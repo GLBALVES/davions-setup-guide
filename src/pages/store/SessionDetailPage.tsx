@@ -122,6 +122,9 @@ const generateOccurrences = (
 
 const SessionDetailPage = () => {
   const { slug, sessionId } = useParams();
+  const customDomainSlug = useCustomDomainSlug();
+  // When accessed via a custom domain, back-navigation goes to "/" (the custom domain store)
+  const backPath = customDomainSlug ? "/" : `/store/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
   const { toast } = useToast();
 
