@@ -228,16 +228,18 @@ const SessionForm = () => {
     let sessionId = id;
 
     if (isEdit && sessionId) {
-      const { error } = await supabase.from("sessions").update(payload).eq("id", sessionId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await supabase.from("sessions").update(payloadWithType as any).eq("id", sessionId);
       if (error) {
         toast({ title: "Error saving session", description: error.message, variant: "destructive" });
         setSaving(false);
         return;
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from("sessions")
-        .insert(payload)
+        .insert(payloadWithType as any)
         .select("id")
         .single();
       if (error || !data) {
