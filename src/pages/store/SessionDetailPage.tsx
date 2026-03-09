@@ -184,18 +184,20 @@ const SessionDetailPage = () => {
     const bookedDate = format(selectedSlot.date, "yyyy-MM-dd");
 
     // 1. Create pending booking
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const insertPayload: any = {
+      session_id: session.id,
+      availability_id: selectedSlot.availabilityId,
+      photographer_id: session.photographer_id,
+      client_name: clientName.trim(),
+      client_email: clientEmail.trim(),
+      status: "pending",
+      payment_status: "pending",
+      booked_date: bookedDate,
+    };
     const { data: bookingData, error: bookingError } = await supabase
       .from("bookings")
-      .insert({
-        session_id: session.id,
-        availability_id: selectedSlot.availabilityId,
-        photographer_id: session.photographer_id,
-        client_name: clientName.trim(),
-        client_email: clientEmail.trim(),
-        status: "pending",
-        payment_status: "pending",
-        booked_date: bookedDate,
-      } as Parameters<typeof supabase.from>[0] extends "bookings" ? never : unknown)
+      .insert(insertPayload)
       .select("id")
       .single();
 
