@@ -194,6 +194,7 @@ const SessionForm = () => {
       setCoverImageUrl(s.cover_image_url);
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
+      setRequirePayment(s.price > 0);
     }
 
     const [availRes, configRes] = await Promise.all([
