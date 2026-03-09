@@ -117,18 +117,11 @@ const SessionForm = () => {
   const [newStart, setNewStart] = useState("09:00");
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
 
-  // ── Day configs (business hours + buffers) ──
-  const [dayConfigs, setDayConfigs] = useState<Map<number, DayConfig>>(new Map());
+  // ── Global config (business hours + buffers — applies to all days) ──
+  const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
 
-  const getDayConfig = (day: number): DayConfig =>
-    dayConfigs.get(day) ?? DEFAULT_DAY_CONFIG();
-
-  const updateDayConfig = (day: number, patch: Partial<DayConfig>) => {
-    setDayConfigs((prev) => {
-      const next = new Map(prev);
-      next.set(day, { ...(prev.get(day) ?? DEFAULT_DAY_CONFIG()), ...patch });
-      return next;
-    });
+  const updateGlobalConfig = (patch: Partial<DayConfig>) => {
+    setGlobalConfig((prev) => ({ ...prev, ...patch }));
   };
 
   // ────────────────────────────────────────────
@@ -220,25 +213,24 @@ const SessionForm = () => {
       );
     }
 
-    if (configRes.data) {
-      const map = new Map<number, DayConfig>();
-      for (const row of configRes.data as Array<{
+    if (configRes.data && configRes.data.length > 0) {
+      // Load global config from day_of_week = -1 sentinel (or fallback to first row for backward compat)
+      const rows = configRes.data as Array<{
         id: string;
         day_of_week: number;
         hours_start: string | null;
         hours_end: string | null;
         buffer_before_min: number;
         buffer_after_min: number;
-      }>) {
-        map.set(row.day_of_week, {
-          db_id: row.id,
-          hours_start: row.hours_start ? row.hours_start.slice(0, 5) : "",
-          hours_end: row.hours_end ? row.hours_end.slice(0, 5) : "",
-          buffer_before_min: row.buffer_before_min ?? 0,
-          buffer_after_min: row.buffer_after_min ?? 0,
-        });
-      }
-      setDayConfigs(map);
+      }>;
+      const globalRow = rows.find((r) => r.day_of_week === -1) ?? rows[0];
+      setGlobalConfig({
+        db_id: globalRow.id,
+        hours_start: globalRow.hours_start ? globalRow.hours_start.slice(0, 5) : "",
+        hours_end: globalRow.hours_end ? globalRow.hours_end.slice(0, 5) : "",
+        buffer_before_min: globalRow.buffer_before_min ?? 0,
+        buffer_after_min: globalRow.buffer_after_min ?? 0,
+      });
     }
 
     setLoading(false);
@@ -335,32 +327,24 @@ const SessionForm = () => {
       );
     }
 
-    // Upsert day configs (delete existing then insert, keyed by session_id + day_of_week)
-    const configEntries = Array.from(dayConfigs.entries());
-    if (configEntries.length > 0 && sessionId) {
-      // Delete all existing configs for this session first, then insert fresh
+    // Save global config as a single row with day_of_week = -1 (sentinel)
+    if (sessionId && (globalConfig.hours_start || globalConfig.hours_end || globalConfig.buffer_before_min > 0 || globalConfig.buffer_after_min > 0)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
         .from("session_day_config")
         .delete()
         .eq("session_id", sessionId);
 
-      const configRows = configEntries
-        .filter(([, cfg]) => cfg.hours_start || cfg.hours_end || cfg.buffer_before_min > 0 || cfg.buffer_after_min > 0)
-        .map(([day, cfg]) => ({
-          session_id: sessionId,
-          photographer_id: user.id,
-          day_of_week: day,
-          hours_start: cfg.hours_start || null,
-          hours_end: cfg.hours_end || null,
-          buffer_before_min: cfg.buffer_before_min,
-          buffer_after_min: cfg.buffer_after_min,
-        }));
-
-      if (configRows.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from("session_day_config").insert(configRows);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("session_day_config").insert({
+        session_id: sessionId,
+        photographer_id: user.id,
+        day_of_week: -1,
+        hours_start: globalConfig.hours_start || null,
+        hours_end: globalConfig.hours_end || null,
+        buffer_before_min: globalConfig.buffer_before_min,
+        buffer_after_min: globalConfig.buffer_after_min,
+      });
     }
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
@@ -378,12 +362,10 @@ const SessionForm = () => {
     );
 
   const suggestNextStart = (day: number): string => {
-    const cfg = getDayConfig(day);
     const daySlots = slotsForDay(day);
     if (daySlots.length === 0) {
-      // Use hours_start + buffer_before as default when no slots yet
-      if (cfg.hours_start) {
-        return addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      if (globalConfig.hours_start) {
+        return addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min);
       }
       return "09:00";
     }
@@ -394,7 +376,7 @@ const SessionForm = () => {
   const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
-    const cfg = getDayConfig(day);
+    const cfg = globalConfig;
 
     // Validate: newStart must be >= latest end_time + break
     const daySlots = slotsForDay(day);
@@ -695,8 +677,72 @@ const SessionForm = () => {
                     Weekly Availability
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                    Each day can have different time slots. Click a day to expand and add times.
+                    Define your working hours and buffer once — they apply to all days.
                   </p>
+                </div>
+
+                {/* Global business hours + buffer config */}
+                <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                      Business hrs
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={globalConfig.hours_start}
+                        onChange={(e) => updateGlobalConfig({ hours_start: e.target.value })}
+                        className="w-28 h-7 text-xs"
+                      />
+                      <span className="text-[10px] text-muted-foreground">→</span>
+                      <Input
+                        type="time"
+                        value={globalConfig.hours_end}
+                        onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
+                        className="w-28 h-7 text-xs"
+                      />
+                    </div>
+                    {(globalConfig.hours_start || globalConfig.hours_end) && (
+                      <button
+                        type="button"
+                        onClick={() => updateGlobalConfig({ hours_start: "", hours_end: "" })}
+                        className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
+                      >
+                        clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                      Buffer
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={globalConfig.buffer_before_min || ""}
+                          onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
+                          className="w-16 h-7 text-xs"
+                          placeholder="0"
+                        />
+                        <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={globalConfig.buffer_after_min || ""}
+                          onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
+                          className="w-16 h-7 text-xs"
+                          placeholder="0"
+                        />
+                        <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Day rows */}
@@ -746,76 +792,6 @@ const SessionForm = () => {
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </Button>
-                        </div>
-
-                        {/* Business hours + buffer config — always visible */}
-                        <div className="border-t border-border/40 bg-muted/5 px-4 py-2.5">
-                          <div className="flex flex-col gap-2">
-                              {/* Business hours row */}
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                                  Business hrs
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    type="time"
-                                    value={getDayConfig(dayIdx).hours_start}
-                                    onChange={(e) => updateDayConfig(dayIdx, { hours_start: e.target.value })}
-                                    className="w-28 h-7 text-xs"
-                                    placeholder="--:--"
-                                  />
-                                  <span className="text-[10px] text-muted-foreground">→</span>
-                                  <Input
-                                    type="time"
-                                    value={getDayConfig(dayIdx).hours_end}
-                                    onChange={(e) => updateDayConfig(dayIdx, { hours_end: e.target.value })}
-                                    className="w-28 h-7 text-xs"
-                                    placeholder="--:--"
-                                  />
-                                </div>
-                                {(getDayConfig(dayIdx).hours_start || getDayConfig(dayIdx).hours_end) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => updateDayConfig(dayIdx, { hours_start: "", hours_end: "" })}
-                                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
-                                  >
-                                    clear
-                                  </button>
-                                )}
-                              </div>
-                              {/* Buffer row */}
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                                  Buffer
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <div className="flex items-center gap-1.5">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="5"
-                                      value={getDayConfig(dayIdx).buffer_before_min || ""}
-                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_before_min: parseInt(e.target.value) || 0 })}
-                                      className="w-16 h-7 text-xs"
-                                      placeholder="0"
-                                    />
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="5"
-                                      value={getDayConfig(dayIdx).buffer_after_min || ""}
-                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_after_min: parseInt(e.target.value) || 0 })}
-                                      className="w-16 h-7 text-xs"
-                                      placeholder="0"
-                                    />
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
-                                   </div>
-                                 </div>
-                               </div>
-                             </div>
                         </div>
 
                         {/* Expanded: slots + add form */}
