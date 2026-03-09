@@ -18,6 +18,8 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Globe,
+  GlobeLock,
   Loader2,
   Mail,
   Plus,
