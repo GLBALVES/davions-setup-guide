@@ -665,7 +665,11 @@ const SessionDetailPage = () => {
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep("slots")} className="text-xs tracking-wider uppercase font-light rounded-none">Back</Button>
-                <Button onClick={() => setStep("addons")} disabled={!clientName.trim() || !clientEmail.trim()} className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11">
+                <Button
+                  onClick={() => setStep("addons")}
+                  disabled={!clientName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+                  className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
+                >
                   Continue →
                 </Button>
               </div>
