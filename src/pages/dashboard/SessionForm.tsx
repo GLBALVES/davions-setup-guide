@@ -390,13 +390,22 @@ const SessionForm = () => {
     if (!user || !sessionId) return;
 
     setSaving(true);
-    const originalPriceInCents = Math.round(parseFloat(price || "0") * 100);
-    const finalPrice = requirePayment ? originalPriceInCents : 0;
+    const priceInCents = Math.round(parseFloat(price || "0") * 100);
+    const finalPrice = requirePayment ? priceInCents : 0;
+    const finalDepositAmount = depositEnabled
+      ? Math.round(parseFloat(depositAmount || "0") * 100)
+      : 0;
 
     const { error } = await supabase
       .from("sessions")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .update({ price: finalPrice } as any)
+      .update({
+        price: finalPrice,
+        tax_rate: taxEnabled ? parseFloat(taxRate || "0") : 0,
+        deposit_enabled: depositEnabled,
+        deposit_amount: finalDepositAmount,
+        allow_tip: allowTip,
+      } as any)
       .eq("id", sessionId);
 
     if (error) {
