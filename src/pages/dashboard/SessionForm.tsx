@@ -193,23 +193,51 @@ const SessionForm = () => {
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
     }
 
-    const { data: avail } = await supabase
-      .from("session_availability")
-      .select("id, day_of_week, start_time, end_time")
-      .eq("session_id", sessionId)
-      .not("day_of_week", "is", null)
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true });
+    const [availRes, configRes] = await Promise.all([
+      supabase
+        .from("session_availability")
+        .select("id, day_of_week, start_time, end_time")
+        .eq("session_id", sessionId)
+        .not("day_of_week", "is", null)
+        .order("day_of_week", { ascending: true })
+        .order("start_time", { ascending: true }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("session_day_config")
+        .select("id, day_of_week, hours_start, hours_end, buffer_before_min, buffer_after_min")
+        .eq("session_id", sessionId),
+    ]);
 
-    if (avail) {
+    if (availRes.data) {
       setSlots(
-        avail.map((a) => ({
+        availRes.data.map((a: { id: string; day_of_week: number; start_time: string; end_time: string }) => ({
           id: a.id,
-          day_of_week: (a as unknown as { day_of_week: number }).day_of_week,
+          day_of_week: a.day_of_week,
           start_time: a.start_time,
           end_time: a.end_time,
         }))
       );
+    }
+
+    if (configRes.data) {
+      const map = new Map<number, DayConfig>();
+      for (const row of configRes.data as Array<{
+        id: string;
+        day_of_week: number;
+        hours_start: string | null;
+        hours_end: string | null;
+        buffer_before_min: number;
+        buffer_after_min: number;
+      }>) {
+        map.set(row.day_of_week, {
+          db_id: row.id,
+          hours_start: row.hours_start ? row.hours_start.slice(0, 5) : "",
+          hours_end: row.hours_end ? row.hours_end.slice(0, 5) : "",
+          buffer_before_min: row.buffer_before_min ?? 0,
+          buffer_after_min: row.buffer_after_min ?? 0,
+        });
+      }
+      setDayConfigs(map);
     }
 
     setLoading(false);
