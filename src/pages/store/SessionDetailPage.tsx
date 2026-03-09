@@ -88,8 +88,7 @@ const generateOccurrences = (
         date,
         start_time: startHHmm,
         end_time: format(endDate, "HH:mm"),
-        label: format(date, "EEEE, dd 'de' MMMM", { locale: ptBR }),
-     MMMM d";
+        label: format(date, "EEEE, MMMM d"),
 };
 
 // ────────────────────────────────────────────
