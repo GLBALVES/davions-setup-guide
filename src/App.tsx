@@ -20,6 +20,7 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
+const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
 const App = () => (
