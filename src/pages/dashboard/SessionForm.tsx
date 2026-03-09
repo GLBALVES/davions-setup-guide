@@ -161,7 +161,7 @@ const SessionForm = () => {
   const handleSave = async () => {
     if (!user) return;
     if (!title.trim()) {
-      toast({ title: "Título obrigatório", variant: "destructive" });
+      toast({ title: "Title is required", variant: "destructive" });
       return;
     }
 
