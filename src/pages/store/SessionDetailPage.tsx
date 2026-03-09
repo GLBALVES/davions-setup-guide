@@ -602,7 +602,39 @@ const SessionDetailPage = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">Email *</Label>
-                  <Input id="clientEmail" type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="you@email.com" className="rounded-none" />
+                  <div className="relative">
+                    <Input
+                      id="clientEmail"
+                      type="email"
+                      value={clientEmail}
+                      onChange={(e) => {
+                        // allow only valid email characters while typing
+                        const val = e.target.value.replace(/\s/g, "");
+                        setClientEmail(val);
+                      }}
+                      placeholder="you@email.com"
+                      className={cn(
+                        "rounded-none pr-8",
+                        clientEmail.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : clientEmail.length > 0
+                          ? "border-foreground"
+                          : ""
+                      )}
+                    />
+                    {clientEmail.length > 0 && (
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none">
+                        {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail) ? (
+                          <Check className="h-3.5 w-3.5 text-foreground" />
+                        ) : (
+                          <span className="text-destructive font-light">✕</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  {clientEmail.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail) && (
+                    <p className="text-[10px] text-destructive font-light">Enter a valid email address</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="clientPhone" className="text-xs tracking-wider uppercase font-light">Phone</Label>
@@ -633,7 +665,11 @@ const SessionDetailPage = () => {
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep("slots")} className="text-xs tracking-wider uppercase font-light rounded-none">Back</Button>
-                <Button onClick={() => setStep("addons")} disabled={!clientName.trim() || !clientEmail.trim()} className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11">
+                <Button
+                  onClick={() => setStep("addons")}
+                  disabled={!clientName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+                  className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
+                >
                   Continue →
                 </Button>
               </div>
