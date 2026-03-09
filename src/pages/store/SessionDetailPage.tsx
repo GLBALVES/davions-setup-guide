@@ -157,6 +157,8 @@ const SessionDetailPage = () => {
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientNotes, setClientNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // ────────────────────────────────────────────
