@@ -299,6 +299,51 @@ export type Database = {
           },
         ]
       }
+      session_photo_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          max_photos: number | null
+          min_photos: number
+          photographer_id: string
+          price_per_photo: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_photos?: number | null
+          min_photos?: number
+          photographer_id: string
+          price_per_photo?: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_photos?: number | null
+          min_photos?: number
+          photographer_id?: string
+          price_per_photo?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_photo_tiers_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_photo_tiers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_types: {
         Row: {
           created_at: string
