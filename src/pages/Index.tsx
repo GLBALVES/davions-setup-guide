@@ -386,7 +386,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-start justify-between gap-8">
             {/* Brand */}
             <div className="flex flex-col gap-3">
-              <span className="text-lg font-light tracking-[0.35em] uppercase text-foreground">DAVIONS</span>
+              <img src={logoPrincipal} alt="Davions" className="h-6 w-auto" />
               <p className="text-xs font-light text-muted-foreground max-w-xs leading-relaxed">
                 The all-in-one platform for photographers to deliver, showcase, and sell their work.
               </p>
