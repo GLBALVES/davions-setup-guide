@@ -327,32 +327,24 @@ const SessionForm = () => {
       );
     }
 
-    // Upsert day configs (delete existing then insert, keyed by session_id + day_of_week)
-    const configEntries = Array.from(dayConfigs.entries());
-    if (configEntries.length > 0 && sessionId) {
-      // Delete all existing configs for this session first, then insert fresh
+    // Save global config as a single row with day_of_week = -1 (sentinel)
+    if (sessionId && (globalConfig.hours_start || globalConfig.hours_end || globalConfig.buffer_before_min > 0 || globalConfig.buffer_after_min > 0)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
         .from("session_day_config")
         .delete()
         .eq("session_id", sessionId);
 
-      const configRows = configEntries
-        .filter(([, cfg]) => cfg.hours_start || cfg.hours_end || cfg.buffer_before_min > 0 || cfg.buffer_after_min > 0)
-        .map(([day, cfg]) => ({
-          session_id: sessionId,
-          photographer_id: user.id,
-          day_of_week: day,
-          hours_start: cfg.hours_start || null,
-          hours_end: cfg.hours_end || null,
-          buffer_before_min: cfg.buffer_before_min,
-          buffer_after_min: cfg.buffer_after_min,
-        }));
-
-      if (configRows.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from("session_day_config").insert(configRows);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("session_day_config").insert({
+        session_id: sessionId,
+        photographer_id: user.id,
+        day_of_week: -1,
+        hours_start: globalConfig.hours_start || null,
+        hours_end: globalConfig.hours_end || null,
+        buffer_before_min: globalConfig.buffer_before_min,
+        buffer_after_min: globalConfig.buffer_after_min,
+      });
     }
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
