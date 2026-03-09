@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 // Types
 // ────────────────────────────────────────────
 
-const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const DAY_FULL = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 // Ordered Mon→Sun for display
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
