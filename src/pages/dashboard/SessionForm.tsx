@@ -77,9 +77,11 @@ const SessionForm = () => {
 
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
-  const [addingSlot, setAddingSlot] = useState(false);
-  const [newDays, setNewDays] = useState<number[]>([]);
+  // addingSlotForDay: which day is currently showing the inline "add time" input
+  const [addingSlotForDay, setAddingSlotForDay] = useState<number | null>(null);
   const [newStart, setNewStart] = useState("09:00");
+  // days that have been "opened" / expanded in the UI
+  const [expandedDays, setExpandedDays] = useState<number[]>([]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
