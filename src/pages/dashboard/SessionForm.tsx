@@ -714,6 +714,10 @@ const SessionForm = () => {
                             onClick={() => toggleDayExpanded(dayIdx)}
                             className="flex items-center gap-3 flex-1 text-left"
                           >
+                            <ChevronRight className={cn(
+                              "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+                              isExpanded && "rotate-90"
+                            )} />
                             <span className={cn(
                               "text-[11px] tracking-wider uppercase w-28 font-light",
                               daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
