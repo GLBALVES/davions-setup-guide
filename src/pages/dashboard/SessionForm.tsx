@@ -381,7 +381,7 @@ const SessionForm = () => {
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Descreva a session para seus clientes…"
+                    placeholder="Describe this session for your clients…"
                     rows={3}
                   />
                 </div>
