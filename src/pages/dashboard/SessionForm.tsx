@@ -1423,7 +1423,15 @@ const SessionForm = () => {
                               <div className="flex rounded-md border border-border overflow-hidden w-fit">
                                 <button
                                   type="button"
-                                  onClick={() => setDepositType("fixed")}
+                                  onClick={() => {
+                                    if (depositType === "percent") {
+                                      const pct = parseFloat(depositAmount || "0");
+                                      const sessionPriceVal = parseFloat(price || "0");
+                                      const fixedVal = (pct / 100) * sessionPriceVal;
+                                      setDepositAmount(fixedVal > 0 ? fixedVal.toFixed(2) : "");
+                                    }
+                                    setDepositType("fixed");
+                                  }}
                                   className={cn(
                                     "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors",
                                     depositType === "fixed"
