@@ -358,7 +358,7 @@ const SessionForm = () => {
               <section className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                   <span className="inline-block w-4 h-px bg-border" />
-                  Detalhes da Session
+                  Session Details
                 </p>
 
                 <div className="flex flex-col gap-2">
