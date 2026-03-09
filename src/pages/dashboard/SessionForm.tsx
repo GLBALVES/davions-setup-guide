@@ -743,9 +743,77 @@ const SessionForm = () => {
                           </Button>
                         </div>
 
-                        {/* Expanded: existing slots + optional add form */}
+                        {/* Expanded: business hours + buffers config + slots + add form */}
                         {isExpanded && (
-                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-2">
+                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
+                            {/* Business hours + buffer config */}
+                            <div className="flex flex-col gap-2 border border-border/50 p-3 bg-background">
+                              {/* Business hours row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                                  Business hrs
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="time"
+                                    value={getDayConfig(dayIdx).hours_start}
+                                    onChange={(e) => updateDayConfig(dayIdx, { hours_start: e.target.value })}
+                                    className="w-28 h-7 text-xs"
+                                    placeholder="--:--"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground">→</span>
+                                  <Input
+                                    type="time"
+                                    value={getDayConfig(dayIdx).hours_end}
+                                    onChange={(e) => updateDayConfig(dayIdx, { hours_end: e.target.value })}
+                                    className="w-28 h-7 text-xs"
+                                    placeholder="--:--"
+                                  />
+                                </div>
+                                {(getDayConfig(dayIdx).hours_start || getDayConfig(dayIdx).hours_end) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateDayConfig(dayIdx, { hours_start: "", hours_end: "" })}
+                                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
+                                  >
+                                    clear
+                                  </button>
+                                )}
+                              </div>
+                              {/* Buffer row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                                  Buffer
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="5"
+                                      value={getDayConfig(dayIdx).buffer_before_min || ""}
+                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_before_min: parseInt(e.target.value) || 0 })}
+                                      className="w-16 h-7 text-xs"
+                                      placeholder="0"
+                                    />
+                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="5"
+                                      value={getDayConfig(dayIdx).buffer_after_min || ""}
+                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_after_min: parseInt(e.target.value) || 0 })}
+                                      className="w-16 h-7 text-xs"
+                                      placeholder="0"
+                                    />
+                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
                             {daySlots.length > 0 && (
                               <div className="flex flex-col gap-1.5">
                                 {daySlots.map((slot) => {
