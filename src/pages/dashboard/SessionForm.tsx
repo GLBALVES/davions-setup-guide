@@ -634,7 +634,7 @@ const SessionForm = () => {
                   onClick={() => navigate("/dashboard/sessions")}
                   className="text-xs tracking-wider uppercase font-light text-muted-foreground"
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   onClick={handleSave}
