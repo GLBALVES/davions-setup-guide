@@ -430,7 +430,7 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
-                      Intervalo (min)
+                      Break (min)
                     </Label>
                     <Input
                       id="break"
