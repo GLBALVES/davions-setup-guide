@@ -291,9 +291,10 @@ const SessionForm = () => {
       const storedType = (sAny2.deposit_type === "percent" ? "percent" : "fixed") as "fixed" | "percent";
       setDepositType(storedType);
       if (storedType === "percent") {
-        // deposit_amount stores the percentage * 100 (e.g. 25.00% stored as 2500)
-        setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+        // deposit_amount stores the raw percentage integer (e.g. 35 for 35%)
+        setDepositAmount(sAny.deposit_amount ? String(sAny.deposit_amount) : "");
       } else {
+        // deposit_amount stores cents (e.g. 5000 = $50.00)
         setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
       }
       setAllowTip(sAny.allow_tip ?? false);
@@ -534,7 +535,9 @@ const SessionForm = () => {
     let finalDepositAmount = 0;
     if (depositEnabled) {
       const depositVal = parseFloat(depositAmount || "0");
-      finalDepositAmount = Math.round(depositVal * 100);
+      finalDepositAmount = depositType === "percent"
+        ? Math.round(depositVal)        // store as raw integer percent (e.g. 35)
+        : Math.round(depositVal * 100); // store as cents (e.g. 5000 = $50)
     }
 
     const { error } = await supabase
