@@ -948,7 +948,7 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-
+                    {user && (
                       <SessionTypeManager
                         photographerId={user.id}
                         sessionTypes={sessionTypes}
