@@ -17,6 +17,7 @@ export type Database = {
       galleries: {
         Row: {
           access_code: string | null
+          category: string
           created_at: string
           id: string
           photographer_id: string
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           access_code?: string | null
+          category?: string
           created_at?: string
           id?: string
           photographer_id: string
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           access_code?: string | null
+          category?: string
           created_at?: string
           id?: string
           photographer_id?: string
