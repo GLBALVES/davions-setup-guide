@@ -23,12 +23,13 @@ interface CreateGalleryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
+  defaultCategory?: string;
 }
 
-export function CreateGalleryDialog({ open, onOpenChange, onCreated }: CreateGalleryDialogProps) {
+export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCategory = "proof" }: CreateGalleryDialogProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("proof");
+  const [category, setCategory] = useState(defaultCategory);
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
