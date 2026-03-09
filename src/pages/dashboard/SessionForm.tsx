@@ -555,7 +555,7 @@ const SessionForm = () => {
                                         {slot.end_time.slice(0, 5)}
                                         {brk > 0 && (
                                           <span className="text-[10px] text-muted-foreground/60">
-                                            (+{brk} min intervalo)
+                                            (+{brk} min break)
                                           </span>
                                         )}
                                       </span>
