@@ -479,140 +479,152 @@ const SessionForm = () => {
 
               {/* Weekly Availability */}
               <section className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                      <span className="inline-block w-4 h-px bg-border" />
-                      Horários Disponíveis
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                      Defina os dias da semana e horários de início de cada atendimento
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setAddingSlot(true)}
-                    className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Adicionar
-                  </Button>
+                <div>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                    <span className="inline-block w-4 h-px bg-border" />
+                    Horários por Dia da Semana
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                    Cada dia pode ter horários diferentes. Clique num dia para expandir e adicionar horários.
+                  </p>
                 </div>
 
-                {/* Add slot form */}
-                {addingSlot && (
-                  <div className="border border-border p-5 flex flex-col gap-5 bg-muted/20">
-                    <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
-                      Novo Horário Recorrente
-                    </p>
+                {/* Day rows */}
+                <div className="flex flex-col border border-border divide-y divide-border">
+                  {DAY_ORDER.map((dayIdx) => {
+                    const daySlots = slotsForDay(dayIdx);
+                    const isExpanded = expandedDays.includes(dayIdx);
+                    const isAddingHere = addingSlotForDay === dayIdx;
 
-                    {/* Day of week selector */}
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs tracking-wider uppercase font-light">
-                        Dias da Semana
-                      </Label>
-                      <div className="flex gap-2 flex-wrap">
-                        {DAY_LABELS.map((label, i) => (
+                    return (
+                      <div key={dayIdx}>
+                        {/* Day header row */}
+                        <div className="flex items-center justify-between px-4 py-3">
                           <button
-                            key={i}
                             type="button"
-                            onClick={() => toggleDay(i)}
-                            className={cn(
-                              "w-10 h-10 text-[11px] tracking-wider border transition-colors",
-                              newDays.includes(i)
-                                ? "border-foreground bg-foreground text-background"
-                                : "border-border hover:border-foreground/40 text-muted-foreground"
-                            )}
+                            onClick={() => toggleDayExpanded(dayIdx)}
+                            className="flex items-center gap-3 flex-1 text-left"
                           >
-                            {label}
+                            <span className={cn(
+                              "text-[11px] tracking-wider uppercase w-28 font-light",
+                              daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
+                            )}>
+                              {DAY_FULL[dayIdx]}
+                            </span>
+                            {daySlots.length > 0 ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                {daySlots.length} horário{daySlots.length !== 1 ? "s" : ""}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/50">Sem horários</span>
+                            )}
                           </button>
-                        ))}
-                      </div>
-                    </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (!isExpanded) setExpandedDays((p) => [...p, dayIdx]);
+                              setAddingSlotForDay(isAddingHere ? null : dayIdx);
+                              setNewStart("09:00");
+                            }}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
 
-                    {/* Start time */}
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-xs tracking-wider uppercase font-light">
-                        Horário de Início
-                      </Label>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          type="time"
-                          value={newStart}
-                          onChange={(e) => setNewStart(e.target.value)}
-                          className="w-36"
-                        />
-                        {newStart && (
-                          <span className="text-[11px] text-muted-foreground">
-                            → término às {computeEndTime(newStart, dur)}
-                            {brk > 0 && `, livre às ${computeEndTime(newStart, totalMinutes)}`}
-                          </span>
+                        {/* Expanded: existing slots + optional add form */}
+                        {isExpanded && (
+                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-2">
+                            {daySlots.length > 0 && (
+                              <div className="flex flex-col gap-1.5">
+                                {daySlots.map((slot) => {
+                                  const globalIdx = slots.findIndex(
+                                    (s) => s === slot
+                                  );
+                                  return (
+                                    <div
+                                      key={slot.id ?? globalIdx}
+                                      className="flex items-center justify-between py-1.5 px-3 bg-background border border-border"
+                                    >
+                                      <span className="flex items-center gap-2 text-[11px]">
+                                        <Clock className="h-3 w-3 text-muted-foreground" />
+                                        {slot.start_time.slice(0, 5)}
+                                        <span className="text-muted-foreground">→</span>
+                                        {slot.end_time.slice(0, 5)}
+                                        {brk > 0 && (
+                                          <span className="text-[10px] text-muted-foreground/60">
+                                            (+{brk} min intervalo)
+                                          </span>
+                                        )}
+                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        {slot._local && (
+                                          <span className="text-[9px] tracking-widest uppercase bg-primary/10 text-primary px-2 py-0.5">
+                                            Novo
+                                          </span>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveSlot(slot, globalIdx)}
+                                          className="text-muted-foreground hover:text-destructive transition-colors"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Inline add-time form */}
+                            {isAddingHere && (
+                              <div className="flex items-center gap-3 pt-1">
+                                <Input
+                                  type="time"
+                                  value={newStart}
+                                  onChange={(e) => setNewStart(e.target.value)}
+                                  className="w-32 h-8 text-sm"
+                                />
+                                {newStart && (
+                                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                    → {computeEndTime(newStart, dur)}
+                                    {brk > 0 && ` (livre ${computeEndTime(newStart, totalMinutes)})`}
+                                  </span>
+                                )}
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleAddSlotForDay(dayIdx)}
+                                  className="h-8 text-xs tracking-wider uppercase font-light"
+                                >
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setAddingSlotForDay(null)}
+                                  className="h-8 text-xs tracking-wider uppercase font-light"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            )}
+
+                            {daySlots.length === 0 && !isAddingHere && (
+                              <p className="text-[11px] text-muted-foreground/50 italic py-1">
+                                Nenhum horário — clique em + para adicionar
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
-                    </div>
-
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setAddingSlot(false);
-                          setNewDays([]);
-                          setNewStart("09:00");
-                        }}
-                        className="text-xs tracking-wider uppercase font-light"
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleAddSlots}
-                        disabled={newDays.length === 0}
-                        className="text-xs tracking-wider uppercase font-light"
-                      >
-                        Adicionar {newDays.length > 0 ? `(${newDays.length})` : ""}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Slots list grouped by day */}
-                {slots.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {slots.map((slot, i) => (
-                      <div
-                        key={slot.id ?? i}
-                        className="flex items-center justify-between px-4 py-3 border border-border text-sm font-light"
-                      >
-                        <div className="flex items-center gap-4">
-                          <span className="text-[11px] tracking-wider uppercase text-muted-foreground w-16">
-                            {DAY_FULL[slot.day_of_week]}
-                          </span>
-                          <span className="flex items-center gap-1 text-[11px]">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
-                          </span>
-                          {slot._local && (
-                            <span className="text-[9px] tracking-widest uppercase bg-primary/10 text-primary px-2 py-0.5">
-                              Novo
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleRemoveSlot(slot, i)}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground text-center py-6 border border-dashed border-border">
-                    Nenhum horário definido — adicione disponibilidade semanal para que clientes possam agendar
-                  </p>
-                )}
+                    );
+                  })}
+                </div>
               </section>
 
               {/* Actions */}
