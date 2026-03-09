@@ -224,6 +224,13 @@ const SessionForm = () => {
     if (isEdit && id) loadSession(id);
   }, [id]);
 
+  // Auto-focus first business hrs input when entering step 2
+  useEffect(() => {
+    if (step === 2) {
+      setTimeout(() => businessHrsStartRef.current?.focus(), 100);
+    }
+  }, [step]);
+
   const loadSession = async (sid: string) => {
     const { data: s } = await supabase
       .from("sessions")
