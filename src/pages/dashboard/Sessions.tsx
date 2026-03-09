@@ -27,6 +27,7 @@ const Sessions = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -41,6 +42,18 @@ const Sessions = () => {
   useEffect(() => {
     fetchSessions();
   }, []);
+
+  const filteredSessions = sessions.filter((s) => {
+    if (filter === "active") return s.status === "active";
+    if (filter === "draft") return s.status !== "active";
+    return true;
+  });
+
+  const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "active", label: "Published" },
+    { key: "draft", label: "Unpublished" },
+  ];
 
   return (
     <SidebarProvider>
