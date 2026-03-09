@@ -513,10 +513,10 @@ const SessionForm = () => {
                             </span>
                             {daySlots.length > 0 ? (
                               <span className="text-[10px] text-muted-foreground">
-                                {daySlots.length} horário{daySlots.length !== 1 ? "s" : ""}
+                                {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground/50">Sem horários</span>
+                              <span className="text-[10px] text-muted-foreground/50">No slots</span>
                             )}
                           </button>
                           <Button
