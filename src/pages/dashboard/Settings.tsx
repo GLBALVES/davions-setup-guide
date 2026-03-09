@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Copy, AlertCircle, Store } from "lucide-react";
+import { Check, Copy, AlertCircle, Store, Globe, ExternalLink } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -19,22 +20,28 @@ const Settings = () => {
   const [fullName, setFullName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [slugInput, setSlugInput] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
+  const [customDomainInput, setCustomDomainInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
+  const [domainError, setDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [domainCopied, setDomainCopied] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("photographers")
-        .select("full_name, store_slug")
+        .select("full_name, store_slug, custom_domain")
         .eq("id", user!.id)
         .single();
       if (data) {
         setFullName(data.full_name ?? "");
         setStoreSlug(data.store_slug ?? "");
         setSlugInput(data.store_slug ?? "");
+        setCustomDomain((data as { custom_domain?: string }).custom_domain ?? "");
+        setCustomDomainInput((data as { custom_domain?: string }).custom_domain ?? "");
       }
       setLoading(false);
     };
@@ -50,34 +57,59 @@ const Settings = () => {
     return null;
   };
 
+  const validateDomain = (value: string) => {
+    if (!value.trim()) return null; // optional
+    const v = value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (!DOMAIN_REGEX.test(v))
+      return "Enter a valid domain (e.g. booking.yourstudio.com).";
+    return null;
+  };
+
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
     setSlugInput(val);
     setSlugError(validateSlug(val));
   };
 
+  const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
+    setCustomDomainInput(val);
+    setDomainError(validateDomain(val));
+  };
+
   const handleSave = async () => {
-    const err = validateSlug(slugInput);
-    if (err) {
-      setSlugError(err);
-      return;
-    }
+    const slugErr = validateSlug(slugInput);
+    const domErr = validateDomain(customDomainInput);
+    if (slugErr) { setSlugError(slugErr); return; }
+    if (domErr) { setDomainError(domErr); return; }
 
     setSaving(true);
+    const updatePayload: Record<string, string | null> = {
+      full_name: fullName,
+      store_slug: slugInput,
+      custom_domain: customDomainInput.trim() || null,
+    };
+
     const { error } = await supabase
       .from("photographers")
-      .update({ full_name: fullName, store_slug: slugInput })
+      .update(updatePayload)
       .eq("id", user!.id);
 
     if (error) {
-      // Unique constraint violation
       if (error.code === "23505") {
-        setSlugError("This URL is already taken. Please choose another.");
+        if (error.message.includes("store_slug")) {
+          setSlugError("This URL is already taken. Please choose another.");
+        } else if (error.message.includes("custom_domain")) {
+          setDomainError("This domain is already linked to another account.");
+        } else {
+          toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        }
       } else {
         toast({ title: "Failed to save", description: error.message, variant: "destructive" });
       }
     } else {
       setStoreSlug(slugInput);
+      setCustomDomain(customDomainInput.trim());
       toast({ title: "Settings saved", description: "Your profile has been updated." });
     }
     setSaving(false);
@@ -87,12 +119,13 @@ const Settings = () => {
     ? `${window.location.origin}/store/${slugInput}`
     : null;
 
-  const copyUrl = async () => {
-    if (!storeUrl) return;
-    await navigator.clipboard.writeText(storeUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedFn(true);
+    setTimeout(() => setCopiedFn(false), 2000);
   };
+
+  const appHost = window.location.host;
 
   return (
     <SidebarProvider>
@@ -122,14 +155,11 @@ const Settings = () => {
                 </p>
               ) : (
                 <>
-                  {/* Profile section */}
+                  {/* ── Profile ── */}
                   <section className="flex flex-col gap-6">
-                    <div>
-                      <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
-                        Profile
-                      </h2>
-                    </div>
-
+                    <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
+                      Profile
+                    </h2>
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">
@@ -142,7 +172,6 @@ const Settings = () => {
                           className="h-9 text-sm font-light"
                         />
                       </div>
-
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">
                           Email
@@ -156,27 +185,22 @@ const Settings = () => {
                     </div>
                   </section>
 
-                  {/* Store URL section */}
+                  {/* ── Booking Store ── */}
                   <section className="flex flex-col gap-6">
-                    <div>
-                      <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
-                        Booking Store
-                      </h2>
-                    </div>
-
+                    <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
+                      Booking Store
+                    </h2>
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">
                           Store URL
                         </Label>
                         <p className="text-[11px] text-muted-foreground">
-                          This is your unique public booking page. Share it with clients so they can browse and book your sessions.
+                          Your unique public booking page. Share it with clients so they can browse and book sessions.
                         </p>
-
-                        {/* Input with prefix */}
                         <div className={`flex items-center border ${slugError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
                           <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none whitespace-nowrap">
-                            {window.location.host}/store/
+                            {appHost}/store/
                           </span>
                           <input
                             value={slugInput}
@@ -185,7 +209,6 @@ const Settings = () => {
                             className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
                           />
                         </div>
-
                         {slugError && (
                           <p className="flex items-center gap-1.5 text-[11px] text-destructive">
                             <AlertCircle className="h-3 w-3 shrink-0" />
@@ -194,7 +217,6 @@ const Settings = () => {
                         )}
                       </div>
 
-                      {/* URL preview + copy */}
                       {storeUrl && !slugError && (
                         <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
                           <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -202,15 +224,11 @@ const Settings = () => {
                             {storeUrl}
                           </span>
                           <button
-                            onClick={copyUrl}
+                            onClick={() => copyUrl(storeUrl, setCopied)}
                             className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                             title="Copy store URL"
                           >
-                            {copied ? (
-                              <Check className="h-3.5 w-3.5 text-foreground" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5" />
-                            )}
+                            {copied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                         </div>
                       )}
@@ -224,11 +242,110 @@ const Settings = () => {
                     </div>
                   </section>
 
+                  {/* ── Custom Domain ── */}
+                  <section className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-1">
+                      <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
+                        Custom Domain
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground pt-2">
+                        Point your own domain (e.g. <span className="font-mono">booking.yourstudio.com</span>) directly to your booking store.
+                        Clients will see your domain instead of the platform URL.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[11px] tracking-wider uppercase font-light flex items-center gap-1.5">
+                          <Globe className="h-3 w-3" />
+                          Your Domain
+                        </Label>
+                        <div className={`flex items-center border ${domainError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">
+                            https://
+                          </span>
+                          <input
+                            value={customDomainInput}
+                            onChange={handleDomainChange}
+                            placeholder="booking.yourstudio.com"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                        </div>
+                        {domainError && (
+                          <p className="flex items-center gap-1.5 text-[11px] text-destructive">
+                            <AlertCircle className="h-3 w-3 shrink-0" />
+                            {domainError}
+                          </p>
+                        )}
+                        {customDomain && !domainError && (
+                          <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
+                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-[11px] text-muted-foreground flex-1 truncate font-mono">
+                              https://{customDomain}
+                            </span>
+                            <button
+                              onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
+                              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                            >
+                              {domainCopied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* DNS Instructions */}
+                      <div className="border border-border p-4 flex flex-col gap-4">
+                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+                          DNS Configuration
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          At your domain registrar, add the following DNS record pointing to this platform:
+                        </p>
+
+                        {/* CNAME record */}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="grid grid-cols-3 gap-2 text-[10px] tracking-wider uppercase text-muted-foreground/60 px-2">
+                            <span>Type</span>
+                            <span>Name</span>
+                            <span>Value</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 bg-muted/40 border border-border p-2 font-mono text-[11px]">
+                            <span className="text-foreground">CNAME</span>
+                            <span className="text-muted-foreground">booking</span>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-foreground truncate">{appHost}</span>
+                              <button
+                                onClick={() => copyUrl(appHost, () => {})}
+                                className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-[10px] text-muted-foreground/60">
+                          DNS changes can take up to 48 hours to propagate worldwide. Once active, visitors to your custom domain will see your booking store.
+                        </p>
+
+                        <a
+                          href="https://docs.lovable.dev/features/custom-domain"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Custom domain documentation
+                        </a>
+                      </div>
+                    </div>
+                  </section>
+
                   {/* Save */}
                   <div className="flex items-center gap-4">
                     <Button
                       onClick={handleSave}
-                      disabled={saving || !!slugError}
+                      disabled={saving || !!slugError || !!domainError}
                       size="sm"
                       className="gap-2 text-xs tracking-wider uppercase font-light"
                     >

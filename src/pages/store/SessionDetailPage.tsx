@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCustomDomainSlug } from "@/contexts/CustomDomainSlugContext";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -121,6 +122,9 @@ const generateOccurrences = (
 
 const SessionDetailPage = () => {
   const { slug, sessionId } = useParams();
+  const customDomainSlug = useCustomDomainSlug();
+  // When accessed via a custom domain, back-navigation goes to "/" (the custom domain store)
+  const backPath = customDomainSlug ? "/" : `/store/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -324,7 +328,7 @@ const SessionDetailPage = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-sm font-light text-muted-foreground">Session not found.</p>
-        <Button variant="ghost" onClick={() => navigate(`/store/${slug}`)}>
+        <Button variant="ghost" onClick={() => navigate(backPath)}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to the store
         </Button>
       </div>
@@ -342,7 +346,7 @@ const SessionDetailPage = () => {
       {/* Header */}
       <header className="border-b border-border px-6 py-4 flex items-center gap-4">
         <button
-          onClick={() => navigate(`/store/${slug}`)}
+          onClick={() => navigate(backPath)}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
