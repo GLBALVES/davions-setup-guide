@@ -276,7 +276,7 @@ const SessionDetailPage = () => {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-          Agendar Session
+          Book a Session
         </p>
       </header>
 
