@@ -945,7 +945,7 @@ const SessionForm = () => {
                         />
                       </div>
                       <p className="text-[10px] text-muted-foreground">
-                        Aparece na URL de agendamento. Gerado automaticamente a partir do título.
+                        Appears in the booking URL. Auto-generated from the title.
                       </p>
                     </div>
 
