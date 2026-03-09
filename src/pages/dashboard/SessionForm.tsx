@@ -417,7 +417,7 @@ const SessionForm = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
-                      Duração (min)
+                      Duration (min)
                     </Label>
                     <Input
                       id="duration"
