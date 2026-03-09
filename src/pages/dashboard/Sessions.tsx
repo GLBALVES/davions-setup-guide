@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
@@ -264,106 +265,105 @@ function SessionCard({
     }
   };
 
+  const noSlugMsg = "Configure your store URL first in Settings";
+
   return (
-    <button
-      onClick={onClick}
-      className="group text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
-    >
-      <div className="aspect-video bg-muted relative overflow-hidden">
-        {session.cover_image_url ? (
-          <img
-            src={session.cover_image_url}
-            alt={session.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
-          </div>
-        )}
-        <div className="absolute top-2 right-2">
-          <Badge
-            variant={session.status === "active" ? "default" : "secondary"}
-            className="text-[9px] tracking-wider uppercase font-light"
-          >
-            {session.status === "active" ? "Published" : "Unpublished"}
-          </Badge>
-        </div>
-        {/* Preview & Share overlay buttons */}
-        {bookingUrl && (
-          <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={handlePreview}
-              title="Preview booking page"
-              className="h-7 w-7 bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-colors"
-            >
-              <Eye className="h-3.5 w-3.5 text-foreground" />
-            </button>
-            <button
-              onClick={handleShare}
-              title="Copy booking link"
-              className="h-7 w-7 bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-colors"
-            >
-              <Share2 className="h-3.5 w-3.5 text-foreground" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 flex flex-col gap-3">
-        <div>
-          <h3 className="text-sm font-light tracking-wide truncate">{session.title || "Untitled"}</h3>
-          {session.description && (
-            <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{session.description}</p>
+    <TooltipProvider>
+      <button
+        onClick={onClick}
+        className="group text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
+      >
+        <div className="aspect-video bg-muted relative overflow-hidden">
+          {session.cover_image_url ? (
+            <img
+              src={session.cover_image_url}
+              alt={session.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
+            </div>
           )}
+          <div className="absolute top-2 right-2">
+            <Badge
+              variant={session.status === "active" ? "default" : "secondary"}
+              className="text-[9px] tracking-wider uppercase font-light"
+            >
+              {session.status === "active" ? "Published" : "Unpublished"}
+            </Badge>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {session.duration_minutes}min
-          </span>
-          <span className="flex items-center gap-1">
-            <Camera className="h-3 w-3" />
-            {session.num_photos} photos
-          </span>
-          {session.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {session.location}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="text-base font-light">{priceFormatted}</span>
-          <div className="flex items-center gap-3">
-            {bookingUrl && (
-              <>
-                <button
-                  onClick={handlePreview}
-                  title="Preview booking page"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={handleShare}
-                  title="Copy booking link"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                </button>
-              </>
+        <div className="p-4 flex flex-col gap-3">
+          <div>
+            <h3 className="text-sm font-light tracking-wide truncate">{session.title || "Untitled"}</h3>
+            {session.description && (
+              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{session.description}</p>
             )}
-            <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Manage
+          </div>
+
+          <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {session.duration_minutes}min
             </span>
+            <span className="flex items-center gap-1">
+              <Camera className="h-3 w-3" />
+              {session.num_photos} photos
+            </span>
+            {session.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {session.location}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-3">
+            <span className="text-base font-light">{priceFormatted}</span>
+            <div className="flex items-center gap-2">
+              {/* Preview */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handlePreview}
+                    disabled={!bookingUrl}
+                    className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {bookingUrl ? "Preview booking page" : noSlugMsg}
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Share */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleShare}
+                    disabled={!bookingUrl}
+                    className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {bookingUrl ? "Copy booking link" : noSlugMsg}
+                </TooltipContent>
+              </Tooltip>
+
+              <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1 ml-1">
+                <Calendar className="h-3 w-3" />
+                Manage
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </TooltipProvider>
   );
 }
 
