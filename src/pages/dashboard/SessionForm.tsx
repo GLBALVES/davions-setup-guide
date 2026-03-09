@@ -1655,6 +1655,170 @@ const SessionForm = () => {
                     </Button>
                     <Button onClick={handleFinishExtras} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 6: Confirmation ── */}
+              {step === 6 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Confirmation
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Customize the email clients receive after booking, and set reminder notifications.
+                      </p>
+                    </div>
+
+                    {/* ── Confirmation Email ── */}
+                    <div className="flex flex-col gap-3 border border-border p-4">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Confirmation Email Message</p>
+                      </div>
+
+                      {/* Rich text toolbar */}
+                      <div className="flex items-center gap-1 border border-border p-1 flex-wrap">
+                        {[
+                          { label: "B", action: () => editor?.chain().focus().toggleBold().run(), isActive: editor?.isActive("bold") },
+                          { label: "I", action: () => editor?.chain().focus().toggleItalic().run(), isActive: editor?.isActive("italic") },
+                          { label: "S", action: () => editor?.chain().focus().toggleStrike().run(), isActive: editor?.isActive("strike") },
+                        ].map(({ label, action, isActive }) => (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={action}
+                            className={cn(
+                              "w-7 h-7 text-xs font-medium border transition-colors",
+                              isActive
+                                ? "bg-foreground text-background border-foreground"
+                                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                            )}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                        <div className="w-px h-5 bg-border mx-1" />
+                        {[
+                          { label: "H1", action: () => editor?.chain().focus().toggleHeading({ level: 1 }).run(), isActive: editor?.isActive("heading", { level: 1 }) },
+                          { label: "H2", action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), isActive: editor?.isActive("heading", { level: 2 }) },
+                        ].map(({ label, action, isActive }) => (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={action}
+                            className={cn(
+                              "px-2 h-7 text-[10px] tracking-widest uppercase border transition-colors",
+                              isActive
+                                ? "bg-foreground text-background border-foreground"
+                                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                            )}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                        <div className="w-px h-5 bg-border mx-1" />
+                        <button
+                          type="button"
+                          onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                          className={cn(
+                            "px-2 h-7 text-[10px] tracking-widest uppercase border transition-colors",
+                            editor?.isActive("bulletList")
+                              ? "bg-foreground text-background border-foreground"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                          )}
+                        >
+                          List
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => editor?.chain().focus().undo().run()}
+                          className="px-2 h-7 text-[10px] tracking-widest uppercase border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors ml-auto"
+                        >
+                          Undo
+                        </button>
+                      </div>
+
+                      {/* Editor area */}
+                      <div className="border border-border min-h-[200px] cursor-text" onClick={() => editor?.commands.focus()}>
+                        <EditorContent
+                          editor={editor}
+                          className="prose prose-sm max-w-none p-4 focus:outline-none [&_.ProseMirror]:min-h-[180px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:text-sm [&_.ProseMirror]:font-light [&_.ProseMirror_p]:mb-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-4 [&_.ProseMirror_h1]:text-lg [&_.ProseMirror_h1]:font-light [&_.ProseMirror_h2]:text-base [&_.ProseMirror_h2]:font-light"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        This message will be included in the booking confirmation email sent to clients.
+                      </p>
+                    </div>
+
+                    {/* ── Session Reminders ── */}
+                    <div className="flex flex-col gap-3 border border-border p-4">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Session Reminders</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Automatically send reminder emails to clients before their session.
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {[
+                          { days: 14, label: "14 days before" },
+                          { days: 7, label: "7 days before" },
+                          { days: 1, label: "1 day before" },
+                        ].map(({ days, label }) => {
+                          const checked = reminderDays.includes(days);
+                          return (
+                            <button
+                              key={days}
+                              type="button"
+                              onClick={() =>
+                                setReminderDays((prev) =>
+                                  checked ? prev.filter((d) => d !== days) : [...prev, days]
+                                )
+                              }
+                              className={cn(
+                                "flex items-center justify-between px-4 py-3 border transition-colors text-left",
+                                checked
+                                  ? "border-foreground bg-foreground/5"
+                                  : "border-border hover:border-foreground/40"
+                              )}
+                            >
+                              <span className="text-xs font-light tracking-wide">{label}</span>
+                              <span className={cn(
+                                "w-4 h-4 border-2 flex items-center justify-center transition-colors shrink-0",
+                                checked ? "border-foreground bg-foreground" : "border-muted-foreground"
+                              )}>
+                                {checked && (
+                                  <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-background">
+                                    <path d="M1 4l2.5 2.5L9 1" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {reminderDays.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Reminders will be sent {reminderDays.sort((a, b) => b - a).map((d) => `${d} day${d > 1 ? "s" : ""}`).join(", ")} before the session.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Step 6 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(5)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishConfirmation} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
                   </div>
