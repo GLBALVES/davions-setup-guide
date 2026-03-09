@@ -219,7 +219,7 @@ const SessionDetailPage = () => {
       );
 
       if (fnError || !checkoutData?.url) {
-        throw new Error(fnError?.message || "Sem URL de pagamento");
+        throw new Error(fnError?.message || "No payment URL returned");
       }
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
