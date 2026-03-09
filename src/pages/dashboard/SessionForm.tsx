@@ -743,32 +743,16 @@ const SessionForm = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="price" className="text-xs tracking-wider uppercase font-light">
-                          Price (USD)
-                        </Label>
-                        <Input
-                          id="price"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
-                          Location
-                        </Label>
-                        <Input
-                          id="location"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          placeholder="e.g. New York, NY"
-                        />
-                      </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
+                        Location
+                      </Label>
+                      <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. New York, NY"
+                      />
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
