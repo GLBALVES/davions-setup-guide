@@ -15,7 +15,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
+import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ────────────────────────────────────────────
@@ -33,20 +33,41 @@ interface SessionDetail {
   location: string | null;
   cover_image_url: string | null;
   photographer_id: string;
+  deposit_enabled: boolean;
+  deposit_amount: number;
+  tax_rate: number;
+  allow_tip: boolean;
+  booking_notice_days: number;
+  booking_window_days: number;
 }
 
 interface WeeklySlotDef {
   id: string;
   day_of_week: number;
-  start_time: string; // "HH:mm:ss"
+  start_time: string;
 }
 
 interface GeneratedSlot {
   availabilityId: string;
   date: Date;
-  start_time: string; // "HH:mm"
-  end_time: string;   // "HH:mm"
-  label: string;      // display label
+  start_time: string;
+  end_time: string;
+  label: string;
+}
+
+interface SessionExtra {
+  id: string;
+  description: string;
+  price: number;
+  quantity: number;
+}
+
+interface SelectedExtra {
+  id: string;
+  description: string;
+  price: number;
+  qty: number;
+  maxQty: number;
 }
 
 type BookingStep = "slots" | "form";
@@ -55,25 +76,23 @@ type BookingStep = "slots" | "form";
 // Helpers
 // ────────────────────────────────────────────
 
-const LOOK_AHEAD_DAYS = 60;
-
-/** Generate next occurrences for each weekly slot def, within LOOK_AHEAD_DAYS. */
 const generateOccurrences = (
   defs: WeeklySlotDef[],
-  bookedKeys: Set<string>, // "availId_yyyy-MM-dd"
-  durationMin: number
+  bookedKeys: Set<string>,
+  durationMin: number,
+  noticeDays: number,
+  windowDays: number
 ): GeneratedSlot[] => {
   const today = startOfToday();
   const result: GeneratedSlot[] = [];
 
-  for (let offset = 0; offset < LOOK_AHEAD_DAYS; offset++) {
+  for (let offset = noticeDays; offset < windowDays; offset++) {
     const date = addDays(today, offset);
-    const dayOfWeek = getDay(date); // 0=Sun
+    const dayOfWeek = getDay(date);
 
     for (const def of defs) {
       if (def.day_of_week !== dayOfWeek) continue;
 
-      // Skip if in the past (same-day slots before now)
       const startHHmm = def.start_time.slice(0, 5);
       const startDate = parse(startHHmm, "HH:mm", date);
       if (isBefore(startDate, new Date())) continue;
@@ -107,10 +126,12 @@ const SessionDetailPage = () => {
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
+  const [extras, setExtras] = useState<SessionExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<BookingStep>("slots");
 
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
+  const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -135,6 +156,13 @@ const SessionDetailPage = () => {
       const s = sessionData as unknown as SessionDetail;
       setSession(s);
 
+      // Fetch extras
+      const { data: extrasData } = await supabase
+        .from("session_extras")
+        .select("id, description, price, quantity")
+        .eq("session_id", sessionId!);
+      setExtras((extrasData ?? []) as SessionExtra[]);
+
       // Fetch weekly slot definitions
       const { data: availData } = await supabase
         .from("session_availability")
@@ -148,15 +176,18 @@ const SessionDetailPage = () => {
         start_time: a.start_time,
       }));
 
-      // Fetch confirmed bookings for these slots (next 60 days)
-      const today = format(startOfToday(), "yyyy-MM-dd");
-      const endDate = format(addDays(startOfToday(), LOOK_AHEAD_DAYS), "yyyy-MM-dd");
+      // Fetch confirmed bookings
+      const noticeDays = s.booking_notice_days ?? 1;
+      const windowDays = s.booking_window_days ?? 60;
+      const fromDate = format(addDays(startOfToday(), noticeDays), "yyyy-MM-dd");
+      const toDate = format(addDays(startOfToday(), windowDays), "yyyy-MM-dd");
+
       const { data: bookingsData } = await supabase
         .from("bookings")
         .select("availability_id, booked_date")
         .in("availability_id", defs.map((d) => d.id))
-        .gte("booked_date", today)
-        .lte("booked_date", endDate)
+        .gte("booked_date", fromDate)
+        .lte("booked_date", toDate)
         .in("status", ["pending", "confirmed"]);
 
       const bookedKeys = new Set<string>(
@@ -165,12 +196,51 @@ const SessionDetailPage = () => {
           .map((b) => `${b.availability_id}_${b.booked_date}`)
       );
 
-      const occurrences = generateOccurrences(defs, bookedKeys, s.duration_minutes);
+      const occurrences = generateOccurrences(defs, bookedKeys, s.duration_minutes, noticeDays, windowDays);
       setGeneratedSlots(occurrences);
       setLoading(false);
     };
     load();
   }, [sessionId]);
+
+  // ────────────────────────────────────────────
+  // Extras helpers
+  // ────────────────────────────────────────────
+
+  const toggleExtra = (extra: SessionExtra) => {
+    setSelectedExtras((prev) => {
+      const existing = prev.find((e) => e.id === extra.id);
+      if (existing) return prev.filter((e) => e.id !== extra.id);
+      return [...prev, { id: extra.id, description: extra.description, price: extra.price, qty: 1, maxQty: extra.quantity }];
+    });
+  };
+
+  const changeExtraQty = (id: string, delta: number) => {
+    setSelectedExtras((prev) =>
+      prev.map((e) =>
+        e.id === id
+          ? { ...e, qty: Math.max(1, Math.min(e.maxQty, e.qty + delta)) }
+          : e
+      )
+    );
+  };
+
+  // ────────────────────────────────────────────
+  // Pricing
+  // ────────────────────────────────────────────
+
+  const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
+  const sessionPrice = session?.price ?? 0;
+  const subtotal = sessionPrice + extrasTotal;
+  const taxAmount = session ? Math.round(subtotal * (session.tax_rate / 100)) : 0;
+  const total = subtotal + taxAmount;
+
+  const chargeAmount = session?.deposit_enabled
+    ? session.deposit_amount + extrasTotal + taxAmount
+    : total;
+
+  const formatCurrency = (cents: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
   // ────────────────────────────────────────────
   // Checkout
@@ -182,7 +252,6 @@ const SessionDetailPage = () => {
 
     const bookedDate = format(selectedSlot.date, "yyyy-MM-dd");
 
-    // 1. Create pending booking
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertPayload: any = {
       session_id: session.id,
@@ -206,7 +275,6 @@ const SessionDetailPage = () => {
       return;
     }
 
-    // 2. Create Stripe checkout session
     try {
       const { data: checkoutData, error: fnError } = await supabase.functions.invoke(
         "create-session-checkout",
@@ -218,6 +286,12 @@ const SessionDetailPage = () => {
             bookedDate,
             clientEmail: clientEmail.trim(),
             clientName: clientName.trim(),
+            selectedExtras: selectedExtras.map((e) => ({
+              id: e.id,
+              description: e.description,
+              price: e.price,
+              qty: e.qty,
+            })),
           },
         }
       );
@@ -257,12 +331,6 @@ const SessionDetailPage = () => {
     );
   }
 
-  const priceFormatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(session.price / 100);
-
-  // Group generated slots by formatted date string for display
   const slotsByDate = generatedSlots.reduce<Record<string, GeneratedSlot[]>>((acc, s) => {
     const key = format(s.date, "yyyy-MM-dd");
     acc[key] = [...(acc[key] ?? []), s];
@@ -286,7 +354,8 @@ const SessionDetailPage = () => {
 
       <main className="max-w-4xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Session Info */}
+
+          {/* ── Session Info ── */}
           <div className="flex flex-col gap-6">
             {session.cover_image_url && (
               <div className="aspect-[4/3] overflow-hidden">
@@ -318,11 +387,71 @@ const SessionDetailPage = () => {
                   </span>
                 )}
               </div>
-              <p className="text-2xl font-light pt-2">{priceFormatted}</p>
+              <p className="text-2xl font-light pt-2">{formatCurrency(session.price)}</p>
             </div>
+
+            {/* Extras */}
+            {extras.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                  Add-ons
+                </p>
+                <div className="flex flex-col gap-2">
+                  {extras.map((extra) => {
+                    const sel = selectedExtras.find((e) => e.id === extra.id);
+                    return (
+                      <div
+                        key={extra.id}
+                        className={cn(
+                          "border p-3 flex items-center justify-between transition-colors cursor-pointer",
+                          sel ? "border-foreground" : "border-border hover:border-foreground/30"
+                        )}
+                        onClick={() => toggleExtra(extra)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "h-4 w-4 border flex items-center justify-center shrink-0 transition-colors",
+                            sel ? "border-foreground bg-foreground" : "border-border"
+                          )}>
+                            {sel && <Check className="h-2.5 w-2.5 text-background" />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-light">{extra.description}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {formatCurrency(extra.price)} · max {extra.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        {sel && (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={() => changeExtraQty(extra.id, -1)}
+                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="text-xs w-4 text-center">{sel.qty}</span>
+                            <button
+                              onClick={() => changeExtraQty(extra.id, +1)}
+                              disabled={sel.qty >= sel.maxQty}
+                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Booking Panel */}
+          {/* ── Booking Panel ── */}
           <div className="flex flex-col gap-6">
             {step === "slots" && (
               <>
@@ -387,6 +516,7 @@ const SessionDetailPage = () => {
                   </p>
                 </div>
 
+                {/* Client details */}
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
                     Your details
@@ -418,22 +548,47 @@ const SessionDetailPage = () => {
 
                 {/* Order summary */}
                 <div className="border border-border p-4 flex flex-col gap-2">
+                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
+                    Order summary
+                  </p>
                   <div className="flex justify-between text-xs font-light">
                     <span className="text-muted-foreground">{session.title}</span>
-                    <span>{priceFormatted}</span>
+                    <span>{formatCurrency(session.price)}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground capitalize">
-                    <span>{selectedSlot.label} · {selectedSlot.start_time}</span>
+                  {selectedExtras.map((e) => (
+                    <div key={e.id} className="flex justify-between text-xs font-light">
+                      <span className="text-muted-foreground">{e.description} × {e.qty}</span>
+                      <span>{formatCurrency(e.price * e.qty)}</span>
+                    </div>
+                  ))}
+                  {session.tax_rate > 0 && (
+                    <div className="flex justify-between text-[10px] text-muted-foreground border-t border-border pt-2 mt-1">
+                      <span>Tax ({session.tax_rate}%)</span>
+                      <span>{formatCurrency(taxAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-xs font-light border-t border-border pt-2 mt-1">
+                    <span className="text-muted-foreground">Total</span>
+                    <span>{formatCurrency(total)}</span>
+                  </div>
+                  {session.deposit_enabled && (
+                    <div className="flex justify-between text-xs font-light text-primary mt-1 pt-1 border-t border-border">
+                      <span>Due today (deposit)</span>
+                      <span>{formatCurrency(chargeAmount)}</span>
+                    </div>
+                  )}
+                  <div className="text-[10px] text-muted-foreground mt-1 capitalize">
+                    {selectedSlot.label} · {selectedSlot.start_time}
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                   <Button
-                     variant="outline"
-                     onClick={() => setStep("slots")}
-                     className="text-xs tracking-wider uppercase font-light"
-                   >
-                     Back
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep("slots")}
+                    className="text-xs tracking-wider uppercase font-light"
+                  >
+                    Back
                   </Button>
                   <Button
                     onClick={handleCheckout}
@@ -441,7 +596,9 @@ const SessionDetailPage = () => {
                     className="flex-1 gap-2 text-xs tracking-wider uppercase font-light"
                   >
                     {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Pay {priceFormatted}
+                    {session.deposit_enabled
+                      ? `Pay deposit ${formatCurrency(chargeAmount)}`
+                      : `Pay ${formatCurrency(chargeAmount)}`}
                   </Button>
                 </div>
               </>
