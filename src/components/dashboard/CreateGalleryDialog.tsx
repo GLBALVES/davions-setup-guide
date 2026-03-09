@@ -32,6 +32,11 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
   const [category, setCategory] = useState(defaultCategory);
   const [loading, setLoading] = useState(false);
 
+  // Sync category when defaultCategory changes (e.g. switching Proof/Final in sidebar)
+  useEffect(() => {
+    setCategory(defaultCategory);
+  }, [defaultCategory, open]);
+
   const handleCreate = async () => {
     if (!title.trim() || !user) return;
     setLoading(true);
