@@ -614,24 +614,17 @@ const SessionForm = () => {
     <div className="flex items-center gap-0 mb-8">
       {/* Step 1 */}
       <button
-        type="button"
         onClick={() => setStep(1)}
-        className="flex items-center gap-2.5 group"
+        className={cn(
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 1 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+        )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 1
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          1
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 1 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Session Details
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 1 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>1</span>
+        Details
       </button>
 
       {/* Connector */}
@@ -639,61 +632,57 @@ const SessionForm = () => {
 
       {/* Step 2 */}
       <button
-        type="button"
-        onClick={() => {
-          if (sessionId || isEdit) setStep(2);
-        }}
-        disabled={!sessionId && !isEdit}
+        onClick={() => sessionId ? setStep(2) : undefined}
+        disabled={!sessionId}
         className={cn(
-          "flex items-center gap-2.5 group",
-          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 2 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
         )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 2
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          2
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 2 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Availability
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 2 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>2</span>
+        Availability
       </button>
 
-      {/* Connector */}
       <div className="flex-1 h-px bg-border mx-4 min-w-8" />
 
       {/* Step 3 */}
       <button
-        type="button"
-        onClick={() => {
-          if (sessionId || isEdit) setStep(3);
-        }}
-        disabled={!sessionId && !isEdit}
+        onClick={() => sessionId ? setStep(3) : undefined}
+        disabled={!sessionId}
         className={cn(
-          "flex items-center gap-2.5 group",
-          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 3 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
         )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 3
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          3
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 3 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Payment
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 3 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>3</span>
+        Payment
+      </button>
+
+      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
+
+      {/* Step 4 */}
+      <button
+        onClick={() => sessionId ? setStep(4) : undefined}
+        disabled={!sessionId}
+        className={cn(
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 4 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
+        )}
+      >
+        <span className={cn(
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 4 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>4</span>
+        Add-ons
       </button>
     </div>
   );
