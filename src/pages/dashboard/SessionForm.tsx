@@ -738,6 +738,7 @@ const SessionForm = () => {
         { n: 4 as const, label: "Add-ons" },
         { n: 5 as const, label: "Extras" },
         { n: 6 as const, label: "Confirmation" },
+        { n: 7 as const, label: "Rules" },
       ].map(({ n, label }, i) => (
         <>
           {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
