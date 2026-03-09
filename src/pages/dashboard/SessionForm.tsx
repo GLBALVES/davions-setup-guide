@@ -213,25 +213,24 @@ const SessionForm = () => {
       );
     }
 
-    if (configRes.data) {
-      const map = new Map<number, DayConfig>();
-      for (const row of configRes.data as Array<{
+    if (configRes.data && configRes.data.length > 0) {
+      // Load global config from day_of_week = -1 sentinel (or fallback to first row for backward compat)
+      const rows = configRes.data as Array<{
         id: string;
         day_of_week: number;
         hours_start: string | null;
         hours_end: string | null;
         buffer_before_min: number;
         buffer_after_min: number;
-      }>) {
-        map.set(row.day_of_week, {
-          db_id: row.id,
-          hours_start: row.hours_start ? row.hours_start.slice(0, 5) : "",
-          hours_end: row.hours_end ? row.hours_end.slice(0, 5) : "",
-          buffer_before_min: row.buffer_before_min ?? 0,
-          buffer_after_min: row.buffer_after_min ?? 0,
-        });
-      }
-      setDayConfigs(map);
+      }>;
+      const globalRow = rows.find((r) => r.day_of_week === -1) ?? rows[0];
+      setGlobalConfig({
+        db_id: globalRow.id,
+        hours_start: globalRow.hours_start ? globalRow.hours_start.slice(0, 5) : "",
+        hours_end: globalRow.hours_end ? globalRow.hours_end.slice(0, 5) : "",
+        buffer_before_min: globalRow.buffer_before_min ?? 0,
+        buffer_after_min: globalRow.buffer_after_min ?? 0,
+      });
     }
 
     setLoading(false);
