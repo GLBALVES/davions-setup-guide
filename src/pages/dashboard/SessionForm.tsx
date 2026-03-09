@@ -173,6 +173,10 @@ const SessionForm = () => {
   // ── Global config (business hours + buffers — applies to all days) ──
   const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
 
+  // Refs for business hours range auto-focus
+  const businessHrsStartRef = useRef<HTMLInputElement>(null);
+  const businessHrsEndRef = useRef<HTMLInputElement>(null);
+
   const updateGlobalConfig = (patch: Partial<DayConfig>) => {
     setGlobalConfig((prev) => ({ ...prev, ...patch }));
   };
@@ -219,6 +223,13 @@ const SessionForm = () => {
   useEffect(() => {
     if (isEdit && id) loadSession(id);
   }, [id]);
+
+  // Auto-focus first business hrs input when entering step 2
+  useEffect(() => {
+    if (step === 2) {
+      setTimeout(() => businessHrsStartRef.current?.focus(), 100);
+    }
+  }, [step]);
 
   const loadSession = async (sid: string) => {
     const { data: s } = await supabase
@@ -1001,68 +1012,87 @@ const SessionForm = () => {
                     </div>
 
                     {/* Global business hours + buffer config */}
-                    <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                          Business hrs
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="time"
-                            value={globalConfig.hours_start}
-                            onChange={(e) => updateGlobalConfig({ hours_start: e.target.value })}
-                            className="w-28 h-7 text-xs"
-                          />
-                          <span className="text-[10px] text-muted-foreground">→</span>
-                          <Input
-                            type="time"
-                            value={globalConfig.hours_end}
-                            onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
-                            className="w-28 h-7 text-xs"
-                          />
-                        </div>
-                        {(globalConfig.hours_start || globalConfig.hours_end) && (
-                          <button
-                            type="button"
-                            onClick={() => updateGlobalConfig({ hours_start: "", hours_end: "" })}
-                            className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
-                          >
-                            clear
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                          Buffer
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="5"
-                              value={globalConfig.buffer_before_min || ""}
-                              onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
-                              className="w-16 h-7 text-xs"
-                              placeholder="0"
-                            />
-                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                    {(() => {
+                      const hasSlots = slots.length > 0;
+                      return (
+                        <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                              Business hrs
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                ref={businessHrsStartRef}
+                                type="time"
+                                value={globalConfig.hours_start}
+                                disabled={hasSlots}
+                                onChange={(e) => {
+                                  updateGlobalConfig({ hours_start: e.target.value });
+                                  if (e.target.value) {
+                                    setTimeout(() => businessHrsEndRef.current?.focus(), 50);
+                                  }
+                                }}
+                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                              <span className="text-[10px] text-muted-foreground">→</span>
+                              <Input
+                                ref={businessHrsEndRef}
+                                type="time"
+                                value={globalConfig.hours_end}
+                                disabled={hasSlots}
+                                onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
+                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                            </div>
+                            {!hasSlots && (globalConfig.hours_start || globalConfig.hours_end) && (
+                              <button
+                                type="button"
+                                onClick={() => updateGlobalConfig({ hours_start: "", hours_end: "" })}
+                                className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
+                              >
+                                clear
+                              </button>
+                            )}
+                            {hasSlots && (
+                              <span className="text-[9px] text-muted-foreground/50 tracking-wide italic">
+                                Clear all slots to edit
+                              </span>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="5"
-                              value={globalConfig.buffer_after_min || ""}
-                              onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
-                              className="w-16 h-7 text-xs"
-                              placeholder="0"
-                            />
-                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                              Buffer
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="5"
+                                  value={globalConfig.buffer_before_min || ""}
+                                  onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
+                                  className="w-16 h-7 text-xs"
+                                  placeholder="0"
+                                />
+                                <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="5"
+                                  value={globalConfig.buffer_after_min || ""}
+                                  onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
+                                  className="w-16 h-7 text-xs"
+                                  placeholder="0"
+                                />
+                                <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Day rows */}
                     {(() => {
