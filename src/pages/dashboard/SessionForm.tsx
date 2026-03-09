@@ -220,7 +220,7 @@ const SessionForm = () => {
       );
     }
 
-    toast({ title: isEdit ? "Sessão atualizada" : "Sessão criada" });
+    toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
   };
