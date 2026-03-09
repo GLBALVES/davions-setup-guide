@@ -362,12 +362,10 @@ const SessionForm = () => {
     );
 
   const suggestNextStart = (day: number): string => {
-    const cfg = getDayConfig(day);
     const daySlots = slotsForDay(day);
     if (daySlots.length === 0) {
-      // Use hours_start + buffer_before as default when no slots yet
-      if (cfg.hours_start) {
-        return addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      if (globalConfig.hours_start) {
+        return addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min);
       }
       return "09:00";
     }
@@ -378,7 +376,7 @@ const SessionForm = () => {
   const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
-    const cfg = getDayConfig(day);
+    const cfg = globalConfig;
 
     // Validate: newStart must be >= latest end_time + break
     const daySlots = slotsForDay(day);
