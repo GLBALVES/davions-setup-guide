@@ -434,6 +434,7 @@ export type Database = {
           booking_window_days: number
           break_after_minutes: number
           confirmation_email_body: string
+          contract_text: string | null
           cover_image_url: string | null
           created_at: string
           deposit_amount: number
@@ -460,6 +461,7 @@ export type Database = {
           booking_window_days?: number
           break_after_minutes?: number
           confirmation_email_body?: string
+          contract_text?: string | null
           cover_image_url?: string | null
           created_at?: string
           deposit_amount?: number
@@ -486,6 +488,7 @@ export type Database = {
           booking_window_days?: number
           break_after_minutes?: number
           confirmation_email_body?: string
+          contract_text?: string | null
           cover_image_url?: string | null
           created_at?: string
           deposit_amount?: number
