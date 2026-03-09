@@ -660,7 +660,7 @@ const SessionDetailPage = () => {
                   type="tel"
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="+55 11 99999-9999"
+                  placeholder="(555) 555-0100"
                   className="rounded-none"
                 />
               </div>
