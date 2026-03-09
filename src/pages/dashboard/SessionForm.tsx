@@ -539,7 +539,6 @@ const SessionForm = () => {
       <button
         type="button"
         onClick={() => {
-          // Only allow navigating to step 2 if session has been created
           if (sessionId || isEdit) setStep(2);
         }}
         disabled={!sessionId && !isEdit}
@@ -561,6 +560,37 @@ const SessionForm = () => {
           step === 2 ? "text-foreground" : "text-muted-foreground"
         )}>
           Availability
+        </span>
+      </button>
+
+      {/* Connector */}
+      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
+
+      {/* Step 3 */}
+      <button
+        type="button"
+        onClick={() => {
+          if (sessionId || isEdit) setStep(3);
+        }}
+        disabled={!sessionId && !isEdit}
+        className={cn(
+          "flex items-center gap-2.5 group",
+          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+        )}
+      >
+        <div className={cn(
+          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
+          step === 3
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-foreground border-foreground"
+        )}>
+          3
+        </div>
+        <span className={cn(
+          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
+          step === 3 ? "text-foreground" : "text-muted-foreground"
+        )}>
+          Payment
         </span>
       </button>
     </div>
