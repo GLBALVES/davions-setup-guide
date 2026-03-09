@@ -50,11 +50,44 @@ const Sessions = () => {
     fetchSessions();
   }, []);
 
-  const filteredSessions = sessions.filter((s) => {
-    if (filter === "active") return s.status === "active";
-    if (filter === "draft") return s.status !== "active";
-    return true;
-  });
+  const filteredSessions = useMemo(() => {
+    let list = sessions.filter((s) => {
+      if (filter === "active") return s.status === "active";
+      if (filter === "draft") return s.status !== "active";
+      return true;
+    });
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          (s.description ?? "").toLowerCase().includes(q) ||
+          (s.location ?? "").toLowerCase().includes(q)
+      );
+    }
+
+    list = [...list].sort((a, b) => {
+      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sort === "az") return a.title.localeCompare(b.title);
+      if (sort === "za") return b.title.localeCompare(a.title);
+      if (sort === "price_asc") return a.price - b.price;
+      if (sort === "price_desc") return b.price - a.price;
+      return 0;
+    });
+
+    return list;
+  }, [sessions, filter, search, sort]);
+
+  const SORT_OPTIONS: { key: typeof sort; label: string; icon: React.ReactNode }[] = [
+    { key: "newest", label: "Newest", icon: <ArrowUpDown className="h-3 w-3" /> },
+    { key: "oldest", label: "Oldest", icon: <ArrowUpDown className="h-3 w-3" /> },
+    { key: "az", label: "A–Z", icon: <ArrowDownAZ className="h-3 w-3" /> },
+    { key: "za", label: "Z–A", icon: <ArrowUpAZ className="h-3 w-3" /> },
+    { key: "price_asc", label: "Price ↑", icon: <DollarSign className="h-3 w-3" /> },
+    { key: "price_desc", label: "Price ↓", icon: <DollarSign className="h-3 w-3" /> },
+  ];
 
   const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
     { key: "all", label: "All" },
