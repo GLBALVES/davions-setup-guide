@@ -1194,48 +1194,103 @@ const SessionForm = () => {
                     })()}
 
                     {/* ── Partial Payment / Deposit ── */}
-                    <div className="border border-border p-4 flex flex-col gap-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-xs tracking-wider uppercase font-light">Require Deposit at Booking</p>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Collect a partial amount upfront; the rest is due at the session.
-                          </p>
-                        </div>
-                        <Switch checked={depositEnabled} onCheckedChange={setDepositEnabled} />
-                      </div>
-                      {depositEnabled && (
-                        <div className="flex items-center gap-4 mt-1">
-                          <div className="flex flex-col gap-1.5 w-40">
-                            <Label htmlFor="deposit-amt" className="text-[9px] tracking-widest uppercase text-muted-foreground">
-                              Deposit Amount
-                            </Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                              <Input
-                                id="deposit-amt"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(e.target.value)}
-                                placeholder="0.00"
-                                className="pl-7 h-8 text-sm"
-                              />
+                    {(() => {
+                      const priceVal = parseFloat(price || "0");
+                      const depositVal = parseFloat(depositAmount || "0");
+                      const depositInDollars =
+                        depositType === "percent"
+                          ? (priceVal * depositVal) / 100
+                          : depositVal;
+                      const remaining = priceVal - depositInDollars;
+
+                      return (
+                        <div className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-xs tracking-wider uppercase font-light">Require Deposit at Booking</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                Collect a partial amount upfront; the rest is due at the session.
+                              </p>
                             </div>
+                            <Switch checked={depositEnabled} onCheckedChange={setDepositEnabled} />
                           </div>
-                          {parseFloat(depositAmount || "0") > 0 && parseFloat(price || "0") > 0 && (
-                            <p className="text-[10px] text-muted-foreground">
-                              Remaining{" "}
-                              <span className="text-foreground font-light">
-                                ${(parseFloat(price || "0") - parseFloat(depositAmount || "0")).toFixed(2)}
-                              </span>{" "}
-                              due at session
-                            </p>
+                          {depositEnabled && (
+                            <div className="flex flex-col gap-3 mt-1">
+                              {/* Type selector */}
+                              <div className="flex rounded-md border border-border overflow-hidden w-fit">
+                                <button
+                                  type="button"
+                                  onClick={() => setDepositType("fixed")}
+                                  className={cn(
+                                    "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors",
+                                    depositType === "fixed"
+                                      ? "bg-foreground text-background"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  $ Value
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDepositType("percent")}
+                                  className={cn(
+                                    "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors border-l border-border",
+                                    depositType === "percent"
+                                      ? "bg-foreground text-background"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  % Percent
+                                </button>
+                              </div>
+
+                              <div className="flex items-center gap-4">
+                                <div className="flex flex-col gap-1.5 w-40">
+                                  <Label htmlFor="deposit-amt" className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                                    {depositType === "fixed" ? "Deposit Amount" : "Deposit Percentage"}
+                                  </Label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                      {depositType === "fixed" ? "$" : "%"}
+                                    </span>
+                                    <Input
+                                      id="deposit-amt"
+                                      type="number"
+                                      min="0"
+                                      max={depositType === "percent" ? "100" : undefined}
+                                      step="0.01"
+                                      value={depositAmount}
+                                      onChange={(e) => setDepositAmount(e.target.value)}
+                                      placeholder={depositType === "percent" ? "25" : "0.00"}
+                                      className="pl-7 h-8 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                {depositVal > 0 && priceVal > 0 && (
+                                  <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
+                                    {depositType === "percent" && (
+                                      <span>
+                                        Deposit:{" "}
+                                        <span className="text-foreground font-light">
+                                          ${depositInDollars.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    )}
+                                    <span>
+                                      Remaining:{" "}
+                                      <span className={cn("font-light", remaining < 0 ? "text-destructive" : "text-foreground")}>
+                                        ${Math.max(remaining, 0).toFixed(2)}
+                                      </span>{" "}
+                                      due at session
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* ── Allow Tip ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
