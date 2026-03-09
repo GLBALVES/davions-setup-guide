@@ -95,7 +95,7 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
 
   // ── Payment step ──
@@ -116,6 +116,16 @@ const SessionForm = () => {
     _local?: boolean;
   }
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+
+  // ── Extras step ──
+  interface SessionExtra {
+    id?: string;
+    description: string;
+    quantity: string;
+    price: string; // dollars
+    _local?: boolean;
+  }
+  const [sessionExtras, setSessionExtras] = useState<SessionExtra[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -293,6 +303,24 @@ const SessionForm = () => {
           min_photos: t.min_photos,
           max_photos: t.max_photos,
           price_per_photo: (t.price_per_photo / 100).toFixed(2),
+        }))
+      );
+    }
+
+    // Load extras
+    const { data: extrasData } = await supabase
+      .from("session_extras" as never)
+      .select("id, description, quantity, price")
+      .eq("session_id", sid)
+      .order("created_at", { ascending: true });
+
+    if (extrasData) {
+      setSessionExtras(
+        (extrasData as Array<{ id: string; description: string; quantity: number; price: number }>).map((e) => ({
+          id: e.id,
+          description: e.description,
+          quantity: String(e.quantity),
+          price: (e.price / 100).toFixed(2),
         }))
       );
     }
@@ -494,6 +522,43 @@ const SessionForm = () => {
       }
     }
 
+    setSaving(false);
+    setStep(5);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 5: Save extras → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishExtras = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    await supabase
+      .from("session_extras" as never)
+      .delete()
+      .eq("session_id", sessionId);
+
+    const validExtras = sessionExtras.filter((e) => e.description.trim());
+    if (validExtras.length > 0) {
+      const inserts = validExtras.map((e) => ({
+        session_id: sessionId,
+        photographer_id: user.id,
+        description: e.description.trim(),
+        quantity: parseInt(e.quantity) || 1,
+        price: Math.round(parseFloat(e.price || "0") * 100),
+      }));
+      const { error } = await supabase
+        .from("session_extras" as never)
+        .insert(inserts as never);
+      if (error) {
+        toast({ title: "Error saving extras", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+    }
+
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
@@ -612,78 +677,33 @@ const SessionForm = () => {
 
   const StepIndicator = () => (
     <div className="flex items-center gap-0 mb-8">
-      {/* Step 1 */}
-      <button
-        onClick={() => setStep(1)}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 1 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 1 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>1</span>
-        Details
-      </button>
-
-      {/* Connector */}
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 2 */}
-      <button
-        onClick={() => sessionId ? setStep(2) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 2 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 2 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>2</span>
-        Availability
-      </button>
-
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 3 */}
-      <button
-        onClick={() => sessionId ? setStep(3) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 3 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 3 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>3</span>
-        Payment
-      </button>
-
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 4 */}
-      <button
-        onClick={() => sessionId ? setStep(4) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 4 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 4 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>4</span>
-        Add-ons
-      </button>
+      {[
+        { n: 1 as const, label: "Details" },
+        { n: 2 as const, label: "Availability" },
+        { n: 3 as const, label: "Payment" },
+        { n: 4 as const, label: "Add-ons" },
+        { n: 5 as const, label: "Extras" },
+      ].map(({ n, label }, i) => (
+        <>
+          {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
+          <button
+            key={n}
+            onClick={() => sessionId ? setStep(n) : undefined}
+            disabled={!sessionId && n > 1}
+            className={cn(
+              "flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase transition-colors shrink-0",
+              step === n ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              !sessionId && n > 1 && "opacity-40 cursor-not-allowed"
+            )}
+          >
+            <span className={cn(
+              "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors shrink-0",
+              step === n ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+            )}>{n}</span>
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        </>
+      ))}
     </div>
   );
 
@@ -1486,6 +1506,99 @@ const SessionForm = () => {
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
                     <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 5: Extras ── */}
+              {step === 5 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Extras
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Itens extras que o cliente poderá selecionar ao fazer o booking.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      {sessionExtras.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground italic border border-dashed border-border p-4 text-center">
+                          Nenhum extra cadastrado. Adicione itens abaixo.
+                        </p>
+                      )}
+                      {sessionExtras.map((extra, idx) => (
+                        <div key={idx} className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Item {idx + 1}</p>
+                            <button
+                              type="button"
+                              onClick={() => setSessionExtras((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="flex flex-col gap-1.5 col-span-1">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Descrição</Label>
+                              <input
+                                type="text"
+                                value={extra.description}
+                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                                placeholder="Ex: Álbum impresso"
+                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Quantidade</Label>
+                              <input
+                                type="number" min="1" step="1"
+                                value={extra.quantity}
+                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))}
+                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Valor</Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                                <input
+                                  type="number" min="0" step="0.01"
+                                  value={extra.price}
+                                  placeholder="0.00"
+                                  onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, price: e.target.value } : x))}
+                                  className="pl-7 h-8 text-sm w-full border border-input bg-background rounded-md pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "1", price: "", _local: true }])}
+                      className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Extra
+                    </button>
+                  </section>
+
+                  {/* Step 5 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(4)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishExtras} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
