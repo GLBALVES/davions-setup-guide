@@ -307,6 +307,24 @@ const SessionForm = () => {
       );
     }
 
+    // Load extras
+    const { data: extrasData } = await supabase
+      .from("session_extras" as never)
+      .select("id, description, quantity, price")
+      .eq("session_id", sid)
+      .order("created_at", { ascending: true });
+
+    if (extrasData) {
+      setSessionExtras(
+        (extrasData as Array<{ id: string; description: string; quantity: number; price: number }>).map((e) => ({
+          id: e.id,
+          description: e.description,
+          quantity: String(e.quantity),
+          price: (e.price / 100).toFixed(2),
+        }))
+      );
+    }
+
     setLoading(false);
   };
 
