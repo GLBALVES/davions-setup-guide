@@ -6,36 +6,50 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+async function getAuthenticatedClient(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  const body = await req.clone().json().catch(() => ({}));
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claims, error } = await supabase.auth.getClaims(token);
+    if (!error && claims?.claims) {
+      return { supabase, userId: claims.claims.sub as string };
+    }
+  }
+
+  if (body.photographer_id) {
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data } = await supabase.from("photographers").select("id").eq("id", body.photographer_id).single();
+    if (data) {
+      return { supabase, userId: body.photographer_id as string };
+    }
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const auth = await getAuthenticatedClient(req);
+    if (!auth) {
       return new Response(
         JSON.stringify({ status: "error", message: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claims?.claims) {
-      return new Response(
-        JSON.stringify({ status: "error", message: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { gallery_id, title, slug, access_code, status } = await req.json();
+    const { gallery_id, gallery_name, gallery_type } = await req.json();
 
     if (!gallery_id) {
       return new Response(
@@ -45,12 +59,10 @@ Deno.serve(async (req) => {
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (title !== undefined) updates.title = title;
-    if (slug !== undefined) updates.slug = slug;
-    if (access_code !== undefined) updates.access_code = access_code;
-    if (status !== undefined) updates.status = status;
+    if (gallery_name !== undefined) updates.title = gallery_name;
+    if (gallery_type !== undefined) updates.category = gallery_type;
 
-    const { error } = await supabase
+    const { error } = await auth.supabase
       .from("galleries")
       .update(updates)
       .eq("id", gallery_id);
