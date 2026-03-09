@@ -1060,8 +1060,93 @@ const SessionForm = () => {
                       <ArrowLeft className="h-3.5 w-3.5" />
                       Back
                     </Button>
-                    <Button
+                     <Button
                       onClick={handleSaveAvailability}
+                      disabled={saving}
+                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    >
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 3: Payment ── */}
+              {step === 3 && (
+                <>
+                  <section className="flex flex-col gap-6">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Payment Settings
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Configure how clients pay when booking this session.
+                      </p>
+                    </div>
+
+                    {/* Session summary */}
+                    <div className="border border-border p-4 flex items-center justify-between">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Session</p>
+                        <p className="text-sm font-light tracking-wide">{title || "Untitled"}</p>
+                      </div>
+                      <div className="flex flex-col gap-0.5 text-right">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Price</p>
+                        <p className="text-sm font-light tracking-wide">
+                          {parseFloat(price || "0") > 0
+                            ? `$${parseFloat(price).toFixed(2)}`
+                            : "Free"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Require payment toggle */}
+                    <div className="flex items-start justify-between border border-border p-4 gap-4">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-wider uppercase font-light">Require payment at booking</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Clients will be redirected to Stripe Checkout to pay when booking.
+                          Disable to allow free bookings regardless of price.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={requirePayment}
+                        onCheckedChange={setRequirePayment}
+                      />
+                    </div>
+
+                    {/* Stripe info */}
+                    <div className="border border-border bg-muted/5 p-4 flex items-start gap-3">
+                      <CreditCard className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Stripe Payments</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Payments are processed securely via Stripe Checkout. You receive funds directly to your connected Stripe account after the booking is confirmed.
+                        </p>
+                        {!requirePayment && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-1 italic">
+                            Payment is disabled — clients will book without paying upfront.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Step 3 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setStep(2)}
+                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleFinish}
                       disabled={saving}
                       className="gap-2 text-xs tracking-wider uppercase font-light"
                     >
