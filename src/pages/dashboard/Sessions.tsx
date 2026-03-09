@@ -191,7 +191,7 @@ function SessionCard({
             variant={session.status === "active" ? "default" : "secondary"}
             className="text-[9px] tracking-wider uppercase font-light"
           >
-            {session.status}
+            {session.status === "active" ? "Published" : "Unpublished"}
           </Badge>
         </div>
       </div>
