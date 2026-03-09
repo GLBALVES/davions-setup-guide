@@ -404,9 +404,19 @@ const SessionForm = () => {
     setSaving(true);
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
     const finalPrice = requirePayment ? priceInCents : 0;
-    const finalDepositAmount = depositEnabled
-      ? Math.round(parseFloat(depositAmount || "0") * 100)
-      : 0;
+
+    // Deposit: if "percent" mode, store the percentage value * 100 (e.g. 25% → 2500)
+    // If "fixed" mode, store the dollar amount in cents as usual
+    let finalDepositAmount = 0;
+    if (depositEnabled) {
+      const depositVal = parseFloat(depositAmount || "0");
+      if (depositType === "percent") {
+        // store percent × 100 so we can recover it; e.g. 25.50% → stored as 2550
+        finalDepositAmount = Math.round(depositVal * 100);
+      } else {
+        finalDepositAmount = Math.round(depositVal * 100);
+      }
+    }
 
     const { error } = await supabase
       .from("sessions")
