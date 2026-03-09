@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import logoPrincipal from "@/assets/logo_principal_preto.png";
+import seloPrincipal from "@/assets/selo_preto.png";
 
 // ─── Corner Bracket Motif ──────────────────────────────────────────────────
 const Bracket = ({ className = "" }: { className?: string }) => (
