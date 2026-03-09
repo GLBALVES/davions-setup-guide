@@ -77,7 +77,7 @@ interface SelectedExtra {
   maxQty: number;
 }
 
-type BookingStep = "slots" | "form";
+type BookingStep = "slots" | "form" | "addons";
 
 // ────────────────────────────────────────────
 // Helpers
