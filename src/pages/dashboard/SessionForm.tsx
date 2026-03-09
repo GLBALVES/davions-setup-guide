@@ -1115,6 +1115,21 @@ const SessionForm = () => {
                       </p>
                     </div>
 
+                    {/* ── Require Payment Toggle ── */}
+                    <div className="flex items-start justify-between border border-border p-4 gap-4">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-wider uppercase font-light">Require payment at booking</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Clients will be redirected to Stripe Checkout to pay when booking.
+                          Disable to allow free bookings regardless of price.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={requirePayment}
+                        onCheckedChange={setRequirePayment}
+                      />
+                    </div>
+
                     {/* ── Collected Amount ── */}
                     <div className="border border-border p-4 flex flex-col gap-3">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Collected Amount</p>
@@ -1301,21 +1316,6 @@ const SessionForm = () => {
                         </p>
                       </div>
                       <Switch checked={allowTip} onCheckedChange={setAllowTip} />
-                    </div>
-
-                    {/* ── Require Payment Toggle ── */}
-                    <div className="flex items-start justify-between border border-border p-4 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <p className="text-xs tracking-wider uppercase font-light">Require payment at booking</p>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Clients will be redirected to Stripe Checkout to pay when booking.
-                          Disable to allow free bookings regardless of price.
-                        </p>
-                      </div>
-                      <Switch
-                        checked={requirePayment}
-                        onCheckedChange={setRequirePayment}
-                      />
                     </div>
 
                     {/* ── Stripe info ── */}
