@@ -18,6 +18,8 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Globe,
+  GlobeLock,
   Loader2,
   Mail,
   Plus,
@@ -663,6 +665,30 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
+  // Publish / Unpublish
+  // ────────────────────────────────────────────
+
+  const [publishing, setPublishing] = useState(false);
+
+  const handleTogglePublish = async () => {
+    if (!user || !sessionId) return;
+    const newStatus = status === "active" ? "draft" : "active";
+    setPublishing(true);
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ status: newStatus } as any)
+      .eq("id", sessionId);
+    if (error) {
+      toast({ title: "Error updating status", description: error.message, variant: "destructive" });
+    } else {
+      setStatus(newStatus);
+      toast({ title: newStatus === "active" ? "Session published" : "Session unpublished" });
+    }
+    setPublishing(false);
+  };
+
+  // ────────────────────────────────────────────
   // Slot helpers
   // ────────────────────────────────────────────
 
@@ -983,15 +1009,28 @@ const SessionForm = () => {
                     >
                       Cancel
                     </Button>
-                    <Button
-                      onClick={handleCreateSession}
-                      disabled={saving}
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
-                    >
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      {isEdit ? "Save & Continue" : "Create Session"}
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button
+                          variant="outline"
+                          onClick={handleTogglePublish}
+                          disabled={publishing}
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button
+                        onClick={handleCreateSession}
+                        disabled={saving}
+                        className="gap-2 text-xs tracking-wider uppercase font-light"
+                      >
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {isEdit ? "Save & Continue" : "Create Session"}
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1179,23 +1218,22 @@ const SessionForm = () => {
 
                   {/* Step 2 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setStep(1)}
-                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      Back
+                    <Button variant="ghost" onClick={() => setStep(1)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                     <Button
-                      onClick={handleSaveAvailability}
-                      disabled={saving}
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
-                    >
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleSaveAvailability} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1439,11 +1477,19 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(2)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinish} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinish} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1537,10 +1583,18 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(3)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1630,11 +1684,19 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(4)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinishExtras} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinishExtras} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1794,11 +1856,19 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(5)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinishConfirmation} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinishConfirmation} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -1884,10 +1954,18 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(6)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Finish
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Finish
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
