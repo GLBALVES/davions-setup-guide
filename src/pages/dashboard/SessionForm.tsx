@@ -441,6 +441,16 @@ const SessionForm = () => {
                   />
                 </div>
 
+                {user && (
+                  <SessionTypeManager
+                    photographerId={user.id}
+                    sessionTypes={sessionTypes}
+                    selectedTypeId={sessionTypeId}
+                    onSelect={setSessionTypeId}
+                    onRefetch={fetchSessionTypes}
+                  />
+                )}
+
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
                     Description
