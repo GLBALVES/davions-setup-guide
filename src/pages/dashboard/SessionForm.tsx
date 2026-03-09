@@ -294,14 +294,13 @@ const SessionForm = () => {
     }
 
     setSaving(true);
-    const priceInCents = Math.round(parseFloat(price || "0") * 100);
     const dur = parseInt(durationMinutes) || 60;
 
+    // Price is NOT saved here — it's saved in Step 3 (Payment)
     const payload = {
       photographer_id: user.id,
       title: title.trim(),
       description: description.trim() || null,
-      price: priceInCents,
       duration_minutes: dur,
       break_after_minutes: parseInt(breakAfterMinutes) || 0,
       num_photos: parseInt(numPhotos) || 0,
@@ -323,7 +322,7 @@ const SessionForm = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from("sessions")
-        .insert(payloadWithType as any)
+        .insert({ ...payloadWithType, price: 0 } as any)
         .select("id")
         .single();
       if (error || !data) {
