@@ -27,6 +27,7 @@ const Sessions = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -41,6 +42,18 @@ const Sessions = () => {
   useEffect(() => {
     fetchSessions();
   }, []);
+
+  const filteredSessions = sessions.filter((s) => {
+    if (filter === "active") return s.status === "active";
+    if (filter === "draft") return s.status !== "active";
+    return true;
+  });
+
+  const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "active", label: "Published" },
+    { key: "draft", label: "Unpublished" },
+  ];
 
   return (
     <SidebarProvider>
@@ -75,34 +88,59 @@ const Sessions = () => {
                 </Button>
               </div>
 
+              {/* Filters */}
+              <div className="flex items-center gap-1 border-b border-border pb-1">
+                {FILTERS.map(({ key, label }) => {
+                  const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setFilter(key)}
+                      className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
+                        filter === key
+                          ? "border-foreground text-foreground"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {label}
+                      <span className="ml-1.5 opacity-50">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               {loading ? (
                 <div className="flex items-center justify-center py-16">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
                     Loading…
                   </span>
                 </div>
-              ) : sessions.length === 0 ? (
+              ) : filteredSessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border">
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
                   <div>
-                    <p className="text-sm font-light text-muted-foreground">No sessions yet</p>
+                    <p className="text-sm font-light text-muted-foreground">
+                      {sessions.length === 0 ? "No sessions yet" : "No sessions match this filter"}
+                    </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      Create your first bookable session product
+                      {sessions.length === 0 ? "Create your first bookable session product" : "Try a different filter"}
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigate("/dashboard/sessions/new")}
-                    className="gap-2 text-xs tracking-wider uppercase font-light mt-2"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    New Session
-                  </Button>
+                  {sessions.length === 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate("/dashboard/sessions/new")}
+                      className="gap-2 text-xs tracking-wider uppercase font-light mt-2"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      New Session
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sessions.map((session) => (
+                  {filteredSessions.map((session) => (
                     <SessionCard
                       key={session.id}
                       session={session}
