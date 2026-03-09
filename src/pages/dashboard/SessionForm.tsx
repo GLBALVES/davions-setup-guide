@@ -459,7 +459,7 @@ const SessionForm = () => {
                 {brk > 0 && (
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
-                    Cada slot ocupa {totalMinutes} min ({dur} min de ensaio + {brk} min de intervalo)
+                    Each slot takes {totalMinutes} min ({dur} min session + {brk} min break)
                   </p>
                 )}
 
