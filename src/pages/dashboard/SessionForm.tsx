@@ -317,7 +317,7 @@ const SessionForm = () => {
               {/* Cover Image */}
               <section className="flex flex-col gap-3">
                 <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
-                  Foto de Capa
+                  Cover Photo
                 </Label>
                 <div
                   className="aspect-video border border-dashed border-border relative overflow-hidden cursor-pointer group"
