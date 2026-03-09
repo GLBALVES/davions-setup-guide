@@ -660,7 +660,18 @@ const SessionDetailPage = () => {
                   id="clientPhone"
                   type="tel"
                   value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    let masked = digits;
+                    if (digits.length >= 7) {
+                      masked = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+                    } else if (digits.length >= 4) {
+                      masked = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                    } else if (digits.length > 0) {
+                      masked = `(${digits}`;
+                    }
+                    setClientPhone(masked);
+                  }}
                   placeholder="(555) 555-0100"
                   className="rounded-none"
                 />
