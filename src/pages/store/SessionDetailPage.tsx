@@ -583,7 +583,7 @@ const SessionDetailPage = () => {
             </div>
 
             {/* Extras card */}
-            {extras.length > 0 && (
+            {extras.length > 0 && selectedSlot && (
               <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-3">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
                   Add-ons
