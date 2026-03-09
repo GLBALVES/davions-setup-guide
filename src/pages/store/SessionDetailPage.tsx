@@ -328,7 +328,7 @@ const SessionDetailPage = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-sm font-light text-muted-foreground">Session not found.</p>
-        <Button variant="ghost" onClick={() => navigate(`/store/${slug}`)}>
+        <Button variant="ghost" onClick={() => navigate(backPath)}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to the store
         </Button>
       </div>
