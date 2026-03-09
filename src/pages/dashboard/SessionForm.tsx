@@ -369,7 +369,7 @@ const SessionForm = () => {
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ex: Ensaio New Born"
+                    placeholder="e.g. Newborn Session"
                   />
                 </div>
 
