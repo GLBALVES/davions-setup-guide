@@ -35,11 +35,11 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated }: CreateGal
     if (!title.trim() || !user) return;
     setLoading(true);
 
-    const { error } = await supabase.from("galleries").insert({
+    const { error } = await supabase.from("galleries").insert([{
       photographer_id: user.id,
       title: title.trim(),
       category,
-    } as Record<string, unknown>);
+    }] as any);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
