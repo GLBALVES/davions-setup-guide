@@ -303,14 +303,14 @@ const SessionForm = () => {
                   className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors mb-4"
                 >
                   <ArrowLeft className="h-3 w-3" />
-                  Voltar para Sessions
+                  Back to Sessions
                 </button>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  {isEdit ? "Editar Session" : "Nova Session"}
+                  {isEdit ? "Edit Session" : "New Session"}
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">
-                  {isEdit ? title || "Sem título" : "Criar Session"}
+                  {isEdit ? title || "Untitled" : "Create Session"}
                 </h1>
               </div>
 
