@@ -365,6 +365,33 @@ const SessionForm = () => {
       buffer_after_min: globalConfig.buffer_after_min,
     });
 
+    setSaving(false);
+    setStep(3);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 3: Finish (apply payment settings)
+  // ────────────────────────────────────────────
+
+  const handleFinish = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+    const originalPriceInCents = Math.round(parseFloat(price || "0") * 100);
+    const finalPrice = requirePayment ? originalPriceInCents : 0;
+
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ price: finalPrice } as any)
+      .eq("id", sessionId);
+
+    if (error) {
+      toast({ title: "Error saving payment settings", description: error.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
