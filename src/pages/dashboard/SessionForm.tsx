@@ -638,11 +638,6 @@ const SessionForm = () => {
                                         )}
                                       </span>
                                       <div className="flex items-center gap-2">
-                                        {slot._local && (
-                                          <span className="text-[9px] tracking-widest uppercase bg-primary/10 text-primary px-2 py-0.5">
-                                             New
-                                          </span>
-                                        )}
                                         <button
                                           type="button"
                                           onClick={() => handleRemoveSlot(slot, globalIdx)}
