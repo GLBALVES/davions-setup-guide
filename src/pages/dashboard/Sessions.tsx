@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +6,9 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2 } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Session {
@@ -31,6 +32,8 @@ const Sessions = () => {
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -47,11 +50,44 @@ const Sessions = () => {
     fetchSessions();
   }, []);
 
-  const filteredSessions = sessions.filter((s) => {
-    if (filter === "active") return s.status === "active";
-    if (filter === "draft") return s.status !== "active";
-    return true;
-  });
+  const filteredSessions = useMemo(() => {
+    let list = sessions.filter((s) => {
+      if (filter === "active") return s.status === "active";
+      if (filter === "draft") return s.status !== "active";
+      return true;
+    });
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          (s.description ?? "").toLowerCase().includes(q) ||
+          (s.location ?? "").toLowerCase().includes(q)
+      );
+    }
+
+    list = [...list].sort((a, b) => {
+      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sort === "az") return a.title.localeCompare(b.title);
+      if (sort === "za") return b.title.localeCompare(a.title);
+      if (sort === "price_asc") return a.price - b.price;
+      if (sort === "price_desc") return b.price - a.price;
+      return 0;
+    });
+
+    return list;
+  }, [sessions, filter, search, sort]);
+
+  const SORT_OPTIONS: { key: typeof sort; label: string; icon: React.ReactNode }[] = [
+    { key: "newest", label: "Newest", icon: <ArrowUpDown className="h-3 w-3" /> },
+    { key: "oldest", label: "Oldest", icon: <ArrowUpDown className="h-3 w-3" /> },
+    { key: "az", label: "A–Z", icon: <ArrowDownAZ className="h-3 w-3" /> },
+    { key: "za", label: "Z–A", icon: <ArrowUpAZ className="h-3 w-3" /> },
+    { key: "price_asc", label: "Price ↑", icon: <DollarSign className="h-3 w-3" /> },
+    { key: "price_desc", label: "Price ↓", icon: <DollarSign className="h-3 w-3" /> },
+  ];
 
   const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
     { key: "all", label: "All" },
@@ -93,24 +129,54 @@ const Sessions = () => {
               </div>
 
               {/* Filters */}
-              <div className="flex items-center gap-1 border-b border-border pb-1">
-                {FILTERS.map(({ key, label }) => {
-                  const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setFilter(key)}
-                      className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
-                        filter === key
-                          ? "border-foreground text-foreground"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {label}
-                      <span className="ml-1.5 opacity-50">{count}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-1 border-b border-border pb-1">
+                  {FILTERS.map(({ key, label }) => {
+                    const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setFilter(key)}
+                        className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
+                          filter === key
+                            ? "border-foreground text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label}
+                        <span className="ml-1.5 opacity-50">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search + Sort */}
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search sessions…"
+                      className="pl-9 h-8 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 ml-auto">
+                    {SORT_OPTIONS.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setSort(key)}
+                        className={`px-2.5 py-1 text-[10px] tracking-wider uppercase font-light border transition-colors ${
+                          sort === key
+                            ? "border-foreground text-foreground bg-foreground/5"
+                            : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {loading ? (
@@ -124,10 +190,10 @@ const Sessions = () => {
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {sessions.length === 0 ? "No sessions yet" : "No sessions match this filter"}
+                      {sessions.length === 0 ? "No sessions yet" : search ? `No results for "${search}"` : "No sessions match this filter"}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {sessions.length === 0 ? "Create your first bookable session product" : "Try a different filter"}
+                      {sessions.length === 0 ? "Create your first bookable session product" : search ? "Try a different search term" : "Try a different filter"}
                     </p>
                   </div>
                   {sessions.length === 0 && (
