@@ -198,7 +198,7 @@ const SessionForm = () => {
         .select("id")
         .single();
       if (error || !data) {
-        toast({ title: "Erro ao criar", description: error?.message, variant: "destructive" });
+        toast({ title: "Error creating session", description: error?.message, variant: "destructive" });
         setSaving(false);
         return;
       }
