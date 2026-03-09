@@ -197,7 +197,7 @@ const SessionDetailPage = () => {
       .single();
 
     if (bookingError || !bookingData) {
-      toast({ title: "Erro ao criar reserva", description: bookingError?.message, variant: "destructive" });
+      toast({ title: "Failed to create booking", description: bookingError?.message, variant: "destructive" });
       setSubmitting(false);
       return;
     }
