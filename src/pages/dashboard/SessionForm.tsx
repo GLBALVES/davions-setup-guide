@@ -99,7 +99,7 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
 
   // ── Payment step ──
