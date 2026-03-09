@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { useCustomDomainSlug } from "@/contexts/CustomDomainSlugContext";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   addDays,
@@ -155,6 +157,8 @@ const SessionDetailPage = () => {
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientNotes, setClientNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // ────────────────────────────────────────────
@@ -640,6 +644,32 @@ const SessionDetailPage = () => {
                   className="rounded-none"
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientPhone" className="text-xs tracking-wider uppercase font-light">
+                  Phone
+                </Label>
+                <Input
+                  id="clientPhone"
+                  type="tel"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="+55 11 99999-9999"
+                  className="rounded-none"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientNotes" className="text-xs tracking-wider uppercase font-light">
+                  Notes
+                </Label>
+                <Textarea
+                  id="clientNotes"
+                  value={clientNotes}
+                  onChange={(e) => setClientNotes(e.target.value)}
+                  placeholder="Any requests or observations..."
+                  rows={3}
+                  className="rounded-none resize-none text-sm font-light"
+                />
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -682,6 +712,8 @@ const SessionDetailPage = () => {
                 </p>
                 <p className="text-sm font-light">{clientName}</p>
                 <p className="text-xs text-muted-foreground">{clientEmail}</p>
+                {clientPhone && <p className="text-xs text-muted-foreground">{clientPhone}</p>}
+                {clientNotes && <p className="text-xs text-muted-foreground italic mt-1">"{clientNotes}"</p>}
               </div>
             </div>
 
