@@ -15,7 +15,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-der2, MapPin } from "lucide-react";
+import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ────────────────────────────────────────────
