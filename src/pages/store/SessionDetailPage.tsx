@@ -245,9 +245,9 @@ const SessionDetailPage = () => {
   if (!session) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Sessão não encontrada.</p>
+        <p className="text-sm font-light text-muted-foreground">Session not found.</p>
         <Button variant="ghost" onClick={() => navigate(`/store/${slug}`)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para a loja
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to the store
         </Button>
       </div>
     );
