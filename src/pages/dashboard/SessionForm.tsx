@@ -626,83 +626,50 @@ const SessionForm = () => {
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
 
-  const suggestNextStart = (day: number): string => {
-    const daySlots = slotsForDay(day);
-    if (daySlots.length === 0) {
-      if (globalConfig.hours_start) {
-        return addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min);
-      }
-      return "09:00";
-    }
-    const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
-    return computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
-  };
-
-  const handleAddSlotForDay = (day: number) => {
-    const dur = parseInt(durationMinutes) || 60;
-    const end = computeEndTime(newStart, dur);
-    const cfg = globalConfig;
-
-    // Validate: newStart must be >= latest end_time + break
-    const daySlots = slotsForDay(day);
-    if (daySlots.length > 0) {
-      const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
-      const minAllowed = computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
-      if (newStart < minAllowed) {
-        toast({
-          title: "Time conflict",
-          description: `Start time must be ${minAllowed} or later (after previous slot + break).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Validate against business hours + buffers
-    if (cfg.hours_start) {
-      const earliest = addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
-      if (newStart < earliest) {
-        toast({
-          title: "Outside business hours",
-          description: `Earliest allowed start is ${earliest} (${cfg.hours_start} + ${cfg.buffer_before_min} min buffer).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    if (cfg.hours_end) {
-      const latest = subMinsFromTime(cfg.hours_end, cfg.buffer_after_min);
-      // end time of the slot must be <= latest allowed end
-      if (end > latest) {
-        toast({
-          title: "Outside business hours",
-          description: `Slot ends at ${end} but must end by ${latest} (${cfg.hours_end} - ${cfg.buffer_after_min} min buffer).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    const entry: WeeklySlot = {
-      day_of_week: day,
-      start_time: newStart,
-      end_time: end,
-      _local: true,
-    };
-    setSlots((prev) => [...prev, entry]);
-    setAddingSlotForDay(null);
-    const nextSuggestion = computeEndTime(newStart, (parseInt(durationMinutes) || 60) + (parseInt(breakAfterMinutes) || 0));
-    setNewStart(nextSuggestion);
-  };
-
-  const handleRemoveSlot = async (slot: WeeklySlot, index: number) => {
-    if (slot.id) {
-      await supabase.from("session_availability").delete().eq("id", slot.id);
-    }
-    setSlots((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const slotsForDay = (day: number) => slots.filter((s) => s.day_of_week === day);
+
+  /** Generate all possible slot start times within business hours for a given day */
+  const generateAvailableSlots = (): Array<{ start: string; end: string }> => {
+    const d = parseInt(durationMinutes) || 60;
+    const b = parseInt(breakAfterMinutes) || 0;
+    const total = d + b;
+
+    if (!globalConfig.hours_start || !globalConfig.hours_end) return [];
+
+    const earliest = globalConfig.buffer_before_min
+      ? addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min)
+      : globalConfig.hours_start;
+    const latestEnd = globalConfig.buffer_after_min
+      ? subMinsFromTime(globalConfig.hours_end, globalConfig.buffer_after_min)
+      : globalConfig.hours_end;
+
+    const result: Array<{ start: string; end: string }> = [];
+    let current = earliest;
+    for (let i = 0; i < 100; i++) {
+      const end = computeEndTime(current, d);
+      if (end > latestEnd) break;
+      result.push({ start: current, end });
+      current = addMinsToTime(current, total);
+      if (current >= latestEnd) break;
+    }
+    return result;
+  };
+
+  const isSlotSelected = (day: number, startTime: string) =>
+    slots.some((s) => s.day_of_week === day && s.start_time.slice(0, 5) === startTime);
+
+  const toggleSlot = (day: number, startTime: string, endTime: string) => {
+    if (isSlotSelected(day, startTime)) {
+      setSlots((prev) =>
+        prev.filter((s) => !(s.day_of_week === day && s.start_time.slice(0, 5) === startTime))
+      );
+    } else {
+      setSlots((prev) => [
+        ...prev,
+        { day_of_week: day, start_time: startTime, end_time: endTime, _local: true },
+      ]);
+    }
+  };
 
   // ────────────────────────────────────────────
   // Render helpers
