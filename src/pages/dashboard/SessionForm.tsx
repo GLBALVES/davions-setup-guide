@@ -522,6 +522,43 @@ const SessionForm = () => {
       }
     }
 
+    setSaving(false);
+    setStep(5);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 5: Save extras → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishExtras = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    await supabase
+      .from("session_extras" as never)
+      .delete()
+      .eq("session_id", sessionId);
+
+    const validExtras = sessionExtras.filter((e) => e.description.trim());
+    if (validExtras.length > 0) {
+      const inserts = validExtras.map((e) => ({
+        session_id: sessionId,
+        photographer_id: user.id,
+        description: e.description.trim(),
+        quantity: parseInt(e.quantity) || 1,
+        price: Math.round(parseFloat(e.price || "0") * 100),
+      }));
+      const { error } = await supabase
+        .from("session_extras" as never)
+        .insert(inserts as never);
+      if (error) {
+        toast({ title: "Error saving extras", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+    }
+
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
