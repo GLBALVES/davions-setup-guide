@@ -436,6 +436,7 @@ const SessionForm = () => {
     const payload = {
       photographer_id: user.id,
       title: title.trim(),
+      slug: slug.trim() || null,
       description: description.trim() || null,
       duration_minutes: dur,
       break_after_minutes: parseInt(breakAfterMinutes) || 0,
