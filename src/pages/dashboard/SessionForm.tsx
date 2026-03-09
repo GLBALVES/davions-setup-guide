@@ -438,11 +438,12 @@ const SessionForm = () => {
 
     setSaving(true);
 
-    // Insert new local weekly slots
-    const newSlots = slots.filter((s) => s._local);
-    if (newSlots.length > 0) {
+    // Delete all existing availability for this session, then re-insert
+    await supabase.from("session_availability").delete().eq("session_id", sessionId);
+
+    if (slots.length > 0) {
       await supabase.from("session_availability").insert(
-        newSlots.map((s) => ({
+        slots.map((s) => ({
           session_id: sessionId,
           photographer_id: user.id,
           day_of_week: s.day_of_week,
