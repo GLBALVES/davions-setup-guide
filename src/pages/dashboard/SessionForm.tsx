@@ -543,7 +543,7 @@ const SessionForm = () => {
 
                 <div className="flex items-center justify-between border border-border p-4">
                   <div>
-                    <p className="text-xs tracking-wider uppercase font-light">Active in Store</p>
+                    <p className="text-xs tracking-wider uppercase font-light">Published</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       Clients can find and book this session
                     </p>
