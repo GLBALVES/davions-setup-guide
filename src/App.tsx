@@ -35,7 +35,7 @@ const App = () => (
             {onCustomDomain ? (
               <>
                 <Route path="/" element={<CustomDomainStore />} />
-                <Route path="/book/:sessionId" element={<CustomDomainSessionGateway />} />
+                <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
