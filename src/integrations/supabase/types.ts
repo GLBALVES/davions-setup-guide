@@ -127,26 +127,32 @@ export type Database = {
       }
       photographers: {
         Row: {
+          bio: string | null
           created_at: string
           custom_domain: string | null
           email: string
           full_name: string | null
+          hero_image_url: string | null
           id: string
           store_slug: string | null
         }
         Insert: {
+          bio?: string | null
           created_at?: string
           custom_domain?: string | null
           email: string
           full_name?: string | null
+          hero_image_url?: string | null
           id: string
           store_slug?: string | null
         }
         Update: {
+          bio?: string | null
           created_at?: string
           custom_domain?: string | null
           email?: string
           full_name?: string | null
+          hero_image_url?: string | null
           id?: string
           store_slug?: string | null
         }
