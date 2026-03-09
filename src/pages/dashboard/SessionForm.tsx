@@ -100,6 +100,11 @@ const SessionForm = () => {
 
   // ── Payment step ──
   const [requirePayment, setRequirePayment] = useState(true);
+  const [taxEnabled, setTaxEnabled] = useState(false);
+  const [taxRate, setTaxRate] = useState("0");
+  const [depositEnabled, setDepositEnabled] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [allowTip, setAllowTip] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
