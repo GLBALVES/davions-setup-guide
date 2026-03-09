@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ChevronRight,
   Clock,
+  CreditCard,
   Loader2,
   Plus,
   Trash2,
