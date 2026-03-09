@@ -1082,7 +1082,7 @@ const SessionForm = () => {
               {/* ── STEP 3: Payment ── */}
               {step === 3 && (
                 <>
-                  <section className="flex flex-col gap-6">
+                  <section className="flex flex-col gap-5">
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                         <span className="inline-block w-4 h-px bg-border" />
@@ -1093,23 +1093,140 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-                    {/* Session summary */}
-                    <div className="border border-border p-4 flex items-center justify-between">
-                      <div className="flex flex-col gap-0.5">
-                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Session</p>
-                        <p className="text-sm font-light tracking-wide">{title || "Untitled"}</p>
-                      </div>
-                      <div className="flex flex-col gap-0.5 text-right">
-                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Price</p>
-                        <p className="text-sm font-light tracking-wide">
-                          {parseFloat(price || "0") > 0
-                            ? `$${parseFloat(price).toFixed(2)}`
-                            : "Free"}
-                        </p>
+                    {/* ── Collected Amount ── */}
+                    <div className="border border-border p-4 flex flex-col gap-3">
+                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Collected Amount</p>
+                      <div className="flex items-start gap-4">
+                        <div className="flex flex-col gap-1.5 flex-1">
+                          <Label htmlFor="pay-price" className="text-xs tracking-wider uppercase font-light">
+                            Session Price (USD)
+                          </Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                            <Input
+                              id="pay-price"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={price}
+                              onChange={(e) => setPrice(e.target.value)}
+                              placeholder="0.00"
+                              className="pl-7"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5 shrink-0 pt-6">
+                          <p className="text-[10px] text-muted-foreground">Session</p>
+                          <p className="text-sm font-light tracking-wide">{title || "Untitled"}</p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Require payment toggle */}
+                    {/* ── Tax ── */}
+                    {(() => {
+                      const priceVal = parseFloat(price || "0");
+                      const taxAmt = taxEnabled ? (priceVal * parseFloat(taxRate || "0")) / 100 : 0;
+                      const total = priceVal + taxAmt;
+                      return (
+                        <div className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-xs tracking-wider uppercase font-light">Add Tax</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                Specify a tax percentage to display to clients.
+                              </p>
+                            </div>
+                            <Switch checked={taxEnabled} onCheckedChange={setTaxEnabled} />
+                          </div>
+                          {taxEnabled && (
+                            <div className="flex items-center gap-4 mt-1">
+                              <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="tax-rate" className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                                  Tax Rate
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    id="tax-rate"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    value={taxRate}
+                                    onChange={(e) => setTaxRate(e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-24 h-8 text-sm"
+                                  />
+                                  <span className="text-xs text-muted-foreground">%</span>
+                                </div>
+                              </div>
+                              {priceVal > 0 && (
+                                <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
+                                  <span>Tax: <span className="text-foreground font-light">${taxAmt.toFixed(2)}</span></span>
+                                  <span>Total: <span className="text-foreground font-light">${total.toFixed(2)}</span></span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* ── Partial Payment / Deposit ── */}
+                    <div className="border border-border p-4 flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-xs tracking-wider uppercase font-light">Require Deposit at Booking</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            Collect a partial amount upfront; the rest is due at the session.
+                          </p>
+                        </div>
+                        <Switch checked={depositEnabled} onCheckedChange={setDepositEnabled} />
+                      </div>
+                      {depositEnabled && (
+                        <div className="flex items-center gap-4 mt-1">
+                          <div className="flex flex-col gap-1.5 w-40">
+                            <Label htmlFor="deposit-amt" className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                              Deposit Amount
+                            </Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                              <Input
+                                id="deposit-amt"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={depositAmount}
+                                onChange={(e) => setDepositAmount(e.target.value)}
+                                placeholder="0.00"
+                                className="pl-7 h-8 text-sm"
+                              />
+                            </div>
+                          </div>
+                          {parseFloat(depositAmount || "0") > 0 && parseFloat(price || "0") > 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Remaining{" "}
+                              <span className="text-foreground font-light">
+                                ${(parseFloat(price || "0") - parseFloat(depositAmount || "0")).toFixed(2)}
+                              </span>{" "}
+                              due at session
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Allow Tip ── */}
+                    <div className="flex items-start justify-between border border-border p-4 gap-4">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-xs tracking-wider uppercase font-light">Allow Tip</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Clients can add a gratuity at checkout.
+                        </p>
+                      </div>
+                      <Switch checked={allowTip} onCheckedChange={setAllowTip} />
+                    </div>
+
+                    {/* ── Require Payment Toggle ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
                       <div className="flex flex-col gap-1">
                         <p className="text-xs tracking-wider uppercase font-light">Require payment at booking</p>
@@ -1124,7 +1241,7 @@ const SessionForm = () => {
                       />
                     </div>
 
-                    {/* Stripe info */}
+                    {/* ── Stripe info ── */}
                     <div className="border border-border bg-muted/5 p-4 flex items-start gap-3">
                       <CreditCard className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                       <div className="flex flex-col gap-1">
