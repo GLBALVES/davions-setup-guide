@@ -1384,19 +1384,121 @@ const SessionForm = () => {
 
                   {/* Step 3 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setStep(2)}
-                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      Back
+                    <Button variant="ghost" onClick={() => setStep(2)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button
-                      onClick={handleFinish}
-                      disabled={saving}
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    <Button onClick={handleFinish} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 4: Additional Photos ── */}
+              {step === 4 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Additional Photos
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Configure tiered pricing for extra photos. Higher quantities can have a lower price per photo.
+                      </p>
+                    </div>
+
+                    {/* Tiers list */}
+                    <div className="flex flex-col gap-3">
+                      {photoTiers.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground italic border border-dashed border-border p-4 text-center">
+                          No tiers added yet. Add a tier below to enable extra photo purchases.
+                        </p>
+                      )}
+                      {photoTiers.map((tier, idx) => {
+                        const nextMin = tier.max_photos != null ? tier.max_photos + 1 : null;
+                        return (
+                          <div key={idx} className="border border-border p-4 flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Tier {idx + 1}</p>
+                              <button
+                                type="button"
+                                onClick={() => setPhotoTiers((prev) => prev.filter((_, i) => i !== idx))}
+                                className="text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">From (photos)</Label>
+                                <Input
+                                  type="number" min="1" step="1"
+                                  value={tier.min_photos}
+                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, min_photos: parseInt(e.target.value) || 1 } : t))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">To (photos)</Label>
+                                <Input
+                                  type="number" min={tier.min_photos + 1} step="1"
+                                  value={tier.max_photos ?? ""}
+                                  placeholder="No limit"
+                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, max_photos: e.target.value ? parseInt(e.target.value) : null } : t))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price / photo</Label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                                  <Input
+                                    type="number" min="0" step="0.01"
+                                    value={tier.price_per_photo}
+                                    placeholder="0.00"
+                                    onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: e.target.value } : t))}
+                                    className="pl-7 h-8 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            {tier.max_photos != null && tier.min_photos > 0 && parseFloat(tier.price_per_photo || "0") > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                {tier.min_photos}–{tier.max_photos} extra photos →{" "}
+                                <span className="text-foreground font-light">
+                                  ${(parseFloat(tier.price_per_photo) * tier.min_photos).toFixed(2)} – ${(parseFloat(tier.price_per_photo) * tier.max_photos).toFixed(2)}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Add tier button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const last = photoTiers.at(-1);
+                        const newMin = last?.max_photos != null ? last.max_photos + 1 : (last ? last.min_photos + 10 : 1);
+                        setPhotoTiers((prev) => [...prev, { min_photos: newMin, max_photos: null, price_per_photo: "", _local: true }]);
+                      }}
+                      className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
                     >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Tier
+                    </button>
+                  </section>
+
+                  {/* Step 4 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(3)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
