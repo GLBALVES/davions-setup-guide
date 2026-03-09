@@ -146,7 +146,7 @@ const SessionForm = () => {
       .from("session-covers")
       .upload(path, file, { upsert: true });
     if (error) {
-      toast({ title: "Upload falhou", description: error.message, variant: "destructive" });
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
       const { data } = supabase.storage.from("session-covers").getPublicUrl(path);
       setCoverImageUrl(data.publicUrl);
