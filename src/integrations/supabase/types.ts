@@ -438,6 +438,7 @@ export type Database = {
           created_at: string
           deposit_amount: number
           deposit_enabled: boolean
+          deposit_type: string
           description: string | null
           duration_minutes: number
           id: string
@@ -463,6 +464,7 @@ export type Database = {
           created_at?: string
           deposit_amount?: number
           deposit_enabled?: boolean
+          deposit_type?: string
           description?: string | null
           duration_minutes?: number
           id?: string
@@ -488,6 +490,7 @@ export type Database = {
           created_at?: string
           deposit_amount?: number
           deposit_enabled?: boolean
+          deposit_type?: string
           description?: string | null
           duration_minutes?: number
           id?: string

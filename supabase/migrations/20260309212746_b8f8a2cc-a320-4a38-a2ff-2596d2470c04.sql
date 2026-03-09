@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS deposit_type text NOT NULL DEFAULT 'fixed';
