@@ -216,7 +216,7 @@ const Settings = () => {
                       )}
 
                       {!storeSlug && (
-                        <p className="flex items-center gap-1.5 text-[11px] text-amber-600">
+                        <p className="flex items-center gap-1.5 text-[11px] text-yellow-600">
                           <AlertCircle className="h-3 w-3 shrink-0" />
                           Set your store URL to enable Preview and Share on session cards.
                         </p>
