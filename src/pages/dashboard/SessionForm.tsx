@@ -1417,65 +1417,52 @@ const SessionForm = () => {
                           No tiers added yet. Add a tier below to enable extra photo purchases.
                         </p>
                       )}
-                      {photoTiers.map((tier, idx) => {
-                        const nextMin = tier.max_photos != null ? tier.max_photos + 1 : null;
-                        return (
-                          <div key={idx} className="border border-border p-4 flex flex-col gap-3">
-                            <div className="flex items-center justify-between">
-                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Tier {idx + 1}</p>
-                              <button
-                                type="button"
-                                onClick={() => setPhotoTiers((prev) => prev.filter((_, i) => i !== idx))}
-                                className="text-muted-foreground hover:text-destructive transition-colors"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="flex flex-col gap-1.5">
-                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">From (photos)</Label>
-                                <Input
-                                  type="number" min="1" step="1"
-                                  value={tier.min_photos}
-                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, min_photos: parseInt(e.target.value) || 1 } : t))}
-                                  className="h-8 text-sm"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-1.5">
-                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">To (photos)</Label>
-                                <Input
-                                  type="number" min={tier.min_photos + 1} step="1"
-                                  value={tier.max_photos ?? ""}
-                                  placeholder="No limit"
-                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, max_photos: e.target.value ? parseInt(e.target.value) : null } : t))}
-                                  className="h-8 text-sm"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-1.5">
-                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price / photo</Label>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                                  <Input
-                                    type="number" min="0" step="0.01"
-                                    value={tier.price_per_photo}
-                                    placeholder="0.00"
-                                    onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: e.target.value } : t))}
-                                    className="pl-7 h-8 text-sm"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            {tier.max_photos != null && tier.min_photos > 0 && parseFloat(tier.price_per_photo || "0") > 0 && (
-                              <p className="text-[10px] text-muted-foreground">
-                                {tier.min_photos}–{tier.max_photos} extra photos →{" "}
-                                <span className="text-foreground font-light">
-                                  ${(parseFloat(tier.price_per_photo) * tier.min_photos).toFixed(2)} – ${(parseFloat(tier.price_per_photo) * tier.max_photos).toFixed(2)}
-                                </span>
-                              </p>
-                            )}
+                      {photoTiers.map((tier, idx) => (
+                        <div key={idx} className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Tier {idx + 1}</p>
+                            <button
+                              type="button"
+                              onClick={() => setPhotoTiers((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </div>
-                        );
-                      })}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Qty extra photos</Label>
+                              <Input
+                                type="number" min="1" step="1"
+                                value={tier.min_photos}
+                                onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, min_photos: parseInt(e.target.value) || 1 } : t))}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price / photo</Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                                <Input
+                                  type="number" min="0" step="0.01"
+                                  value={tier.price_per_photo}
+                                  placeholder="0.00"
+                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: e.target.value } : t))}
+                                  className="pl-7 h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {tier.min_photos > 0 && parseFloat(tier.price_per_photo || "0") > 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              {tier.min_photos} extra photo{tier.min_photos > 1 ? "s" : ""} ×{" "}
+                              <span className="text-foreground font-light">${parseFloat(tier.price_per_photo).toFixed(2)}</span>{" "}
+                              ={" "}
+                              <span className="text-foreground font-light">${(parseFloat(tier.price_per_photo) * tier.min_photos).toFixed(2)}</span>
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
 
                     {/* Add tier button */}
