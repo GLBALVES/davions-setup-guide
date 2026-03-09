@@ -535,7 +535,9 @@ const SessionForm = () => {
     let finalDepositAmount = 0;
     if (depositEnabled) {
       const depositVal = parseFloat(depositAmount || "0");
-      finalDepositAmount = Math.round(depositVal * 100);
+      finalDepositAmount = depositType === "percent"
+        ? Math.round(depositVal)        // store as raw integer percent (e.g. 35)
+        : Math.round(depositVal * 100); // store as cents (e.g. 5000 = $50)
     }
 
     const { error } = await supabase

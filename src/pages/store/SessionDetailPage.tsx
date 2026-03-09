@@ -276,7 +276,7 @@ const SessionDetailPage = () => {
     : 0;
 
   const chargeAmount = session?.deposit_enabled
-    ? depositAmountCents + extrasTotal + taxAmount
+    ? depositAmountCents
     : total;
 
   const formatCurrency = (cents: number) =>
