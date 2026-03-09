@@ -117,18 +117,11 @@ const SessionForm = () => {
   const [newStart, setNewStart] = useState("09:00");
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
 
-  // ── Day configs (business hours + buffers) ──
-  const [dayConfigs, setDayConfigs] = useState<Map<number, DayConfig>>(new Map());
+  // ── Global config (business hours + buffers — applies to all days) ──
+  const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
 
-  const getDayConfig = (day: number): DayConfig =>
-    dayConfigs.get(day) ?? DEFAULT_DAY_CONFIG();
-
-  const updateDayConfig = (day: number, patch: Partial<DayConfig>) => {
-    setDayConfigs((prev) => {
-      const next = new Map(prev);
-      next.set(day, { ...(prev.get(day) ?? DEFAULT_DAY_CONFIG()), ...patch });
-      return next;
-    });
+  const updateGlobalConfig = (patch: Partial<DayConfig>) => {
+    setGlobalConfig((prev) => ({ ...prev, ...patch }));
   };
 
   // ────────────────────────────────────────────
