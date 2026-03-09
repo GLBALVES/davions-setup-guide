@@ -15,8 +15,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-
-import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
+der2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ────────────────────────────────────────────
@@ -90,11 +89,7 @@ const generateOccurrences = (
         start_time: startHHmm,
         end_time: format(endDate, "HH:mm"),
         label: format(date, "EEEE, dd 'de' MMMM", { locale: ptBR }),
-      });
-    }
-  }
-
-  return result;
+     MMMM d";
 };
 
 // ────────────────────────────────────────────
