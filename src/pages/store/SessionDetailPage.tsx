@@ -301,11 +301,11 @@ const SessionDetailPage = () => {
               <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground pt-2">
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
-                  {session.duration_minutes} minutos
+                  {session.duration_minutes} minutes
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Camera className="h-3.5 w-3.5" />
-                  {session.num_photos} fotos
+                  {session.num_photos} photos
                 </span>
                 {session.location && (
                   <span className="flex items-center gap-1.5">
