@@ -32,6 +32,8 @@ const Sessions = () => {
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
 
   const fetchSessions = async () => {
     setLoading(true);
