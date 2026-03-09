@@ -208,7 +208,18 @@ const SessionForm = () => {
         setTaxRate(String(sAny.tax_rate));
       }
       setDepositEnabled(sAny.deposit_enabled ?? false);
-      setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      // Determine if stored deposit is percentage or fixed:
+      // We store percent as negative sentinel in deposit_amount is not feasible,
+      // so we rely on deposit_type if available, else guess fixed
+      const sAny2 = s as unknown as { deposit_type?: string };
+      const storedType = (sAny2.deposit_type === "percent" ? "percent" : "fixed") as "fixed" | "percent";
+      setDepositType(storedType);
+      if (storedType === "percent") {
+        // deposit_amount stores the percentage * 100 (e.g. 25.00% stored as 2500)
+        setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      } else {
+        setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      }
       setAllowTip(sAny.allow_tip ?? false);
     }
 
