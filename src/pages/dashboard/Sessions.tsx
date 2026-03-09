@@ -247,7 +247,7 @@ function SessionCard({
   }).format(session.price / 100);
 
   const bookingUrl = storeSlug
-    ? `${window.location.origin}/store/${storeSlug}/${session.id}`
+    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
     : null;
 
   const handlePreview = (e: React.MouseEvent) => {
