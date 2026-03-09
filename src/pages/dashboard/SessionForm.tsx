@@ -95,7 +95,7 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
 
   // ── Payment step ──
@@ -106,6 +106,16 @@ const SessionForm = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositType, setDepositType] = useState<"fixed" | "percent">("fixed");
   const [allowTip, setAllowTip] = useState(false);
+
+  // ── Additional Photos step ──
+  interface PhotoTier {
+    id?: string;
+    min_photos: number;
+    max_photos: number | null;
+    price_per_photo: string; // dollars, e.g. "5.00"
+    _local?: boolean;
+  }
+  const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
