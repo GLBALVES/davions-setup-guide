@@ -377,8 +377,15 @@ const SessionForm = () => {
     );
 
   const suggestNextStart = (day: number): string => {
+    const cfg = getDayConfig(day);
     const daySlots = slotsForDay(day);
-    if (daySlots.length === 0) return "09:00";
+    if (daySlots.length === 0) {
+      // Use hours_start + buffer_before as default when no slots yet
+      if (cfg.hours_start) {
+        return addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      }
+      return "09:00";
+    }
     const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
     return computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
   };
@@ -386,6 +393,7 @@ const SessionForm = () => {
   const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
+    const cfg = getDayConfig(day);
 
     // Validate: newStart must be >= latest end_time + break
     const daySlots = slotsForDay(day);
@@ -402,6 +410,31 @@ const SessionForm = () => {
       }
     }
 
+    // Validate against business hours + buffers
+    if (cfg.hours_start) {
+      const earliest = addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      if (newStart < earliest) {
+        toast({
+          title: "Outside business hours",
+          description: `Earliest allowed start is ${earliest} (${cfg.hours_start} + ${cfg.buffer_before_min} min buffer).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    if (cfg.hours_end) {
+      const latest = subMinsFromTime(cfg.hours_end, cfg.buffer_after_min);
+      // end time of the slot must be <= latest allowed end
+      if (end > latest) {
+        toast({
+          title: "Outside business hours",
+          description: `Slot ends at ${end} but must end by ${latest} (${cfg.hours_end} - ${cfg.buffer_after_min} min buffer).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const entry: WeeklySlot = {
       day_of_week: day,
       start_time: newStart,
@@ -410,7 +443,8 @@ const SessionForm = () => {
     };
     setSlots((prev) => [...prev, entry]);
     setAddingSlotForDay(null);
-    setNewStart("09:00");
+    const nextSuggestion = computeEndTime(newStart, (parseInt(durationMinutes) || 60) + (parseInt(breakAfterMinutes) || 0));
+    setNewStart(nextSuggestion);
   };
 
   const handleRemoveSlot = async (slot: WeeklySlot, index: number) => {
