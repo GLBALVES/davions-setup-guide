@@ -400,14 +400,14 @@ const SessionDetailPage = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">
-                      E-mail *
+                      Email *
                     </Label>
                     <Input
                       id="clientEmail"
                       type="email"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="seu@email.com"
+                      placeholder="you@email.com"
                     />
                   </div>
                 </div>
