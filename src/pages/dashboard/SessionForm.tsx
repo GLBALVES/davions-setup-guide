@@ -95,7 +95,7 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
 
   // ── Payment step ──
@@ -106,6 +106,16 @@ const SessionForm = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositType, setDepositType] = useState<"fixed" | "percent">("fixed");
   const [allowTip, setAllowTip] = useState(false);
+
+  // ── Additional Photos step ──
+  interface PhotoTier {
+    id?: string;
+    min_photos: number;
+    max_photos: number | null;
+    price_per_photo: string; // dollars, e.g. "5.00"
+    _local?: boolean;
+  }
+  const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -269,6 +279,24 @@ const SessionForm = () => {
       });
     }
 
+    // Load photo tiers
+    const { data: tiersData } = await supabase
+      .from("session_photo_tiers" as never)
+      .select("id, min_photos, max_photos, price_per_photo")
+      .eq("session_id", sid)
+      .order("min_photos", { ascending: true });
+
+    if (tiersData) {
+      setPhotoTiers(
+        (tiersData as Array<{ id: string; min_photos: number; max_photos: number | null; price_per_photo: number }>).map((t) => ({
+          id: t.id,
+          min_photos: t.min_photos,
+          max_photos: t.max_photos,
+          price_per_photo: (t.price_per_photo / 100).toFixed(2),
+        }))
+      );
+    }
+
     setLoading(false);
   };
 
@@ -395,7 +423,7 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
-  // Step 3: Finish (apply payment settings)
+  // Step 3: Save payment settings → go to step 4
   // ────────────────────────────────────────────
 
   const handleFinish = async () => {
@@ -405,17 +433,10 @@ const SessionForm = () => {
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
     const finalPrice = requirePayment ? priceInCents : 0;
 
-    // Deposit: if "percent" mode, store the percentage value * 100 (e.g. 25% → 2500)
-    // If "fixed" mode, store the dollar amount in cents as usual
     let finalDepositAmount = 0;
     if (depositEnabled) {
       const depositVal = parseFloat(depositAmount || "0");
-      if (depositType === "percent") {
-        // store percent × 100 so we can recover it; e.g. 25.50% → stored as 2550
-        finalDepositAmount = Math.round(depositVal * 100);
-      } else {
-        finalDepositAmount = Math.round(depositVal * 100);
-      }
+      finalDepositAmount = Math.round(depositVal * 100);
     }
 
     const { error } = await supabase
@@ -434,6 +455,43 @@ const SessionForm = () => {
       toast({ title: "Error saving payment settings", description: error.message, variant: "destructive" });
       setSaving(false);
       return;
+    }
+
+    setSaving(false);
+    setStep(4);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 4: Save photo tiers → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishTiers = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    // Delete existing tiers and re-insert
+    await supabase
+      .from("session_photo_tiers" as never)
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (photoTiers.length > 0) {
+      const inserts = photoTiers.map((t) => ({
+        session_id: sessionId,
+        photographer_id: user.id,
+        min_photos: t.min_photos,
+        max_photos: t.max_photos,
+        price_per_photo: Math.round(parseFloat(t.price_per_photo || "0") * 100),
+      }));
+      const { error } = await supabase
+        .from("session_photo_tiers" as never)
+        .insert(inserts as never);
+      if (error) {
+        toast({ title: "Error saving photo tiers", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
     }
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
@@ -556,24 +614,17 @@ const SessionForm = () => {
     <div className="flex items-center gap-0 mb-8">
       {/* Step 1 */}
       <button
-        type="button"
         onClick={() => setStep(1)}
-        className="flex items-center gap-2.5 group"
+        className={cn(
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 1 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+        )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 1
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          1
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 1 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Session Details
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 1 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>1</span>
+        Details
       </button>
 
       {/* Connector */}
@@ -581,61 +632,57 @@ const SessionForm = () => {
 
       {/* Step 2 */}
       <button
-        type="button"
-        onClick={() => {
-          if (sessionId || isEdit) setStep(2);
-        }}
-        disabled={!sessionId && !isEdit}
+        onClick={() => sessionId ? setStep(2) : undefined}
+        disabled={!sessionId}
         className={cn(
-          "flex items-center gap-2.5 group",
-          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 2 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
         )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 2
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          2
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 2 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Availability
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 2 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>2</span>
+        Availability
       </button>
 
-      {/* Connector */}
       <div className="flex-1 h-px bg-border mx-4 min-w-8" />
 
       {/* Step 3 */}
       <button
-        type="button"
-        onClick={() => {
-          if (sessionId || isEdit) setStep(3);
-        }}
-        disabled={!sessionId && !isEdit}
+        onClick={() => sessionId ? setStep(3) : undefined}
+        disabled={!sessionId}
         className={cn(
-          "flex items-center gap-2.5 group",
-          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 3 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
         )}
       >
-        <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
-          step === 3
-            ? "bg-foreground text-background border-foreground"
-            : "bg-background text-foreground border-foreground"
-        )}>
-          3
-        </div>
         <span className={cn(
-          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
-          step === 3 ? "text-foreground" : "text-muted-foreground"
-        )}>
-          Payment
-        </span>
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 3 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>3</span>
+        Payment
+      </button>
+
+      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
+
+      {/* Step 4 */}
+      <button
+        onClick={() => sessionId ? setStep(4) : undefined}
+        disabled={!sessionId}
+        className={cn(
+          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
+          step === 4 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          !sessionId && "opacity-40 cursor-not-allowed"
+        )}
+      >
+        <span className={cn(
+          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
+          step === 4 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+        )}>4</span>
+        Add-ons
       </button>
     </div>
   );
@@ -1337,19 +1384,121 @@ const SessionForm = () => {
 
                   {/* Step 3 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setStep(2)}
-                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      Back
+                    <Button variant="ghost" onClick={() => setStep(2)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button
-                      onClick={handleFinish}
-                      disabled={saving}
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    <Button onClick={handleFinish} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 4: Additional Photos ── */}
+              {step === 4 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Additional Photos
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Configure tiered pricing for extra photos. Higher quantities can have a lower price per photo.
+                      </p>
+                    </div>
+
+                    {/* Tiers list */}
+                    <div className="flex flex-col gap-3">
+                      {photoTiers.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground italic border border-dashed border-border p-4 text-center">
+                          No tiers added yet. Add a tier below to enable extra photo purchases.
+                        </p>
+                      )}
+                      {photoTiers.map((tier, idx) => {
+                        const nextMin = tier.max_photos != null ? tier.max_photos + 1 : null;
+                        return (
+                          <div key={idx} className="border border-border p-4 flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Tier {idx + 1}</p>
+                              <button
+                                type="button"
+                                onClick={() => setPhotoTiers((prev) => prev.filter((_, i) => i !== idx))}
+                                className="text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">From (photos)</Label>
+                                <Input
+                                  type="number" min="1" step="1"
+                                  value={tier.min_photos}
+                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, min_photos: parseInt(e.target.value) || 1 } : t))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">To (photos)</Label>
+                                <Input
+                                  type="number" min={tier.min_photos + 1} step="1"
+                                  value={tier.max_photos ?? ""}
+                                  placeholder="No limit"
+                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, max_photos: e.target.value ? parseInt(e.target.value) : null } : t))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price / photo</Label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                                  <Input
+                                    type="number" min="0" step="0.01"
+                                    value={tier.price_per_photo}
+                                    placeholder="0.00"
+                                    onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: e.target.value } : t))}
+                                    className="pl-7 h-8 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            {tier.max_photos != null && tier.min_photos > 0 && parseFloat(tier.price_per_photo || "0") > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                {tier.min_photos}–{tier.max_photos} extra photos →{" "}
+                                <span className="text-foreground font-light">
+                                  ${(parseFloat(tier.price_per_photo) * tier.min_photos).toFixed(2)} – ${(parseFloat(tier.price_per_photo) * tier.max_photos).toFixed(2)}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Add tier button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const last = photoTiers.at(-1);
+                        const newMin = last?.max_photos != null ? last.max_photos + 1 : (last ? last.min_photos + 10 : 1);
+                        setPhotoTiers((prev) => [...prev, { min_photos: newMin, max_photos: null, price_per_photo: "", _local: true }]);
+                      }}
+                      className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
                     >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Tier
+                    </button>
+                  </section>
+
+                  {/* Step 4 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(3)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
