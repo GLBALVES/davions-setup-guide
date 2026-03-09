@@ -253,9 +253,9 @@ const SessionDetailPage = () => {
     );
   }
 
-  const priceFormatted = new Intl.NumberFormat("pt-BR", {
+  const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "BRL",
+    currency: "USD",
   }).format(session.price / 100);
 
   // Group generated slots by formatted date string for display
