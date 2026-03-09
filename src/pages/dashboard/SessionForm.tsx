@@ -595,7 +595,7 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
-  // Step 6: Save confirmation settings → navigate away
+  // Step 6: Save confirmation settings → go to step 7
   // ────────────────────────────────────────────
 
   const handleFinishConfirmation = async () => {
@@ -614,6 +614,34 @@ const SessionForm = () => {
 
     if (error) {
       toast({ title: "Error saving confirmation settings", description: error.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    setSaving(false);
+    setStep(7);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 7: Save booking rules → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishBookingRules = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({
+        booking_notice_days: parseInt(bookingNoticeDays) || 1,
+        booking_window_days: parseInt(bookingWindowDays) || 60,
+      } as any)
+      .eq("id", sessionId);
+
+    if (error) {
+      toast({ title: "Error saving booking rules", description: error.message, variant: "destructive" });
       setSaving(false);
       return;
     }
