@@ -600,7 +600,7 @@ const SessionForm = () => {
                                   onClick={() => handleAddSlotForDay(dayIdx)}
                                   className="h-8 text-xs tracking-wider uppercase font-light"
                                 >
-                                  Confirmar
+                                  Confirm
                                 </Button>
                                 <Button
                                   type="button"
