@@ -117,6 +117,16 @@ const SessionForm = () => {
   }
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
 
+  // ── Extras step ──
+  interface SessionExtra {
+    id?: string;
+    description: string;
+    quantity: string;
+    price: string; // dollars
+    _local?: boolean;
+  }
+  const [sessionExtras, setSessionExtras] = useState<SessionExtra[]>([]);
+
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
