@@ -812,11 +812,15 @@ const SessionForm = () => {
                                       placeholder="0"
                                     />
                                     <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                                   </div>
+                                 </div>
+                               </div>
+                             </div>
+                        </div>
 
+                        {/* Expanded: slots + add form */}
+                        {isExpanded && (
+                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
                             {daySlots.length > 0 && (
                               <div className="flex flex-col gap-1.5">
                                 {daySlots.map((slot) => {
