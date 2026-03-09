@@ -745,7 +745,7 @@ const SessionDetailPage = () => {
                           <div>
                             <p className="text-xs font-light">{extra.description}</p>
                             <p className="text-[10px] text-muted-foreground">
-                              {formatCurrency(extra.price)} · max {extra.quantity}
+                              {formatCurrency(extra.price)} por unidade
                             </p>
                           </div>
                         </div>

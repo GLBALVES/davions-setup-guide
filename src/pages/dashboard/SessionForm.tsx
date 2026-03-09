@@ -1690,13 +1690,14 @@ const SessionForm = () => {
                               />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Quantity</Label>
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Máx. por reserva</Label>
                               <input
                                 type="number" min="1" step="1"
                                 value={extra.quantity}
                                 onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))}
                                 className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                               />
+                              <p className="text-[9px] text-muted-foreground">Deixe em 1 para sem limite (até 99)</p>
                             </div>
                             <div className="flex flex-col gap-1.5">
                               <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price</Label>
