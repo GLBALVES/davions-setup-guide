@@ -20,8 +20,6 @@ import {
   CreditCard,
   Loader2,
   Mail,
-  Plus,
-  Trash2,
   Upload,
 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
