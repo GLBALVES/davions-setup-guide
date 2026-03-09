@@ -104,6 +104,7 @@ const SessionForm = () => {
   const [taxRate, setTaxRate] = useState("0");
   const [depositEnabled, setDepositEnabled] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositType, setDepositType] = useState<"fixed" | "percent">("fixed");
   const [allowTip, setAllowTip] = useState(false);
 
   const [saving, setSaving] = useState(false);
