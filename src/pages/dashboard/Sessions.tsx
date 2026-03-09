@@ -129,24 +129,54 @@ const Sessions = () => {
               </div>
 
               {/* Filters */}
-              <div className="flex items-center gap-1 border-b border-border pb-1">
-                {FILTERS.map(({ key, label }) => {
-                  const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setFilter(key)}
-                      className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
-                        filter === key
-                          ? "border-foreground text-foreground"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {label}
-                      <span className="ml-1.5 opacity-50">{count}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-1 border-b border-border pb-1">
+                  {FILTERS.map(({ key, label }) => {
+                    const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setFilter(key)}
+                        className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
+                          filter === key
+                            ? "border-foreground text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label}
+                        <span className="ml-1.5 opacity-50">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search + Sort */}
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search sessions…"
+                      className="pl-9 h-8 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 ml-auto">
+                    {SORT_OPTIONS.map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setSort(key)}
+                        className={`px-2.5 py-1 text-[10px] tracking-wider uppercase font-light border transition-colors ${
+                          sort === key
+                            ? "border-foreground text-foreground bg-foreground/5"
+                            : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {loading ? (
