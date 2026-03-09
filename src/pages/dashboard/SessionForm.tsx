@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { cn } from "@/lib/utils";
+import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 
 // ────────────────────────────────────────────
 // Types
