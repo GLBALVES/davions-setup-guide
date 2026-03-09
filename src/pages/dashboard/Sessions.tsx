@@ -164,15 +164,39 @@ const Sessions = () => {
 
 function SessionCard({
   session,
+  storeSlug,
   onClick,
 }: {
   session: Session;
+  storeSlug: string | null;
   onClick: () => void;
 }) {
+  const { toast } = useToast();
+
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   }).format(session.price / 100);
+
+  const bookingUrl = storeSlug
+    ? `${window.location.origin}/store/${storeSlug}/${session.id}`
+    : null;
+
+  const handlePreview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (bookingUrl) window.open(bookingUrl, "_blank");
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      toast({ title: "Link copied!", description: "Booking URL copied to clipboard." });
+    } catch {
+      toast({ title: "Failed to copy", variant: "destructive" });
+    }
+  };
 
   return (
     <button
@@ -199,6 +223,25 @@ function SessionCard({
             {session.status === "active" ? "Published" : "Unpublished"}
           </Badge>
         </div>
+        {/* Preview & Share overlay buttons */}
+        {bookingUrl && (
+          <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={handlePreview}
+              title="Preview booking page"
+              className="h-7 w-7 bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-colors"
+            >
+              <Eye className="h-3.5 w-3.5 text-foreground" />
+            </button>
+            <button
+              onClick={handleShare}
+              title="Copy booking link"
+              className="h-7 w-7 bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-background transition-colors"
+            >
+              <Share2 className="h-3.5 w-3.5 text-foreground" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="p-4 flex flex-col gap-3">
@@ -228,10 +271,30 @@ function SessionCard({
 
         <div className="flex items-center justify-between border-t border-border pt-3">
           <span className="text-base font-light">{priceFormatted}</span>
-          <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            Manage
-          </span>
+          <div className="flex items-center gap-3">
+            {bookingUrl && (
+              <>
+                <button
+                  onClick={handlePreview}
+                  title="Preview booking page"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={handleShare}
+                  title="Copy booking link"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </button>
+              </>
+            )}
+            <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Manage
+            </span>
+          </div>
         </div>
       </div>
     </button>
