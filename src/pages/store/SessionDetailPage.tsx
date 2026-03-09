@@ -389,13 +389,13 @@ const SessionDetailPage = () => {
                   </p>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
-                      Nome Completo *
+                      Full Name *
                     </Label>
                     <Input
                       id="clientName"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
-                      placeholder="Seu nome"
+                      placeholder="Your name"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
