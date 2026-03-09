@@ -27,7 +27,9 @@ import { cn } from "@/lib/utils";
 // ────────────────────────────────────────────
 
 const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const DAY_FULL = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const DAY_FULL = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+// Ordered Mon→Sun for display
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 interface WeeklySlot {
   id?: string;
