@@ -677,78 +677,33 @@ const SessionForm = () => {
 
   const StepIndicator = () => (
     <div className="flex items-center gap-0 mb-8">
-      {/* Step 1 */}
-      <button
-        onClick={() => setStep(1)}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 1 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 1 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>1</span>
-        Details
-      </button>
-
-      {/* Connector */}
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 2 */}
-      <button
-        onClick={() => sessionId ? setStep(2) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 2 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 2 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>2</span>
-        Availability
-      </button>
-
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 3 */}
-      <button
-        onClick={() => sessionId ? setStep(3) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 3 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 3 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>3</span>
-        Payment
-      </button>
-
-      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
-
-      {/* Step 4 */}
-      <button
-        onClick={() => sessionId ? setStep(4) : undefined}
-        disabled={!sessionId}
-        className={cn(
-          "flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-colors",
-          step === 4 ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-          !sessionId && "opacity-40 cursor-not-allowed"
-        )}
-      >
-        <span className={cn(
-          "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors",
-          step === 4 ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-        )}>4</span>
-        Add-ons
-      </button>
+      {[
+        { n: 1 as const, label: "Details" },
+        { n: 2 as const, label: "Availability" },
+        { n: 3 as const, label: "Payment" },
+        { n: 4 as const, label: "Add-ons" },
+        { n: 5 as const, label: "Extras" },
+      ].map(({ n, label }, i) => (
+        <>
+          {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
+          <button
+            key={n}
+            onClick={() => sessionId ? setStep(n) : undefined}
+            disabled={!sessionId && n > 1}
+            className={cn(
+              "flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase transition-colors shrink-0",
+              step === n ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              !sessionId && n > 1 && "opacity-40 cursor-not-allowed"
+            )}
+          >
+            <span className={cn(
+              "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors shrink-0",
+              step === n ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
+            )}>{n}</span>
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        </>
+      ))}
     </div>
   );
 
