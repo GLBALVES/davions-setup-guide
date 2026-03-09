@@ -642,7 +642,7 @@ const SessionForm = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {isEdit ? "Salvar Alterações" : "Criar Session"}
+                  {isEdit ? "Save Changes" : "Create Session"}
                 </Button>
               </div>
             </div>

@@ -223,8 +223,8 @@ const SessionDetailPage = () => {
       }
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
-      toast({ title: "Erro no pagamento", description: message, variant: "destructive" });
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Payment error", description: message, variant: "destructive" });
       await supabase.from("bookings").delete().eq("id", bookingData.id);
       setSubmitting(false);
     }

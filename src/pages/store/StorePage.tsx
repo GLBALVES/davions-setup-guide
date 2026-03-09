@@ -145,7 +145,7 @@ const StorePage = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Camera className="h-3 w-3" />
-                        {session.num_photos} fotos
+                        {session.num_photos} photos
                       </span>
                       {session.location && (
                         <span className="flex items-center gap-1">
