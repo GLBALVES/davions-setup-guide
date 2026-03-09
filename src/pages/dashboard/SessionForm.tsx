@@ -104,6 +104,7 @@ const SessionForm = () => {
   const [taxRate, setTaxRate] = useState("0");
   const [depositEnabled, setDepositEnabled] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositType, setDepositType] = useState<"fixed" | "percent">("fixed");
   const [allowTip, setAllowTip] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -207,7 +208,18 @@ const SessionForm = () => {
         setTaxRate(String(sAny.tax_rate));
       }
       setDepositEnabled(sAny.deposit_enabled ?? false);
-      setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      // Determine if stored deposit is percentage or fixed:
+      // We store percent as negative sentinel in deposit_amount is not feasible,
+      // so we rely on deposit_type if available, else guess fixed
+      const sAny2 = s as unknown as { deposit_type?: string };
+      const storedType = (sAny2.deposit_type === "percent" ? "percent" : "fixed") as "fixed" | "percent";
+      setDepositType(storedType);
+      if (storedType === "percent") {
+        // deposit_amount stores the percentage * 100 (e.g. 25.00% stored as 2500)
+        setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      } else {
+        setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      }
       setAllowTip(sAny.allow_tip ?? false);
     }
 
@@ -392,9 +404,19 @@ const SessionForm = () => {
     setSaving(true);
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
     const finalPrice = requirePayment ? priceInCents : 0;
-    const finalDepositAmount = depositEnabled
-      ? Math.round(parseFloat(depositAmount || "0") * 100)
-      : 0;
+
+    // Deposit: if "percent" mode, store the percentage value * 100 (e.g. 25% → 2500)
+    // If "fixed" mode, store the dollar amount in cents as usual
+    let finalDepositAmount = 0;
+    if (depositEnabled) {
+      const depositVal = parseFloat(depositAmount || "0");
+      if (depositType === "percent") {
+        // store percent × 100 so we can recover it; e.g. 25.50% → stored as 2550
+        finalDepositAmount = Math.round(depositVal * 100);
+      } else {
+        finalDepositAmount = Math.round(depositVal * 100);
+      }
+    }
 
     const { error } = await supabase
       .from("sessions")
@@ -1172,48 +1194,103 @@ const SessionForm = () => {
                     })()}
 
                     {/* ── Partial Payment / Deposit ── */}
-                    <div className="border border-border p-4 flex flex-col gap-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-xs tracking-wider uppercase font-light">Require Deposit at Booking</p>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Collect a partial amount upfront; the rest is due at the session.
-                          </p>
-                        </div>
-                        <Switch checked={depositEnabled} onCheckedChange={setDepositEnabled} />
-                      </div>
-                      {depositEnabled && (
-                        <div className="flex items-center gap-4 mt-1">
-                          <div className="flex flex-col gap-1.5 w-40">
-                            <Label htmlFor="deposit-amt" className="text-[9px] tracking-widest uppercase text-muted-foreground">
-                              Deposit Amount
-                            </Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                              <Input
-                                id="deposit-amt"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={depositAmount}
-                                onChange={(e) => setDepositAmount(e.target.value)}
-                                placeholder="0.00"
-                                className="pl-7 h-8 text-sm"
-                              />
+                    {(() => {
+                      const priceVal = parseFloat(price || "0");
+                      const depositVal = parseFloat(depositAmount || "0");
+                      const depositInDollars =
+                        depositType === "percent"
+                          ? (priceVal * depositVal) / 100
+                          : depositVal;
+                      const remaining = priceVal - depositInDollars;
+
+                      return (
+                        <div className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-xs tracking-wider uppercase font-light">Require Deposit at Booking</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                Collect a partial amount upfront; the rest is due at the session.
+                              </p>
                             </div>
+                            <Switch checked={depositEnabled} onCheckedChange={setDepositEnabled} />
                           </div>
-                          {parseFloat(depositAmount || "0") > 0 && parseFloat(price || "0") > 0 && (
-                            <p className="text-[10px] text-muted-foreground">
-                              Remaining{" "}
-                              <span className="text-foreground font-light">
-                                ${(parseFloat(price || "0") - parseFloat(depositAmount || "0")).toFixed(2)}
-                              </span>{" "}
-                              due at session
-                            </p>
+                          {depositEnabled && (
+                            <div className="flex flex-col gap-3 mt-1">
+                              {/* Type selector */}
+                              <div className="flex rounded-md border border-border overflow-hidden w-fit">
+                                <button
+                                  type="button"
+                                  onClick={() => setDepositType("fixed")}
+                                  className={cn(
+                                    "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors",
+                                    depositType === "fixed"
+                                      ? "bg-foreground text-background"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  $ Value
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDepositType("percent")}
+                                  className={cn(
+                                    "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors border-l border-border",
+                                    depositType === "percent"
+                                      ? "bg-foreground text-background"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  % Percent
+                                </button>
+                              </div>
+
+                              <div className="flex items-center gap-4">
+                                <div className="flex flex-col gap-1.5 w-40">
+                                  <Label htmlFor="deposit-amt" className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                                    {depositType === "fixed" ? "Deposit Amount" : "Deposit Percentage"}
+                                  </Label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                      {depositType === "fixed" ? "$" : "%"}
+                                    </span>
+                                    <Input
+                                      id="deposit-amt"
+                                      type="number"
+                                      min="0"
+                                      max={depositType === "percent" ? "100" : undefined}
+                                      step="0.01"
+                                      value={depositAmount}
+                                      onChange={(e) => setDepositAmount(e.target.value)}
+                                      placeholder={depositType === "percent" ? "25" : "0.00"}
+                                      className="pl-7 h-8 text-sm"
+                                    />
+                                  </div>
+                                </div>
+                                {depositVal > 0 && priceVal > 0 && (
+                                  <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
+                                    {depositType === "percent" && (
+                                      <span>
+                                        Deposit:{" "}
+                                        <span className="text-foreground font-light">
+                                          ${depositInDollars.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    )}
+                                    <span>
+                                      Remaining:{" "}
+                                      <span className={cn("font-light", remaining < 0 ? "text-destructive" : "text-foreground")}>
+                                        ${Math.max(remaining, 0).toFixed(2)}
+                                      </span>{" "}
+                                      due at session
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* ── Allow Tip ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
