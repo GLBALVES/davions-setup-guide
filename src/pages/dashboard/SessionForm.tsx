@@ -173,6 +173,10 @@ const SessionForm = () => {
   // ── Global config (business hours + buffers — applies to all days) ──
   const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
 
+  // Refs for business hours range auto-focus
+  const businessHrsStartRef = useRef<HTMLInputElement>(null);
+  const businessHrsEndRef = useRef<HTMLInputElement>(null);
+
   const updateGlobalConfig = (patch: Partial<DayConfig>) => {
     setGlobalConfig((prev) => ({ ...prev, ...patch }));
   };
