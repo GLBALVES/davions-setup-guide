@@ -77,7 +77,7 @@ interface SelectedExtra {
   maxQty: number;
 }
 
-type BookingStep = "slots" | "form";
+type BookingStep = "slots" | "form" | "addons";
 
 // ────────────────────────────────────────────
 // Helpers
@@ -427,7 +427,9 @@ const SessionDetailPage = () => {
               </p>
             )}
             <h1 className="text-white text-xl font-light tracking-wide">
-              Please select a date and time
+              {step === "slots" && "Please select a date and time"}
+              {step === "form" && "Enter your details"}
+              {step === "addons" && "Customize your session"}
             </h1>
           </div>
         </div>
@@ -582,66 +584,6 @@ const SessionDetailPage = () => {
               )}
             </div>
 
-            {/* Extras card */}
-            {extras.length > 0 && selectedSlot && (
-              <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-3">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                  Add-ons
-                </p>
-                <div className="flex flex-col gap-2">
-                  {extras.map((extra) => {
-                    const sel = selectedExtras.find((e) => e.id === extra.id);
-                    return (
-                      <div
-                        key={extra.id}
-                        className={cn(
-                          "border p-3 flex items-center justify-between transition-colors cursor-pointer",
-                          sel ? "border-foreground" : "border-border hover:border-foreground/30"
-                        )}
-                        onClick={() => toggleExtra(extra)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "h-4 w-4 border flex items-center justify-center shrink-0 transition-colors",
-                            sel ? "border-foreground bg-foreground" : "border-border"
-                          )}>
-                            {sel && <Check className="h-2.5 w-2.5 text-background" />}
-                          </div>
-                          <div>
-                            <p className="text-xs font-light">{extra.description}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {formatCurrency(extra.price)} · max {extra.quantity}
-                            </p>
-                          </div>
-                        </div>
-                        {sel && (
-                          <div
-                            className="flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              onClick={() => changeExtraQty(extra.id, -1)}
-                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="text-xs w-4 text-center">{sel.qty}</span>
-                            <button
-                              onClick={() => changeExtraQty(extra.id, +1)}
-                              disabled={sel.qty >= sel.maxQty}
-                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Continue button */}
             <Button
               onClick={() => setStep("form")}
@@ -700,8 +642,111 @@ const SessionDetailPage = () => {
               </div>
             </div>
 
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep("slots")}
+                className="text-xs tracking-wider uppercase font-light rounded-none"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={() => setStep("addons")}
+                disabled={!clientName.trim() || !clientEmail.trim()}
+                className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
+              >
+                Continue →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: Add-ons + Order Summary + Pay ── */}
+        {step === "addons" && selectedSlot && (
+          <div className="flex flex-col gap-5">
+
+            {/* Slot + client summary */}
+            <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-3">
+              <div className="border border-border p-4 flex flex-col gap-1">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
+                  Selected slot
+                </p>
+                <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedSlot.start_time} – {selectedSlot.end_time}
+                </p>
+              </div>
+              <div className="border border-border p-4 flex flex-col gap-1">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
+                  Your details
+                </p>
+                <p className="text-sm font-light">{clientName}</p>
+                <p className="text-xs text-muted-foreground">{clientEmail}</p>
+              </div>
+            </div>
+
+            {/* Add-ons */}
+            {extras.length > 0 && (
+              <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                  Add-ons
+                </p>
+                <div className="flex flex-col gap-2">
+                  {extras.map((extra) => {
+                    const sel = selectedExtras.find((e) => e.id === extra.id);
+                    return (
+                      <div
+                        key={extra.id}
+                        className={cn(
+                          "border p-3 flex items-center justify-between transition-colors cursor-pointer",
+                          sel ? "border-foreground" : "border-border hover:border-foreground/30"
+                        )}
+                        onClick={() => toggleExtra(extra)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "h-4 w-4 border flex items-center justify-center shrink-0 transition-colors",
+                            sel ? "border-foreground bg-foreground" : "border-border"
+                          )}>
+                            {sel && <Check className="h-2.5 w-2.5 text-background" />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-light">{extra.description}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {formatCurrency(extra.price)} · max {extra.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        {sel && (
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={() => changeExtraQty(extra.id, -1)}
+                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <span className="text-xs w-4 text-center">{sel.qty}</span>
+                            <button
+                              onClick={() => changeExtraQty(extra.id, +1)}
+                              disabled={sel.qty >= sel.maxQty}
+                              className="h-6 w-6 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Order summary */}
-            <div className="border border-border p-4 flex flex-col gap-2">
+            <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-2">
               <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
                 Order summary
               </p>
@@ -739,14 +784,14 @@ const SessionDetailPage = () => {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => setStep("slots")}
+                onClick={() => setStep("form")}
                 className="text-xs tracking-wider uppercase font-light rounded-none"
               >
                 Back
               </Button>
               <Button
                 onClick={handleCheckout}
-                disabled={submitting || !clientName.trim() || !clientEmail.trim()}
+                disabled={submitting}
                 className="flex-1 gap-2 text-xs tracking-wider uppercase font-light rounded-none h-11"
               >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
