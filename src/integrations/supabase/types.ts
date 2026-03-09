@@ -421,6 +421,8 @@ export type Database = {
       sessions: {
         Row: {
           allow_tip: boolean
+          booking_notice_days: number
+          booking_window_days: number
           break_after_minutes: number
           confirmation_email_body: string
           cover_image_url: string | null
@@ -443,6 +445,8 @@ export type Database = {
         }
         Insert: {
           allow_tip?: boolean
+          booking_notice_days?: number
+          booking_window_days?: number
           break_after_minutes?: number
           confirmation_email_body?: string
           cover_image_url?: string | null
@@ -465,6 +469,8 @@ export type Database = {
         }
         Update: {
           allow_tip?: boolean
+          booking_notice_days?: number
+          booking_window_days?: number
           break_after_minutes?: number
           confirmation_email_body?: string
           cover_image_url?: string | null

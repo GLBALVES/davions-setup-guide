@@ -99,7 +99,7 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
 
   // ── Payment step ──
@@ -134,6 +134,10 @@ const SessionForm = () => {
   // ── Confirmation step ──
   const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
   const [reminderDays, setReminderDays] = useState<number[]>([]);
+
+  // ── Booking Rules step ──
+  const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
+  const [bookingWindowDays, setBookingWindowDays] = useState("60");
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -340,10 +344,12 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[] };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
+    setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
+    setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     // Sync to editor once loaded
     if (editor && bodyHtml) {
       editor.commands.setContent(bodyHtml);
@@ -589,7 +595,7 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
-  // Step 6: Save confirmation settings → navigate away
+  // Step 6: Save confirmation settings → go to step 7
   // ────────────────────────────────────────────
 
   const handleFinishConfirmation = async () => {
@@ -608,6 +614,34 @@ const SessionForm = () => {
 
     if (error) {
       toast({ title: "Error saving confirmation settings", description: error.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    setSaving(false);
+    setStep(7);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 7: Save booking rules → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishBookingRules = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({
+        booking_notice_days: parseInt(bookingNoticeDays) || 1,
+        booking_window_days: parseInt(bookingWindowDays) || 60,
+      } as any)
+      .eq("id", sessionId);
+
+    if (error) {
+      toast({ title: "Error saving booking rules", description: error.message, variant: "destructive" });
       setSaving(false);
       return;
     }
@@ -704,6 +738,7 @@ const SessionForm = () => {
         { n: 4 as const, label: "Add-ons" },
         { n: 5 as const, label: "Extras" },
         { n: 6 as const, label: "Confirmation" },
+        { n: 7 as const, label: "Rules" },
       ].map(({ n, label }, i) => (
         <>
           {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
@@ -1730,6 +1765,96 @@ const SessionForm = () => {
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
                     <Button onClick={handleFinishConfirmation} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 7: Booking Rules ── */}
+              {step === 7 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Booking Rules
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Control when clients can schedule sessions.
+                      </p>
+                    </div>
+
+                    {/* Notice period */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Notice Required</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          How many days in advance must a client book? Prevents last-minute same-day bookings.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={bookingNoticeDays}
+                          onChange={(e) => setBookingNoticeDays(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">
+                          day{parseInt(bookingNoticeDays) !== 1 ? "s" : ""} notice required
+                        </span>
+                      </div>
+                      {parseInt(bookingNoticeDays) === 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          Clients can book for today (same-day bookings allowed).
+                        </p>
+                      )}
+                      {parseInt(bookingNoticeDays) > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          The earliest a client can book is {parseInt(bookingNoticeDays)} day{parseInt(bookingNoticeDays) !== 1 ? "s" : ""} from today.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Booking window */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Booking Window</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          How far into the future can clients book? Limits the calendar visibility.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={bookingWindowDays}
+                          onChange={(e) => setBookingWindowDays(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">
+                          day{parseInt(bookingWindowDays) !== 1 ? "s" : ""} into the future
+                        </span>
+                      </div>
+                      {parseInt(bookingWindowDays) > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          Clients can book sessions up to {parseInt(bookingWindowDays)} days from today.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Step 7 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(6)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
