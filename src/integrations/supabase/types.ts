@@ -245,6 +245,60 @@ export type Database = {
           },
         ]
       }
+      session_day_config: {
+        Row: {
+          buffer_after_min: number
+          buffer_before_min: number
+          created_at: string
+          day_of_week: number
+          hours_end: string | null
+          hours_start: string | null
+          id: string
+          photographer_id: string
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          buffer_after_min?: number
+          buffer_before_min?: number
+          created_at?: string
+          day_of_week: number
+          hours_end?: string | null
+          hours_start?: string | null
+          id?: string
+          photographer_id: string
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          buffer_after_min?: number
+          buffer_before_min?: number
+          created_at?: string
+          day_of_week?: number
+          hours_end?: string | null
+          hours_start?: string | null
+          id?: string
+          photographer_id?: string
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_day_config_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_day_config_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_types: {
         Row: {
           created_at: string

@@ -40,6 +40,22 @@ interface WeeklySlot {
   _local?: boolean;
 }
 
+interface DayConfig {
+  hours_start: string;   // "HH:mm" or ""
+  hours_end: string;     // "HH:mm" or ""
+  buffer_before_min: number;
+  buffer_after_min: number;
+  /** DB id if persisted */
+  db_id?: string;
+}
+
+const DEFAULT_DAY_CONFIG = (): DayConfig => ({
+  hours_start: "",
+  hours_end: "",
+  buffer_before_min: 0,
+  buffer_after_min: 0,
+});
+
 // ────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────
@@ -47,6 +63,20 @@ interface WeeklySlot {
 const computeEndTime = (start: string, durationMin: number): string => {
   const base = parse(start, "HH:mm", new Date());
   return format(addMinutes(base, durationMin), "HH:mm");
+};
+
+/** Add minutes to a "HH:mm" string */
+const addMinsToTime = (time: string, mins: number): string => {
+  if (!time) return "";
+  const base = parse(time, "HH:mm", new Date());
+  return format(addMinutes(base, mins), "HH:mm");
+};
+
+/** Subtract minutes from a "HH:mm" string */
+const subMinsFromTime = (time: string, mins: number): string => {
+  if (!time) return "";
+  const base = parse(time, "HH:mm", new Date());
+  return format(addMinutes(base, -mins), "HH:mm");
 };
 
 // ────────────────────────────────────────────
@@ -82,11 +112,23 @@ const SessionForm = () => {
 
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
-  // addingSlotForDay: which day is currently showing the inline "add time" input
   const [addingSlotForDay, setAddingSlotForDay] = useState<number | null>(null);
   const [newStart, setNewStart] = useState("09:00");
-  // days that have been "opened" / expanded in the UI
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
+
+  // ── Day configs (business hours + buffers) ──
+  const [dayConfigs, setDayConfigs] = useState<Map<number, DayConfig>>(new Map());
+
+  const getDayConfig = (day: number): DayConfig =>
+    dayConfigs.get(day) ?? DEFAULT_DAY_CONFIG();
+
+  const updateDayConfig = (day: number, patch: Partial<DayConfig>) => {
+    setDayConfigs((prev) => {
+      const next = new Map(prev);
+      next.set(day, { ...(prev.get(day) ?? DEFAULT_DAY_CONFIG()), ...patch });
+      return next;
+    });
+  };
 
   // ────────────────────────────────────────────
   // Session types
@@ -151,23 +193,51 @@ const SessionForm = () => {
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
     }
 
-    const { data: avail } = await supabase
-      .from("session_availability")
-      .select("id, day_of_week, start_time, end_time")
-      .eq("session_id", sessionId)
-      .not("day_of_week", "is", null)
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true });
+    const [availRes, configRes] = await Promise.all([
+      supabase
+        .from("session_availability")
+        .select("id, day_of_week, start_time, end_time")
+        .eq("session_id", sessionId)
+        .not("day_of_week", "is", null)
+        .order("day_of_week", { ascending: true })
+        .order("start_time", { ascending: true }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any)
+        .from("session_day_config")
+        .select("id, day_of_week, hours_start, hours_end, buffer_before_min, buffer_after_min")
+        .eq("session_id", sessionId),
+    ]);
 
-    if (avail) {
+    if (availRes.data) {
       setSlots(
-        avail.map((a) => ({
+        availRes.data.map((a: { id: string; day_of_week: number; start_time: string; end_time: string }) => ({
           id: a.id,
-          day_of_week: (a as unknown as { day_of_week: number }).day_of_week,
+          day_of_week: a.day_of_week,
           start_time: a.start_time,
           end_time: a.end_time,
         }))
       );
+    }
+
+    if (configRes.data) {
+      const map = new Map<number, DayConfig>();
+      for (const row of configRes.data as Array<{
+        id: string;
+        day_of_week: number;
+        hours_start: string | null;
+        hours_end: string | null;
+        buffer_before_min: number;
+        buffer_after_min: number;
+      }>) {
+        map.set(row.day_of_week, {
+          db_id: row.id,
+          hours_start: row.hours_start ? row.hours_start.slice(0, 5) : "",
+          hours_end: row.hours_end ? row.hours_end.slice(0, 5) : "",
+          buffer_before_min: row.buffer_before_min ?? 0,
+          buffer_after_min: row.buffer_after_min ?? 0,
+        });
+      }
+      setDayConfigs(map);
     }
 
     setLoading(false);
@@ -260,9 +330,36 @@ const SessionForm = () => {
           day_of_week: s.day_of_week,
           start_time: s.start_time,
           end_time: s.end_time,
-          // date is now nullable; leave null for weekly recurring slots
         }))
       );
+    }
+
+    // Upsert day configs (delete existing then insert, keyed by session_id + day_of_week)
+    const configEntries = Array.from(dayConfigs.entries());
+    if (configEntries.length > 0 && sessionId) {
+      // Delete all existing configs for this session first, then insert fresh
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("session_day_config")
+        .delete()
+        .eq("session_id", sessionId);
+
+      const configRows = configEntries
+        .filter(([, cfg]) => cfg.hours_start || cfg.hours_end || cfg.buffer_before_min > 0 || cfg.buffer_after_min > 0)
+        .map(([day, cfg]) => ({
+          session_id: sessionId,
+          photographer_id: user.id,
+          day_of_week: day,
+          hours_start: cfg.hours_start || null,
+          hours_end: cfg.hours_end || null,
+          buffer_before_min: cfg.buffer_before_min,
+          buffer_after_min: cfg.buffer_after_min,
+        }));
+
+      if (configRows.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("session_day_config").insert(configRows);
+      }
     }
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
@@ -280,8 +377,15 @@ const SessionForm = () => {
     );
 
   const suggestNextStart = (day: number): string => {
+    const cfg = getDayConfig(day);
     const daySlots = slotsForDay(day);
-    if (daySlots.length === 0) return "09:00";
+    if (daySlots.length === 0) {
+      // Use hours_start + buffer_before as default when no slots yet
+      if (cfg.hours_start) {
+        return addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      }
+      return "09:00";
+    }
     const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
     return computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
   };
@@ -289,6 +393,7 @@ const SessionForm = () => {
   const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
+    const cfg = getDayConfig(day);
 
     // Validate: newStart must be >= latest end_time + break
     const daySlots = slotsForDay(day);
@@ -305,6 +410,31 @@ const SessionForm = () => {
       }
     }
 
+    // Validate against business hours + buffers
+    if (cfg.hours_start) {
+      const earliest = addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
+      if (newStart < earliest) {
+        toast({
+          title: "Outside business hours",
+          description: `Earliest allowed start is ${earliest} (${cfg.hours_start} + ${cfg.buffer_before_min} min buffer).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    if (cfg.hours_end) {
+      const latest = subMinsFromTime(cfg.hours_end, cfg.buffer_after_min);
+      // end time of the slot must be <= latest allowed end
+      if (end > latest) {
+        toast({
+          title: "Outside business hours",
+          description: `Slot ends at ${end} but must end by ${latest} (${cfg.hours_end} - ${cfg.buffer_after_min} min buffer).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const entry: WeeklySlot = {
       day_of_week: day,
       start_time: newStart,
@@ -313,7 +443,8 @@ const SessionForm = () => {
     };
     setSlots((prev) => [...prev, entry]);
     setAddingSlotForDay(null);
-    setNewStart("09:00");
+    const nextSuggestion = computeEndTime(newStart, (parseInt(durationMinutes) || 60) + (parseInt(breakAfterMinutes) || 0));
+    setNewStart(nextSuggestion);
   };
 
   const handleRemoveSlot = async (slot: WeeklySlot, index: number) => {
@@ -612,9 +743,77 @@ const SessionForm = () => {
                           </Button>
                         </div>
 
-                        {/* Expanded: existing slots + optional add form */}
+                        {/* Expanded: business hours + buffers config + slots + add form */}
                         {isExpanded && (
-                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-2">
+                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
+                            {/* Business hours + buffer config */}
+                            <div className="flex flex-col gap-2 border border-border/50 p-3 bg-background">
+                              {/* Business hours row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                                  Business hrs
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="time"
+                                    value={getDayConfig(dayIdx).hours_start}
+                                    onChange={(e) => updateDayConfig(dayIdx, { hours_start: e.target.value })}
+                                    className="w-28 h-7 text-xs"
+                                    placeholder="--:--"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground">→</span>
+                                  <Input
+                                    type="time"
+                                    value={getDayConfig(dayIdx).hours_end}
+                                    onChange={(e) => updateDayConfig(dayIdx, { hours_end: e.target.value })}
+                                    className="w-28 h-7 text-xs"
+                                    placeholder="--:--"
+                                  />
+                                </div>
+                                {(getDayConfig(dayIdx).hours_start || getDayConfig(dayIdx).hours_end) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateDayConfig(dayIdx, { hours_start: "", hours_end: "" })}
+                                    className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
+                                  >
+                                    clear
+                                  </button>
+                                )}
+                              </div>
+                              {/* Buffer row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                                  Buffer
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="5"
+                                      value={getDayConfig(dayIdx).buffer_before_min || ""}
+                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_before_min: parseInt(e.target.value) || 0 })}
+                                      className="w-16 h-7 text-xs"
+                                      placeholder="0"
+                                    />
+                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="5"
+                                      value={getDayConfig(dayIdx).buffer_after_min || ""}
+                                      onChange={(e) => updateDayConfig(dayIdx, { buffer_after_min: parseInt(e.target.value) || 0 })}
+                                      className="w-16 h-7 text-xs"
+                                      placeholder="0"
+                                    />
+                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
                             {daySlots.length > 0 && (
                               <div className="flex flex-col gap-1.5">
                                 {daySlots.map((slot) => {
