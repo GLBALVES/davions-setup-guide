@@ -330,9 +330,12 @@ export type Database = {
       }
       sessions: {
         Row: {
+          allow_tip: boolean
           break_after_minutes: number
           cover_image_url: string | null
           created_at: string
+          deposit_amount: number
+          deposit_enabled: boolean
           description: string | null
           duration_minutes: number
           id: string
@@ -342,13 +345,17 @@ export type Database = {
           price: number
           session_type_id: string | null
           status: string
+          tax_rate: number
           title: string
           updated_at: string
         }
         Insert: {
+          allow_tip?: boolean
           break_after_minutes?: number
           cover_image_url?: string | null
           created_at?: string
+          deposit_amount?: number
+          deposit_enabled?: boolean
           description?: string | null
           duration_minutes?: number
           id?: string
@@ -358,13 +365,17 @@ export type Database = {
           price?: number
           session_type_id?: string | null
           status?: string
+          tax_rate?: number
           title?: string
           updated_at?: string
         }
         Update: {
+          allow_tip?: boolean
           break_after_minutes?: number
           cover_image_url?: string | null
           created_at?: string
+          deposit_amount?: number
+          deposit_enabled?: boolean
           description?: string | null
           duration_minutes?: number
           id?: string
@@ -374,6 +385,7 @@ export type Database = {
           price?: number
           session_type_id?: string | null
           status?: string
+          tax_rate?: number
           title?: string
           updated_at?: string
         }
