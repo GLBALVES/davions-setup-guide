@@ -6,7 +6,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Session {
