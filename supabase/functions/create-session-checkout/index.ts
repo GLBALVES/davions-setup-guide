@@ -79,7 +79,9 @@ serve(async (req) => {
 
     if (sessionData.deposit_enabled) {
       // Charge only deposit + extras + tax
-      const depositBase = sessionData.deposit_amount as number;
+      const depositBase = sessionData.deposit_type === 'percent'
+        ? Math.round(subtotal * ((sessionData.deposit_amount as number) / 100))
+        : (sessionData.deposit_amount as number);
       lineItems.push({
         price_data: {
           currency: "brl",
