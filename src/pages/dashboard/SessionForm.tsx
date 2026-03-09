@@ -234,9 +234,32 @@ const SessionForm = () => {
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
 
+  const suggestNextStart = (day: number): string => {
+    const daySlots = slotsForDay(day);
+    if (daySlots.length === 0) return "09:00";
+    const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
+    return computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
+  };
+
   const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
+
+    // Validate: newStart must be >= latest end_time + break
+    const daySlots = slotsForDay(day);
+    if (daySlots.length > 0) {
+      const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
+      const minAllowed = computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
+      if (newStart < minAllowed) {
+        toast({
+          title: "Time conflict",
+          description: `Start time must be ${minAllowed} or later (after previous slot + break).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const entry: WeeklySlot = {
       day_of_week: day,
       start_time: newStart,
