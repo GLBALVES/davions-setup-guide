@@ -230,7 +230,7 @@ const SessionDetailPage = () => {
       setLoading(false);
     };
     load();
-  }, [sessionId]);
+  }, [sessionSlug]);
 
   // ────────────────────────────────────────────
   // Extras helpers
