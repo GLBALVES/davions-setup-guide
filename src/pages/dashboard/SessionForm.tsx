@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ChevronRight,
   Clock,
+  CreditCard,
   Loader2,
   Plus,
   Trash2,
@@ -94,8 +95,11 @@ const SessionForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Wizard step ──
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
+
+  // ── Payment step ──
+  const [requirePayment, setRequirePayment] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
@@ -190,6 +194,7 @@ const SessionForm = () => {
       setCoverImageUrl(s.cover_image_url);
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
+      setRequirePayment(s.price > 0);
     }
 
     const [availRes, configRes] = await Promise.all([
@@ -360,6 +365,33 @@ const SessionForm = () => {
       buffer_after_min: globalConfig.buffer_after_min,
     });
 
+    setSaving(false);
+    setStep(3);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 3: Finish (apply payment settings)
+  // ────────────────────────────────────────────
+
+  const handleFinish = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+    const originalPriceInCents = Math.round(parseFloat(price || "0") * 100);
+    const finalPrice = requirePayment ? originalPriceInCents : 0;
+
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ price: finalPrice } as any)
+      .eq("id", sessionId);
+
+    if (error) {
+      toast({ title: "Error saving payment settings", description: error.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
@@ -507,7 +539,6 @@ const SessionForm = () => {
       <button
         type="button"
         onClick={() => {
-          // Only allow navigating to step 2 if session has been created
           if (sessionId || isEdit) setStep(2);
         }}
         disabled={!sessionId && !isEdit}
@@ -529,6 +560,37 @@ const SessionForm = () => {
           step === 2 ? "text-foreground" : "text-muted-foreground"
         )}>
           Availability
+        </span>
+      </button>
+
+      {/* Connector */}
+      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
+
+      {/* Step 3 */}
+      <button
+        type="button"
+        onClick={() => {
+          if (sessionId || isEdit) setStep(3);
+        }}
+        disabled={!sessionId && !isEdit}
+        className={cn(
+          "flex items-center gap-2.5 group",
+          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+        )}
+      >
+        <div className={cn(
+          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
+          step === 3
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-foreground border-foreground"
+        )}>
+          3
+        </div>
+        <span className={cn(
+          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
+          step === 3 ? "text-foreground" : "text-muted-foreground"
+        )}>
+          Payment
         </span>
       </button>
     </div>
@@ -998,8 +1060,93 @@ const SessionForm = () => {
                       <ArrowLeft className="h-3.5 w-3.5" />
                       Back
                     </Button>
-                    <Button
+                     <Button
                       onClick={handleSaveAvailability}
+                      disabled={saving}
+                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    >
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 3: Payment ── */}
+              {step === 3 && (
+                <>
+                  <section className="flex flex-col gap-6">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Payment Settings
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Configure how clients pay when booking this session.
+                      </p>
+                    </div>
+
+                    {/* Session summary */}
+                    <div className="border border-border p-4 flex items-center justify-between">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Session</p>
+                        <p className="text-sm font-light tracking-wide">{title || "Untitled"}</p>
+                      </div>
+                      <div className="flex flex-col gap-0.5 text-right">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Price</p>
+                        <p className="text-sm font-light tracking-wide">
+                          {parseFloat(price || "0") > 0
+                            ? `$${parseFloat(price).toFixed(2)}`
+                            : "Free"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Require payment toggle */}
+                    <div className="flex items-start justify-between border border-border p-4 gap-4">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-wider uppercase font-light">Require payment at booking</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Clients will be redirected to Stripe Checkout to pay when booking.
+                          Disable to allow free bookings regardless of price.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={requirePayment}
+                        onCheckedChange={setRequirePayment}
+                      />
+                    </div>
+
+                    {/* Stripe info */}
+                    <div className="border border-border bg-muted/5 p-4 flex items-start gap-3">
+                      <CreditCard className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Stripe Payments</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Payments are processed securely via Stripe Checkout. You receive funds directly to your connected Stripe account after the booking is confirmed.
+                        </p>
+                        {!requirePayment && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-1 italic">
+                            Payment is disabled — clients will book without paying upfront.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Step 3 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setStep(2)}
+                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleFinish}
                       disabled={saving}
                       className="gap-2 text-xs tracking-wider uppercase font-light"
                     >
