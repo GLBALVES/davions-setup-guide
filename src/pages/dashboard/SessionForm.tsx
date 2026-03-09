@@ -482,10 +482,10 @@ const SessionForm = () => {
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                     <span className="inline-block w-4 h-px bg-border" />
-                    Horários por Dia da Semana
+                    Weekly Availability
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                    Cada dia pode ter horários diferentes. Clique num dia para expandir e adicionar horários.
+                    Each day can have different time slots. Click a day to expand and add times.
                   </p>
                 </div>
 
