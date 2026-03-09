@@ -591,7 +591,7 @@ const SessionForm = () => {
                                 {newStart && (
                                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                                     → {computeEndTime(newStart, dur)}
-                                    {brk > 0 && ` (livre ${computeEndTime(newStart, totalMinutes)})`}
+                                    {brk > 0 && ` (free until ${computeEndTime(newStart, totalMinutes)})`}
                                   </span>
                                 )}
                                 <Button
