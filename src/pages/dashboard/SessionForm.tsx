@@ -761,28 +761,6 @@ const SessionForm = () => {
       ))}
     </div>
   );
-        <>
-          {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
-          <button
-            key={n}
-            onClick={() => sessionId ? setStep(n) : undefined}
-            disabled={!sessionId && n > 1}
-            className={cn(
-              "flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase transition-colors shrink-0",
-              step === n ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-              !sessionId && n > 1 && "opacity-40 cursor-not-allowed"
-            )}
-          >
-            <span className={cn(
-              "w-5 h-5 rounded-full border flex items-center justify-center text-[9px] transition-colors shrink-0",
-              step === n ? "border-foreground bg-foreground text-background" : "border-muted-foreground"
-            )}>{n}</span>
-            <span className="hidden sm:inline">{label}</span>
-          </button>
-        </>
-      ))}
-    </div>
-  );
 
   // ────────────────────────────────────────────
   // Render
