@@ -363,7 +363,7 @@ const SessionForm = () => {
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="title" className="text-xs tracking-wider uppercase font-light">
-                    Título *
+                    Title *
                   </Label>
                   <Input
                     id="title"
