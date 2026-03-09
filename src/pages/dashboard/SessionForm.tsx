@@ -89,6 +89,41 @@ const SessionForm = () => {
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
 
   // ────────────────────────────────────────────
+  // Session types
+  // ────────────────────────────────────────────
+
+  const DEFAULT_TYPES = ["Newborn", "Family", "Portrait", "Wedding", "Birthday"];
+
+  const fetchSessionTypes = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) {
+      if (data.length === 0) {
+        // Pre-seed defaults on first use
+        const inserts = DEFAULT_TYPES.map((name) => ({
+          photographer_id: user.id,
+          name,
+        }));
+        const { data: seeded } = await supabase
+          .from("session_types")
+          .insert(inserts)
+          .select("id, name");
+        if (seeded) setSessionTypes(seeded);
+      } else {
+        setSessionTypes(data);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchSessionTypes();
+  }, [fetchSessionTypes]);
+
+  // ────────────────────────────────────────────
   // Load (edit mode)
   // ────────────────────────────────────────────
 
@@ -113,6 +148,7 @@ const SessionForm = () => {
       setLocation(s.location ?? "");
       setCoverImageUrl(s.cover_image_url);
       setStatus(s.status as "draft" | "active");
+      setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
     }
 
     const { data: avail } = await supabase
