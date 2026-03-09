@@ -545,6 +545,7 @@ const SessionForm = () => {
         tax_rate: taxEnabled ? parseFloat(taxRate || "0") : 0,
         deposit_enabled: depositEnabled,
         deposit_amount: finalDepositAmount,
+        deposit_type: depositType,
         allow_tip: allowTip,
       } as any)
       .eq("id", sessionId);
