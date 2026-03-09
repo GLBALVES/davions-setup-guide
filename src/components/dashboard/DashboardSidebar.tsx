@@ -4,6 +4,7 @@ import {
   Settings,
   LogOut,
   CalendarDays,
+  BookOpen,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -25,6 +26,7 @@ import {
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sessions", url: "/dashboard/sessions", icon: CalendarDays },
+  { title: "Bookings", url: "/dashboard/bookings", icon: BookOpen },
   { title: "Galleries", url: "/dashboard/galleries", icon: FolderOpen },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];

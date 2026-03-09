@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Sessions from "./pages/dashboard/Sessions";
 import SessionForm from "./pages/dashboard/SessionForm";
+import Bookings from "./pages/dashboard/Bookings";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/dashboard/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
             <Route path="/dashboard/sessions/new" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
             <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
+            <Route path="/dashboard/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
