@@ -76,6 +76,10 @@ const SessionForm = () => {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "active">("draft");
 
+  // ── Session type ──
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   // addingSlotForDay: which day is currently showing the inline "add time" input
