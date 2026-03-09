@@ -19,9 +19,11 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between h-16 px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <span className="text-xl font-light tracking-[0.35em] uppercase text-foreground select-none">
-            DAVIONS
-          </span>
+          <img
+            src={logoPrincipal}
+            alt="Davions"
+            className="h-7 w-auto"
+          />
         </Link>
 
         {/* Desktop Nav */}
