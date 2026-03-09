@@ -88,6 +88,27 @@ const Sessions = () => {
                 </Button>
               </div>
 
+              {/* Filters */}
+              <div className="flex items-center gap-1 border-b border-border pb-1">
+                {FILTERS.map(({ key, label }) => {
+                  const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setFilter(key)}
+                      className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
+                        filter === key
+                          ? "border-foreground text-foreground"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {label}
+                      <span className="ml-1.5 opacity-50">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               {loading ? (
                 <div className="flex items-center justify-center py-16">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
