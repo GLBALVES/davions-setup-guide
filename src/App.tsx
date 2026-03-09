@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Sessions from "./pages/dashboard/Sessions";
 import SessionForm from "./pages/dashboard/SessionForm";
 import Bookings from "./pages/dashboard/Bookings";
+import Settings from "./pages/dashboard/Settings";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
