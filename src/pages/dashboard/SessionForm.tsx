@@ -616,7 +616,7 @@ const SessionForm = () => {
 
                             {daySlots.length === 0 && !isAddingHere && (
                               <p className="text-[11px] text-muted-foreground/50 italic py-1">
-                                Nenhum horário — clique em + para adicionar
+                                No slots — click + to add
                               </p>
                             )}
                           </div>
