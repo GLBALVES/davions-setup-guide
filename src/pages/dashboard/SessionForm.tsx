@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { cn } from "@/lib/utils";
+import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 
 // ────────────────────────────────────────────
 // Types
@@ -75,6 +76,10 @@ const SessionForm = () => {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "active">("draft");
 
+  // ── Session type ──
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   // addingSlotForDay: which day is currently showing the inline "add time" input
@@ -82,6 +87,41 @@ const SessionForm = () => {
   const [newStart, setNewStart] = useState("09:00");
   // days that have been "opened" / expanded in the UI
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
+
+  // ────────────────────────────────────────────
+  // Session types
+  // ────────────────────────────────────────────
+
+  const DEFAULT_TYPES = ["Newborn", "Family", "Portrait", "Wedding", "Birthday"];
+
+  const fetchSessionTypes = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) {
+      if (data.length === 0) {
+        // Pre-seed defaults on first use
+        const inserts = DEFAULT_TYPES.map((name) => ({
+          photographer_id: user.id,
+          name,
+        }));
+        const { data: seeded } = await supabase
+          .from("session_types")
+          .insert(inserts)
+          .select("id, name");
+        if (seeded) setSessionTypes(seeded);
+      } else {
+        setSessionTypes(data);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchSessionTypes();
+  }, [fetchSessionTypes]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
@@ -108,6 +148,7 @@ const SessionForm = () => {
       setLocation(s.location ?? "");
       setCoverImageUrl(s.cover_image_url);
       setStatus(s.status as "draft" | "active");
+      setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
     }
 
     const { data: avail } = await supabase
@@ -181,20 +222,24 @@ const SessionForm = () => {
       cover_image_url: coverImageUrl,
       status,
     };
+    // session_type_id is not yet in generated types, cast via spread
+    const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
     let sessionId = id;
 
     if (isEdit && sessionId) {
-      const { error } = await supabase.from("sessions").update(payload).eq("id", sessionId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await supabase.from("sessions").update(payloadWithType as any).eq("id", sessionId);
       if (error) {
         toast({ title: "Error saving session", description: error.message, variant: "destructive" });
         setSaving(false);
         return;
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase
         .from("sessions")
-        .insert(payload)
+        .insert(payloadWithType as any)
         .select("id")
         .single();
       if (error || !data) {
@@ -395,6 +440,16 @@ const SessionForm = () => {
                     placeholder="e.g. Newborn Session"
                   />
                 </div>
+
+                {user && (
+                  <SessionTypeManager
+                    photographerId={user.id}
+                    sessionTypes={sessionTypes}
+                    selectedTypeId={sessionTypeId}
+                    onSelect={setSessionTypeId}
+                    onRefetch={fetchSessionTypes}
+                  />
+                )}
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
