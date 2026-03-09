@@ -27,7 +27,8 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sessions", url: "/dashboard/sessions", icon: CalendarDays },
   { title: "Bookings", url: "/dashboard/bookings", icon: BookOpen },
-  { title: "Galleries", url: "/dashboard/galleries", icon: FolderOpen },
+  { title: "Proof Galleries", url: "/dashboard/galleries?type=proof", icon: FolderOpen },
+  { title: "Final Galleries", url: "/dashboard/galleries?type=final", icon: FolderOpen },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
@@ -42,10 +43,18 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isActive = (path: string) =>
-    path === "/dashboard"
-      ? currentPath === "/dashboard"
-      : currentPath.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/dashboard") return currentPath === "/dashboard";
+    const [pathname, search] = path.split("?");
+    if (!currentPath.startsWith(pathname)) return false;
+    if (!search) return true;
+    const params = new URLSearchParams(location.search);
+    const expected = new URLSearchParams(search);
+    for (const [key, val] of expected.entries()) {
+      if (params.get(key) !== val) return false;
+    }
+    return true;
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">

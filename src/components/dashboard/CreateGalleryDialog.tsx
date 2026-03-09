@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -23,13 +23,19 @@ interface CreateGalleryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
+  defaultCategory?: string;
 }
 
-export function CreateGalleryDialog({ open, onOpenChange, onCreated }: CreateGalleryDialogProps) {
+export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCategory = "proof" }: CreateGalleryDialogProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("proof");
+  const [category, setCategory] = useState(defaultCategory);
   const [loading, setLoading] = useState(false);
+
+  // Sync category when defaultCategory changes (e.g. switching Proof/Final in sidebar)
+  useEffect(() => {
+    setCategory(defaultCategory);
+  }, [defaultCategory, open]);
 
   const handleCreate = async () => {
     if (!title.trim() || !user) return;
