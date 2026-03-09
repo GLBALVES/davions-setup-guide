@@ -164,9 +164,7 @@ const SessionForm = () => {
 
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
-  const [addingSlotForDay, setAddingSlotForDay] = useState<number | null>(null);
-  const [newStart, setNewStart] = useState("09:00");
-  const [expandedDays, setExpandedDays] = useState<number[]>([]);
+  const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
 
   // ── Global config (business hours + buffers — applies to all days) ──
   const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
@@ -440,11 +438,12 @@ const SessionForm = () => {
 
     setSaving(true);
 
-    // Insert new local weekly slots
-    const newSlots = slots.filter((s) => s._local);
-    if (newSlots.length > 0) {
+    // Delete all existing availability for this session, then re-insert
+    await supabase.from("session_availability").delete().eq("session_id", sessionId);
+
+    if (slots.length > 0) {
       await supabase.from("session_availability").insert(
-        newSlots.map((s) => ({
+        slots.map((s) => ({
           session_id: sessionId,
           photographer_id: user.id,
           day_of_week: s.day_of_week,
@@ -627,83 +626,50 @@ const SessionForm = () => {
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
 
-  const suggestNextStart = (day: number): string => {
-    const daySlots = slotsForDay(day);
-    if (daySlots.length === 0) {
-      if (globalConfig.hours_start) {
-        return addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min);
-      }
-      return "09:00";
-    }
-    const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
-    return computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
-  };
-
-  const handleAddSlotForDay = (day: number) => {
-    const dur = parseInt(durationMinutes) || 60;
-    const end = computeEndTime(newStart, dur);
-    const cfg = globalConfig;
-
-    // Validate: newStart must be >= latest end_time + break
-    const daySlots = slotsForDay(day);
-    if (daySlots.length > 0) {
-      const latestEnd = daySlots.map((s) => s.end_time).sort().at(-1)!;
-      const minAllowed = computeEndTime(latestEnd.slice(0, 5), parseInt(breakAfterMinutes) || 0);
-      if (newStart < minAllowed) {
-        toast({
-          title: "Time conflict",
-          description: `Start time must be ${minAllowed} or later (after previous slot + break).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Validate against business hours + buffers
-    if (cfg.hours_start) {
-      const earliest = addMinsToTime(cfg.hours_start, cfg.buffer_before_min);
-      if (newStart < earliest) {
-        toast({
-          title: "Outside business hours",
-          description: `Earliest allowed start is ${earliest} (${cfg.hours_start} + ${cfg.buffer_before_min} min buffer).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    if (cfg.hours_end) {
-      const latest = subMinsFromTime(cfg.hours_end, cfg.buffer_after_min);
-      // end time of the slot must be <= latest allowed end
-      if (end > latest) {
-        toast({
-          title: "Outside business hours",
-          description: `Slot ends at ${end} but must end by ${latest} (${cfg.hours_end} - ${cfg.buffer_after_min} min buffer).`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    const entry: WeeklySlot = {
-      day_of_week: day,
-      start_time: newStart,
-      end_time: end,
-      _local: true,
-    };
-    setSlots((prev) => [...prev, entry]);
-    setAddingSlotForDay(null);
-    const nextSuggestion = computeEndTime(newStart, (parseInt(durationMinutes) || 60) + (parseInt(breakAfterMinutes) || 0));
-    setNewStart(nextSuggestion);
-  };
-
-  const handleRemoveSlot = async (slot: WeeklySlot, index: number) => {
-    if (slot.id) {
-      await supabase.from("session_availability").delete().eq("id", slot.id);
-    }
-    setSlots((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const slotsForDay = (day: number) => slots.filter((s) => s.day_of_week === day);
+
+  /** Generate all possible slot start times within business hours for a given day */
+  const generateAvailableSlots = (): Array<{ start: string; end: string }> => {
+    const d = parseInt(durationMinutes) || 60;
+    const b = parseInt(breakAfterMinutes) || 0;
+    const total = d + b;
+
+    if (!globalConfig.hours_start || !globalConfig.hours_end) return [];
+
+    const earliest = globalConfig.buffer_before_min
+      ? addMinsToTime(globalConfig.hours_start, globalConfig.buffer_before_min)
+      : globalConfig.hours_start;
+    const latestEnd = globalConfig.buffer_after_min
+      ? subMinsFromTime(globalConfig.hours_end, globalConfig.buffer_after_min)
+      : globalConfig.hours_end;
+
+    const result: Array<{ start: string; end: string }> = [];
+    let current = earliest;
+    for (let i = 0; i < 100; i++) {
+      const end = computeEndTime(current, d);
+      if (end > latestEnd) break;
+      result.push({ start: current, end });
+      current = addMinsToTime(current, total);
+      if (current >= latestEnd) break;
+    }
+    return result;
+  };
+
+  const isSlotSelected = (day: number, startTime: string) =>
+    slots.some((s) => s.day_of_week === day && s.start_time.slice(0, 5) === startTime);
+
+  const toggleSlot = (day: number, startTime: string, endTime: string) => {
+    if (isSlotSelected(day, startTime)) {
+      setSlots((prev) =>
+        prev.filter((s) => !(s.day_of_week === day && s.start_time.slice(0, 5) === startTime))
+      );
+    } else {
+      setSlots((prev) => [
+        ...prev,
+        { day_of_week: day, start_time: startTime, end_time: endTime, _local: true },
+      ]);
+    }
+  };
 
   // ────────────────────────────────────────────
   // Render helpers
@@ -1064,140 +1030,86 @@ const SessionForm = () => {
                     </div>
 
                     {/* Day rows */}
-                    <div className="flex flex-col border border-border divide-y divide-border">
-                      {DAY_ORDER.map((dayIdx) => {
-                        const daySlots = slotsForDay(dayIdx);
-                        const isExpanded = expandedDays.includes(dayIdx);
-                        const isAddingHere = addingSlotForDay === dayIdx;
+                    {(() => {
+                      const availableSlots = generateAvailableSlots();
+                      const hasBusinessHours = !!globalConfig.hours_start && !!globalConfig.hours_end;
 
-                        return (
-                          <div key={dayIdx}>
-                            {/* Day header row */}
-                            <div className="flex items-center justify-between px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() => toggleDayExpanded(dayIdx)}
-                                className="flex items-center gap-3 flex-1 text-left"
-                              >
-                                <ChevronRight className={cn(
-                                  "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
-                                  isExpanded && "rotate-90"
-                                )} />
-                                <span className={cn(
-                                  "text-[11px] tracking-wider uppercase w-28 font-light",
-                                  daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
-                                )}>
-                                  {DAY_FULL[dayIdx]}
-                                </span>
-                                {daySlots.length > 0 ? (
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""}
+                      return (
+                        <div className="flex flex-col border border-border divide-y divide-border">
+                          {DAY_ORDER.map((dayIdx) => {
+                            const daySlots = slotsForDay(dayIdx);
+                            const isExpanded = expandedDays.includes(dayIdx);
+
+                            return (
+                              <div key={dayIdx}>
+                                {/* Day header row */}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDayExpanded(dayIdx)}
+                                  className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/5 transition-colors"
+                                >
+                                  <ChevronRight className={cn(
+                                    "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+                                    isExpanded && "rotate-90"
+                                  )} />
+                                  <span className={cn(
+                                    "text-[11px] tracking-wider uppercase w-28 font-light",
+                                    daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
+                                  )}>
+                                    {DAY_FULL[dayIdx]}
                                   </span>
-                                ) : (
-                                  <span className="text-[10px] text-muted-foreground/50">No slots</span>
-                                )}
-                              </button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  if (!isExpanded) setExpandedDays((p) => [...p, dayIdx]);
-                                  setAddingSlotForDay(isAddingHere ? null : dayIdx);
-                                  setNewStart(suggestNextStart(dayIdx));
-                                }}
-                                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                                  {daySlots.length > 0 ? (
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""} selected
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] text-muted-foreground/40">No slots selected</span>
+                                  )}
+                                </button>
 
-                            {/* Expanded: slots + add form */}
-                            {isExpanded && (
-                              <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
-                                {daySlots.length > 0 && (
-                                  <div className="flex flex-col gap-1.5">
-                                    {daySlots.map((slot) => {
-                                      const globalIdx = slots.findIndex(
-                                        (s) => s === slot
-                                      );
-                                      return (
-                                        <div
-                                          key={slot.id ?? globalIdx}
-                                          className="flex items-center justify-between py-1.5 px-3 bg-background border border-border"
-                                        >
-                                          <span className="flex items-center gap-2 text-[11px]">
-                                            <Clock className="h-3 w-3 text-muted-foreground" />
-                                            {slot.start_time.slice(0, 5)}
-                                            <span className="text-muted-foreground">→</span>
-                                            {slot.end_time.slice(0, 5)}
-                                            {brk > 0 && (
-                                              <span className="text-[10px] text-muted-foreground/60">
-                                                (+{brk} min break)
-                                              </span>
-                                            )}
-                                          </span>
-                                          <div className="flex items-center gap-2">
+                                {/* Expanded: slot chips */}
+                                {isExpanded && (
+                                  <div className="bg-muted/10 border-t border-border/60 px-4 py-4">
+                                    {!hasBusinessHours ? (
+                                      <p className="text-[11px] text-muted-foreground/50 italic">
+                                        Set business hours above to see available slots.
+                                      </p>
+                                    ) : availableSlots.length === 0 ? (
+                                      <p className="text-[11px] text-muted-foreground/50 italic">
+                                        No slots fit within the business hours. Try adjusting the duration or hours.
+                                      </p>
+                                    ) : (
+                                      <div className="flex flex-wrap gap-2">
+                                        {availableSlots.map(({ start, end }) => {
+                                          const selected = isSlotSelected(dayIdx, start);
+                                          return (
                                             <button
+                                              key={start}
                                               type="button"
-                                              onClick={() => handleRemoveSlot(slot, globalIdx)}
-                                              className="text-muted-foreground hover:text-destructive transition-colors"
+                                              onClick={() => toggleSlot(dayIdx, start, end)}
+                                              className={cn(
+                                                "flex items-center gap-1.5 px-3 py-1.5 border text-[11px] tracking-wide transition-colors",
+                                                selected
+                                                  ? "bg-foreground text-background border-foreground"
+                                                  : "bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+                                              )}
                                             >
-                                              <Trash2 className="h-3.5 w-3.5" />
+                                              <Clock className="h-3 w-3 shrink-0" />
+                                              {start}
+                                              <span className={cn("opacity-60", selected && "opacity-80")}>→ {end}</span>
                                             </button>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {/* Inline add-time form */}
-                                {isAddingHere && (
-                                  <div className="flex items-center gap-3 pt-1">
-                                    <Input
-                                      type="time"
-                                      value={newStart}
-                                      onChange={(e) => setNewStart(e.target.value)}
-                                      className="w-32 h-8 text-sm"
-                                    />
-                                    {newStart && (
-                                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                                        → {computeEndTime(newStart, dur)}
-                                        {brk > 0 && ` (free until ${computeEndTime(newStart, totalMinutes)})`}
-                                      </span>
+                                          );
+                                        })}
+                                      </div>
                                     )}
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      onClick={() => handleAddSlotForDay(dayIdx)}
-                                      className="h-8 text-xs tracking-wider uppercase font-light"
-                                    >
-                                      Confirm
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => setAddingSlotForDay(null)}
-                                      className="h-8 text-xs tracking-wider uppercase font-light"
-                                    >
-                                      ✕
-                                    </Button>
                                   </div>
-                                )}
-
-                                {daySlots.length === 0 && !isAddingHere && (
-                                  <p className="text-[11px] text-muted-foreground/50 italic py-1">
-                                    No slots — click + to add
-                                  </p>
                                 )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </section>
 
                   {/* Step 2 Actions */}
