@@ -748,11 +748,9 @@ const SessionForm = () => {
                           </Button>
                         </div>
 
-                        {/* Expanded: business hours + buffers config + slots + add form */}
-                        {isExpanded && (
-                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
-                            {/* Business hours + buffer config */}
-                            <div className="flex flex-col gap-2 border border-border/50 p-3 bg-background">
+                        {/* Business hours + buffer config — always visible */}
+                        <div className="border-t border-border/40 bg-muted/5 px-4 py-2.5">
+                          <div className="flex flex-col gap-2">
                               {/* Business hours row */}
                               <div className="flex items-center gap-3 flex-wrap">
                                 <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
@@ -814,11 +812,15 @@ const SessionForm = () => {
                                       placeholder="0"
                                     />
                                     <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                                   </div>
+                                 </div>
+                               </div>
+                             </div>
+                        </div>
 
+                        {/* Expanded: slots + add form */}
+                        {isExpanded && (
+                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
                             {daySlots.length > 0 && (
                               <div className="flex flex-col gap-1.5">
                                 {daySlots.map((slot) => {
