@@ -126,9 +126,9 @@ function SessionCard({
   session: Session;
   onClick: () => void;
 }) {
-  const priceFormatted = new Intl.NumberFormat("pt-BR", {
+  const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "BRL",
+    currency: "USD",
   }).format(session.price / 100);
 
   return (
