@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, addMinutes, parse } from "date-fns";
 import {
   ArrowLeft,
+  ChevronRight,
   Clock,
   Loader2,
   Plus,
