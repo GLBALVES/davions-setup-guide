@@ -39,6 +39,7 @@ interface SessionDetail {
   photographer_id: string;
   deposit_enabled: boolean;
   deposit_amount: number;
+  deposit_type: string;
   tax_rate: number;
   allow_tip: boolean;
   booking_notice_days: number;
@@ -268,8 +269,14 @@ const SessionDetailPage = () => {
   const taxAmount = session ? Math.round(subtotal * (session.tax_rate / 100)) : 0;
   const total = subtotal + taxAmount;
 
+  const depositAmountCents = session
+    ? session.deposit_type === 'percent'
+      ? Math.round(subtotal * (session.deposit_amount / 100))
+      : session.deposit_amount
+    : 0;
+
   const chargeAmount = session?.deposit_enabled
-    ? session.deposit_amount + extrasTotal + taxAmount
+    ? depositAmountCents + extrasTotal + taxAmount
     : total;
 
   const formatCurrency = (cents: number) =>
