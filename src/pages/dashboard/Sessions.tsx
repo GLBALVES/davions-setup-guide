@@ -14,6 +14,7 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Session {
   id: string;
+  slug: string | null;
   title: string;
   description: string | null;
   price: number;
