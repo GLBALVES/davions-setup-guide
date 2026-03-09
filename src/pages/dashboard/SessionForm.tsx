@@ -221,7 +221,8 @@ const SessionForm = () => {
       location: location.trim() || null,
       cover_image_url: coverImageUrl,
       status,
-    };
+      session_type_id: sessionTypeId,
+    } as Record<string, unknown>;
 
     let sessionId = id;
 
