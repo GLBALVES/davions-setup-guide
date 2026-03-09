@@ -338,7 +338,7 @@ const SessionForm = () => {
                         <>
                           <Upload className="h-6 w-6" />
                           <span className="text-[10px] tracking-widest uppercase">
-                            Clique para enviar
+                            Click to upload
                           </span>
                         </>
                       )}
