@@ -1,5 +1,6 @@
 import { Image, FolderOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 interface GalleryCardProps {
   gallery: {
@@ -21,7 +22,10 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   });
 
   return (
-    <div className="border border-border p-5 flex flex-col gap-4 hover:border-foreground/30 transition-colors group cursor-pointer">
+    <Link
+      to={`/dashboard/galleries/${gallery.id}`}
+      className="border border-border p-5 flex flex-col gap-4 hover:border-foreground/30 transition-colors group cursor-pointer no-underline"
+    >
       {/* Thumbnail placeholder */}
       <div className="aspect-[4/3] bg-muted flex items-center justify-center">
         <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
@@ -30,7 +34,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
       {/* Info */}
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-light tracking-wide truncate">
+          <h3 className="text-sm font-light tracking-wide truncate text-foreground">
             {gallery.title || "Untitled Gallery"}
           </h3>
           <Badge
@@ -63,6 +67,6 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

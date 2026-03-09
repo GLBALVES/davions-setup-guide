@@ -13,6 +13,9 @@ import Sessions from "./pages/dashboard/Sessions";
 import SessionForm from "./pages/dashboard/SessionForm";
 import Bookings from "./pages/dashboard/Bookings";
 import Settings from "./pages/dashboard/Settings";
+import Galleries from "./pages/dashboard/Galleries";
+import GalleryDetail from "./pages/dashboard/GalleryDetail";
+import GalleryView from "./pages/gallery/GalleryView";
 import CustomDomainStore from "./pages/store/CustomDomainStore";
 import CustomDomainSessionGateway from "./pages/store/CustomDomainSessionGateway";
 import { isCustomDomain } from "./lib/custom-domain";
@@ -49,6 +52,9 @@ const App = () => (
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
 
+                {/* Public gallery view */}
+                <Route path="/gallery/:id" element={<GalleryView />} />
+
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/dashboard/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
@@ -56,6 +62,8 @@ const App = () => (
                 <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
                 <Route path="/dashboard/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
                 <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/dashboard/galleries" element={<ProtectedRoute><Galleries /></ProtectedRoute>} />
+                <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><GalleryDetail /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
