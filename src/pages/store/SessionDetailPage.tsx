@@ -427,7 +427,9 @@ const SessionDetailPage = () => {
               </p>
             )}
             <h1 className="text-white text-xl font-light tracking-wide">
-              Please select a date and time
+              {step === "slots" && "Please select a date and time"}
+              {step === "form" && "Enter your details"}
+              {step === "addons" && "Customize your session"}
             </h1>
           </div>
         </div>
