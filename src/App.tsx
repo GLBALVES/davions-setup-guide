@@ -35,7 +35,7 @@ const App = () => (
             {onCustomDomain ? (
               <>
                 <Route path="/" element={<CustomDomainStore />} />
-                <Route path="/book/:sessionId" element={<CustomDomainSessionGateway />} />
+                <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
@@ -46,7 +46,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/store/:slug" element={<StorePage />} />
-                <Route path="/store/:slug/:sessionId" element={<SessionDetailPage />} />
+                <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
 
                 {/* Protected routes */}

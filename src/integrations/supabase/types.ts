@@ -447,6 +447,7 @@ export type Database = {
           price: number
           reminder_days: number[]
           session_type_id: string | null
+          slug: string | null
           status: string
           tax_rate: number
           title: string
@@ -471,6 +472,7 @@ export type Database = {
           price?: number
           reminder_days?: number[]
           session_type_id?: string | null
+          slug?: string | null
           status?: string
           tax_rate?: number
           title?: string
@@ -495,6 +497,7 @@ export type Database = {
           price?: number
           reminder_days?: number[]
           session_type_id?: string | null
+          slug?: string | null
           status?: string
           tax_rate?: number
           title?: string
@@ -522,7 +525,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

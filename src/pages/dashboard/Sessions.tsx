@@ -14,6 +14,7 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Session {
   id: string;
+  slug: string | null;
   title: string;
   description: string | null;
   price: number;
@@ -246,7 +247,7 @@ function SessionCard({
   }).format(session.price / 100);
 
   const bookingUrl = storeSlug
-    ? `${window.location.origin}/store/${storeSlug}/${session.id}`
+    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
     : null;
 
   const handlePreview = (e: React.MouseEvent) => {

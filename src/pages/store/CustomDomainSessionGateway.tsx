@@ -13,7 +13,7 @@ import SessionDetailPage from "./SessionDetailPage";
 import { CustomDomainSlugContext } from "@/contexts/CustomDomainSlugContext";
 
 const CustomDomainSessionGateway = () => {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { sessionSlug } = useParams<{ sessionSlug: string }>();
   const navigate = useNavigate();
   const [slug, setSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

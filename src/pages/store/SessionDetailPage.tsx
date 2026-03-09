@@ -137,7 +137,7 @@ const getInitials = (name: string | null | undefined): string => {
 // ────────────────────────────────────────────
 
 const SessionDetailPage = () => {
-  const { slug, sessionId } = useParams();
+  const { slug, sessionSlug } = useParams();
   const customDomainSlug = useCustomDomainSlug();
   const backPath = customDomainSlug ? "/" : `/store/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
@@ -163,12 +163,13 @@ const SessionDetailPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: sessionData } = await supabase
-        .from("sessions")
-        .select("*")
-        .eq("id", sessionId!)
-        .eq("status", "active")
-        .single();
+      // sessionSlug can be either the slug or the UUID id (backward compat)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionSlug ?? "");
+      const query = supabase.from("sessions").select("*").eq("status", "active");
+      const { data: sessionData } = await (isUuid
+        ? query.eq("id", sessionSlug!)
+        : query.eq("slug", sessionSlug!)
+      ).single();
 
       if (!sessionData) {
         setLoading(false);
@@ -190,13 +191,13 @@ const SessionDetailPage = () => {
       const { data: extrasData } = await supabase
         .from("session_extras")
         .select("id, description, price, quantity")
-        .eq("session_id", sessionId!);
+        .eq("session_id", s.id);
       setExtras((extrasData ?? []) as SessionExtra[]);
 
       const { data: availData } = await supabase
         .from("session_availability")
         .select("id, day_of_week, start_time")
-        .eq("session_id", sessionId!)
+        .eq("session_id", s.id)
         .not("day_of_week", "is", null);
 
       const defs: WeeklySlotDef[] = (availData ?? []).map((a) => ({
@@ -229,7 +230,7 @@ const SessionDetailPage = () => {
       setLoading(false);
     };
     load();
-  }, [sessionId]);
+  }, [sessionSlug]);
 
   // ────────────────────────────────────────────
   // Extras helpers

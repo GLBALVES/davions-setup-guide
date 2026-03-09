@@ -155,6 +155,8 @@ const SessionForm = () => {
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
@@ -163,6 +165,26 @@ const SessionForm = () => {
   const [location, setLocation] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "active">("draft");
+
+  // Auto-generate slug from title (unless user manually edited it)
+  const generateSlug = (val: string) =>
+    val
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    if (!slugEdited) setSlug(generateSlug(val));
+  };
+
+  const handleSlugChange = (val: string) => {
+    setSlug(val.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+    setSlugEdited(true);
+  };
 
   // ── Session type ──
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
@@ -242,6 +264,9 @@ const SessionForm = () => {
 
     if (s) {
       setTitle(s.title);
+      const existingSlug = (s as unknown as { slug?: string | null }).slug ?? "";
+      setSlug(existingSlug);
+      setSlugEdited(Boolean(existingSlug)); // treat existing slug as "manually set"
       setDescription(s.description ?? "");
       setPrice((s.price / 100).toFixed(2));
       setDurationMinutes(String(s.duration_minutes));
@@ -411,6 +436,7 @@ const SessionForm = () => {
     const payload = {
       photographer_id: user.id,
       title: title.trim(),
+      slug: slug.trim() || null,
       description: description.trim() || null,
       duration_minutes: dur,
       break_after_minutes: parseInt(breakAfterMinutes) || 0,
@@ -897,9 +923,30 @@ const SessionForm = () => {
                       <Input
                         id="title"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => handleTitleChange(e.target.value)}
                         placeholder="e.g. Newborn Session"
                       />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="slug" className="text-xs tracking-wider uppercase font-light">
+                        URL Slug
+                      </Label>
+                      <div className="flex items-center border border-input rounded-none overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                        <span className="px-3 py-2 text-xs text-muted-foreground bg-muted border-r border-input shrink-0 select-none">
+                          /book/
+                        </span>
+                        <input
+                          id="slug"
+                          value={slug}
+                          onChange={(e) => handleSlugChange(e.target.value)}
+                          placeholder="newborn-session"
+                          className="flex-1 px-3 py-2 text-xs bg-background outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Aparece na URL de agendamento. Gerado automaticamente a partir do título.
+                      </p>
                     </div>
 
                     {user && (

@@ -14,6 +14,7 @@ interface Photographer {
 
 interface Session {
   id: string;
+  slug: string | null;
   title: string;
   description: string | null;
   price: number;
@@ -49,7 +50,7 @@ const StorePage = () => {
 
       const { data: sessionData } = await supabase
         .from("sessions")
-        .select("id, title, description, price, duration_minutes, num_photos, location, cover_image_url")
+        .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
         .eq("photographer_id", photoData.id)
         .eq("status", "active")
         .order("created_at", { ascending: true });
@@ -141,7 +142,7 @@ const StorePage = () => {
                 return (
                   <button
                     key={session.id}
-                    onClick={() => navigate(`/store/${slug}/${session.id}`)}
+                    onClick={() => navigate(`/store/${slug}/${session.slug ?? session.id}`)}
                     className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card"
                   >
                     <div className="aspect-[4/3] bg-muted relative overflow-hidden">
