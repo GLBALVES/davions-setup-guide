@@ -26,17 +26,20 @@ interface Session {
 const Sessions = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
 
   const fetchSessions = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("sessions")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setSessions(data ?? []);
+    const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
+      supabase.from("sessions").select("*").order("created_at", { ascending: false }),
+      supabase.from("photographers").select("store_slug").eq("id", user!.id).single(),
+    ]);
+    setSessions(sessionsData ?? []);
+    setStoreSlug(photoData?.store_slug ?? null);
     setLoading(false);
   };
 
