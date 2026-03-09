@@ -43,6 +43,11 @@ interface SessionDetail {
   booking_window_days: number;
 }
 
+interface PhotographerInfo {
+  full_name: string | null;
+  hero_image_url: string | null;
+}
+
 interface WeeklySlotDef {
   id: string;
   day_of_week: number;
@@ -117,6 +122,16 @@ const generateOccurrences = (
   return result;
 };
 
+const getInitials = (name: string | null | undefined): string => {
+  if (!name) return "P";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join("");
+};
+
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────
@@ -129,6 +144,7 @@ const SessionDetailPage = () => {
   const { toast } = useToast();
 
   const [session, setSession] = useState<SessionDetail | null>(null);
+  const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +176,16 @@ const SessionDetailPage = () => {
       }
       const s = sessionData as unknown as SessionDetail;
       setSession(s);
+
+      // Fetch photographer info (allowed by the new public RLS policy)
+      const { data: photographerData } = await supabase
+        .from("photographers")
+        .select("full_name, hero_image_url")
+        .eq("id", s.photographer_id)
+        .single();
+      if (photographerData) {
+        setPhotographer(photographerData as PhotographerInfo);
+      }
 
       const { data: extrasData } = await supabase
         .from("session_extras")
@@ -248,7 +274,6 @@ const SessionDetailPage = () => {
   // Calendar helpers
   // ────────────────────────────────────────────
 
-  // Set of dateKeys that have available slots
   const availableDateKeys = new Set(
     generatedSlots.map((s) => format(s.date, "yyyy-MM-dd"))
   );
@@ -355,62 +380,210 @@ const SessionDetailPage = () => {
     );
   }
 
+  // Hero image: prefer session cover, fall back to photographer hero
+  const heroImage = session.cover_image_url || photographer?.hero_image_url || null;
+  const initials = getInitials(photographer?.full_name);
+
+  // ────────────────────────────────────────────
+  // Render
+  // ────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border px-6 py-4 flex items-center gap-4">
+    <div className="min-h-screen bg-[hsl(var(--muted))]" style={{ backgroundColor: "#f5f2ee" }}>
+
+      {/* ══════════════ HERO ══════════════ */}
+      <div className="relative w-full h-[42vh] min-h-[280px] overflow-hidden">
+        {heroImage ? (
+          <img
+            src={heroImage}
+            alt={session.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-foreground" />
+        )}
+        {/* gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/50" />
+
+        {/* Back button */}
         <button
           onClick={() => navigate(backPath)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-          Book a Session
-        </p>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-
-          {/* ── Session Info ── */}
-          <div className="flex flex-col gap-6">
-            {session.cover_image_url && (
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={session.cover_image_url}
-                  alt={session.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+        {/* Centered content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-4 text-center">
+          {/* Photographer initials circle */}
+          <div className="h-16 w-16 rounded-full border-2 border-white/80 bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <span className="text-white text-lg font-light tracking-widest">{initials}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            {photographer?.full_name && (
+              <p className="text-white/60 text-[10px] tracking-[0.35em] uppercase">
+                {photographer.full_name}
+              </p>
             )}
-            <div className="flex flex-col gap-3">
-              <h1 className="text-xl font-light tracking-wide">{session.title}</h1>
-              {session.description && (
-                <p className="text-sm font-light text-muted-foreground">{session.description}</p>
-              )}
-              <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground pt-2">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  {session.duration_minutes} minutes
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Camera className="h-3.5 w-3.5" />
-                  {session.num_photos} photos
-                </span>
-                {session.location && (
+            <h1 className="text-white text-xl font-light tracking-wide">
+              Please select a date and time
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════ CONTENT BELOW HERO ══════════════ */}
+      <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-5">
+
+        {/* ── Session Info Card ── */}
+        <div className="bg-background rounded-sm shadow-sm p-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-light tracking-wide text-foreground">{session.title}</h2>
+
+            {/* Meta pills */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                {session.duration_minutes} min
+              </span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-foreground font-light text-sm">{formatCurrency(session.price)}</span>
+              {session.num_photos > 0 && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
                   <span className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5" />
+                    <Camera className="h-3.5 w-3.5 shrink-0" />
+                    {session.num_photos} photos
+                  </span>
+                </>
+              )}
+              {session.location && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
                     {session.location}
                   </span>
-                )}
-              </div>
-              <p className="text-2xl font-light pt-2">{formatCurrency(session.price)}</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {session.description && (
+            <p className="text-sm font-light text-muted-foreground leading-relaxed">
+              {session.description}
+            </p>
+          )}
+        </div>
+
+        {/* ── Booking Panel (step 1: calendar + slots) ── */}
+        {step === "slots" && (
+          <>
+            {/* Calendar + Time slots card */}
+            <div className="bg-background rounded-sm shadow-sm overflow-hidden">
+              {generatedSlots.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-sm font-light text-muted-foreground">
+                    No available slots at this time.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
+                  {/* ── Calendar ── */}
+                  <div className="sm:flex-1 p-4">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={handleDateSelect}
+                      disabled={isDayDisabled}
+                      fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
+                      toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
+                      className="pointer-events-auto w-full"
+                      classNames={{
+                        months: "w-full",
+                        month: "w-full space-y-3",
+                        caption: "flex justify-center pt-1 relative items-center mb-2",
+                        caption_label: "text-xs font-light tracking-[0.25em] uppercase text-foreground",
+                        nav: "space-x-1 flex items-center",
+                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-40 hover:opacity-100 border border-border flex items-center justify-center transition-opacity",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        table: "w-full border-collapse",
+                        head_row: "flex w-full",
+                        head_cell: "text-muted-foreground/60 flex-1 font-normal text-[0.7rem] text-center pb-1",
+                        row: "flex w-full mt-1",
+                        cell: "flex-1 h-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                        day: cn(
+                          "h-9 w-full p-0 font-normal aria-selected:opacity-100 transition-colors text-xs",
+                          "hover:bg-accent hover:text-accent-foreground rounded-none"
+                        ),
+                        day_selected: "bg-foreground text-background hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background rounded-none font-normal",
+                        day_today: "bg-accent/60 text-accent-foreground rounded-none",
+                        day_disabled: "text-muted-foreground/25 pointer-events-none",
+                        day_outside: "text-muted-foreground/25 opacity-40",
+                      }}
+                      components={{
+                        DayContent: ({ date }) => {
+                          const key = format(date, "yyyy-MM-dd");
+                          const hasSlots = availableDateKeys.has(key);
+                          return (
+                            <div className="flex flex-col items-center justify-center h-full gap-[2px]">
+                              <span>{date.getDate()}</span>
+                              {hasSlots && (
+                                <span className="h-[3px] w-[3px] rounded-full bg-current opacity-60" />
+                              )}
+                            </div>
+                          );
+                        },
+                      }}
+                    />
+                  </div>
+
+                  {/* ── Time slots ── */}
+                  <div className="sm:w-48 p-4 flex flex-col gap-3">
+                    {!selectedDate ? (
+                      <div className="flex-1 flex items-center justify-center py-8 sm:py-0">
+                        <p className="text-xs text-muted-foreground/60 text-center">
+                          Select a date<br />to see times
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">
+                          {format(selectedDate, "EEE, MMM d")}
+                        </p>
+                        {slotsForSelectedDate.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No slots for this day.</p>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {slotsForSelectedDate.map((slot, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setSelectedSlot(slot)}
+                                className={cn(
+                                  "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left",
+                                  selectedSlot &&
+                                    selectedSlot.availabilityId === slot.availabilityId &&
+                                    isSameDay(selectedSlot.date, slot.date)
+                                    ? "border-foreground bg-foreground text-background"
+                                    : "border-border hover:border-foreground/40 text-foreground"
+                                )}
+                              >
+                                {slot.start_time}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Extras */}
+            {/* Extras card */}
             {extras.length > 0 && (
-              <div className="flex flex-col gap-3">
+              <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-3">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
                   Add-ons
                 </p>
@@ -467,200 +640,126 @@ const SessionDetailPage = () => {
                 </div>
               </div>
             )}
+
+            {/* Continue button */}
+            <Button
+              onClick={() => setStep("form")}
+              disabled={!selectedSlot}
+              className="w-full text-xs tracking-wider uppercase font-light rounded-none h-11"
+            >
+              Continue →
+            </Button>
+          </>
+        )}
+
+        {/* ── Step 2: Form ── */}
+        {step === "form" && selectedSlot && (
+          <div className="bg-background rounded-sm shadow-sm p-6 flex flex-col gap-5">
+
+            {/* Selected slot summary */}
+            <div className="border border-border p-4 flex flex-col gap-1">
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
+                Selected slot
+              </p>
+              <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
+              <p className="text-xs text-muted-foreground">
+                {selectedSlot.start_time} – {selectedSlot.end_time}
+              </p>
+            </div>
+
+            {/* Client details */}
+            <div className="flex flex-col gap-4">
+              <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                Your details
+              </p>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
+                  Full Name *
+                </Label>
+                <Input
+                  id="clientName"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Your name"
+                  className="rounded-none"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">
+                  Email *
+                </Label>
+                <Input
+                  id="clientEmail"
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="you@email.com"
+                  className="rounded-none"
+                />
+              </div>
+            </div>
+
+            {/* Order summary */}
+            <div className="border border-border p-4 flex flex-col gap-2">
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
+                Order summary
+              </p>
+              <div className="flex justify-between text-xs font-light">
+                <span className="text-muted-foreground">{session.title}</span>
+                <span>{formatCurrency(session.price)}</span>
+              </div>
+              {selectedExtras.map((e) => (
+                <div key={e.id} className="flex justify-between text-xs font-light">
+                  <span className="text-muted-foreground">{e.description} × {e.qty}</span>
+                  <span>{formatCurrency(e.price * e.qty)}</span>
+                </div>
+              ))}
+              {session.tax_rate > 0 && (
+                <div className="flex justify-between text-[10px] text-muted-foreground border-t border-border pt-2 mt-1">
+                  <span>Tax ({session.tax_rate}%)</span>
+                  <span>{formatCurrency(taxAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-xs font-light border-t border-border pt-2 mt-1">
+                <span className="text-muted-foreground">Total</span>
+                <span>{formatCurrency(total)}</span>
+              </div>
+              {session.deposit_enabled && (
+                <div className="flex justify-between text-xs font-light text-primary mt-1 pt-1 border-t border-border">
+                  <span>Due today (deposit)</span>
+                  <span>{formatCurrency(chargeAmount)}</span>
+                </div>
+              )}
+              <div className="text-[10px] text-muted-foreground mt-1 capitalize">
+                {selectedSlot.label} · {selectedSlot.start_time}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep("slots")}
+                className="text-xs tracking-wider uppercase font-light rounded-none"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleCheckout}
+                disabled={submitting || !clientName.trim() || !clientEmail.trim()}
+                className="flex-1 gap-2 text-xs tracking-wider uppercase font-light rounded-none h-11"
+              >
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {session.deposit_enabled
+                  ? `Pay deposit ${formatCurrency(chargeAmount)}`
+                  : `Pay ${formatCurrency(chargeAmount)}`}
+              </Button>
+            </div>
           </div>
+        )}
+      </div>
 
-          {/* ── Booking Panel ── */}
-          <div className="flex flex-col gap-6">
-            {step === "slots" && (
-              <>
-                {/* ── Calendar ── */}
-                <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
-                    Choose a date
-                  </p>
-                  {generatedSlots.length === 0 ? (
-                    <p className="text-sm font-light text-muted-foreground text-center py-8 border border-dashed border-border">
-                      No available slots at this time.
-                    </p>
-                  ) : (
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={handleDateSelect}
-                      disabled={isDayDisabled}
-                      fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
-                      toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
-                      className="pointer-events-auto border border-border p-3 w-full"
-                      classNames={{
-                        months: "w-full",
-                        month: "w-full space-y-3",
-                        table: "w-full",
-                        head_row: "flex w-full",
-                        head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.75rem] text-center",
-                        row: "flex w-full mt-1",
-                        cell: "flex-1 h-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                        day: "h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-none transition-colors",
-                        day_selected: "bg-foreground text-background hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background rounded-none",
-                        day_today: "bg-accent text-accent-foreground rounded-none",
-                        day_disabled: "text-muted-foreground/30 pointer-events-none",
-                        day_outside: "text-muted-foreground/30 opacity-50",
-                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-foreground/20 flex items-center justify-center",
-                        nav_button_previous: "absolute left-1",
-                        nav_button_next: "absolute right-1",
-                        caption: "flex justify-center pt-1 relative items-center",
-                        caption_label: "text-sm font-light tracking-widest uppercase",
-                      }}
-                    />
-                  )}
-                </div>
-
-                {/* ── Time slots for selected date ── */}
-                {selectedDate && (
-                  <div>
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-3">
-                      {format(selectedDate, "EEEE, MMMM d")}
-                    </p>
-                    {slotsForSelectedDate.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No slots for this day.</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {slotsForSelectedDate.map((slot, i) => (
-                          <button
-                            key={i}
-                            onClick={() => setSelectedSlot(slot)}
-                            className={cn(
-                              "px-4 py-2 text-xs border transition-colors tracking-wider",
-                              selectedSlot &&
-                                selectedSlot.availabilityId === slot.availabilityId &&
-                                isSameDay(selectedSlot.date, slot.date)
-                                ? "border-foreground bg-foreground text-background"
-                                : "border-border hover:border-foreground/40"
-                            )}
-                          >
-                            {slot.start_time}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => setStep("form")}
-                  disabled={!selectedSlot}
-                  className="w-full text-xs tracking-wider uppercase font-light"
-                >
-                  Continue →
-                </Button>
-              </>
-            )}
-
-            {step === "form" && selectedSlot && (
-              <>
-                {/* Selected slot summary */}
-                <div className="border border-border p-4 flex flex-col gap-1">
-                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
-                    Selected slot
-                  </p>
-                  <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedSlot.start_time} – {selectedSlot.end_time}
-                  </p>
-                </div>
-
-                {/* Client details */}
-                <div className="flex flex-col gap-4">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                    Your details
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
-                      Full Name *
-                    </Label>
-                    <Input
-                      id="clientName"
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">
-                      Email *
-                    </Label>
-                    <Input
-                      id="clientEmail"
-                      type="email"
-                      value={clientEmail}
-                      onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="you@email.com"
-                    />
-                  </div>
-                </div>
-
-                {/* Order summary */}
-                <div className="border border-border p-4 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1">
-                    Order summary
-                  </p>
-                  <div className="flex justify-between text-xs font-light">
-                    <span className="text-muted-foreground">{session.title}</span>
-                    <span>{formatCurrency(session.price)}</span>
-                  </div>
-                  {selectedExtras.map((e) => (
-                    <div key={e.id} className="flex justify-between text-xs font-light">
-                      <span className="text-muted-foreground">{e.description} × {e.qty}</span>
-                      <span>{formatCurrency(e.price * e.qty)}</span>
-                    </div>
-                  ))}
-                  {session.tax_rate > 0 && (
-                    <div className="flex justify-between text-[10px] text-muted-foreground border-t border-border pt-2 mt-1">
-                      <span>Tax ({session.tax_rate}%)</span>
-                      <span>{formatCurrency(taxAmount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-xs font-light border-t border-border pt-2 mt-1">
-                    <span className="text-muted-foreground">Total</span>
-                    <span>{formatCurrency(total)}</span>
-                  </div>
-                  {session.deposit_enabled && (
-                    <div className="flex justify-between text-xs font-light text-primary mt-1 pt-1 border-t border-border">
-                      <span>Due today (deposit)</span>
-                      <span>{formatCurrency(chargeAmount)}</span>
-                    </div>
-                  )}
-                  <div className="text-[10px] text-muted-foreground mt-1 capitalize">
-                    {selectedSlot.label} · {selectedSlot.start_time}
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep("slots")}
-                    className="text-xs tracking-wider uppercase font-light"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={submitting || !clientName.trim() || !clientEmail.trim()}
-                    className="flex-1 gap-2 text-xs tracking-wider uppercase font-light"
-                  >
-                    {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    {session.deposit_enabled
-                      ? `Pay deposit ${formatCurrency(chargeAmount)}`
-                      : `Pay ${formatCurrency(chargeAmount)}`}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </main>
-
-      <footer className="border-t border-border py-6 text-center mt-10">
-        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/50">
+      <footer className="py-8 text-center">
+        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">
           Powered by Davions
         </p>
       </footer>
