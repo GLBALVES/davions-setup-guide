@@ -5,10 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO } from "date-fns";
+import {
+  addDays,
+  format,
+  getDay,
+  isBefore,
+  startOfToday,
+  parse,
+  addMinutes,
+  isSameDay,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ────────────────────────────────────────────
+// Types
+// ────────────────────────────────────────────
 
 interface SessionDetail {
   id: string;
@@ -16,21 +29,77 @@ interface SessionDetail {
   description: string | null;
   price: number;
   duration_minutes: number;
+  break_after_minutes: number;
   num_photos: number;
   location: string | null;
   cover_image_url: string | null;
   photographer_id: string;
 }
 
-interface Slot {
+interface WeeklySlotDef {
   id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  is_booked: boolean;
+  day_of_week: number;
+  start_time: string; // "HH:mm:ss"
 }
 
-type BookingStep = "slots" | "form" | "pay";
+interface GeneratedSlot {
+  availabilityId: string;
+  date: Date;
+  start_time: string; // "HH:mm"
+  end_time: string;   // "HH:mm"
+  label: string;      // display label
+}
+
+type BookingStep = "slots" | "form";
+
+// ────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────
+
+const LOOK_AHEAD_DAYS = 60;
+
+/** Generate next occurrences for each weekly slot def, within LOOK_AHEAD_DAYS. */
+const generateOccurrences = (
+  defs: WeeklySlotDef[],
+  bookedKeys: Set<string>, // "availId_yyyy-MM-dd"
+  durationMin: number
+): GeneratedSlot[] => {
+  const today = startOfToday();
+  const result: GeneratedSlot[] = [];
+
+  for (let offset = 0; offset < LOOK_AHEAD_DAYS; offset++) {
+    const date = addDays(today, offset);
+    const dayOfWeek = getDay(date); // 0=Sun
+
+    for (const def of defs) {
+      if (def.day_of_week !== dayOfWeek) continue;
+
+      // Skip if in the past (same-day slots before now)
+      const startHHmm = def.start_time.slice(0, 5);
+      const startDate = parse(startHHmm, "HH:mm", date);
+      if (isBefore(startDate, new Date())) continue;
+
+      const dateKey = format(date, "yyyy-MM-dd");
+      const key = `${def.id}_${dateKey}`;
+      if (bookedKeys.has(key)) continue;
+
+      const endDate = addMinutes(startDate, durationMin);
+      result.push({
+        availabilityId: def.id,
+        date,
+        start_time: startHHmm,
+        end_time: format(endDate, "HH:mm"),
+        label: format(date, "EEEE, dd 'de' MMMM", { locale: ptBR }),
+      });
+    }
+  }
+
+  return result;
+};
+
+// ────────────────────────────────────────────
+// Component
+// ────────────────────────────────────────────
 
 const SessionDetailPage = () => {
   const { slug, sessionId } = useParams();
@@ -38,14 +107,18 @@ const SessionDetailPage = () => {
   const { toast } = useToast();
 
   const [session, setSession] = useState<SessionDetail | null>(null);
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<BookingStep>("slots");
 
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // ────────────────────────────────────────────
+  // Load
+  // ────────────────────────────────────────────
 
   useEffect(() => {
     const load = async () => {
@@ -60,48 +133,74 @@ const SessionDetailPage = () => {
         setLoading(false);
         return;
       }
-      setSession(sessionData as SessionDetail);
+      const s = sessionData as unknown as SessionDetail;
+      setSession(s);
 
+      // Fetch weekly slot definitions
       const { data: availData } = await supabase
         .from("session_availability")
-        .select("id, date, start_time, end_time, is_booked")
+        .select("id, day_of_week, start_time")
         .eq("session_id", sessionId!)
-        .eq("is_booked", false)
-        .gte("date", new Date().toISOString().split("T")[0])
-        .order("date", { ascending: true });
+        .not("day_of_week", "is", null);
 
-      setSlots((availData ?? []) as Slot[]);
+      const defs: WeeklySlotDef[] = (availData ?? []).map((a) => ({
+        id: a.id,
+        day_of_week: (a as unknown as { day_of_week: number }).day_of_week,
+        start_time: a.start_time,
+      }));
+
+      // Fetch confirmed bookings for these slots (next 60 days)
+      const today = format(startOfToday(), "yyyy-MM-dd");
+      const endDate = format(addDays(startOfToday(), LOOK_AHEAD_DAYS), "yyyy-MM-dd");
+      const { data: bookingsData } = await supabase
+        .from("bookings")
+        .select("availability_id, booked_date")
+        .in("availability_id", defs.map((d) => d.id))
+        .gte("booked_date", today)
+        .lte("booked_date", endDate)
+        .in("status", ["pending", "confirmed"]);
+
+      const bookedKeys = new Set<string>(
+        (bookingsData ?? [])
+          .filter((b) => b.booked_date)
+          .map((b) => `${b.availability_id}_${b.booked_date}`)
+      );
+
+      const occurrences = generateOccurrences(defs, bookedKeys, s.duration_minutes);
+      setGeneratedSlots(occurrences);
       setLoading(false);
     };
     load();
   }, [sessionId]);
 
-  const handleProceedToForm = () => {
-    if (!selectedSlot) return;
-    setStep("form");
-  };
+  // ────────────────────────────────────────────
+  // Checkout
+  // ────────────────────────────────────────────
 
   const handleCheckout = async () => {
     if (!session || !selectedSlot || !clientName.trim() || !clientEmail.trim()) return;
     setSubmitting(true);
+
+    const bookedDate = format(selectedSlot.date, "yyyy-MM-dd");
 
     // 1. Create pending booking
     const { data: bookingData, error: bookingError } = await supabase
       .from("bookings")
       .insert({
         session_id: session.id,
-        availability_id: selectedSlot.id,
+        availability_id: selectedSlot.availabilityId,
         photographer_id: session.photographer_id,
         client_name: clientName.trim(),
         client_email: clientEmail.trim(),
         status: "pending",
         payment_status: "pending",
-      })
+        booked_date: bookedDate,
+      } as Parameters<typeof supabase.from>[0] extends "bookings" ? never : unknown)
       .select("id")
       .single();
 
     if (bookingError || !bookingData) {
-      toast({ title: "Error creating booking", description: bookingError?.message, variant: "destructive" });
+      toast({ title: "Erro ao criar reserva", description: bookingError?.message, variant: "destructive" });
       setSubmitting(false);
       return;
     }
@@ -114,7 +213,8 @@ const SessionDetailPage = () => {
           body: {
             bookingId: bookingData.id,
             sessionId: session.id,
-            slotId: selectedSlot.id,
+            slotId: selectedSlot.availabilityId,
+            bookedDate,
             clientEmail: clientEmail.trim(),
             clientName: clientName.trim(),
           },
@@ -122,18 +222,20 @@ const SessionDetailPage = () => {
       );
 
       if (fnError || !checkoutData?.url) {
-        throw new Error(fnError?.message || "No checkout URL");
+        throw new Error(fnError?.message || "Sem URL de pagamento");
       }
-
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      toast({ title: "Payment error", description: message, variant: "destructive" });
-      // Clean up pending booking
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast({ title: "Erro no pagamento", description: message, variant: "destructive" });
       await supabase.from("bookings").delete().eq("id", bookingData.id);
       setSubmitting(false);
     }
   };
+
+  // ────────────────────────────────────────────
+  // Loading / not found
+  // ────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -146,9 +248,9 @@ const SessionDetailPage = () => {
   if (!session) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Session not found.</p>
+        <p className="text-sm font-light text-muted-foreground">Sessão não encontrada.</p>
         <Button variant="ghost" onClick={() => navigate(`/store/${slug}`)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to store
+          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para a loja
         </Button>
       </div>
     );
@@ -159,9 +261,10 @@ const SessionDetailPage = () => {
     currency: "BRL",
   }).format(session.price / 100);
 
-  // Group slots by date
-  const slotsByDate = slots.reduce<Record<string, Slot[]>>((acc, slot) => {
-    acc[slot.date] = [...(acc[slot.date] ?? []), slot];
+  // Group generated slots by formatted date string for display
+  const slotsByDate = generatedSlots.reduce<Record<string, GeneratedSlot[]>>((acc, s) => {
+    const key = format(s.date, "yyyy-MM-dd");
+    acc[key] = [...(acc[key] ?? []), s];
     return acc;
   }, {});
 
@@ -176,7 +279,7 @@ const SessionDetailPage = () => {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-          Book a Session
+          Agendar Session
         </p>
       </header>
 
@@ -224,32 +327,34 @@ const SessionDetailPage = () => {
               <>
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
-                    Select a date & time
+                    Escolha uma data e horário
                   </p>
-                  {slots.length === 0 ? (
+                  {generatedSlots.length === 0 ? (
                     <p className="text-sm font-light text-muted-foreground text-center py-8 border border-dashed border-border">
-                      No available slots at the moment.
+                      Nenhum horário disponível no momento.
                     </p>
                   ) : (
-                    <div className="flex flex-col gap-4">
-                      {Object.entries(slotsByDate).map(([date, daySlots]) => (
-                        <div key={date}>
-                          <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
-                            {format(parseISO(date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                    <div className="flex flex-col gap-5 max-h-[420px] overflow-y-auto pr-1">
+                      {Object.entries(slotsByDate).map(([dateKey, daySlots]) => (
+                        <div key={dateKey}>
+                          <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2 capitalize">
+                            {daySlots[0].label}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {daySlots.map((slot) => (
+                            {daySlots.map((slot, i) => (
                               <button
-                                key={slot.id}
+                                key={i}
                                 onClick={() => setSelectedSlot(slot)}
                                 className={cn(
                                   "px-3 py-2 text-xs border transition-colors tracking-wider",
-                                  selectedSlot?.id === slot.id
+                                  selectedSlot &&
+                                    selectedSlot.availabilityId === slot.availabilityId &&
+                                    isSameDay(selectedSlot.date, slot.date)
                                     ? "border-foreground bg-foreground text-background"
                                     : "border-border hover:border-foreground/40"
                                 )}
                               >
-                                {slot.start_time.slice(0, 5)}
+                                {slot.start_time}
                               </button>
                             ))}
                           </div>
@@ -259,68 +364,65 @@ const SessionDetailPage = () => {
                   )}
                 </div>
                 <Button
-                  onClick={handleProceedToForm}
+                  onClick={() => setStep("form")}
                   disabled={!selectedSlot}
                   className="w-full text-xs tracking-wider uppercase font-light"
                 >
-                  Continue →
+                  Continuar →
                 </Button>
               </>
             )}
 
-            {step === "form" && (
+            {step === "form" && selectedSlot && (
               <>
-                <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">
-                    Selected slot
+                {/* Selected slot summary */}
+                <div className="border border-border p-4 flex flex-col gap-1">
+                  <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
+                    Horário selecionado
                   </p>
-                  <p className="text-sm font-light">
-                    {selectedSlot && format(parseISO(selectedSlot.date), "PPP", { locale: ptBR })}
-                    {" · "}
-                    {selectedSlot?.start_time.slice(0, 5)}
+                  <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedSlot.start_time} – {selectedSlot.end_time}
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                    Your details
+                    Seus dados
                   </p>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
-                      Full Name *
+                      Nome Completo *
                     </Label>
                     <Input
                       id="clientName"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder="Seu nome"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">
-                      Email *
+                      E-mail *
                     </Label>
                     <Input
                       id="clientEmail"
                       type="email"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="your@email.com"
+                      placeholder="seu@email.com"
                     />
                   </div>
                 </div>
 
-                <div className="border border-border p-4 flex flex-col gap-1">
+                {/* Order summary */}
+                <div className="border border-border p-4 flex flex-col gap-2">
                   <div className="flex justify-between text-xs font-light">
                     <span className="text-muted-foreground">{session.title}</span>
                     <span>{priceFormatted}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>
-                      {selectedSlot &&
-                        format(parseISO(selectedSlot.date), "dd/MM/yyyy", { locale: ptBR })}{" "}
-                      {selectedSlot?.start_time.slice(0, 5)}
-                    </span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground capitalize">
+                    <span>{selectedSlot.label} · {selectedSlot.start_time}</span>
                   </div>
                 </div>
 
@@ -330,7 +432,7 @@ const SessionDetailPage = () => {
                     onClick={() => setStep("slots")}
                     className="text-xs tracking-wider uppercase font-light"
                   >
-                    Back
+                    Voltar
                   </Button>
                   <Button
                     onClick={handleCheckout}
@@ -338,7 +440,7 @@ const SessionDetailPage = () => {
                     className="flex-1 gap-2 text-xs tracking-wider uppercase font-light"
                   >
                     {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Pay {priceFormatted}
+                    Pagar {priceFormatted}
                   </Button>
                 </div>
               </>
