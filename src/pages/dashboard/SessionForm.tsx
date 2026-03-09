@@ -585,6 +585,34 @@ const SessionForm = () => {
       }
     }
 
+    setSaving(false);
+    setStep(6);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 6: Save confirmation settings → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishConfirmation = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({
+        confirmation_email_body: confirmationEmailBody,
+        reminder_days: reminderDays,
+      } as any)
+      .eq("id", sessionId);
+
+    if (error) {
+      toast({ title: "Error saving confirmation settings", description: error.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
