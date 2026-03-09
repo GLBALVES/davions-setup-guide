@@ -163,7 +163,15 @@ const SessionDetailPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: sessionData } = await supabase
+  useEffect(() => {
+    const load = async () => {
+      // sessionSlug can be either the slug or the UUID id (backward compat)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionSlug ?? "");
+      const query = supabase.from("sessions").select("*").eq("status", "active");
+      const { data: sessionData } = await (isUuid
+        ? query.eq("id", sessionSlug!)
+        : query.eq("slug", sessionSlug!)
+      ).single();
         .from("sessions")
         .select("*")
         .eq("id", sessionId!)
