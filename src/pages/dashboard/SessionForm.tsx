@@ -1523,14 +1523,14 @@ const SessionForm = () => {
                         Extras
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                        Itens extras que o cliente poderá selecionar ao fazer o booking.
+                        Optional add-ons clients can select when booking this session.
                       </p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                       {sessionExtras.length === 0 && (
                         <p className="text-[10px] text-muted-foreground italic border border-dashed border-border p-4 text-center">
-                          Nenhum extra cadastrado. Adicione itens abaixo.
+                          No extras added yet. Add items below.
                         </p>
                       )}
                       {sessionExtras.map((extra, idx) => (
@@ -1547,17 +1547,17 @@ const SessionForm = () => {
                           </div>
                           <div className="grid grid-cols-3 gap-3">
                             <div className="flex flex-col gap-1.5 col-span-1">
-                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Descrição</Label>
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Description</Label>
                               <input
                                 type="text"
                                 value={extra.description}
                                 onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
-                                placeholder="Ex: Álbum impresso"
+                                placeholder="e.g. Printed album"
                                 className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                               />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Quantidade</Label>
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Quantity</Label>
                               <input
                                 type="number" min="1" step="1"
                                 value={extra.quantity}
@@ -1566,7 +1566,7 @@ const SessionForm = () => {
                               />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Valor</Label>
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price</Label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
                                 <input
