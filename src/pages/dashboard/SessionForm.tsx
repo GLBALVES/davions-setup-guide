@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, addMinutes, parse } from "date-fns";
 import {
   ArrowLeft,
+  ArrowRight,
   ChevronRight,
   Clock,
   Loader2,
@@ -92,6 +93,10 @@ const SessionForm = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Wizard step ──
+  const [step, setStep] = useState<1 | 2>(1);
+  const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
+
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -167,11 +172,11 @@ const SessionForm = () => {
     if (isEdit && id) loadSession(id);
   }, [id]);
 
-  const loadSession = async (sessionId: string) => {
+  const loadSession = async (sid: string) => {
     const { data: s } = await supabase
       .from("sessions")
       .select("*")
-      .eq("id", sessionId)
+      .eq("id", sid)
       .single();
 
     if (s) {
@@ -191,7 +196,7 @@ const SessionForm = () => {
       supabase
         .from("session_availability")
         .select("id, day_of_week, start_time, end_time")
-        .eq("session_id", sessionId)
+        .eq("session_id", sid)
         .not("day_of_week", "is", null)
         .order("day_of_week", { ascending: true })
         .order("start_time", { ascending: true }),
@@ -199,7 +204,7 @@ const SessionForm = () => {
       (supabase as any)
         .from("session_day_config")
         .select("id, day_of_week, hours_start, hours_end, buffer_before_min, buffer_after_min")
-        .eq("session_id", sessionId),
+        .eq("session_id", sid),
     ]);
 
     if (availRes.data) {
@@ -259,10 +264,10 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
-  // Save
+  // Step 1: Create / update session details
   // ────────────────────────────────────────────
 
-  const handleSave = async () => {
+  const handleCreateSession = async () => {
     if (!user) return;
     if (!title.trim()) {
       toast({ title: "Title is required", variant: "destructive" });
@@ -285,10 +290,7 @@ const SessionForm = () => {
       cover_image_url: coverImageUrl,
       status,
     };
-    // session_type_id is not yet in generated types, cast via spread
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
-
-    let sessionId = id;
 
     if (isEdit && sessionId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,15 +312,28 @@ const SessionForm = () => {
         setSaving(false);
         return;
       }
-      sessionId = data.id;
+      setSessionId(data.id);
     }
 
+    setSaving(false);
+    setStep(2);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 2: Save availability
+  // ────────────────────────────────────────────
+
+  const handleSaveAvailability = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
     // Insert new local weekly slots
-    const newSlots = slots.filter((s) => s._local && sessionId);
+    const newSlots = slots.filter((s) => s._local);
     if (newSlots.length > 0) {
       await supabase.from("session_availability").insert(
         newSlots.map((s) => ({
-          session_id: sessionId!,
+          session_id: sessionId,
           photographer_id: user.id,
           day_of_week: s.day_of_week,
           start_time: s.start_time,
@@ -328,24 +343,22 @@ const SessionForm = () => {
     }
 
     // Save global config as a single row with day_of_week = -1 (sentinel)
-    if (sessionId && (globalConfig.hours_start || globalConfig.hours_end || globalConfig.buffer_before_min > 0 || globalConfig.buffer_after_min > 0)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
-        .from("session_day_config")
-        .delete()
-        .eq("session_id", sessionId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("session_day_config")
+      .delete()
+      .eq("session_id", sessionId);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("session_day_config").insert({
-        session_id: sessionId,
-        photographer_id: user.id,
-        day_of_week: -1,
-        hours_start: globalConfig.hours_start || null,
-        hours_end: globalConfig.hours_end || null,
-        buffer_before_min: globalConfig.buffer_before_min,
-        buffer_after_min: globalConfig.buffer_after_min,
-      });
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("session_day_config").insert({
+      session_id: sessionId,
+      photographer_id: user.id,
+      day_of_week: -1,
+      hours_start: globalConfig.hours_start || null,
+      hours_end: globalConfig.hours_end || null,
+      buffer_before_min: globalConfig.buffer_before_min,
+      buffer_after_min: globalConfig.buffer_after_min,
+    });
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
@@ -460,6 +473,68 @@ const SessionForm = () => {
   }
 
   // ────────────────────────────────────────────
+  // Step indicator
+  // ────────────────────────────────────────────
+
+  const StepIndicator = () => (
+    <div className="flex items-center gap-0 mb-8">
+      {/* Step 1 */}
+      <button
+        type="button"
+        onClick={() => setStep(1)}
+        className="flex items-center gap-2.5 group"
+      >
+        <div className={cn(
+          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
+          step === 1
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-foreground border-foreground"
+        )}>
+          1
+        </div>
+        <span className={cn(
+          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
+          step === 1 ? "text-foreground" : "text-muted-foreground"
+        )}>
+          Session Details
+        </span>
+      </button>
+
+      {/* Connector */}
+      <div className="flex-1 h-px bg-border mx-4 min-w-8" />
+
+      {/* Step 2 */}
+      <button
+        type="button"
+        onClick={() => {
+          // Only allow navigating to step 2 if session has been created
+          if (sessionId || isEdit) setStep(2);
+        }}
+        disabled={!sessionId && !isEdit}
+        className={cn(
+          "flex items-center gap-2.5 group",
+          (!sessionId && !isEdit) && "opacity-40 cursor-not-allowed"
+        )}
+      >
+        <div className={cn(
+          "w-7 h-7 rounded-full flex items-center justify-center border text-[11px] font-light tracking-wider transition-all duration-200",
+          step === 2
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-foreground border-foreground"
+        )}>
+          2
+        </div>
+        <span className={cn(
+          "text-[10px] tracking-[0.25em] uppercase transition-colors duration-200",
+          step === 2 ? "text-foreground" : "text-muted-foreground"
+        )}>
+          Availability
+        </span>
+      </button>
+    </div>
+  );
+
+  // ────────────────────────────────────────────
   // Render
   // ────────────────────────────────────────────
 
@@ -496,410 +571,444 @@ const SessionForm = () => {
                 </h1>
               </div>
 
-              {/* Cover Image */}
-              <section className="flex flex-col gap-3">
-                <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
-                  Cover Photo
-                </Label>
-                <div
-                  className="aspect-video border border-dashed border-border relative overflow-hidden cursor-pointer group"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {coverImageUrl ? (
-                    <>
-                      <img src={coverImageUrl} alt="Capa" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Upload className="h-6 w-6 text-white" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/50">
-                      {uploadingCover ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      ) : (
+              {/* Step indicator */}
+              <StepIndicator />
+
+              {/* ── STEP 1: Session Details ── */}
+              {step === 1 && (
+                <>
+                  {/* Cover Image */}
+                  <section className="flex flex-col gap-3">
+                    <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                      Cover Photo
+                    </Label>
+                    <div
+                      className="aspect-video border border-dashed border-border relative overflow-hidden cursor-pointer group"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {coverImageUrl ? (
                         <>
-                          <Upload className="h-6 w-6" />
-                          <span className="text-[10px] tracking-widest uppercase">
-                            Click to upload
-                          </span>
+                          <img src={coverImageUrl} alt="Capa" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload className="h-6 w-6 text-white" />
+                          </div>
                         </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/50">
+                          {uploadingCover ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                          ) : (
+                            <>
+                              <Upload className="h-6 w-6" />
+                              <span className="text-[10px] tracking-widest uppercase">
+                                Click to upload
+                              </span>
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleCoverUpload}
-                />
-              </section>
-
-              {/* Basic Info */}
-              <section className="flex flex-col gap-4">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                  <span className="inline-block w-4 h-px bg-border" />
-                  Session Details
-                </p>
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="title" className="text-xs tracking-wider uppercase font-light">
-                    Title *
-                  </Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Newborn Session"
-                  />
-                </div>
-
-                {user && (
-                  <SessionTypeManager
-                    photographerId={user.id}
-                    sessionTypes={sessionTypes}
-                    selectedTypeId={sessionTypeId}
-                    onSelect={setSessionTypeId}
-                    onRefetch={fetchSessionTypes}
-                  />
-                )}
-
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe this session for your clients…"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="price" className="text-xs tracking-wider uppercase font-light">
-                      Price (USD)
-                    </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="0.00"
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCoverUpload}
                     />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
-                      Location
-                    </Label>
-                    <Input
-                      id="location"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="e.g. New York, NY"
-                    />
-                  </div>
-                </div>
+                  </section>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
-                      Duration (min)
-                    </Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      min="15"
-                      step="15"
-                      value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
-                      Break (min)
-                    </Label>
-                    <Input
-                      id="break"
-                      type="number"
-                      min="0"
-                      step="5"
-                      value={breakAfterMinutes}
-                      onChange={(e) => setBreakAfterMinutes(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="numPhotos" className="text-xs tracking-wider uppercase font-light">
-                      No. of Photos
-                    </Label>
-                    <Input
-                      id="numPhotos"
-                      type="number"
-                      min="0"
-                      value={numPhotos}
-                      onChange={(e) => setNumPhotos(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Duration summary */}
-                {brk > 0 && (
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    Each slot takes {totalMinutes} min ({dur} min session + {brk} min break)
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between border border-border p-4">
-                  <div>
-                    <p className="text-xs tracking-wider uppercase font-light">Published</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Clients can find and book this session
+                  {/* Basic Info */}
+                  <section className="flex flex-col gap-4">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                      <span className="inline-block w-4 h-px bg-border" />
+                      Session Details
                     </p>
-                  </div>
-                  <Switch
-                    checked={status === "active"}
-                    onCheckedChange={(v) => setStatus(v ? "active" : "draft")}
-                  />
-                </div>
-              </section>
 
-              {/* Weekly Availability */}
-              <section className="flex flex-col gap-4">
-                <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                    <span className="inline-block w-4 h-px bg-border" />
-                    Weekly Availability
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                    Define your working hours and buffer once — they apply to all days.
-                  </p>
-                </div>
-
-                {/* Global business hours + buffer config */}
-                <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                      Business hrs
-                    </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="title" className="text-xs tracking-wider uppercase font-light">
+                        Title *
+                      </Label>
                       <Input
-                        type="time"
-                        value={globalConfig.hours_start}
-                        onChange={(e) => updateGlobalConfig({ hours_start: e.target.value })}
-                        className="w-28 h-7 text-xs"
-                      />
-                      <span className="text-[10px] text-muted-foreground">→</span>
-                      <Input
-                        type="time"
-                        value={globalConfig.hours_end}
-                        onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
-                        className="w-28 h-7 text-xs"
+                        id="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g. Newborn Session"
                       />
                     </div>
-                    {(globalConfig.hours_start || globalConfig.hours_end) && (
-                      <button
-                        type="button"
-                        onClick={() => updateGlobalConfig({ hours_start: "", hours_end: "" })}
-                        className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
-                      >
-                        clear
-                      </button>
+
+                    {user && (
+                      <SessionTypeManager
+                        photographerId={user.id}
+                        sessionTypes={sessionTypes}
+                        selectedTypeId={sessionTypeId}
+                        onSelect={setSessionTypeId}
+                        onRefetch={fetchSessionTypes}
+                      />
                     )}
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
-                      Buffer
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5">
+
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Describe this session for your clients…"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="price" className="text-xs tracking-wider uppercase font-light">
+                          Price (USD)
+                        </Label>
                         <Input
+                          id="price"
                           type="number"
                           min="0"
-                          step="5"
-                          value={globalConfig.buffer_before_min || ""}
-                          onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
-                          className="w-16 h-7 text-xs"
-                          placeholder="0"
+                          step="0.01"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          placeholder="0.00"
                         />
-                        <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
+                          Location
+                        </Label>
                         <Input
-                          type="number"
-                          min="0"
-                          step="5"
-                          value={globalConfig.buffer_after_min || ""}
-                          onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
-                          className="w-16 h-7 text-xs"
-                          placeholder="0"
+                          id="location"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="e.g. New York, NY"
                         />
-                        <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
+                          Duration (min)
+                        </Label>
+                        <Input
+                          id="duration"
+                          type="number"
+                          min="15"
+                          step="15"
+                          value={durationMinutes}
+                          onChange={(e) => setDurationMinutes(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
+                          Break (min)
+                        </Label>
+                        <Input
+                          id="break"
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={breakAfterMinutes}
+                          onChange={(e) => setBreakAfterMinutes(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="numPhotos" className="text-xs tracking-wider uppercase font-light">
+                          No. of Photos
+                        </Label>
+                        <Input
+                          id="numPhotos"
+                          type="number"
+                          min="0"
+                          value={numPhotos}
+                          onChange={(e) => setNumPhotos(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Duration summary */}
+                    {brk > 0 && (
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
+                        Each slot takes {totalMinutes} min ({dur} min session + {brk} min break)
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between border border-border p-4">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Published</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Clients can find and book this session
+                        </p>
+                      </div>
+                      <Switch
+                        checked={status === "active"}
+                        onCheckedChange={(v) => setStatus(v ? "active" : "draft")}
+                      />
+                    </div>
+                  </section>
+
+                  {/* Step 1 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate("/dashboard/sessions")}
+                      className="text-xs tracking-wider uppercase font-light text-muted-foreground"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateSession}
+                      disabled={saving}
+                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    >
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      {isEdit ? "Save & Continue" : "Create Session"}
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
                   </div>
-                </div>
+                </>
+              )}
 
-                {/* Day rows */}
-                <div className="flex flex-col border border-border divide-y divide-border">
-                  {DAY_ORDER.map((dayIdx) => {
-                    const daySlots = slotsForDay(dayIdx);
-                    const isExpanded = expandedDays.includes(dayIdx);
-                    const isAddingHere = addingSlotForDay === dayIdx;
+              {/* ── STEP 2: Availability ── */}
+              {step === 2 && (
+                <>
+                  {/* Weekly Availability */}
+                  <section className="flex flex-col gap-4">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Weekly Availability
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Define your working hours and buffer once — they apply to all days.
+                      </p>
+                    </div>
 
-                    return (
-                      <div key={dayIdx}>
-                        {/* Day header row */}
-                        <div className="flex items-center justify-between px-4 py-3">
+                    {/* Global business hours + buffer config */}
+                    <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                          Business hrs
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            value={globalConfig.hours_start}
+                            onChange={(e) => updateGlobalConfig({ hours_start: e.target.value })}
+                            className="w-28 h-7 text-xs"
+                          />
+                          <span className="text-[10px] text-muted-foreground">→</span>
+                          <Input
+                            type="time"
+                            value={globalConfig.hours_end}
+                            onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
+                            className="w-28 h-7 text-xs"
+                          />
+                        </div>
+                        {(globalConfig.hours_start || globalConfig.hours_end) && (
                           <button
                             type="button"
-                            onClick={() => toggleDayExpanded(dayIdx)}
-                            className="flex items-center gap-3 flex-1 text-left"
+                            onClick={() => updateGlobalConfig({ hours_start: "", hours_end: "" })}
+                            className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
                           >
-                            <ChevronRight className={cn(
-                              "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
-                              isExpanded && "rotate-90"
-                            )} />
-                            <span className={cn(
-                              "text-[11px] tracking-wider uppercase w-28 font-light",
-                              daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
-                            )}>
-                              {DAY_FULL[dayIdx]}
-                            </span>
-                            {daySlots.length > 0 ? (
-                              <span className="text-[10px] text-muted-foreground">
-                                {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground/50">No slots</span>
-                            )}
+                            clear
                           </button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              if (!isExpanded) setExpandedDays((p) => [...p, dayIdx]);
-                              setAddingSlotForDay(isAddingHere ? null : dayIdx);
-                              setNewStart(suggestNextStart(dayIdx));
-                            }}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-
-                        {/* Expanded: slots + add form */}
-                        {isExpanded && (
-                          <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
-                            {daySlots.length > 0 && (
-                              <div className="flex flex-col gap-1.5">
-                                {daySlots.map((slot) => {
-                                  const globalIdx = slots.findIndex(
-                                    (s) => s === slot
-                                  );
-                                  return (
-                                    <div
-                                      key={slot.id ?? globalIdx}
-                                      className="flex items-center justify-between py-1.5 px-3 bg-background border border-border"
-                                    >
-                                      <span className="flex items-center gap-2 text-[11px]">
-                                        <Clock className="h-3 w-3 text-muted-foreground" />
-                                        {slot.start_time.slice(0, 5)}
-                                        <span className="text-muted-foreground">→</span>
-                                        {slot.end_time.slice(0, 5)}
-                                        {brk > 0 && (
-                                          <span className="text-[10px] text-muted-foreground/60">
-                                            (+{brk} min break)
-                                          </span>
-                                        )}
-                                      </span>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleRemoveSlot(slot, globalIdx)}
-                                          className="text-muted-foreground hover:text-destructive transition-colors"
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-
-                            {/* Inline add-time form */}
-                            {isAddingHere && (
-                              <div className="flex items-center gap-3 pt-1">
-                                <Input
-                                  type="time"
-                                  value={newStart}
-                                  onChange={(e) => setNewStart(e.target.value)}
-                                  className="w-32 h-8 text-sm"
-                                />
-                                {newStart && (
-                                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                                    → {computeEndTime(newStart, dur)}
-                                    {brk > 0 && ` (free until ${computeEndTime(newStart, totalMinutes)})`}
-                                  </span>
-                                )}
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  onClick={() => handleAddSlotForDay(dayIdx)}
-                                  className="h-8 text-xs tracking-wider uppercase font-light"
-                                >
-                                  Confirm
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setAddingSlotForDay(null)}
-                                  className="h-8 text-xs tracking-wider uppercase font-light"
-                                >
-                                  ✕
-                                </Button>
-                              </div>
-                            )}
-
-                            {daySlots.length === 0 && !isAddingHere && (
-                              <p className="text-[11px] text-muted-foreground/50 italic py-1">
-                                No slots — click + to add
-                              </p>
-                            )}
-                          </div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-[9px] tracking-widest uppercase text-muted-foreground w-24 shrink-0">
+                          Buffer
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="5"
+                              value={globalConfig.buffer_before_min || ""}
+                              onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
+                              className="w-16 h-7 text-xs"
+                              placeholder="0"
+                            />
+                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">min before</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="5"
+                              value={globalConfig.buffer_after_min || ""}
+                              onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
+                              className="w-16 h-7 text-xs"
+                              placeholder="0"
+                            />
+                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">min after</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between border-t border-border pt-6">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/dashboard/sessions")}
-                  className="text-xs tracking-wider uppercase font-light text-muted-foreground"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="gap-2 text-xs tracking-wider uppercase font-light"
-                >
-                  {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {isEdit ? "Save Changes" : "Create Session"}
-                </Button>
-              </div>
+                    {/* Day rows */}
+                    <div className="flex flex-col border border-border divide-y divide-border">
+                      {DAY_ORDER.map((dayIdx) => {
+                        const daySlots = slotsForDay(dayIdx);
+                        const isExpanded = expandedDays.includes(dayIdx);
+                        const isAddingHere = addingSlotForDay === dayIdx;
+
+                        return (
+                          <div key={dayIdx}>
+                            {/* Day header row */}
+                            <div className="flex items-center justify-between px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => toggleDayExpanded(dayIdx)}
+                                className="flex items-center gap-3 flex-1 text-left"
+                              >
+                                <ChevronRight className={cn(
+                                  "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+                                  isExpanded && "rotate-90"
+                                )} />
+                                <span className={cn(
+                                  "text-[11px] tracking-wider uppercase w-28 font-light",
+                                  daySlots.length > 0 ? "text-foreground" : "text-muted-foreground"
+                                )}>
+                                  {DAY_FULL[dayIdx]}
+                                </span>
+                                {daySlots.length > 0 ? (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground/50">No slots</span>
+                                )}
+                              </button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (!isExpanded) setExpandedDays((p) => [...p, dayIdx]);
+                                  setAddingSlotForDay(isAddingHere ? null : dayIdx);
+                                  setNewStart(suggestNextStart(dayIdx));
+                                }}
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+
+                            {/* Expanded: slots + add form */}
+                            {isExpanded && (
+                              <div className="bg-muted/10 border-t border-border/60 px-4 py-3 flex flex-col gap-3">
+                                {daySlots.length > 0 && (
+                                  <div className="flex flex-col gap-1.5">
+                                    {daySlots.map((slot) => {
+                                      const globalIdx = slots.findIndex(
+                                        (s) => s === slot
+                                      );
+                                      return (
+                                        <div
+                                          key={slot.id ?? globalIdx}
+                                          className="flex items-center justify-between py-1.5 px-3 bg-background border border-border"
+                                        >
+                                          <span className="flex items-center gap-2 text-[11px]">
+                                            <Clock className="h-3 w-3 text-muted-foreground" />
+                                            {slot.start_time.slice(0, 5)}
+                                            <span className="text-muted-foreground">→</span>
+                                            {slot.end_time.slice(0, 5)}
+                                            {brk > 0 && (
+                                              <span className="text-[10px] text-muted-foreground/60">
+                                                (+{brk} min break)
+                                              </span>
+                                            )}
+                                          </span>
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleRemoveSlot(slot, globalIdx)}
+                                              className="text-muted-foreground hover:text-destructive transition-colors"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Inline add-time form */}
+                                {isAddingHere && (
+                                  <div className="flex items-center gap-3 pt-1">
+                                    <Input
+                                      type="time"
+                                      value={newStart}
+                                      onChange={(e) => setNewStart(e.target.value)}
+                                      className="w-32 h-8 text-sm"
+                                    />
+                                    {newStart && (
+                                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                                        → {computeEndTime(newStart, dur)}
+                                        {brk > 0 && ` (free until ${computeEndTime(newStart, totalMinutes)})`}
+                                      </span>
+                                    )}
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => handleAddSlotForDay(dayIdx)}
+                                      className="h-8 text-xs tracking-wider uppercase font-light"
+                                    >
+                                      Confirm
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => setAddingSlotForDay(null)}
+                                      className="h-8 text-xs tracking-wider uppercase font-light"
+                                    >
+                                      ✕
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {daySlots.length === 0 && !isAddingHere && (
+                                  <p className="text-[11px] text-muted-foreground/50 italic py-1">
+                                    No slots — click + to add
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* Step 2 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setStep(1)}
+                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleSaveAvailability}
+                      disabled={saving}
+                      className="gap-2 text-xs tracking-wider uppercase font-light"
+                    >
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Finish
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </main>
         </div>
