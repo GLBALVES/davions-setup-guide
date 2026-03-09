@@ -365,7 +365,7 @@ const SessionDetailPage = () => {
                   disabled={!selectedSlot}
                   className="w-full text-xs tracking-wider uppercase font-light"
                 >
-                  Continuar →
+                  Continue →
                 </Button>
               </>
             )}
