@@ -1435,7 +1435,16 @@ const SessionForm = () => {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setDepositType("percent")}
+                                  onClick={() => {
+                                    if (depositType === "fixed") {
+                                      // Convert fixed → %: (fixedVal / sessionPrice) * 100
+                                      const fixedVal = parseFloat(depositAmount || "0");
+                                      const sessionPriceVal = parseFloat(price || "0");
+                                      const pct = sessionPriceVal > 0 ? (fixedVal / sessionPriceVal) * 100 : 0;
+                                      setDepositAmount(pct > 0 ? String(Math.round(pct)) : "");
+                                    }
+                                    setDepositType("percent");
+                                  }}
                                   className={cn(
                                     "px-3 py-1 text-[10px] tracking-widest uppercase transition-colors border-l border-border",
                                     depositType === "percent"
