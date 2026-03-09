@@ -443,7 +443,7 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="numPhotos" className="text-xs tracking-wider uppercase font-light">
-                      Nº de Fotos
+                      No. of Photos
                     </Label>
                     <Input
                       id="numPhotos"
