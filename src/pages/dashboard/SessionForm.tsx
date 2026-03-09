@@ -665,6 +665,30 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
+  // Publish / Unpublish
+  // ────────────────────────────────────────────
+
+  const [publishing, setPublishing] = useState(false);
+
+  const handleTogglePublish = async () => {
+    if (!user || !sessionId) return;
+    const newStatus = status === "active" ? "draft" : "active";
+    setPublishing(true);
+    const { error } = await supabase
+      .from("sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ status: newStatus } as any)
+      .eq("id", sessionId);
+    if (error) {
+      toast({ title: "Error updating status", description: error.message, variant: "destructive" });
+    } else {
+      setStatus(newStatus);
+      toast({ title: newStatus === "active" ? "Session published" : "Session unpublished" });
+    }
+    setPublishing(false);
+  };
+
+  // ────────────────────────────────────────────
   // Slot helpers
   // ────────────────────────────────────────────
 
