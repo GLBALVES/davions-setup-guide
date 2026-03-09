@@ -264,6 +264,9 @@ const SessionForm = () => {
 
     if (s) {
       setTitle(s.title);
+      const existingSlug = (s as unknown as { slug?: string | null }).slug ?? "";
+      setSlug(existingSlug);
+      setSlugEdited(Boolean(existingSlug)); // treat existing slug as "manually set"
       setDescription(s.description ?? "");
       setPrice((s.price / 100).toFixed(2));
       setDurationMinutes(String(s.duration_minutes));
