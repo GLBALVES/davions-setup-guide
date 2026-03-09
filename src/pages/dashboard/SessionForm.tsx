@@ -375,7 +375,7 @@ const SessionForm = () => {
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
-                    Descrição
+                    Description
                   </Label>
                   <Textarea
                     id="description"
