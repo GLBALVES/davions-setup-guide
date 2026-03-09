@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          availability_id: string
+          client_email: string
+          client_name: string
+          created_at: string
+          id: string
+          payment_status: string
+          photographer_id: string
+          session_id: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          availability_id: string
+          client_email: string
+          client_name: string
+          created_at?: string
+          id?: string
+          payment_status?: string
+          photographer_id: string
+          session_id: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          availability_id?: string
+          client_email?: string
+          client_name?: string
+          created_at?: string
+          id?: string
+          payment_status?: string
+          photographer_id?: string
+          session_id?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_availability_id_fkey"
+            columns: ["availability_id"]
+            isOneToOne: false
+            referencedRelation: "session_availability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       galleries: {
         Row: {
           access_code: string | null
@@ -64,18 +128,21 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          store_slug: string | null
         }
         Insert: {
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          store_slug?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          store_slug?: string | null
         }
         Relationships: []
       }
@@ -117,6 +184,107 @@ export type Database = {
           },
           {
             foreignKeyName: "photos_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_availability: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          is_booked: boolean
+          photographer_id: string
+          session_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          is_booked?: boolean
+          photographer_id: string
+          session_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          photographer_id?: string
+          session_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_availability_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_availability_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          location: string | null
+          num_photos: number
+          photographer_id: string
+          price: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          num_photos?: number
+          photographer_id: string
+          price?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          num_photos?: number
+          photographer_id?: string
+          price?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_photographer_id_fkey"
             columns: ["photographer_id"]
             isOneToOne: false
             referencedRelation: "photographers"
