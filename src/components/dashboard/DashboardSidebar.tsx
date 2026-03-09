@@ -43,10 +43,18 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isActive = (path: string) =>
-    path === "/dashboard"
-      ? currentPath === "/dashboard"
-      : currentPath.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/dashboard") return currentPath === "/dashboard";
+    const [pathname, search] = path.split("?");
+    if (!currentPath.startsWith(pathname)) return false;
+    if (!search) return true;
+    const params = new URLSearchParams(location.search);
+    const expected = new URLSearchParams(search);
+    for (const [key, val] of expected.entries()) {
+      if (params.get(key) !== val) return false;
+    }
+    return true;
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">

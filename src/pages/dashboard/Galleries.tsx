@@ -25,6 +25,8 @@ const Galleries = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get("type") as "proof" | "final" | null;
 
   const fetchGalleries = async () => {
     setLoading(true);
@@ -58,8 +60,9 @@ const Galleries = () => {
     fetchGalleries();
   }, []);
 
-  const proofGalleries = galleries.filter((g) => g.category === "proof");
-  const finalGalleries = galleries.filter((g) => g.category === "final");
+  const filtered = type ? galleries.filter((g) => g.category === type) : galleries;
+  const heading = type === "proof" ? "Proof Galleries" : type === "final" ? "Final Galleries" : "Galleries";
+  const defaultCategory = type ?? "proof";
 
   return (
     <SidebarProvider>
@@ -82,7 +85,7 @@ const Galleries = () => {
                     <span className="inline-block w-6 h-px bg-border" />
                     Dashboard
                   </p>
-                  <h1 className="text-2xl font-light tracking-wide">Galleries</h1>
+                  <h1 className="text-2xl font-light tracking-wide">{heading}</h1>
                 </div>
                 <Button
                   size="sm"
@@ -94,29 +97,7 @@ const Galleries = () => {
                 </Button>
               </div>
 
-              <Tabs defaultValue="all">
-                <TabsList className="bg-secondary/50 rounded-none border border-border">
-                  <TabsTrigger value="all" className="rounded-none text-xs tracking-wider uppercase font-light">
-                    All ({galleries.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="proof" className="rounded-none text-xs tracking-wider uppercase font-light">
-                    Proof ({proofGalleries.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="final" className="rounded-none text-xs tracking-wider uppercase font-light">
-                    Final ({finalGalleries.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="all" className="mt-4">
-                  <GalleryGrid galleries={galleries} loading={loading} />
-                </TabsContent>
-                <TabsContent value="proof" className="mt-4">
-                  <GalleryGrid galleries={proofGalleries} loading={loading} />
-                </TabsContent>
-                <TabsContent value="final" className="mt-4">
-                  <GalleryGrid galleries={finalGalleries} loading={loading} />
-                </TabsContent>
-              </Tabs>
+              <GalleryGrid galleries={filtered} loading={loading} />
             </div>
           </main>
         </div>
@@ -126,6 +107,7 @@ const Galleries = () => {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={fetchGalleries}
+        defaultCategory={defaultCategory}
       />
     </SidebarProvider>
   );
