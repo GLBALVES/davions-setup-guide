@@ -38,7 +38,7 @@ serve(async (req) => {
     // Fetch session data
     const { data: sessionData, error: sessionError } = await supabase
       .from("sessions")
-      .select("title, price, photographer_id, deposit_enabled, deposit_amount, tax_rate")
+      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate")
       .eq("id", sessionId)
       .single();
 

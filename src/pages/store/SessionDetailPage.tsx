@@ -39,6 +39,7 @@ interface SessionDetail {
   photographer_id: string;
   deposit_enabled: boolean;
   deposit_amount: number;
+  deposit_type: string;
   tax_rate: number;
   allow_tip: boolean;
   booking_notice_days: number;
