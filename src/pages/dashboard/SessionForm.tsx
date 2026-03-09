@@ -187,7 +187,7 @@ const SessionForm = () => {
     if (isEdit && sessionId) {
       const { error } = await supabase.from("sessions").update(payload).eq("id", sessionId);
       if (error) {
-        toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+        toast({ title: "Error saving session", description: error.message, variant: "destructive" });
         setSaving(false);
         return;
       }
