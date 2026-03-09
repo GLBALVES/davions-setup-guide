@@ -15,7 +15,6 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +88,7 @@ const generateOccurrences = (
         date,
         start_time: startHHmm,
         end_time: format(endDate, "HH:mm"),
-        label: format(date, "EEEE, dd 'de' MMMM", { locale: ptBR }),
+        label: format(date, "EEEE, MMMM d"),
       });
     }
   }
@@ -202,7 +201,7 @@ const SessionDetailPage = () => {
       .single();
 
     if (bookingError || !bookingData) {
-      toast({ title: "Erro ao criar reserva", description: bookingError?.message, variant: "destructive" });
+      toast({ title: "Failed to create booking", description: bookingError?.message, variant: "destructive" });
       setSubmitting(false);
       return;
     }
@@ -224,12 +223,12 @@ const SessionDetailPage = () => {
       );
 
       if (fnError || !checkoutData?.url) {
-        throw new Error(fnError?.message || "Sem URL de pagamento");
+        throw new Error(fnError?.message || "No payment URL returned");
       }
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erro desconhecido";
-      toast({ title: "Erro no pagamento", description: message, variant: "destructive" });
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Payment error", description: message, variant: "destructive" });
       await supabase.from("bookings").delete().eq("id", bookingData.id);
       setSubmitting(false);
     }
@@ -250,17 +249,17 @@ const SessionDetailPage = () => {
   if (!session) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Sessão não encontrada.</p>
+        <p className="text-sm font-light text-muted-foreground">Session not found.</p>
         <Button variant="ghost" onClick={() => navigate(`/store/${slug}`)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para a loja
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to the store
         </Button>
       </div>
     );
   }
 
-  const priceFormatted = new Intl.NumberFormat("pt-BR", {
+  const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "BRL",
+    currency: "USD",
   }).format(session.price / 100);
 
   // Group generated slots by formatted date string for display
@@ -281,7 +280,7 @@ const SessionDetailPage = () => {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-          Agendar Session
+          Book a Session
         </p>
       </header>
 
@@ -306,11 +305,11 @@ const SessionDetailPage = () => {
               <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground pt-2">
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
-                  {session.duration_minutes} minutos
+                  {session.duration_minutes} minutes
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Camera className="h-3.5 w-3.5" />
-                  {session.num_photos} fotos
+                  {session.num_photos} photos
                 </span>
                 {session.location && (
                   <span className="flex items-center gap-1.5">
@@ -329,11 +328,11 @@ const SessionDetailPage = () => {
               <>
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
-                    Escolha uma data e horário
+                    Choose a date &amp; time
                   </p>
                   {generatedSlots.length === 0 ? (
                     <p className="text-sm font-light text-muted-foreground text-center py-8 border border-dashed border-border">
-                      Nenhum horário disponível no momento.
+                      No available slots at this time.
                     </p>
                   ) : (
                     <div className="flex flex-col gap-5 max-h-[420px] overflow-y-auto pr-1">
@@ -370,7 +369,7 @@ const SessionDetailPage = () => {
                   disabled={!selectedSlot}
                   className="w-full text-xs tracking-wider uppercase font-light"
                 >
-                  Continuar →
+                  Continue →
                 </Button>
               </>
             )}
@@ -380,7 +379,7 @@ const SessionDetailPage = () => {
                 {/* Selected slot summary */}
                 <div className="border border-border p-4 flex flex-col gap-1">
                   <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
-                    Horário selecionado
+                    Selected slot
                   </p>
                   <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
                   <p className="text-xs text-muted-foreground">
@@ -390,29 +389,29 @@ const SessionDetailPage = () => {
 
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                    Seus dados
+                    Your details
                   </p>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
-                      Nome Completo *
+                      Full Name *
                     </Label>
                     <Input
                       id="clientName"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
-                      placeholder="Seu nome"
+                      placeholder="Your name"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientEmail" className="text-xs tracking-wider uppercase font-light">
-                      E-mail *
+                      Email *
                     </Label>
                     <Input
                       id="clientEmail"
                       type="email"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="seu@email.com"
+                      placeholder="you@email.com"
                     />
                   </div>
                 </div>
@@ -429,12 +428,12 @@ const SessionDetailPage = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep("slots")}
-                    className="text-xs tracking-wider uppercase font-light"
-                  >
-                    Voltar
+                   <Button
+                     variant="outline"
+                     onClick={() => setStep("slots")}
+                     className="text-xs tracking-wider uppercase font-light"
+                   >
+                     Back
                   </Button>
                   <Button
                     onClick={handleCheckout}
@@ -442,7 +441,7 @@ const SessionDetailPage = () => {
                     className="flex-1 gap-2 text-xs tracking-wider uppercase font-light"
                   >
                     {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Pagar {priceFormatted}
+                    Pay {priceFormatted}
                   </Button>
                 </div>
               </>

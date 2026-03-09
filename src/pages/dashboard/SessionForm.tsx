@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 // Types
 // ────────────────────────────────────────────
 
-const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const DAY_FULL = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 // Ordered Mon→Sun for display
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -146,7 +146,7 @@ const SessionForm = () => {
       .from("session-covers")
       .upload(path, file, { upsert: true });
     if (error) {
-      toast({ title: "Upload falhou", description: error.message, variant: "destructive" });
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     } else {
       const { data } = supabase.storage.from("session-covers").getPublicUrl(path);
       setCoverImageUrl(data.publicUrl);
@@ -161,7 +161,7 @@ const SessionForm = () => {
   const handleSave = async () => {
     if (!user) return;
     if (!title.trim()) {
-      toast({ title: "Título obrigatório", variant: "destructive" });
+      toast({ title: "Title is required", variant: "destructive" });
       return;
     }
 
@@ -187,7 +187,7 @@ const SessionForm = () => {
     if (isEdit && sessionId) {
       const { error } = await supabase.from("sessions").update(payload).eq("id", sessionId);
       if (error) {
-        toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+        toast({ title: "Error saving session", description: error.message, variant: "destructive" });
         setSaving(false);
         return;
       }
@@ -198,7 +198,7 @@ const SessionForm = () => {
         .select("id")
         .single();
       if (error || !data) {
-        toast({ title: "Erro ao criar", description: error?.message, variant: "destructive" });
+        toast({ title: "Error creating session", description: error?.message, variant: "destructive" });
         setSaving(false);
         return;
       }
@@ -220,7 +220,7 @@ const SessionForm = () => {
       );
     }
 
-    toast({ title: isEdit ? "Sessão atualizada" : "Sessão criada" });
+    toast({ title: isEdit ? "Session updated" : "Session created" });
     navigate("/dashboard/sessions");
     setSaving(false);
   };
@@ -303,21 +303,21 @@ const SessionForm = () => {
                   className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors mb-4"
                 >
                   <ArrowLeft className="h-3 w-3" />
-                  Voltar para Sessions
+                  Back to Sessions
                 </button>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  {isEdit ? "Editar Session" : "Nova Session"}
+                  {isEdit ? "Edit Session" : "New Session"}
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">
-                  {isEdit ? title || "Sem título" : "Criar Session"}
+                  {isEdit ? title || "Untitled" : "Create Session"}
                 </h1>
               </div>
 
               {/* Cover Image */}
               <section className="flex flex-col gap-3">
                 <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
-                  Foto de Capa
+                  Cover Photo
                 </Label>
                 <div
                   className="aspect-video border border-dashed border-border relative overflow-hidden cursor-pointer group"
@@ -338,7 +338,7 @@ const SessionForm = () => {
                         <>
                           <Upload className="h-6 w-6" />
                           <span className="text-[10px] tracking-widest uppercase">
-                            Clique para enviar
+                            Click to upload
                           </span>
                         </>
                       )}
@@ -358,30 +358,30 @@ const SessionForm = () => {
               <section className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                   <span className="inline-block w-4 h-px bg-border" />
-                  Detalhes da Session
+                  Session Details
                 </p>
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="title" className="text-xs tracking-wider uppercase font-light">
-                    Título *
+                    Title *
                   </Label>
                   <Input
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ex: Ensaio New Born"
+                    placeholder="e.g. Newborn Session"
                   />
                 </div>
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="description" className="text-xs tracking-wider uppercase font-light">
-                    Descrição
+                    Description
                   </Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Descreva a session para seus clientes…"
+                    placeholder="Describe this session for your clients…"
                     rows={3}
                   />
                 </div>
@@ -389,7 +389,7 @@ const SessionForm = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="price" className="text-xs tracking-wider uppercase font-light">
-                      Preço (R$)
+                      Price (USD)
                     </Label>
                     <Input
                       id="price"
@@ -403,13 +403,13 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
-                      Local
+                      Location
                     </Label>
                     <Input
                       id="location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      placeholder="ex: São Paulo, SP"
+                      placeholder="e.g. New York, NY"
                     />
                   </div>
                 </div>
@@ -417,7 +417,7 @@ const SessionForm = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
-                      Duração (min)
+                      Duration (min)
                     </Label>
                     <Input
                       id="duration"
@@ -430,7 +430,7 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
-                      Intervalo (min)
+                      Break (min)
                     </Label>
                     <Input
                       id="break"
@@ -443,7 +443,7 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="numPhotos" className="text-xs tracking-wider uppercase font-light">
-                      Nº de Fotos
+                      No. of Photos
                     </Label>
                     <Input
                       id="numPhotos"
@@ -459,15 +459,15 @@ const SessionForm = () => {
                 {brk > 0 && (
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
-                    Cada slot ocupa {totalMinutes} min ({dur} min de ensaio + {brk} min de intervalo)
+                    Each slot takes {totalMinutes} min ({dur} min session + {brk} min break)
                   </p>
                 )}
 
                 <div className="flex items-center justify-between border border-border p-4">
                   <div>
-                    <p className="text-xs tracking-wider uppercase font-light">Ativo na Loja</p>
+                    <p className="text-xs tracking-wider uppercase font-light">Active in Store</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Clientes podem encontrar e agendar esta session
+                      Clients can find and book this session
                     </p>
                   </div>
                   <Switch
@@ -482,10 +482,10 @@ const SessionForm = () => {
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                     <span className="inline-block w-4 h-px bg-border" />
-                    Horários por Dia da Semana
+                    Weekly Availability
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                    Cada dia pode ter horários diferentes. Clique num dia para expandir e adicionar horários.
+                    Each day can have different time slots. Click a day to expand and add times.
                   </p>
                 </div>
 
@@ -513,10 +513,10 @@ const SessionForm = () => {
                             </span>
                             {daySlots.length > 0 ? (
                               <span className="text-[10px] text-muted-foreground">
-                                {daySlots.length} horário{daySlots.length !== 1 ? "s" : ""}
+                                {daySlots.length} slot{daySlots.length !== 1 ? "s" : ""}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground/50">Sem horários</span>
+                              <span className="text-[10px] text-muted-foreground/50">No slots</span>
                             )}
                           </button>
                           <Button
@@ -555,14 +555,14 @@ const SessionForm = () => {
                                         {slot.end_time.slice(0, 5)}
                                         {brk > 0 && (
                                           <span className="text-[10px] text-muted-foreground/60">
-                                            (+{brk} min intervalo)
+                                            (+{brk} min break)
                                           </span>
                                         )}
                                       </span>
                                       <div className="flex items-center gap-2">
                                         {slot._local && (
                                           <span className="text-[9px] tracking-widest uppercase bg-primary/10 text-primary px-2 py-0.5">
-                                            Novo
+                                             New
                                           </span>
                                         )}
                                         <button
@@ -591,7 +591,7 @@ const SessionForm = () => {
                                 {newStart && (
                                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                                     → {computeEndTime(newStart, dur)}
-                                    {brk > 0 && ` (livre ${computeEndTime(newStart, totalMinutes)})`}
+                                    {brk > 0 && ` (free until ${computeEndTime(newStart, totalMinutes)})`}
                                   </span>
                                 )}
                                 <Button
@@ -600,7 +600,7 @@ const SessionForm = () => {
                                   onClick={() => handleAddSlotForDay(dayIdx)}
                                   className="h-8 text-xs tracking-wider uppercase font-light"
                                 >
-                                  Confirmar
+                                  Confirm
                                 </Button>
                                 <Button
                                   type="button"
@@ -616,7 +616,7 @@ const SessionForm = () => {
 
                             {daySlots.length === 0 && !isAddingHere && (
                               <p className="text-[11px] text-muted-foreground/50 italic py-1">
-                                Nenhum horário — clique em + para adicionar
+                                No slots — click + to add
                               </p>
                             )}
                           </div>
@@ -634,7 +634,7 @@ const SessionForm = () => {
                   onClick={() => navigate("/dashboard/sessions")}
                   className="text-xs tracking-wider uppercase font-light text-muted-foreground"
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   onClick={handleSave}
@@ -642,7 +642,7 @@ const SessionForm = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {isEdit ? "Salvar Alterações" : "Criar Session"}
+                  {isEdit ? "Save Changes" : "Create Session"}
                 </Button>
               </div>
             </div>

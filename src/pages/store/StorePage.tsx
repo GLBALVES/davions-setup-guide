@@ -105,9 +105,9 @@ const StorePage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sessions.map((session) => {
-              const priceFormatted = new Intl.NumberFormat("pt-BR", {
+              const priceFormatted = new Intl.NumberFormat("en-US", {
                 style: "currency",
-                currency: "BRL",
+                currency: "USD",
               }).format(session.price / 100);
 
               return (
@@ -145,7 +145,7 @@ const StorePage = () => {
                       </span>
                       <span className="flex items-center gap-1">
                         <Camera className="h-3 w-3" />
-                        {session.num_photos} fotos
+                        {session.num_photos} photos
                       </span>
                       {session.location && (
                         <span className="flex items-center gap-1">

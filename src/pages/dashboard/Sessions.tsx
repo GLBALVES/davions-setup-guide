@@ -126,9 +126,9 @@ function SessionCard({
   session: Session;
   onClick: () => void;
 }) {
-  const priceFormatted = new Intl.NumberFormat("pt-BR", {
+  const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "BRL",
+    currency: "USD",
   }).format(session.price / 100);
 
   return (
@@ -173,7 +173,7 @@ function SessionCard({
           </span>
           <span className="flex items-center gap-1">
             <Camera className="h-3 w-3" />
-            {session.num_photos} fotos
+            {session.num_photos} photos
           </span>
           {session.location && (
             <span className="flex items-center gap-1">
