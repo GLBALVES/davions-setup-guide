@@ -1766,6 +1766,96 @@ const SessionForm = () => {
                     </Button>
                     <Button onClick={handleFinishConfirmation} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue
+                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 7: Booking Rules ── */}
+              {step === 7 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Booking Rules
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Control when clients can schedule sessions.
+                      </p>
+                    </div>
+
+                    {/* Notice period */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Notice Required</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          How many days in advance must a client book? Prevents last-minute same-day bookings.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={bookingNoticeDays}
+                          onChange={(e) => setBookingNoticeDays(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">
+                          day{parseInt(bookingNoticeDays) !== 1 ? "s" : ""} notice required
+                        </span>
+                      </div>
+                      {parseInt(bookingNoticeDays) === 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          Clients can book for today (same-day bookings allowed).
+                        </p>
+                      )}
+                      {parseInt(bookingNoticeDays) > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          The earliest a client can book is {parseInt(bookingNoticeDays)} day{parseInt(bookingNoticeDays) !== 1 ? "s" : ""} from today.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Booking window */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Booking Window</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          How far into the future can clients book? Limits the calendar visibility.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={bookingWindowDays}
+                          onChange={(e) => setBookingWindowDays(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">
+                          day{parseInt(bookingWindowDays) !== 1 ? "s" : ""} into the future
+                        </span>
+                      </div>
+                      {parseInt(bookingWindowDays) > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          Clients can book sessions up to {parseInt(bookingWindowDays)} days from today.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Step 7 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(6)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
                   </div>
