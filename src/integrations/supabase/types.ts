@@ -14,7 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      galleries: {
+        Row: {
+          access_code: string | null
+          created_at: string
+          id: string
+          photographer_id: string
+          slug: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_code?: string | null
+          created_at?: string
+          id?: string
+          photographer_id: string
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          access_code?: string | null
+          created_at?: string
+          id?: string
+          photographer_id?: string
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galleries_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photographers: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          created_at: string
+          filename: string
+          gallery_id: string
+          id: string
+          order_index: number
+          photographer_id: string
+          storage_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          filename?: string
+          gallery_id: string
+          id?: string
+          order_index?: number
+          photographer_id: string
+          storage_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          gallery_id?: string
+          id?: string
+          order_index?: number
+          photographer_id?: string
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "galleries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
