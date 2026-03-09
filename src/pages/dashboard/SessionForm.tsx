@@ -409,7 +409,7 @@ const SessionForm = () => {
                       id="location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      placeholder="ex: São Paulo, SP"
+                      placeholder="e.g. New York, NY"
                     />
                   </div>
                 </div>
