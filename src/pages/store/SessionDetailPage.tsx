@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
 import { useCustomDomainSlug } from "@/contexts/CustomDomainSlugContext";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -123,7 +124,6 @@ const generateOccurrences = (
 const SessionDetailPage = () => {
   const { slug, sessionId } = useParams();
   const customDomainSlug = useCustomDomainSlug();
-  // When accessed via a custom domain, back-navigation goes to "/" (the custom domain store)
   const backPath = customDomainSlug ? "/" : `/store/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -134,6 +134,7 @@ const SessionDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<BookingStep>("slots");
 
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [clientName, setClientName] = useState("");
@@ -160,14 +161,12 @@ const SessionDetailPage = () => {
       const s = sessionData as unknown as SessionDetail;
       setSession(s);
 
-      // Fetch extras
       const { data: extrasData } = await supabase
         .from("session_extras")
         .select("id, description, price, quantity")
         .eq("session_id", sessionId!);
       setExtras((extrasData ?? []) as SessionExtra[]);
 
-      // Fetch weekly slot definitions
       const { data: availData } = await supabase
         .from("session_availability")
         .select("id, day_of_week, start_time")
@@ -180,7 +179,6 @@ const SessionDetailPage = () => {
         start_time: a.start_time,
       }));
 
-      // Fetch confirmed bookings
       const noticeDays = s.booking_notice_days ?? 1;
       const windowDays = s.booking_window_days ?? 60;
       const fromDate = format(addDays(startOfToday(), noticeDays), "yyyy-MM-dd");
@@ -245,6 +243,28 @@ const SessionDetailPage = () => {
 
   const formatCurrency = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+
+  // ────────────────────────────────────────────
+  // Calendar helpers
+  // ────────────────────────────────────────────
+
+  // Set of dateKeys that have available slots
+  const availableDateKeys = new Set(
+    generatedSlots.map((s) => format(s.date, "yyyy-MM-dd"))
+  );
+
+  const isDayDisabled = (date: Date) => {
+    return !availableDateKeys.has(format(date, "yyyy-MM-dd"));
+  };
+
+  const slotsForSelectedDate = selectedDate
+    ? generatedSlots.filter((s) => isSameDay(s.date, selectedDate))
+    : [];
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setSelectedSlot(null);
+  };
 
   // ────────────────────────────────────────────
   // Checkout
@@ -334,12 +354,6 @@ const SessionDetailPage = () => {
       </div>
     );
   }
-
-  const slotsByDate = generatedSlots.reduce<Record<string, GeneratedSlot[]>>((acc, s) => {
-    const key = format(s.date, "yyyy-MM-dd");
-    acc[key] = [...(acc[key] ?? []), s];
-    return acc;
-  }, {});
 
   return (
     <div className="min-h-screen bg-background">
@@ -459,44 +473,78 @@ const SessionDetailPage = () => {
           <div className="flex flex-col gap-6">
             {step === "slots" && (
               <>
+                {/* ── Calendar ── */}
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
-                    Choose a date &amp; time
+                    Choose a date
                   </p>
                   {generatedSlots.length === 0 ? (
                     <p className="text-sm font-light text-muted-foreground text-center py-8 border border-dashed border-border">
                       No available slots at this time.
                     </p>
                   ) : (
-                    <div className="flex flex-col gap-5 max-h-[420px] overflow-y-auto pr-1">
-                      {Object.entries(slotsByDate).map(([dateKey, daySlots]) => (
-                        <div key={dateKey}>
-                          <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2 capitalize">
-                            {daySlots[0].label}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {daySlots.map((slot, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setSelectedSlot(slot)}
-                                className={cn(
-                                  "px-3 py-2 text-xs border transition-colors tracking-wider",
-                                  selectedSlot &&
-                                    selectedSlot.availabilityId === slot.availabilityId &&
-                                    isSameDay(selectedSlot.date, slot.date)
-                                    ? "border-foreground bg-foreground text-background"
-                                    : "border-border hover:border-foreground/40"
-                                )}
-                              >
-                                {slot.start_time}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={handleDateSelect}
+                      disabled={isDayDisabled}
+                      fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
+                      toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
+                      className="pointer-events-auto border border-border p-3 w-full"
+                      classNames={{
+                        months: "w-full",
+                        month: "w-full space-y-3",
+                        table: "w-full",
+                        head_row: "flex w-full",
+                        head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.75rem] text-center",
+                        row: "flex w-full mt-1",
+                        cell: "flex-1 h-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                        day: "h-9 w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-none transition-colors",
+                        day_selected: "bg-foreground text-background hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background rounded-none",
+                        day_today: "bg-accent text-accent-foreground rounded-none",
+                        day_disabled: "text-muted-foreground/30 pointer-events-none",
+                        day_outside: "text-muted-foreground/30 opacity-50",
+                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-foreground/20 flex items-center justify-center",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        caption: "flex justify-center pt-1 relative items-center",
+                        caption_label: "text-sm font-light tracking-widest uppercase",
+                      }}
+                    />
                   )}
                 </div>
+
+                {/* ── Time slots for selected date ── */}
+                {selectedDate && (
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-3">
+                      {format(selectedDate, "EEEE, MMMM d")}
+                    </p>
+                    {slotsForSelectedDate.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No slots for this day.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {slotsForSelectedDate.map((slot, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSelectedSlot(slot)}
+                            className={cn(
+                              "px-4 py-2 text-xs border transition-colors tracking-wider",
+                              selectedSlot &&
+                                selectedSlot.availabilityId === slot.availabilityId &&
+                                isSameDay(selectedSlot.date, slot.date)
+                                ? "border-foreground bg-foreground text-background"
+                                : "border-border hover:border-foreground/40"
+                            )}
+                          >
+                            {slot.start_time}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <Button
                   onClick={() => setStep("form")}
                   disabled={!selectedSlot}
