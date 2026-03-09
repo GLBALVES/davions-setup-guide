@@ -40,6 +40,22 @@ interface WeeklySlot {
   _local?: boolean;
 }
 
+interface DayConfig {
+  hours_start: string;   // "HH:mm" or ""
+  hours_end: string;     // "HH:mm" or ""
+  buffer_before_min: number;
+  buffer_after_min: number;
+  /** DB id if persisted */
+  db_id?: string;
+}
+
+const DEFAULT_DAY_CONFIG = (): DayConfig => ({
+  hours_start: "",
+  hours_end: "",
+  buffer_before_min: 0,
+  buffer_after_min: 0,
+});
+
 // ────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────
@@ -47,6 +63,20 @@ interface WeeklySlot {
 const computeEndTime = (start: string, durationMin: number): string => {
   const base = parse(start, "HH:mm", new Date());
   return format(addMinutes(base, durationMin), "HH:mm");
+};
+
+/** Add minutes to a "HH:mm" string */
+const addMinsToTime = (time: string, mins: number): string => {
+  if (!time) return "";
+  const base = parse(time, "HH:mm", new Date());
+  return format(addMinutes(base, mins), "HH:mm");
+};
+
+/** Subtract minutes from a "HH:mm" string */
+const subMinsFromTime = (time: string, mins: number): string => {
+  if (!time) return "";
+  const base = parse(time, "HH:mm", new Date());
+  return format(addMinutes(base, -mins), "HH:mm");
 };
 
 // ────────────────────────────────────────────
@@ -82,11 +112,23 @@ const SessionForm = () => {
 
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
-  // addingSlotForDay: which day is currently showing the inline "add time" input
   const [addingSlotForDay, setAddingSlotForDay] = useState<number | null>(null);
   const [newStart, setNewStart] = useState("09:00");
-  // days that have been "opened" / expanded in the UI
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
+
+  // ── Day configs (business hours + buffers) ──
+  const [dayConfigs, setDayConfigs] = useState<Map<number, DayConfig>>(new Map());
+
+  const getDayConfig = (day: number): DayConfig =>
+    dayConfigs.get(day) ?? DEFAULT_DAY_CONFIG();
+
+  const updateDayConfig = (day: number, patch: Partial<DayConfig>) => {
+    setDayConfigs((prev) => {
+      const next = new Map(prev);
+      next.set(day, { ...(prev.get(day) ?? DEFAULT_DAY_CONFIG()), ...patch });
+      return next;
+    });
+  };
 
   // ────────────────────────────────────────────
   // Session types
