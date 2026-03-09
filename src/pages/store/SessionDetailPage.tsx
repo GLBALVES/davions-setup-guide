@@ -385,7 +385,7 @@ const SessionDetailPage = () => {
 
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                    Seus dados
+                    Your details
                   </p>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="clientName" className="text-xs tracking-wider uppercase font-light">
