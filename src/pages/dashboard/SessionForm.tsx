@@ -279,6 +279,24 @@ const SessionForm = () => {
       });
     }
 
+    // Load photo tiers
+    const { data: tiersData } = await supabase
+      .from("session_photo_tiers" as never)
+      .select("id, min_photos, max_photos, price_per_photo")
+      .eq("session_id", sid)
+      .order("min_photos", { ascending: true });
+
+    if (tiersData) {
+      setPhotoTiers(
+        (tiersData as Array<{ id: string; min_photos: number; max_photos: number | null; price_per_photo: number }>).map((t) => ({
+          id: t.id,
+          min_photos: t.min_photos,
+          max_photos: t.max_photos,
+          price_per_photo: (t.price_per_photo / 100).toFixed(2),
+        }))
+      );
+    }
+
     setLoading(false);
   };
 
