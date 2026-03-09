@@ -245,6 +245,35 @@ export type Database = {
           },
         ]
       }
+      session_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          photographer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          photographer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_types_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           break_after_minutes: number
@@ -257,6 +286,7 @@ export type Database = {
           num_photos: number
           photographer_id: string
           price: number
+          session_type_id: string | null
           status: string
           title: string
           updated_at: string
@@ -272,6 +302,7 @@ export type Database = {
           num_photos?: number
           photographer_id: string
           price?: number
+          session_type_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -287,6 +318,7 @@ export type Database = {
           num_photos?: number
           photographer_id?: string
           price?: number
+          session_type_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -297,6 +329,13 @@ export type Database = {
             columns: ["photographer_id"]
             isOneToOne: false
             referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_session_type_id_fkey"
+            columns: ["session_type_id"]
+            isOneToOne: false
+            referencedRelation: "session_types"
             referencedColumns: ["id"]
           },
         ]
