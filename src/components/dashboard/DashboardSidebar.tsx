@@ -24,6 +24,7 @@ import {
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Sessions", url: "/dashboard/sessions", icon: CalendarDays },
   { title: "Galleries", url: "/dashboard/galleries", icon: FolderOpen },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
