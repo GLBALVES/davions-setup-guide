@@ -190,10 +190,10 @@ const Sessions = () => {
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {sessions.length === 0 ? "No sessions yet" : "No sessions match this filter"}
+                      {sessions.length === 0 ? "No sessions yet" : search ? `No results for "${search}"` : "No sessions match this filter"}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {sessions.length === 0 ? "Create your first bookable session product" : "Try a different filter"}
+                      {sessions.length === 0 ? "Create your first bookable session product" : search ? "Try a different search term" : "Try a different filter"}
                     </p>
                   </div>
                   {sessions.length === 0 && (
