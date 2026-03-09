@@ -423,7 +423,7 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
-  // Step 3: Finish (apply payment settings)
+  // Step 3: Save payment settings → go to step 4
   // ────────────────────────────────────────────
 
   const handleFinish = async () => {
@@ -433,17 +433,10 @@ const SessionForm = () => {
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
     const finalPrice = requirePayment ? priceInCents : 0;
 
-    // Deposit: if "percent" mode, store the percentage value * 100 (e.g. 25% → 2500)
-    // If "fixed" mode, store the dollar amount in cents as usual
     let finalDepositAmount = 0;
     if (depositEnabled) {
       const depositVal = parseFloat(depositAmount || "0");
-      if (depositType === "percent") {
-        // store percent × 100 so we can recover it; e.g. 25.50% → stored as 2550
-        finalDepositAmount = Math.round(depositVal * 100);
-      } else {
-        finalDepositAmount = Math.round(depositVal * 100);
-      }
+      finalDepositAmount = Math.round(depositVal * 100);
     }
 
     const { error } = await supabase
@@ -462,6 +455,43 @@ const SessionForm = () => {
       toast({ title: "Error saving payment settings", description: error.message, variant: "destructive" });
       setSaving(false);
       return;
+    }
+
+    setSaving(false);
+    setStep(4);
+  };
+
+  // ────────────────────────────────────────────
+  // Step 4: Save photo tiers → navigate away
+  // ────────────────────────────────────────────
+
+  const handleFinishTiers = async () => {
+    if (!user || !sessionId) return;
+
+    setSaving(true);
+
+    // Delete existing tiers and re-insert
+    await supabase
+      .from("session_photo_tiers" as never)
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (photoTiers.length > 0) {
+      const inserts = photoTiers.map((t) => ({
+        session_id: sessionId,
+        photographer_id: user.id,
+        min_photos: t.min_photos,
+        max_photos: t.max_photos,
+        price_per_photo: Math.round(parseFloat(t.price_per_photo || "0") * 100),
+      }));
+      const { error } = await supabase
+        .from("session_photo_tiers" as never)
+        .insert(inserts as never);
+      if (error) {
+        toast({ title: "Error saving photo tiers", description: error.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
     }
 
     toast({ title: isEdit ? "Session updated" : "Session created" });
