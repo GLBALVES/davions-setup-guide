@@ -389,7 +389,7 @@ const SessionForm = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="price" className="text-xs tracking-wider uppercase font-light">
-                      Preço (R$)
+                      Price (USD)
                     </Label>
                     <Input
                       id="price"
