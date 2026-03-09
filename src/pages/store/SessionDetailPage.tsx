@@ -712,6 +712,8 @@ const SessionDetailPage = () => {
                 </p>
                 <p className="text-sm font-light">{clientName}</p>
                 <p className="text-xs text-muted-foreground">{clientEmail}</p>
+                {clientPhone && <p className="text-xs text-muted-foreground">{clientPhone}</p>}
+                {clientNotes && <p className="text-xs text-muted-foreground italic mt-1">"{clientNotes}"</p>}
               </div>
             </div>
 
