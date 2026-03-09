@@ -375,7 +375,7 @@ const SessionDetailPage = () => {
                 {/* Selected slot summary */}
                 <div className="border border-border p-4 flex flex-col gap-1">
                   <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">
-                    Horário selecionado
+                    Selected slot
                   </p>
                   <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
                   <p className="text-xs text-muted-foreground">
