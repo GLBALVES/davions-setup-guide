@@ -922,12 +922,33 @@ const SessionForm = () => {
                       <Input
                         id="title"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => handleTitleChange(e.target.value)}
                         placeholder="e.g. Newborn Session"
                       />
                     </div>
 
-                    {user && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="slug" className="text-xs tracking-wider uppercase font-light">
+                        URL Slug
+                      </Label>
+                      <div className="flex items-center border border-input rounded-none overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                        <span className="px-3 py-2 text-xs text-muted-foreground bg-muted border-r border-input shrink-0 select-none">
+                          /book/
+                        </span>
+                        <input
+                          id="slug"
+                          value={slug}
+                          onChange={(e) => handleSlugChange(e.target.value)}
+                          placeholder="newborn-session"
+                          className="flex-1 px-3 py-2 text-xs bg-background outline-none placeholder:text-muted-foreground"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Aparece na URL de agendamento. Gerado automaticamente a partir do título.
+                      </p>
+                    </div>
+
+
                       <SessionTypeManager
                         photographerId={user.id}
                         sessionTypes={sessionTypes}
