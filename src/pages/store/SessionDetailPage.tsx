@@ -324,11 +324,11 @@ const SessionDetailPage = () => {
               <>
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">
-                    Escolha uma data e horário
+                    Choose a date &amp; time
                   </p>
                   {generatedSlots.length === 0 ? (
                     <p className="text-sm font-light text-muted-foreground text-center py-8 border border-dashed border-border">
-                      Nenhum horário disponível no momento.
+                      No available slots at this time.
                     </p>
                   ) : (
                     <div className="flex flex-col gap-5 max-h-[420px] overflow-y-auto pr-1">
