@@ -163,8 +163,6 @@ const SessionDetailPage = () => {
 
   useEffect(() => {
     const load = async () => {
-  useEffect(() => {
-    const load = async () => {
       // sessionSlug can be either the slug or the UUID id (backward compat)
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionSlug ?? "");
       const query = supabase.from("sessions").select("*").eq("status", "active");
@@ -172,11 +170,6 @@ const SessionDetailPage = () => {
         ? query.eq("id", sessionSlug!)
         : query.eq("slug", sessionSlug!)
       ).single();
-        .from("sessions")
-        .select("*")
-        .eq("id", sessionId!)
-        .eq("status", "active")
-        .single();
 
       if (!sessionData) {
         setLoading(false);
