@@ -403,7 +403,7 @@ const SessionForm = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
-                      Local
+                      Location
                     </Label>
                     <Input
                       id="location"
