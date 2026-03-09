@@ -148,6 +148,7 @@ const Sessions = () => {
                     <SessionCard
                       key={session.id}
                       session={session}
+                      storeSlug={storeSlug}
                       onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
                     />
                   ))}
