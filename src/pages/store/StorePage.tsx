@@ -50,7 +50,7 @@ const StorePage = () => {
 
       const { data: sessionData } = await supabase
         .from("sessions")
-        .select("id, title, description, price, duration_minutes, num_photos, location, cover_image_url")
+        .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
         .eq("photographer_id", photoData.id)
         .eq("status", "active")
         .order("created_at", { ascending: true });
