@@ -229,26 +229,22 @@ const SessionForm = () => {
   // Slot helpers
   // ────────────────────────────────────────────
 
-  const toggleDay = (d: number) =>
-    setNewDays((prev) =>
+  const toggleDayExpanded = (d: number) =>
+    setExpandedDays((prev) =>
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
 
-  const handleAddSlots = () => {
-    if (newDays.length === 0) return;
+  const handleAddSlotForDay = (day: number) => {
     const dur = parseInt(durationMinutes) || 60;
     const end = computeEndTime(newStart, dur);
-    const newEntries: WeeklySlot[] = newDays
-      .sort((a, b) => a - b)
-      .map((d) => ({
-        day_of_week: d,
-        start_time: newStart,
-        end_time: end,
-        _local: true,
-      }));
-    setSlots((prev) => [...prev, ...newEntries]);
-    setAddingSlot(false);
-    setNewDays([]);
+    const entry: WeeklySlot = {
+      day_of_week: day,
+      start_time: newStart,
+      end_time: end,
+      _local: true,
+    };
+    setSlots((prev) => [...prev, entry]);
+    setAddingSlotForDay(null);
     setNewStart("09:00");
   };
 
@@ -258,6 +254,8 @@ const SessionForm = () => {
     }
     setSlots((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const slotsForDay = (day: number) => slots.filter((s) => s.day_of_week === day);
 
   // ────────────────────────────────────────────
   // Render helpers
