@@ -14,10 +14,12 @@ import { format, addMinutes, parse } from "date-fns";
 import {
   ArrowLeft,
   ArrowRight,
+  Bell,
   ChevronRight,
   Clock,
   CreditCard,
   Loader2,
+  Mail,
   Plus,
   Trash2,
   Upload,
@@ -25,6 +27,8 @@ import {
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { cn } from "@/lib/utils";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 // ────────────────────────────────────────────
 // Types
