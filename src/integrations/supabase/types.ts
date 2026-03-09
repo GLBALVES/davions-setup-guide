@@ -17,6 +17,7 @@ export type Database = {
       bookings: {
         Row: {
           availability_id: string
+          booked_date: string | null
           client_email: string
           client_name: string
           created_at: string
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           availability_id: string
+          booked_date?: string | null
           client_email: string
           client_name: string
           created_at?: string
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           availability_id?: string
+          booked_date?: string | null
           client_email?: string
           client_name?: string
           created_at?: string
@@ -194,7 +197,8 @@ export type Database = {
       session_availability: {
         Row: {
           created_at: string
-          date: string
+          date: string | null
+          day_of_week: number | null
           end_time: string
           id: string
           is_booked: boolean
@@ -204,7 +208,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          date: string
+          date?: string | null
+          day_of_week?: number | null
           end_time: string
           id?: string
           is_booked?: boolean
@@ -214,7 +219,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          date?: string
+          date?: string | null
+          day_of_week?: number | null
           end_time?: string
           id?: string
           is_booked?: boolean
@@ -241,6 +247,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          break_after_minutes: number
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -255,6 +262,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          break_after_minutes?: number
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -269,6 +277,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          break_after_minutes?: number
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
