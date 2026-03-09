@@ -549,7 +549,7 @@ const SessionForm = () => {
                             onClick={() => {
                               if (!isExpanded) setExpandedDays((p) => [...p, dayIdx]);
                               setAddingSlotForDay(isAddingHere ? null : dayIdx);
-                              setNewStart("09:00");
+                              setNewStart(suggestNextStart(dayIdx));
                             }}
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                           >
