@@ -191,13 +191,13 @@ const SessionDetailPage = () => {
       const { data: extrasData } = await supabase
         .from("session_extras")
         .select("id, description, price, quantity")
-        .eq("session_id", sessionId!);
+        .eq("session_id", s.id);
       setExtras((extrasData ?? []) as SessionExtra[]);
 
       const { data: availData } = await supabase
         .from("session_availability")
         .select("id, day_of_week, start_time")
-        .eq("session_id", sessionId!)
+        .eq("session_id", s.id)
         .not("day_of_week", "is", null);
 
       const defs: WeeklySlotDef[] = (availData ?? []).map((a) => ({
