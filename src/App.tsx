@@ -20,7 +20,7 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
-const queryClient = new QueryClient();
+const onCustomDomain = isCustomDomain();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,24 +30,36 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/store/:slug" element={<StorePage />} />
-            <Route path="/store/:slug/:sessionId" element={<SessionDetailPage />} />
-            <Route path="/booking-success" element={<BookingSuccess />} />
+            {/* ── Custom domain routes (photographer's personal domain) ── */}
+            {onCustomDomain ? (
+              <>
+                <Route path="/" element={<CustomDomainStore />} />
+                <Route path="/book/:sessionId" element={<CustomDomainSessionGateway />} />
+                <Route path="/booking-success" element={<BookingSuccess />} />
+                <Route path="*" element={<CustomDomainStore />} />
+              </>
+            ) : (
+              <>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/store/:slug" element={<StorePage />} />
+                <Route path="/store/:slug/:sessionId" element={<SessionDetailPage />} />
+                <Route path="/booking-success" element={<BookingSuccess />} />
 
-            {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-            <Route path="/dashboard/sessions/new" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
-            <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
-            <Route path="/dashboard/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
-            <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                {/* Protected routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+                <Route path="/dashboard/sessions/new" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
+                <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
+                <Route path="/dashboard/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+                <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </>
+            )}
           </Routes>
         </AuthProvider>
       </BrowserRouter>
