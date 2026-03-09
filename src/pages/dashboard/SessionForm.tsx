@@ -131,6 +131,18 @@ const SessionForm = () => {
   }
   const [sessionExtras, setSessionExtras] = useState<SessionExtra[]>([]);
 
+  // ── Confirmation step ──
+  const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
+  const [reminderDays, setReminderDays] = useState<number[]>([]);
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: confirmationEmailBody,
+    onUpdate: ({ editor }) => {
+      setConfirmationEmailBody(editor.getHTML());
+    },
+  });
+
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
