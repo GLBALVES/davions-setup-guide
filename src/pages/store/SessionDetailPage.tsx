@@ -424,12 +424,12 @@ const SessionDetailPage = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep("slots")}
-                    className="text-xs tracking-wider uppercase font-light"
-                  >
-                    Voltar
+                   <Button
+                     variant="outline"
+                     onClick={() => setStep("slots")}
+                     className="text-xs tracking-wider uppercase font-light"
+                   >
+                     Back
                   </Button>
                   <Button
                     onClick={handleCheckout}
