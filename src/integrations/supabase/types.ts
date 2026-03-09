@@ -422,6 +422,7 @@ export type Database = {
         Row: {
           allow_tip: boolean
           break_after_minutes: number
+          confirmation_email_body: string
           cover_image_url: string | null
           created_at: string
           deposit_amount: number
@@ -433,6 +434,7 @@ export type Database = {
           num_photos: number
           photographer_id: string
           price: number
+          reminder_days: number[]
           session_type_id: string | null
           status: string
           tax_rate: number
@@ -442,6 +444,7 @@ export type Database = {
         Insert: {
           allow_tip?: boolean
           break_after_minutes?: number
+          confirmation_email_body?: string
           cover_image_url?: string | null
           created_at?: string
           deposit_amount?: number
@@ -453,6 +456,7 @@ export type Database = {
           num_photos?: number
           photographer_id: string
           price?: number
+          reminder_days?: number[]
           session_type_id?: string | null
           status?: string
           tax_rate?: number
@@ -462,6 +466,7 @@ export type Database = {
         Update: {
           allow_tip?: boolean
           break_after_minutes?: number
+          confirmation_email_body?: string
           cover_image_url?: string | null
           created_at?: string
           deposit_amount?: number
@@ -473,6 +478,7 @@ export type Database = {
           num_photos?: number
           photographer_id?: string
           price?: number
+          reminder_days?: number[]
           session_type_id?: string | null
           status?: string
           tax_rate?: number
