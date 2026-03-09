@@ -1218,23 +1218,22 @@ const SessionForm = () => {
 
                   {/* Step 2 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setStep(1)}
-                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                      Back
+                    <Button variant="ghost" onClick={() => setStep(1)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                     <Button
-                      onClick={handleSaveAvailability}
-                      disabled={saving}
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
-                    >
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Continue
-                      {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleSaveAvailability} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Continue
+                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
