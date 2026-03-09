@@ -155,6 +155,8 @@ const SessionForm = () => {
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
@@ -163,6 +165,26 @@ const SessionForm = () => {
   const [location, setLocation] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "active">("draft");
+
+  // Auto-generate slug from title (unless user manually edited it)
+  const generateSlug = (val: string) =>
+    val
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    if (!slugEdited) setSlug(generateSlug(val));
+  };
+
+  const handleSlugChange = (val: string) => {
+    setSlug(val.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+    setSlugEdited(true);
+  };
 
   // ── Session type ──
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
