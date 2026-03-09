@@ -244,7 +244,7 @@ const SessionDetailPage = () => {
     setSelectedExtras((prev) => {
       const existing = prev.find((e) => e.id === extra.id);
       if (existing) return prev.filter((e) => e.id !== extra.id);
-      return [...prev, { id: extra.id, description: extra.description, price: extra.price, qty: 1, maxQty: extra.quantity }];
+      return [...prev, { id: extra.id, description: extra.description, price: extra.price, qty: 1, maxQty: extra.quantity > 1 ? extra.quantity : 99 }];
     });
   };
 
