@@ -135,6 +135,10 @@ const SessionForm = () => {
   const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
   const [reminderDays, setReminderDays] = useState<number[]>([]);
 
+  // ── Booking Rules step ──
+  const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
+  const [bookingWindowDays, setBookingWindowDays] = useState("60");
+
   const editor = useEditor({
     extensions: [StarterKit],
     content: confirmationEmailBody,
