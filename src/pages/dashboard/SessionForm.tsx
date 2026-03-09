@@ -164,9 +164,7 @@ const SessionForm = () => {
 
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
-  const [addingSlotForDay, setAddingSlotForDay] = useState<number | null>(null);
-  const [newStart, setNewStart] = useState("09:00");
-  const [expandedDays, setExpandedDays] = useState<number[]>([]);
+  const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
 
   // ── Global config (business hours + buffers — applies to all days) ──
   const [globalConfig, setGlobalConfig] = useState<DayConfig>(DEFAULT_DAY_CONFIG());
