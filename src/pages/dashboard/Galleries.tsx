@@ -6,8 +6,8 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, FolderOpen } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Gallery {

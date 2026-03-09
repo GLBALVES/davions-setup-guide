@@ -27,7 +27,8 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sessions", url: "/dashboard/sessions", icon: CalendarDays },
   { title: "Bookings", url: "/dashboard/bookings", icon: BookOpen },
-  { title: "Galleries", url: "/dashboard/galleries", icon: FolderOpen },
+  { title: "Proof Galleries", url: "/dashboard/galleries?type=proof", icon: FolderOpen },
+  { title: "Final Galleries", url: "/dashboard/galleries?type=final", icon: FolderOpen },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
