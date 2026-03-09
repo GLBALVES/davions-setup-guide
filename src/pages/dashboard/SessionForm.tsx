@@ -200,6 +200,15 @@ const SessionForm = () => {
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
       setRequirePayment(s.price > 0);
+      // Payment extras
+      const sAny = s as unknown as { tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; allow_tip?: boolean };
+      if (sAny.tax_rate != null && sAny.tax_rate > 0) {
+        setTaxEnabled(true);
+        setTaxRate(String(sAny.tax_rate));
+      }
+      setDepositEnabled(sAny.deposit_enabled ?? false);
+      setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
+      setAllowTip(sAny.allow_tip ?? false);
     }
 
     const [availRes, configRes] = await Promise.all([
