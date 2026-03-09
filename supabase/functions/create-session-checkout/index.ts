@@ -8,13 +8,27 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface SelectedExtra {
+  id: string;
+  description: string;
+  price: number;
+  qty: number;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { bookingId, sessionId, slotId, clientEmail, clientName } = await req.json();
+    const {
+      bookingId,
+      sessionId,
+      slotId,
+      clientEmail,
+      clientName,
+      selectedExtras = [],
+    } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -24,7 +38,7 @@ serve(async (req) => {
     // Fetch session data
     const { data: sessionData, error: sessionError } = await supabase
       .from("sessions")
-      .select("title, price, photographer_id")
+      .select("title, price, photographer_id, deposit_enabled, deposit_amount, tax_rate")
       .eq("id", sessionId)
       .single();
 
@@ -53,30 +67,82 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // ── Build line items ──
+    const extras: SelectedExtra[] = selectedExtras ?? [];
+    const extrasTotal = extras.reduce((sum: number, e: SelectedExtra) => sum + e.price * e.qty, 0);
+    const sessionPrice = sessionData.price as number;
+    const subtotal = sessionPrice + extrasTotal;
+    const taxRate = (sessionData.tax_rate as number) ?? 0;
+    const taxAmount = Math.round(subtotal * (taxRate / 100));
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+    if (sessionData.deposit_enabled) {
+      // Charge only deposit + extras + tax
+      const depositBase = sessionData.deposit_amount as number;
+      lineItems.push({
+        price_data: {
+          currency: "brl",
+          product_data: {
+            name: `${sessionData.title} — Deposit`,
+            metadata: { booking_id: bookingId, session_id: sessionId },
+          },
+          unit_amount: depositBase,
+        },
+        quantity: 1,
+      });
+    } else {
+      lineItems.push({
+        price_data: {
+          currency: "brl",
+          product_data: {
+            name: sessionData.title,
+            metadata: { booking_id: bookingId, session_id: sessionId },
+          },
+          unit_amount: sessionPrice,
+        },
+        quantity: 1,
+      });
+    }
+
+    // Add extras as individual line items
+    for (const extra of extras) {
+      lineItems.push({
+        price_data: {
+          currency: "brl",
+          product_data: { name: extra.description },
+          unit_amount: extra.price,
+        },
+        quantity: extra.qty,
+      });
+    }
+
+    // Add tax as separate line item if applicable
+    if (taxAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "brl",
+          product_data: { name: `Tax (${taxRate}%)` },
+          unit_amount: taxAmount,
+        },
+        quantity: 1,
+      });
+    }
+
     // Create checkout session
     const checkout = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : clientEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: "brl",
-            product_data: {
-              name: sessionData.title,
-              metadata: { booking_id: bookingId, session_id: sessionId },
-            },
-            unit_amount: sessionData.price,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "payment",
       metadata: {
         booking_id: bookingId,
         slot_id: slotId,
         store_slug: storeSlug,
+        client_name: clientName,
+        session_id: sessionId,
       },
-      success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}`,
+      success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`,
       cancel_url: `${origin}/store/${storeSlug}/${sessionId}`,
     });
 
