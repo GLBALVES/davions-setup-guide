@@ -1954,10 +1954,18 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(6)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Save & Finish
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isEdit && (
+                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
+                          {status === "active" ? "Unpublish" : "Publish"}
+                        </Button>
+                      )}
+                      <Button onClick={handleFinishBookingRules} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        Save & Finish
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
