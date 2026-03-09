@@ -1507,6 +1507,99 @@ const SessionForm = () => {
                     </Button>
                     <Button onClick={handleFinishTiers} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Save & Continue <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 5: Extras ── */}
+              {step === 5 && (
+                <>
+                  <section className="flex flex-col gap-5">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                        <span className="inline-block w-4 h-px bg-border" />
+                        Extras
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 ml-7">
+                        Itens extras que o cliente poderá selecionar ao fazer o booking.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      {sessionExtras.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground italic border border-dashed border-border p-4 text-center">
+                          Nenhum extra cadastrado. Adicione itens abaixo.
+                        </p>
+                      )}
+                      {sessionExtras.map((extra, idx) => (
+                        <div key={idx} className="border border-border p-4 flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Item {idx + 1}</p>
+                            <button
+                              type="button"
+                              onClick={() => setSessionExtras((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="flex flex-col gap-1.5 col-span-1">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Descrição</Label>
+                              <input
+                                type="text"
+                                value={extra.description}
+                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
+                                placeholder="Ex: Álbum impresso"
+                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Quantidade</Label>
+                              <input
+                                type="number" min="1" step="1"
+                                value={extra.quantity}
+                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))}
+                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Valor</Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                                <input
+                                  type="number" min="0" step="0.01"
+                                  value={extra.price}
+                                  placeholder="0.00"
+                                  onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, price: e.target.value } : x))}
+                                  className="pl-7 h-8 text-sm w-full border border-input bg-background rounded-md pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "1", price: "", _local: true }])}
+                      className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Add Extra
+                    </button>
+                  </section>
+
+                  {/* Step 5 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(4)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={handleFinishExtras} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       Save & Finish
                     </Button>
                   </div>
