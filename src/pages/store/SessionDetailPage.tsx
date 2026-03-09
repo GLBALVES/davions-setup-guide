@@ -644,6 +644,32 @@ const SessionDetailPage = () => {
                   className="rounded-none"
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientPhone" className="text-xs tracking-wider uppercase font-light">
+                  Phone
+                </Label>
+                <Input
+                  id="clientPhone"
+                  type="tel"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="+55 11 99999-9999"
+                  className="rounded-none"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="clientNotes" className="text-xs tracking-wider uppercase font-light">
+                  Notes
+                </Label>
+                <Textarea
+                  id="clientNotes"
+                  value={clientNotes}
+                  onChange={(e) => setClientNotes(e.target.value)}
+                  placeholder="Any requests or observations..."
+                  rows={3}
+                  className="rounded-none resize-none text-sm font-light"
+                />
+              </div>
             </div>
 
             <div className="flex gap-3">
