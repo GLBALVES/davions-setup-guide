@@ -15,7 +15,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ptBR } from "date-fns/locale";
+
 import { ArrowLeft, Camera, Clock, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
