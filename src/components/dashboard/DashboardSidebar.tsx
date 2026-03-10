@@ -48,6 +48,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     if (path === "/dashboard") return currentPath === "/dashboard";
     const [pathname, search] = path.split("?");
     if (!currentPath.startsWith(pathname)) return false;
+    // If this item requires query params but the current URL has none → inactive
+    if (search && !location.search) return false;
     if (!search) return true;
     const params = new URLSearchParams(location.search);
     const expected = new URLSearchParams(search);
@@ -86,7 +88,6 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       to={item.url}
                       end={item.url === "/dashboard"}
                       className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-normal"
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
