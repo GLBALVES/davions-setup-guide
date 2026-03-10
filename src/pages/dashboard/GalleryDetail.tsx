@@ -419,6 +419,41 @@ const GalleryDetail = () => {
     toast({ title: "Photo removed" });
   };
 
+  // ── Bulk delete selected photos ──────────────────────────────────────────────
+  const deleteSelectedPhotosBulk = async () => {
+    if (selectedPhotos.size === 0) return;
+    setDeletingSelected(true);
+    const toDelete = photos.filter((p) => selectedPhotos.has(p.id));
+    const paths = toDelete.map((p) => p.storage_path).filter(Boolean) as string[];
+    if (paths.length > 0) {
+      await supabase.storage.from("gallery-photos").remove(paths);
+    }
+    const ids = toDelete.map((p) => p.id);
+    await supabase.from("photos").delete().in("id", ids);
+    setPhotos((prev) => prev.filter((p) => !selectedPhotos.has(p.id)));
+    setSelectedPhotos(new Set());
+    setIsSelecting(false);
+    setDeletingSelected(false);
+    toast({ title: `${toDelete.length} photo${toDelete.length !== 1 ? "s" : ""} removed` });
+  };
+
+  const toggleSelectPhoto = (id: string) => {
+    setSelectedPhotos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPhotos.size === photos.length) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map((p) => p.id)));
+    }
+  };
+
   // ── Toggle publish ──────────────────────────────────────────────────────────
   const togglePublish = async () => {
     if (!gallery) return;
