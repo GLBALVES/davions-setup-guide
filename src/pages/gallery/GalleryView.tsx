@@ -466,8 +466,8 @@ const GalleryView = () => {
           <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
           <p className="text-sm text-green-800 font-light">
             {isFree
-              ? "Sua seleção foi enviada! O fotógrafo será notificado."
-              : "Pagamento confirmado! Sua seleção foi registrada."}
+              ? "Your selection was submitted! The photographer will be notified."
+              : "Payment confirmed! Your selection has been recorded."}
           </p>
           <button onClick={() => setPurchaseSuccess(false)} className="ml-auto text-green-600 hover:text-green-800">
             <X className="h-4 w-4" />
