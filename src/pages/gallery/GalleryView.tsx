@@ -3,9 +3,10 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle } from "lucide-react";
+import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +32,25 @@ function storeCode(galleryId: string, code: string): void {
   localStorage.setItem(`davions_access_${galleryId}`, code);
 }
 
+// ── Photo notes (client-side per token+gallery) ──────────────────────────────
+function getNotesKey(galleryId: string, clientToken: string) {
+  return `davions_notes_${galleryId}_${clientToken}`;
+}
+function loadNotes(galleryId: string, clientToken: string): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(getNotesKey(galleryId, clientToken));
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function saveNotes(galleryId: string, clientToken: string, notes: Record<string, string>) {
+  localStorage.setItem(getNotesKey(galleryId, clientToken), JSON.stringify(notes));
+}
+
 function formatCurrency(cents: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
-// ── Watermark position helper (mirrors WatermarkEditor) ─────────────────────
+// ── Watermark position helper ────────────────────────────────────────────────
 type WmPosition =
   | "top-left" | "top-center" | "top-right"
   | "center-left" | "center" | "center-right"
@@ -43,15 +58,15 @@ type WmPosition =
 
 function positionToStyle(pos: WmPosition): React.CSSProperties {
   const map: Record<WmPosition, React.CSSProperties> = {
-    "top-left":     { top: "6%",    left: "5%",  transform: "none" },
-    "top-center":   { top: "6%",    left: "50%", transform: "translateX(-50%)" },
-    "top-right":    { top: "6%",    right: "5%", transform: "none" },
-    "center-left":  { top: "50%",   left: "5%",  transform: "translateY(-50%)" },
-    "center":       { top: "50%",   left: "50%", transform: "translate(-50%, -50%)" },
-    "center-right": { top: "50%",   right: "5%", transform: "translateY(-50%)" },
-    "bottom-left":  { bottom: "6%", left: "5%",  transform: "none" },
-    "bottom-center":{ bottom: "6%", left: "50%", transform: "translateX(-50%)" },
-    "bottom-right": { bottom: "6%", right: "5%", transform: "none" },
+    "top-left":      { top: "6%",    left: "5%",  transform: "none" },
+    "top-center":    { top: "6%",    left: "50%", transform: "translateX(-50%)" },
+    "top-right":     { top: "6%",    right: "5%", transform: "none" },
+    "center-left":   { top: "50%",   left: "5%",  transform: "translateY(-50%)" },
+    "center":        { top: "50%",   left: "50%", transform: "translate(-50%, -50%)" },
+    "center-right":  { top: "50%",   right: "5%", transform: "translateY(-50%)" },
+    "bottom-left":   { bottom: "6%", left: "5%",  transform: "none" },
+    "bottom-center": { bottom: "6%", left: "50%", transform: "translateX(-50%)" },
+    "bottom-right":  { bottom: "6%", right: "5%", transform: "none" },
   };
   return map[pos] ?? { bottom: "6%", right: "5%" };
 }
@@ -78,15 +93,10 @@ interface WatermarkSettings {
   image_position: WmPosition;
 }
 
-// ── WatermarkOverlay component ───────────────────────────────────────────────
-// size="thumb" → smaller proportional sizing for grid thumbnails
-// size="full"  → full-size for the lightbox
 function WatermarkOverlay({ wm, size }: { wm: WatermarkSettings; size: "thumb" | "full" }) {
   const scaleFactor = size === "thumb" ? 0.55 : 1;
-
   return (
     <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-20">
-      {/* Text layer */}
       {wm.text_enabled && wm.text_content && (
         <span
           style={{
@@ -106,8 +116,6 @@ function WatermarkOverlay({ wm, size }: { wm: WatermarkSettings; size: "thumb" |
           {wm.text_content}
         </span>
       )}
-
-      {/* Image layer */}
       {wm.image_enabled && wm.image_url && (
         <img
           src={wm.image_url}
@@ -154,6 +162,11 @@ interface Photo {
   url?: string;
 }
 
+// ── Strip extension from filename ───────────────────────────────────────────
+function displayName(filename: string): string {
+  return filename.replace(/\.[^.]+$/, "");
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 const GalleryView = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -169,67 +182,59 @@ const GalleryView = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [togglingFav, setTogglingFav] = useState<Set<string>>(new Set());
   const [watermark, setWatermark] = useState<WatermarkSettings | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  // card note panel open state (photoId -> boolean)
+  const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
   const clientToken = getClientToken();
 
-  // Purchase modal state
+  // Purchase modal
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
-  // ── Anti-piracy: block right-click, keyboard shortcuts, print ──────────────
+  // ── Anti-piracy ──────────────────────────────────────────────────────────
   useEffect(() => {
-    // Block print
     const styleEl = document.createElement("style");
     styleEl.textContent = `@media print { body { display: none !important; } }`;
     document.head.appendChild(styleEl);
-
-    // Block keyboard shortcuts
     const blockKeys = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
-      // Block Ctrl+S, Ctrl+P, Ctrl+U (view source), Ctrl+A (select all), Ctrl+Shift+I/J/C (devtools)
       if (ctrl && ["s", "p", "u", "a"].includes(key)) { e.preventDefault(); return; }
       if (e.key === "F12") { e.preventDefault(); return; }
       if (ctrl && e.shiftKey && ["i", "j", "c"].includes(key)) { e.preventDefault(); return; }
     };
     window.addEventListener("keydown", blockKeys);
-
     return () => {
       document.head.removeChild(styleEl);
       window.removeEventListener("keydown", blockKeys);
     };
   }, []);
 
-  // Check for ?purchased=true
   useEffect(() => {
     if (searchParams.get("purchased") === "true") setPurchaseSuccess(true);
   }, [searchParams]);
 
-  // ── Fetch gallery ────────────────────────────────────────────────────────────
+  // ── Fetch gallery ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchGallery = async () => {
       if (!slug) return;
       setLoading(true);
-
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
       let query = supabase
         .from("galleries")
         .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo, watermark_id")
         .eq("status", "published");
-
       if (isUuid) query = query.eq("id", slug);
       else query = query.eq("slug", slug);
 
       const { data, error } = await query.single();
-
       if (error || !data) { setNotFound(true); setLoading(false); return; }
-
       setGallery(data as Gallery);
 
-      // Fetch watermark settings if available
       if (data.watermark_id) {
         const { data: wmData } = await supabase
           .from("watermarks")
@@ -239,7 +244,9 @@ const GalleryView = () => {
         if (wmData) setWatermark(wmData as WatermarkSettings);
       }
 
-      // Auto-unlock via stored code
+      // Load saved notes
+      setNotes(loadNotes(data.id, clientToken));
+
       if (data.access_code) {
         const stored = getStoredCode(data.id);
         if (stored && stored.toUpperCase() === (data.access_code ?? "").toUpperCase()) {
@@ -252,10 +259,8 @@ const GalleryView = () => {
         setUnlocked(true);
         await loadPhotos(data.id);
       }
-
       setLoading(false);
     };
-
     fetchGallery();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
@@ -266,7 +271,6 @@ const GalleryView = () => {
       .select("id, filename, storage_path, order_index")
       .eq("gallery_id", galleryId)
       .order("order_index", { ascending: true });
-
     if (data) {
       const withUrls = data.map((p) => {
         let url: string | undefined;
@@ -277,13 +281,11 @@ const GalleryView = () => {
         return { ...p, url };
       });
       setPhotos(withUrls);
-
       const { data: favData } = await supabase
         .from("photo_favorites")
         .select("photo_id")
         .eq("gallery_id", galleryId)
         .eq("client_token", clientToken);
-
       if (favData) setFavorites(new Set(favData.map((f) => f.photo_id)));
     }
   };
@@ -303,10 +305,8 @@ const GalleryView = () => {
   const toggleFavorite = useCallback(async (e: React.MouseEvent, photo: Photo) => {
     e.stopPropagation();
     if (!gallery || togglingFav.has(photo.id)) return;
-
     setTogglingFav((prev) => new Set(prev).add(photo.id));
     const isFav = favorites.has(photo.id);
-
     if (isFav) {
       await supabase.from("photo_favorites").delete().eq("photo_id", photo.id).eq("client_token", clientToken);
       setFavorites((prev) => { const s = new Set(prev); s.delete(photo.id); return s; });
@@ -314,11 +314,25 @@ const GalleryView = () => {
       await supabase.from("photo_favorites").insert({ photo_id: photo.id, gallery_id: gallery.id, client_token: clientToken });
       setFavorites((prev) => new Set(prev).add(photo.id));
     }
-
     setTogglingFav((prev) => { const s = new Set(prev); s.delete(photo.id); return s; });
   }, [gallery, favorites, togglingFav, clientToken]);
 
-  // ── Purchase flow ────────────────────────────────────────────────────────────
+  // ── Note helpers ─────────────────────────────────────────────────────────
+  const handleNoteChange = useCallback((photoId: string, value: string) => {
+    if (!gallery) return;
+    setNotes((prev) => {
+      const updated = { ...prev, [photoId]: value };
+      saveNotes(gallery.id, clientToken, updated);
+      return updated;
+    });
+  }, [gallery, clientToken]);
+
+  const toggleNotePanel = useCallback((e: React.MouseEvent, photoId: string) => {
+    e.stopPropagation();
+    setNoteOpen((prev) => ({ ...prev, [photoId]: !prev[photoId] }));
+  }, []);
+
+  // ── Purchase flow ─────────────────────────────────────────────────────────
   const handlePurchaseOrSubmit = async () => {
     if (!gallery || !clientEmail.trim()) return;
     setCheckingOut(true);
@@ -342,7 +356,7 @@ const GalleryView = () => {
     }
   };
 
-  // ── Lightbox keyboard nav ────────────────────────────────────────────────────
+  // ── Lightbox keyboard nav ─────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (lightboxIndex === null) return;
@@ -407,8 +421,6 @@ const GalleryView = () => {
   const pricePerPhoto = gallery?.price_per_photo ?? 0;
   const totalPrice = pricePerPhoto * favCount;
   const isFree = pricePerPhoto === 0;
-
-  // ── Shared: prevent right-click on any protected container ──────────────────
   const blockContext = (e: React.MouseEvent) => e.preventDefault();
 
   return (
@@ -417,9 +429,7 @@ const GalleryView = () => {
       {/* ── Navbar ── */}
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
         <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" draggable={false} />
-
         <div className="flex items-center gap-3">
-          {/* Selection pill */}
           {unlocked && isProof && favCount > 0 && (
             <button
               onClick={() => setPurchaseOpen(true)}
@@ -437,16 +447,15 @@ const GalleryView = () => {
               )}
               <span className="hidden sm:flex items-center gap-1.5 ml-0.5 text-[10px] tracking-widest uppercase text-rose-600 font-light">
                 <ShoppingCart className="h-3 w-3" />
-                {isFree ? "Submit" : "Checkout"}
+                {isFree ? "Enviar" : "Checkout"}
               </span>
             </button>
           )}
-
           <Badge
             variant={isProof ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
           >
-            {isProof ? "Proof Gallery" : "Final Gallery"}
+            {isProof ? "Prova" : "Final"}
           </Badge>
         </div>
       </header>
@@ -457,8 +466,8 @@ const GalleryView = () => {
           <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
           <p className="text-sm text-green-800 font-light">
             {isFree
-              ? "Your selection has been submitted! The photographer will be notified."
-              : "Payment successful! Your photo selection has been confirmed."}
+              ? "Sua seleção foi enviada! O fotógrafo será notificado."
+              : "Pagamento confirmado! Sua seleção foi registrada."}
           </p>
           <button onClick={() => setPurchaseSuccess(false)} className="ml-auto text-green-600 hover:text-green-800">
             <X className="h-4 w-4" />
@@ -476,7 +485,7 @@ const GalleryView = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-light tracking-wide">{gallery.title}</h1>
-                <p className="text-sm text-muted-foreground">This gallery is private. Enter the access code to continue.</p>
+                <p className="text-sm text-muted-foreground">Esta galeria é privada. Insira o código de acesso para continuar.</p>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -484,13 +493,13 @@ const GalleryView = () => {
                 value={codeInput}
                 onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(false); }}
                 onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="ACCESS CODE"
+                placeholder="CÓDIGO DE ACESSO"
                 autoFocus
                 className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.4em] uppercase font-mono text-base h-12 ${codeError ? "border-destructive focus-visible:border-destructive" : ""}`}
               />
-              {codeError && <p className="text-xs text-destructive text-center">Incorrect code — please try again.</p>}
+              {codeError && <p className="text-xs text-destructive text-center">Código incorreto — tente novamente.</p>}
               <Button onClick={handleUnlock} className="w-full h-11 tracking-widest uppercase text-xs font-light" disabled={!codeInput.trim()}>
-                Unlock Gallery
+                Desbloquear Galeria
               </Button>
             </div>
           </div>
@@ -515,12 +524,12 @@ const GalleryView = () => {
                 <div className="flex flex-col gap-1.5">
                   <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">{gallery.title}</h1>
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
-                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
-                    {isProof && " · Click ♡ to add to your selection"}
+                    {photos.length} foto{photos.length !== 1 ? "s" : ""}
+                    {isProof && " · Clique em ♡ para selecionar"}
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
-                  {isProof ? "Proof Gallery" : "Final Gallery"}
+                  {isProof ? "Prova" : "Final"}
                 </Badge>
               </div>
             </div>
@@ -528,8 +537,8 @@ const GalleryView = () => {
             <div className="px-6 md:px-10 pt-8 pb-2">
               <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
-                {photos.length} photo{photos.length !== 1 ? "s" : ""}
-                {isProof && " · Click ♡ to add to your selection"}
+                {photos.length} foto{photos.length !== 1 ? "s" : ""}
+                {isProof && " · Clique em ♡ para selecionar"}
               </p>
             </div>
           )}
@@ -538,75 +547,112 @@ const GalleryView = () => {
             {photos.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Image className="h-10 w-10 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">No photos in this gallery yet.</p>
+                <p className="text-sm text-muted-foreground">Nenhuma foto nesta galeria ainda.</p>
               </div>
             )}
 
             {/* ── Photo grid ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {photos.map((photo, index) => {
                 const isFav = favorites.has(photo.id);
+                const noteVal = notes[photo.id] ?? "";
+                const isNoteOpen = noteOpen[photo.id] ?? false;
                 return (
-                  <div
-                    key={photo.id}
-                    className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
-                      ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
-                    `}
-                    onClick={() => setLightboxIndex(index)}
-                    onContextMenu={blockContext}
-                  >
-                    {/* Image — pointer-events-none prevents all browser-native interactions */}
-                    {photo.url ? (
-                      <img
-                        src={photo.url}
-                        alt=""
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
-                        draggable={false}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Image className="h-6 w-6 text-muted-foreground/30" />
-                      </div>
-                    )}
+                  <div key={photo.id} className="flex flex-col gap-0">
+                    {/* Image card */}
+                    <div
+                      className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
+                        ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
+                      `}
+                      onClick={() => setLightboxIndex(index)}
+                      onContextMenu={blockContext}
+                    >
+                      {photo.url ? (
+                        <img
+                          src={photo.url}
+                          alt=""
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
+                          draggable={false}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Image className="h-6 w-6 text-muted-foreground/30" />
+                        </div>
+                      )}
 
-                    {/* Watermark overlay — always on top of the image */}
-                    {watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
+                      {/* Watermark */}
+                      {watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
 
-                    {/* Proof: selected checkmark badge */}
-                    {isProof && isFav && (
-                      <div className="absolute top-2 left-2 z-30 bg-rose-500 text-white rounded-full p-1 shadow-lg">
-                        <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    )}
+                      {/* Selected checkmark */}
+                      {isProof && isFav && (
+                        <div className="absolute top-2 left-2 z-30 bg-rose-500 text-white rounded-full p-1 shadow-lg">
+                          <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
 
-                    {/* Proof: rose tint when selected */}
-                    {isProof && isFav && (
-                      <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
-                    )}
+                      {/* Proof: rose tint when selected */}
+                      {isProof && isFav && (
+                        <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
+                      )}
 
-                    {/* Proof: hover overlay with Select/Remove button */}
-                    {isProof && (
-                      <div
-                        className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={(e) => toggleFavorite(e, photo)}
-                          className={`flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
-                            ${isFav
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-white text-black hover:bg-rose-500 hover:text-white"
-                            }`}
+                      {/* Proof: hover overlay */}
+                      {isProof && (
+                        <div
+                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                          {isFav ? "Remove" : "Select"}
+                          <button
+                            onClick={(e) => toggleFavorite(e, photo)}
+                            className={`flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
+                              ${isFav
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-white text-black hover:bg-rose-500 hover:text-white"
+                              }`}
+                          >
+                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                            {isFav ? "Remover" : "Selecionar"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Below card: filename + note toggle */}
+                    <div className="bg-background border border-t-0 border-border px-3 pt-2 pb-2 flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-muted-foreground truncate leading-tight" title={photo.filename}>
+                          {displayName(photo.filename)}
+                        </span>
+                        <button
+                          onClick={(e) => toggleNotePanel(e, photo.id)}
+                          className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
+                            noteVal
+                              ? "text-foreground"
+                              : isNoteOpen
+                              ? "text-foreground"
+                              : "text-muted-foreground/50 hover:text-muted-foreground"
+                          }`}
+                          title="Adicionar observação"
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          {noteVal ? <span className="text-[9px]">Nota</span> : null}
                         </button>
                       </div>
-                    )}
+
+                      {/* Note textarea — slides open */}
+                      {isNoteOpen && (
+                        <Textarea
+                          value={noteVal}
+                          onChange={(e) => handleNoteChange(photo.id, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          placeholder="Sua observação sobre esta foto…"
+                          className="text-xs rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground min-h-[60px] resize-none leading-snug placeholder:text-muted-foreground/40"
+                        />
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -621,11 +667,11 @@ const GalleryView = () => {
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              {isFree ? "Submit Your Selection" : "Purchase Your Selection"}
+              {isFree ? "Enviar Seleção" : "Comprar Seleção"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {favCount} photo{favCount !== 1 ? "s" : ""} selected
-              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} each · Total: ${formatCurrency(totalPrice)}`}
+              {favCount} foto{favCount !== 1 ? "s" : ""} selecionada{favCount !== 1 ? "s" : ""}
+              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} cada · Total: ${formatCurrency(totalPrice)}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -636,31 +682,27 @@ const GalleryView = () => {
                 <span className="font-medium text-foreground">{formatCurrency(totalPrice)}</span>
               </div>
             )}
-
             <div className="flex flex-col gap-2">
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                Your Name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
+                Seu nome <span className="normal-case tracking-normal text-muted-foreground/50">(opcional)</span>
               </Label>
               <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Silva" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
-
             <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
-                Email <span className="text-destructive">*</span>
+              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                E-mail <span className="text-destructive">*</span>
               </Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@example.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@exemplo.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
-
             <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full mt-2 gap-2" size="lg">
               {checkingOut ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
-              ) : isFree ? "Submit Selection" : (
-                <><ShoppingCart className="h-4 w-4" /> Proceed to Checkout</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processando…</>
+              ) : isFree ? "Enviar Seleção" : (
+                <><ShoppingCart className="h-4 w-4" /> Ir para o Pagamento</>
               )}
             </Button>
-
             {!isFree && (
-              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment powered by Stripe</p>
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Pagamento seguro via Stripe</p>
             )}
           </div>
         </DialogContent>
@@ -670,96 +712,127 @@ const GalleryView = () => {
       {lightboxIndex !== null && photos[lightboxIndex] && (() => {
         const lPhoto = photos[lightboxIndex];
         const lIsFav = favorites.has(lPhoto.id);
+        const lNoteVal = notes[lPhoto.id] ?? "";
         return (
           <div
-            className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center select-none"
-            onClick={() => setLightboxIndex(null)}
+            className="fixed inset-0 bg-black z-50 flex flex-col select-none"
             onContextMenu={blockContext}
           >
-            {/* Top bar */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 py-4 z-10" onClick={(e) => e.stopPropagation()}>
-              <span className="text-[11px] text-white/30 tracking-widest font-light">
-                {lightboxIndex + 1} / {photos.length}
-              </span>
-              <button className="text-white/40 hover:text-white transition-colors" onClick={() => setLightboxIndex(null)}>
+            {/* ── Top bar: counter + filename + close ── */}
+            <div className="flex items-center justify-between px-5 py-3 z-10 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-white/30 tracking-[0.2em] uppercase font-light">
+                  Foto {lightboxIndex + 1} de {photos.length}
+                </span>
+                <span className="text-[13px] text-white/70 font-light tracking-wide">
+                  {displayName(lPhoto.filename)}
+                </span>
+              </div>
+              <button
+                className="text-white/40 hover:text-white transition-colors p-1"
+                onClick={() => setLightboxIndex(null)}
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Prev / Next */}
-            {lightboxIndex > 0 && (
-              <button
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white text-4xl leading-none px-2 py-4 z-10 transition-colors"
-                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
-              >‹</button>
-            )}
-            {lightboxIndex < photos.length - 1 && (
-              <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white text-4xl leading-none px-2 py-4 z-10 transition-colors"
-                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
-              >›</button>
-            )}
-
-            {/* Photo + watermark container */}
-            <div
-              className="relative flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-              onContextMenu={blockContext}
-              style={{ maxHeight: "78vh", maxWidth: "84vw" }}
-            >
-              <img
-                src={lPhoto.url}
-                alt=""
-                className="max-h-[78vh] max-w-[84vw] object-contain pointer-events-none"
-                draggable={false}
-              />
-              {/* Watermark fills the image bounds */}
-              {watermark && (
-                <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-                  <WatermarkOverlay wm={watermark} size="full" />
-                </div>
-              )}
-            </div>
-
-            {/* Proof CTA */}
-            {isProof && (
-              <div
-                className="flex flex-col items-center gap-2.5 mt-6 z-10"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {pricePerPhoto > 0 && (
-                  <span className="text-[11px] text-white/30 tracking-widest uppercase">
-                    {formatCurrency(pricePerPhoto)} per photo
-                  </span>
-                )}
+            {/* ── Image area (flex-1, centered) ── */}
+            <div className="flex-1 flex items-center justify-center relative min-h-0 px-14">
+              {/* Prev */}
+              {lightboxIndex > 0 && (
                 <button
-                  onClick={(e) => toggleFavorite(e, lPhoto)}
-                  className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
-                    ${lIsFav
-                      ? "bg-rose-500 text-white hover:bg-rose-600"
-                      : "bg-white text-black hover:bg-rose-500 hover:text-white"
-                    }`}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors z-10 p-2"
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
                 >
-                  <Heart className={`h-4 w-4 transition-all ${lIsFav ? "fill-white" : ""}`} />
-                  {lIsFav ? "Selected  ·  Remove" : "Add to Selection"}
+                  <ChevronLeft className="h-8 w-8" />
                 </button>
-                {favCount > 0 && (
-                  <button
-                    onClick={() => { setLightboxIndex(null); setPurchaseOpen(true); }}
-                    className="text-[10px] text-white/30 hover:text-white/70 tracking-widest uppercase transition-colors underline underline-offset-2"
-                  >
-                    {favCount} selected · go to checkout
-                  </button>
+              )}
+              {/* Next */}
+              {lightboxIndex < photos.length - 1 && (
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors z-10 p-2"
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              )}
+
+              {/* Photo + watermark */}
+              <div
+                className="relative flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+                onContextMenu={blockContext}
+                style={{ maxHeight: "100%", maxWidth: "100%" }}
+              >
+                <img
+                  src={lPhoto.url}
+                  alt=""
+                  className="max-h-full max-w-full object-contain pointer-events-none"
+                  style={{ maxHeight: "calc(100vh - 200px)" }}
+                  draggable={false}
+                />
+                {watermark && (
+                  <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+                    <WatermarkOverlay wm={watermark} size="full" />
+                  </div>
                 )}
               </div>
-            )}
+            </div>
+
+            {/* ── Bottom bar: CTA + note field ── */}
+            <div className="shrink-0 flex flex-col items-center gap-3 px-6 pb-6 pt-4" onClick={(e) => e.stopPropagation()}>
+              {/* Proof CTA */}
+              {isProof && (
+                <div className="flex flex-col items-center gap-2">
+                  {pricePerPhoto > 0 && (
+                    <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                      {formatCurrency(pricePerPhoto)} por foto
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => toggleFavorite(e, lPhoto)}
+                    className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
+                      ${lIsFav
+                        ? "bg-rose-500 text-white hover:bg-rose-600"
+                        : "bg-white text-black hover:bg-rose-500 hover:text-white"
+                      }`}
+                  >
+                    <Heart className={`h-4 w-4 transition-all ${lIsFav ? "fill-white" : ""}`} />
+                    {lIsFav ? "Selecionada  ·  Remover" : "Adicionar à Seleção"}
+                  </button>
+                  {favCount > 0 && (
+                    <button
+                      onClick={() => { setLightboxIndex(null); setPurchaseOpen(true); }}
+                      className="text-[10px] text-white/30 hover:text-white/70 tracking-widest uppercase transition-colors underline underline-offset-2"
+                    >
+                      {favCount} selecionada{favCount !== 1 ? "s" : ""} · ver seleção
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Note field */}
+              <div className="w-full max-w-lg">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <MessageSquare className="h-3 w-3 text-white/30" />
+                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Observação</span>
+                </div>
+                <Textarea
+                  value={lNoteVal}
+                  onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Escreva algo sobre esta foto… ex: quero esta em preto e branco"
+                  className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
+                />
+              </div>
+            </div>
           </div>
         );
       })()}
 
       {/* Footer */}
       <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
-        <p className="text-[10px] tracking-widests uppercase text-muted-foreground/50">Powered by Davions</p>
+        <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50">Powered by Davions</p>
       </footer>
     </div>
   );
