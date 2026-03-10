@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Copy, AlertCircle, Store, Globe, ExternalLink, Upload, Loader2, X } from "lucide-react";
+import { Check, Copy, AlertCircle, Store, Globe, ExternalLink, Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
