@@ -413,6 +413,76 @@ Guidelines:
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
         <div className="flex-1 flex flex-col">
           <DashboardHeader />
+
+          {/* Commander Bar */}
+          {(() => {
+            const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+            const currentMode = getAgentAIMode();
+            return (
+              <div className="border-b border-border bg-muted/30 px-4 py-2 flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold tracking-wide uppercase">Commander</span>
+                </div>
+
+                <Separator orientation="vertical" className="h-5" />
+
+                {agents.length > 0 && (
+                  <Select value={selectedAgentSlug} onValueChange={setSelectedAgentSlug}>
+                    <SelectTrigger className="h-7 w-40 text-[10px]">
+                      <SelectValue placeholder="Select agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map((a) => (
+                        <SelectItem key={a.id} value={a.slug} className="text-xs">{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeAgent?.auto_reply ?? false}
+                    onCheckedChange={(v) => updateAgentToggle("auto_reply", v)}
+                    disabled={!activeAgent}
+                  />
+                  <Label className="text-[10px] cursor-pointer">IA Ativa</Label>
+                </div>
+
+                {activeAgent?.auto_reply && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={activeAgent?.review_mode ?? false}
+                      onCheckedChange={(v) => updateAgentToggle("review_mode", v)}
+                    />
+                    <Label className="text-[10px] cursor-pointer">Supervisão</Label>
+                  </div>
+                )}
+
+                <Badge variant="outline" className={`text-[9px] ${aiModeColor(currentMode)}`}>
+                  {aiModeLabel(currentMode)}
+                </Badge>
+
+                {draftCount > 0 && (
+                  <Badge variant="secondary" className="text-[9px] gap-1">
+                    <FileText className="h-2.5 w-2.5" />
+                    {draftCount} draft{draftCount > 1 ? "s" : ""}
+                  </Badge>
+                )}
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 ml-auto"
+                  onClick={() => window.location.href = "/dashboard/agents"}
+                  title="Agent Settings"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })()}
+
           <div className="flex-1 flex overflow-hidden">
             {/* Left Panel: Ticket List */}
             <div className="w-80 border-r border-border flex flex-col bg-background">
