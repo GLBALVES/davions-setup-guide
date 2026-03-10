@@ -362,6 +362,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
+    const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
         <NavLink
@@ -401,6 +403,11 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
+        {badgeCount > 0 && (
+          <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
+            {badgeCount}
+          </SidebarMenuBadge>
+        )}
       </SidebarMenuItem>
     );
   };
