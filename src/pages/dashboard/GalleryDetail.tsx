@@ -989,49 +989,6 @@ const GalleryDetail = () => {
                   />
                 </div>
 
-                {/* Gallery URL Slug */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Gallery URL
-                    </Label>
-                    <button
-                      onClick={generateSlugFromTitle}
-                      className="text-[10px] tracking-wider uppercase text-muted-foreground/60 hover:text-foreground transition-colors"
-                      type="button"
-                    >
-                      Generate from title
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={slugValue}
-                      onChange={(e) => {
-                        setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
-                        setSlugError("");
-                      }}
-                      placeholder="e.g. wedding-2025"
-                      className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={saveSlug}
-                      disabled={slugSaving}
-                      className="shrink-0 text-xs tracking-wider uppercase font-light"
-                    >
-                      {slugSaving ? "Saving…" : "Save"}
-                    </Button>
-                  </div>
-                  {slugError && (
-                    <p className="text-[10px] text-destructive">{slugError}</p>
-                  )}
-                  {slugValue && !slugError && (
-                    <p className="text-[10px] text-muted-foreground/60 font-mono truncate">
-                      {window.location.origin}/gallery/<span className="text-foreground/70">{slugValue}</span>
-                    </p>
-                  )}
-                </div>
 
                 {/* Share link */}
                 <div className="flex flex-col gap-2">
