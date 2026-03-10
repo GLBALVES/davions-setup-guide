@@ -464,8 +464,8 @@ const GalleryDetail = () => {
 
           <main className="flex-1 overflow-y-auto">
             {/* Hero banner */}
-            {gallery.cover_image_url && (
-              <div className="relative w-full h-52 md:h-72 overflow-hidden">
+            {gallery.cover_image_url ? (
+              <div className="relative w-full h-52 md:h-72 overflow-hidden group">
                 <img
                   src={gallery.cover_image_url}
                   alt={gallery.title}
@@ -500,7 +500,7 @@ const GalleryDetail = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge
                       variant={gallery.category === "proof" ? "outline" : "default"}
                       className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
@@ -513,6 +513,24 @@ const GalleryDetail = () => {
                     </div>
                   </div>
                 </div>
+                {/* Edit cover overlay */}
+                <button
+                  onClick={() => setCoverPickerOpen(true)}
+                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5"
+                >
+                  <ImagePlus className="h-3 w-3" /> Change cover
+                </button>
+              </div>
+            ) : (
+              <div className="px-6 md:px-10 pt-6 pb-0 flex items-center gap-3">
+                <button
+                  onClick={() => setCoverPickerOpen(true)}
+                  disabled={photos.length === 0}
+                  className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground/60 hover:text-muted-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  {photos.length === 0 ? "Upload photos to set a cover" : "Set cover image"}
+                </button>
               </div>
             )}
 
