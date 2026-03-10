@@ -107,7 +107,7 @@ export function CreateGalleryDialog({
     fetchData();
   }, [open, user]);
 
-  // When client selected, filter sessions
+  // When client/booking selected, load the session from that booking directly
   useEffect(() => {
     if (!selectedBookingId) {
       setSessions([]);
@@ -118,21 +118,22 @@ export function CreateGalleryDialog({
     const booking = bookings.find((b) => b.id === selectedBookingId);
     if (!booking) return;
 
-    const clientSessionIds = bookings
-      .filter((b) => b.client_email === booking.client_email)
-      .map((b) => b.session_id);
-
-    const fetchSessions = async () => {
+    const fetchSession = async () => {
       const { data } = await supabase
         .from("sessions")
         .select("id, title")
-        .in("id", clientSessionIds);
-      if (data) setSessions(data as Session[]);
-      if (data?.length === 1) setSelectedSessionId(data[0].id);
-      else setSelectedSessionId("");
+        .eq("id", booking.session_id)
+        .maybeSingle();
+      if (data) {
+        setSessions([data as Session]);
+        setSelectedSessionId(data.id);
+      } else {
+        setSessions([]);
+        setSelectedSessionId("");
+      }
     };
 
-    fetchSessions();
+    fetchSession();
   }, [selectedBookingId, bookings]);
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
