@@ -36,7 +36,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -52,7 +51,6 @@ const Signup = () => {
         password: values.password,
         options: {
           data: { full_name: values.fullName },
-          emailRedirectTo: window.location.origin,
         },
       });
       if (error) {
@@ -62,7 +60,7 @@ const Signup = () => {
           setServerError(error.message);
         }
       } else {
-        setSuccess(true);
+        navigate("/dashboard");
       }
     } catch {
       setServerError("Something went wrong. Please try again.");
