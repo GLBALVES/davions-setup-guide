@@ -105,12 +105,29 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const handleAssign = async (booking: Booking) => {
     setAssigning(true);
     try {
+      // Build a new title from the booking data, only if gallery has no meaningful title
+      const suggestedTitle = [booking.client_name, booking.session_title]
+        .filter(Boolean)
+        .join(" · ");
+      const currentTitle = gallery.title?.trim() ?? "";
+      const isTitleGeneric =
+        !currentTitle ||
+        currentTitle === "Untitled Gallery" ||
+        currentTitle === gallery.id;
+      const updates: Record<string, string> = { booking_id: booking.id };
+      if (isTitleGeneric && suggestedTitle) updates.title = suggestedTitle;
+
       const { error } = await supabase
         .from("galleries")
-        .update({ booking_id: booking.id })
+        .update(updates)
         .eq("id", gallery.id);
       if (error) throw error;
-      toast({ title: "Client assigned", description: `${booking.client_name} linked to this gallery.` });
+      toast({
+        title: "Client assigned",
+        description: isTitleGeneric && suggestedTitle
+          ? `Title updated to "${suggestedTitle}"`
+          : `${booking.client_name} linked to this gallery.`,
+      });
       setAssignOpen(false);
       onAssigned?.();
     } catch {
