@@ -280,6 +280,7 @@ const GalleryDetail = () => {
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [copiedFavorites, setCopiedFavorites] = useState(false);
   const [lightroomModalOpen, setLightroomModalOpen] = useState(false);
+  const [pricePerPhoto, setPricePerPhoto] = useState(0);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
