@@ -572,20 +572,32 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       {/* ── Logo header ── */}
-      <SidebarHeader className="flex items-center justify-center border-b border-sidebar-border py-4 px-3">
-        {collapsed ? (
-          <img
-            src={seloPreto}
-            alt="Davions"
-            className="h-7 w-7 object-contain"
-          />
-        ) : (
-          <img
-            src={logoPrincipal}
-            alt="Davions"
-            className="h-7 object-contain"
-          />
-        )}
+      <SidebarHeader className="flex items-center justify-center border-b border-sidebar-border py-4 px-3 overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          {collapsed ? (
+            <motion.img
+              key="selo"
+              src={seloPreto}
+              alt="Davions"
+              className="h-7 w-7 object-contain"
+              initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+            />
+          ) : (
+            <motion.img
+              key="logo"
+              src={logoPrincipal}
+              alt="Davions"
+              className="h-7 object-contain"
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+            />
+          )}
+        </AnimatePresence>
       </SidebarHeader>
 
       <SidebarContent>
