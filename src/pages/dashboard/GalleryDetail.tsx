@@ -13,6 +13,21 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -93,6 +108,64 @@ interface Watermark {
   id: string;
   name: string;
 }
+
+// ── Sortable photo card ───────────────────────────────────────────────────────
+interface SortablePhotoProps {
+  photo: Photo;
+  onDelete: (photo: Photo) => void;
+}
+
+const SortablePhoto = ({ photo, onDelete }: SortablePhotoProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group aspect-square bg-muted overflow-hidden cursor-grab active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+    >
+      {photo.url ? (
+        <img
+          src={photo.url}
+          alt={photo.filename}
+          className="w-full h-full object-cover pointer-events-none select-none"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center pointer-events-none">
+          <span className="text-[10px] text-muted-foreground">No preview</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onDelete(photo); }}
+          className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
 
 const GalleryDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -511,6 +584,31 @@ const GalleryDetail = () => {
     navigate("/dashboard/galleries");
   };
 
+  // ── Drag-and-drop reorder ────────────────────────────────────────────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = photos.findIndex((p) => p.id === active.id);
+    const newIndex = photos.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(photos, oldIndex, newIndex).map((p, i) => ({
+      ...p,
+      order_index: i,
+    }));
+    setPhotos(reordered);
+
+    // Persist new order in parallel
+    await Promise.all(
+      reordered.map((p) =>
+        supabase.from("photos").update({ order_index: p.order_index }).eq("id", p.id)
+      )
+    );
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -875,38 +973,23 @@ const GalleryDetail = () => {
                 </div>
               )}
 
-              {/* Photo grid */}
+              {/* Photo grid — drag to reorder */}
               {photos.length > 0 && (
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                     <span className="inline-block w-6 h-px bg-border" />
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {photos.map((photo) => (
-                      <div key={photo.id} className="relative group aspect-square bg-muted overflow-hidden">
-                        {photo.url ? (
-                          <img
-                            src={photo.url}
-                            alt={photo.filename}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-[10px] text-muted-foreground">No preview</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <button
-                            onClick={() => deletePhoto(photo)}
-                            className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {photos.map((photo) => (
+                          <SortablePhoto key={photo.id} photo={photo} onDelete={deletePhoto} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               )}
 
@@ -915,6 +998,7 @@ const GalleryDetail = () => {
                   <p className="text-xs text-muted-foreground/60">No photos yet — upload above to get started</p>
                 </div>
               )}
+
 
               {/* Watermark section */}
               {gallery.category === "proof" && (
