@@ -446,7 +446,7 @@ Guidelines:
                     onCheckedChange={(v) => updateAgentToggle("auto_reply", v)}
                     disabled={!activeAgent}
                   />
-                  <Label className="text-[10px] cursor-pointer">IA Ativa</Label>
+                  <Label className="text-[10px] cursor-pointer">AI Active</Label>
                 </div>
 
                 {activeAgent?.auto_reply && (
@@ -455,7 +455,7 @@ Guidelines:
                       checked={activeAgent?.review_mode ?? false}
                       onCheckedChange={(v) => updateAgentToggle("review_mode", v)}
                     />
-                    <Label className="text-[10px] cursor-pointer">Supervisão</Label>
+                    <Label className="text-[10px] cursor-pointer">Supervision</Label>
                   </div>
                 )}
 
