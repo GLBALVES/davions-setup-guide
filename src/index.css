@@ -55,6 +55,15 @@
     @apply border-border;
   }
 
+  /* Hide scrollbar but keep scroll functionality */
+  [data-sidebar="content"] {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  [data-sidebar="content"]::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
     font-weight: 300;
