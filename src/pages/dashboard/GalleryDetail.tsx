@@ -1007,9 +1007,14 @@ const GalleryDetail = () => {
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {photos.map((photo) => (
-                          <SortablePhoto key={photo.id} photo={photo} onRequestDelete={setPhotoToDelete} />
-                        ))}
+                        {photos.map((photo, idx) => (
+                           <SortablePhoto
+                             key={photo.id}
+                             photo={photo}
+                             onRequestDelete={setPhotoToDelete}
+                             onPreview={() => setLightboxIndex(idx)}
+                           />
+                         ))}
                       </div>
                     </SortableContext>
                   </DndContext>
