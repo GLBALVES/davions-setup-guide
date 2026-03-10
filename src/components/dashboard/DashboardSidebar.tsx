@@ -65,6 +65,11 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   DndContext,
   closestCenter,
   PointerSensor,
@@ -79,8 +84,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 import seloPreto from "@/assets/selo_preto.png";
+import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 
 type MenuItem = {
@@ -288,6 +293,147 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
   );
 }
 
+// ── Collapsed popover group ──────────────────────────────────────────────────
+interface CollapsedGroupPopoverProps {
+  group: MenuGroup;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  isItemActive: (item: MenuItem) => boolean;
+  badges: Record<string, number>;
+}
+
+function CollapsedGroupPopover({ group, isOpen, onOpenChange, isItemActive, badges }: CollapsedGroupPopoverProps) {
+  const hasActive = group.items.some((item) => isItemActive(item));
+
+  return (
+    <SidebarMenuItem>
+      <Popover open={isOpen} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <SidebarMenuButton
+            tooltip={group.title}
+            isActive={hasActive}
+            className="gap-3 text-xs tracking-wider uppercase font-light"
+          >
+            <group.icon className="h-4 w-4 shrink-0" />
+          </SidebarMenuButton>
+        </PopoverTrigger>
+        <PopoverContent
+          side="right"
+          align="start"
+          sideOffset={8}
+          className="w-52 p-1.5"
+        >
+          <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light px-2 pt-1 pb-1.5">
+            {group.title}
+          </p>
+          <div className="flex flex-col gap-0.5">
+            {group.items.map((item) => {
+              const badgeCount = item.badgeKey ? (badges[item.badgeKey] ?? 0) : 0;
+              if (item.to) {
+                return (
+                  <NavLink
+                    key={item.title}
+                    to={item.to}
+                    end={item.end}
+                    className="flex items-center gap-2.5 px-2 py-1.5 text-xs tracking-wider uppercase font-light rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    activeClassName="text-foreground bg-accent"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    <item.icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate">{item.title}</span>
+                    {badgeCount > 0 && (
+                      <span className="bg-foreground text-background text-[9px] font-medium min-w-[16px] h-4 px-1 flex items-center justify-center rounded-sm">
+                        {badgeCount}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              }
+              return (
+                <div
+                  key={item.title}
+                  className="flex items-center gap-2.5 px-2 py-1.5 text-xs tracking-wider uppercase font-light rounded-sm text-muted-foreground/40 cursor-not-allowed"
+                >
+                  <item.icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="flex-1 truncate">{item.title}</span>
+                </div>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </SidebarMenuItem>
+  );
+}
+
+// ── Collapsed favorites popover ──────────────────────────────────────────────
+interface CollapsedFavoritesPopoverProps {
+  favoriteItems: (MenuItem & { groupTitle: string })[];
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  isItemActive: (item: MenuItem) => boolean;
+  badges: Record<string, number>;
+}
+
+function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItemActive, badges }: CollapsedFavoritesPopoverProps) {
+  return (
+    <SidebarMenuItem>
+      <Popover open={isOpen} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <SidebarMenuButton tooltip="Favorites" className="gap-3 text-xs tracking-wider uppercase font-light">
+            <Star className="h-4 w-4 shrink-0" />
+          </SidebarMenuButton>
+        </PopoverTrigger>
+        <PopoverContent side="right" align="start" sideOffset={8} className="w-52 p-1.5">
+          <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light px-2 pt-1 pb-1.5">
+            Favorites
+          </p>
+          {favoriteItems.length === 0 ? (
+            <p className="px-2 py-2 text-[10px] text-muted-foreground/50 font-light italic">
+              No pinned items
+            </p>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              {favoriteItems.map((item) => {
+                const badgeCount = item.badgeKey ? (badges[item.badgeKey] ?? 0) : 0;
+                if (item.to) {
+                  return (
+                    <NavLink
+                      key={itemKey(item.groupTitle, item.title)}
+                      to={item.to}
+                      end={item.end}
+                      className="flex items-center gap-2.5 px-2 py-1.5 text-xs tracking-wider uppercase font-light rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      activeClassName="text-foreground bg-accent"
+                      onClick={() => onOpenChange(false)}
+                    >
+                      <item.icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex-1 truncate">{item.title}</span>
+                      {badgeCount > 0 && (
+                        <span className="bg-foreground text-background text-[9px] font-medium min-w-[16px] h-4 px-1 flex items-center justify-center rounded-sm">
+                          {badgeCount}
+                        </span>
+                      )}
+                    </NavLink>
+                  );
+                }
+                return (
+                  <div
+                    key={itemKey(item.groupTitle, item.title)}
+                    className="flex items-center gap-2.5 px-2 py-1.5 text-xs tracking-wider uppercase font-light rounded-sm text-muted-foreground/40 cursor-not-allowed"
+                  >
+                    <item.icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 truncate">{item.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    </SidebarMenuItem>
+  );
+}
+
 // ── Main sidebar ─────────────────────────────────────────────────────────────
 interface DashboardSidebarProps {
   onSignOut: () => void;
@@ -301,6 +447,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const badges = useSidebarBadges();
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
+  // Which group popover is open in collapsed mode
+  const [collapsedOpenGroup, setCollapsedOpenGroup] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -418,6 +566,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     );
   };
 
+  const badgesAsRecord = badges as unknown as Record<string, number>;
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       {/* ── Logo header ── */}
@@ -438,99 +588,129 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
       </SidebarHeader>
 
       <SidebarContent>
-        {/* ── Favorites group (drag-and-drop) ── */}
-        <Collapsible
-          open={collapsed ? true : openGroups["Favorites"]}
-          onOpenChange={() => !collapsed && toggleGroup("Favorites")}
-        >
-          <SidebarGroup>
-            <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
-                <Star className="h-3.5 w-3.5 shrink-0" />
-                {!collapsed && (
-                  <>
+        {/* ── COLLAPSED MODE: icon-only popovers ── */}
+        {collapsed ? (
+          <>
+            {/* Favorites popover */}
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <CollapsedFavoritesPopover
+                    favoriteItems={favoriteItems}
+                    isOpen={collapsedOpenGroup === "Favorites"}
+                    onOpenChange={(open) => setCollapsedOpenGroup(open ? "Favorites" : null)}
+                    isItemActive={isItemActive}
+                    badges={badgesAsRecord}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Group popovers */}
+            {groups.map((group) => (
+              <SidebarGroup key={group.title}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <CollapsedGroupPopover
+                      group={group}
+                      isOpen={collapsedOpenGroup === group.title}
+                      onOpenChange={(open) => setCollapsedOpenGroup(open ? group.title : null)}
+                      isItemActive={isItemActive}
+                      badges={badgesAsRecord}
+                    />
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </>
+        ) : (
+          /* ── EXPANDED MODE: collapsible groups ── */
+          <>
+            {/* Favorites group */}
+            <Collapsible
+              open={openGroups["Favorites"]}
+              onOpenChange={() => toggleGroup("Favorites")}
+            >
+              <SidebarGroup>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
+                    <Star className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 text-left">Favorites</span>
                     <ChevronRight
                       className="h-3 w-3 shrink-0 transition-transform duration-200"
                       style={{ transform: openGroups["Favorites"] ? "rotate(90deg)" : "rotate(0deg)" }}
                     />
-                  </>
-                )}
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
 
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu className={collapsed ? "" : "pl-3"}>
-                  {favoriteItems.length === 0 ? (
-                    !collapsed && (
-                      <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
-                        Right-click any item to pin it here
-                      </p>
-                    )
-                  ) : (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <SortableContext
-                        items={pinnedKeys}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {favoriteItems.map((item) => (
-                          <SortableFavoriteItem
-                            key={itemKey(item.groupTitle, item.title)}
-                            id={itemKey(item.groupTitle, item.title)}
-                            item={item}
-                            isActive={isItemActive(item)}
-                            collapsed={collapsed}
-                            badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
-                            onUnpin={() => togglePin(item.groupTitle, item)}
-                          />
-                        ))}
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu className="pl-3">
+                      {favoriteItems.length === 0 ? (
+                        <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
+                          Right-click any item to pin it here
+                        </p>
+                      ) : (
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <SortableContext
+                            items={pinnedKeys}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            {favoriteItems.map((item) => (
+                              <SortableFavoriteItem
+                                key={itemKey(item.groupTitle, item.title)}
+                                id={itemKey(item.groupTitle, item.title)}
+                                item={item}
+                                isActive={isItemActive(item)}
+                                collapsed={false}
+                                badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
+                                onUnpin={() => togglePin(item.groupTitle, item)}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
+                      )}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
 
-        {/* ── Regular groups ── */}
-        {groups.map((group) => (
-          <Collapsible
-            key={group.title}
-            open={collapsed ? true : openGroups[group.title]}
-            onOpenChange={() => !collapsed && toggleGroup(group.title)}
-          >
-            <SidebarGroup>
-              <SidebarGroupLabel asChild>
-                <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
-                  <group.icon className="h-3.5 w-3.5 shrink-0" />
-                  {!collapsed && (
-                    <>
+            {/* Regular groups */}
+            {groups.map((group) => (
+              <Collapsible
+                key={group.title}
+                open={openGroups[group.title]}
+                onOpenChange={() => toggleGroup(group.title)}
+              >
+                <SidebarGroup>
+                  <SidebarGroupLabel asChild>
+                    <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
+                      <group.icon className="h-3.5 w-3.5 shrink-0" />
                       <span className="flex-1 text-left">{group.title}</span>
                       <ChevronRight
                         className="h-3 w-3 shrink-0 transition-transform duration-200"
                         style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
-                    </>
-                  )}
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
 
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu className={collapsed ? "" : "pl-3"}>
-                    {group.items.map((item) => renderRegularItem(item, group.title))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu className="pl-3">
+                        {group.items.map((item) => renderRegularItem(item, group.title))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </SidebarGroup>
+              </Collapsible>
+            ))}
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
