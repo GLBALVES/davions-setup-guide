@@ -571,41 +571,6 @@ Guidelines:
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {/* AI Mode selector */}
-                    <Select value={selectedTicket.ai_mode} onValueChange={changeAIMode}>
-                      <SelectTrigger className="h-7 w-32 text-[10px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manual" className="text-xs">Manual</SelectItem>
-                        <SelectItem value="active" className="text-xs">AI Active</SelectItem>
-                        <SelectItem value="supervised" className="text-xs">Supervised</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* Agent selector */}
-                    {agents.length > 0 && selectedTicket.ai_mode !== "manual" && (
-                      <>
-                        <Select value={selectedAgentSlug} onValueChange={setSelectedAgentSlug}>
-                          <SelectTrigger className="h-7 w-36 text-[10px]">
-                            <SelectValue placeholder="Select agent" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {agents.map((a) => (
-                              <SelectItem key={a.id} value={a.slug} className="text-xs">{a.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0"
-                          onClick={() => window.location.href = "/dashboard/agents"}
-                          title="Agent Settings"
-                        >
-                          <Settings2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
                     {selectedTicket.status === "open" ? (
                       <Button size="sm" variant="destructive" className="h-7 text-[10px]" onClick={closeTicket}>
                         <X className="h-3 w-3 mr-1" /> Close
