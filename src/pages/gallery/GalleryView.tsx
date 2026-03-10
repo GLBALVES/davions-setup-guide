@@ -15,6 +15,7 @@ interface Gallery {
   status: string;
   access_code: string | null;
   photographer_id: string;
+  cover_image_url: string | null;
 }
 
 interface Photo {
