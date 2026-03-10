@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Image, FolderOpen, CheckCircle } from "lucide-react";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Gallery {
   id: string;

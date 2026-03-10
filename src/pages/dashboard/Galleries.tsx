@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
