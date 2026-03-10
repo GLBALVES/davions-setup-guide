@@ -774,11 +774,19 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
-        {!collapsed && userEmail && (
-          <p className="text-[10px] text-muted-foreground truncate mb-2 px-2">
-            {userEmail}
-          </p>
-        )}
+        <AnimatePresence initial={false}>
+          {!collapsed && userEmail && (
+            <motion.p
+              className="text-[10px] text-muted-foreground truncate mb-2 px-2"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18, ease: "easeInOut" }}
+            >
+              {userEmail}
+            </motion.p>
+          )}
+        </AnimatePresence>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -787,7 +795,19 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               className="gap-3 text-xs tracking-wider uppercase font-light text-muted-foreground hover:text-destructive hover:bg-destructive/5"
             >
               <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Sign Out</span>}
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.18, ease: "easeInOut" }}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    Sign Out
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
