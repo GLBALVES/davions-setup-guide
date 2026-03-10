@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Download, Lock, Image } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
@@ -11,6 +10,7 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 interface Gallery {
   id: string;
   title: string;
+  slug: string | null;
   category: string;
   status: string;
   access_code: string | null;
@@ -27,7 +27,7 @@ interface Photo {
 }
 
 const GalleryView = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,17 +39,32 @@ const GalleryView = () => {
 
   useEffect(() => {
     const fetchGallery = async () => {
-      if (!id) return;
+      if (!slug) return;
       setLoading(true);
 
-      const { data, error } = await supabase
+      // Try by slug first, then fall back to UUID
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+      let query = supabase
         .from("galleries")
-        .select("id, title, category, status, access_code, photographer_id, cover_image_url")
-        .eq("id", id)
-        .eq("status", "published")
-        .single();
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url")
+        .eq("status", "published");
+
+      if (isUuid) {
+        query = query.eq("id", slug);
+      } else {
+        query = query.eq("slug", slug);
+      }
+
+      const { data, error } = await query.single();
 
       if (error || !data) {
+        // If slug lookup failed and it looks like a UUID, try by ID anyway
+        if (!isUuid) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
         setNotFound(true);
         setLoading(false);
         return;
@@ -57,17 +72,16 @@ const GalleryView = () => {
 
       setGallery(data as Gallery);
 
-      // If no access code, auto-unlock
       if (!data.access_code) {
         setUnlocked(true);
-        await loadPhotos(id);
+        await loadPhotos(data.id);
       }
 
       setLoading(false);
     };
 
     fetchGallery();
-  }, [id]);
+  }, [slug]);
 
   const loadPhotos = async (galleryId: string) => {
     const { data } = await supabase
@@ -160,7 +174,6 @@ const GalleryView = () => {
       {!unlocked && gallery?.access_code && (
         <div className="flex-1 flex items-center justify-center px-6 py-16">
           <div className="w-full max-w-sm flex flex-col gap-8">
-            {/* Icon + title */}
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="h-16 w-16 rounded-full border border-border flex items-center justify-center">
                 <Lock className="h-7 w-7 text-muted-foreground/60" />
@@ -171,7 +184,6 @@ const GalleryView = () => {
               </div>
             </div>
 
-            {/* Code input */}
             <div className="flex flex-col gap-3">
               <Input
                 value={codeInput}
@@ -184,7 +196,7 @@ const GalleryView = () => {
                 }`}
               />
               {codeError && (
-                <p className="text-xs text-destructive text-center flex items-center justify-center gap-1.5">
+                <p className="text-xs text-destructive text-center">
                   Incorrect code — please try again.
                 </p>
               )}
@@ -265,7 +277,6 @@ const GalleryView = () => {
                     </div>
                   )}
 
-                  {/* Download overlay for final galleries */}
                   {gallery?.category === "final" && (
                     <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                       <button

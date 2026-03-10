@@ -29,7 +29,15 @@ import {
   XCircle,
   Send,
   Mail,
+  ImagePlus,
+  Star,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,10 +94,14 @@ const GalleryDetail = () => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [settingCover, setSettingCover] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const publicUrl = `${window.location.origin}/gallery/${id}`;
+  // Public URL uses slug if available, otherwise falls back to id
+  const publicSlugOrId = gallery?.slug ?? id;
+  const publicUrl = `${window.location.origin}/gallery/${publicSlugOrId}`;
 
   // ── Fetch gallery + photos ──────────────────────────────────────────────────
   const fetchGallery = useCallback(async () => {
@@ -361,6 +373,34 @@ const GalleryDetail = () => {
     }
   };
 
+  // ── Set cover from photo ─────────────────────────────────────────────────────
+  const setCoverFromPhoto = async (photo: Photo) => {
+    if (!gallery || !photo.url) return;
+    setSettingCover(photo.id);
+    const { error } = await supabase
+      .from("galleries")
+      .update({ cover_image_url: photo.url })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, cover_image_url: photo.url! } : g);
+      toast({ title: "Cover updated" });
+      setCoverPickerOpen(false);
+    }
+    setSettingCover(null);
+  };
+
+  const removeCover = async () => {
+    if (!gallery) return;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ cover_image_url: null })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, cover_image_url: null } : g);
+      toast({ title: "Cover removed" });
+    }
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
@@ -424,8 +464,8 @@ const GalleryDetail = () => {
 
           <main className="flex-1 overflow-y-auto">
             {/* Hero banner */}
-            {gallery.cover_image_url && (
-              <div className="relative w-full h-52 md:h-72 overflow-hidden">
+            {gallery.cover_image_url ? (
+              <div className="relative w-full h-52 md:h-72 overflow-hidden group">
                 <img
                   src={gallery.cover_image_url}
                   alt={gallery.title}
@@ -460,7 +500,7 @@ const GalleryDetail = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge
                       variant={gallery.category === "proof" ? "outline" : "default"}
                       className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
@@ -473,6 +513,24 @@ const GalleryDetail = () => {
                     </div>
                   </div>
                 </div>
+                {/* Edit cover overlay */}
+                <button
+                  onClick={() => setCoverPickerOpen(true)}
+                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5"
+                >
+                  <ImagePlus className="h-3 w-3" /> Change cover
+                </button>
+              </div>
+            ) : (
+              <div className="px-6 md:px-10 pt-6 pb-0 flex items-center gap-3">
+                <button
+                  onClick={() => setCoverPickerOpen(true)}
+                  disabled={photos.length === 0}
+                  className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground/60 hover:text-muted-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  {photos.length === 0 ? "Upload photos to set a cover" : "Set cover image"}
+                </button>
               </div>
             )}
 
@@ -579,10 +637,18 @@ const GalleryDetail = () => {
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-none w-44">
+                  <DropdownMenuContent align="end" className="rounded-none w-48">
                     <DropdownMenuItem onClick={startRename} className="gap-2 text-xs">
                       <Pencil className="h-3.5 w-3.5" /> Rename
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCoverPickerOpen(true)} className="gap-2 text-xs" disabled={photos.length === 0}>
+                      <ImagePlus className="h-3.5 w-3.5" /> Change cover
+                    </DropdownMenuItem>
+                    {gallery.cover_image_url && (
+                      <DropdownMenuItem onClick={removeCover} className="gap-2 text-xs">
+                        <X className="h-3.5 w-3.5" /> Remove cover
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={deleteGallery}
@@ -819,6 +885,56 @@ const GalleryDetail = () => {
           </main>
         </div>
       </div>
+
+      {/* Cover Picker Dialog */}
+      <Dialog open={coverPickerOpen} onOpenChange={setCoverPickerOpen}>
+        <DialogContent className="max-w-2xl rounded-none p-0 gap-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <DialogTitle className="text-base font-light tracking-wide">Choose Cover Image</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">Select one of the gallery photos to use as the cover.</p>
+          </DialogHeader>
+          <div className="p-6 overflow-y-auto max-h-[60vh]">
+            {photos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+                <ImagePlus className="h-8 w-8 opacity-30" />
+                <p className="text-sm">No photos uploaded yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {photos.map((photo) => {
+                  const isCurrent = gallery.cover_image_url === photo.url;
+                  return (
+                    <button
+                      key={photo.id}
+                      onClick={() => setCoverFromPhoto(photo)}
+                      disabled={settingCover === photo.id}
+                      className={`relative aspect-square overflow-hidden group border-2 transition-colors ${
+                        isCurrent ? "border-primary" : "border-transparent hover:border-primary/50"
+                      }`}
+                    >
+                      <img
+                        src={photo.url}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      {isCurrent && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <Star className="h-5 w-5 text-primary fill-primary" />
+                        </div>
+                      )}
+                      {settingCover === photo.id && (
+                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                          <span className="text-[10px] text-muted-foreground animate-pulse tracking-widest uppercase">Saving…</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
