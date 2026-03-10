@@ -632,6 +632,18 @@ const GalleryDetail = () => {
     );
   };
 
+  // ── Lightbox keyboard navigation ─────────────────────────────────────────────
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowRight") setLightboxIndex((i) => i !== null && i < photos.length - 1 ? i + 1 : i);
+      if (e.key === "ArrowLeft") setLightboxIndex((i) => i !== null && i > 0 ? i - 1 : i);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxIndex, photos.length]);
+
   if (loading) {
     return (
       <SidebarProvider>
