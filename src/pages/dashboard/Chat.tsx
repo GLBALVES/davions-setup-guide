@@ -547,12 +547,6 @@ Guidelines:
                           </span>
                         </div>
                       </div>
-                      {ticket.ai_mode !== "manual" && (
-                        <Badge variant="outline" className={`mt-1 text-[9px] px-1 py-0 ${aiModeColor(ticket.ai_mode)}`}>
-                          <Bot className="h-2.5 w-2.5 mr-0.5" />
-                          {aiModeLabel(ticket.ai_mode)}
-                        </Badge>
-                      )}
                     </button>
                   ))
                 )}
