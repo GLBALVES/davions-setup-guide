@@ -1108,6 +1108,18 @@ const GalleryDetail = () => {
 
               <div className="flex items-center gap-3">
                 <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
+                  title="Preview public gallery"
+                >
+                  <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                    <Eye className="h-3.5 w-3.5" /> Preview
+                  </a>
+                </Button>
+
+                <Button
                   variant="outline"
                   size="sm"
                   onClick={togglePublish}
