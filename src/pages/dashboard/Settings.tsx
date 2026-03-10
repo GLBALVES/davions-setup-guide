@@ -51,6 +51,10 @@ const Settings = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
+  // Gallery settings
+  const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
+  const [savingGallerySettings, setSavingGallerySettings] = useState(false);
+
   // Business tab
   const [businessName, setBusinessName] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
