@@ -341,6 +341,71 @@ const Settings = () => {
                     </div>
                   </section>
 
+                  {/* ── Galleries ── */}
+                  <section className="flex flex-col gap-6">
+                    <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
+                      Galleries
+                    </h2>
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[11px] tracking-wider uppercase font-light">
+                        Proof Gallery Watermark
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Image (PNG with transparency recommended) applied to photos in Proof galleries.
+                      </p>
+
+                      {watermarkUrl ? (
+                        <div className="relative group border border-border flex items-center justify-center bg-muted/30 p-4 min-h-[80px]">
+                          <img
+                            src={watermarkUrl}
+                            alt="Watermark preview"
+                            className="max-h-16 w-auto object-contain opacity-80"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <button
+                              onClick={() => watermarkInputRef.current?.click()}
+                              className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
+                            >
+                              Change
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await supabase.from("photographers").update({ watermark_url: null } as any).eq("id", user!.id);
+                                setWatermarkUrl(null);
+                                toast({ title: "Watermark removed" });
+                              }}
+                              className="text-white/70 hover:text-white transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => watermarkInputRef.current?.click()}
+                          disabled={uploadingWatermark}
+                          className="w-full h-20 border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
+                        >
+                          {uploadingWatermark ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <Upload className="h-5 w-5" />
+                              <span className="text-[10px] tracking-widest uppercase">Upload watermark</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <input
+                        ref={watermarkInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleWatermarkUpload}
+                      />
+                    </div>
+                  </section>
+
                   {/* ── Booking Store ── */}
                   <section className="flex flex-col gap-6">
                     <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
