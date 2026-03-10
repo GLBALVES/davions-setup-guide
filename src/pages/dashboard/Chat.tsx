@@ -70,29 +70,12 @@ type Message = {
   created_at: string;
 };
 
-interface KnowledgeEntry { topic: string; content: string; }
-
 type Agent = {
   id: string;
   name: string;
   slug: string;
   enabled: boolean;
-  auto_reply: boolean;
-  review_mode: boolean;
-  model: string;
-  temperature: number;
-  description: string;
-  system_prompt: string;
-  knowledge_base: KnowledgeEntry[];
 };
-
-const MODELS = [
-  { value: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (fast)" },
-  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (balanced)" },
-  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (advanced)" },
-  { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
-  { value: "openai/gpt-5-nano", label: "GPT-5 Nano (economic)" },
-];
 
 export default function Chat() {
   const { user, signOut } = useAuth();
