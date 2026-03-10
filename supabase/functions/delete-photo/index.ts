@@ -38,12 +38,17 @@ Deno.serve(async (req) => {
       const anonClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
-      const { data: claims, error: claimsError } = await anonClient.auth.getClaims(token);
-      if (claimsError) {
-        console.error("Bearer auth error:", claimsError.message);
-      } else if (claims?.claims?.sub) {
-        console.log("Authenticated via Bearer token, userId:", claims.claims.sub);
-        verified = true;
+      try {
+        const { data: claims, error: claimsError } = await anonClient.auth.getClaims(token);
+        if (claimsError) {
+          console.warn("Bearer auth error:", claimsError.message);
+        } else if (claims?.claims?.sub) {
+          console.log("Authenticated via Bearer token, userId:", claims.claims.sub);
+          verified = true;
+        }
+      } catch (jwtErr) {
+        console.warn("JWT verification failed (possibly expired), trying photographer_id fallback:", String(jwtErr));
+        // verified permanece false → fallback de photographer_id será tentado
       }
     }
 
