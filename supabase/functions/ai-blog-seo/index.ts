@@ -60,6 +60,10 @@ serve(async (req) => {
       systemPrompt = 'You are an SEO specialist. Given an article title and content, suggest 5-8 SEO-optimized tags/keywords in English. Return ONLY a JSON array of strings, e.g. ["tag1","tag2"].';
     } else if (action === "improve_title") {
       systemPrompt = "You are an SEO specialist. Given an article title and content, suggest 3 improved SEO-optimized title alternatives in English, each under 60 characters. Return ONLY a JSON array of strings.";
+    } else if (action === "seo_suggest_meta") {
+      systemPrompt = "You are an SEO specialist. Given a page name/title and optional description, generate a compelling meta description in English between 140-155 characters. Return ONLY the meta description text, nothing else.";
+    } else if (action === "seo_suggest_keywords") {
+      systemPrompt = 'You are an SEO specialist. Given a page name/title and optional description, suggest 5-8 SEO-optimized keywords in English. Return ONLY a JSON array of strings, e.g. ["keyword1","keyword2"].';
     } else {
       systemPrompt = "You are an SEO specialist. Analyze the article and provide a JSON object with: { score: number 0-100, suggestions: string[] } with SEO improvement tips in English.";
     }
