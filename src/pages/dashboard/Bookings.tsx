@@ -71,6 +71,10 @@ const Bookings = () => {
     bookingId: "",
     action: "confirm",
   });
+  const [galleryDialog, setGalleryDialog] = useState<{ open: boolean; bookingId: string }>({
+    open: false,
+    bookingId: "",
+  });
 
   const fetchBookings = async () => {
     setLoading(true);
