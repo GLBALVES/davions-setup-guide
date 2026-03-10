@@ -455,6 +455,30 @@ export type Database = {
           },
         ]
       }
+      gallery_settings: {
+        Row: {
+          id: string
+          key: string
+          photographer_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          photographer_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          photographer_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       mkt_email_automated: {
         Row: {
           created_at: string

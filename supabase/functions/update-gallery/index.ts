@@ -6,6 +6,41 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate URL-friendly slug from a string
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+// Ensure slug uniqueness, excluding the current gallery
+async function uniqueSlug(
+  supabase: ReturnType<typeof createClient>,
+  base: string,
+  photographerId: string,
+  excludeGalleryId: string
+): Promise<string> {
+  let slug = base;
+  let attempt = 0;
+  while (true) {
+    const { data } = await supabase
+      .from("galleries")
+      .select("id")
+      .eq("slug", slug)
+      .eq("photographer_id", photographerId)
+      .neq("id", excludeGalleryId)
+      .maybeSingle();
+    if (!data) return slug;
+    attempt++;
+    slug = `${base}-${attempt}`;
+  }
+}
+
 async function getAuthenticatedClient(req: Request) {
   const authHeader = req.headers.get("Authorization");
   const body = await req.clone().json().catch(() => ({}));
@@ -24,7 +59,7 @@ async function getAuthenticatedClient(req: Request) {
         return { supabase, userId: claims.claims.sub as string };
       }
     } catch (jwtErr) {
-      console.warn("JWT verification failed (possibly expired), trying photographer_id fallback:", String(jwtErr));
+      console.warn("JWT verification failed, trying photographer_id fallback:", String(jwtErr));
     }
   }
 
@@ -64,7 +99,14 @@ Deno.serve(async (req) => {
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (gallery_name !== undefined) updates.title = gallery_name;
+
+    if (gallery_name !== undefined) {
+      updates.title = gallery_name;
+      // Regenerate slug whenever the title changes, ensuring uniqueness
+      const base = slugify(gallery_name) || "gallery";
+      updates.slug = await uniqueSlug(auth.supabase, base, auth.userId, gallery_id);
+    }
+
     if (gallery_type !== undefined) updates.category = gallery_type;
 
     const { error } = await auth.supabase
@@ -80,7 +122,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ status: "success" }),
+      JSON.stringify({ status: "success", slug: updates.slug }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
