@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Check, Copy, AlertCircle, Store, Globe, ExternalLink,
+  Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
