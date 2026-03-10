@@ -6,6 +6,28 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate URL-friendly slug from a string
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+// Generate a random 6-char alphanumeric access code (no ambiguous chars)
+function generateAccessCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 async function getAuthenticatedClient(req: Request) {
   const authHeader = req.headers.get("Authorization");
   const body = await req.clone().json().catch(() => ({}));
@@ -27,7 +49,6 @@ async function getAuthenticatedClient(req: Request) {
 
   // Fallback: photographer_id in body (legacy plugin without auth headers)
   if (body.photographer_id) {
-    // Use service role to verify this is a real user
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data } = await supabase.from("photographers").select("id").eq("id", body.photographer_id).single();
     if (data) {
@@ -36,6 +57,23 @@ async function getAuthenticatedClient(req: Request) {
   }
 
   return null;
+}
+
+// Ensure slug uniqueness by appending a suffix if needed
+async function uniqueSlug(supabase: ReturnType<typeof createClient>, base: string, photographerId: string): Promise<string> {
+  let slug = base;
+  let attempt = 0;
+  while (true) {
+    const { data } = await supabase
+      .from("galleries")
+      .select("id")
+      .eq("slug", slug)
+      .eq("photographer_id", photographerId)
+      .maybeSingle();
+    if (!data) return slug;
+    attempt++;
+    slug = `${base}-${attempt}`;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -54,12 +92,19 @@ Deno.serve(async (req) => {
 
     const { gallery_name, gallery_type } = await req.json();
 
+    const title = gallery_name ?? "";
+    const baseSlug = slugify(title) || "gallery";
+    const slug = await uniqueSlug(auth.supabase, baseSlug, auth.userId);
+    const access_code = generateAccessCode();
+
     const { data, error } = await auth.supabase
       .from("galleries")
       .insert({
         photographer_id: auth.userId,
-        title: gallery_name ?? "",
+        title,
         category: gallery_type ?? "proof",
+        slug,
+        access_code,
       })
       .select("id")
       .single();
@@ -72,7 +117,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ status: "success", response: { unique_id: data.id } }),
+      JSON.stringify({ status: "success", response: { unique_id: data.id, slug, access_code } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
