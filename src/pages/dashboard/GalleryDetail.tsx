@@ -165,7 +165,7 @@ const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
       <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
         <button
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onDelete(photo); }}
+          onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
           className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
         >
           <Trash2 className="h-4 w-4" />
