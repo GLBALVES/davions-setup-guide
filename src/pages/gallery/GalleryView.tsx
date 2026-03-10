@@ -784,11 +784,11 @@ const GalleryView = () => {
               {/* Proof CTA */}
               {isProof && (
                 <div className="flex flex-col items-center gap-2">
-                  {pricePerPhoto > 0 && (
-                    <span className="text-[11px] text-white/30 tracking-widest uppercase">
-                      {formatCurrency(pricePerPhoto)} por foto
-                    </span>
-                  )}
+                    {pricePerPhoto > 0 && (
+                      <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                        {formatCurrency(pricePerPhoto)} per photo
+                      </span>
+                    )}
                   <button
                     onClick={(e) => toggleFavorite(e, lPhoto)}
                     className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
@@ -798,14 +798,14 @@ const GalleryView = () => {
                       }`}
                   >
                     <Heart className={`h-4 w-4 transition-all ${lIsFav ? "fill-white" : ""}`} />
-                    {lIsFav ? "Selecionada  ·  Remover" : "Adicionar à Seleção"}
+                    {lIsFav ? "Selected  ·  Remove" : "Add to Selection"}
                   </button>
                   {favCount > 0 && (
                     <button
                       onClick={() => { setLightboxIndex(null); setPurchaseOpen(true); }}
                       className="text-[10px] text-white/30 hover:text-white/70 tracking-widest uppercase transition-colors underline underline-offset-2"
                     >
-                      {favCount} selecionada{favCount !== 1 ? "s" : ""} · ver seleção
+                      {favCount} selected · view selection
                     </button>
                   )}
                 </div>
