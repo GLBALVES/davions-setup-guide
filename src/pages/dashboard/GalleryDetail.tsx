@@ -78,11 +78,13 @@ const GalleryDetail = () => {
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [accessCode, setAccessCode] = useState("");
   const [savingCode, setSavingCode] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const publicUrl = `${window.location.origin}/gallery/${id}`;
 
@@ -249,19 +251,26 @@ const GalleryDetail = () => {
     }
   };
 
-  // ── Save access code ────────────────────────────────────────────────────────
-  const saveAccessCode = async () => {
+  // ── Auto-save access code ───────────────────────────────────────────────────
+  const persistAccessCode = useCallback(async (code: string) => {
     if (!gallery) return;
     setSavingCode(true);
+    const value = code.trim() || null;
     const { error } = await supabase
       .from("galleries")
-      .update({ access_code: accessCode.trim() || null })
+      .update({ access_code: value })
       .eq("id", gallery.id);
     if (!error) {
-      setGallery({ ...gallery, access_code: accessCode.trim() || null });
-      toast({ title: "Access code saved" });
+      setGallery((g) => g ? { ...g, access_code: value } : g);
     }
     setSavingCode(false);
+  }, [gallery]);
+
+  const handleAccessCodeChange = (value: string) => {
+    const upper = value.toUpperCase();
+    setAccessCode(upper);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => persistAccessCode(upper), 800);
   };
 
   // ── Copy link ───────────────────────────────────────────────────────────────
@@ -271,27 +280,27 @@ const GalleryDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyCode = () => {
+    if (!gallery?.access_code) return;
+    navigator.clipboard.writeText(gallery.access_code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   // ── Generate access code ────────────────────────────────────────────────────
   const generateAccessCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const code = Array.from({ length: 6 }, () =>
       chars[Math.floor(Math.random() * chars.length)]
     ).join("");
-    setAccessCode(code);
+    handleAccessCodeChange(code);
   };
 
   const clearAccessCode = async () => {
-    setSavingCode(true);
     setAccessCode("");
-    const { error } = await supabase
-      .from("galleries")
-      .update({ access_code: null })
-      .eq("id", gallery!.id);
-    if (!error) {
-      setGallery((g) => g ? { ...g, access_code: null } : g);
-      toast({ title: "Access code removed" });
-    }
-    setSavingCode(false);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    await persistAccessCode("");
+    toast({ title: "Access code removed" });
   };
 
   // ── Rename ──────────────────────────────────────────────────────────────────
@@ -691,13 +700,16 @@ const GalleryDetail = () => {
                     <div className="relative flex-1">
                       <Input
                         value={accessCode}
-                        onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                        onChange={(e) => handleAccessCodeChange(e.target.value)}
                         placeholder="e.g. WEDDING2025"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground pr-8 font-mono tracking-widest"
                       />
-                      {accessCode && (
+                      {savingCode && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/50 tracking-widest uppercase">saving…</span>
+                      )}
+                      {!savingCode && accessCode && (
                         <button
-                          onClick={() => setAccessCode("")}
+                          onClick={() => clearAccessCode()}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                           type="button"
                         >
@@ -714,21 +726,22 @@ const GalleryDetail = () => {
                     >
                       <RefreshCw className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={saveAccessCode}
-                      disabled={savingCode}
-                      className="text-xs tracking-wider uppercase font-light shrink-0"
-                    >
-                      {savingCode ? "Saving…" : "Save"}
-                    </Button>
                   </div>
                   <div className="flex items-center justify-between">
                     {gallery.access_code ? (
-                      <p className="text-[10px] text-green-600 flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
-                        Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-green-600 flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
+                          Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
+                        </p>
+                        <button
+                          onClick={copyCode}
+                          className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                          title="Copy code"
+                        >
+                          {copiedCode ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                        </button>
+                      </div>
                     ) : (
                       <p className="text-[10px] text-muted-foreground/50">No code set — gallery is open to anyone with the link.</p>
                     )}
