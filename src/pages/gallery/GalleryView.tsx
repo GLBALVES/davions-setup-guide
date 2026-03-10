@@ -1,11 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, Image, CalendarX2 } from "lucide-react";
+import { Download, Lock, Image, CalendarX2, Heart } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
+
+// ── Client token (anonymous identifier persisted in localStorage) ─────────────
+function getClientToken(): string {
+  const key = "davions_client_token";
+  let token = localStorage.getItem(key);
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem(key, token);
+  }
+  return token;
+}
 
 interface Gallery {
   id: string;
@@ -39,13 +50,15 @@ const GalleryView = () => {
   const [unlocked, setUnlocked] = useState(false);
   const [codeError, setCodeError] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [togglingFav, setTogglingFav] = useState<Set<string>>(new Set());
+  const clientToken = getClientToken();
 
   useEffect(() => {
     const fetchGallery = async () => {
       if (!slug) return;
       setLoading(true);
 
-      // Try by slug first, then fall back to UUID
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
       let query = supabase
@@ -62,12 +75,6 @@ const GalleryView = () => {
       const { data, error } = await query.single();
 
       if (error || !data) {
-        // If slug lookup failed and it looks like a UUID, try by ID anyway
-        if (!isUuid) {
-          setNotFound(true);
-          setLoading(false);
-          return;
-        }
         setNotFound(true);
         setLoading(false);
         return;
@@ -105,6 +112,17 @@ const GalleryView = () => {
         return { ...p, url };
       });
       setPhotos(withUrls);
+
+      // Load this client's favorites for the gallery
+      const { data: favData } = await supabase
+        .from("photo_favorites")
+        .select("photo_id")
+        .eq("gallery_id", galleryId)
+        .eq("client_token", clientToken);
+
+      if (favData) {
+        setFavorites(new Set(favData.map((f) => f.photo_id)));
+      }
     }
   };
 
@@ -118,6 +136,33 @@ const GalleryView = () => {
       setCodeError(true);
     }
   };
+
+  const toggleFavorite = useCallback(async (e: React.MouseEvent, photo: Photo) => {
+    e.stopPropagation();
+    if (!gallery) return;
+    if (togglingFav.has(photo.id)) return;
+
+    setTogglingFav((prev) => new Set(prev).add(photo.id));
+    const isFav = favorites.has(photo.id);
+
+    if (isFav) {
+      await supabase
+        .from("photo_favorites")
+        .delete()
+        .eq("photo_id", photo.id)
+        .eq("client_token", clientToken);
+      setFavorites((prev) => { const s = new Set(prev); s.delete(photo.id); return s; });
+    } else {
+      await supabase.from("photo_favorites").insert({
+        photo_id: photo.id,
+        gallery_id: gallery.id,
+        client_token: clientToken,
+      });
+      setFavorites((prev) => new Set(prev).add(photo.id));
+    }
+
+    setTogglingFav((prev) => { const s = new Set(prev); s.delete(photo.id); return s; });
+  }, [gallery, favorites, togglingFav, clientToken]);
 
   const downloadPhoto = async (photo: Photo) => {
     if (!photo.url) return;
@@ -193,17 +238,27 @@ const GalleryView = () => {
     );
   }
 
+  const favCount = favorites.size;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navbar */}
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
         <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
-        <Badge
-          variant={gallery?.category === "proof" ? "outline" : "default"}
-          className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
-        >
-          {gallery?.category === "proof" ? "Proof Gallery" : "Final Gallery"}
-        </Badge>
+        <div className="flex items-center gap-3">
+          {unlocked && favCount > 0 && (
+            <span className="flex items-center gap-1 text-[10px] tracking-[0.2em] uppercase text-rose-500 font-light">
+              <Heart className="h-3 w-3 fill-rose-500" />
+              {favCount}
+            </span>
+          )}
+          <Badge
+            variant={gallery?.category === "proof" ? "outline" : "default"}
+            className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
+          >
+            {gallery?.category === "proof" ? "Proof Gallery" : "Final Gallery"}
+          </Badge>
+        </div>
       </header>
 
       {/* Access gate */}
@@ -267,6 +322,7 @@ const GalleryView = () => {
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
                     {gallery.category === "final" && " · Click any photo to download"}
+                    {gallery.category === "proof" && " · Click ♡ to save favorites"}
                   </p>
                 </div>
                 <Badge
@@ -283,6 +339,7 @@ const GalleryView = () => {
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
                 {photos.length} photo{photos.length !== 1 ? "s" : ""}
                 {gallery?.category === "final" && " · Click any photo to download"}
+                {gallery?.category === "proof" && " · Click ♡ to save favorites"}
               </p>
             </div>
           )}
@@ -297,37 +354,53 @@ const GalleryView = () => {
 
             {/* Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {photos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className="relative group aspect-square bg-muted overflow-hidden cursor-pointer"
-                  onClick={() => setLightboxIndex(index)}
-                >
-                  {photo.url ? (
-                    <img
-                      src={photo.url}
-                      alt={photo.filename}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Image className="h-6 w-6 text-muted-foreground/30" />
-                    </div>
-                  )}
+              {photos.map((photo, index) => {
+                const isFav = favorites.has(photo.id);
+                return (
+                  <div
+                    key={photo.id}
+                    className="relative group aspect-square bg-muted overflow-hidden cursor-pointer"
+                    onClick={() => setLightboxIndex(index)}
+                  >
+                    {photo.url ? (
+                      <img
+                        src={photo.url}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Image className="h-6 w-6 text-muted-foreground/30" />
+                      </div>
+                    )}
 
-                  {gallery?.category === "final" && (
-                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); downloadPhoto(photo); }}
-                        className="bg-background/90 text-foreground p-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {/* Favorite button — always visible for proof, hover for final */}
+                    <button
+                      onClick={(e) => toggleFavorite(e, photo)}
+                      className={`absolute top-2 right-2 p-1.5 rounded-full transition-all z-10
+                        ${isFav
+                          ? "bg-rose-500/90 text-white opacity-100"
+                          : "bg-black/40 text-white/70 opacity-0 group-hover:opacity-100"
+                        }`}
+                      title={isFav ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                    </button>
+
+                    {gallery?.category === "final" && (
+                      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); downloadPhoto(photo); }}
+                          className="bg-background/90 text-foreground p-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </main>
@@ -367,6 +440,18 @@ const GalleryView = () => {
             className="max-h-[90vh] max-w-[90vw] object-contain"
             onClick={(e) => e.stopPropagation()}
           />
+          {/* Favorite button in lightbox */}
+          <button
+            onClick={(e) => toggleFavorite(e, photos[lightboxIndex!])}
+            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 text-xs tracking-widest uppercase font-light transition-colors
+              ${favorites.has(photos[lightboxIndex].id)
+                ? "bg-rose-500 text-white"
+                : "bg-background/80 text-foreground hover:bg-rose-500 hover:text-white"
+              }`}
+          >
+            <Heart className={`h-3 w-3 ${favorites.has(photos[lightboxIndex].id) ? "fill-white" : ""}`} />
+            {favorites.has(photos[lightboxIndex].id) ? "Favorita" : "Favoritar"}
+          </button>
           {gallery?.category === "final" && (
             <button
               className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-foreground text-background px-4 py-2 text-xs tracking-widest uppercase font-light hover:bg-foreground/80 transition-colors"
