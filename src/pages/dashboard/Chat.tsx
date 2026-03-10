@@ -685,7 +685,7 @@ Guidelines:
                       <Button size="sm" onClick={sendMessage} disabled={loading || !newMessage.trim()} className="h-10">
                         <Send className="h-4 w-4" />
                       </Button>
-                      {selectedTicket.ai_mode !== "manual" && (
+                      {getAgentAIMode() !== "manual" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -694,7 +694,7 @@ Guidelines:
                           className="h-10 text-[10px]"
                         >
                           <Bot className="h-4 w-4 mr-1" />
-                          {sendingAI ? "Thinking..." : selectedTicket.ai_mode === "supervised" ? "Generate Draft" : "AI Reply"}
+                          {sendingAI ? "Thinking..." : getAgentAIMode() === "supervised" ? "Generate Draft" : "AI Reply"}
                         </Button>
                       )}
                     </div>
