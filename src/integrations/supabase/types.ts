@@ -86,6 +86,8 @@ export type Database = {
           access_code: string | null
           booking_id: string | null
           category: string
+          cover_focal_x: number | null
+          cover_focal_y: number | null
           cover_image_url: string | null
           created_at: string
           expires_at: string | null
@@ -102,6 +104,8 @@ export type Database = {
           access_code?: string | null
           booking_id?: string | null
           category?: string
+          cover_focal_x?: number | null
+          cover_focal_y?: number | null
           cover_image_url?: string | null
           created_at?: string
           expires_at?: string | null
@@ -118,6 +122,8 @@ export type Database = {
           access_code?: string | null
           booking_id?: string | null
           category?: string
+          cover_focal_x?: number | null
+          cover_focal_y?: number | null
           cover_image_url?: string | null
           created_at?: string
           expires_at?: string | null
