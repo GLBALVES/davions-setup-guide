@@ -126,6 +126,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
   };
 
   return (
+    <>
     <div className={`border flex group transition-colors ${
       isExpired
         ? "border-destructive/40 hover:border-destructive/60"
