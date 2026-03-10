@@ -88,6 +88,7 @@ type MenuItem = {
   icon: React.ElementType;
   to?: string;
   end?: boolean;
+  badgeKey?: "pendingBookings" | "draftSessions";
 };
 
 type MenuGroup = {
