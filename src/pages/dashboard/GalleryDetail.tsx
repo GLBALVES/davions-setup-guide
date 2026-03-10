@@ -547,101 +547,142 @@ const GalleryDetail = () => {
             {/* Hero banner */}
             {gallery.cover_image_url ? (
               <>
-                {/* ── Focal-mode: full image picker ──────────────────────── */}
+                {/* ── Focal-mode: full image picker (stays visible until X) ── */}
                 {focalMode && (
                   <div
-                    ref={coverRef}
-                    className="relative w-full bg-black cursor-crosshair select-none"
+                    className="relative w-full bg-black select-none"
                     style={{ minHeight: "280px" }}
-                    onClick={handleFocalClick}
                   >
-                    <img
-                      src={gallery.cover_image_url}
-                      alt={gallery.title}
-                      className="w-full h-auto block pointer-events-none"
-                      style={{ maxHeight: "70vh", objectFit: "contain", margin: "0 auto" }}
-                      draggable={false}
-                    />
-                    {/* Grid overlay */}
-                    <div className="absolute inset-0 pointer-events-none"
-                      style={{
-                        backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)",
-                        backgroundSize: "33.33% 33.33%",
-                      }}
-                    />
-                    {/* Instruction banner */}
-                    <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-3 bg-black/60">
+                    {/* Clickable image area */}
+                    <div
+                      ref={focalImgRef}
+                      className="relative cursor-crosshair"
+                      onClick={handleFocalClick}
+                    >
+                      <img
+                        src={gallery.cover_image_url}
+                        alt={gallery.title}
+                        className="w-full h-auto block pointer-events-none"
+                        style={{ maxHeight: "72vh", objectFit: "contain", margin: "0 auto" }}
+                        draggable={false}
+                      />
+                      {/* Thirds grid overlay */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          backgroundImage:
+                            "linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px)",
+                          backgroundSize: "33.33% 33.33%",
+                        }}
+                      />
+                      {/* Focal dot indicator */}
+                      {(focalPreview || (gallery.cover_focal_x != null && gallery.cover_focal_y != null)) && (
+                        <div
+                          className="absolute pointer-events-none"
+                          style={{
+                            left: `${focalPreview?.x ?? gallery.cover_focal_x}%`,
+                            top: `${focalPreview?.y ?? gallery.cover_focal_y}%`,
+                            transform: "translate(-50%, -50%)",
+                          }}
+                        >
+                          <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg bg-white/20" />
+                          <div className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full bg-white" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Top bar: instruction + close */}
+                    <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-3 bg-black/60 pointer-events-none">
                       <p className="text-white text-[11px] tracking-widest uppercase font-light flex items-center gap-2">
                         <Crosshair className="h-3.5 w-3.5" />
-                        Click on the area to keep in focus
+                        {focalPreview ? "Click again to adjust · preview updated below" : "Click on the area to keep in focus"}
                       </p>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setFocalMode(false); }}
-                        className="text-white/60 hover:text-white text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
-                      >
-                        <X className="h-3.5 w-3.5" /> Cancel
-                      </button>
+                    </div>
+                    <button
+                      onClick={() => { setFocalMode(false); setFocalPreview(null); }}
+                      className="absolute top-2.5 right-3 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
+                      title="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+
+                    {/* Live cover preview strip */}
+                    <div className="w-full border-t border-white/10">
+                      <div className="relative w-full h-24 overflow-hidden">
+                        <img
+                          src={gallery.cover_image_url}
+                          alt="Cover preview"
+                          className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-300"
+                          style={{
+                            objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                        <span className="absolute bottom-2 left-3 text-[9px] tracking-[0.2em] uppercase text-white/60 font-light">
+                          Cover preview
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* ── Normal / preview-after-click mode ──────────────────── */}
-                {!focalMode && (
-                  <div
-                    ref={coverRef}
-                    className="relative w-full h-52 md:h-72 overflow-hidden group"
-                  >
-                    <img
-                      src={gallery.cover_image_url}
-                      alt={gallery.title}
-                      className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-500"
-                      style={{
-                        objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between pointer-events-none">
-                      <div className="flex flex-col gap-1.5">
-                        <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
-                          {gallery.title || "Untitled Gallery"}
-                        </h1>
-                        {(gallery.client_name || gallery.session_title) && (
-                          <div className="flex items-center gap-4 text-[11px] text-white/70">
-                            {gallery.client_name && (
-                              <span className="flex items-center gap-1.5">
-                                <User className="h-3 w-3" />
-                                {gallery.client_name}
-                              </span>
-                            )}
-                            {gallery.session_title && (
-                              <span className="flex items-center gap-1.5">
-                                <Camera className="h-3 w-3" />
-                                {gallery.session_title}
-                              </span>
-                            )}
-                            {gallery.booked_date && (
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="h-3 w-3" />
-                                {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant={gallery.category === "proof" ? "outline" : "default"}
-                          className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
-                        >
-                          {gallery.category === "proof" ? "Proof" : "Final"}
-                        </Badge>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
-                          <span className="text-[10px] tracking-[0.2em] uppercase text-white/70 font-light">{gallery.status}</span>
+                {/* ── Normal cover (always rendered, under focal picker) ──── */}
+                <div
+                  ref={coverRef}
+                  className="relative w-full h-52 md:h-72 overflow-hidden group"
+                >
+                  <img
+                    src={gallery.cover_image_url}
+                    alt={gallery.title}
+                    className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-300"
+                    style={{
+                      objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between pointer-events-none">
+                    <div className="flex flex-col gap-1.5">
+                      <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
+                        {gallery.title || "Untitled Gallery"}
+                      </h1>
+                      {(gallery.client_name || gallery.session_title) && (
+                        <div className="flex items-center gap-4 text-[11px] text-white/70">
+                          {gallery.client_name && (
+                            <span className="flex items-center gap-1.5">
+                              <User className="h-3 w-3" />
+                              {gallery.client_name}
+                            </span>
+                          )}
+                          {gallery.session_title && (
+                            <span className="flex items-center gap-1.5">
+                              <Camera className="h-3 w-3" />
+                              {gallery.session_title}
+                            </span>
+                          )}
+                          {gallery.booked_date && (
+                            <span className="flex items-center gap-1.5">
+                              <Calendar className="h-3 w-3" />
+                              {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
+                            </span>
+                          )}
                         </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge
+                        variant={gallery.category === "proof" ? "outline" : "default"}
+                        className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
+                      >
+                        {gallery.category === "proof" ? "Proof" : "Final"}
+                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-white/70 font-light">{gallery.status}</span>
                       </div>
                     </div>
-                    {/* Cover action buttons */}
+                  </div>
+                  {/* Cover action buttons — hidden in focal mode */}
+                  {!focalMode && (
                     <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => setFocalMode(true)}
@@ -656,8 +697,8 @@ const GalleryDetail = () => {
                         <ImagePlus className="h-3 w-3" /> Change
                       </button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             ) : (
               <div className="px-6 md:px-10 pt-6 pb-0 flex items-center gap-3">
