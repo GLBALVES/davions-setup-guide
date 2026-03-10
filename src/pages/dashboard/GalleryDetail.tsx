@@ -336,6 +336,16 @@ const GalleryDetail = () => {
   useEffect(() => {
     if (!id) return;
 
+    const triggerSyncing = () => {
+      setIsSyncing(true);
+      setSyncCount((n) => n + 1);
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = setTimeout(() => {
+        setIsSyncing(false);
+        setSyncCount(0);
+      }, 4000);
+    };
+
     const channel = supabase
       .channel(`gallery-photos-${id}`)
       .on(
@@ -347,6 +357,7 @@ const GalleryDetail = () => {
           filter: `gallery_id=eq.${id}`,
         },
         (payload) => {
+          triggerSyncing();
           const newPhoto = payload.new as { id: string; filename: string; storage_path: string | null; order_index: number };
           let url: string | undefined;
           if (newPhoto.storage_path) {
@@ -356,15 +367,10 @@ const GalleryDetail = () => {
             url = urlData.publicUrl;
           }
           setPhotos((prev) => {
-            // guard against duplicates (realtime can fire more than once)
             if (prev.some((p) => p.id === newPhoto.id)) return prev;
             return [...prev, { ...newPhoto, url }].sort(
               (a, b) => a.order_index - b.order_index
             );
-          });
-          toast({
-            title: "Nova foto recebida",
-            description: newPhoto.filename,
           });
         }
       )
@@ -372,6 +378,7 @@ const GalleryDetail = () => {
 
     return () => {
       supabase.removeChannel(channel);
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     };
   }, [id]);
 
