@@ -26,6 +26,15 @@ interface CreateGalleryDialogProps {
   onCreated: () => void;
   defaultCategory?: string;
   prefilledBookingId?: string;
+  // Edit mode
+  editGallery?: {
+    id: string;
+    title: string;
+    category: string;
+    cover_image_url?: string | null;
+    booking_id?: string | null;
+    watermark_id?: string | null;
+  } | null;
 }
 
 interface Booking {
@@ -45,14 +54,29 @@ interface Watermark {
   name: string;
 }
 
+function generateSlug(title: string) {
+  return title
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 export function CreateGalleryDialog({
   open,
   onOpenChange,
   onCreated,
   defaultCategory = "proof",
   prefilledBookingId,
+  editGallery,
 }: CreateGalleryDialogProps) {
   const { user } = useAuth();
+  const isEditMode = !!editGallery;
+
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -72,19 +96,27 @@ export function CreateGalleryDialog({
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [selectedWatermarkId, setSelectedWatermarkId] = useState<string>("");
 
-  const isProof = defaultCategory === "proof";
+  const isProof = (isEditMode ? editGallery?.category : defaultCategory) === "proof";
 
-  // Fetch bookings + watermarks when dialog opens
+  // Reset + populate when dialog opens
   useEffect(() => {
     if (!open || !user) return;
 
-    setTitle("");
+    if (isEditMode && editGallery) {
+      setTitle(editGallery.title ?? "");
+      setCoverPreview(editGallery.cover_image_url ?? null);
+      setSelectedBookingId(editGallery.booking_id ?? "");
+      setSelectedWatermarkId(editGallery.watermark_id ?? "");
+    } else {
+      setTitle("");
+      setCoverPreview(null);
+      setSelectedBookingId(prefilledBookingId ?? "");
+      setSelectedWatermarkId("");
+    }
+
     setCoverFile(null);
-    setCoverPreview(null);
-    setSelectedBookingId("");
-    setSelectedSessionId("");
-    setSelectedWatermarkId("");
     setSessions([]);
+    setSelectedSessionId("");
 
     const fetchData = async () => {
       const bookingsRes = await supabase
@@ -102,18 +134,14 @@ export function CreateGalleryDialog({
           .order("created_at", { ascending: true });
       }
 
-      if (bookingsRes.data) {
-        setBookings(bookingsRes.data as Booking[]);
-        // Auto-select booking if prefilled
-        if (prefilledBookingId) setSelectedBookingId(prefilledBookingId);
-      }
+      if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
     };
 
     fetchData();
   }, [open, user]);
 
-  // When client/booking selected, load the session from that booking directly
+  // When booking selected, load its session
   useEffect(() => {
     if (!selectedBookingId) {
       setSessions([]);
@@ -149,11 +177,11 @@ export function CreateGalleryDialog({
     setCoverPreview(URL.createObjectURL(file));
   };
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !user) return;
     setLoading(true);
 
-    let coverImageUrl: string | null = null;
+    let coverImageUrl: string | null = coverFile ? null : (isEditMode ? editGallery?.cover_image_url ?? null : null);
 
     if (coverFile) {
       setUploadingCover(true);
@@ -175,36 +203,48 @@ export function CreateGalleryDialog({
       setUploadingCover(false);
     }
 
-    const autoSlug = title.trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
+    const autoSlug = generateSlug(title.trim());
 
-    const insertPayload: Record<string, string | boolean | null> = {
-      photographer_id: user.id,
-      title: title.trim(),
-      slug: autoSlug || null,
-      category: defaultCategory,
-    };
+    if (isEditMode && editGallery) {
+      // UPDATE
+      const updatePayload: Record<string, string | boolean | null> = {
+        title: title.trim(),
+        slug: autoSlug || null,
+      };
+      if (coverImageUrl !== undefined) updatePayload.cover_image_url = coverImageUrl;
+      if (selectedBookingId) updatePayload.booking_id = selectedBookingId;
+      if (isProof && selectedWatermarkId) updatePayload.watermark_id = selectedWatermarkId;
 
-    if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
-    if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
-    // session_id is not a column on galleries — session is resolved via booking_id
-    if (isProof && selectedWatermarkId) insertPayload.watermark_id = selectedWatermarkId;
-
-    const { error } = await supabase.from("galleries").insert([insertPayload] as any);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      const { error } = await supabase.from("galleries").update(updatePayload as any).eq("id", editGallery.id);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Gallery updated" });
+        onOpenChange(false);
+        onCreated();
+      }
     } else {
-      toast({ title: "Gallery created" });
-      onOpenChange(false);
-      onCreated();
+      // INSERT
+      const insertPayload: Record<string, string | boolean | null> = {
+        photographer_id: user.id,
+        title: title.trim(),
+        slug: autoSlug || null,
+        category: defaultCategory,
+      };
+      if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
+      if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
+      if (isProof && selectedWatermarkId) insertPayload.watermark_id = selectedWatermarkId;
+
+      const { error } = await supabase.from("galleries").insert([insertPayload] as any);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Gallery created" });
+        onOpenChange(false);
+        onCreated();
+      }
     }
+
     setLoading(false);
   };
 
@@ -219,7 +259,7 @@ export function CreateGalleryDialog({
       <DialogContent className="sm:max-w-md rounded-none border-border">
         <DialogHeader>
           <DialogTitle className="text-lg font-light tracking-wide">
-            New {isProof ? "Proof" : "Final"} Gallery
+            {isEditMode ? "Edit Gallery" : `New ${isProof ? "Proof" : "Final"} Gallery`}
           </DialogTitle>
         </DialogHeader>
 
@@ -275,7 +315,7 @@ export function CreateGalleryDialog({
 
           {/* Gallery Name */}
           <div className="flex flex-col gap-2">
-            <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+            <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
               Gallery Name
             </Label>
             <Input
@@ -306,7 +346,7 @@ export function CreateGalleryDialog({
             </Select>
           </div>
 
-          {/* Session — always visible; auto-populated from the selected booking */}
+          {/* Session — auto-populated from booking */}
           <div className="flex flex-col gap-2">
             <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
               Session
@@ -354,12 +394,12 @@ export function CreateGalleryDialog({
           )}
 
           <Button
-            onClick={handleCreate}
+            onClick={handleSubmit}
             disabled={!title.trim() || loading}
             className="w-full mt-2"
             size="lg"
           >
-            {loading ? "Creating…" : "Create Gallery"}
+            {loading ? (isEditMode ? "Saving…" : "Creating…") : (isEditMode ? "Save Changes" : "Create Gallery")}
           </Button>
         </div>
       </DialogContent>

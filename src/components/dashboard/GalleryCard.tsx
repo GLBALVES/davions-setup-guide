@@ -1,4 +1,4 @@
-import { Image, FolderOpen, User } from "lucide-react";
+import { Image, FolderOpen, User, Eye, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
@@ -15,22 +15,22 @@ interface GalleryCardProps {
     client_name?: string | null;
     session_title?: string | null;
   };
+  onEdit?: () => void;
 }
 
-export function GalleryCard({ gallery }: GalleryCardProps) {
+export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
   const date = new Date(gallery.created_at).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 
+  const publicUrl = `/gallery/${gallery.slug ?? gallery.id}`;
+
   return (
-    <Link
-      to={`/dashboard/galleries/${gallery.id}`}
-      className="border border-border p-5 flex flex-col gap-4 hover:border-foreground/30 transition-colors group cursor-pointer no-underline"
-    >
-      {/* Thumbnail placeholder */}
-      <div className="aspect-[4/3] bg-muted flex items-center justify-center overflow-hidden">
+    <div className="border border-border flex flex-col group hover:border-foreground/30 transition-colors">
+      {/* Thumbnail */}
+      <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden">
         {gallery.cover_image_url ? (
           <img
             src={gallery.cover_image_url}
@@ -38,16 +38,21 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+          <div className="w-full h-full flex items-center justify-center">
+            <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+          </div>
         )}
-      </div>
+      </Link>
 
       {/* Info */}
-      <div className="flex flex-col gap-2">
+      <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-light tracking-wide truncate text-foreground">
+          <Link
+            to={`/dashboard/galleries/${gallery.id}`}
+            className="text-sm font-light tracking-wide truncate text-foreground hover:underline underline-offset-2 no-underline"
+          >
             {gallery.title || "Untitled Gallery"}
-          </h3>
+          </Link>
           <Badge
             variant={gallery.category === "proof" ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light shrink-0 rounded-none"
@@ -56,7 +61,6 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           </Badge>
         </div>
 
-        {/* Client + Session */}
         {(gallery.client_name || gallery.session_title) && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
             <User className="h-3 w-3 shrink-0" />
@@ -75,19 +79,44 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           <span>{date}</span>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              gallery.status === "published"
-                ? "bg-green-500"
-                : "bg-muted-foreground/30"
-            }`}
-          />
-          <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-            {gallery.status}
-          </span>
+        {/* Footer row: status + actions */}
+        <div className="flex items-center justify-between mt-auto pt-1">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
+              }`}
+            />
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+              {gallery.status}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {gallery.status === "published" && (
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                title="View public gallery"
+                className="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {onEdit && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
+                title="Edit gallery info"
+                className="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
