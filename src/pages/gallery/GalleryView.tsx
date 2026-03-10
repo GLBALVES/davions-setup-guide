@@ -684,9 +684,9 @@ const GalleryView = () => {
             )}
             <div className="flex flex-col gap-2">
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                Seu nome <span className="normal-case tracking-normal text-muted-foreground/50">(opcional)</span>
+                Your name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
               </Label>
-              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Silva" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jane Smith" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
             <div className="flex flex-col gap-2">
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
