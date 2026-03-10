@@ -119,7 +119,7 @@ const GalleryDetail = () => {
   const publicSlugOrId = gallery?.slug ?? id;
   const publicUrl = `${window.location.origin}/gallery/${publicSlugOrId}`;
 
-  // ── Fetch gallery + photos ──────────────────────────────────────────────────
+  // ── Fetch gallery + photos + watermarks ────────────────────────────────────
   const fetchGallery = useCallback(async () => {
     if (!id) return;
     const { data } = await supabase
@@ -143,8 +143,19 @@ const GalleryDetail = () => {
         booked_date: raw.bookings?.booked_date ?? null,
       } as Gallery);
       setAccessCode(raw.access_code ?? "");
+      setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
     }
   }, [id]);
+
+  const fetchWatermarks = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("watermarks")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) setWatermarks(data as Watermark[]);
+  }, [user]);
 
   const fetchPhotos = useCallback(async () => {
     if (!id) return;
@@ -172,11 +183,11 @@ const GalleryDetail = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchGallery(), fetchPhotos()]);
+      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks()]);
       setLoading(false);
     };
     init();
-  }, [fetchGallery, fetchPhotos]);
+  }, [fetchGallery, fetchPhotos, fetchWatermarks]);
 
   // ── Upload logic ─────────────────────────────────────────────────────────────
   const uploadFiles = async (files: FileList | File[]) => {
