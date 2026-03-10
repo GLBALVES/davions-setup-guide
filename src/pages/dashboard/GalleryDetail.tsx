@@ -54,6 +54,9 @@ import {
   ChevronDown,
   CalendarClock,
   Crosshair,
+  ZoomIn,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -123,9 +126,10 @@ interface Watermark {
 interface SortablePhotoProps {
   photo: Photo;
   onRequestDelete: (photo: Photo) => void;
+  onPreview: (photo: Photo) => void;
 }
 
-const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
@@ -162,7 +166,14 @@ const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
           <span className="text-[10px] text-muted-foreground">No preview</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
+          className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </button>
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
@@ -201,6 +212,7 @@ const GalleryDetail = () => {
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -620,6 +632,18 @@ const GalleryDetail = () => {
     );
   };
 
+  // ── Lightbox keyboard navigation ─────────────────────────────────────────────
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxIndex(null);
+      if (e.key === "ArrowRight") setLightboxIndex((i) => i !== null && i < photos.length - 1 ? i + 1 : i);
+      if (e.key === "ArrowLeft") setLightboxIndex((i) => i !== null && i > 0 ? i - 1 : i);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxIndex, photos.length]);
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -995,9 +1019,14 @@ const GalleryDetail = () => {
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {photos.map((photo) => (
-                          <SortablePhoto key={photo.id} photo={photo} onRequestDelete={setPhotoToDelete} />
-                        ))}
+                        {photos.map((photo, idx) => (
+                           <SortablePhoto
+                             key={photo.id}
+                             photo={photo}
+                             onRequestDelete={setPhotoToDelete}
+                             onPreview={() => setLightboxIndex(idx)}
+                           />
+                         ))}
                       </div>
                     </SortableContext>
                   </DndContext>
@@ -1340,6 +1369,61 @@ const GalleryDetail = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && photos[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Close */}
+          <button
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
+            onClick={() => setLightboxIndex(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/50 text-[11px] tracking-[0.3em] uppercase z-10">
+            {lightboxIndex + 1} / {photos.length}
+          </div>
+
+          {/* Filename */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-[10px] tracking-widest uppercase z-10 truncate max-w-xs text-center">
+            {photos[lightboxIndex].filename}
+          </div>
+
+          {/* Prev */}
+          {lightboxIndex > 0 && (
+            <button
+              className="absolute left-4 text-white/50 hover:text-white transition-colors z-10 p-2"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i ?? 0) - 1); }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+          )}
+
+          {/* Next */}
+          {lightboxIndex < photos.length - 1 && (
+            <button
+              className="absolute right-4 text-white/50 hover:text-white transition-colors z-10 p-2"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i ?? 0) + 1); }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={photos[lightboxIndex].url}
+            alt={photos[lightboxIndex].filename}
+            className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+            draggable={false}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </SidebarProvider>
   );
 };
