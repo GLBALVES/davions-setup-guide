@@ -316,15 +316,6 @@ Guidelines:
     await supabase.from("support_tickets").update({ ai_mode: mode }).eq("id", selectedTicket.id);
     setSelectedTicket((prev) => prev ? { ...prev, ai_mode: mode } : null);
   };
-  // Update agent field
-  const selectedAgent = agents.find(a => a.slug === selectedAgentSlug);
-
-  const updateAgentField = async (field: string, value: any) => {
-    if (!selectedAgent) return;
-    await supabase.from("ai_agents" as any).update({ [field]: value } as any).eq("id", selectedAgent.id);
-    setAgents(prev => prev.map(a => a.id === selectedAgent.id ? { ...a, [field]: value } : a));
-    toast.success("Agent updated");
-  };
 
 
   const saveNotes = async () => {
