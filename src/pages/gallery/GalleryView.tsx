@@ -667,11 +667,11 @@ const GalleryView = () => {
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              {isFree ? "Enviar Seleção" : "Comprar Seleção"}
+              {isFree ? "Submit Selection" : "Purchase Selection"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {favCount} foto{favCount !== 1 ? "s" : ""} selecionada{favCount !== 1 ? "s" : ""}
-              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} cada · Total: ${formatCurrency(totalPrice)}`}
+              {favCount} photo{favCount !== 1 ? "s" : ""} selected
+              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} each · Total: ${formatCurrency(totalPrice)}`}
             </DialogDescription>
           </DialogHeader>
 
