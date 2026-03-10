@@ -58,6 +58,8 @@ import {
   ZoomIn,
   ChevronLeft,
   ChevronRight,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import {
   Dialog,
@@ -128,9 +130,12 @@ interface SortablePhotoProps {
   photo: Photo;
   onRequestDelete: (photo: Photo) => void;
   onPreview: (photo: Photo) => void;
+  isSelected: boolean;
+  isSelecting: boolean;
+  onToggleSelect: (id: string) => void;
 }
 
-const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
@@ -151,9 +156,14 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps
     <div
       ref={setNodeRef}
       style={style}
-      className="relative group aspect-square bg-muted overflow-hidden cursor-grab active:cursor-grabbing"
-      {...attributes}
-      {...listeners}
+      className={cn(
+        "relative group aspect-square bg-muted overflow-hidden",
+        isSelecting ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+        isSelected && "ring-2 ring-primary ring-offset-1"
+      )}
+      {...(isSelecting ? {} : attributes)}
+      {...(isSelecting ? {} : listeners)}
+      onClick={isSelecting ? () => onToggleSelect(photo.id) : undefined}
     >
       {photo.url ? (
         <img
@@ -167,22 +177,42 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps
           <span className="text-[10px] text-muted-foreground">No preview</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
-          className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </button>
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
-          className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+
+      {/* Selection checkbox */}
+      {isSelecting && (
+        <div className="absolute top-2 left-2 z-10">
+          {isSelected ? (
+            <CheckSquare className="h-5 w-5 text-primary drop-shadow" />
+          ) : (
+            <Square className="h-5 w-5 text-white/80 drop-shadow" />
+          )}
+        </div>
+      )}
+
+      {/* Selected overlay */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
+      )}
+
+      {/* Hover actions (only when not selecting) */}
+      {!isSelecting && (
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -215,6 +245,10 @@ const GalleryDetail = () => {
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const [deleteGalleryOpen, setDeleteGalleryOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [deletingSelected, setDeletingSelected] = useState(false);
+  const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -383,6 +417,41 @@ const GalleryDetail = () => {
     await supabase.from("photos").delete().eq("id", photo.id);
     setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
     toast({ title: "Photo removed" });
+  };
+
+  // ── Bulk delete selected photos ──────────────────────────────────────────────
+  const deleteSelectedPhotosBulk = async () => {
+    if (selectedPhotos.size === 0) return;
+    setDeletingSelected(true);
+    const toDelete = photos.filter((p) => selectedPhotos.has(p.id));
+    const paths = toDelete.map((p) => p.storage_path).filter(Boolean) as string[];
+    if (paths.length > 0) {
+      await supabase.storage.from("gallery-photos").remove(paths);
+    }
+    const ids = toDelete.map((p) => p.id);
+    await supabase.from("photos").delete().in("id", ids);
+    setPhotos((prev) => prev.filter((p) => !selectedPhotos.has(p.id)));
+    setSelectedPhotos(new Set());
+    setIsSelecting(false);
+    setDeletingSelected(false);
+    toast({ title: `${toDelete.length} photo${toDelete.length !== 1 ? "s" : ""} removed` });
+  };
+
+  const toggleSelectPhoto = (id: string) => {
+    setSelectedPhotos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPhotos.size === photos.length) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map((p) => p.id)));
+    }
   };
 
   // ── Toggle publish ──────────────────────────────────────────────────────────
@@ -1007,11 +1076,55 @@ const GalleryDetail = () => {
               {/* Photo grid — drag to reorder */}
               {photos.length > 0 && (
                 <div className="flex flex-col gap-4">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                    <span className="inline-block w-6 h-px bg-border" />
-                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
-                    <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
-                  </p>
+                  {/* Toolbar */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                      <span className="inline-block w-6 h-px bg-border" />
+                      {isSelecting
+                        ? `${selectedPhotos.size} selected`
+                        : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
+                      {!isSelecting && (
+                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {isSelecting ? (
+                        <>
+                          <button
+                            onClick={toggleSelectAll}
+                            className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {selectedPhotos.size === photos.length ? "Deselect all" : "Select all"}
+                          </button>
+                          {selectedPhotos.size > 0 && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setDeleteSelectedOpen(true)}
+                              className="gap-1.5 text-xs tracking-wider uppercase font-light h-7"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Delete {selectedPhotos.size}
+                            </Button>
+                          )}
+                          <button
+                            onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
+                            className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setIsSelecting(true)}
+                          className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                        >
+                          <CheckSquare className="h-3.5 w-3.5" />
+                          Select
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1021,6 +1134,9 @@ const GalleryDetail = () => {
                              photo={photo}
                              onRequestDelete={setPhotoToDelete}
                              onPreview={() => setLightboxIndex(idx)}
+                             isSelected={selectedPhotos.has(photo.id)}
+                             isSelecting={isSelecting}
+                             onToggleSelect={toggleSelectPhoto}
                            />
                          ))}
                       </div>
@@ -1183,8 +1299,8 @@ const GalleryDetail = () => {
                   <div className="flex items-center justify-between">
                     {gallery.access_code ? (
                       <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-green-600 flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
+                        <p className="text-[10px] text-primary flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
                           Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
                         </p>
                         <button
@@ -1192,7 +1308,7 @@ const GalleryDetail = () => {
                           className="text-muted-foreground/50 hover:text-foreground transition-colors"
                           title="Copy code"
                         >
-                          {copiedCode ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                          {copiedCode ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                         </button>
                       </div>
                     ) : (
@@ -1361,6 +1477,30 @@ const GalleryDetail = () => {
               }}
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteSelectedOpen} onOpenChange={setDeleteSelectedOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove <strong>{selectedPhotos.size}</strong> selected photo{selectedPhotos.size !== 1 ? "s" : ""} from the gallery. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setDeleteSelectedOpen(false);
+                await deleteSelectedPhotosBulk();
+              }}
+              disabled={deletingSelected}
+            >
+              {deletingSelected ? "Deleting…" : `Delete ${selectedPhotos.size}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
