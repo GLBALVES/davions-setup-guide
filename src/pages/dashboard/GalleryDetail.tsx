@@ -215,7 +215,8 @@ const SortablePhoto = React.forwardRef<HTMLDivElement, SortablePhotoProps>(({ ph
       )}
     </div>
   );
-};
+});
+SortablePhoto.displayName = "SortablePhoto";
 
 
 
