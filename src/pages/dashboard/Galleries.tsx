@@ -18,6 +18,8 @@ interface Gallery {
   status: string;
   created_at: string;
   photo_count: number;
+  client_name?: string | null;
+  session_title?: string | null;
 }
 
 const Galleries = () => {
