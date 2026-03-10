@@ -547,86 +547,69 @@ const GalleryDetail = () => {
             {/* Hero banner */}
             {gallery.cover_image_url ? (
               <>
-                {/* ── Focal-mode: full image picker (stays visible until X) ── */}
+                {/* ── Focal point modal ───────────────────────────────────── */}
                 {focalMode && (
-                  <div
-                    className="relative w-full bg-black select-none"
-                    style={{ minHeight: "280px" }}
-                  >
-                    {/* Clickable image area */}
-                    <div
-                      ref={focalImgRef}
-                      className="relative cursor-crosshair"
-                      onClick={handleFocalClick}
-                    >
-                      <img
-                        src={gallery.cover_image_url}
-                        alt={gallery.title}
-                        className="w-full h-auto block pointer-events-none"
-                        style={{ maxHeight: "72vh", objectFit: "contain", margin: "0 auto" }}
-                        draggable={false}
-                      />
-                      {/* Thirds grid overlay */}
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          backgroundImage:
-                            "linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px)",
-                          backgroundSize: "33.33% 33.33%",
-                        }}
-                      />
-                      {/* Focal dot indicator */}
-                      {(focalPreview || (gallery.cover_focal_x != null && gallery.cover_focal_y != null)) && (
-                        <div
-                          className="absolute pointer-events-none"
-                          style={{
-                            left: `${focalPreview?.x ?? gallery.cover_focal_x}%`,
-                            top: `${focalPreview?.y ?? gallery.cover_focal_y}%`,
-                            transform: "translate(-50%, -50%)",
-                          }}
-                        >
-                          <div className="h-5 w-5 rounded-full border-2 border-white shadow-lg bg-white/20" />
-                          <div className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full bg-white" style={{ top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="bg-background rounded-none shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+                      {/* Modal header */}
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                        <div className="flex items-center gap-2">
+                          <Crosshair className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-[11px] tracking-[0.2em] uppercase font-light text-foreground">
+                            Set focal point
+                          </span>
                         </div>
-                      )}
-                    </div>
+                        <button
+                          onClick={() => { setFocalMode(false); setFocalPreview(null); }}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
 
-                    {/* Top bar: instruction + close */}
-                    <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-3 bg-black/60 pointer-events-none">
-                      <p className="text-white text-[11px] tracking-widest uppercase font-light flex items-center gap-2">
-                        <Crosshair className="h-3.5 w-3.5" />
-                        {focalPreview ? "Click again to adjust · preview updated below" : "Click on the area to keep in focus"}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => { setFocalMode(false); setFocalPreview(null); }}
-                      className="absolute top-2.5 right-3 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
-                      title="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-
-                    {/* Live cover preview strip */}
-                    <div className="w-full border-t border-white/10">
-                      <div className="relative w-full h-24 overflow-hidden">
+                      {/* Clickable image */}
+                      <div
+                        ref={focalImgRef}
+                        className="relative cursor-crosshair select-none"
+                        onClick={handleFocalClick}
+                      >
                         <img
                           src={gallery.cover_image_url}
-                          alt="Cover preview"
-                          className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-300"
-                          style={{
-                            objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
-                          }}
+                          alt={gallery.title}
+                          className="w-full block pointer-events-none"
+                          style={{ maxHeight: "55vh", objectFit: "contain" }}
+                          draggable={false}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-                        <span className="absolute bottom-2 left-3 text-[9px] tracking-[0.2em] uppercase text-white/60 font-light">
-                          Cover preview
-                        </span>
+                        {/* Focal dot */}
+                        {(focalPreview || gallery.cover_focal_x != null) && (
+                          <div
+                            className="absolute pointer-events-none"
+                            style={{
+                              left: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}%`,
+                              top: `${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
+                              transform: "translate(-50%, -50%)",
+                            }}
+                          >
+                            <div className="h-7 w-7 rounded-full border-[3px] border-primary bg-primary/20 shadow-lg" />
+                            <div
+                              className="absolute rounded-full bg-primary"
+                              style={{ width: 8, height: 8, top: "50%", left: "50%", transform: "translate(-50%,-50%)" }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer hint */}
+                      <div className="px-5 py-3 border-t border-border">
+                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                          {focalPreview ? "Click to reposition · preview updated on cover" : "Click anywhere on the image to set focus"}
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ── Normal cover (always rendered, under focal picker) ──── */}
+                {/* ── Cover hero (always visible, updates in real-time) ───── */}
                 <div
                   ref={coverRef}
                   className="relative w-full h-52 md:h-72 overflow-hidden group"
@@ -681,23 +664,21 @@ const GalleryDetail = () => {
                       </div>
                     </div>
                   </div>
-                  {/* Cover action buttons — hidden in focal mode */}
-                  {!focalMode && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => setFocalMode(true)}
-                        className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
-                      >
-                        <Crosshair className="h-3 w-3" /> Focus
-                      </button>
-                      <button
-                        onClick={() => setCoverPickerOpen(true)}
-                        className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
-                      >
-                        <ImagePlus className="h-3 w-3" /> Change
-                      </button>
-                    </div>
-                  )}
+                  {/* Cover action buttons */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => setFocalMode(true)}
+                      className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                    >
+                      <Crosshair className="h-3 w-3" /> Focus
+                    </button>
+                    <button
+                      onClick={() => setCoverPickerOpen(true)}
+                      className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                    >
+                      <ImagePlus className="h-3 w-3" /> Change
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (
