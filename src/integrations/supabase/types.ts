@@ -84,7 +84,9 @@ export type Database = {
       galleries: {
         Row: {
           access_code: string | null
+          booking_id: string | null
           category: string
+          cover_image_url: string | null
           created_at: string
           id: string
           photographer_id: string
@@ -92,10 +94,13 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          watermark_url: string | null
         }
         Insert: {
           access_code?: string | null
+          booking_id?: string | null
           category?: string
+          cover_image_url?: string | null
           created_at?: string
           id?: string
           photographer_id: string
@@ -103,10 +108,13 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          watermark_url?: string | null
         }
         Update: {
           access_code?: string | null
+          booking_id?: string | null
           category?: string
+          cover_image_url?: string | null
           created_at?: string
           id?: string
           photographer_id?: string
@@ -114,8 +122,16 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          watermark_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "galleries_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "galleries_photographer_id_fkey"
             columns: ["photographer_id"]
