@@ -1299,8 +1299,8 @@ const GalleryDetail = () => {
                   <div className="flex items-center justify-between">
                     {gallery.access_code ? (
                       <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-green-600 flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
+                        <p className="text-[10px] text-primary flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
                           Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
                         </p>
                         <button
@@ -1308,7 +1308,7 @@ const GalleryDetail = () => {
                           className="text-muted-foreground/50 hover:text-foreground transition-colors"
                           title="Copy code"
                         >
-                          {copiedCode ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                          {copiedCode ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                         </button>
                       </div>
                     ) : (
