@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   LogOut,
   ChevronRight,
@@ -39,6 +39,8 @@ import {
   BookOpen,
   PanelLeftClose,
   PanelLeftOpen,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -56,6 +58,12 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 type MenuItem = {
   title: string;
@@ -71,15 +79,10 @@ type MenuGroup = {
   defaultOpen?: boolean;
 };
 
+// All pinnable items across all groups (flat list for lookup)
+const ALL_ITEMS: (MenuItem & { groupTitle: string })[] = [];
+
 const groups: MenuGroup[] = [
-  {
-    title: "Favorites",
-    icon: Star,
-    defaultOpen: true,
-    items: [
-      { title: "Starred Functions", icon: Star },
-    ],
-  },
   {
     title: "Photographers",
     icon: Camera,
@@ -159,6 +162,33 @@ const groups: MenuGroup[] = [
   },
 ];
 
+// Build flat lookup after groups are defined
+groups.forEach((g) => {
+  g.items.forEach((item) => {
+    ALL_ITEMS.push({ ...item, groupTitle: g.title });
+  });
+});
+
+const FAVORITES_KEY = "davions_sidebar_favorites";
+
+function loadFavorites(): string[] {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(keys: string[]) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(keys));
+}
+
+// Unique key for a menu item (group:title)
+function itemKey(groupTitle: string, itemTitle: string) {
+  return `${groupTitle}:${itemTitle}`;
+}
+
 interface DashboardSidebarProps {
   onSignOut: () => void;
   userEmail?: string | null;
@@ -168,6 +198,27 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+
+  const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
+
+  const togglePin = useCallback((groupTitle: string, item: MenuItem) => {
+    const key = itemKey(groupTitle, item.title);
+    setPinnedKeys((prev) => {
+      const next = prev.includes(key)
+        ? prev.filter((k) => k !== key)
+        : [...prev, key];
+      saveFavorites(next);
+      return next;
+    });
+  }, []);
+
+  const isPinned = (groupTitle: string, itemTitle: string) =>
+    pinnedKeys.includes(itemKey(groupTitle, itemTitle));
+
+  // Build the live favorites list from pinned keys
+  const favoriteItems: (MenuItem & { groupTitle: string })[] = pinnedKeys
+    .map((key) => ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
+    .filter((i): i is MenuItem & { groupTitle: string } => !!i);
 
   const isItemActive = (item: MenuItem): boolean => {
     if (!item.to) return false;
@@ -188,7 +239,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     group.items.some((item) => isItemActive(item));
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
+    const initial: Record<string, boolean> = { Favorites: true };
     groups.forEach((g) => {
       initial[g.title] = g.defaultOpen || groupHasActive(g);
     });
@@ -197,6 +248,57 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
   const toggleGroup = (title: string) => {
     setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const renderItem = (item: MenuItem, groupTitle: string) => {
+    const pinned = isPinned(groupTitle, item.title);
+    const content = item.to ? (
+      <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
+        <NavLink
+          to={item.to}
+          end={item.end}
+          className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
+        >
+          <item.icon className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>{item.title}</span>}
+        </NavLink>
+      </SidebarMenuButton>
+    ) : (
+      <SidebarMenuButton
+        disabled
+        tooltip={item.title}
+        className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span>{item.title}</span>}
+      </SidebarMenuButton>
+    );
+
+    return (
+      <SidebarMenuItem key={`${groupTitle}:${item.title}`}>
+        <ContextMenu>
+          <ContextMenuTrigger asChild>{content}</ContextMenuTrigger>
+          <ContextMenuContent className="text-xs">
+            <ContextMenuItem
+              className="gap-2 text-xs cursor-pointer"
+              onClick={() => togglePin(groupTitle, item)}
+            >
+              {pinned ? (
+                <>
+                  <PinOff className="h-3.5 w-3.5" />
+                  Unpin from Favorites
+                </>
+              ) : (
+                <>
+                  <Pin className="h-3.5 w-3.5" />
+                  Pin to Favorites
+                </>
+              )}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      </SidebarMenuItem>
+    );
   };
 
   return (
@@ -219,6 +321,46 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
           </button>
         </div>
 
+        {/* Favorites group */}
+        <Collapsible
+          open={!collapsed && openGroups["Favorites"]}
+          onOpenChange={() => toggleGroup("Favorites")}
+        >
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
+                {collapsed ? (
+                  <Star className="h-4 w-4 shrink-0 mx-auto" />
+                ) : (
+                  <>
+                    <Star className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 text-left">Favorites</span>
+                    <ChevronRight
+                      className="h-3 w-3 shrink-0 transition-transform duration-200"
+                      style={{ transform: openGroups["Favorites"] ? "rotate(90deg)" : "rotate(0deg)" }}
+                    />
+                  </>
+                )}
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu className="pl-3">
+                  {favoriteItems.length === 0 ? (
+                    <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
+                      Right-click any item to pin it here
+                    </p>
+                  ) : (
+                    favoriteItems.map((item) => renderItem(item, item.groupTitle))
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        {/* Regular groups */}
         {groups.map((group) => (
           <Collapsible
             key={group.title}
@@ -248,35 +390,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu className="pl-3">
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        {item.to ? (
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isItemActive(item)}
-                            tooltip={item.title}
-                          >
-                            <NavLink
-                              to={item.to}
-                              end={item.end}
-                              className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
-                            >
-                              <item.icon className="h-4 w-4 shrink-0" />
-                              {!collapsed && <span>{item.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        ) : (
-                          <SidebarMenuButton
-                            disabled
-                            tooltip={item.title}
-                            className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
-                          >
-                            <item.icon className="h-4 w-4 shrink-0" />
-                            {!collapsed && <span>{item.title}</span>}
-                          </SidebarMenuButton>
-                        )}
-                      </SidebarMenuItem>
-                    ))}
+                    {group.items.map((item) => renderItem(item, group.title))}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>
