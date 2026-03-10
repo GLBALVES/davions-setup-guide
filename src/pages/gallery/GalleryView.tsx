@@ -497,9 +497,9 @@ const GalleryView = () => {
                 autoFocus
                 className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.4em] uppercase font-mono text-base h-12 ${codeError ? "border-destructive focus-visible:border-destructive" : ""}`}
               />
-              {codeError && <p className="text-xs text-destructive text-center">Código incorreto — tente novamente.</p>}
+              {codeError && <p className="text-xs text-destructive text-center">Incorrect code — please try again.</p>}
               <Button onClick={handleUnlock} className="w-full h-11 tracking-widest uppercase text-xs font-light" disabled={!codeInput.trim()}>
-                Desbloquear Galeria
+                Unlock Gallery
               </Button>
             </div>
           </div>
