@@ -16,6 +16,8 @@ interface Gallery {
   access_code: string | null;
   photographer_id: string;
   cover_image_url: string | null;
+  cover_focal_x: number | null;
+  cover_focal_y: number | null;
 }
 
 interface Photo {
@@ -47,7 +49,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y")
         .eq("status", "published");
 
       if (isUuid) {
@@ -218,6 +220,9 @@ const GalleryView = () => {
                 src={gallery.cover_image_url}
                 alt={gallery.title}
                 className="w-full h-full object-cover"
+                style={{
+                  objectPosition: `${gallery.cover_focal_x ?? 50}% ${gallery.cover_focal_y ?? 50}%`,
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-6 flex items-end justify-between">
