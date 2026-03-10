@@ -135,6 +135,7 @@ export type Database = {
           hero_image_url: string | null
           id: string
           store_slug: string | null
+          watermark_url: string | null
         }
         Insert: {
           bio?: string | null
@@ -145,6 +146,7 @@ export type Database = {
           hero_image_url?: string | null
           id: string
           store_slug?: string | null
+          watermark_url?: string | null
         }
         Update: {
           bio?: string | null
@@ -155,6 +157,7 @@ export type Database = {
           hero_image_url?: string | null
           id?: string
           store_slug?: string | null
+          watermark_url?: string | null
         }
         Relationships: []
       }

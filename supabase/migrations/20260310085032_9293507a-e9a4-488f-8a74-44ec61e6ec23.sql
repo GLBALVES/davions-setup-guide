@@ -1,0 +1,1 @@
+ALTER TABLE public.photographers ADD COLUMN IF NOT EXISTS watermark_url text;
