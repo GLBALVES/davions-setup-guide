@@ -438,15 +438,21 @@ const GalleryDetail = () => {
   const handleFocalClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     if (!gallery || !focalMode || !coverRef.current) return;
     const rect = coverRef.current.getBoundingClientRect();
+    // In focal mode the image is object-contain, so we need to map click coords
+    // back to percentage relative to the full container (= object-position space)
     const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    // 1) instantly show cropped preview
+    setFocalPreview({ x, y });
+    setFocalMode(false);
+    // 2) persist in background
     const { error } = await supabase
       .from("galleries")
       .update({ cover_focal_x: x, cover_focal_y: y } as any)
       .eq("id", gallery.id);
     if (!error) {
       setGallery((g) => g ? { ...g, cover_focal_x: x, cover_focal_y: y } : g);
-      setFocalMode(false);
+      setFocalPreview(null);
       toast({ title: "Focus point saved" });
     }
   };
