@@ -112,6 +112,7 @@ interface Photo {
   storage_path: string | null;
   order_index: number;
   url?: string;
+  favorite_count?: number;
 }
 
 interface UploadItem {
