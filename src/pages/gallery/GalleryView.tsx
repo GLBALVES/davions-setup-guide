@@ -18,6 +18,7 @@ interface Gallery {
   cover_image_url: string | null;
   cover_focal_x: number | null;
   cover_focal_y: number | null;
+  expires_at: string | null;
 }
 
 interface Photo {
