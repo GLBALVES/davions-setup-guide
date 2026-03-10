@@ -601,13 +601,12 @@ const GalleryView = () => {
                       {/* Proof: hover overlay */}
                       {isProof && (
                         <div
-                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
                           style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             onClick={(e) => toggleFavorite(e, photo)}
-                            className={`flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
+                            className={`pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
                               ${isFav
                                 ? "bg-rose-500 text-white hover:bg-rose-600"
                                 : "bg-white text-black hover:bg-rose-500 hover:text-white"
