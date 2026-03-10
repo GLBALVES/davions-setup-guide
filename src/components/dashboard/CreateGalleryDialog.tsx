@@ -177,7 +177,7 @@ export function CreateGalleryDialog({
 
     if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
     if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
-    if (selectedSessionId) insertPayload.session_id = selectedSessionId;
+    // session_id is not a column on galleries — session is resolved via booking_id
     if (isProof && selectedWatermarkId) insertPayload.watermark_id = selectedWatermarkId;
 
     const { error } = await supabase.from("galleries").insert([insertPayload] as any);
