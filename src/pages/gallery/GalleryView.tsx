@@ -648,7 +648,7 @@ const GalleryView = () => {
                           value={noteVal}
                           onChange={(e) => handleNoteChange(photo.id, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          placeholder="Sua observação sobre esta foto…"
+                          placeholder="Your note about this photo…"
                           className="text-xs rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground min-h-[60px] resize-none leading-snug placeholder:text-muted-foreground/40"
                         />
                       )}
