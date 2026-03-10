@@ -635,7 +635,7 @@ const GalleryView = () => {
                               ? "text-foreground"
                               : "text-muted-foreground/50 hover:text-muted-foreground"
                           }`}
-                          title="Adicionar observação"
+                          title="Add note"
                         >
                           <MessageSquare className="h-3 w-3" />
                           {noteVal ? <span className="text-[9px]">Nota</span> : null}
