@@ -613,8 +613,8 @@ const GalleryView = () => {
                                 : "bg-white text-black hover:bg-rose-500 hover:text-white"
                               }`}
                           >
-                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                            {isFav ? "Remover" : "Selecionar"}
+                          <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                            {isFav ? "Remove" : "Select"}
                           </button>
                         </div>
                       )}
