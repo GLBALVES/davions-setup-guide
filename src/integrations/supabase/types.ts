@@ -1320,6 +1320,97 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          attachment_url: string | null
+          content: string
+          created_at: string
+          id: string
+          role: string
+          ticket_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          ticket_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          ai_mode: string
+          client_email: string
+          client_name: string
+          closed_at: string | null
+          created_at: string
+          id: string
+          internal_notes: string | null
+          photographer_id: string
+          rating: number | null
+          rating_comment: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          ai_mode?: string
+          client_email?: string
+          client_name?: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          photographer_id: string
+          rating?: number | null
+          rating_comment?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_mode?: string
+          client_email?: string
+          client_name?: string
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          photographer_id?: string
+          rating?: number | null
+          rating_comment?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_occurrences: {
         Row: {
           actual_minutes: number | null
