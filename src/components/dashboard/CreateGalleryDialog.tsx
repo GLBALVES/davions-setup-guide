@@ -39,7 +39,17 @@ interface Session {
   title: string;
 }
 
-export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCategory = "proof" }: CreateGalleryDialogProps) {
+interface Watermark {
+  id: string;
+  name: string;
+}
+
+export function CreateGalleryDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  defaultCategory = "proof",
+}: CreateGalleryDialogProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,13 +66,13 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
 
-  // Watermark (proof only)
-  const [watermarkUrl, setWatermarkUrl] = useState<string | null>(null);
-  const [applyWatermark, setApplyWatermark] = useState(true);
+  // Watermarks (proof only)
+  const [watermarks, setWatermarks] = useState<Watermark[]>([]);
+  const [selectedWatermarkId, setSelectedWatermarkId] = useState<string>("");
 
   const isProof = defaultCategory === "proof";
 
-  // Fetch bookings + watermark when dialog opens
+  // Fetch bookings + watermarks when dialog opens
   useEffect(() => {
     if (!open || !user) return;
 
@@ -71,24 +81,32 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
     setCoverPreview(null);
     setSelectedBookingId("");
     setSelectedSessionId("");
+    setSelectedWatermarkId("");
     setSessions([]);
 
     const fetchData = async () => {
-      const [{ data: bookingsData }, { data: photographerData }] = await Promise.all([
+      const queries: Promise<any>[] = [
         supabase
           .from("bookings")
           .select("id, client_name, client_email, session_id")
           .eq("photographer_id", user.id)
           .order("created_at", { ascending: false }),
-        supabase
-          .from("photographers")
-          .select("watermark_url")
-          .eq("id", user.id)
-          .single(),
-      ]);
+      ];
 
-      if (bookingsData) setBookings(bookingsData as Booking[]);
-      if (photographerData) setWatermarkUrl((photographerData as { watermark_url?: string | null }).watermark_url ?? null);
+      if (isProof) {
+        queries.push(
+          (supabase as any)
+            .from("watermarks")
+            .select("id, name")
+            .eq("photographer_id", user.id)
+            .order("created_at", { ascending: true })
+        );
+      }
+
+      const [bookingsRes, watermarksRes] = await Promise.all(queries);
+
+      if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
+      if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
     };
 
     fetchData();
@@ -105,7 +123,6 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
     const booking = bookings.find((b) => b.id === selectedBookingId);
     if (!booking) return;
 
-    // Fetch all sessions booked by same client (same session_id from matching bookings)
     const clientSessionIds = bookings
       .filter((b) => b.client_email === booking.client_email)
       .map((b) => b.session_id);
@@ -116,8 +133,6 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
         .select("id, title")
         .in("id", clientSessionIds);
       if (data) setSessions(data as Session[]);
-
-      // Auto-select if only one
       if (data?.length === 1) setSelectedSessionId(data[0].id);
       else setSelectedSessionId("");
     };
@@ -138,7 +153,6 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
 
     let coverImageUrl: string | null = null;
 
-    // Upload cover if provided
     if (coverFile) {
       setUploadingCover(true);
       const ext = coverFile.name.split(".").pop();
@@ -168,7 +182,7 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
     if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
     if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
     if (selectedSessionId) insertPayload.session_id = selectedSessionId;
-    if (isProof && watermarkUrl) insertPayload.watermark_url = applyWatermark ? watermarkUrl : null;
+    if (isProof && selectedWatermarkId) insertPayload.watermark_id = selectedWatermarkId;
 
     const { error } = await supabase.from("galleries").insert([insertPayload] as any);
 
@@ -187,8 +201,6 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
     if (!acc.find((x) => x.client_email === b.client_email)) acc.push(b);
     return acc;
   }, []);
-
-  const selectedBooking = bookings.find((b) => b.id === selectedBookingId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -264,13 +276,10 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
 
           {/* Client */}
           <div className="flex flex-col gap-2">
-            <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+            <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
               Client
             </Label>
-            <Select
-              value={selectedBookingId}
-              onValueChange={setSelectedBookingId}
-            >
+            <Select value={selectedBookingId} onValueChange={setSelectedBookingId}>
               <SelectTrigger className="rounded-none border-border focus:ring-0">
                 <SelectValue placeholder={uniqueClients.length === 0 ? "No bookings yet" : "Select client…"} />
               </SelectTrigger>
@@ -288,13 +297,10 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
           {/* Session — only shown after client selected */}
           {selectedBookingId && (
             <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
                 Session
               </Label>
-              <Select
-                value={selectedSessionId}
-                onValueChange={setSelectedSessionId}
-              >
+              <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
                 <SelectTrigger className="rounded-none border-border focus:ring-0">
                   <SelectValue placeholder="Select session…" />
                 </SelectTrigger>
@@ -310,32 +316,30 @@ export function CreateGalleryDialog({ open, onOpenChange, onCreated, defaultCate
           )}
 
           {/* Watermark — only for proof galleries */}
-          {isProof && watermarkUrl && (
-            <div className="flex items-center justify-between border border-border p-3">
-              <div className="flex items-center gap-3">
-                <img src={watermarkUrl} alt="Watermark" className="h-6 w-auto opacity-70 object-contain" />
-                <span className="text-xs font-light text-muted-foreground">Apply watermark</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setApplyWatermark((v) => !v)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                  applyWatermark ? "bg-foreground" : "bg-muted"
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform ${
-                    applyWatermark ? "translate-x-4" : "translate-x-0"
-                  }`}
-                />
-              </button>
+          {isProof && (
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
+                Watermark
+              </Label>
+              {watermarks.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground/60 border border-dashed border-border px-3 py-2">
+                  No watermarks configured — create one in Settings to apply to proof galleries.
+                </p>
+              ) : (
+                <Select value={selectedWatermarkId} onValueChange={setSelectedWatermarkId}>
+                  <SelectTrigger className="rounded-none border-border focus:ring-0">
+                    <SelectValue placeholder="Select watermark… (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-none">
+                    {watermarks.map((wm) => (
+                      <SelectItem key={wm.id} value={wm.id}>
+                        {wm.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-          )}
-
-          {isProof && !watermarkUrl && (
-            <p className="text-[10px] text-muted-foreground/60 border border-dashed border-border px-3 py-2">
-              No watermark configured — add one in Settings to apply it to proof galleries.
-            </p>
           )}
 
           <Button
