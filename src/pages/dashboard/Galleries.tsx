@@ -107,7 +107,7 @@ const Galleries = () => {
                 </Button>
               </div>
 
-              <GalleryGrid galleries={filtered} loading={loading} />
+              <GalleryGrid galleries={filtered} loading={loading} onEdit={setEditGallery} />
             </div>
           </main>
         </div>
