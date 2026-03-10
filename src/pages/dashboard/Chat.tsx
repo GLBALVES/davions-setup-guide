@@ -109,7 +109,6 @@ export default function Chat() {
     const { data } = await q;
     setTickets((data as Ticket[]) || []);
   }, [photographerId, filterStatus]);
-  const [agentMonitorOpen, setAgentMonitorOpen] = useState(true);
 
   // Load agents — auto-create default support agent if none exist
   useEffect(() => {
