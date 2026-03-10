@@ -541,61 +541,111 @@ const GalleryDetail = () => {
           <main className="flex-1 overflow-y-auto">
             {/* Hero banner */}
             {gallery.cover_image_url ? (
-              <div className="relative w-full h-52 md:h-72 overflow-hidden group">
+              <div
+                ref={coverRef}
+                className={cn(
+                  "relative w-full h-52 md:h-72 overflow-hidden group",
+                  focalMode && "cursor-crosshair"
+                )}
+                onClick={focalMode ? handleFocalClick : undefined}
+              >
                 <img
                   src={gallery.cover_image_url}
                   alt={gallery.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover pointer-events-none"
+                  style={{
+                    objectPosition: `${gallery.cover_focal_x ?? 50}% ${gallery.cover_focal_y ?? 50}%`,
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between">
-                  <div className="flex flex-col gap-1.5">
-                    <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
-                      {gallery.title || "Untitled Gallery"}
-                    </h1>
-                    {(gallery.client_name || gallery.session_title) && (
-                      <div className="flex items-center gap-4 text-[11px] text-white/70">
-                        {gallery.client_name && (
-                          <span className="flex items-center gap-1.5">
-                            <User className="h-3 w-3" />
-                            {gallery.client_name}
-                          </span>
-                        )}
-                        {gallery.session_title && (
-                          <span className="flex items-center gap-1.5">
-                            <Camera className="h-3 w-3" />
-                            {gallery.session_title}
-                          </span>
-                        )}
-                        {gallery.booked_date && (
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="h-3 w-3" />
-                            {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
-                          </span>
+
+                {/* Focal mode overlay */}
+                {focalMode ? (
+                  <>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <p className="text-white text-xs tracking-widest uppercase font-light bg-black/50 px-4 py-2">
+                        Click to set focus point
+                      </p>
+                    </div>
+                    {/* Current focal point dot */}
+                    <div
+                      className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                      style={{
+                        left: `${gallery.cover_focal_x ?? 50}%`,
+                        top: `${gallery.cover_focal_y ?? 50}%`,
+                      }}
+                    >
+                      <div className="w-5 h-5 rounded-full border-2 border-white bg-white/30 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setFocalMode(false); }}
+                      className="absolute top-3 right-3 bg-background/90 text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 hover:bg-background transition-colors"
+                    >
+                      <X className="h-3 w-3" /> Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between pointer-events-none">
+                      <div className="flex flex-col gap-1.5">
+                        <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
+                          {gallery.title || "Untitled Gallery"}
+                        </h1>
+                        {(gallery.client_name || gallery.session_title) && (
+                          <div className="flex items-center gap-4 text-[11px] text-white/70">
+                            {gallery.client_name && (
+                              <span className="flex items-center gap-1.5">
+                                <User className="h-3 w-3" />
+                                {gallery.client_name}
+                              </span>
+                            )}
+                            {gallery.session_title && (
+                              <span className="flex items-center gap-1.5">
+                                <Camera className="h-3 w-3" />
+                                {gallery.session_title}
+                              </span>
+                            )}
+                            {gallery.booked_date && (
+                              <span className="flex items-center gap-1.5">
+                                <Calendar className="h-3 w-3" />
+                                {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge
-                      variant={gallery.category === "proof" ? "outline" : "default"}
-                      className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
-                    >
-                      {gallery.category === "proof" ? "Proof" : "Final"}
-                    </Badge>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-white/70 font-light">{gallery.status}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          variant={gallery.category === "proof" ? "outline" : "default"}
+                          className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
+                        >
+                          {gallery.category === "proof" ? "Proof" : "Final"}
+                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
+                          <span className="text-[10px] tracking-[0.2em] uppercase text-white/70 font-light">{gallery.status}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                {/* Edit cover overlay */}
-                <button
-                  onClick={() => setCoverPickerOpen(true)}
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5"
-                >
-                  <ImagePlus className="h-3 w-3" /> Change cover
-                </button>
+                    {/* Cover action buttons */}
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setFocalMode(true)}
+                        className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                      >
+                        <Crosshair className="h-3 w-3" /> Focus
+                      </button>
+                      <button
+                        onClick={() => setCoverPickerOpen(true)}
+                        className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                      >
+                        <ImagePlus className="h-3 w-3" /> Change
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="px-6 md:px-10 pt-6 pb-0 flex items-center gap-3">
