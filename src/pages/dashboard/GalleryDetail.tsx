@@ -238,6 +238,9 @@ const GalleryDetail = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [settingCover, setSettingCover] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncCount, setSyncCount] = useState(0);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
