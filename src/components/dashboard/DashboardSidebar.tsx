@@ -279,6 +279,11 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+      {badgeCount > 0 && (
+        <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
+          {badgeCount}
+        </SidebarMenuBadge>
+      )}
     </SidebarMenuItem>
   );
 }
