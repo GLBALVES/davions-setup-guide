@@ -118,6 +118,7 @@ const GalleryDetail = () => {
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
+  const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
