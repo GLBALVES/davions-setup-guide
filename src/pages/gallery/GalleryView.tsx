@@ -524,8 +524,8 @@ const GalleryView = () => {
                 <div className="flex flex-col gap-1.5">
                   <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">{gallery.title}</h1>
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
-                    {photos.length} foto{photos.length !== 1 ? "s" : ""}
-                    {isProof && " · Clique em ♡ para selecionar"}
+                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    {isProof && " · Click ♡ to select"}
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
