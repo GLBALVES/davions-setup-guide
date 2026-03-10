@@ -135,7 +135,7 @@ interface SortablePhotoProps {
   onToggleSelect: (id: string) => void;
 }
 
-const SortablePhoto = React.forwardRef<HTMLDivElement, SortablePhotoProps>(({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }, _ref) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
