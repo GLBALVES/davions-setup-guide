@@ -884,7 +884,7 @@ const SessionForm = () => {
                     >
                       {coverImageUrl ? (
                         <>
-                          <img src={coverImageUrl} alt="Capa" className="w-full h-full object-cover" />
+                          <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Upload className="h-6 w-6 text-white" />
                           </div>
