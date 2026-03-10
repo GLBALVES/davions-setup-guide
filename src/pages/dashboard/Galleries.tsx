@@ -363,12 +363,14 @@ function GalleryGrid({
   loading,
   onEdit,
   onDelete,
+  onAssigned,
   viewMode,
 }: {
   galleries: Gallery[];
   loading: boolean;
   onEdit: (g: Gallery) => void;
   onDelete: () => void;
+  onAssigned: () => void;
   viewMode: ViewMode;
 }) {
   if (loading) {
@@ -416,6 +418,7 @@ function GalleryGrid({
               gallery={gallery}
               onEdit={() => onEdit(gallery)}
               onDelete={onDelete}
+              onAssigned={onAssigned}
               compact={viewMode === "list"}
             />
           </motion.div>
