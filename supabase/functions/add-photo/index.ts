@@ -86,11 +86,16 @@ Deno.serve(async (req) => {
     const arrayBuffer = await photo.arrayBuffer();
     const uint8Array  = new Uint8Array(arrayBuffer);
 
-    const ext = (photo_name ? photo_name.split(".").pop() : null) ?? "jpg";
-    const rawName = photo_name || `${crypto.randomUUID()}.${ext}`;
-    // Sanitize filename: replace characters invalid for storage keys
-    const fileName = rawName.replace(/[{}()\[\]#%\s]+/g, "_").replace(/_+/g, "_");
-    const storagePath = `${userId}/${gallery_id}/${fileName}`;
+    // Use original name for DB display, safe name for storage path
+    const originalName = photo_name || `${crypto.randomUUID()}.jpg`;
+    const ext = originalName.split(".").pop() ?? "jpg";
+    // Thorough sanitization: normalize accents, then keep only safe chars
+    const safeName = originalName
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")  // strip diacritics
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_")
+      .replace(/_+/g, "_");
+    const storagePath = `${userId}/${gallery_id}/${safeName}`;
 
     const mimeMap: Record<string, string> = {
       jpg: "image/jpeg", jpeg: "image/jpeg",
@@ -112,15 +117,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Uploaded ${fileName} (${uint8Array.byteLength} bytes) → ${storagePath}`);
+    console.log(`Uploaded ${safeName} (${uint8Array.byteLength} bytes) → ${storagePath}`);
 
-    // Insert photo record
+    // Insert photo record — save original filename for display, safe path for storage
     const { data, error: insertError } = await dbClient
       .from("photos")
       .insert({
         gallery_id,
         photographer_id: userId,
-        filename: fileName,
+        filename: originalName,
         storage_path: storagePath,
         order_index,
       })
@@ -137,8 +142,9 @@ Deno.serve(async (req) => {
 
     console.log(`Photo record created: ${data.id}`);
 
+    // Return photo_id at top level — required by the Lightroom plugin to call recordPublishedPhotoId
     return new Response(
-      JSON.stringify({ status: "success", response: { photo_id: data.id } }),
+      JSON.stringify({ photo_id: data.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
