@@ -1357,6 +1357,61 @@ const GalleryDetail = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && photos[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Close */}
+          <button
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
+            onClick={() => setLightboxIndex(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/50 text-[11px] tracking-[0.3em] uppercase z-10">
+            {lightboxIndex + 1} / {photos.length}
+          </div>
+
+          {/* Filename */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-[10px] tracking-widest uppercase z-10 truncate max-w-xs text-center">
+            {photos[lightboxIndex].filename}
+          </div>
+
+          {/* Prev */}
+          {lightboxIndex > 0 && (
+            <button
+              className="absolute left-4 text-white/50 hover:text-white transition-colors z-10 p-2"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i ?? 0) - 1); }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+          )}
+
+          {/* Next */}
+          {lightboxIndex < photos.length - 1 && (
+            <button
+              className="absolute right-4 text-white/50 hover:text-white transition-colors z-10 p-2"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => (i ?? 0) + 1); }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={photos[lightboxIndex].url}
+            alt={photos[lightboxIndex].filename}
+            className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+            draggable={false}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </SidebarProvider>
   );
 };
