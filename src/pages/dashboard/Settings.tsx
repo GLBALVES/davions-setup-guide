@@ -51,6 +51,16 @@ const Settings = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
+  // Business tab
+  const [businessName, setBusinessName] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [businessCity, setBusinessCity] = useState("");
+  const [businessCountry, setBusinessCountry] = useState("");
+  const [businessCurrency, setBusinessCurrency] = useState("USD");
+  const [businessTaxId, setBusinessTaxId] = useState("");
+  const [savingBusiness, setSavingBusiness] = useState(false);
+
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSessionTypes = useCallback(async () => {
@@ -199,6 +209,26 @@ const Settings = () => {
     setDeletingId(null);
   };
 
+  const handleSaveBusiness = async () => {
+    setSavingBusiness(true);
+    const { error } = await (supabase as any).from("photographers").update({
+      business_name: businessName.trim() || null,
+      business_phone: businessPhone.trim() || null,
+      business_address: businessAddress.trim() || null,
+      business_city: businessCity.trim() || null,
+      business_country: businessCountry.trim() || null,
+      business_currency: businessCurrency.trim() || null,
+      business_tax_id: businessTaxId.trim() || null,
+    }).eq("id", user!.id);
+
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Business settings saved" });
+    }
+    setSavingBusiness(false);
+  };
+
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
     await navigator.clipboard.writeText(url);
@@ -232,13 +262,14 @@ const Settings = () => {
               {loading ? (
                 <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
               ) : (
-                <Tabs defaultValue="profile" className="w-full">
+                <Tabs defaultValue="studio" className="w-full">
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
+                      { value: "studio", label: "Studio" },
+                      { value: "business", label: "Business" },
                       { value: "profile", label: "Profile" },
                       { value: "store", label: "Store" },
-                      { value: "studio", label: "Studio" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
                       <TabsTrigger
@@ -516,6 +547,113 @@ const Settings = () => {
                         />
                       )}
                     </section>
+                  </TabsContent>
+
+                  {/* ── BUSINESS TAB ── */}
+                  <TabsContent value="business" className="mt-0 flex flex-col gap-8">
+                    <section className="flex flex-col gap-5">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Business Information</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Details used on invoices, contracts, and client-facing documents.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Business Name</Label>
+                          <Input
+                            value={businessName}
+                            onChange={(e) => setBusinessName(e.target.value)}
+                            placeholder="Acme Photography LLC"
+                            className="h-9 text-sm font-light"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Phone</Label>
+                          <Input
+                            value={businessPhone}
+                            onChange={(e) => setBusinessPhone(e.target.value)}
+                            placeholder="+1 (555) 000-0000"
+                            className="h-9 text-sm font-light"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Street Address</Label>
+                        <Input
+                          value={businessAddress}
+                          onChange={(e) => setBusinessAddress(e.target.value)}
+                          placeholder="123 Main St, Suite 4"
+                          className="h-9 text-sm font-light"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">City</Label>
+                          <Input
+                            value={businessCity}
+                            onChange={(e) => setBusinessCity(e.target.value)}
+                            placeholder="New York"
+                            className="h-9 text-sm font-light"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Country</Label>
+                          <Input
+                            value={businessCountry}
+                            onChange={(e) => setBusinessCountry(e.target.value)}
+                            placeholder="United States"
+                            className="h-9 text-sm font-light"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Currency</Label>
+                          <select
+                            value={businessCurrency}
+                            onChange={(e) => setBusinessCurrency(e.target.value)}
+                            className="h-9 px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          >
+                            {[
+                              { code: "USD", label: "USD — US Dollar" },
+                              { code: "EUR", label: "EUR — Euro" },
+                              { code: "GBP", label: "GBP — British Pound" },
+                              { code: "CAD", label: "CAD — Canadian Dollar" },
+                              { code: "AUD", label: "AUD — Australian Dollar" },
+                              { code: "BRL", label: "BRL — Brazilian Real" },
+                              { code: "MXN", label: "MXN — Mexican Peso" },
+                            ].map((c) => (
+                              <option key={c.code} value={c.code}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Tax ID / VAT Number</Label>
+                          <Input
+                            value={businessTaxId}
+                            onChange={(e) => setBusinessTaxId(e.target.value)}
+                            placeholder="e.g. 12-3456789"
+                            className="h-9 text-sm font-light"
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <div>
+                      <Button
+                        onClick={handleSaveBusiness}
+                        disabled={savingBusiness}
+                        size="sm"
+                        className="gap-2 text-xs tracking-wider uppercase font-light"
+                      >
+                        {savingBusiness ? "Saving…" : "Save changes"}
+                      </Button>
+                    </div>
                   </TabsContent>
 
                   {/* ── GALLERIES TAB ── */}
