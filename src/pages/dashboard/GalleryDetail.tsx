@@ -29,7 +29,15 @@ import {
   XCircle,
   Send,
   Mail,
+  ImagePlus,
+  Star,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
