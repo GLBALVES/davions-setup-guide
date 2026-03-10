@@ -37,6 +37,8 @@ import {
   ScanEye,
   Images,
   BookOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -66,12 +68,14 @@ type MenuGroup = {
   title: string;
   icon: React.ElementType;
   items: MenuItem[];
+  defaultOpen?: boolean;
 };
 
 const groups: MenuGroup[] = [
   {
     title: "Favorites",
     icon: Star,
+    defaultOpen: true,
     items: [
       { title: "Starred Functions", icon: Star },
     ],
@@ -79,6 +83,7 @@ const groups: MenuGroup[] = [
   {
     title: "Photographers",
     icon: Camera,
+    defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions" },
@@ -160,7 +165,7 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps) {
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
 
@@ -185,7 +190,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     groups.forEach((g) => {
-      initial[g.title] = groupHasActive(g);
+      initial[g.title] = g.defaultOpen || groupHasActive(g);
     });
     return initial;
   });
@@ -197,13 +202,21 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent>
-        {/* Logo */}
-        <div className="p-4 flex items-center justify-center border-b border-sidebar-border">
-          <img
-            src={seloPreto}
-            alt="Davions"
-            className={collapsed ? "h-6 w-auto" : "h-8 w-auto"}
-          />
+        {/* Logo + collapse toggle */}
+        <div className="flex items-center justify-between px-3 py-3 border-b border-sidebar-border">
+          {!collapsed && (
+            <img src={seloPreto} alt="Davions" className="h-8 w-auto ml-1" />
+          )}
+          <button
+            onClick={toggleSidebar}
+            className={`text-muted-foreground hover:text-foreground transition-colors p-1 ${collapsed ? "mx-auto" : ""}`}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed
+              ? <PanelLeftOpen className="h-4 w-4" />
+              : <PanelLeftClose className="h-4 w-4" />
+            }
+          </button>
         </div>
 
         {groups.map((group) => (
@@ -216,7 +229,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               <SidebarGroupLabel asChild>
                 <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                   {collapsed ? (
-                    <group.icon className="h-4 w-4 shrink-0" />
+                    <group.icon className="h-4 w-4 shrink-0 mx-auto" />
                   ) : (
                     <>
                       <group.icon className="h-3.5 w-3.5 shrink-0" />
@@ -234,7 +247,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
               <CollapsibleContent>
                 <SidebarGroupContent>
-                  <SidebarMenu>
+                  <SidebarMenu className="pl-3">
                     {group.items.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         {item.to ? (
