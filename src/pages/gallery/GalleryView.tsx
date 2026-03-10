@@ -157,35 +157,40 @@ const GalleryView = () => {
 
       {/* Access gate */}
       {!unlocked && gallery?.access_code && (
-        <div className="flex-1 flex items-center justify-center px-6">
-          <div className="w-full max-w-sm flex flex-col gap-6">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <Lock className="h-8 w-8 text-muted-foreground/60" />
-              <h1 className="text-xl font-light tracking-wide">{gallery.title}</h1>
-              <p className="text-sm text-muted-foreground">Enter the access code to view this gallery.</p>
+        <div className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="w-full max-w-sm flex flex-col gap-8">
+            {/* Icon + title */}
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="h-16 w-16 rounded-full border border-border flex items-center justify-center">
+                <Lock className="h-7 w-7 text-muted-foreground/60" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-light tracking-wide">{gallery.title}</h1>
+                <p className="text-sm text-muted-foreground">This gallery is private. Enter the access code to continue.</p>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                Access Code
-              </Label>
+            {/* Code input */}
+            <div className="flex flex-col gap-3">
               <Input
                 value={codeInput}
-                onChange={(e) => { setCodeInput(e.target.value); setCodeError(false); }}
+                onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(false); }}
                 onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="e.g. WEDDING2025"
-                className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.3em] uppercase ${
-                  codeError ? "border-destructive" : ""
+                placeholder="ACCESS CODE"
+                autoFocus
+                className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.4em] uppercase font-mono text-base h-12 ${
+                  codeError ? "border-destructive focus-visible:border-destructive" : ""
                 }`}
               />
               {codeError && (
-                <p className="text-xs text-destructive text-center">Incorrect code. Try again.</p>
+                <p className="text-xs text-destructive text-center flex items-center justify-center gap-1.5">
+                  Incorrect code — please try again.
+                </p>
               )}
+              <Button onClick={handleUnlock} className="w-full h-11 tracking-widest uppercase text-xs font-light" disabled={!codeInput.trim()}>
+                Unlock Gallery
+              </Button>
             </div>
-
-            <Button onClick={handleUnlock} className="w-full" disabled={!codeInput.trim()}>
-              Unlock Gallery
-            </Button>
           </div>
         </div>
       )}
