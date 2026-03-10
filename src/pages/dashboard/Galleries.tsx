@@ -339,6 +339,7 @@ const Galleries = () => {
                 loading={loading}
                 onEdit={setEditGallery}
                 onDelete={fetchGalleries}
+                onAssigned={fetchGalleries}
                 viewMode={viewMode}
               />
             </div>
