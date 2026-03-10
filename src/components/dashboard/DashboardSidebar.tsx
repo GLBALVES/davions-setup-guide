@@ -50,6 +50,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -77,6 +78,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import logoPrincipal from "@/assets/logo_principal_preto.png";
+import seloPreto from "@/assets/selo_preto.png";
 
 type MenuItem = {
   title: string;
@@ -204,10 +207,11 @@ interface SortableFavoriteItemProps {
   id: string;
   item: MenuItem & { groupTitle: string };
   isActive: boolean;
+  collapsed: boolean;
   onUnpin: () => void;
 }
 
-function SortableFavoriteItem({ id, item, isActive, onUnpin }: SortableFavoriteItemProps) {
+function SortableFavoriteItem({ id, item, isActive, collapsed, onUnpin }: SortableFavoriteItemProps) {
   const {
     attributes,
     listeners,
@@ -231,7 +235,7 @@ function SortableFavoriteItem({ id, item, isActive, onUnpin }: SortableFavoriteI
         className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
       >
         <item.icon className="h-4 w-4 shrink-0" />
-        <span className="flex-1 truncate">{item.title}</span>
+        {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
       </NavLink>
     </SidebarMenuButton>
   ) : (
@@ -241,7 +245,7 @@ function SortableFavoriteItem({ id, item, isActive, onUnpin }: SortableFavoriteI
       className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
     >
       <item.icon className="h-4 w-4 shrink-0" />
-      <span>{item.title}</span>
+      {!collapsed && <span>{item.title}</span>}
     </SidebarMenuButton>
   );
 
@@ -250,15 +254,17 @@ function SortableFavoriteItem({ id, item, isActive, onUnpin }: SortableFavoriteI
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div className="flex items-center group/fav">
-            <button
-              {...attributes}
-              {...listeners}
-              className="shrink-0 px-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing opacity-0 group-hover/fav:opacity-100 transition-opacity"
-              tabIndex={-1}
-              aria-label="Drag to reorder"
-            >
-              <GripVertical className="h-3.5 w-3.5" />
-            </button>
+            {!collapsed && (
+              <button
+                {...attributes}
+                {...listeners}
+                className="shrink-0 px-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing opacity-0 group-hover/fav:opacity-100 transition-opacity"
+                tabIndex={-1}
+                aria-label="Drag to reorder"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
+              </button>
+            )}
             <div className="flex-1 min-w-0">{inner}</div>
           </div>
         </ContextMenuTrigger>
@@ -360,7 +366,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
           className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
         >
           <item.icon className="h-4 w-4 shrink-0" />
-          <span>{item.title}</span>
+          {!collapsed && <span>{item.title}</span>}
         </NavLink>
       </SidebarMenuButton>
     ) : (
@@ -370,7 +376,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
       >
         <item.icon className="h-4 w-4 shrink-0" />
-        <span>{item.title}</span>
+        {!collapsed && <span>{item.title}</span>}
       </SidebarMenuButton>
     );
 
@@ -395,80 +401,56 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     );
   };
 
-  // ── Collapsed view: flat icon list for all groups ──
-  if (collapsed) {
-    // Collect all items with routes for the flat icon strip
-    const allRoutableItems = ALL_ITEMS.filter((i) => i.to);
-
-    return (
-      <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {allRoutableItems.map((item) => (
-                  <SidebarMenuItem key={`collapsed:${item.groupTitle}:${item.title}`}>
-                    <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
-                      <NavLink
-                        to={item.to!}
-                        end={item.end}
-                        className="justify-center hover:bg-sidebar-accent/50"
-                      >
-                        <item.icon className="h-4 w-4 shrink-0" />
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter className="border-t border-sidebar-border p-3">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={onSignOut}
-                tooltip="Sign out"
-                className="justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-              >
-                <LogOut className="h-4 w-4" />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-    );
-  }
-
-  // ── Expanded view: full collapsible groups ──
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      {/* ── Logo header ── */}
+      <SidebarHeader className="flex items-center justify-center border-b border-sidebar-border py-4 px-3">
+        {collapsed ? (
+          <img
+            src={seloPreto}
+            alt="Davions"
+            className="h-7 w-7 object-contain"
+          />
+        ) : (
+          <img
+            src={logoPrincipal}
+            alt="Davions"
+            className="h-7 object-contain"
+          />
+        )}
+      </SidebarHeader>
+
       <SidebarContent>
         {/* ── Favorites group (drag-and-drop) ── */}
         <Collapsible
-          open={openGroups["Favorites"]}
-          onOpenChange={() => toggleGroup("Favorites")}
+          open={collapsed ? true : openGroups["Favorites"]}
+          onOpenChange={() => !collapsed && toggleGroup("Favorites")}
         >
           <SidebarGroup>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                 <Star className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-left">Favorites</span>
-                <ChevronRight
-                  className="h-3 w-3 shrink-0 transition-transform duration-200"
-                  style={{ transform: openGroups["Favorites"] ? "rotate(90deg)" : "rotate(0deg)" }}
-                />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">Favorites</span>
+                    <ChevronRight
+                      className="h-3 w-3 shrink-0 transition-transform duration-200"
+                      style={{ transform: openGroups["Favorites"] ? "rotate(90deg)" : "rotate(0deg)" }}
+                    />
+                  </>
+                )}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
 
             <CollapsibleContent>
               <SidebarGroupContent>
-                <SidebarMenu className="pl-3">
+                <SidebarMenu className={collapsed ? "" : "pl-3"}>
                   {favoriteItems.length === 0 ? (
-                    <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
-                      Right-click any item to pin it here
-                    </p>
+                    !collapsed && (
+                      <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
+                        Right-click any item to pin it here
+                      </p>
+                    )
                   ) : (
                     <DndContext
                       sensors={sensors}
@@ -485,6 +467,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                             id={itemKey(item.groupTitle, item.title)}
                             item={item}
                             isActive={isItemActive(item)}
+                            collapsed={collapsed}
                             onUnpin={() => togglePin(item.groupTitle, item)}
                           />
                         ))}
@@ -501,24 +484,28 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         {groups.map((group) => (
           <Collapsible
             key={group.title}
-            open={openGroups[group.title]}
-            onOpenChange={() => toggleGroup(group.title)}
+            open={collapsed ? true : openGroups[group.title]}
+            onOpenChange={() => !collapsed && toggleGroup(group.title)}
           >
             <SidebarGroup>
               <SidebarGroupLabel asChild>
                 <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                   <group.icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="flex-1 text-left">{group.title}</span>
-                  <ChevronRight
-                    className="h-3 w-3 shrink-0 transition-transform duration-200"
-                    style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
-                  />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 text-left">{group.title}</span>
+                      <ChevronRight
+                        className="h-3 w-3 shrink-0 transition-transform duration-200"
+                        style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
+                      />
+                    </>
+                  )}
                 </CollapsibleTrigger>
               </SidebarGroupLabel>
 
               <CollapsibleContent>
                 <SidebarGroupContent>
-                  <SidebarMenu className="pl-3">
+                  <SidebarMenu className={collapsed ? "" : "pl-3"}>
                     {group.items.map((item) => renderRegularItem(item, group.title))}
                   </SidebarMenu>
                 </SidebarGroupContent>
@@ -529,7 +516,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
-        {userEmail && (
+        {!collapsed && userEmail && (
           <p className="text-[10px] text-muted-foreground truncate mb-2 px-2">
             {userEmail}
           </p>
@@ -542,7 +529,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               className="gap-3 text-xs tracking-wider uppercase font-light text-muted-foreground hover:text-destructive hover:bg-destructive/5"
             >
               <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
+              {!collapsed && <span>Sign Out</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
