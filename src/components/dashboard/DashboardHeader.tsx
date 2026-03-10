@@ -9,16 +9,15 @@ export function DashboardHeader() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
+    // Cast to any since business_name is a custom column not yet in the generated types
+    (supabase as any)
       .from("photographers")
       .select("business_name, full_name")
       .eq("id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: { data: { business_name?: string | null; full_name?: string | null } | null }) => {
         if (data) {
-          const name = (data as unknown as { business_name?: string | null }).business_name
-            || data.full_name
-            || null;
+          const name = data.business_name || data.full_name || null;
           setBusinessName(name);
         }
       });
@@ -33,7 +32,7 @@ export function DashboardHeader() {
             {businessName}
           </span>
         ) : (
-          <span className="h-3 w-32 bg-muted animate-pulse rounded-sm" />
+          <span className="h-3 w-32 bg-muted animate-pulse rounded-sm inline-block" />
         )}
       </div>
     </header>
