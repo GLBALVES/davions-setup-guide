@@ -87,7 +87,9 @@ Deno.serve(async (req) => {
     const uint8Array  = new Uint8Array(arrayBuffer);
 
     const ext = (photo_name ? photo_name.split(".").pop() : null) ?? "jpg";
-    const fileName   = photo_name || `${crypto.randomUUID()}.${ext}`;
+    const rawName = photo_name || `${crypto.randomUUID()}.${ext}`;
+    // Sanitize filename: replace characters invalid for storage keys
+    const fileName = rawName.replace(/[{}()\[\]#%\s]+/g, "_").replace(/_+/g, "_");
     const storagePath = `${userId}/${gallery_id}/${fileName}`;
 
     const mimeMap: Record<string, string> = {
