@@ -27,6 +27,8 @@ import {
   Calendar,
   RefreshCw,
   XCircle,
+  Send,
+  Mail,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -83,6 +85,7 @@ const GalleryDetail = () => {
   const [savingCode, setSavingCode] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -320,6 +323,42 @@ const GalleryDetail = () => {
       toast({ title: "Gallery renamed" });
     }
     setEditingTitle(false);
+  };
+
+  // ── Send gallery link to client ─────────────────────────────────────────────
+  const sendGalleryLink = async () => {
+    if (!gallery) return;
+    const clientEmail = gallery.client_name
+      ? prompt(`Send gallery to client email:`)
+      : prompt(`Send gallery to client email:`);
+    if (!clientEmail?.trim()) return;
+
+    setSendingEmail(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("send-gallery-link", {
+        body: {
+          galleryId: gallery.id,
+          clientEmail: clientEmail.trim(),
+          clientName: gallery.client_name ?? undefined,
+        },
+      });
+
+      if (res.error) throw res.error;
+
+      toast({
+        title: "Email sent",
+        description: `Gallery link sent to ${clientEmail.trim()}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Failed to send email",
+        description: err?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   // ── Delete gallery ──────────────────────────────────────────────────────────
@@ -755,6 +794,25 @@ const GalleryDetail = () => {
                       </button>
                     )}
                   </div>
+                </div>
+
+                {/* Send to client */}
+                <div className="pt-2 border-t border-border">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-xs tracking-wider uppercase font-light"
+                    onClick={sendGalleryLink}
+                    disabled={sendingEmail}
+                  >
+                    {sendingEmail ? (
+                      <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
+                    ) : (
+                      <><Send className="h-3.5 w-3.5" /> Send to Client</>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                    Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
+                  </p>
                 </div>
               </div>
             </div>
