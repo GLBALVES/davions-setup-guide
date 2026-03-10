@@ -58,6 +58,8 @@ const App = () => (
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
