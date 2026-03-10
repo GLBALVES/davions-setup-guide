@@ -54,6 +54,9 @@ import {
   ChevronDown,
   CalendarClock,
   Crosshair,
+  ZoomIn,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Dialog,
