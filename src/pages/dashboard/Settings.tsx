@@ -118,6 +118,33 @@ const Settings = () => {
     toast({ title: "Hero image uploaded" });
   };
 
+  const handleWatermarkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingWatermark(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user!.id}/watermark.${ext}`;
+
+    const { error: upErr } = await supabase.storage
+      .from("session-covers")
+      .upload(path, file, { upsert: true });
+
+    if (upErr) {
+      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
+      setUploadingWatermark(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + `?t=${Date.now()}`;
+
+    await supabase.from("photographers").update({ watermark_url: publicUrl } as any).eq("id", user!.id);
+    setWatermarkUrl(publicUrl);
+    setUploadingWatermark(false);
+    toast({ title: "Watermark saved" });
+  };
+
   const handleSave = async () => {
     const slugErr = validateSlug(slugInput);
     const domErr = validateDomain(customDomainInput);
