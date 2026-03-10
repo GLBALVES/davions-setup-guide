@@ -416,6 +416,14 @@ const Bookings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CreateGalleryDialog
+        open={galleryDialog.open}
+        onOpenChange={(open) => setGalleryDialog((d) => ({ ...d, open }))}
+        onCreated={() => {}}
+        defaultCategory="proof"
+        prefilledBookingId={galleryDialog.bookingId}
+      />
     </SidebarProvider>
   );
 };
