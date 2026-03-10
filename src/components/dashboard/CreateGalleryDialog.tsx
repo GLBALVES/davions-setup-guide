@@ -25,30 +25,15 @@ interface CreateGalleryDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
   defaultCategory?: string;
+  prefilledBookingId?: string;
 }
-
-interface Booking {
-  id: string;
-  client_name: string;
-  client_email: string;
-  session_id: string;
-}
-
-interface Session {
-  id: string;
-  title: string;
-}
-
-interface Watermark {
-  id: string;
-  name: string;
-}
-
+...
 export function CreateGalleryDialog({
   open,
   onOpenChange,
   onCreated,
   defaultCategory = "proof",
+  prefilledBookingId,
 }: CreateGalleryDialogProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
