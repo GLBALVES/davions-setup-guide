@@ -1130,12 +1130,20 @@ const GalleryDetail = () => {
                 {/* Lightroom Export Modal */}
                 {(() => {
                   const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
-                  const listText = favoritedPhotos.map((p) => p.filename).join("\n");
                   const csvText = favoritedPhotos.map((p) => p.filename).join(",");
-                  const copyText = async (text: string) => {
-                    await navigator.clipboard.writeText(text);
+                  const copyText = async () => {
+                    await navigator.clipboard.writeText(csvText);
                     setCopiedFavorites(true);
                     setTimeout(() => setCopiedFavorites(false), 2000);
+                  };
+                  const downloadTxt = () => {
+                    const blob = new Blob([csvText], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "lightroom-favorites.txt";
+                    a.click();
+                    URL.revokeObjectURL(url);
                   };
                   return (
                     <Dialog open={lightroomModalOpen} onOpenChange={setLightroomModalOpen}>
@@ -1146,7 +1154,7 @@ const GalleryDetail = () => {
                             Export to Lightroom
                           </DialogTitle>
                           <DialogDescription className="text-xs">
-                            {favoritedPhotos.length} foto{favoritedPhotos.length !== 1 ? "s" : ""} favoritada{favoritedPhotos.length !== 1 ? "s" : ""} pelo cliente
+                            {favoritedPhotos.length} photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited by your client
                           </DialogDescription>
                         </DialogHeader>
                         <div className="flex flex-col gap-3">
@@ -1162,19 +1170,19 @@ const GalleryDetail = () => {
                               size="sm"
                               variant="outline"
                               className="w-full gap-2 text-xs"
-                              onClick={() => copyText(listText)}
+                              onClick={copyText}
                             >
                               {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                              {copiedFavorites ? "Copiado!" : "Copiar (um por linha)"}
+                              {copiedFavorites ? "Copied!" : "Copy"}
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               className="w-full gap-2 text-xs"
-                              onClick={() => copyText(csvText)}
+                              onClick={downloadTxt}
                             >
-                              <Copy className="h-3.5 w-3.5" />
-                              Copiar como CSV
+                              <Download className="h-3.5 w-3.5" />
+                              Download .txt
                             </Button>
                           </div>
                         </div>
