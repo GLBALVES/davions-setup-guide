@@ -52,8 +52,8 @@ const App = () => (
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
 
-                {/* Public gallery view */}
-                <Route path="/gallery/:id" element={<GalleryView />} />
+                {/* Public gallery view — supports both slug and UUID */}
+                <Route path="/gallery/:slug" element={<GalleryView />} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
