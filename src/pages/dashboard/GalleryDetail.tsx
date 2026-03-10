@@ -599,7 +599,7 @@ const GalleryDetail = () => {
                       alt={gallery.title}
                       className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-500"
                       style={{
-                        objectPosition: `${(focalPreview ?? gallery).cover_focal_x ?? 50}% ${(focalPreview ?? gallery).cover_focal_y ?? 50}%`,
+                        objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
