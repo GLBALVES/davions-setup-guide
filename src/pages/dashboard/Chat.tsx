@@ -111,18 +111,61 @@ export default function Chat() {
     setTickets((data as Ticket[]) || []);
   }, [photographerId, filterStatus]);
 
-  // Load agents
+  // Load agents — auto-create default support agent if none exist
   useEffect(() => {
     if (!photographerId) return;
-    supabase
-      .from("ai_agents")
-      .select("id, name, slug, enabled")
-      .eq("photographer_id", photographerId)
-      .eq("enabled", true)
-      .then(({ data }) => {
-        setAgents((data as Agent[]) || []);
-        if (data && data.length > 0) setSelectedAgentSlug(data[0].slug);
-      });
+    const loadAgents = async () => {
+      const { data } = await supabase
+        .from("ai_agents")
+        .select("id, name, slug, enabled")
+        .eq("photographer_id", photographerId);
+
+      const allAgents = (data as Agent[]) || [];
+
+      // If no agents exist at all, seed a default Customer Support agent
+      if (allAgents.length === 0) {
+        const { data: created, error } = await supabase.from("ai_agents" as any).insert({
+          name: "Customer Support",
+          slug: "customer-support",
+          description: "Default AI agent for customer support chat. Handles inquiries about bookings, galleries, sessions, and general questions.",
+          category: "support",
+          system_prompt: `You are a friendly and professional customer support assistant for a photography business. Your role is to help clients with their inquiries about photo sessions, bookings, galleries, pricing, and general questions.
+
+Guidelines:
+- Be warm, polite, and professional at all times
+- Provide clear, concise answers
+- If you don't know the answer, acknowledge it and suggest the client contact the photographer directly
+- Help with booking inquiries, session details, gallery access, and payment questions
+- Use a helpful and reassuring tone
+- Keep responses focused and relevant`,
+          knowledge_base: [
+            { topic: "Bookings", content: "Clients can book photo sessions through the online store. Each session has specific availability slots, duration, and pricing. Clients receive a confirmation email after booking." },
+            { topic: "Galleries", content: "After a photo session, the photographer creates a gallery with the client's photos. Clients receive a link to view and select their favorite photos. Galleries may have an access code for privacy." },
+            { topic: "Sessions", content: "Photo sessions vary in type (portrait, wedding, event, etc.), duration, and pricing. Each session includes a set number of edited photos. Additional photos can be purchased." },
+          ] as any,
+          model: "google/gemini-3-flash-preview",
+          temperature: 0.7,
+          enabled: true,
+          auto_reply: true,
+          review_mode: false,
+          user_id: photographerId,
+          photographer_id: photographerId,
+        } as any).select("id, name, slug, enabled").single();
+
+        if (!error && created) {
+          const agent = created as unknown as Agent;
+          setAgents([agent]);
+          setSelectedAgentSlug(agent.slug);
+          toast.success("Default Customer Support agent created automatically!");
+          return;
+        }
+      }
+
+      const enabled = allAgents.filter(a => a.enabled);
+      setAgents(enabled);
+      if (enabled.length > 0) setSelectedAgentSlug(enabled[0].slug);
+    };
+    loadAgents();
   }, [photographerId]);
 
   useEffect(() => { loadTickets(); }, [loadTickets]);
