@@ -47,6 +47,10 @@ const Settings = () => {
   const [editingWatermark, setEditingWatermark] = useState<WatermarkData | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Session Types (Studio tab)
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
+
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
