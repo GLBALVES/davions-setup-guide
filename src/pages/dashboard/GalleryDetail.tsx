@@ -122,10 +122,10 @@ interface Watermark {
 // ── Sortable photo card ───────────────────────────────────────────────────────
 interface SortablePhotoProps {
   photo: Photo;
-  onDelete: (photo: Photo) => void;
+  onRequestDelete: (photo: Photo) => void;
 }
 
-const SortablePhoto = ({ photo, onDelete }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
