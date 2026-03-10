@@ -974,7 +974,65 @@ const GalleryDetail = () => {
                 </div>
 
                 {/* Send to client */}
-                <div className="pt-2 border-t border-border">
+                <div className="pt-2 border-t border-border flex flex-col gap-4">
+                  {/* Expiration date */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" />
+                      Expiration Date <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground/60">
+                      After this date, the gallery will no longer be accessible.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "flex-1 justify-start text-left font-light text-xs rounded-none border-border h-9 gap-2",
+                              !expiresAt && "text-muted-foreground"
+                            )}
+                          >
+                            <Calendar className="h-3.5 w-3.5 shrink-0" />
+                            {expiresAt ? format(expiresAt, "dd MMM yyyy") : "No expiration"}
+                            <ChevronDown className="h-3.5 w-3.5 ml-auto shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-none" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={expiresAt}
+                            onSelect={(d) => saveExpiresAt(d)}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {expiresAt && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => saveExpiresAt(undefined)}
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          title="Remove expiration"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    {expiresAt && (
+                      <p className={cn(
+                        "text-[10px] flex items-center gap-1.5",
+                        expiresAt < new Date() ? "text-destructive" : "text-muted-foreground/60"
+                      )}>
+                        <span className={cn("h-1.5 w-1.5 rounded-full inline-block", expiresAt < new Date() ? "bg-destructive" : "bg-amber-500")} />
+                        {expiresAt < new Date() ? "Expired — gallery is no longer accessible" : `Expires ${format(expiresAt, "MMMM d, yyyy")}`}
+                      </p>
+                    )}
+                  </div>
+
                   <Button
                     variant="outline"
                     className="w-full gap-2 text-xs tracking-wider uppercase font-light"
@@ -987,7 +1045,7 @@ const GalleryDetail = () => {
                       <><Send className="h-3.5 w-3.5" /> Send to Client</>
                     )}
                   </Button>
-                  <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                  <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
                     Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
                   </p>
                 </div>
