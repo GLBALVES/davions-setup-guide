@@ -388,6 +388,7 @@ export type Database = {
           expires_at: string | null
           id: string
           photographer_id: string
+          price_per_photo: number
           slug: string | null
           status: string
           title: string
@@ -406,6 +407,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           photographer_id: string
+          price_per_photo?: number
           slug?: string | null
           status?: string
           title?: string
@@ -424,6 +426,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           photographer_id?: string
+          price_per_photo?: number
           slug?: string | null
           status?: string
           title?: string

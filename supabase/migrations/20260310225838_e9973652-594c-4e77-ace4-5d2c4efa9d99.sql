@@ -1,0 +1,1 @@
+ALTER TABLE public.galleries ADD COLUMN IF NOT EXISTS price_per_photo integer NOT NULL DEFAULT 0;
