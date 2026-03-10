@@ -428,6 +428,34 @@ const GalleryDetail = () => {
     }
   };
 
+  // ── Watermark ────────────────────────────────────────────────────────────────
+  const setWatermark = async (watermarkId: string | null) => {
+    if (!gallery) return;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ watermark_id: watermarkId })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, watermark_id: watermarkId } : g);
+      toast({ title: watermarkId ? "Watermark applied" : "Watermark removed" });
+    }
+  };
+
+  // ── Expiration date ──────────────────────────────────────────────────────────
+  const saveExpiresAt = async (date: Date | undefined) => {
+    if (!gallery) return;
+    const value = date ? date.toISOString() : null;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ expires_at: value } as any)
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, expires_at: value } : g);
+      setExpiresAt(date);
+      toast({ title: date ? "Expiration date set" : "Expiration date removed" });
+    }
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
