@@ -88,6 +88,7 @@ export type Database = {
           category: string
           cover_image_url: string | null
           created_at: string
+          expires_at: string | null
           id: string
           photographer_id: string
           slug: string | null
@@ -103,6 +104,7 @@ export type Database = {
           category?: string
           cover_image_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           photographer_id: string
           slug?: string | null
@@ -118,6 +120,7 @@ export type Database = {
           category?: string
           cover_image_url?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           photographer_id?: string
           slug?: string | null

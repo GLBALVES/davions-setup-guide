@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ArrowLeft,
   Upload,
@@ -31,6 +35,9 @@ import {
   Mail,
   ImagePlus,
   Star,
+  Stamp,
+  ChevronDown,
+  CalendarClock,
 } from "lucide-react";
 import {
   Dialog,
@@ -57,6 +64,8 @@ interface Gallery {
   cover_image_url: string | null;
   created_at: string;
   booking_id: string | null;
+  watermark_id: string | null;
+  expires_at: string | null;
   client_name?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
@@ -75,6 +84,11 @@ interface UploadItem {
   progress: number;
   done: boolean;
   error?: string;
+}
+
+interface Watermark {
+  id: string;
+  name: string;
 }
 
 const GalleryDetail = () => {
@@ -96,6 +110,8 @@ const GalleryDetail = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [settingCover, setSettingCover] = useState<string | null>(null);
+  const [watermarks, setWatermarks] = useState<Watermark[]>([]);
+  const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -103,7 +119,7 @@ const GalleryDetail = () => {
   const publicSlugOrId = gallery?.slug ?? id;
   const publicUrl = `${window.location.origin}/gallery/${publicSlugOrId}`;
 
-  // ── Fetch gallery + photos ──────────────────────────────────────────────────
+  // ── Fetch gallery + photos + watermarks ────────────────────────────────────
   const fetchGallery = useCallback(async () => {
     if (!id) return;
     const { data } = await supabase
@@ -127,8 +143,19 @@ const GalleryDetail = () => {
         booked_date: raw.bookings?.booked_date ?? null,
       } as Gallery);
       setAccessCode(raw.access_code ?? "");
+      setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
     }
   }, [id]);
+
+  const fetchWatermarks = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("watermarks")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) setWatermarks(data as Watermark[]);
+  }, [user]);
 
   const fetchPhotos = useCallback(async () => {
     if (!id) return;
@@ -156,11 +183,11 @@ const GalleryDetail = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchGallery(), fetchPhotos()]);
+      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks()]);
       setLoading(false);
     };
     init();
-  }, [fetchGallery, fetchPhotos]);
+  }, [fetchGallery, fetchPhotos, fetchWatermarks]);
 
   // ── Upload logic ─────────────────────────────────────────────────────────────
   const uploadFiles = async (files: FileList | File[]) => {
@@ -398,6 +425,34 @@ const GalleryDetail = () => {
     if (!error) {
       setGallery((g) => g ? { ...g, cover_image_url: null } : g);
       toast({ title: "Cover removed" });
+    }
+  };
+
+  // ── Watermark ────────────────────────────────────────────────────────────────
+  const setWatermark = async (watermarkId: string | null) => {
+    if (!gallery) return;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ watermark_id: watermarkId })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, watermark_id: watermarkId } : g);
+      toast({ title: watermarkId ? "Watermark applied" : "Watermark removed" });
+    }
+  };
+
+  // ── Expiration date ──────────────────────────────────────────────────────────
+  const saveExpiresAt = async (date: Date | undefined) => {
+    if (!gallery) return;
+    const value = date ? date.toISOString() : null;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ expires_at: value } as any)
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, expires_at: value } : g);
+      setExpiresAt(date);
+      toast({ title: date ? "Expiration date set" : "Expiration date removed" });
     }
   };
 
@@ -745,6 +800,62 @@ const GalleryDetail = () => {
                 </div>
               )}
 
+              {/* Watermark section */}
+              {gallery.category === "proof" && (
+                <div className="border border-border p-6 flex flex-col gap-4">
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
+                      <span className="inline-block w-6 h-px bg-border" />
+                      Watermark
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Select a watermark preset to apply to proof photos.
+                    </p>
+                  </div>
+
+                  {watermarks.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/50">
+                      No watermark presets found. Create one in{" "}
+                      <button
+                        onClick={() => navigate("/dashboard/settings")}
+                        className="underline underline-offset-2 hover:text-foreground transition-colors"
+                      >
+                        Settings
+                      </button>.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setWatermark(null)}
+                        className={cn(
+                          "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors",
+                          !gallery.watermark_id
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border hover:border-foreground/50 text-muted-foreground"
+                        )}
+                      >
+                        None
+                      </button>
+                      {watermarks.map((wm) => (
+                        <button
+                          key={wm.id}
+                          onClick={() => setWatermark(wm.id)}
+                          className={cn(
+                            "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors flex items-center gap-1.5",
+                            gallery.watermark_id === wm.id
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border hover:border-foreground/50 text-muted-foreground"
+                          )}
+                        >
+                          <Stamp className="h-3 w-3" />
+                          {wm.name || "Untitled"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Client access section */}
               <div className="border border-border p-6 flex flex-col gap-6">
                 <div>
@@ -863,7 +974,65 @@ const GalleryDetail = () => {
                 </div>
 
                 {/* Send to client */}
-                <div className="pt-2 border-t border-border">
+                <div className="pt-2 border-t border-border flex flex-col gap-4">
+                  {/* Expiration date */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" />
+                      Expiration Date <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground/60">
+                      After this date, the gallery will no longer be accessible.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "flex-1 justify-start text-left font-light text-xs rounded-none border-border h-9 gap-2",
+                              !expiresAt && "text-muted-foreground"
+                            )}
+                          >
+                            <Calendar className="h-3.5 w-3.5 shrink-0" />
+                            {expiresAt ? format(expiresAt, "dd MMM yyyy") : "No expiration"}
+                            <ChevronDown className="h-3.5 w-3.5 ml-auto shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-none" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={expiresAt}
+                            onSelect={(d) => saveExpiresAt(d)}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {expiresAt && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => saveExpiresAt(undefined)}
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          title="Remove expiration"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    {expiresAt && (
+                      <p className={cn(
+                        "text-[10px] flex items-center gap-1.5",
+                        expiresAt < new Date() ? "text-destructive" : "text-muted-foreground/60"
+                      )}>
+                        <span className={cn("h-1.5 w-1.5 rounded-full inline-block", expiresAt < new Date() ? "bg-destructive" : "bg-amber-500")} />
+                        {expiresAt < new Date() ? "Expired — gallery is no longer accessible" : `Expires ${format(expiresAt, "MMMM d, yyyy")}`}
+                      </p>
+                    )}
+                  </div>
+
                   <Button
                     variant="outline"
                     className="w-full gap-2 text-xs tracking-wider uppercase font-light"
@@ -876,7 +1045,7 @@ const GalleryDetail = () => {
                       <><Send className="h-3.5 w-3.5" /> Send to Client</>
                     )}
                   </Button>
-                  <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                  <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
                     Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
                   </p>
                 </div>
