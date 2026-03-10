@@ -80,7 +80,7 @@ const Settings = () => {
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      const [profileRes, watermarksRes] = await Promise.all([
+      const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
           .select("full_name, store_slug, custom_domain, bio, hero_image_url")
@@ -91,6 +91,10 @@ const Settings = () => {
           .select("*")
           .eq("photographer_id", user.id)
           .order("created_at", { ascending: true }),
+        (supabase as any)
+          .from("gallery_settings")
+          .select("key, value")
+          .eq("photographer_id", user.id),
         fetchSessionTypes(),
       ]);
 
@@ -107,6 +111,11 @@ const Settings = () => {
 
       if (watermarksRes.data) {
         setWatermarks(watermarksRes.data as WatermarkData[]);
+      }
+
+      if (gallerySettingsRes?.data) {
+        const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
+        if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
       }
 
       setLoading(false);
