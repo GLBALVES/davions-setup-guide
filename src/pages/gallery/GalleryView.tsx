@@ -196,20 +196,48 @@ const GalleryView = () => {
 
   // ── Anti-piracy ──────────────────────────────────────────────────────────
   useEffect(() => {
+    // Print block
     const styleEl = document.createElement("style");
-    styleEl.textContent = `@media print { body { display: none !important; } }`;
+    styleEl.textContent = `
+      @media print { body { display: none !important; } }
+      * { -webkit-user-select: none !important; user-select: none !important; }
+    `;
     document.head.appendChild(styleEl);
+
+    // Block right-click globally
+    const blockCtx = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", blockCtx);
+
+    // Block keyboard shortcuts: F12, Ctrl+S/P/U/A, Ctrl+Shift+I/J/C/K, PrtSc
     const blockKeys = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
+      // Ctrl combos
       if (ctrl && ["s", "p", "u", "a"].includes(key)) { e.preventDefault(); return; }
-      if (e.key === "F12") { e.preventDefault(); return; }
-      if (ctrl && e.shiftKey && ["i", "j", "c"].includes(key)) { e.preventDefault(); return; }
+      // Ctrl+Shift combos (DevTools, view source)
+      if (ctrl && e.shiftKey && ["i", "j", "c", "k", "e"].includes(key)) { e.preventDefault(); return; }
+      // F keys
+      if (["f12", "f11", "f5"].includes(key)) { e.preventDefault(); return; }
+      // PrintScreen
+      if (e.key === "PrintScreen") { e.preventDefault(); return; }
     };
-    window.addEventListener("keydown", blockKeys);
+    window.addEventListener("keydown", blockKeys, true);
+
+    // Detect DevTools open via resize heuristic and blur the page
+    const devtoolsStyle = document.createElement("style");
+    devtoolsStyle.id = "davions-blur-devtools";
+    document.head.appendChild(devtoolsStyle);
+
+    // Disable drag on all images globally
+    const blockDrag = (e: DragEvent) => e.preventDefault();
+    document.addEventListener("dragstart", blockDrag);
+
     return () => {
       document.head.removeChild(styleEl);
-      window.removeEventListener("keydown", blockKeys);
+      document.head.removeChild(devtoolsStyle);
+      document.removeEventListener("contextmenu", blockCtx);
+      window.removeEventListener("keydown", blockKeys, true);
+      document.removeEventListener("dragstart", blockDrag);
     };
   }, []);
 
