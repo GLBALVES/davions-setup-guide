@@ -18,9 +18,13 @@ async function getAuthenticatedClient(req: Request) {
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: claims, error } = await supabase.auth.getClaims(token);
-    if (!error && claims?.claims) {
-      return { supabase, userId: claims.claims.sub as string };
+    try {
+      const { data: claims, error } = await supabase.auth.getClaims(token);
+      if (!error && claims?.claims) {
+        return { supabase, userId: claims.claims.sub as string };
+      }
+    } catch (jwtErr) {
+      console.warn("JWT verification failed (possibly expired), trying photographer_id fallback:", String(jwtErr));
     }
   }
 
