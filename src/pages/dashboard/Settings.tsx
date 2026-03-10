@@ -238,6 +238,7 @@ const Settings = () => {
                     {[
                       { value: "profile", label: "Profile" },
                       { value: "store", label: "Store" },
+                      { value: "studio", label: "Studio" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
                       <TabsTrigger
