@@ -54,6 +54,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuBadge,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -80,6 +81,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import seloPreto from "@/assets/selo_preto.png";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 
 type MenuItem = {
   title: string;
