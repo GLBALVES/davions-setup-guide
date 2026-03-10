@@ -51,7 +51,7 @@ interface Gallery {
   booking_id?: string | null;
 }
 
-type StatusFilter = "all" | "draft" | "published" | "expired";
+type StatusFilter = "all" | "draft" | "published" | "expired" | "unassigned";
 type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc";
 type ViewMode = "grid" | "list";
 
@@ -60,6 +60,7 @@ const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementT
   { value: "draft", label: "Draft", icon: Clock4 },
   { value: "published", label: "Published", icon: CheckCheck },
   { value: "expired", label: "Expired", icon: CalendarX2 },
+  { value: "unassigned", label: "No client", icon: UserX },
 ];
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
