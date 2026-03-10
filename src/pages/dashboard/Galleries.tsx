@@ -40,7 +40,7 @@ const Galleries = () => {
       .from("galleries")
       .select(`
         id, title, slug, category, status, created_at, cover_image_url, expires_at,
-        bookings ( client_name, sessions ( title ) )
+        bookings ( client_name, client_email, sessions ( title ) )
       `)
       .order("created_at", { ascending: false });
 
