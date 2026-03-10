@@ -455,7 +455,7 @@ Guidelines:
                       checked={activeAgent?.review_mode ?? false}
                       onCheckedChange={(v) => updateAgentToggle("review_mode", v)}
                     />
-                    <Label className="text-[10px] cursor-pointer">Supervisão</Label>
+                    <Label className="text-[10px] cursor-pointer">Supervision</Label>
                   </div>
                 )}
 
