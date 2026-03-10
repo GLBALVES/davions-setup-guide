@@ -1,10 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, Image, CalendarX2, Heart } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Download, Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 // ── Client token (anonymous identifier persisted in localStorage) ─────────────
@@ -16,6 +24,10 @@ function getClientToken(): string {
     localStorage.setItem(key, token);
   }
   return token;
+}
+
+function formatCurrency(cents: number): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
 interface Gallery {
@@ -30,6 +42,7 @@ interface Gallery {
   cover_focal_x: number | null;
   cover_focal_y: number | null;
   expires_at: string | null;
+  price_per_photo: number;
 }
 
 interface Photo {
@@ -42,6 +55,7 @@ interface Photo {
 
 const GalleryView = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +68,20 @@ const GalleryView = () => {
   const [togglingFav, setTogglingFav] = useState<Set<string>>(new Set());
   const clientToken = getClientToken();
 
+  // Purchase modal state
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+
+  // Check for ?purchased=true in URL
+  useEffect(() => {
+    if (searchParams.get("purchased") === "true") {
+      setPurchaseSuccess(true);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     const fetchGallery = async () => {
       if (!slug) return;
@@ -63,7 +91,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo")
         .eq("status", "published");
 
       if (isUuid) {
@@ -175,6 +203,41 @@ const GalleryView = () => {
     URL.revokeObjectURL(a.href);
   };
 
+  // ── Purchase / Submit selection ───────────────────────────────────────────────
+  const handlePurchaseOrSubmit = async () => {
+    if (!gallery || !clientEmail.trim()) return;
+    setCheckingOut(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-gallery-checkout", {
+        body: {
+          galleryId: gallery.id,
+          clientEmail: clientEmail.trim(),
+          clientName: clientName.trim() || undefined,
+          clientToken,
+          photoCount: favorites.size,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.free) {
+        // Free gallery — just confirm
+        setPurchaseOpen(false);
+        setPurchaseSuccess(true);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
   // Lightbox keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -239,6 +302,10 @@ const GalleryView = () => {
   }
 
   const favCount = favorites.size;
+  const isProof = gallery?.category === "proof";
+  const pricePerPhoto = gallery?.price_per_photo ?? 0;
+  const totalPrice = pricePerPhoto * favCount;
+  const isFree = pricePerPhoto === 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -253,13 +320,28 @@ const GalleryView = () => {
             </span>
           )}
           <Badge
-            variant={gallery?.category === "proof" ? "outline" : "default"}
+            variant={isProof ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
           >
-            {gallery?.category === "proof" ? "Proof Gallery" : "Final Gallery"}
+            {isProof ? "Proof Gallery" : "Final Gallery"}
           </Badge>
         </div>
       </header>
+
+      {/* Purchase success banner */}
+      {purchaseSuccess && (
+        <div className="bg-green-50 border-b border-green-200 px-6 py-3 flex items-center gap-3">
+          <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+          <p className="text-sm text-green-800 font-light">
+            {isFree
+              ? "Your selection has been submitted! The photographer will be notified."
+              : "Payment successful! Your photo selection has been confirmed."}
+          </p>
+          <button onClick={() => setPurchaseSuccess(false)} className="ml-auto text-green-600 hover:text-green-800">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Access gate */}
       {!unlocked && gallery?.access_code && (
@@ -301,7 +383,7 @@ const GalleryView = () => {
 
       {/* Gallery content */}
       {unlocked && (
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col pb-32">
           {/* Cover image hero */}
           {gallery?.cover_image_url ? (
             <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0">
@@ -322,14 +404,14 @@ const GalleryView = () => {
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
                     {gallery.category === "final" && " · Click any photo to download"}
-                    {gallery.category === "proof" && " · Click ♡ to save favorites"}
+                    {isProof && " · Click ♡ to save your favorites"}
                   </p>
                 </div>
                 <Badge
-                  variant={gallery.category === "proof" ? "outline" : "default"}
+                  variant={isProof ? "outline" : "default"}
                   className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0"
                 >
-                  {gallery.category === "proof" ? "Proof Gallery" : "Final Gallery"}
+                  {isProof ? "Proof Gallery" : "Final Gallery"}
                 </Badge>
               </div>
             </div>
@@ -339,7 +421,7 @@ const GalleryView = () => {
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
                 {photos.length} photo{photos.length !== 1 ? "s" : ""}
                 {gallery?.category === "final" && " · Click any photo to download"}
-                {gallery?.category === "proof" && " · Click ♡ to save favorites"}
+                {isProof && " · Click ♡ to save your favorites"}
               </p>
             </div>
           )}
@@ -383,7 +465,7 @@ const GalleryView = () => {
                           ? "bg-rose-500/90 text-white opacity-100"
                           : "bg-black/40 text-white/70 opacity-0 group-hover:opacity-100"
                         }`}
-                      title={isFav ? "Remove from favorites" : "Add to favorites"}
+                      title={isFav ? "Remove from selection" : "Add to selection"}
                     >
                       <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
                     </button>
@@ -405,6 +487,114 @@ const GalleryView = () => {
           </div>
         </main>
       )}
+
+      {/* ── Sticky purchase bar — proof gallery only ───────────────────────── */}
+      {unlocked && isProof && favCount > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm shadow-lg">
+          <div className="max-w-2xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-rose-500">
+                <Heart className="h-4 w-4 fill-rose-500 shrink-0" />
+                <span className="text-sm font-light">
+                  <strong className="font-medium">{favCount}</strong> photo{favCount !== 1 ? "s" : ""} selected
+                </span>
+              </div>
+              {pricePerPhoto > 0 && (
+                <>
+                  <span className="text-muted-foreground/40 hidden sm:block">·</span>
+                  <span className="text-sm font-light text-muted-foreground hidden sm:block">
+                    Total: <strong className="text-foreground font-medium">{formatCurrency(totalPrice)}</strong>
+                  </span>
+                </>
+              )}
+            </div>
+            <Button
+              onClick={() => setPurchaseOpen(true)}
+              className="w-full sm:w-auto gap-2 text-xs tracking-widest uppercase font-light"
+              size="lg"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {isFree ? "Submit Selection" : "Purchase Selection"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Purchase / Submit modal ────────────────────────────────────────── */}
+      <Dialog open={purchaseOpen} onOpenChange={setPurchaseOpen}>
+        <DialogContent className="sm:max-w-md rounded-none border-border">
+          <DialogHeader>
+            <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              {isFree ? "Submit Your Selection" : "Purchase Your Selection"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {favCount} photo{favCount !== 1 ? "s" : ""} selected
+              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} each · Total: ${formatCurrency(totalPrice)}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 pt-2">
+            {/* Pricing summary */}
+            {pricePerPhoto > 0 && (
+              <div className="border border-border bg-muted/20 px-4 py-3 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground font-light">
+                  {favCount} × {formatCurrency(pricePerPhoto)}
+                </span>
+                <span className="font-medium text-foreground">{formatCurrency(totalPrice)}</span>
+              </div>
+            )}
+
+            {/* Client name */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                Your Name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
+              </Label>
+              <Input
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Ana Silva"
+                className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground"
+              />
+            </div>
+
+            {/* Client email */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="ana@example.com"
+                className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground"
+              />
+            </div>
+
+            <Button
+              onClick={handlePurchaseOrSubmit}
+              disabled={!clientEmail.trim() || checkingOut}
+              className="w-full mt-2 gap-2"
+              size="lg"
+            >
+              {checkingOut ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+              ) : isFree ? (
+                "Submit Selection"
+              ) : (
+                <><ShoppingCart className="h-4 w-4" /> Proceed to Checkout</>
+              )}
+            </Button>
+
+            {!isFree && (
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">
+                Secure payment powered by Stripe
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Lightbox */}
       {lightboxIndex !== null && photos[lightboxIndex] && (
@@ -450,7 +640,7 @@ const GalleryView = () => {
               }`}
           >
             <Heart className={`h-3 w-3 ${favorites.has(photos[lightboxIndex].id) ? "fill-white" : ""}`} />
-            {favorites.has(photos[lightboxIndex].id) ? "Favorita" : "Favoritar"}
+            {favorites.has(photos[lightboxIndex].id) ? "Saved" : "Save"}
           </button>
           {gallery?.category === "final" && (
             <button
