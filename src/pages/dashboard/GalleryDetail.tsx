@@ -1076,11 +1076,55 @@ const GalleryDetail = () => {
               {/* Photo grid — drag to reorder */}
               {photos.length > 0 && (
                 <div className="flex flex-col gap-4">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                    <span className="inline-block w-6 h-px bg-border" />
-                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
-                    <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
-                  </p>
+                  {/* Toolbar */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                      <span className="inline-block w-6 h-px bg-border" />
+                      {isSelecting
+                        ? `${selectedPhotos.size} selected`
+                        : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
+                      {!isSelecting && (
+                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {isSelecting ? (
+                        <>
+                          <button
+                            onClick={toggleSelectAll}
+                            className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {selectedPhotos.size === photos.length ? "Deselect all" : "Select all"}
+                          </button>
+                          {selectedPhotos.size > 0 && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setDeleteSelectedOpen(true)}
+                              className="gap-1.5 text-xs tracking-wider uppercase font-light h-7"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Delete {selectedPhotos.size}
+                            </Button>
+                          )}
+                          <button
+                            onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
+                            className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setIsSelecting(true)}
+                          className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                        >
+                          <CheckSquare className="h-3.5 w-3.5" />
+                          Select
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1090,6 +1134,9 @@ const GalleryDetail = () => {
                              photo={photo}
                              onRequestDelete={setPhotoToDelete}
                              onPreview={() => setLightboxIndex(idx)}
+                             isSelected={selectedPhotos.has(photo.id)}
+                             isSelecting={isSelecting}
+                             onToggleSelect={toggleSelectPhoto}
                            />
                          ))}
                       </div>
