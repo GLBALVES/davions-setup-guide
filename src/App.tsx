@@ -27,6 +27,7 @@ import Blog from "./pages/blog/Blog";
 import BlogPostPage from "./pages/blog/BlogPost";
 import BlogManager from "./pages/dashboard/BlogManager";
 import BlogEditor from "./pages/dashboard/BlogEditor";
+import SiteSeo from "./pages/dashboard/SiteSeo";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
