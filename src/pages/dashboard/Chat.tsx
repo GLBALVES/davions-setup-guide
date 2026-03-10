@@ -336,12 +336,8 @@ Guidelines:
     toast.success("Ticket reopened");
   };
 
-  // Change AI mode
-  const changeAIMode = async (mode: string) => {
-    if (!selectedTicket) return;
-    await supabase.from("support_tickets").update({ ai_mode: mode }).eq("id", selectedTicket.id);
-    setSelectedTicket((prev) => prev ? { ...prev, ai_mode: mode } : null);
-  };
+
+
 
 
   const saveNotes = async () => {
