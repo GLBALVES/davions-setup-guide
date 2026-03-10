@@ -28,6 +28,7 @@ const Galleries = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editGallery, setEditGallery] = useState<Gallery | null>(null);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type") as "proof" | "final" | null;
 
@@ -106,23 +107,24 @@ const Galleries = () => {
                 </Button>
               </div>
 
-              <GalleryGrid galleries={filtered} loading={loading} />
+              <GalleryGrid galleries={filtered} loading={loading} onEdit={setEditGallery} />
             </div>
           </main>
         </div>
       </div>
 
       <CreateGalleryDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
+        open={createOpen || !!editGallery}
+        onOpenChange={(v) => { setCreateOpen(v); if (!v) setEditGallery(null); }}
         onCreated={fetchGalleries}
         defaultCategory={defaultCategory}
+        editGallery={editGallery}
       />
     </SidebarProvider>
   );
 };
 
-function GalleryGrid({ galleries, loading }: { galleries: Gallery[]; loading: boolean }) {
+function GalleryGrid({ galleries, loading, onEdit }: { galleries: Gallery[]; loading: boolean; onEdit: (g: Gallery) => void }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -144,7 +146,7 @@ function GalleryGrid({ galleries, loading }: { galleries: Gallery[]; loading: bo
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {galleries.map((gallery) => (
-        <GalleryCard key={gallery.id} gallery={gallery} />
+        <GalleryCard key={gallery.id} gallery={gallery} onEdit={() => onEdit(gallery)} />
       ))}
     </div>
   );
