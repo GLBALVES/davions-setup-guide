@@ -357,6 +357,13 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteOpen(true); }}
+                title="Delete gallery"
+                className="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
@@ -373,9 +380,38 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
                 <Pencil className="h-3.5 w-3.5" />
               </button>
             )}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteOpen(true); }}
+              title="Delete gallery"
+              className="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </div>
     </div>
+
+    <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete <span className="font-medium text-foreground">"{gallery.title}"</span> and all its photos. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting…" : "Delete gallery"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }

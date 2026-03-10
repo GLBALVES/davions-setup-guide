@@ -406,6 +406,7 @@ function GalleryGrid({
             <GalleryCard
               gallery={gallery}
               onEdit={() => onEdit(gallery)}
+              onDelete={onDelete}
               compact={viewMode === "list"}
             />
           </motion.div>
