@@ -447,7 +447,7 @@ const GalleryView = () => {
               )}
               <span className="hidden sm:flex items-center gap-1.5 ml-0.5 text-[10px] tracking-widest uppercase text-rose-600 font-light">
                 <ShoppingCart className="h-3 w-3" />
-                {isFree ? "Enviar" : "Checkout"}
+                {isFree ? "Submit" : "Checkout"}
               </span>
             </button>
           )}
@@ -455,7 +455,7 @@ const GalleryView = () => {
             variant={isProof ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
           >
-            {isProof ? "Prova" : "Final"}
+            {isProof ? "Proof" : "Final"}
           </Badge>
         </div>
       </header>
