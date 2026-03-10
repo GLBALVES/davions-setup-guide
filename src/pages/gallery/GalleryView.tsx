@@ -547,7 +547,7 @@ const GalleryView = () => {
             {photos.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Image className="h-10 w-10 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">Nenhuma foto nesta galeria ainda.</p>
+                <p className="text-sm text-muted-foreground">No photos in this gallery yet.</p>
               </div>
             )}
 
