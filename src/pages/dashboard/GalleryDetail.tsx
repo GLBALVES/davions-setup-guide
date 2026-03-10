@@ -1107,6 +1107,29 @@ const GalleryDetail = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                {(() => {
+                  const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
+                  const listText = favoritedPhotos.map((p) => p.filename).join("\n");
+                  const copyFavs = async () => {
+                    await navigator.clipboard.writeText(listText);
+                    setCopiedFavorites(true);
+                    setTimeout(() => setCopiedFavorites(false), 2000);
+                  };
+                  return (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyFavs}
+                      disabled={favoritedPhotos.length === 0}
+                      className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
+                      title={favoritedPhotos.length === 0 ? "No favorites yet" : `Copy ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
+                    >
+                      {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Heart className="h-3.5 w-3.5" />}
+                      {copiedFavorites ? "Copied!" : `Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
+                    </Button>
+                  );
+                })()}
+
                 <Button
                   variant="ghost"
                   size="sm"
