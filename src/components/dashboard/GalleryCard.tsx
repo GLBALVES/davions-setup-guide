@@ -244,6 +244,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
         {compact && (
           <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted-foreground tracking-wider uppercase shrink-0">
             {gallery.client_name && <span className="truncate max-w-[120px]">{gallery.client_name}</span>}
+            {isUnassigned && (
+              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                <UserX className="h-3 w-3" />
+                No client
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Image className="h-3 w-3" />
               {gallery.photo_count}
