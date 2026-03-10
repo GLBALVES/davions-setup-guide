@@ -50,7 +50,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at")
         .eq("status", "published");
 
       if (isUuid) {
