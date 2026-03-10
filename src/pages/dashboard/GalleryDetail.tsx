@@ -130,9 +130,12 @@ interface SortablePhotoProps {
   photo: Photo;
   onRequestDelete: (photo: Photo) => void;
   onPreview: (photo: Photo) => void;
+  isSelected: boolean;
+  isSelecting: boolean;
+  onToggleSelect: (id: string) => void;
 }
 
-const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
@@ -153,9 +156,14 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps
     <div
       ref={setNodeRef}
       style={style}
-      className="relative group aspect-square bg-muted overflow-hidden cursor-grab active:cursor-grabbing"
-      {...attributes}
-      {...listeners}
+      className={cn(
+        "relative group aspect-square bg-muted overflow-hidden",
+        isSelecting ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+        isSelected && "ring-2 ring-primary ring-offset-1"
+      )}
+      {...(isSelecting ? {} : attributes)}
+      {...(isSelecting ? {} : listeners)}
+      onClick={isSelecting ? () => onToggleSelect(photo.id) : undefined}
     >
       {photo.url ? (
         <img
@@ -169,22 +177,42 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps
           <span className="text-[10px] text-muted-foreground">No preview</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
-          className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </button>
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
-          className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+
+      {/* Selection checkbox */}
+      {isSelecting && (
+        <div className="absolute top-2 left-2 z-10">
+          {isSelected ? (
+            <CheckSquare className="h-5 w-5 text-primary drop-shadow" />
+          ) : (
+            <Square className="h-5 w-5 text-white/80 drop-shadow" />
+          )}
+        </div>
+      )}
+
+      {/* Selected overlay */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
+      )}
+
+      {/* Hover actions (only when not selecting) */}
+      {!isSelecting && (
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
