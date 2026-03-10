@@ -485,7 +485,7 @@ const GalleryView = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-light tracking-wide">{gallery.title}</h1>
-                <p className="text-sm text-muted-foreground">Esta galeria é privada. Insira o código de acesso para continuar.</p>
+                <p className="text-sm text-muted-foreground">This gallery is private. Enter the access code to continue.</p>
               </div>
             </div>
             <div className="flex flex-col gap-3">
