@@ -125,6 +125,15 @@ const Galleries = () => {
 
   useEffect(() => {
     fetchGalleries();
+
+    const channel = supabase
+      .channel("galleries-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "galleries" }, () => {
+        fetchGalleries();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Derived — apply category tab, search, status filter, sort
