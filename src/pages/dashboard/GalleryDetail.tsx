@@ -350,6 +350,59 @@ const GalleryDetail = () => {
           </header>
 
           <main className="flex-1 overflow-y-auto">
+            {/* Hero banner */}
+            {gallery.cover_image_url && (
+              <div className="relative w-full h-52 md:h-72 overflow-hidden">
+                <img
+                  src={gallery.cover_image_url}
+                  alt={gallery.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between">
+                  <div className="flex flex-col gap-1.5">
+                    <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
+                      {gallery.title || "Untitled Gallery"}
+                    </h1>
+                    {(gallery.client_name || gallery.session_title) && (
+                      <div className="flex items-center gap-4 text-[11px] text-white/70">
+                        {gallery.client_name && (
+                          <span className="flex items-center gap-1.5">
+                            <User className="h-3 w-3" />
+                            {gallery.client_name}
+                          </span>
+                        )}
+                        {gallery.session_title && (
+                          <span className="flex items-center gap-1.5">
+                            <Camera className="h-3 w-3" />
+                            {gallery.session_title}
+                          </span>
+                        )}
+                        {gallery.booked_date && (
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3" />
+                            {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge
+                      variant={gallery.category === "proof" ? "outline" : "default"}
+                      className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
+                    >
+                      {gallery.category === "proof" ? "Proof" : "Final"}
+                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
+                      <span className="text-[10px] tracking-[0.2em] uppercase text-white/70 font-light">{gallery.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Sub-header */}
             <div className="border-b border-border px-6 md:px-10 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
@@ -381,28 +434,33 @@ const GalleryDetail = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-lg font-light tracking-wide">{gallery.title || "Untitled Gallery"}</h1>
-                      <Badge
-                        variant={gallery.category === "proof" ? "outline" : "default"}
-                        className="text-[9px] tracking-[0.2em] uppercase font-light shrink-0 rounded-none"
-                      >
-                        {gallery.category === "proof" ? "Proof" : "Final"}
-                      </Badge>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
-                          }`}
-                        />
-                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-                          {gallery.status}
-                        </span>
+                    {!gallery.cover_image_url && (
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-lg font-light tracking-wide">{gallery.title || "Untitled Gallery"}</h1>
+                        <Badge
+                          variant={gallery.category === "proof" ? "outline" : "default"}
+                          className="text-[9px] tracking-[0.2em] uppercase font-light shrink-0 rounded-none"
+                        >
+                          {gallery.category === "proof" ? "Proof" : "Final"}
+                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
+                            }`}
+                          />
+                          <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+                            {gallery.status}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {gallery.cover_image_url && (
+                      <h1 className="text-lg font-light tracking-wide">{gallery.title || "Untitled Gallery"}</h1>
+                    )}
 
-                    {/* Booking info strip */}
-                    {(gallery.client_name || gallery.session_title) && (
+                    {/* Booking info strip — only show here if no cover (cover shows it overlaid) */}
+                    {!gallery.cover_image_url && (gallery.client_name || gallery.session_title) && (
                       <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
                         {gallery.client_name && (
                           <span className="flex items-center gap-1.5">
