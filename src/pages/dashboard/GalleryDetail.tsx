@@ -1366,6 +1366,26 @@ const GalleryDetail = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={deleteGalleryOpen} onOpenChange={setDeleteGalleryOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <span className="font-medium text-foreground">"{gallery?.title}"</span> and all its photos. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={deleteGallery}
+            >
+              Delete gallery
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Lightbox */}
       {lightboxIndex !== null && photos[lightboxIndex] && (
         <div
