@@ -331,6 +331,17 @@ const GalleryDetail = () => {
       .order("order_index", { ascending: true });
 
     if (data) {
+      // Fetch favorite counts per photo
+      const { data: favData } = await supabase
+        .from("photo_favorites")
+        .select("photo_id")
+        .eq("gallery_id", id);
+
+      const favCount: Record<string, number> = {};
+      favData?.forEach((f) => {
+        favCount[f.photo_id] = (favCount[f.photo_id] || 0) + 1;
+      });
+
       const withUrls = data.map((p) => {
         let url: string | undefined;
         if (p.storage_path) {
@@ -339,7 +350,7 @@ const GalleryDetail = () => {
             .getPublicUrl(p.storage_path);
           url = urlData.publicUrl;
         }
-        return { ...p, url };
+        return { ...p, url, favorite_count: favCount[p.id] ?? 0 };
       });
       setPhotos(withUrls);
     }
