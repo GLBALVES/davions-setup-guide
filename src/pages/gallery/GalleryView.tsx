@@ -44,7 +44,7 @@ const GalleryView = () => {
 
       const { data, error } = await supabase
         .from("galleries")
-        .select("id, title, category, status, access_code, photographer_id")
+        .select("id, title, category, status, access_code, photographer_id, cover_image_url")
         .eq("id", id)
         .eq("status", "published")
         .single();
