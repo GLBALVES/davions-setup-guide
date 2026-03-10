@@ -496,6 +496,28 @@ const Settings = () => {
                     </div>
                   </TabsContent>
 
+                  {/* ── STUDIO TAB ── */}
+                  <TabsContent value="studio" className="mt-0 flex flex-col gap-8">
+                    <section className="flex flex-col gap-4">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Session Types</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Categorize your sessions by type (e.g. Newborn, Wedding, Portrait). Types can be assigned when creating sessions.
+                        </p>
+                      </div>
+
+                      {user && (
+                        <SessionTypeManager
+                          photographerId={user.id}
+                          sessionTypes={sessionTypes}
+                          selectedTypeId={selectedTypeId}
+                          onSelect={setSelectedTypeId}
+                          onRefetch={fetchSessionTypes}
+                        />
+                      )}
+                    </section>
+                  </TabsContent>
+
                   {/* ── GALLERIES TAB ── */}
                   <TabsContent value="galleries" className="mt-0 flex flex-col gap-6">
                     {/* Header */}
