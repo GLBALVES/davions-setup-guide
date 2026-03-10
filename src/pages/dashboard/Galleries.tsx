@@ -62,6 +62,7 @@ const Galleries = () => {
           cover_image_url: g.cover_image_url ?? null,
           expires_at: g.expires_at ?? null,
           client_name: g.bookings?.client_name ?? null,
+          client_email: g.bookings?.client_email ?? null,
           session_title: (g.bookings as any)?.sessions?.title ?? null,
         }))
       );
