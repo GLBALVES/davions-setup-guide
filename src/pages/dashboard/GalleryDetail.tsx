@@ -794,6 +794,26 @@ const GalleryDetail = () => {
                       </button>
                     )}
                   </div>
+                  </div>
+                </div>
+
+                {/* Send to client */}
+                <div className="pt-2 border-t border-border">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-xs tracking-wider uppercase font-light"
+                    onClick={sendGalleryLink}
+                    disabled={sendingEmail}
+                  >
+                    {sendingEmail ? (
+                      <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
+                    ) : (
+                      <><Send className="h-3.5 w-3.5" /> Send to Client</>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                    Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
+                  </p>
                 </div>
               </div>
             </div>
