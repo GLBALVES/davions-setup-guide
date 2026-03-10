@@ -160,6 +160,39 @@ const GalleryView = () => {
     );
   }
 
+  const isExpired = gallery?.expires_at ? new Date(gallery.expires_at) < new Date() : false;
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
+          <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
+          <div className="h-20 w-20 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
+            <CalendarX2 className="h-9 w-9" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              This gallery has expired and is no longer available.
+            </p>
+            {gallery?.expires_at && (
+              <p className="text-[11px] text-muted-foreground/50 tracking-wider uppercase mt-1">
+                Expired on {new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            )}
+          </div>
+        </div>
+        <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
+          <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50">
+            Powered by Davions
+          </p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navbar */}
