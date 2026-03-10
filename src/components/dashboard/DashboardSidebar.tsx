@@ -292,6 +292,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const badges = useSidebarBadges();
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
 
