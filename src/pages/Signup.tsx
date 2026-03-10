@@ -82,22 +82,8 @@ const Signup = () => {
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm flex flex-col gap-10">
 
-          {success ? (
-            /* ── Success state ── */
-            <div className="flex flex-col gap-6 text-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border border-foreground flex items-center justify-center text-foreground text-xl font-light">
-                  ✓
-                </div>
-                <h1 className="text-2xl font-light tracking-wide">Check your inbox</h1>
-                <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                  We sent a confirmation link to{" "}
-                  <span className="text-foreground">{form.getValues("email")}</span>.
-                  Open it to activate your account.
-                </p>
-              </div>
-              <Button variant="outline" asChild className="w-full">
-                <Link to="/login">Back to Sign In</Link>
+          {false ? (
+            <div>
               </Button>
             </div>
           ) : (
