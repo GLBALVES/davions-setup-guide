@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ArrowLeft,
   Upload,
@@ -31,6 +35,9 @@ import {
   Mail,
   ImagePlus,
   Star,
+  Stamp,
+  ChevronDown,
+  CalendarClock,
 } from "lucide-react";
 import {
   Dialog,
