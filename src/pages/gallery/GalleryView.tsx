@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, Image } from "lucide-react";
+import { Download, Lock, Image, CalendarX2 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Gallery {
@@ -18,6 +18,7 @@ interface Gallery {
   cover_image_url: string | null;
   cover_focal_x: number | null;
   cover_focal_y: number | null;
+  expires_at: string | null;
 }
 
 interface Photo {
@@ -49,7 +50,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at")
         .eq("status", "published");
 
       if (isUuid) {
@@ -155,6 +156,39 @@ const GalleryView = () => {
         <Image className="h-10 w-10 text-muted-foreground/40" />
         <h1 className="text-xl font-light tracking-wide">Gallery not found</h1>
         <p className="text-sm text-muted-foreground">This gallery may not exist or has not been published yet.</p>
+      </div>
+    );
+  }
+
+  const isExpired = gallery?.expires_at ? new Date(gallery.expires_at) < new Date() : false;
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
+          <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
+          <div className="h-20 w-20 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
+            <CalendarX2 className="h-9 w-9" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              This gallery has expired and is no longer available.
+            </p>
+            {gallery?.expires_at && (
+              <p className="text-[11px] text-muted-foreground/50 tracking-wider uppercase mt-1">
+                Expired on {new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            )}
+          </div>
+        </div>
+        <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
+          <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50">
+            Powered by Davions
+          </p>
+        </footer>
       </div>
     );
   }
