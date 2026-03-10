@@ -102,7 +102,11 @@ export function CreateGalleryDialog({
           .order("created_at", { ascending: true });
       }
 
-      if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
+      if (bookingsRes.data) {
+        setBookings(bookingsRes.data as Booking[]);
+        // Auto-select booking if prefilled
+        if (prefilledBookingId) setSelectedBookingId(prefilledBookingId);
+      }
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
     };
 
