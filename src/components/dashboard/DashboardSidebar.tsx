@@ -107,8 +107,8 @@ const groups: MenuGroup[] = [
     defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
-      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings" },
+      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings" },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final" },
     ],
