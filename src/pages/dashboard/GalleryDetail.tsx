@@ -526,6 +526,31 @@ const GalleryDetail = () => {
     navigate("/dashboard/galleries");
   };
 
+  // ── Drag-and-drop reorder ────────────────────────────────────────────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = photos.findIndex((p) => p.id === active.id);
+    const newIndex = photos.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(photos, oldIndex, newIndex).map((p, i) => ({
+      ...p,
+      order_index: i,
+    }));
+    setPhotos(reordered);
+
+    // Persist new order in parallel
+    await Promise.all(
+      reordered.map((p) =>
+        supabase.from("photos").update({ order_index: p.order_index }).eq("id", p.id)
+      )
+    );
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
