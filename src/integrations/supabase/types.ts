@@ -393,6 +393,256 @@ export type Database = {
           },
         ]
       }
+      mkt_email_automated: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          html_content: string | null
+          id: string
+          name: string
+          photographer_id: string
+          sender_email: string
+          sender_name: string
+          subject: string
+          trigger_config: Json | null
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id: string
+          sender_email?: string
+          sender_name?: string
+          subject?: string
+          trigger_config?: Json | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id?: string
+          sender_email?: string
+          sender_name?: string
+          subject?: string
+          trigger_config?: Json | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_email_automated_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mkt_email_campaign_emails: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          delay_days: number
+          email_order: number
+          html_content: string | null
+          id: string
+          send_time: string | null
+          subject: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          delay_days?: number
+          email_order?: number
+          html_content?: string | null
+          id?: string
+          send_time?: string | null
+          subject?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          delay_days?: number
+          email_order?: number
+          html_content?: string | null
+          id?: string
+          send_time?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_email_campaign_emails_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "mkt_email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mkt_email_campaigns: {
+        Row: {
+          audience: Json | null
+          created_at: string
+          html_content: string | null
+          id: string
+          name: string
+          photographer_id: string
+          sender_email: string
+          sender_name: string
+          stats: Json | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Json | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id: string
+          sender_email?: string
+          sender_name?: string
+          stats?: Json | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Json | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id?: string
+          sender_email?: string
+          sender_name?: string
+          stats?: Json | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_email_campaigns_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mkt_email_oneoff: {
+        Row: {
+          audience: Json | null
+          created_at: string
+          html_content: string | null
+          id: string
+          name: string
+          photographer_id: string
+          scheduled_at: string | null
+          sender_email: string
+          sender_name: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Json | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id: string
+          scheduled_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Json | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name?: string
+          photographer_id?: string
+          scheduled_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_email_oneoff_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mkt_push_notifications: {
+        Row: {
+          action_url: string | null
+          audience: Json | null
+          body: string
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          photographer_id: string
+          scheduled_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          audience?: Json | null
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          photographer_id: string
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+        }
+        Update: {
+          action_url?: string | null
+          audience?: Json | null
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          photographer_id?: string
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_push_notifications_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_seo_settings: {
         Row: {
           canonical_url: string | null
