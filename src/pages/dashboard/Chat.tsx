@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   MessageCircle,
   Send,
@@ -36,11 +37,12 @@ import {
   Paperclip,
   Star,
   Check,
-  Settings2,
   Edit3,
   Trash2,
   RotateCcw,
   Plus,
+  Settings2,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
