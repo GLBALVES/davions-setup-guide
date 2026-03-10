@@ -101,15 +101,34 @@ Deno.serve(async (req) => {
     const slug = await uniqueSlug(auth.supabase, baseSlug, auth.userId);
     const access_code = generateAccessCode();
 
+    // Read default expiry from gallery_settings
+    const { data: settingsData } = await auth.supabase
+      .from("gallery_settings")
+      .select("value")
+      .eq("photographer_id", auth.userId)
+      .eq("key", "default_expiry_days")
+      .maybeSingle();
+
+    let expires_at: string | null = null;
+    if (settingsData?.value) {
+      const days = parseInt(settingsData.value, 10);
+      if (!isNaN(days) && days > 0) {
+        expires_at = new Date(Date.now() + days * 86400000).toISOString();
+      }
+    }
+
+    const insertData: Record<string, unknown> = {
+      photographer_id: auth.userId,
+      title,
+      category: gallery_type ?? "proof",
+      slug,
+      access_code,
+    };
+    if (expires_at) insertData.expires_at = expires_at;
+
     const { data, error } = await auth.supabase
       .from("galleries")
-      .insert({
-        photographer_id: auth.userId,
-        title,
-        category: gallery_type ?? "proof",
-        slug,
-        access_code,
-      })
+      .insert(insertData)
       .select("id")
       .single();
 
