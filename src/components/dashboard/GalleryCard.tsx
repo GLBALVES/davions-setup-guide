@@ -24,9 +24,11 @@ interface GalleryCardProps {
     session_title?: string | null;
   };
   onEdit?: () => void;
+  /** Render as a compact single-row for list view */
+  compact?: boolean;
 }
 
-export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
+export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardProps) {
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
   const [email, setEmail] = useState(gallery.client_email ?? "");
