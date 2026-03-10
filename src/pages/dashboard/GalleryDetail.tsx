@@ -885,6 +885,56 @@ const GalleryDetail = () => {
           </main>
         </div>
       </div>
+
+      {/* Cover Picker Dialog */}
+      <Dialog open={coverPickerOpen} onOpenChange={setCoverPickerOpen}>
+        <DialogContent className="max-w-2xl rounded-none p-0 gap-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <DialogTitle className="text-base font-light tracking-wide">Choose Cover Image</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">Select one of the gallery photos to use as the cover.</p>
+          </DialogHeader>
+          <div className="p-6 overflow-y-auto max-h-[60vh]">
+            {photos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+                <ImagePlus className="h-8 w-8 opacity-30" />
+                <p className="text-sm">No photos uploaded yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                {photos.map((photo) => {
+                  const isCurrent = gallery.cover_image_url === photo.url;
+                  return (
+                    <button
+                      key={photo.id}
+                      onClick={() => setCoverFromPhoto(photo)}
+                      disabled={settingCover === photo.id}
+                      className={`relative aspect-square overflow-hidden group border-2 transition-colors ${
+                        isCurrent ? "border-primary" : "border-transparent hover:border-primary/50"
+                      }`}
+                    >
+                      <img
+                        src={photo.url}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      {isCurrent && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <Star className="h-5 w-5 text-primary fill-primary" />
+                        </div>
+                      )}
+                      {settingCover === photo.id && (
+                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                          <span className="text-[10px] text-muted-foreground animate-pulse tracking-widest uppercase">Saving…</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
