@@ -20,6 +20,7 @@ import {
   CalendarX2,
   LayoutGrid,
   List,
+  UserX,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,9 +48,10 @@ interface Gallery {
   client_name?: string | null;
   client_email?: string | null;
   session_title?: string | null;
+  booking_id?: string | null;
 }
 
-type StatusFilter = "all" | "draft" | "published" | "expired";
+type StatusFilter = "all" | "draft" | "published" | "expired" | "unassigned";
 type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc";
 type ViewMode = "grid" | "list";
 
@@ -58,6 +60,7 @@ const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementT
   { value: "draft", label: "Draft", icon: Clock4 },
   { value: "published", label: "Published", icon: CheckCheck },
   { value: "expired", label: "Expired", icon: CalendarX2 },
+  { value: "unassigned", label: "No client", icon: UserX },
 ];
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -88,7 +91,7 @@ const Galleries = () => {
     const { data: galleriesData } = await supabase
       .from("galleries")
       .select(`
-        id, title, slug, category, status, created_at, cover_image_url, expires_at,
+        id, title, slug, category, status, created_at, cover_image_url, expires_at, booking_id,
         bookings ( client_name, client_email, sessions ( title ) )
       `)
       .order("created_at", { ascending: false });
@@ -110,6 +113,7 @@ const Galleries = () => {
           photo_count: countMap[g.id] || 0,
           cover_image_url: g.cover_image_url ?? null,
           expires_at: g.expires_at ?? null,
+          booking_id: g.booking_id ?? null,
           client_name: g.bookings?.client_name ?? null,
           client_email: g.bookings?.client_email ?? null,
           session_title: (g.bookings as any)?.sessions?.title ?? null,
@@ -144,6 +148,7 @@ const Galleries = () => {
       list = list.filter((g) => {
         const isExpired = g.expires_at ? new Date(g.expires_at) < new Date() : false;
         if (statusFilter === "expired") return isExpired;
+        if (statusFilter === "unassigned") return !g.booking_id;
         if (statusFilter === "draft") return g.status === "draft" && !isExpired;
         if (statusFilter === "published") return g.status === "published" && !isExpired;
         return true;

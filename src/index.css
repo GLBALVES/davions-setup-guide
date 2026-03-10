@@ -36,6 +36,9 @@
 
     --radius: 0.125rem;
 
+    --warning: 38 95% 52%;
+    --warning-foreground: 0 0% 100%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 20%;
     --sidebar-primary: 0 0% 0%;

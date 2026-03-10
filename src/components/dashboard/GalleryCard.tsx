@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2 } from "lucide-react";
+import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,6 +32,7 @@ interface GalleryCardProps {
     client_name?: string | null;
     client_email?: string | null;
     session_title?: string | null;
+    booking_id?: string | null;
   };
   onEdit?: () => void;
   onDelete?: () => void;
@@ -86,6 +87,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
   const isExpired = gallery.expires_at ? new Date(gallery.expires_at) < new Date() : false;
   const isDraft = gallery.status === "draft";
   const isPublished = gallery.status === "published";
+  const isUnassigned = !gallery.booking_id;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +163,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
               Draft
             </div>
           )}
+          {isUnassigned && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-warning text-warning-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
+              <UserX className="h-2.5 w-2.5" />
+              No client
+            </div>
+          )}
         </Link>
       )}
 
@@ -213,6 +221,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
             </span>
           </div>
         )}
+        {!compact && isUnassigned && (
+          <div className="flex items-center gap-1.5 text-[11px] text-warning truncate">
+            <UserX className="h-3 w-3 shrink-0" />
+            <span>No client assigned</span>
+          </div>
+        )}
 
         {/* Photo count + date */}
         {!compact && (
@@ -230,6 +244,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
         {compact && (
           <div className="hidden sm:flex items-center gap-3 text-[10px] text-muted-foreground tracking-wider uppercase shrink-0">
             {gallery.client_name && <span className="truncate max-w-[120px]">{gallery.client_name}</span>}
+            {isUnassigned && (
+              <span className="flex items-center gap-1 text-warning">
+                <UserX className="h-3 w-3" />
+                No client
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Image className="h-3 w-3" />
               {gallery.photo_count}
