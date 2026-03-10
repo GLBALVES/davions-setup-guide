@@ -245,7 +245,19 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
         className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
       >
         <item.icon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.span
+              className="flex-1 truncate"
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.18, ease: "easeInOut" }}
+            >
+              {item.title}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </NavLink>
     </SidebarMenuButton>
   ) : (
@@ -255,7 +267,18 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
       className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
     >
       <item.icon className="h-4 w-4 shrink-0" />
-      {!collapsed && <span>{item.title}</span>}
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: "auto" }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={{ duration: 0.18, ease: "easeInOut" }}
+          >
+            {item.title}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </SidebarMenuButton>
   );
 
