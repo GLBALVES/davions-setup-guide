@@ -116,15 +116,10 @@ export default function Chat() {
     const loadAgents = async () => {
       const { data } = await supabase
         .from("ai_agents")
-        .select("id, name, slug, enabled, auto_reply, review_mode, model, temperature, description, system_prompt, knowledge_base")
+        .select("id, name, slug, enabled")
         .eq("photographer_id", photographerId);
 
-      const allAgents = ((data as any[]) || []).map((a) => ({
-        ...a,
-        knowledge_base: Array.isArray(a.knowledge_base) ? a.knowledge_base : [],
-        auto_reply: a.auto_reply ?? true,
-        review_mode: a.review_mode ?? false,
-      })) as Agent[];
+      const allAgents = ((data as any[]) || []) as Agent[];
 
       // If no agents exist at all, seed a default Customer Support agent
       if (allAgents.length === 0) {
