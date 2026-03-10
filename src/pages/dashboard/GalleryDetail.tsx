@@ -995,7 +995,7 @@ const GalleryDetail = () => {
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {photos.map((photo) => (
-                          <SortablePhoto key={photo.id} photo={photo} onDelete={deletePhoto} />
+                          <SortablePhoto key={photo.id} photo={photo} onRequestDelete={setPhotoToDelete} />
                         ))}
                       </div>
                     </SortableContext>
