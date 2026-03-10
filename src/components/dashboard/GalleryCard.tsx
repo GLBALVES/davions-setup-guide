@@ -1,4 +1,4 @@
-import { Image, FolderOpen } from "lucide-react";
+import { Image, FolderOpen, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
@@ -11,6 +11,8 @@ interface GalleryCardProps {
     status: string;
     created_at: string;
     photo_count: number;
+    client_name?: string | null;
+    session_title?: string | null;
   };
 }
 
@@ -44,6 +46,16 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
             {gallery.category === "proof" ? "Proof" : "Final"}
           </Badge>
         </div>
+
+        {/* Client + Session */}
+        {(gallery.client_name || gallery.session_title) && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
+            <User className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              {[gallery.client_name, gallery.session_title].filter(Boolean).join(" · ")}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground tracking-wider uppercase">
           <span className="flex items-center gap-1">

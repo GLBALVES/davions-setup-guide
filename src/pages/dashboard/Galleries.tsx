@@ -18,6 +18,8 @@ interface Gallery {
   status: string;
   created_at: string;
   photo_count: number;
+  client_name?: string | null;
+  session_title?: string | null;
 }
 
 const Galleries = () => {
@@ -32,7 +34,10 @@ const Galleries = () => {
     setLoading(true);
     const { data: galleriesData } = await supabase
       .from("galleries")
-      .select("id, title, slug, category, status, created_at")
+      .select(`
+        id, title, slug, category, status, created_at,
+        bookings ( client_name, sessions ( title ) )
+      `)
       .order("created_at", { ascending: false });
 
     if (galleriesData) {
@@ -46,10 +51,12 @@ const Galleries = () => {
       });
 
       setGalleries(
-        galleriesData.map((g) => ({
+        (galleriesData as any[]).map((g) => ({
           ...g,
           category: g.category ?? "proof",
           photo_count: countMap[g.id] || 0,
+          client_name: g.bookings?.client_name ?? null,
+          session_title: (g.bookings as any)?.sessions?.title ?? null,
         }))
       );
     }
