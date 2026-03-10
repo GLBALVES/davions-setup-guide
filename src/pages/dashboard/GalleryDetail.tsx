@@ -60,6 +60,7 @@ import {
   ChevronRight,
   CheckSquare,
   Square,
+  Heart,
 } from "lucide-react";
 import {
   Dialog,
