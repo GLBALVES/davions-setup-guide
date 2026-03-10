@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-chat]
 verify_jwt = false
+
+[functions.create-gallery-checkout]
+verify_jwt = false
