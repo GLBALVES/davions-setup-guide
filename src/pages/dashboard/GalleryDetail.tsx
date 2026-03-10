@@ -700,13 +700,16 @@ const GalleryDetail = () => {
                     <div className="relative flex-1">
                       <Input
                         value={accessCode}
-                        onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                        onChange={(e) => handleAccessCodeChange(e.target.value)}
                         placeholder="e.g. WEDDING2025"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground pr-8 font-mono tracking-widest"
                       />
-                      {accessCode && (
+                      {savingCode && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/50 tracking-widest uppercase">saving…</span>
+                      )}
+                      {!savingCode && accessCode && (
                         <button
-                          onClick={() => setAccessCode("")}
+                          onClick={() => clearAccessCode()}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                           type="button"
                         >
@@ -723,21 +726,22 @@ const GalleryDetail = () => {
                     >
                       <RefreshCw className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={saveAccessCode}
-                      disabled={savingCode}
-                      className="text-xs tracking-wider uppercase font-light shrink-0"
-                    >
-                      {savingCode ? "Saving…" : "Save"}
-                    </Button>
                   </div>
                   <div className="flex items-center justify-between">
                     {gallery.access_code ? (
-                      <p className="text-[10px] text-green-600 flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
-                        Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-green-600 flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 inline-block" />
+                          Active: <strong className="font-mono tracking-widest">{gallery.access_code}</strong>
+                        </p>
+                        <button
+                          onClick={copyCode}
+                          className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                          title="Copy code"
+                        >
+                          {copiedCode ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                        </button>
+                      </div>
                     ) : (
                       <p className="text-[10px] text-muted-foreground/50">No code set — gallery is open to anyone with the link.</p>
                     )}
