@@ -28,6 +28,7 @@ const Galleries = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editGallery, setEditGallery] = useState<Gallery | null>(null);
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type") as "proof" | "final" | null;
 
