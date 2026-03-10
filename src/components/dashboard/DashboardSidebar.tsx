@@ -211,10 +211,11 @@ interface SortableFavoriteItemProps {
   item: MenuItem & { groupTitle: string };
   isActive: boolean;
   collapsed: boolean;
+  badgeCount?: number;
   onUnpin: () => void;
 }
 
-function SortableFavoriteItem({ id, item, isActive, collapsed, onUnpin }: SortableFavoriteItemProps) {
+function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, onUnpin }: SortableFavoriteItemProps) {
   const {
     attributes,
     listeners,
