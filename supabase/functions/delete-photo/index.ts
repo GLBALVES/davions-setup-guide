@@ -69,8 +69,12 @@ Deno.serve(async (req) => {
     }
 
     if (!verified) {
+      const reason = photographer_id
+        ? "photographer_id not found in database"
+        : "No valid Bearer token and photographer_id missing from request body";
+      console.error("Unauthorized:", reason);
       return new Response(
-        JSON.stringify({ status: "error", message: "Unauthorized" }),
+        JSON.stringify({ status: "error", message: "Unauthorized", detail: reason }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
