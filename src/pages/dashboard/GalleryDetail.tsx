@@ -593,7 +593,6 @@ const GalleryDetail = () => {
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
-    if (!confirm(`Delete "${gallery.title}"? This cannot be undone.`)) return;
 
     // Remove all photos from storage
     if (photos.length > 0) {
