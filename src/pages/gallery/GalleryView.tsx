@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, Image } from "lucide-react";
+import { Download, Lock, Image, CalendarX2 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Gallery {
