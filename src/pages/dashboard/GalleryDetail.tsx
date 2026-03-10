@@ -126,9 +126,10 @@ interface Watermark {
 interface SortablePhotoProps {
   photo: Photo;
   onRequestDelete: (photo: Photo) => void;
+  onPreview: (photo: Photo) => void;
 }
 
-const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
@@ -165,7 +166,14 @@ const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
           <span className="text-[10px] text-muted-foreground">No preview</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
+          className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </button>
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
