@@ -27,6 +27,9 @@ export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
   });
 
   const publicUrl = `/gallery/${gallery.slug ?? gallery.id}`;
+  const isExpired = gallery.expires_at ? new Date(gallery.expires_at) < new Date() : false;
+  const isDraft = gallery.status === "draft";
+  const isPublished = gallery.status === "published";
 
   return (
     <div className="border border-border flex flex-col group hover:border-foreground/30 transition-colors">
