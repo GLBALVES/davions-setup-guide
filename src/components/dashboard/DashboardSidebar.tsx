@@ -41,6 +41,7 @@ import {
   PanelLeftOpen,
   Pin,
   PinOff,
+  GripVertical,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -64,6 +65,21 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type MenuItem = {
   title: string;
@@ -79,7 +95,6 @@ type MenuGroup = {
   defaultOpen?: boolean;
 };
 
-// All pinnable items across all groups (flat list for lookup)
 const ALL_ITEMS: (MenuItem & { groupTitle: string })[] = [];
 
 const groups: MenuGroup[] = [
@@ -162,7 +177,6 @@ const groups: MenuGroup[] = [
   },
 ];
 
-// Build flat lookup after groups are defined
 groups.forEach((g) => {
   g.items.forEach((item) => {
     ALL_ITEMS.push({ ...item, groupTitle: g.title });
@@ -184,11 +198,88 @@ function saveFavorites(keys: string[]) {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(keys));
 }
 
-// Unique key for a menu item (group:title)
 function itemKey(groupTitle: string, itemTitle: string) {
   return `${groupTitle}:${itemTitle}`;
 }
 
+// ── Sortable favorite row ────────────────────────────────────────────────────
+interface SortableFavoriteItemProps {
+  id: string;
+  item: MenuItem & { groupTitle: string };
+  isActive: boolean;
+  collapsed: boolean;
+  onUnpin: () => void;
+}
+
+function SortableFavoriteItem({ id, item, isActive, collapsed, onUnpin }: SortableFavoriteItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  const inner = item.to ? (
+    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+      <NavLink
+        to={item.to}
+        end={item.end}
+        className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
+      >
+        <item.icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
+      </NavLink>
+    </SidebarMenuButton>
+  ) : (
+    <SidebarMenuButton
+      disabled
+      tooltip={item.title}
+      className="gap-3 text-xs tracking-wider uppercase font-light opacity-40 cursor-not-allowed"
+    >
+      <item.icon className="h-4 w-4 shrink-0" />
+      {!collapsed && <span>{item.title}</span>}
+    </SidebarMenuButton>
+  );
+
+  return (
+    <SidebarMenuItem ref={setNodeRef} style={style}>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div className="flex items-center group/fav">
+            {!collapsed && (
+              <button
+                {...attributes}
+                {...listeners}
+                className="shrink-0 px-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing opacity-0 group-hover/fav:opacity-100 transition-opacity"
+                tabIndex={-1}
+                aria-label="Drag to reorder"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <div className="flex-1 min-w-0">{inner}</div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="text-xs">
+          <ContextMenuItem className="gap-2 text-xs cursor-pointer" onClick={onUnpin}>
+            <PinOff className="h-3.5 w-3.5" />
+            Unpin from Favorites
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </SidebarMenuItem>
+  );
+}
+
+// ── Main sidebar ─────────────────────────────────────────────────────────────
 interface DashboardSidebarProps {
   onSignOut: () => void;
   userEmail?: string | null;
@@ -200,6 +291,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const location = useLocation();
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
 
   const togglePin = useCallback((groupTitle: string, item: MenuItem) => {
     const key = itemKey(groupTitle, item.title);
@@ -215,10 +310,21 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const isPinned = (groupTitle: string, itemTitle: string) =>
     pinnedKeys.includes(itemKey(groupTitle, itemTitle));
 
-  // Build the live favorites list from pinned keys
   const favoriteItems: (MenuItem & { groupTitle: string })[] = pinnedKeys
     .map((key) => ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
     .filter((i): i is MenuItem & { groupTitle: string } => !!i);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setPinnedKeys((prev) => {
+      const oldIdx = prev.indexOf(active.id as string);
+      const newIdx = prev.indexOf(over.id as string);
+      const next = arrayMove(prev, oldIdx, newIdx);
+      saveFavorites(next);
+      return next;
+    });
+  };
 
   const isItemActive = (item: MenuItem): boolean => {
     if (!item.to) return false;
@@ -250,7 +356,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
-  const renderItem = (item: MenuItem, groupTitle: string) => {
+  const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
@@ -284,15 +390,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               onClick={() => togglePin(groupTitle, item)}
             >
               {pinned ? (
-                <>
-                  <PinOff className="h-3.5 w-3.5" />
-                  Unpin from Favorites
-                </>
+                <><PinOff className="h-3.5 w-3.5" />Unpin from Favorites</>
               ) : (
-                <>
-                  <Pin className="h-3.5 w-3.5" />
-                  Pin to Favorites
-                </>
+                <><Pin className="h-3.5 w-3.5" />Pin to Favorites</>
               )}
             </ContextMenuItem>
           </ContextMenuContent>
@@ -314,14 +414,11 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             className={`text-muted-foreground hover:text-foreground transition-colors p-1 ${collapsed ? "mx-auto" : ""}`}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed
-              ? <PanelLeftOpen className="h-4 w-4" />
-              : <PanelLeftClose className="h-4 w-4" />
-            }
+            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
         </div>
 
-        {/* Favorites group */}
+        {/* ── Favorites group (drag-and-drop) ── */}
         <Collapsible
           open={!collapsed && openGroups["Favorites"]}
           onOpenChange={() => toggleGroup("Favorites")}
@@ -352,7 +449,27 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       Right-click any item to pin it here
                     </p>
                   ) : (
-                    favoriteItems.map((item) => renderItem(item, item.groupTitle))
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={pinnedKeys}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {favoriteItems.map((item) => (
+                          <SortableFavoriteItem
+                            key={itemKey(item.groupTitle, item.title)}
+                            id={itemKey(item.groupTitle, item.title)}
+                            item={item}
+                            isActive={isItemActive(item)}
+                            collapsed={collapsed}
+                            onUnpin={() => togglePin(item.groupTitle, item)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -360,7 +477,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
           </SidebarGroup>
         </Collapsible>
 
-        {/* Regular groups */}
+        {/* ── Regular groups ── */}
         {groups.map((group) => (
           <Collapsible
             key={group.title}
@@ -378,9 +495,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       <span className="flex-1 text-left">{group.title}</span>
                       <ChevronRight
                         className="h-3 w-3 shrink-0 transition-transform duration-200"
-                        style={{
-                          transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)",
-                        }}
+                        style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
                     </>
                   )}
@@ -390,7 +505,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu className="pl-3">
-                    {group.items.map((item) => renderItem(item, group.title))}
+                    {group.items.map((item) => renderRegularItem(item, group.title))}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>
