@@ -23,6 +23,10 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
+import Blog from "./pages/blog/Blog";
+import BlogPostPage from "./pages/blog/BlogPost";
+import BlogManager from "./pages/dashboard/BlogManager";
+import BlogEditor from "./pages/dashboard/BlogEditor";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
