@@ -117,9 +117,6 @@ const GalleryDetail = () => {
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
-  const [slugValue, setSlugValue] = useState("");
-  const [slugSaving, setSlugSaving] = useState(false);
-  const [slugError, setSlugError] = useState("");
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +151,7 @@ const GalleryDetail = () => {
       } as Gallery);
       setAccessCode(raw.access_code ?? "");
       setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
-      setSlugValue(raw.slug ?? "");
+      
     }
   }, [id]);
 
@@ -484,40 +481,6 @@ const GalleryDetail = () => {
       setExpiresAt(date);
       toast({ title: date ? "Expiration date set" : "Expiration date removed" });
     }
-  };
-
-  // ── Slug ─────────────────────────────────────────────────────────────────────
-  const generateSlugFromTitle = () => {
-    if (!gallery?.title) return;
-    const slug = gallery.title
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-");
-    setSlugValue(slug);
-    setSlugError("");
-  };
-
-  const saveSlug = async () => {
-    if (!gallery) return;
-    const cleaned = slugValue.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-    if (!cleaned) { setSlugError("Slug cannot be empty"); return; }
-    setSlugSaving(true);
-    setSlugError("");
-    const { error } = await supabase
-      .from("galleries")
-      .update({ slug: cleaned })
-      .eq("id", gallery.id);
-    if (error) {
-      setSlugError(error.message.includes("unique") ? "This slug is already in use" : error.message);
-    } else {
-      setGallery((g) => g ? { ...g, slug: cleaned } : g);
-      setSlugValue(cleaned);
-      toast({ title: "Gallery URL updated" });
-    }
-    setSlugSaving(false);
   };
 
   // ── Delete gallery ──────────────────────────────────────────────────────────
@@ -1026,49 +989,6 @@ const GalleryDetail = () => {
                   />
                 </div>
 
-                {/* Gallery URL Slug */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Gallery URL
-                    </Label>
-                    <button
-                      onClick={generateSlugFromTitle}
-                      className="text-[10px] tracking-wider uppercase text-muted-foreground/60 hover:text-foreground transition-colors"
-                      type="button"
-                    >
-                      Generate from title
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={slugValue}
-                      onChange={(e) => {
-                        setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
-                        setSlugError("");
-                      }}
-                      placeholder="e.g. wedding-2025"
-                      className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={saveSlug}
-                      disabled={slugSaving}
-                      className="shrink-0 text-xs tracking-wider uppercase font-light"
-                    >
-                      {slugSaving ? "Saving…" : "Save"}
-                    </Button>
-                  </div>
-                  {slugError && (
-                    <p className="text-[10px] text-destructive">{slugError}</p>
-                  )}
-                  {slugValue && !slugError && (
-                    <p className="text-[10px] text-muted-foreground/60 font-mono truncate">
-                      {window.location.origin}/gallery/<span className="text-foreground/70">{slugValue}</span>
-                    </p>
-                  )}
-                </div>
 
                 {/* Share link */}
                 <div className="flex flex-col gap-2">
