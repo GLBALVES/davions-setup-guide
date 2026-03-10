@@ -181,7 +181,8 @@ Guidelines:
         } as any).select("*").single();
 
         if (!error && created) {
-          const agent = { ...created, knowledge_base: Array.isArray(created.knowledge_base) ? created.knowledge_base : [] } as unknown as Agent;
+          const c = created as any;
+          const agent = { ...c, knowledge_base: Array.isArray(c.knowledge_base) ? c.knowledge_base : [] } as unknown as Agent;
           setAgents([agent]);
           setSelectedAgentSlug(agent.slug);
           toast.success("Default Customer Support agent created automatically!");
