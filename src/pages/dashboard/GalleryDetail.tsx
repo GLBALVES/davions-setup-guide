@@ -794,7 +794,6 @@ const GalleryDetail = () => {
                       </button>
                     )}
                   </div>
-                  </div>
                 </div>
 
                 {/* Send to client */}
