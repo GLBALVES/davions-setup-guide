@@ -124,7 +124,7 @@ const Galleries = () => {
   );
 };
 
-function GalleryGrid({ galleries, loading }: { galleries: Gallery[]; loading: boolean }) {
+function GalleryGrid({ galleries, loading, onEdit }: { galleries: Gallery[]; loading: boolean; onEdit: (g: Gallery) => void }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
