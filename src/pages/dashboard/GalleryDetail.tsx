@@ -325,6 +325,42 @@ const GalleryDetail = () => {
     setEditingTitle(false);
   };
 
+  // ── Send gallery link to client ─────────────────────────────────────────────
+  const sendGalleryLink = async () => {
+    if (!gallery) return;
+    const clientEmail = gallery.client_name
+      ? prompt(`Send gallery to client email:`)
+      : prompt(`Send gallery to client email:`);
+    if (!clientEmail?.trim()) return;
+
+    setSendingEmail(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("send-gallery-link", {
+        body: {
+          galleryId: gallery.id,
+          clientEmail: clientEmail.trim(),
+          clientName: gallery.client_name ?? undefined,
+        },
+      });
+
+      if (res.error) throw res.error;
+
+      toast({
+        title: "Email sent",
+        description: `Gallery link sent to ${clientEmail.trim()}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Failed to send email",
+        description: err?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
