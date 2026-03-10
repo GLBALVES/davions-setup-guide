@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   MessageCircle,
   Send,
@@ -36,11 +37,12 @@ import {
   Paperclip,
   Star,
   Check,
-  Settings2,
   Edit3,
   Trash2,
   RotateCcw,
   Plus,
+  Settings2,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -75,6 +77,8 @@ type Agent = {
   name: string;
   slug: string;
   enabled: boolean;
+  auto_reply: boolean;
+  review_mode: boolean;
 };
 
 export default function Chat() {
@@ -116,7 +120,7 @@ export default function Chat() {
     const loadAgents = async () => {
       const { data } = await supabase
         .from("ai_agents")
-        .select("id, name, slug, enabled")
+        .select("id, name, slug, enabled, auto_reply, review_mode")
         .eq("photographer_id", photographerId);
 
       const allAgents = ((data as any[]) || []) as Agent[];
@@ -232,27 +236,49 @@ Guidelines:
     setLoading(false);
   };
 
+  // Get current AI mode from active agent's state
+  const getAgentAIMode = (): string => {
+    const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+    if (!activeAgent || !activeAgent.auto_reply) return "manual";
+    if (activeAgent.review_mode) return "supervised";
+    return "active";
+  };
+
   // Trigger AI response
   const triggerAI = async () => {
     if (!selectedTicket) return;
+    const currentMode = getAgentAIMode();
     setSendingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {
           ticket_id: selectedTicket.id,
           agent_slug: selectedAgentSlug || undefined,
-          mode: selectedTicket.ai_mode,
+          mode: currentMode,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(selectedTicket.ai_mode === "supervised" ? "Draft generated" : "AI response sent");
+      toast.success(currentMode === "supervised" ? "Draft generated" : "AI response sent");
       loadMessages();
     } catch (e: any) {
       toast.error(e.message || "AI error");
     }
     setSendingAI(false);
   };
+
+  // Update agent toggle (Commander)
+  const updateAgentToggle = async (field: "auto_reply" | "review_mode", value: boolean) => {
+    const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+    if (!activeAgent) return;
+    const updates: any = { [field]: value };
+    if (field === "auto_reply" && !value) updates.review_mode = false;
+    await supabase.from("ai_agents" as any).update(updates).eq("id", activeAgent.id);
+    setAgents(prev => prev.map(a => a.id === activeAgent.id ? { ...a, ...updates } : a));
+  };
+
+  // Draft count for Commander badge
+  const draftCount = messages.filter(m => m.role === "assistant_draft").length;
 
   // Approve draft
   const approveDraft = async (msg: Message) => {
@@ -310,12 +336,8 @@ Guidelines:
     toast.success("Ticket reopened");
   };
 
-  // Change AI mode
-  const changeAIMode = async (mode: string) => {
-    if (!selectedTicket) return;
-    await supabase.from("support_tickets").update({ ai_mode: mode }).eq("id", selectedTicket.id);
-    setSelectedTicket((prev) => prev ? { ...prev, ai_mode: mode } : null);
-  };
+
+
 
 
   const saveNotes = async () => {
@@ -391,6 +413,76 @@ Guidelines:
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
         <div className="flex-1 flex flex-col">
           <DashboardHeader />
+
+          {/* Commander Bar */}
+          {(() => {
+            const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+            const currentMode = getAgentAIMode();
+            return (
+              <div className="border-b border-border bg-muted/30 px-4 py-2 flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold tracking-wide uppercase">Commander</span>
+                </div>
+
+                <Separator orientation="vertical" className="h-5" />
+
+                {agents.length > 0 && (
+                  <Select value={selectedAgentSlug} onValueChange={setSelectedAgentSlug}>
+                    <SelectTrigger className="h-7 w-40 text-[10px]">
+                      <SelectValue placeholder="Select agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agents.map((a) => (
+                        <SelectItem key={a.id} value={a.slug} className="text-xs">{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeAgent?.auto_reply ?? false}
+                    onCheckedChange={(v) => updateAgentToggle("auto_reply", v)}
+                    disabled={!activeAgent}
+                  />
+                  <Label className="text-[10px] cursor-pointer">IA Ativa</Label>
+                </div>
+
+                {activeAgent?.auto_reply && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={activeAgent?.review_mode ?? false}
+                      onCheckedChange={(v) => updateAgentToggle("review_mode", v)}
+                    />
+                    <Label className="text-[10px] cursor-pointer">Supervisão</Label>
+                  </div>
+                )}
+
+                <Badge variant="outline" className={`text-[9px] ${aiModeColor(currentMode)}`}>
+                  {aiModeLabel(currentMode)}
+                </Badge>
+
+                {draftCount > 0 && (
+                  <Badge variant="secondary" className="text-[9px] gap-1">
+                    <FileText className="h-2.5 w-2.5" />
+                    {draftCount} draft{draftCount > 1 ? "s" : ""}
+                  </Badge>
+                )}
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 ml-auto"
+                  onClick={() => window.location.href = "/dashboard/agents"}
+                  title="Agent Settings"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })()}
+
           <div className="flex-1 flex overflow-hidden">
             {/* Left Panel: Ticket List */}
             <div className="w-80 border-r border-border flex flex-col bg-background">
@@ -455,12 +547,6 @@ Guidelines:
                           </span>
                         </div>
                       </div>
-                      {ticket.ai_mode !== "manual" && (
-                        <Badge variant="outline" className={`mt-1 text-[9px] px-1 py-0 ${aiModeColor(ticket.ai_mode)}`}>
-                          <Bot className="h-2.5 w-2.5 mr-0.5" />
-                          {aiModeLabel(ticket.ai_mode)}
-                        </Badge>
-                      )}
                     </button>
                   ))
                 )}
@@ -479,41 +565,6 @@ Guidelines:
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {/* AI Mode selector */}
-                    <Select value={selectedTicket.ai_mode} onValueChange={changeAIMode}>
-                      <SelectTrigger className="h-7 w-32 text-[10px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manual" className="text-xs">Manual</SelectItem>
-                        <SelectItem value="active" className="text-xs">AI Active</SelectItem>
-                        <SelectItem value="supervised" className="text-xs">Supervised</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* Agent selector */}
-                    {agents.length > 0 && selectedTicket.ai_mode !== "manual" && (
-                      <>
-                        <Select value={selectedAgentSlug} onValueChange={setSelectedAgentSlug}>
-                          <SelectTrigger className="h-7 w-36 text-[10px]">
-                            <SelectValue placeholder="Select agent" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {agents.map((a) => (
-                              <SelectItem key={a.id} value={a.slug} className="text-xs">{a.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0"
-                          onClick={() => window.location.href = "/dashboard/agents"}
-                          title="Agent Settings"
-                        >
-                          <Settings2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
                     {selectedTicket.status === "open" ? (
                       <Button size="sm" variant="destructive" className="h-7 text-[10px]" onClick={closeTicket}>
                         <X className="h-3 w-3 mr-1" /> Close
@@ -628,7 +679,7 @@ Guidelines:
                       <Button size="sm" onClick={sendMessage} disabled={loading || !newMessage.trim()} className="h-10">
                         <Send className="h-4 w-4" />
                       </Button>
-                      {selectedTicket.ai_mode !== "manual" && (
+                      {getAgentAIMode() !== "manual" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -637,7 +688,7 @@ Guidelines:
                           className="h-10 text-[10px]"
                         >
                           <Bot className="h-4 w-4 mr-1" />
-                          {sendingAI ? "Thinking..." : selectedTicket.ai_mode === "supervised" ? "Generate Draft" : "AI Reply"}
+                          {sendingAI ? "Thinking..." : getAgentAIMode() === "supervised" ? "Generate Draft" : "AI Reply"}
                         </Button>
                       )}
                     </div>
@@ -699,8 +750,8 @@ Guidelines:
                     <Separator />
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Mode</Label>
-                      <Badge variant="outline" className={`mt-1 text-[9px] ${aiModeColor(selectedTicket.ai_mode)}`}>
-                        {aiModeLabel(selectedTicket.ai_mode)}
+                      <Badge variant="outline" className={`mt-1 text-[9px] ${aiModeColor(getAgentAIMode())}`}>
+                        {aiModeLabel(getAgentAIMode())}
                       </Badge>
                     </div>
                     <Separator />
