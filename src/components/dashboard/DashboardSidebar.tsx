@@ -136,7 +136,7 @@ const groups: MenuGroup[] = [
     title: "AI",
     icon: BrainCircuit,
     items: [
-      { title: "AI Agents", icon: Bot },
+      { title: "AI Agents", icon: Bot, to: "/dashboard/agents" },
       { title: "AI Automations", icon: Zap },
       { title: "Smart Suggestions", icon: Lightbulb },
       { title: "Creative Assistant", icon: Wand2 },
