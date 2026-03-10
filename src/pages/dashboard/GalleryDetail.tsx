@@ -271,6 +271,29 @@ const GalleryDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── Generate access code ────────────────────────────────────────────────────
+  const generateAccessCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const code = Array.from({ length: 6 }, () =>
+      chars[Math.floor(Math.random() * chars.length)]
+    ).join("");
+    setAccessCode(code);
+  };
+
+  const clearAccessCode = async () => {
+    setSavingCode(true);
+    setAccessCode("");
+    const { error } = await supabase
+      .from("galleries")
+      .update({ access_code: null })
+      .eq("id", gallery!.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, access_code: null } : g);
+      toast({ title: "Access code removed" });
+    }
+    setSavingCode(false);
+  };
+
   // ── Rename ──────────────────────────────────────────────────────────────────
   const startRename = () => {
     setNewTitle(gallery?.title ?? "");
