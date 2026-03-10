@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_pageviews: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          page_path: string
+          photographer_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          id?: string
+          page_path: string
+          photographer_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          page_path?: string
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_pageviews_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -357,6 +389,77 @@ export type Database = {
             columns: ["watermark_id"]
             isOneToOne: false
             referencedRelation: "watermarks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_seo_settings: {
+        Row: {
+          canonical_url: string | null
+          changefreq: string
+          created_at: string
+          id: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          nofollow: boolean
+          noindex: boolean
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          page_name: string
+          page_path: string
+          photographer_id: string
+          priority: number
+          structured_data: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          canonical_url?: string | null
+          changefreq?: string
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          nofollow?: boolean
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          page_name: string
+          page_path: string
+          photographer_id: string
+          priority?: number
+          structured_data?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canonical_url?: string | null
+          changefreq?: string
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          nofollow?: boolean
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          page_name?: string
+          page_path?: string
+          photographer_id?: string
+          priority?: number
+          structured_data?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_seo_settings_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
             referencedColumns: ["id"]
           },
         ]
