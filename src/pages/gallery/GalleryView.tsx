@@ -696,13 +696,13 @@ const GalleryView = () => {
             </div>
             <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full mt-2 gap-2" size="lg">
               {checkingOut ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Processando…</>
-              ) : isFree ? "Enviar Seleção" : (
-                <><ShoppingCart className="h-4 w-4" /> Ir para o Pagamento</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+              ) : isFree ? "Submit Selection" : (
+                <><ShoppingCart className="h-4 w-4" /> Go to Checkout</>
               )}
             </Button>
             {!isFree && (
-              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Pagamento seguro via Stripe</p>
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment via Stripe</p>
             )}
           </div>
         </DialogContent>
