@@ -692,7 +692,7 @@ const GalleryView = () => {
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
                 E-mail <span className="text-destructive">*</span>
               </Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@exemplo.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jane@example.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
             <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full mt-2 gap-2" size="lg">
               {checkingOut ? (
