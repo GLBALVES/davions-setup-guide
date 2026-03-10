@@ -160,6 +160,45 @@ export type Database = {
           },
         ]
       }
+      photo_favorites: {
+        Row: {
+          client_token: string
+          created_at: string
+          gallery_id: string
+          id: string
+          photo_id: string
+        }
+        Insert: {
+          client_token: string
+          created_at?: string
+          gallery_id: string
+          id?: string
+          photo_id: string
+        }
+        Update: {
+          client_token?: string
+          created_at?: string
+          gallery_id?: string
+          id?: string
+          photo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_favorites_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "galleries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_favorites_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photographers: {
         Row: {
           bio: string | null
