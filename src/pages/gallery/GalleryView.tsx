@@ -47,7 +47,7 @@ function saveNotes(galleryId: string, clientToken: string, notes: Record<string,
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
 // ── Watermark position helper ────────────────────────────────────────────────
@@ -447,7 +447,7 @@ const GalleryView = () => {
               )}
               <span className="hidden sm:flex items-center gap-1.5 ml-0.5 text-[10px] tracking-widest uppercase text-rose-600 font-light">
                 <ShoppingCart className="h-3 w-3" />
-                {isFree ? "Enviar" : "Checkout"}
+                {isFree ? "Submit" : "Checkout"}
               </span>
             </button>
           )}
@@ -455,7 +455,7 @@ const GalleryView = () => {
             variant={isProof ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
           >
-            {isProof ? "Prova" : "Final"}
+            {isProof ? "Proof" : "Final"}
           </Badge>
         </div>
       </header>
@@ -466,8 +466,8 @@ const GalleryView = () => {
           <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
           <p className="text-sm text-green-800 font-light">
             {isFree
-              ? "Sua seleção foi enviada! O fotógrafo será notificado."
-              : "Pagamento confirmado! Sua seleção foi registrada."}
+              ? "Your selection was submitted! The photographer will be notified."
+              : "Payment confirmed! Your selection has been recorded."}
           </p>
           <button onClick={() => setPurchaseSuccess(false)} className="ml-auto text-green-600 hover:text-green-800">
             <X className="h-4 w-4" />
@@ -485,7 +485,7 @@ const GalleryView = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-light tracking-wide">{gallery.title}</h1>
-                <p className="text-sm text-muted-foreground">Esta galeria é privada. Insira o código de acesso para continuar.</p>
+                <p className="text-sm text-muted-foreground">This gallery is private. Enter the access code to continue.</p>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -497,9 +497,9 @@ const GalleryView = () => {
                 autoFocus
                 className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.4em] uppercase font-mono text-base h-12 ${codeError ? "border-destructive focus-visible:border-destructive" : ""}`}
               />
-              {codeError && <p className="text-xs text-destructive text-center">Código incorreto — tente novamente.</p>}
+              {codeError && <p className="text-xs text-destructive text-center">Incorrect code — please try again.</p>}
               <Button onClick={handleUnlock} className="w-full h-11 tracking-widest uppercase text-xs font-light" disabled={!codeInput.trim()}>
-                Desbloquear Galeria
+                Unlock Gallery
               </Button>
             </div>
           </div>
@@ -524,12 +524,12 @@ const GalleryView = () => {
                 <div className="flex flex-col gap-1.5">
                   <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">{gallery.title}</h1>
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
-                    {photos.length} foto{photos.length !== 1 ? "s" : ""}
-                    {isProof && " · Clique em ♡ para selecionar"}
+                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    {isProof && " · Click ♡ to select"}
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
-                  {isProof ? "Prova" : "Final"}
+                  {isProof ? "Proof" : "Final"}
                 </Badge>
               </div>
             </div>
@@ -537,8 +537,8 @@ const GalleryView = () => {
             <div className="px-6 md:px-10 pt-8 pb-2">
               <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
-                {photos.length} foto{photos.length !== 1 ? "s" : ""}
-                {isProof && " · Clique em ♡ para selecionar"}
+                {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                {isProof && " · Click ♡ to select"}
               </p>
             </div>
           )}
@@ -547,7 +547,7 @@ const GalleryView = () => {
             {photos.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Image className="h-10 w-10 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">Nenhuma foto nesta galeria ainda.</p>
+                <p className="text-sm text-muted-foreground">No photos in this gallery yet.</p>
               </div>
             )}
 
@@ -613,8 +613,8 @@ const GalleryView = () => {
                                 : "bg-white text-black hover:bg-rose-500 hover:text-white"
                               }`}
                           >
-                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                            {isFav ? "Remover" : "Selecionar"}
+                          <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                            {isFav ? "Remove" : "Select"}
                           </button>
                         </div>
                       )}
@@ -635,7 +635,7 @@ const GalleryView = () => {
                               ? "text-foreground"
                               : "text-muted-foreground/50 hover:text-muted-foreground"
                           }`}
-                          title="Adicionar observação"
+                          title="Add note"
                         >
                           <MessageSquare className="h-3 w-3" />
                           {noteVal ? <span className="text-[9px]">Nota</span> : null}
@@ -648,7 +648,7 @@ const GalleryView = () => {
                           value={noteVal}
                           onChange={(e) => handleNoteChange(photo.id, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          placeholder="Sua observação sobre esta foto…"
+                          placeholder="Your note about this photo…"
                           className="text-xs rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground min-h-[60px] resize-none leading-snug placeholder:text-muted-foreground/40"
                         />
                       )}
@@ -667,11 +667,11 @@ const GalleryView = () => {
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              {isFree ? "Enviar Seleção" : "Comprar Seleção"}
+              {isFree ? "Submit Selection" : "Purchase Selection"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {favCount} foto{favCount !== 1 ? "s" : ""} selecionada{favCount !== 1 ? "s" : ""}
-              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} cada · Total: ${formatCurrency(totalPrice)}`}
+              {favCount} photo{favCount !== 1 ? "s" : ""} selected
+              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} each · Total: ${formatCurrency(totalPrice)}`}
             </DialogDescription>
           </DialogHeader>
 
@@ -684,25 +684,25 @@ const GalleryView = () => {
             )}
             <div className="flex flex-col gap-2">
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                Seu nome <span className="normal-case tracking-normal text-muted-foreground/50">(opcional)</span>
+                Your name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
               </Label>
-              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Silva" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jane Smith" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
             <div className="flex flex-col gap-2">
               <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
                 E-mail <span className="text-destructive">*</span>
               </Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@exemplo.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jane@example.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
             </div>
             <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full mt-2 gap-2" size="lg">
               {checkingOut ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Processando…</>
-              ) : isFree ? "Enviar Seleção" : (
-                <><ShoppingCart className="h-4 w-4" /> Ir para o Pagamento</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+              ) : isFree ? "Submit Selection" : (
+                <><ShoppingCart className="h-4 w-4" /> Go to Checkout</>
               )}
             </Button>
             {!isFree && (
-              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Pagamento seguro via Stripe</p>
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment via Stripe</p>
             )}
           </div>
         </DialogContent>
@@ -722,7 +722,7 @@ const GalleryView = () => {
             <div className="flex items-center justify-between px-5 py-3 z-10 shrink-0" onClick={(e) => e.stopPropagation()}>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] text-white/30 tracking-[0.2em] uppercase font-light">
-                  Foto {lightboxIndex + 1} de {photos.length}
+                  Photo {lightboxIndex + 1} of {photos.length}
                 </span>
                 <span className="text-[13px] text-white/70 font-light tracking-wide">
                   {displayName(lPhoto.filename)}
@@ -784,11 +784,11 @@ const GalleryView = () => {
               {/* Proof CTA */}
               {isProof && (
                 <div className="flex flex-col items-center gap-2">
-                  {pricePerPhoto > 0 && (
-                    <span className="text-[11px] text-white/30 tracking-widest uppercase">
-                      {formatCurrency(pricePerPhoto)} por foto
-                    </span>
-                  )}
+                    {pricePerPhoto > 0 && (
+                      <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                        {formatCurrency(pricePerPhoto)} per photo
+                      </span>
+                    )}
                   <button
                     onClick={(e) => toggleFavorite(e, lPhoto)}
                     className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
@@ -798,14 +798,14 @@ const GalleryView = () => {
                       }`}
                   >
                     <Heart className={`h-4 w-4 transition-all ${lIsFav ? "fill-white" : ""}`} />
-                    {lIsFav ? "Selecionada  ·  Remover" : "Adicionar à Seleção"}
+                    {lIsFav ? "Selected  ·  Remove" : "Add to Selection"}
                   </button>
                   {favCount > 0 && (
                     <button
                       onClick={() => { setLightboxIndex(null); setPurchaseOpen(true); }}
                       className="text-[10px] text-white/30 hover:text-white/70 tracking-widest uppercase transition-colors underline underline-offset-2"
                     >
-                      {favCount} selecionada{favCount !== 1 ? "s" : ""} · ver seleção
+                      {favCount} selected · view selection
                     </button>
                   )}
                 </div>
@@ -815,13 +815,13 @@ const GalleryView = () => {
               <div className="w-full max-w-lg">
                 <div className="flex items-center gap-2 mb-1.5">
                   <MessageSquare className="h-3 w-3 text-white/30" />
-                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Observação</span>
+                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
                 </div>
                 <Textarea
                   value={lNoteVal}
                   onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
-                  placeholder="Escreva algo sobre esta foto… ex: quero esta em preto e branco"
+                  placeholder="Write something about this photo… e.g. I want this one in black & white"
                   className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
                 />
               </div>
