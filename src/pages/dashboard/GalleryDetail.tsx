@@ -215,8 +215,7 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelect
       )}
     </div>
   );
-});
-SortablePhoto.displayName = "SortablePhoto";
+};
 
 
 
