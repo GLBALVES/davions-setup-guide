@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -16,6 +16,7 @@ import {
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
+import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -46,7 +47,21 @@ const Settings = () => {
   const [editingWatermark, setEditingWatermark] = useState<WatermarkData | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Session Types (Studio tab)
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
+
   const heroInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchSessionTypes = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setSessionTypes(data as SessionType[]);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -62,6 +77,7 @@ const Settings = () => {
           .select("*")
           .eq("photographer_id", user.id)
           .order("created_at", { ascending: true }),
+        fetchSessionTypes(),
       ]);
 
       if (profileRes.data) {
@@ -82,7 +98,7 @@ const Settings = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user]);
+  }, [user, fetchSessionTypes]);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
@@ -222,6 +238,7 @@ const Settings = () => {
                     {[
                       { value: "profile", label: "Profile" },
                       { value: "store", label: "Store" },
+                      { value: "studio", label: "Studio" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
                       <TabsTrigger
@@ -477,6 +494,28 @@ const Settings = () => {
                         {saving ? "Saving…" : "Save changes"}
                       </Button>
                     </div>
+                  </TabsContent>
+
+                  {/* ── STUDIO TAB ── */}
+                  <TabsContent value="studio" className="mt-0 flex flex-col gap-8">
+                    <section className="flex flex-col gap-4">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Session Types</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Categorize your sessions by type (e.g. Newborn, Wedding, Portrait). Types can be assigned when creating sessions.
+                        </p>
+                      </div>
+
+                      {user && (
+                        <SessionTypeManager
+                          photographerId={user.id}
+                          sessionTypes={sessionTypes}
+                          selectedTypeId={selectedTypeId}
+                          onSelect={setSelectedTypeId}
+                          onRefetch={fetchSessionTypes}
+                        />
+                      )}
+                    </section>
                   </TabsContent>
 
                   {/* ── GALLERIES TAB ── */}
