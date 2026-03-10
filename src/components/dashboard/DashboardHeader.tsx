@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import seloPreto from "@/assets/selo_preto.png";
 
 export function DashboardHeader() {
   const { user } = useAuth();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    // Cast to any since business_name is a custom column not yet in the generated types
     (supabase as any)
       .from("photographers")
       .select("business_name, full_name")
@@ -27,13 +30,41 @@ export function DashboardHeader() {
     <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-muted-foreground" />
-        {businessName ? (
-          <span className="text-[11px] tracking-[0.25em] uppercase font-light text-foreground/80 select-none">
-            {businessName}
-          </span>
-        ) : (
-          <span className="h-3 w-32 bg-muted animate-pulse rounded-sm inline-block" />
-        )}
+
+        <AnimatePresence mode="wait" initial={false}>
+          {collapsed ? (
+            <motion.img
+              key="seal"
+              src={seloPreto}
+              alt="Davions"
+              className="h-6 w-6 object-contain"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            />
+          ) : businessName ? (
+            <motion.span
+              key="business-name"
+              className="text-[11px] tracking-[0.25em] uppercase font-light text-foreground/80 select-none"
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              {businessName}
+            </motion.span>
+          ) : (
+            <motion.span
+              key="skeleton"
+              className="h-3 w-32 bg-muted animate-pulse rounded-sm inline-block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );
