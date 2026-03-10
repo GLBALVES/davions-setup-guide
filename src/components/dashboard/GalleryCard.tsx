@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+interface Booking {
+  id: string;
+  client_name: string;
+  client_email: string;
+  booked_date: string | null;
+  session_title: string | null;
+}
 
 interface GalleryCardProps {
   gallery: {
@@ -36,11 +44,12 @@ interface GalleryCardProps {
   };
   onEdit?: () => void;
   onDelete?: () => void;
+  onAssigned?: () => void;
   /** Render as a compact single-row for list view */
   compact?: boolean;
 }
 
-export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: GalleryCardProps) {
+export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = false }: GalleryCardProps) {
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
   const [email, setEmail] = useState(gallery.client_email ?? "");
@@ -49,10 +58,71 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Assign-client popover
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingQuery, setBookingQuery] = useState("");
+  const [assigning, setAssigning] = useState(false);
+
+  const fetchBookings = useCallback(async () => {
+    setBookingsLoading(true);
+    const { data } = await supabase
+      .from("bookings")
+      .select("id, client_name, client_email, booked_date, sessions(title)")
+      .eq("status", "confirmed")
+      .order("created_at", { ascending: false });
+
+    setBookings(
+      (data ?? []).map((b: any) => ({
+        id: b.id,
+        client_name: b.client_name,
+        client_email: b.client_email,
+        booked_date: b.booked_date ?? null,
+        session_title: b.sessions?.title ?? null,
+      }))
+    );
+    setBookingsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (assignOpen) {
+      setBookingQuery("");
+      fetchBookings();
+    }
+  }, [assignOpen, fetchBookings]);
+
+  const filteredBookings = bookings.filter((b) => {
+    if (!bookingQuery.trim()) return true;
+    const q = bookingQuery.toLowerCase();
+    return (
+      b.client_name.toLowerCase().includes(q) ||
+      b.client_email.toLowerCase().includes(q) ||
+      (b.session_title?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  const handleAssign = async (booking: Booking) => {
+    setAssigning(true);
+    try {
+      const { error } = await supabase
+        .from("galleries")
+        .update({ booking_id: booking.id })
+        .eq("id", gallery.id);
+      if (error) throw error;
+      toast({ title: "Client assigned", description: `${booking.client_name} linked to this gallery.` });
+      setAssignOpen(false);
+      onAssigned?.();
+    } catch {
+      toast({ title: "Failed to assign client", variant: "destructive" });
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // Remove all photos from storage for this gallery
       const { data: photos } = await supabase
         .from("photos")
         .select("storage_path")
@@ -126,6 +196,83 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
       setSending(false);
     }
   };
+
+  /** Assign-client popover content (shared between grid and compact) */
+  const assignPopover = (
+    <Popover open={assignOpen} onOpenChange={setAssignOpen}>
+      <PopoverTrigger asChild>
+        <button
+          onClick={(e) => e.stopPropagation()}
+          title="Assign client booking"
+          className="p-1.5 text-warning/70 hover:text-warning transition-colors"
+        >
+          <UserCheck className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-80 p-0 rounded-none border-border"
+        side="top"
+        align="end"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <UserCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <p className="text-[11px] tracking-[0.2em] uppercase font-light flex-1">Assign Client</p>
+          <button
+            onClick={() => setAssignOpen(false)}
+            className="text-muted-foreground/50 hover:text-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-3 py-2 border-b border-border relative">
+          <Search className="absolute left-5.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50 pointer-events-none" />
+          <Input
+            value={bookingQuery}
+            onChange={(e) => setBookingQuery(e.target.value)}
+            placeholder="Search client or session…"
+            className="h-7 pl-7 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
+            autoFocus
+          />
+        </div>
+
+        {/* Booking list */}
+        <div className="max-h-56 overflow-y-auto">
+          {bookingsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+            </div>
+          ) : filteredBookings.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-xs text-muted-foreground font-light">No confirmed bookings found</p>
+            </div>
+          ) : (
+            filteredBookings.map((b) => (
+              <button
+                key={b.id}
+                disabled={assigning}
+                onClick={() => handleAssign(b)}
+                className="w-full flex flex-col gap-0.5 px-4 py-3 text-left border-b border-border last:border-0 hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                <span className="text-xs font-light text-foreground truncate">{b.client_name}</span>
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {[b.session_title, b.client_email].filter(Boolean).join(" · ")}
+                </span>
+                {b.booked_date && (
+                  <span className="text-[10px] text-muted-foreground/60">
+                    {new Date(b.booked_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <>
@@ -297,6 +444,9 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Assign-client button — only for unassigned galleries */}
+              {isUnassigned && assignPopover}
+
               {isPublished && !isExpired && (
                 <Popover open={sendOpen} onOpenChange={(v) => { setSendOpen(v); if (!v) { setSent(false); setEmail(gallery.client_email ?? ""); } }}>
                   <PopoverTrigger asChild>
@@ -392,6 +542,9 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
         {/* Compact actions */}
         {compact && (
           <div className="flex items-center gap-1 shrink-0 ml-auto">
+            {/* Assign-client button in compact mode */}
+            {isUnassigned && assignPopover}
+
             {onEdit && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
