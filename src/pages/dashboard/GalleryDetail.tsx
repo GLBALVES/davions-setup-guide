@@ -410,10 +410,10 @@ const GalleryDetail = () => {
     setSettingCover(photo.id);
     const { error } = await supabase
       .from("galleries")
-      .update({ cover_image_url: photo.url })
+      .update({ cover_image_url: photo.url, cover_focal_x: 50, cover_focal_y: 50 } as any)
       .eq("id", gallery.id);
     if (!error) {
-      setGallery((g) => g ? { ...g, cover_image_url: photo.url! } : g);
+      setGallery((g) => g ? { ...g, cover_image_url: photo.url!, cover_focal_x: 50, cover_focal_y: 50 } : g);
       toast({ title: "Cover updated" });
       setCoverPickerOpen(false);
     }
@@ -424,11 +424,28 @@ const GalleryDetail = () => {
     if (!gallery) return;
     const { error } = await supabase
       .from("galleries")
-      .update({ cover_image_url: null })
+      .update({ cover_image_url: null } as any)
       .eq("id", gallery.id);
     if (!error) {
       setGallery((g) => g ? { ...g, cover_image_url: null } : g);
       toast({ title: "Cover removed" });
+    }
+  };
+
+  // ── Focal point ──────────────────────────────────────────────────────────────
+  const handleFocalClick = async (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!gallery || !focalMode || !coverRef.current) return;
+    const rect = coverRef.current.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    const { error } = await supabase
+      .from("galleries")
+      .update({ cover_focal_x: x, cover_focal_y: y } as any)
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, cover_focal_x: x, cover_focal_y: y } : g);
+      setFocalMode(false);
+      toast({ title: "Focus point saved" });
     }
   };
 
