@@ -477,14 +477,16 @@ const GalleryView = () => {
                 return (
                   <div
                     key={photo.id}
-                    className="relative group aspect-square bg-muted overflow-hidden cursor-pointer"
+                    className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
+                      ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
+                    `}
                     onClick={() => setLightboxIndex(index)}
                   >
                     {photo.url ? (
                       <img
                         src={photo.url}
                         alt={photo.filename}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
                     ) : (
@@ -493,26 +495,50 @@ const GalleryView = () => {
                       </div>
                     )}
 
-                    {/* Favorite button */}
+                    {/* ── PROOF: selection overlay ── */}
                     {isProof && (
-                      <button
-                        onClick={(e) => toggleFavorite(e, photo)}
-                        className={`absolute top-2 right-2 p-1.5 rounded-full transition-all z-10
+                      <>
+                        {/* Selected state: rose tint + checkmark badge */}
+                        {isFav && (
+                          <div className="absolute inset-0 bg-rose-500/10 pointer-events-none" />
+                        )}
+                        <div className={`absolute top-2 left-2 z-10 transition-all duration-200 ${isFav ? "opacity-100 scale-100" : "opacity-0 scale-75"}`}>
+                          <div className="bg-rose-500 text-white rounded-full p-1">
+                            <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Hover overlay with CTA */}
+                        <div className={`absolute inset-0 flex flex-col items-center justify-end pb-3 transition-all duration-200
                           ${isFav
-                            ? "bg-rose-500/90 text-white opacity-100"
-                            : "bg-black/40 text-white/70 opacity-0 group-hover:opacity-100"
-                          }`}
-                        title={isFav ? "Remove from selection" : "Add to selection"}
-                      >
-                        <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                      </button>
+                            ? "bg-black/0 group-hover:bg-black/30"
+                            : "bg-black/0 group-hover:bg-black/40"
+                          } opacity-0 group-hover:opacity-100`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={(e) => toggleFavorite(e, photo)}
+                            className={`flex items-center gap-2 px-4 py-2 text-[11px] tracking-widest uppercase font-medium transition-all duration-150 shadow-lg
+                              ${isFav
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-white text-black hover:bg-rose-500 hover:text-white"
+                              }`}
+                          >
+                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                            {isFav ? "Remove" : "Select"}
+                          </button>
+                        </div>
+                      </>
                     )}
 
+                    {/* ── FINAL: download overlay ── */}
                     {gallery?.category === "final" && (
-                      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <button
                           onClick={(e) => { e.stopPropagation(); downloadPhoto(photo); }}
-                          className="bg-background/90 text-foreground p-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                          className="bg-white text-black p-3 hover:bg-black hover:text-white transition-colors shadow-lg"
                         >
                           <Download className="h-4 w-4" />
                         </button>
