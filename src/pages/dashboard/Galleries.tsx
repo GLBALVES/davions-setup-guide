@@ -307,6 +307,8 @@ const Galleries = () => {
                   {STATUS_FILTERS.map((f) => {
                     const isActive = statusFilter === f.value;
                     const Icon = f.icon;
+                    const count = statusCounts[f.value];
+                    const showCount = f.value !== "all" && count > 0;
                     return (
                       <button
                         key={f.value}
@@ -320,6 +322,20 @@ const Galleries = () => {
                       >
                         <Icon className="h-2.5 w-2.5" />
                         {f.label}
+                        {showCount && (
+                          <span className={cn(
+                            "ml-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-normal px-1 leading-none",
+                            isActive
+                              ? "bg-background/20 text-background"
+                              : f.value === "unassigned"
+                              ? "bg-warning/20 text-warning"
+                              : f.value === "expired"
+                              ? "bg-destructive/15 text-destructive"
+                              : "bg-foreground/10 text-foreground/60"
+                          )}>
+                            {count}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
