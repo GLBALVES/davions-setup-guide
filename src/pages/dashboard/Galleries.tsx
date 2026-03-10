@@ -36,7 +36,7 @@ const Galleries = () => {
     const { data: galleriesData } = await supabase
       .from("galleries")
       .select(`
-        id, title, slug, category, status, created_at,
+        id, title, slug, category, status, created_at, cover_image_url,
         bookings ( client_name, sessions ( title ) )
       `)
       .order("created_at", { ascending: false });
