@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_agents: {
+        Row: {
+          auto_reply: boolean
+          category: string
+          created_at: string
+          description: string
+          enabled: boolean
+          id: string
+          knowledge_base: Json
+          model: string
+          name: string
+          photographer_id: string
+          review_mode: boolean
+          slug: string
+          system_prompt: string
+          temperature: number
+          user_id: string
+        }
+        Insert: {
+          auto_reply?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          id?: string
+          knowledge_base?: Json
+          model?: string
+          name?: string
+          photographer_id: string
+          review_mode?: boolean
+          slug?: string
+          system_prompt?: string
+          temperature?: number
+          user_id: string
+        }
+        Update: {
+          auto_reply?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          id?: string
+          knowledge_base?: Json
+          model?: string
+          name?: string
+          photographer_id?: string
+          review_mode?: boolean
+          slug?: string
+          system_prompt?: string
+          temperature?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agents_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_pageviews: {
         Row: {
           action: string
@@ -855,6 +917,86 @@ export type Database = {
           },
         ]
       }
+      recurring_tasks: {
+        Row: {
+          avoid_weekends: boolean
+          created_at: string
+          department: string | null
+          display_order: number
+          enabled: boolean
+          estimated_minutes: number | null
+          id: string
+          notes: string | null
+          owner_name: string | null
+          photographer_id: string
+          repeat_count: number | null
+          schedule_day_of_month: number | null
+          schedule_days_of_week: number[] | null
+          schedule_freq: string
+          schedule_interval: number
+          start_date: string
+          started_at: string | null
+          state: string
+          title: string
+          user_id: string
+          weekend_policy: string
+        }
+        Insert: {
+          avoid_weekends?: boolean
+          created_at?: string
+          department?: string | null
+          display_order?: number
+          enabled?: boolean
+          estimated_minutes?: number | null
+          id?: string
+          notes?: string | null
+          owner_name?: string | null
+          photographer_id: string
+          repeat_count?: number | null
+          schedule_day_of_month?: number | null
+          schedule_days_of_week?: number[] | null
+          schedule_freq?: string
+          schedule_interval?: number
+          start_date?: string
+          started_at?: string | null
+          state?: string
+          title?: string
+          user_id: string
+          weekend_policy?: string
+        }
+        Update: {
+          avoid_weekends?: boolean
+          created_at?: string
+          department?: string | null
+          display_order?: number
+          enabled?: boolean
+          estimated_minutes?: number | null
+          id?: string
+          notes?: string | null
+          owner_name?: string | null
+          photographer_id?: string
+          repeat_count?: number | null
+          schedule_day_of_month?: number | null
+          schedule_days_of_week?: number[] | null
+          schedule_freq?: string
+          schedule_interval?: number
+          start_date?: string
+          started_at?: string | null
+          state?: string
+          title?: string
+          user_id?: string
+          weekend_policy?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_tasks_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_availability: {
         Row: {
           created_at: string
@@ -1178,6 +1320,50 @@ export type Database = {
           },
         ]
       }
+      task_occurrences: {
+        Row: {
+          actual_minutes: number | null
+          completed_at: string | null
+          completion_notes: string | null
+          created_at: string
+          due_date: string
+          id: string
+          late_by_days: number
+          recurring_task_id: string
+          status: string
+        }
+        Insert: {
+          actual_minutes?: number | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          late_by_days?: number
+          recurring_task_id: string
+          status?: string
+        }
+        Update: {
+          actual_minutes?: number | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          late_by_days?: number
+          recurring_task_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_occurrences_recurring_task_id_fkey"
+            columns: ["recurring_task_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watermarks: {
         Row: {
           created_at: string
@@ -1237,6 +1423,266 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      workflow_activity: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_activity_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_members: {
+        Row: {
+          id: string
+          joined_at: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_projects: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          owner_id: string
+          photographer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          owner_id: string
+          photographer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          photographer_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_projects_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_sections: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          position: number
+          project_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          project_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_sections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_tasks: {
+        Row: {
+          assignee_id: string | null
+          attachments: Json | null
+          created_at: string
+          created_by: string
+          department: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          photographer_id: string
+          position: number
+          priority: string
+          project_id: string
+          section_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          attachments?: Json | null
+          created_at?: string
+          created_by: string
+          department?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          photographer_id: string
+          position?: number
+          priority?: string
+          project_id: string
+          section_id: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          attachments?: Json | null
+          created_at?: string
+          created_by?: string
+          department?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          photographer_id?: string
+          position?: number
+          priority?: string
+          project_id?: string
+          section_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_tasks_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_tasks_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_sections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
