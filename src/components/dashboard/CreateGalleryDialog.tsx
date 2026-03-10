@@ -122,11 +122,17 @@ export function CreateGalleryDialog({
     setSelectedSessionId("");
 
     const fetchData = async () => {
-      const bookingsRes = await supabase
-        .from("bookings")
-        .select("id, client_name, client_email, session_id")
-        .eq("photographer_id", user.id)
-        .order("created_at", { ascending: false });
+      const [bookingsRes, gallerySettingsRes] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("id, client_name, client_email, session_id")
+          .eq("photographer_id", user.id)
+          .order("created_at", { ascending: false }),
+        (supabase as any)
+          .from("gallery_settings")
+          .select("key, value")
+          .eq("photographer_id", user.id),
+      ]);
 
       let watermarksRes: { data: Watermark[] | null } = { data: null };
       if (isProof) {
@@ -139,6 +145,15 @@ export function CreateGalleryDialog({
 
       if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
+      if (gallerySettingsRes?.data) {
+        const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
+        if (expiryRow?.value) {
+          const days = parseInt(expiryRow.value, 10);
+          setDefaultExpiryDays(isNaN(days) || days <= 0 ? null : days);
+        } else {
+          setDefaultExpiryDays(null);
+        }
+      }
     };
 
     fetchData();
