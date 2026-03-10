@@ -114,10 +114,11 @@ const Galleries = () => {
       </div>
 
       <CreateGalleryDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
+        open={createOpen || !!editGallery}
+        onOpenChange={(v) => { setCreateOpen(v); if (!v) setEditGallery(null); }}
         onCreated={fetchGalleries}
         defaultCategory={defaultCategory}
+        editGallery={editGallery}
       />
     </SidebarProvider>
   );
