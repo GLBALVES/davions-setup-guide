@@ -32,18 +32,37 @@ export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
   const isPublished = gallery.status === "published";
 
   return (
-    <div className="border border-border flex flex-col group hover:border-foreground/30 transition-colors">
+    <div className={`border flex flex-col group transition-colors ${
+      isExpired
+        ? "border-destructive/40 hover:border-destructive/60"
+        : isDraft
+        ? "border-border border-dashed hover:border-foreground/30"
+        : "border-border hover:border-foreground/30"
+    }`}>
       {/* Thumbnail */}
-      <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden">
+      <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
         {gallery.cover_image_url ? (
           <img
             src={gallery.cover_image_url}
             alt={gallery.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isExpired ? "opacity-50 grayscale" : ""}`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+          </div>
+        )}
+        {/* Overlay badges on thumbnail */}
+        {isExpired && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-destructive text-destructive-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
+            <CalendarX2 className="h-2.5 w-2.5" />
+            Expired
+          </div>
+        )}
+        {isDraft && !isExpired && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-muted/90 text-muted-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light border border-border">
+            <Clock className="h-2.5 w-2.5" />
+            Draft
           </div>
         )}
       </Link>
@@ -86,18 +105,27 @@ export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
         {/* Footer row: status + actions */}
         <div className="flex items-center justify-between mt-auto pt-1">
           <div className="flex items-center gap-1.5">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
-              }`}
-            />
-            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              {gallery.status}
-            </span>
+            {isExpired ? (
+              <span className="text-[10px] tracking-[0.2em] uppercase text-destructive font-light flex items-center gap-1">
+                <CalendarX2 className="h-3 w-3" />
+                Expired {gallery.expires_at && new Date(gallery.expires_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+              </span>
+            ) : (
+              <>
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isPublished ? "bg-green-500" : "bg-muted-foreground/30"
+                  }`}
+                />
+                <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+                  {gallery.status}
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
-            {gallery.status === "published" && (
+            {isPublished && !isExpired && (
               <a
                 href={publicUrl}
                 target="_blank"
