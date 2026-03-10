@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
   ChevronRight,
