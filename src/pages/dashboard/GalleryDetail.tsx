@@ -1139,7 +1139,7 @@ const GalleryDetail = () => {
                   };
                   return (
                     <Dialog open={lightroomModalOpen} onOpenChange={setLightroomModalOpen}>
-                      <DialogContent className="max-w-md">
+                      <DialogContent className="w-[90vw] max-w-sm">
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2 text-sm tracking-wider uppercase font-light">
                             <SlidersHorizontal className="h-4 w-4" />
@@ -1150,17 +1150,18 @@ const GalleryDetail = () => {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="flex flex-col gap-3">
-                          <textarea
-                            readOnly
-                            value={listText}
-                            rows={Math.min(favoritedPhotos.length, 10)}
-                            className="w-full resize-none rounded border border-border bg-secondary/30 px-3 py-2 text-xs font-mono text-muted-foreground focus:outline-none leading-relaxed"
-                          />
-                          <div className="flex gap-2">
+                          <div className="max-h-48 overflow-y-auto rounded border border-border bg-secondary/30 px-3 py-2">
+                            <ul className="space-y-0.5">
+                              {favoritedPhotos.map((p) => (
+                                <li key={p.id} className="text-xs font-mono text-muted-foreground truncate">{p.filename}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="flex flex-col gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 gap-2 text-xs"
+                              className="w-full gap-2 text-xs"
                               onClick={() => copyText(listText)}
                             >
                               {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -1169,7 +1170,7 @@ const GalleryDetail = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 gap-2 text-xs"
+                              className="w-full gap-2 text-xs"
                               onClick={() => copyText(csvText)}
                             >
                               <Copy className="h-3.5 w-3.5" />
