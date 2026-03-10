@@ -172,6 +172,19 @@ const Galleries = () => {
   const defaultCategory = type ?? "proof";
   const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || sortBy !== "newest";
 
+  // Count per status chip, always from the full category-scoped list (ignoring active filter/search)
+  const statusCounts = useMemo(() => {
+    const base = type ? galleries.filter((g) => g.category === type) : galleries;
+    const now = new Date();
+    return {
+      all: base.length,
+      draft: base.filter((g) => g.status === "draft" && !(g.expires_at && new Date(g.expires_at) < now)).length,
+      published: base.filter((g) => g.status === "published" && !(g.expires_at && new Date(g.expires_at) < now)).length,
+      expired: base.filter((g) => g.expires_at && new Date(g.expires_at) < now).length,
+      unassigned: base.filter((g) => !g.booking_id).length,
+    };
+  }, [galleries, type]);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
