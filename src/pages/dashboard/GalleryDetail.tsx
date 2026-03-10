@@ -82,7 +82,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
+
 
 interface Gallery {
   id: string;

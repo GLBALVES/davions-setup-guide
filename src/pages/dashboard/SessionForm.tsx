@@ -27,7 +27,6 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { cn } from "@/lib/utils";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import { useEditor, EditorContent } from "@tiptap/react";
