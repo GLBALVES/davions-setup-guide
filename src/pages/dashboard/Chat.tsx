@@ -120,7 +120,7 @@ export default function Chat() {
     const loadAgents = async () => {
       const { data } = await supabase
         .from("ai_agents")
-        .select("id, name, slug, enabled")
+        .select("id, name, slug, enabled, auto_reply, review_mode")
         .eq("photographer_id", photographerId);
 
       const allAgents = ((data as any[]) || []) as Agent[];
