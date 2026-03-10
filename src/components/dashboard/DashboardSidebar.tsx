@@ -48,6 +48,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     if (path === "/dashboard") return currentPath === "/dashboard";
     const [pathname, search] = path.split("?");
     if (!currentPath.startsWith(pathname)) return false;
+    // If this item requires query params but the current URL has none → inactive
+    if (search && !location.search) return false;
     if (!search) return true;
     const params = new URLSearchParams(location.search);
     const expected = new URLSearchParams(search);
