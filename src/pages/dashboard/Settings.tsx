@@ -242,6 +242,25 @@ const Settings = () => {
     setSavingBusiness(false);
   };
 
+  const handleSaveGallerySettings = async () => {
+    if (!user) return;
+    setSavingGallerySettings(true);
+    const days = parseInt(galleryExpiryDays, 10);
+    const valueToSave = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
+    const { error } = await (supabase as any)
+      .from("gallery_settings")
+      .upsert(
+        { photographer_id: user.id, key: "default_expiry_days", value: valueToSave },
+        { onConflict: "photographer_id,key" }
+      );
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Gallery settings saved" });
+    }
+    setSavingGallerySettings(false);
+  };
+
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
     await navigator.clipboard.writeText(url);
