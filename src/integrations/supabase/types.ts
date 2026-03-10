@@ -163,6 +163,13 @@ export type Database = {
       photographers: {
         Row: {
           bio: string | null
+          business_address: string | null
+          business_city: string | null
+          business_country: string | null
+          business_currency: string | null
+          business_name: string | null
+          business_phone: string | null
+          business_tax_id: string | null
           created_at: string
           custom_domain: string | null
           email: string
@@ -174,6 +181,13 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          business_address?: string | null
+          business_city?: string | null
+          business_country?: string | null
+          business_currency?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          business_tax_id?: string | null
           created_at?: string
           custom_domain?: string | null
           email: string
@@ -185,6 +199,13 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          business_address?: string | null
+          business_city?: string | null
+          business_country?: string | null
+          business_currency?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          business_tax_id?: string | null
           created_at?: string
           custom_domain?: string | null
           email?: string
