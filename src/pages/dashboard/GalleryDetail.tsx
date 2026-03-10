@@ -616,7 +616,7 @@ const GalleryDetail = () => {
   const saveTitle = async () => {
     if (!gallery || !newTitle.trim()) return;
     const trimmed = newTitle.trim();
-    const autoSlug = trimmed
+    const baseSlug = trimmed
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -624,12 +624,29 @@ const GalleryDetail = () => {
       .trim()
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-");
+
+    // Ensure slug uniqueness across this photographer's galleries (excluding current)
+    let slug = baseSlug || "gallery";
+    let attempt = 0;
+    while (true) {
+      const { data: conflict } = await supabase
+        .from("galleries")
+        .select("id")
+        .eq("slug", slug)
+        .eq("photographer_id", user!.id)
+        .neq("id", gallery.id)
+        .maybeSingle();
+      if (!conflict) break;
+      attempt++;
+      slug = `${baseSlug}-${attempt}`;
+    }
+
     const { error } = await supabase
       .from("galleries")
-      .update({ title: trimmed, slug: autoSlug || null })
+      .update({ title: trimmed, slug })
       .eq("id", gallery.id);
     if (!error) {
-      setGallery({ ...gallery, title: trimmed, slug: autoSlug || null });
+      setGallery({ ...gallery, title: trimmed, slug });
       toast({ title: "Gallery renamed" });
     }
     setEditingTitle(false);
