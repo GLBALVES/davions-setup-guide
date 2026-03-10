@@ -68,6 +68,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -276,6 +277,7 @@ const GalleryDetail = () => {
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [copiedFavorites, setCopiedFavorites] = useState(false);
+  const [lightroomModalOpen, setLightroomModalOpen] = useState(false);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1110,24 +1112,73 @@ const GalleryDetail = () => {
               <div className="flex items-center gap-3">
                 {(() => {
                   const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
-                  const listText = favoritedPhotos.map((p) => p.filename).join("\n");
-                  const copyFavs = async () => {
-                    await navigator.clipboard.writeText(listText);
-                    setCopiedFavorites(true);
-                    setTimeout(() => setCopiedFavorites(false), 2000);
-                  };
                   return (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={copyFavs}
+                      onClick={() => setLightroomModalOpen(true)}
                       disabled={favoritedPhotos.length === 0}
                       className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
-                      title={favoritedPhotos.length === 0 ? "No favorites yet" : `Copy ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
+                      title={favoritedPhotos.length === 0 ? "No favorites yet" : `Export ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
                     >
-                      {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <SlidersHorizontal className="h-3.5 w-3.5" />}
-                      {copiedFavorites ? "Copied!" : `Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      {`Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
                     </Button>
+                  );
+                })()}
+
+                {/* Lightroom Export Modal */}
+                {(() => {
+                  const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
+                  const listText = favoritedPhotos.map((p) => p.filename).join("\n");
+                  const csvText = favoritedPhotos.map((p) => p.filename).join(",");
+                  const copyText = async (text: string) => {
+                    await navigator.clipboard.writeText(text);
+                    setCopiedFavorites(true);
+                    setTimeout(() => setCopiedFavorites(false), 2000);
+                  };
+                  return (
+                    <Dialog open={lightroomModalOpen} onOpenChange={setLightroomModalOpen}>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2 text-sm tracking-wider uppercase font-light">
+                            <SlidersHorizontal className="h-4 w-4" />
+                            Export to Lightroom
+                          </DialogTitle>
+                          <DialogDescription className="text-xs">
+                            {favoritedPhotos.length} foto{favoritedPhotos.length !== 1 ? "s" : ""} favoritada{favoritedPhotos.length !== 1 ? "s" : ""} pelo cliente
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex flex-col gap-3">
+                          <textarea
+                            readOnly
+                            value={listText}
+                            rows={Math.min(favoritedPhotos.length, 10)}
+                            className="w-full resize-none rounded border border-border bg-secondary/30 px-3 py-2 text-xs font-mono text-muted-foreground focus:outline-none leading-relaxed"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 gap-2 text-xs"
+                              onClick={() => copyText(listText)}
+                            >
+                              {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                              {copiedFavorites ? "Copiado!" : "Copiar (um por linha)"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 gap-2 text-xs"
+                              onClick={() => copyText(csvText)}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              Copiar como CSV
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   );
                 })()}
 
