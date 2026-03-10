@@ -634,83 +634,87 @@ const GalleryView = () => {
         const lIsFav = favorites.has(lPhoto.id);
         return (
           <div
-            className="fixed inset-0 bg-black/97 z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black/97 z-50 flex flex-col items-center justify-center"
             onClick={() => setLightboxIndex(null)}
           >
-            {/* Close */}
-            <button
-              className="absolute top-4 right-5 text-white/50 hover:text-white text-3xl leading-none z-10"
-              onClick={() => setLightboxIndex(null)}
-            >
-              ×
-            </button>
+            {/* Top bar */}
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 py-4 z-10" onClick={(e) => e.stopPropagation()}>
+              <span className="text-[11px] text-white/30 tracking-widest font-light">
+                {lightboxIndex + 1} / {photos.length}
+              </span>
+              <button className="text-white/40 hover:text-white transition-colors" onClick={() => setLightboxIndex(null)}>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
             {/* Prev */}
             {lightboxIndex > 0 && (
               <button
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl leading-none px-3 py-2 z-10"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white text-4xl leading-none px-2 py-4 z-10 transition-colors"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
-              >
-                ‹
-              </button>
+              >‹</button>
             )}
 
             {/* Next */}
             {lightboxIndex < photos.length - 1 && (
               <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl leading-none px-3 py-2 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white text-4xl leading-none px-2 py-4 z-10 transition-colors"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
-              >
-                ›
-              </button>
+              >›</button>
             )}
 
             {/* Photo */}
             <img
               src={lPhoto.url}
               alt={lPhoto.filename}
-              className="max-h-[88vh] max-w-[88vw] object-contain select-none"
+              className="max-h-[78vh] max-w-[84vw] object-contain select-none"
               onClick={(e) => e.stopPropagation()}
             />
 
-            {/* ── Bottom action bar ── */}
-            <div
-              className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 bg-gradient-to-t from-black/80 to-transparent"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Counter */}
-              <span className="text-xs text-white/40 tracking-widest">
-                {lightboxIndex + 1} / {photos.length}
-              </span>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {/* Proof: save / saved button */}
-                {isProof && (
-                  <button
-                    onClick={(e) => toggleFavorite(e, lPhoto)}
-                    className={`flex items-center gap-2 px-4 py-2 text-xs tracking-widest uppercase font-light transition-all border
-                      ${lIsFav
-                        ? "bg-rose-500 border-rose-500 text-white"
-                        : "bg-white/10 border-white/20 text-white hover:bg-rose-500 hover:border-rose-500"
-                      }`}
-                  >
-                    <Heart className={`h-3.5 w-3.5 ${lIsFav ? "fill-white" : ""}`} />
-                    {lIsFav ? "Saved" : "Save"}
-                  </button>
+            {/* ── Proof: CTA below photo ── */}
+            {isProof && (
+              <div
+                className="flex flex-col items-center gap-2.5 mt-6 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {pricePerPhoto > 0 && (
+                  <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                    {formatCurrency(pricePerPhoto)} per photo
+                  </span>
                 )}
-
-                {/* Final: download button */}
-                {gallery?.category === "final" && (
+                <button
+                  onClick={(e) => toggleFavorite(e, lPhoto)}
+                  className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-medium transition-all duration-200 shadow-2xl
+                    ${lIsFav
+                      ? "bg-rose-500 text-white hover:bg-rose-600"
+                      : "bg-white text-black hover:bg-rose-500 hover:text-white"
+                    }`}
+                >
+                  <Heart className={`h-4 w-4 transition-all ${lIsFav ? "fill-white" : ""}`} />
+                  {lIsFav ? "Selected  ·  Remove" : "Add to Selection"}
+                </button>
+                {favCount > 0 && (
                   <button
-                    className="flex items-center gap-2 bg-white/10 border border-white/20 text-white px-4 py-2 text-xs tracking-widest uppercase font-light hover:bg-white hover:text-black transition-colors"
-                    onClick={(e) => { e.stopPropagation(); downloadPhoto(lPhoto); }}
+                    onClick={() => { setLightboxIndex(null); setPurchaseOpen(true); }}
+                    className="text-[10px] text-white/30 hover:text-white/70 tracking-widest uppercase transition-colors underline underline-offset-2"
                   >
-                    <Download className="h-3.5 w-3.5" /> Download
+                    {favCount} selected · go to checkout
                   </button>
                 )}
               </div>
-            </div>
+            )}
+
+            {/* Final: download */}
+            {gallery?.category === "final" && (
+              <div className="mt-6 z-10" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="flex items-center gap-2 bg-white text-black px-8 py-3 text-xs tracking-widest uppercase font-medium hover:bg-black hover:text-white transition-colors shadow-2xl"
+                  onClick={(e) => { e.stopPropagation(); downloadPhoto(lPhoto); }}
+                >
+                  <Download className="h-3.5 w-3.5" /> Download
+                </button>
+              </div>
+            )}
           </div>
         );
       })()}
