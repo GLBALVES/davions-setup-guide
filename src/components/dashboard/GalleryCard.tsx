@@ -221,6 +221,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
             </span>
           </div>
         )}
+        {!compact && isUnassigned && (
+          <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400 truncate">
+            <UserX className="h-3 w-3 shrink-0" />
+            <span>No client assigned</span>
+          </div>
+        )}
 
         {/* Photo count + date */}
         {!compact && (
