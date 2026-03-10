@@ -64,6 +64,8 @@ interface Gallery {
   cover_image_url: string | null;
   created_at: string;
   booking_id: string | null;
+  watermark_id: string | null;
+  expires_at: string | null;
   client_name?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
@@ -82,6 +84,11 @@ interface UploadItem {
   progress: number;
   done: boolean;
   error?: string;
+}
+
+interface Watermark {
+  id: string;
+  name: string;
 }
 
 const GalleryDetail = () => {
@@ -103,6 +110,8 @@ const GalleryDetail = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [settingCover, setSettingCover] = useState<string | null>(null);
+  const [watermarks, setWatermarks] = useState<Watermark[]>([]);
+  const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
