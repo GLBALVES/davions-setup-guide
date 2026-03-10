@@ -486,6 +486,40 @@ const GalleryDetail = () => {
     }
   };
 
+  // ── Slug ─────────────────────────────────────────────────────────────────────
+  const generateSlugFromTitle = () => {
+    if (!gallery?.title) return;
+    const slug = gallery.title
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+    setSlugValue(slug);
+    setSlugError("");
+  };
+
+  const saveSlug = async () => {
+    if (!gallery) return;
+    const cleaned = slugValue.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    if (!cleaned) { setSlugError("Slug cannot be empty"); return; }
+    setSlugSaving(true);
+    setSlugError("");
+    const { error } = await supabase
+      .from("galleries")
+      .update({ slug: cleaned })
+      .eq("id", gallery.id);
+    if (error) {
+      setSlugError(error.message.includes("unique") ? "This slug is already in use" : error.message);
+    } else {
+      setGallery((g) => g ? { ...g, slug: cleaned } : g);
+      setSlugValue(cleaned);
+      toast({ title: "Gallery URL updated" });
+    }
+    setSlugSaving(false);
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
