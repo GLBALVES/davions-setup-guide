@@ -119,6 +119,22 @@ Deno.serve(async (req) => {
 
     console.log(`Uploaded ${safeName} (${uint8Array.byteLength} bytes) → ${storagePath}`);
 
+    // Deduplication: check if a record with the same filename already exists in this gallery
+    const { data: existing } = await dbClient
+      .from("photos")
+      .select("id")
+      .eq("gallery_id", gallery_id)
+      .eq("filename", originalName)
+      .maybeSingle();
+
+    if (existing) {
+      console.log(`Duplicate detected, returning existing photo_id: ${existing.id}`);
+      return new Response(
+        JSON.stringify({ photo_id: existing.id }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Insert photo record — save original filename for display, safe path for storage
     const { data, error: insertError } = await dbClient
       .from("photos")
