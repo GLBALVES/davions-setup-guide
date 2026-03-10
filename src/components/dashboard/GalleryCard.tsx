@@ -32,6 +32,7 @@ interface GalleryCardProps {
     client_name?: string | null;
     client_email?: string | null;
     session_title?: string | null;
+    booking_id?: string | null;
   };
   onEdit?: () => void;
   onDelete?: () => void;

@@ -47,6 +47,7 @@ interface Gallery {
   client_name?: string | null;
   client_email?: string | null;
   session_title?: string | null;
+  booking_id?: string | null;
 }
 
 type StatusFilter = "all" | "draft" | "published" | "expired";
