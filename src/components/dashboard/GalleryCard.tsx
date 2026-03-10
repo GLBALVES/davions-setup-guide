@@ -163,6 +163,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: Gall
               Draft
             </div>
           )}
+          {isUnassigned && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-amber-500/90 text-white px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
+              <UserX className="h-2.5 w-2.5" />
+              No client
+            </div>
+          )}
         </Link>
       )}
 
