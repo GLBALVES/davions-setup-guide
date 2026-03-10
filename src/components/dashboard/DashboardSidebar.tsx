@@ -88,7 +88,6 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       to={item.url}
                       end={item.url === "/dashboard"}
                       className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-normal"
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
