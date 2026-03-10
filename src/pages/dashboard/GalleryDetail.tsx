@@ -116,6 +116,7 @@ const GalleryDetail = () => {
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
+  const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
