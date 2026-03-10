@@ -109,6 +109,64 @@ interface Watermark {
   name: string;
 }
 
+// ── Sortable photo card ───────────────────────────────────────────────────────
+interface SortablePhotoProps {
+  photo: Photo;
+  onDelete: (photo: Photo) => void;
+}
+
+const SortablePhoto = ({ photo, onDelete }: SortablePhotoProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group aspect-square bg-muted overflow-hidden cursor-grab active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+    >
+      {photo.url ? (
+        <img
+          src={photo.url}
+          alt={photo.filename}
+          className="w-full h-full object-cover pointer-events-none select-none"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center pointer-events-none">
+          <span className="text-[10px] text-muted-foreground">No preview</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onDelete(photo); }}
+          className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+
 const GalleryDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
