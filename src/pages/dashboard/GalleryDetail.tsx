@@ -436,7 +436,6 @@ const GalleryDetail = () => {
   };
 
   // ── Focal point ──────────────────────────────────────────────────────────────
-  const focalImgRef = useRef<HTMLDivElement>(null);
 
   const handleFocalClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     if (!gallery || !focalMode || !focalImgRef.current) return;
