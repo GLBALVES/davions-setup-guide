@@ -172,6 +172,19 @@ const Galleries = () => {
   const defaultCategory = type ?? "proof";
   const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || sortBy !== "newest";
 
+  // Count per status chip, always from the full category-scoped list (ignoring active filter/search)
+  const statusCounts = useMemo(() => {
+    const base = type ? galleries.filter((g) => g.category === type) : galleries;
+    const now = new Date();
+    return {
+      all: base.length,
+      draft: base.filter((g) => g.status === "draft" && !(g.expires_at && new Date(g.expires_at) < now)).length,
+      published: base.filter((g) => g.status === "published" && !(g.expires_at && new Date(g.expires_at) < now)).length,
+      expired: base.filter((g) => g.expires_at && new Date(g.expires_at) < now).length,
+      unassigned: base.filter((g) => !g.booking_id).length,
+    };
+  }, [galleries, type]);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -294,6 +307,8 @@ const Galleries = () => {
                   {STATUS_FILTERS.map((f) => {
                     const isActive = statusFilter === f.value;
                     const Icon = f.icon;
+                    const count = statusCounts[f.value];
+                    const showCount = f.value !== "all" && count > 0;
                     return (
                       <button
                         key={f.value}
@@ -307,6 +322,20 @@ const Galleries = () => {
                       >
                         <Icon className="h-2.5 w-2.5" />
                         {f.label}
+                        {showCount && (
+                          <span className={cn(
+                            "ml-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-normal px-1 leading-none",
+                            isActive
+                              ? "bg-background/20 text-background"
+                              : f.value === "unassigned"
+                              ? "bg-warning/20 text-warning"
+                              : f.value === "expired"
+                              ? "bg-destructive/15 text-destructive"
+                              : "bg-foreground/10 text-foreground/60"
+                          )}>
+                            {count}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
