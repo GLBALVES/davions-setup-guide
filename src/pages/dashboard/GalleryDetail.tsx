@@ -804,6 +804,22 @@ const GalleryDetail = () => {
           {/* Header */}
           <DashboardHeader />
 
+          {/* Lightroom sync indicator */}
+          {isSyncing && (
+            <div className="flex items-center gap-3 px-6 py-2.5 bg-primary/10 border-b border-primary/20 text-primary text-[11px] tracking-[0.2em] uppercase font-light">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+              </span>
+              Sincronizando com Lightroom
+              {syncCount > 0 && (
+                <span className="ml-auto text-primary/60">
+                  {syncCount} foto{syncCount !== 1 ? "s" : ""} recebida{syncCount !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          )}
+
           <main className="flex-1 overflow-y-auto">
             {/* Hero banner */}
             {gallery.cover_image_url ? (
