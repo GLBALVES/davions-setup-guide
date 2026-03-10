@@ -116,6 +116,7 @@ const GalleryDetail = () => {
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
+  const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -437,15 +438,21 @@ const GalleryDetail = () => {
   const handleFocalClick = async (e: React.MouseEvent<HTMLDivElement>) => {
     if (!gallery || !focalMode || !coverRef.current) return;
     const rect = coverRef.current.getBoundingClientRect();
+    // In focal mode the image is object-contain, so we need to map click coords
+    // back to percentage relative to the full container (= object-position space)
     const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    // 1) instantly show cropped preview
+    setFocalPreview({ x, y });
+    setFocalMode(false);
+    // 2) persist in background
     const { error } = await supabase
       .from("galleries")
       .update({ cover_focal_x: x, cover_focal_y: y } as any)
       .eq("id", gallery.id);
     if (!error) {
       setGallery((g) => g ? { ...g, cover_focal_x: x, cover_focal_y: y } : g);
-      setFocalMode(false);
+      setFocalPreview(null);
       toast({ title: "Focus point saved" });
     }
   };
@@ -542,52 +549,59 @@ const GalleryDetail = () => {
           <main className="flex-1 overflow-y-auto">
             {/* Hero banner */}
             {gallery.cover_image_url ? (
-              <div
-                ref={coverRef}
-                className={cn(
-                  "relative w-full h-52 md:h-72 overflow-hidden group",
-                  focalMode && "cursor-crosshair"
-                )}
-                onClick={focalMode ? handleFocalClick : undefined}
-              >
-                <img
-                  src={gallery.cover_image_url}
-                  alt={gallery.title}
-                  className="w-full h-full object-cover pointer-events-none"
-                  style={{
-                    objectPosition: `${gallery.cover_focal_x ?? 50}% ${gallery.cover_focal_y ?? 50}%`,
-                  }}
-                />
-
-                {/* Focal mode overlay */}
-                {focalMode ? (
-                  <>
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <p className="text-white text-xs tracking-widest uppercase font-light bg-black/50 px-4 py-2">
-                        Click to set focus point
-                      </p>
-                    </div>
-                    {/* Current focal point dot */}
-                    <div
-                      className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              <>
+                {/* ── Focal-mode: full image picker ──────────────────────── */}
+                {focalMode && (
+                  <div
+                    ref={coverRef}
+                    className="relative w-full bg-black cursor-crosshair select-none"
+                    style={{ minHeight: "280px" }}
+                    onClick={handleFocalClick}
+                  >
+                    <img
+                      src={gallery.cover_image_url}
+                      alt={gallery.title}
+                      className="w-full h-auto block pointer-events-none"
+                      style={{ maxHeight: "70vh", objectFit: "contain", margin: "0 auto" }}
+                      draggable={false}
+                    />
+                    {/* Grid overlay */}
+                    <div className="absolute inset-0 pointer-events-none"
                       style={{
-                        left: `${gallery.cover_focal_x ?? 50}%`,
-                        top: `${gallery.cover_focal_y ?? 50}%`,
+                        backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)",
+                        backgroundSize: "33.33% 33.33%",
                       }}
-                    >
-                      <div className="w-5 h-5 rounded-full border-2 border-white bg-white/30 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                      </div>
+                    />
+                    {/* Instruction banner */}
+                    <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-3 bg-black/60">
+                      <p className="text-white text-[11px] tracking-widest uppercase font-light flex items-center gap-2">
+                        <Crosshair className="h-3.5 w-3.5" />
+                        Click on the area to keep in focus
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setFocalMode(false); }}
+                        className="text-white/60 hover:text-white text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" /> Cancel
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setFocalMode(false); }}
-                      className="absolute top-3 right-3 bg-background/90 text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 hover:bg-background transition-colors"
-                    >
-                      <X className="h-3 w-3" /> Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
+                  </div>
+                )}
+
+                {/* ── Normal / preview-after-click mode ──────────────────── */}
+                {!focalMode && (
+                  <div
+                    ref={coverRef}
+                    className="relative w-full h-52 md:h-72 overflow-hidden group"
+                  >
+                    <img
+                      src={gallery.cover_image_url}
+                      alt={gallery.title}
+                      className="w-full h-full object-cover pointer-events-none transition-[object-position] duration-500"
+                      style={{
+                        objectPosition: `${focalPreview?.x ?? gallery.cover_focal_x ?? 50}% ${focalPreview?.y ?? gallery.cover_focal_y ?? 50}%`,
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
                     <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-5 flex items-end justify-between pointer-events-none">
                       <div className="flex flex-col gap-1.5">
@@ -645,9 +659,9 @@ const GalleryDetail = () => {
                         <ImagePlus className="h-3 w-3" /> Change
                       </button>
                     </div>
-                  </>
+                  </div>
                 )}
-              </div>
+              </>
             ) : (
               <div className="px-6 md:px-10 pt-6 pb-0 flex items-center gap-3">
                 <button
@@ -660,6 +674,7 @@ const GalleryDetail = () => {
                 </button>
               </div>
             )}
+
 
             {/* Sub-header */}
             <div className="border-b border-border px-6 md:px-10 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
