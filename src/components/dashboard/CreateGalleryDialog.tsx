@@ -96,6 +96,9 @@ export function CreateGalleryDialog({
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
   const [selectedWatermarkId, setSelectedWatermarkId] = useState<string>("");
 
+  // Default expiry from gallery settings
+  const [defaultExpiryDays, setDefaultExpiryDays] = useState<number | null>(null);
+
   const isProof = (isEditMode ? editGallery?.category : defaultCategory) === "proof";
 
   // Reset + populate when dialog opens
