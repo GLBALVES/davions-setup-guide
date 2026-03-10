@@ -53,6 +53,16 @@ const Settings = () => {
 
   const heroInputRef = useRef<HTMLInputElement>(null);
 
+  const fetchSessionTypes = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setSessionTypes(data as SessionType[]);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
@@ -67,6 +77,7 @@ const Settings = () => {
           .select("*")
           .eq("photographer_id", user.id)
           .order("created_at", { ascending: true }),
+        fetchSessionTypes(),
       ]);
 
       if (profileRes.data) {
@@ -87,7 +98,7 @@ const Settings = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user]);
+  }, [user, fetchSessionTypes]);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
