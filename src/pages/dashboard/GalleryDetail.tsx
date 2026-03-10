@@ -1440,6 +1440,59 @@ const GalleryDetail = () => {
                 </div>
               )}
 
+              {/* Photo Purchase Price — proof only */}
+              {gallery.category === "proof" && (
+                <div className="border border-border p-6 flex flex-col gap-4">
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
+                      <span className="inline-block w-6 h-px bg-border" />
+                      Photo Purchase Price
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Set a price per photo for client selection checkout. Leave at 0 for a free submission flow.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-light pointer-events-none">R$</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={pricePerPhoto === 0 ? "" : (pricePerPhoto / 100).toFixed(0)}
+                        onChange={(e) => {
+                          const brl = parseFloat(e.target.value) || 0;
+                          setPricePerPhoto(Math.round(brl * 100));
+                        }}
+                        placeholder="0"
+                        className="pl-9 rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground font-mono"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => savePricePerPhoto(pricePerPhoto)}
+                      className="text-xs tracking-widest uppercase font-light shrink-0"
+                    >
+                      Save
+                    </Button>
+                  </div>
+                  {pricePerPhoto > 0 && (
+                    <p className="text-[10px] text-muted-foreground/60">
+                      Clients will pay{" "}
+                      <strong className="text-foreground">
+                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(pricePerPhoto / 100)}
+                      </strong>{" "}
+                      per photo via Stripe checkout.
+                    </p>
+                  )}
+                  {pricePerPhoto === 0 && (
+                    <p className="text-[10px] text-muted-foreground/50">
+                      Free mode — clients submit their selection with no payment required.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Client Favorites — Lightroom Export */}
               {(() => {
                 const favoritedPhotos = photos
