@@ -634,7 +634,7 @@ const GalleryView = () => {
         const lIsFav = favorites.has(lPhoto.id);
         return (
           <div
-            className="fixed inset-0 bg-black/96 z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black/97 z-50 flex items-center justify-center"
             onClick={() => setLightboxIndex(null)}
           >
             {/* Close */}
