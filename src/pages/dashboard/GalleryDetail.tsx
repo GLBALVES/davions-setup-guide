@@ -251,19 +251,26 @@ const GalleryDetail = () => {
     }
   };
 
-  // ── Save access code ────────────────────────────────────────────────────────
-  const saveAccessCode = async () => {
+  // ── Auto-save access code ───────────────────────────────────────────────────
+  const persistAccessCode = useCallback(async (code: string) => {
     if (!gallery) return;
     setSavingCode(true);
+    const value = code.trim() || null;
     const { error } = await supabase
       .from("galleries")
-      .update({ access_code: accessCode.trim() || null })
+      .update({ access_code: value })
       .eq("id", gallery.id);
     if (!error) {
-      setGallery({ ...gallery, access_code: accessCode.trim() || null });
-      toast({ title: "Access code saved" });
+      setGallery((g) => g ? { ...g, access_code: value } : g);
     }
     setSavingCode(false);
+  }, [gallery]);
+
+  const handleAccessCodeChange = (value: string) => {
+    const upper = value.toUpperCase();
+    setAccessCode(upper);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => persistAccessCode(upper), 800);
   };
 
   // ── Copy link ───────────────────────────────────────────────────────────────
@@ -273,27 +280,27 @@ const GalleryDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyCode = () => {
+    if (!gallery?.access_code) return;
+    navigator.clipboard.writeText(gallery.access_code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   // ── Generate access code ────────────────────────────────────────────────────
   const generateAccessCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const code = Array.from({ length: 6 }, () =>
       chars[Math.floor(Math.random() * chars.length)]
     ).join("");
-    setAccessCode(code);
+    handleAccessCodeChange(code);
   };
 
   const clearAccessCode = async () => {
-    setSavingCode(true);
     setAccessCode("");
-    const { error } = await supabase
-      .from("galleries")
-      .update({ access_code: null })
-      .eq("id", gallery!.id);
-    if (!error) {
-      setGallery((g) => g ? { ...g, access_code: null } : g);
-      toast({ title: "Access code removed" });
-    }
-    setSavingCode(false);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    await persistAccessCode("");
+    toast({ title: "Access code removed" });
   };
 
   // ── Rename ──────────────────────────────────────────────────────────────────
