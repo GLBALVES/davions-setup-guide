@@ -62,6 +62,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -112,10 +122,10 @@ interface Watermark {
 // ── Sortable photo card ───────────────────────────────────────────────────────
 interface SortablePhotoProps {
   photo: Photo;
-  onDelete: (photo: Photo) => void;
+  onRequestDelete: (photo: Photo) => void;
 }
 
-const SortablePhoto = ({ photo, onDelete }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete }: SortablePhotoProps) => {
   const {
     attributes,
     listeners,
@@ -155,7 +165,7 @@ const SortablePhoto = ({ photo, onDelete }: SortablePhotoProps) => {
       <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
         <button
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onDelete(photo); }}
+          onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
           className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
         >
           <Trash2 className="h-4 w-4" />
@@ -190,6 +200,7 @@ const GalleryDetail = () => {
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -985,7 +996,7 @@ const GalleryDetail = () => {
                     <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {photos.map((photo) => (
-                          <SortablePhoto key={photo.id} photo={photo} onDelete={deletePhoto} />
+                          <SortablePhoto key={photo.id} photo={photo} onRequestDelete={setPhotoToDelete} />
                         ))}
                       </div>
                     </SortableContext>
@@ -1305,6 +1316,30 @@ const GalleryDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!photoToDelete} onOpenChange={(open) => { if (!open) setPhotoToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deletar foto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. A foto será removida permanentemente da galeria.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (photoToDelete) {
+                  await deletePhoto(photoToDelete);
+                  setPhotoToDelete(null);
+                }
+              }}
+            >
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
