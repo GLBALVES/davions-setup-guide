@@ -165,8 +165,8 @@ const groups: MenuGroup[] = [
     title: "Workflows",
     icon: GitBranch,
     items: [
-      { title: "Kanban", icon: Columns },
-      { title: "Recurring Workflows", icon: RefreshCw },
+      { title: "Kanban", icon: Columns, to: "/dashboard/workflow" },
+      { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring" },
     ],
   },
   {

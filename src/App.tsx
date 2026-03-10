@@ -88,6 +88,10 @@ const App = () => (
                 <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><EmailAutomatedEditor /></ProtectedRoute>} />
                 <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><EmailOneoffEditor /></ProtectedRoute>} />
                 <Route path="/dashboard/push" element={<ProtectedRoute><PushNotifications /></ProtectedRoute>} />
+                <Route path="/dashboard/workflow" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
+                <Route path="/dashboard/workflow/:projectId" element={<ProtectedRoute><WorkflowProject /></ProtectedRoute>} />
+                <Route path="/dashboard/recurring" element={<ProtectedRoute><RecurringWorkflows /></ProtectedRoute>} />
+                <Route path="/dashboard/agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
