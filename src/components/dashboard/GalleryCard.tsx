@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail } from "lucide-react";
+import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface GalleryCardProps {
   gallery: {
