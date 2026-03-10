@@ -236,27 +236,49 @@ Guidelines:
     setLoading(false);
   };
 
+  // Get current AI mode from active agent's state
+  const getAgentAIMode = (): string => {
+    const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+    if (!activeAgent || !activeAgent.auto_reply) return "manual";
+    if (activeAgent.review_mode) return "supervised";
+    return "active";
+  };
+
   // Trigger AI response
   const triggerAI = async () => {
     if (!selectedTicket) return;
+    const currentMode = getAgentAIMode();
     setSendingAI(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {
           ticket_id: selectedTicket.id,
           agent_slug: selectedAgentSlug || undefined,
-          mode: selectedTicket.ai_mode,
+          mode: currentMode,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(selectedTicket.ai_mode === "supervised" ? "Draft generated" : "AI response sent");
+      toast.success(currentMode === "supervised" ? "Draft generated" : "AI response sent");
       loadMessages();
     } catch (e: any) {
       toast.error(e.message || "AI error");
     }
     setSendingAI(false);
   };
+
+  // Update agent toggle (Commander)
+  const updateAgentToggle = async (field: "auto_reply" | "review_mode", value: boolean) => {
+    const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
+    if (!activeAgent) return;
+    const updates: any = { [field]: value };
+    if (field === "auto_reply" && !value) updates.review_mode = false;
+    await supabase.from("ai_agents" as any).update(updates).eq("id", activeAgent.id);
+    setAgents(prev => prev.map(a => a.id === activeAgent.id ? { ...a, ...updates } : a));
+  };
+
+  // Draft count for Commander badge
+  const draftCount = messages.filter(m => m.role === "assistant_draft").length;
 
   // Approve draft
   const approveDraft = async (msg: Message) => {
