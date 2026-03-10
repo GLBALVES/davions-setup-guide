@@ -756,8 +756,8 @@ Guidelines:
                     <Separator />
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Mode</Label>
-                      <Badge variant="outline" className={`mt-1 text-[9px] ${aiModeColor(selectedTicket.ai_mode)}`}>
-                        {aiModeLabel(selectedTicket.ai_mode)}
+                      <Badge variant="outline" className={`mt-1 text-[9px] ${aiModeColor(getAgentAIMode())}`}>
+                        {aiModeLabel(getAgentAIMode())}
                       </Badge>
                     </div>
                     <Separator />
