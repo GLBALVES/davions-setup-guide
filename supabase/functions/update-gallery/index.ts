@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     }
 
     const { gallery_id, gallery_name, gallery_type } = await req.json();
+    console.log("update-gallery called with gallery_id:", gallery_id, "gallery_name:", gallery_name, "gallery_type:", gallery_type);
 
     if (!gallery_id) {
       return new Response(
