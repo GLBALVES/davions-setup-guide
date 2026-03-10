@@ -25,6 +25,8 @@ import {
   User,
   Camera,
   Calendar,
+  RefreshCw,
+  XCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
