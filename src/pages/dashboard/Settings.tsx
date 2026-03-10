@@ -31,15 +31,18 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
-  const [uploadingWatermark, setUploadingWatermark] = useState(false);
-  const [watermarkUrl, setWatermarkUrl] = useState<string | null>(null);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [domainError, setDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [domainCopied, setDomainCopied] = useState(false);
 
+  // Watermarks
+  const [watermarks, setWatermarks] = useState<WatermarkData[]>([]);
+  const [watermarkEditorOpen, setWatermarkEditorOpen] = useState(false);
+  const [editingWatermark, setEditingWatermark] = useState<WatermarkData | undefined>(undefined);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const heroInputRef = useRef<HTMLInputElement>(null);
-  const watermarkInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
