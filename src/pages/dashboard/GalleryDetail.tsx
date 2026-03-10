@@ -42,6 +42,7 @@ interface Gallery {
   category: string;
   status: string;
   access_code: string | null;
+  cover_image_url: string | null;
   created_at: string;
   booking_id: string | null;
   client_name?: string | null;
