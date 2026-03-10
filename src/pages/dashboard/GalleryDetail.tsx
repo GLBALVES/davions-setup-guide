@@ -88,12 +88,25 @@ const GalleryDetail = () => {
     if (!id) return;
     const { data } = await supabase
       .from("galleries")
-      .select("*")
+      .select(`
+        *,
+        bookings (
+          client_name,
+          booked_date,
+          sessions ( title )
+        )
+      `)
       .eq("id", id)
       .single();
     if (data) {
-      setGallery(data as Gallery);
-      setAccessCode(data.access_code ?? "");
+      const raw = data as any;
+      setGallery({
+        ...raw,
+        client_name: raw.bookings?.client_name ?? null,
+        session_title: raw.bookings?.sessions?.title ?? null,
+        booked_date: raw.bookings?.booked_date ?? null,
+      } as Gallery);
+      setAccessCode(raw.access_code ?? "");
     }
   }, [id]);
 
