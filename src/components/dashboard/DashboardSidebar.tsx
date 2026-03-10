@@ -1,10 +1,11 @@
 import {
   LayoutDashboard,
-  FolderOpen,
   Settings,
   LogOut,
   CalendarDays,
   BookOpen,
+  ScanEye,
+  Images,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -27,8 +28,8 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Sessions", url: "/dashboard/sessions", icon: CalendarDays },
   { title: "Bookings", url: "/dashboard/bookings", icon: BookOpen },
-  { title: "Proof Galleries", url: "/dashboard/galleries?type=proof", icon: FolderOpen },
-  { title: "Final Galleries", url: "/dashboard/galleries?type=final", icon: FolderOpen },
+  { title: "Proof Galleries", url: "/dashboard/galleries?type=proof", icon: ScanEye },
+  { title: "Final Galleries", url: "/dashboard/galleries?type=final", icon: Images },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
