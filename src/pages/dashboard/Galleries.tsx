@@ -55,6 +55,7 @@ const Galleries = () => {
           ...g,
           category: g.category ?? "proof",
           photo_count: countMap[g.id] || 0,
+          cover_image_url: g.cover_image_url ?? null,
           client_name: g.bookings?.client_name ?? null,
           session_title: (g.bookings as any)?.sessions?.title ?? null,
         }))
