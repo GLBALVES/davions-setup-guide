@@ -200,6 +200,7 @@ const GalleryDetail = () => {
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
