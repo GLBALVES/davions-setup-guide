@@ -14,6 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          photographer_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          photographer_id: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_categories_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author: string
+          canonical_url: string | null
+          category: string | null
+          content: string
+          cover_image_url: string | null
+          created_at: string
+          featured: boolean
+          footer: string | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          mid_image_1: string | null
+          mid_image_2: string | null
+          og_image_url: string | null
+          photographer_id: string
+          published: boolean
+          published_at: string | null
+          reading_time_min: number
+          scheduled_at: string | null
+          slug: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          canonical_url?: string | null
+          category?: string | null
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string
+          featured?: boolean
+          footer?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          mid_image_1?: string | null
+          mid_image_2?: string | null
+          og_image_url?: string | null
+          photographer_id: string
+          published?: boolean
+          published_at?: string | null
+          reading_time_min?: number
+          scheduled_at?: string | null
+          slug?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          canonical_url?: string | null
+          category?: string | null
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string
+          featured?: boolean
+          footer?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          mid_image_1?: string | null
+          mid_image_2?: string | null
+          og_image_url?: string | null
+          photographer_id?: string
+          published?: boolean
+          published_at?: string | null
+          reading_time_min?: number
+          scheduled_at?: string | null
+          slug?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_settings: {
+        Row: {
+          id: string
+          key: string
+          photographer_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          photographer_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          photographer_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_settings_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_themes: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          photographer_id: string
+          status: string
+          theme: string
+          used_by_post_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          photographer_id: string
+          status?: string
+          theme: string
+          used_by_post_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          photographer_id?: string
+          status?: string
+          theme?: string
+          used_by_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_themes_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_themes_used_by_post_id_fkey"
+            columns: ["used_by_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           availability_id: string
