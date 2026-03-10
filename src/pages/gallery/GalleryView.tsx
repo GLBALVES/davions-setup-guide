@@ -16,6 +16,8 @@ interface Gallery {
   access_code: string | null;
   photographer_id: string;
   cover_image_url: string | null;
+  cover_focal_x: number | null;
+  cover_focal_y: number | null;
 }
 
 interface Photo {
