@@ -94,6 +94,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          watermark_id: string | null
           watermark_url: string | null
         }
         Insert: {
@@ -108,6 +109,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          watermark_id?: string | null
           watermark_url?: string | null
         }
         Update: {
@@ -122,6 +124,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          watermark_id?: string | null
           watermark_url?: string | null
         }
         Relationships: [
@@ -137,6 +140,13 @@ export type Database = {
             columns: ["photographer_id"]
             isOneToOne: false
             referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galleries_watermark_id_fkey"
+            columns: ["watermark_id"]
+            isOneToOne: false
+            referencedRelation: "watermarks"
             referencedColumns: ["id"]
           },
         ]
@@ -544,6 +554,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      watermarks: {
+        Row: {
+          created_at: string
+          id: string
+          image_enabled: boolean
+          image_opacity: number
+          image_position: string
+          image_scale: number
+          image_url: string | null
+          name: string
+          photographer_id: string
+          text_color: string
+          text_content: string | null
+          text_enabled: boolean
+          text_font: string
+          text_opacity: number
+          text_position: string
+          text_scale: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_enabled?: boolean
+          image_opacity?: number
+          image_position?: string
+          image_scale?: number
+          image_url?: string | null
+          name?: string
+          photographer_id: string
+          text_color?: string
+          text_content?: string | null
+          text_enabled?: boolean
+          text_font?: string
+          text_opacity?: number
+          text_position?: string
+          text_scale?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_enabled?: boolean
+          image_opacity?: number
+          image_position?: string
+          image_scale?: number
+          image_url?: string | null
+          name?: string
+          photographer_id?: string
+          text_color?: string
+          text_content?: string | null
+          text_enabled?: boolean
+          text_font?: string
+          text_opacity?: number
+          text_position?: string
+          text_scale?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
