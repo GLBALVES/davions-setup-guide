@@ -759,23 +759,19 @@ const GalleryView = () => {
 
               {/* Photo + watermark */}
               <div
-                className="relative flex items-center justify-center"
+                className="relative inline-flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
                 onContextMenu={blockContext}
-                style={{ maxHeight: "100%", maxWidth: "100%" }}
+                style={{ maxHeight: "calc(100vh - 200px)", maxWidth: "100%" }}
               >
                 <img
                   src={lPhoto.url}
                   alt=""
-                  className="max-h-full max-w-full object-contain pointer-events-none"
+                  className="block max-h-full max-w-full object-contain pointer-events-none"
                   style={{ maxHeight: "calc(100vh - 200px)" }}
                   draggable={false}
                 />
-                {watermark && (
-                  <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-                    <WatermarkOverlay wm={watermark} size="full" />
-                  </div>
-                )}
+                {watermark && <WatermarkOverlay wm={watermark} size="full" />}
               </div>
             </div>
 
