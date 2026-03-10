@@ -54,6 +54,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuBadge,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -80,12 +81,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import seloPreto from "@/assets/selo_preto.png";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 
 type MenuItem = {
   title: string;
   icon: React.ElementType;
   to?: string;
   end?: boolean;
+  badgeKey?: "pendingBookings" | "draftSessions";
 };
 
 type MenuGroup = {
@@ -104,8 +107,8 @@ const groups: MenuGroup[] = [
     defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
-      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings" },
+      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings" },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final" },
     ],
@@ -208,10 +211,11 @@ interface SortableFavoriteItemProps {
   item: MenuItem & { groupTitle: string };
   isActive: boolean;
   collapsed: boolean;
+  badgeCount?: number;
   onUnpin: () => void;
 }
 
-function SortableFavoriteItem({ id, item, isActive, collapsed, onUnpin }: SortableFavoriteItemProps) {
+function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, onUnpin }: SortableFavoriteItemProps) {
   const {
     attributes,
     listeners,
@@ -275,6 +279,11 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, onUnpin }: Sortab
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+      {badgeCount > 0 && (
+        <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
+          {badgeCount}
+        </SidebarMenuBadge>
+      )}
     </SidebarMenuItem>
   );
 }
@@ -289,6 +298,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const badges = useSidebarBadges();
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
 
@@ -358,6 +368,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
+    const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
         <NavLink
@@ -397,6 +409,11 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
+        {badgeCount > 0 && (
+          <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
+            {badgeCount}
+          </SidebarMenuBadge>
+        )}
       </SidebarMenuItem>
     );
   };
@@ -468,6 +485,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                             item={item}
                             isActive={isItemActive(item)}
                             collapsed={collapsed}
+                            badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
                             onUnpin={() => togglePin(item.groupTitle, item)}
                           />
                         ))}
