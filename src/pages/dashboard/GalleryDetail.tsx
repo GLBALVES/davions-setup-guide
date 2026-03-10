@@ -61,6 +61,7 @@ import {
   CheckSquare,
   Square,
   Heart,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   Dialog,
@@ -1124,7 +1125,7 @@ const GalleryDetail = () => {
                       className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
                       title={favoritedPhotos.length === 0 ? "No favorites yet" : `Copy ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
                     >
-                      {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Heart className="h-3.5 w-3.5" />}
+                      {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <SlidersHorizontal className="h-3.5 w-3.5" />}
                       {copiedFavorites ? "Copied!" : `Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
                     </Button>
                   );
