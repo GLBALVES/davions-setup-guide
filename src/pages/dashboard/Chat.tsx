@@ -12,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,9 @@ import {
   Paperclip,
   Star,
   Check,
+  ChevronDown,
+  BookOpen,
+  Settings2,
   Edit3,
   Trash2,
   RotateCcw,
@@ -71,12 +76,29 @@ type Message = {
   created_at: string;
 };
 
+interface KnowledgeEntry { topic: string; content: string; }
+
 type Agent = {
   id: string;
   name: string;
   slug: string;
   enabled: boolean;
+  auto_reply: boolean;
+  review_mode: boolean;
+  model: string;
+  temperature: number;
+  description: string;
+  system_prompt: string;
+  knowledge_base: KnowledgeEntry[];
 };
+
+const MODELS = [
+  { value: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (fast)" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (balanced)" },
+  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (advanced)" },
+  { value: "openai/gpt-5-mini", label: "GPT-5 Mini" },
+  { value: "openai/gpt-5-nano", label: "GPT-5 Nano (economic)" },
+];
 
 export default function Chat() {
   const { user, signOut } = useAuth();
@@ -110,6 +132,7 @@ export default function Chat() {
     const { data } = await q;
     setTickets((data as Ticket[]) || []);
   }, [photographerId, filterStatus]);
+  const [agentMonitorOpen, setAgentMonitorOpen] = useState(true);
 
   // Load agents — auto-create default support agent if none exist
   useEffect(() => {
@@ -117,10 +140,15 @@ export default function Chat() {
     const loadAgents = async () => {
       const { data } = await supabase
         .from("ai_agents")
-        .select("id, name, slug, enabled")
+        .select("id, name, slug, enabled, auto_reply, review_mode, model, temperature, description, system_prompt, knowledge_base")
         .eq("photographer_id", photographerId);
 
-      const allAgents = (data as Agent[]) || [];
+      const allAgents = ((data as any[]) || []).map((a) => ({
+        ...a,
+        knowledge_base: Array.isArray(a.knowledge_base) ? a.knowledge_base : [],
+        auto_reply: a.auto_reply ?? true,
+        review_mode: a.review_mode ?? false,
+      })) as Agent[];
 
       // If no agents exist at all, seed a default Customer Support agent
       if (allAgents.length === 0) {
@@ -150,10 +178,11 @@ Guidelines:
           review_mode: false,
           user_id: photographerId,
           photographer_id: photographerId,
-        } as any).select("id, name, slug, enabled").single();
+        } as any).select("*").single();
 
         if (!error && created) {
-          const agent = created as unknown as Agent;
+          const c = created as any;
+          const agent = { ...c, knowledge_base: Array.isArray(c.knowledge_base) ? c.knowledge_base : [] } as unknown as Agent;
           setAgents([agent]);
           setSelectedAgentSlug(agent.slug);
           toast.success("Default Customer Support agent created automatically!");
@@ -161,9 +190,11 @@ Guidelines:
         }
       }
 
-      const enabled = allAgents.filter(a => a.enabled);
-      setAgents(enabled);
-      if (enabled.length > 0) setSelectedAgentSlug(enabled[0].slug);
+      setAgents(allAgents);
+      if (allAgents.length > 0 && !selectedAgentSlug) {
+        const enabledAgent = allAgents.find(a => a.enabled);
+        setSelectedAgentSlug(enabledAgent?.slug || allAgents[0].slug);
+      }
     };
     loadAgents();
   }, [photographerId]);
@@ -314,8 +345,17 @@ Guidelines:
     await supabase.from("support_tickets").update({ ai_mode: mode }).eq("id", selectedTicket.id);
     setSelectedTicket((prev) => prev ? { ...prev, ai_mode: mode } : null);
   };
+  // Update agent field
+  const selectedAgent = agents.find(a => a.slug === selectedAgentSlug);
 
-  // Save internal notes
+  const updateAgentField = async (field: string, value: any) => {
+    if (!selectedAgent) return;
+    await supabase.from("ai_agents" as any).update({ [field]: value } as any).eq("id", selectedAgent.id);
+    setAgents(prev => prev.map(a => a.id === selectedAgent.id ? { ...a, [field]: value } : a));
+    toast.success("Agent updated");
+  };
+
+
   const saveNotes = async () => {
     if (!selectedTicket) return;
     await supabase.from("support_tickets").update({ internal_notes: internalNotes }).eq("id", selectedTicket.id);
@@ -703,6 +743,112 @@ Guidelines:
                         Save Notes
                       </Button>
                     </div>
+
+                    {/* Agent Monitor */}
+                    {selectedAgent && (
+                      <>
+                        <Separator />
+                        <Collapsible open={agentMonitorOpen} onOpenChange={setAgentMonitorOpen}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full py-1 group">
+                            <div className="flex items-center gap-1.5">
+                              <Settings2 className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-[10px] font-medium uppercase tracking-wider">Agent Monitor</span>
+                            </div>
+                            <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${agentMonitorOpen ? "rotate-180" : ""}`} />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="space-y-3 pt-2">
+                            {/* Agent name */}
+                            <div>
+                              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Agent</Label>
+                              <p className="text-xs font-medium mt-0.5">{selectedAgent.name}</p>
+                              {selectedAgent.description && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{selectedAgent.description}</p>
+                              )}
+                            </div>
+
+                            {/* Enable/Disable */}
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px]">Enabled</Label>
+                              <Switch
+                                checked={selectedAgent.enabled}
+                                onCheckedChange={(v) => updateAgentField("enabled", v)}
+                              />
+                            </div>
+
+                            {/* Auto Reply */}
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px]">Auto Reply</Label>
+                              <Switch
+                                checked={selectedAgent.auto_reply}
+                                onCheckedChange={(v) => updateAgentField("auto_reply", v)}
+                              />
+                            </div>
+
+                            {/* Review Mode */}
+                            {selectedAgent.auto_reply && (
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[10px]">Review Mode</Label>
+                                <Switch
+                                  checked={selectedAgent.review_mode}
+                                  onCheckedChange={(v) => updateAgentField("review_mode", v)}
+                                />
+                              </div>
+                            )}
+
+                            {/* Model */}
+                            <div>
+                              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Model</Label>
+                              <Select value={selectedAgent.model} onValueChange={(v) => updateAgentField("model", v)}>
+                                <SelectTrigger className="h-7 text-[10px] mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {MODELS.map((m) => (
+                                    <SelectItem key={m.value} value={m.value} className="text-xs">{m.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Temperature */}
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Temperature</Label>
+                                <span className="text-[10px] text-muted-foreground">{selectedAgent.temperature}</span>
+                              </div>
+                              <Slider
+                                value={[selectedAgent.temperature]}
+                                onValueCommit={(v) => updateAgentField("temperature", v[0])}
+                                min={0}
+                                max={1}
+                                step={0.1}
+                                className="mt-1"
+                              />
+                            </div>
+
+                            {/* Knowledge Base */}
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <BookOpen className="h-3 w-3 text-muted-foreground" />
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Knowledge Base</Label>
+                                <Badge variant="secondary" className="text-[9px] h-4 px-1.5">
+                                  {selectedAgent.knowledge_base.length}
+                                </Badge>
+                              </div>
+                              {selectedAgent.knowledge_base.length > 0 && (
+                                <div className="mt-1 space-y-1">
+                                  {selectedAgent.knowledge_base.map((entry, i) => (
+                                    <div key={i} className="text-[10px] px-2 py-1 rounded bg-muted">
+                                      <span className="font-medium">{entry.topic}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </>
+                    )}
                   </div>
                 </ScrollArea>
               </div>
