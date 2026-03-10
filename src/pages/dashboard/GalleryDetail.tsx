@@ -373,6 +373,34 @@ const GalleryDetail = () => {
     }
   };
 
+  // ── Set cover from photo ─────────────────────────────────────────────────────
+  const setCoverFromPhoto = async (photo: Photo) => {
+    if (!gallery || !photo.url) return;
+    setSettingCover(photo.id);
+    const { error } = await supabase
+      .from("galleries")
+      .update({ cover_image_url: photo.url })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, cover_image_url: photo.url! } : g);
+      toast({ title: "Cover updated" });
+      setCoverPickerOpen(false);
+    }
+    setSettingCover(null);
+  };
+
+  const removeCover = async () => {
+    if (!gallery) return;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ cover_image_url: null })
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, cover_image_url: null } : g);
+      toast({ title: "Cover removed" });
+    }
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
