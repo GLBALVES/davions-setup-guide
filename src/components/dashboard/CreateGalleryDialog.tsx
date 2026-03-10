@@ -107,7 +107,7 @@ export function CreateGalleryDialog({
     fetchData();
   }, [open, user]);
 
-  // When client selected, filter sessions
+  // When client/booking selected, load the session from that booking directly
   useEffect(() => {
     if (!selectedBookingId) {
       setSessions([]);
@@ -118,21 +118,22 @@ export function CreateGalleryDialog({
     const booking = bookings.find((b) => b.id === selectedBookingId);
     if (!booking) return;
 
-    const clientSessionIds = bookings
-      .filter((b) => b.client_email === booking.client_email)
-      .map((b) => b.session_id);
-
-    const fetchSessions = async () => {
+    const fetchSession = async () => {
       const { data } = await supabase
         .from("sessions")
         .select("id, title")
-        .in("id", clientSessionIds);
-      if (data) setSessions(data as Session[]);
-      if (data?.length === 1) setSelectedSessionId(data[0].id);
-      else setSelectedSessionId("");
+        .eq("id", booking.session_id)
+        .maybeSingle();
+      if (data) {
+        setSessions([data as Session]);
+        setSelectedSessionId(data.id);
+      } else {
+        setSessions([]);
+        setSelectedSessionId("");
+      }
     };
 
-    fetchSessions();
+    fetchSession();
   }, [selectedBookingId, bookings]);
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,26 +290,25 @@ export function CreateGalleryDialog({
             </Select>
           </div>
 
-          {/* Session — only shown after client selected */}
-          {selectedBookingId && (
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
-                Session
-              </Label>
-              <Select value={selectedSessionId} onValueChange={setSelectedSessionId}>
-                <SelectTrigger className="rounded-none border-border focus:ring-0">
-                  <SelectValue placeholder="Select session…" />
-                </SelectTrigger>
-                <SelectContent className="rounded-none">
-                  {sessions.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Session — always visible; auto-populated from the selected booking */}
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
+              Session
+            </Label>
+            {!selectedBookingId ? (
+              <div className="h-10 border border-dashed border-border flex items-center px-3 text-xs text-muted-foreground/60">
+                Select a client first
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="h-10 border border-border flex items-center px-3 text-xs text-muted-foreground animate-pulse">
+                Loading…
+              </div>
+            ) : (
+              <div className="h-10 border border-border bg-muted/30 flex items-center px-3 text-sm">
+                {sessions[0]?.title ?? "—"}
+              </div>
+            )}
+          </div>
 
           {/* Watermark — only for proof galleries */}
           {isProof && (
