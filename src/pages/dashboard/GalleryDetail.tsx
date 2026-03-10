@@ -245,6 +245,10 @@ const GalleryDetail = () => {
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
   const [deleteGalleryOpen, setDeleteGalleryOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [deletingSelected, setDeletingSelected] = useState(false);
+  const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
