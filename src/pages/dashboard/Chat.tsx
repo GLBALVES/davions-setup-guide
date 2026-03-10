@@ -153,8 +153,9 @@ Guidelines:
         } as any).select("id, name, slug, enabled").single();
 
         if (!error && created) {
-          setAgents([created as Agent]);
-          setSelectedAgentSlug((created as any).slug);
+          const agent = created as unknown as Agent;
+          setAgents([agent]);
+          setSelectedAgentSlug(agent.slug);
           toast.success("Default Customer Support agent created automatically!");
           return;
         }
