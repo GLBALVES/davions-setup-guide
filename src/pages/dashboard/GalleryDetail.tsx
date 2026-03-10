@@ -769,6 +769,19 @@ const GalleryDetail = () => {
     }
   };
 
+  // ── Price per photo ───────────────────────────────────────────────────────────
+  const savePricePerPhoto = async (cents: number) => {
+    if (!gallery) return;
+    const { error } = await supabase
+      .from("galleries")
+      .update({ price_per_photo: cents } as any)
+      .eq("id", gallery.id);
+    if (!error) {
+      setGallery((g) => g ? { ...g, price_per_photo: cents } : g);
+      toast({ title: "Price updated" });
+    }
+  };
+
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
