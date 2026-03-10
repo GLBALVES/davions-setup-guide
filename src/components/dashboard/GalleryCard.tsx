@@ -85,40 +85,62 @@ export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardPro
   };
 
   return (
-    <div className={`border flex flex-col group transition-colors ${
+    <div className={`border flex group transition-colors ${
       isExpired
         ? "border-destructive/40 hover:border-destructive/60"
         : isDraft
         ? "border-border border-dashed hover:border-foreground/30"
         : "border-border hover:border-foreground/30"
-    }`}>
-      {/* Thumbnail */}
-      <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
-        {gallery.cover_image_url ? (
-          <img
-            src={gallery.cover_image_url}
-            alt={gallery.title}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isExpired ? "opacity-50 grayscale" : ""}`}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
-          </div>
-        )}
-        {/* Overlay badges on thumbnail */}
-        {isExpired && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-destructive text-destructive-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
-            <CalendarX2 className="h-2.5 w-2.5" />
-            Expired
-          </div>
-        )}
-        {isDraft && !isExpired && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-muted/90 text-muted-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light border border-border">
-            <Clock className="h-2.5 w-2.5" />
-            Draft
-          </div>
-        )}
-      </Link>
+    } ${compact ? "flex-row items-center gap-3 p-3" : "flex-col"}`}>
+
+      {/* Thumbnail — hidden in compact list view */}
+      {!compact && (
+        <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
+          {gallery.cover_image_url ? (
+            <img
+              src={gallery.cover_image_url}
+              alt={gallery.title}
+              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isExpired ? "opacity-50 grayscale" : ""}`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+            </div>
+          )}
+          {isExpired && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 bg-destructive text-destructive-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
+              <CalendarX2 className="h-2.5 w-2.5" />
+              Expired
+            </div>
+          )}
+          {isDraft && !isExpired && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 bg-muted/90 text-muted-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light border border-border">
+              <Clock className="h-2.5 w-2.5" />
+              Draft
+            </div>
+          )}
+        </Link>
+      )}
+
+      {/* Compact thumbnail */}
+      {compact && (
+        <Link
+          to={`/dashboard/galleries/${gallery.id}`}
+          className="shrink-0 w-14 h-10 bg-muted overflow-hidden relative"
+        >
+          {gallery.cover_image_url ? (
+            <img
+              src={gallery.cover_image_url}
+              alt={gallery.title}
+              className={`w-full h-full object-cover group-hover:brightness-90 transition-all duration-300 ${isExpired ? "opacity-50 grayscale" : ""}`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <FolderOpen className="h-4 w-4 text-muted-foreground/30" />
+            </div>
+          )}
+        </Link>
+      )}
 
       {/* Info */}
       <div className="p-4 flex flex-col gap-2 flex-1">
