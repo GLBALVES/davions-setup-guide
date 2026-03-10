@@ -29,28 +29,32 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingWatermark, setUploadingWatermark] = useState(false);
+  const [watermarkUrl, setWatermarkUrl] = useState<string | null>(null);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [domainError, setDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [domainCopied, setDomainCopied] = useState(false);
 
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const watermarkInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("photographers")
-        .select("full_name, store_slug, custom_domain, bio, hero_image_url")
+        .select("full_name, store_slug, custom_domain, bio, hero_image_url, watermark_url")
         .eq("id", user!.id)
         .single();
       if (data) {
         setFullName(data.full_name ?? "");
         setStoreSlug(data.store_slug ?? "");
         setSlugInput(data.store_slug ?? "");
-        setCustomDomain((data as { custom_domain?: string }).custom_domain ?? "");
-        setCustomDomainInput((data as { custom_domain?: string }).custom_domain ?? "");
-        setBio((data as { bio?: string }).bio ?? "");
-        setHeroImageUrl((data as { hero_image_url?: string }).hero_image_url ?? "");
+        setCustomDomain((data as any).custom_domain ?? "");
+        setCustomDomainInput((data as any).custom_domain ?? "");
+        setBio((data as any).bio ?? "");
+        setHeroImageUrl((data as any).hero_image_url ?? "");
+        setWatermarkUrl((data as any).watermark_url ?? null);
       }
       setLoading(false);
     };
