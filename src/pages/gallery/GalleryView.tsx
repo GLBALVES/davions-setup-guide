@@ -815,13 +815,13 @@ const GalleryView = () => {
               <div className="w-full max-w-lg">
                 <div className="flex items-center gap-2 mb-1.5">
                   <MessageSquare className="h-3 w-3 text-white/30" />
-                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Observação</span>
+                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
                 </div>
                 <Textarea
                   value={lNoteVal}
                   onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
-                  placeholder="Escreva algo sobre esta foto… ex: quero esta em preto e branco"
+                  placeholder="Write something about this photo… e.g. I want this one in black & white"
                   className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
                 />
               </div>
