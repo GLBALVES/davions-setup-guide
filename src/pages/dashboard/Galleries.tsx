@@ -20,6 +20,7 @@ import {
   CalendarX2,
   LayoutGrid,
   List,
+  UserX,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
