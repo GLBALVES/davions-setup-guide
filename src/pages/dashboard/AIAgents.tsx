@@ -157,7 +157,8 @@ export default function AIAgents() {
         body: { agent_slug: editAgent.slug, messages: [...testMessages, userMsg] },
       });
       if (error) throw error;
-      setTestMessages((prev) => [...prev, { role: "assistant", content: data.reply || "No response" }]);
+      const reply = data?.reply || data?.content || "No response";
+      setTestMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e: any) {
       toast.error("Test error: " + (e.message || "unknown"));
     } finally {
