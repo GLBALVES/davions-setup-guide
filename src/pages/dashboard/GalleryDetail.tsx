@@ -951,7 +951,7 @@ const GalleryDetail = () => {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={deleteGallery}
+                      onClick={() => setDeleteGalleryOpen(true)}
                       className="gap-2 text-xs text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Delete gallery
