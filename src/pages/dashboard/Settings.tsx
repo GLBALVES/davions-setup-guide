@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Copy, AlertCircle, Store, Globe, ExternalLink, Upload, Loader2, X } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
+import { Separator } from "@/components/ui/separator";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
