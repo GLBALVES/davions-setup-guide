@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Image, FolderOpen, CheckCircle } from "lucide-react";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Gallery {
   id: string;
@@ -69,13 +69,7 @@ const Dashboard = () => {
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-muted-foreground" />
-              <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
-            </div>
-          </header>
+          <DashboardHeader />
 
           {/* Content */}
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">

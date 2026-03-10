@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +27,6 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { cn } from "@/lib/utils";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -840,12 +840,7 @@ const SessionForm = () => {
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-muted-foreground" />
-              <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
-            </div>
-          </header>
+          <DashboardHeader />
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="max-w-2xl mx-auto flex flex-col gap-8">
