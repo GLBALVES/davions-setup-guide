@@ -77,6 +77,8 @@ type Agent = {
   name: string;
   slug: string;
   enabled: boolean;
+  auto_reply: boolean;
+  review_mode: boolean;
 };
 
 export default function Chat() {
