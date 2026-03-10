@@ -36,7 +36,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -52,7 +51,6 @@ const Signup = () => {
         password: values.password,
         options: {
           data: { full_name: values.fullName },
-          emailRedirectTo: window.location.origin,
         },
       });
       if (error) {
@@ -62,7 +60,7 @@ const Signup = () => {
           setServerError(error.message);
         }
       } else {
-        setSuccess(true);
+        navigate("/dashboard");
       }
     } catch {
       setServerError("Something went wrong. Please try again.");
@@ -84,178 +82,154 @@ const Signup = () => {
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm flex flex-col gap-10">
 
-          {success ? (
-            /* ── Success state ── */
-            <div className="flex flex-col gap-6 text-center">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border border-foreground flex items-center justify-center text-foreground text-xl font-light">
-                  ✓
-                </div>
-                <h1 className="text-2xl font-light tracking-wide">Check your inbox</h1>
-                <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                  We sent a confirmation link to{" "}
-                  <span className="text-foreground">{form.getValues("email")}</span>.
-                  Open it to activate your account.
+          {/* Heading */}
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+              <span className="inline-block w-6 h-px bg-border" />
+              Create Account
+            </p>
+            <h1 className="text-2xl font-light tracking-wide text-foreground">
+              Start for free
+            </h1>
+            <p className="text-sm font-light text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-foreground underline-offset-4 hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                      Full Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Jane Doe"
+                        autoComplete="name"
+                        className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                      Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Min. 8 characters"
+                        autoComplete="new-password"
+                        className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                      Confirm Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Repeat your password"
+                        autoComplete="new-password"
+                        className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Server error */}
+              {serverError && (
+                <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-3 py-2">
+                  {serverError}
                 </p>
-              </div>
-              <Button variant="outline" asChild className="w-full">
-                <Link to="/login">Back to Sign In</Link>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-2"
+                size="lg"
+              >
+                {loading ? "Creating account…" : "Create Account"}
               </Button>
-            </div>
-          ) : (
-            <>
-              {/* Heading */}
-              <div className="flex flex-col gap-2">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  Create Account
-                </p>
-                <h1 className="text-2xl font-light tracking-wide text-foreground">
-                  Start for free
-                </h1>
-                <p className="text-sm font-light text-muted-foreground">
-                  Already have an account?{" "}
-                  <Link
-                    to="/login"
-                    className="text-foreground underline-offset-4 hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </p>
-              </div>
 
-              {/* Form */}
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
-
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                          Full Name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            placeholder="Jane Doe"
-                            autoComplete="name"
-                            className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                          Email
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                            className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                          Password
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Min. 8 characters"
-                            autoComplete="new-password"
-                            className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                          Confirm Password
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Repeat your password"
-                            autoComplete="new-password"
-                            className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Server error */}
-                  {serverError && (
-                    <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-3 py-2">
-                      {serverError}
-                    </p>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full mt-2"
-                    size="lg"
-                  >
-                    {loading ? "Creating account…" : "Create Account"}
-                  </Button>
-
-                  <p className="text-[10px] text-muted-foreground text-center leading-relaxed font-light">
-                    By creating an account you agree to our{" "}
-                    <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
-                      Privacy Policy
-                    </Link>
-                    .
-                  </p>
-                </form>
-              </Form>
-            </>
-          )}
+              <p className="text-[10px] text-muted-foreground text-center leading-relaxed font-light">
+                By creating an account you agree to our{" "}
+                <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </form>
+          </Form>
 
           {/* Footer */}
-          {!success && (
-            <div className="border-t border-border pt-6">
-              <p className="text-[10px] tracking-widest uppercase text-muted-foreground text-center">
-                Secure · End-to-end encrypted · Davions © {new Date().getFullYear()}
-              </p>
-            </div>
-          )}
+          <div className="border-t border-border pt-6">
+            <p className="text-[10px] tracking-widest uppercase text-muted-foreground text-center">
+              Secure · End-to-end encrypted · Davions © {new Date().getFullYear()}
+            </p>
+          </div>
         </div>
       </main>
     </div>
