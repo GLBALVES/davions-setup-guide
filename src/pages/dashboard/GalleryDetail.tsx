@@ -94,10 +94,14 @@ const GalleryDetail = () => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [settingCover, setSettingCover] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const publicUrl = `${window.location.origin}/gallery/${id}`;
+  // Public URL uses slug if available, otherwise falls back to id
+  const publicSlugOrId = gallery?.slug ?? id;
+  const publicUrl = `${window.location.origin}/gallery/${publicSlugOrId}`;
 
   // ── Fetch gallery + photos ──────────────────────────────────────────────────
   const fetchGallery = useCallback(async () => {
