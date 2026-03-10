@@ -28,6 +28,11 @@ import BlogPostPage from "./pages/blog/BlogPost";
 import BlogManager from "./pages/dashboard/BlogManager";
 import BlogEditor from "./pages/dashboard/BlogEditor";
 import SiteSeo from "./pages/dashboard/SiteSeo";
+import EmailMarketing from "./pages/dashboard/EmailMarketing";
+import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
+import EmailAutomatedEditor from "./pages/dashboard/EmailAutomatedEditor";
+import EmailOneoffEditor from "./pages/dashboard/EmailOneoffEditor";
+import PushNotifications from "./pages/dashboard/PushNotifications";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
