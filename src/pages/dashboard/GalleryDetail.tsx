@@ -22,6 +22,9 @@ import {
   MoreHorizontal,
   Pencil,
   X,
+  User,
+  Camera,
+  Calendar,
 } from "lucide-react";
 import {
   DropdownMenu,
