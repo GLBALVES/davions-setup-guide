@@ -19,7 +19,9 @@ interface Gallery {
   created_at: string;
   photo_count: number;
   cover_image_url?: string | null;
+  expires_at?: string | null;
   client_name?: string | null;
+  client_email?: string | null;
   session_title?: string | null;
 }
 
@@ -38,7 +40,7 @@ const Galleries = () => {
       .from("galleries")
       .select(`
         id, title, slug, category, status, created_at, cover_image_url, expires_at,
-        bookings ( client_name, sessions ( title ) )
+        bookings ( client_name, client_email, sessions ( title ) )
       `)
       .order("created_at", { ascending: false });
 
@@ -60,6 +62,7 @@ const Galleries = () => {
           cover_image_url: g.cover_image_url ?? null,
           expires_at: g.expires_at ?? null,
           client_name: g.bookings?.client_name ?? null,
+          client_email: g.bookings?.client_email ?? null,
           session_title: (g.bookings as any)?.sessions?.title ?? null,
         }))
       );

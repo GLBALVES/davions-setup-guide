@@ -1,6 +1,12 @@
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock } from "lucide-react";
+import { useState } from "react";
+import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface GalleryCardProps {
   gallery: {
@@ -14,12 +20,19 @@ interface GalleryCardProps {
     cover_image_url?: string | null;
     expires_at?: string | null;
     client_name?: string | null;
+    client_email?: string | null;
     session_title?: string | null;
   };
   onEdit?: () => void;
 }
 
 export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
+  const { toast } = useToast();
+  const [sendOpen, setSendOpen] = useState(false);
+  const [email, setEmail] = useState(gallery.client_email ?? "");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
   const date = new Date(gallery.created_at).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -30,6 +43,44 @@ export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
   const isExpired = gallery.expires_at ? new Date(gallery.expires_at) < new Date() : false;
   const isDraft = gallery.status === "draft";
   const isPublished = gallery.status === "published";
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-gallery-link`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            galleryId: gallery.id,
+            clientEmail: email.trim(),
+            clientName: gallery.client_name ?? undefined,
+          }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to send");
+      }
+      setSent(true);
+      toast({ title: "Gallery link sent", description: `Email sent to ${email.trim()}` });
+      setTimeout(() => {
+        setSent(false);
+        setSendOpen(false);
+      }, 2000);
+    } catch (err: any) {
+      toast({ title: "Failed to send", description: err.message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className={`border flex flex-col group transition-colors ${
@@ -125,6 +176,67 @@ export function GalleryCard({ gallery, onEdit }: GalleryCardProps) {
           </div>
 
           <div className="flex items-center gap-1">
+            {/* Quick-send button — only for published, non-expired */}
+            {isPublished && !isExpired && (
+              <Popover open={sendOpen} onOpenChange={(v) => { setSendOpen(v); if (!v) { setSent(false); setEmail(gallery.client_email ?? ""); } }}>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    title="Send gallery to client"
+                    className="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-72 p-0 rounded-none border-border"
+                  side="top"
+                  align="end"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <p className="text-[11px] tracking-[0.2em] uppercase font-light">Send Gallery Link</p>
+                  </div>
+                  <form onSubmit={handleSend} className="p-4 flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] tracking-wider uppercase text-muted-foreground font-light">
+                        Client email
+                      </label>
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="client@example.com"
+                        required
+                        className="h-8 text-sm font-light rounded-none"
+                        autoFocus
+                      />
+                    </div>
+                    {gallery.client_name && (
+                      <p className="text-[10px] text-muted-foreground/70 -mt-1">
+                        Sending to <span className="text-foreground/70">{gallery.client_name}</span>
+                      </p>
+                    )}
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={sending || sent || !email.trim()}
+                      className="gap-2 text-[10px] tracking-widest uppercase font-light rounded-none w-full"
+                    >
+                      {sent ? (
+                        <><Check className="h-3.5 w-3.5" /> Sent!</>
+                      ) : sending ? (
+                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+                      ) : (
+                        <><Send className="h-3.5 w-3.5" /> Send</>
+                      )}
+                    </Button>
+                  </form>
+                </PopoverContent>
+              </Popover>
+            )}
+
             {isPublished && !isExpired && (
               <a
                 href={publicUrl}
