@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Copy, AlertCircle, Store, Globe, ExternalLink, Upload, Loader2, X } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
+import { Separator } from "@/components/ui/separator";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -28,28 +29,32 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingWatermark, setUploadingWatermark] = useState(false);
+  const [watermarkUrl, setWatermarkUrl] = useState<string | null>(null);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [domainError, setDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [domainCopied, setDomainCopied] = useState(false);
 
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const watermarkInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("photographers")
-        .select("full_name, store_slug, custom_domain, bio, hero_image_url")
+        .select("full_name, store_slug, custom_domain, bio, hero_image_url, watermark_url")
         .eq("id", user!.id)
         .single();
       if (data) {
         setFullName(data.full_name ?? "");
         setStoreSlug(data.store_slug ?? "");
         setSlugInput(data.store_slug ?? "");
-        setCustomDomain((data as { custom_domain?: string }).custom_domain ?? "");
-        setCustomDomainInput((data as { custom_domain?: string }).custom_domain ?? "");
-        setBio((data as { bio?: string }).bio ?? "");
-        setHeroImageUrl((data as { hero_image_url?: string }).hero_image_url ?? "");
+        setCustomDomain((data as any).custom_domain ?? "");
+        setCustomDomainInput((data as any).custom_domain ?? "");
+        setBio((data as any).bio ?? "");
+        setHeroImageUrl((data as any).hero_image_url ?? "");
+        setWatermarkUrl((data as any).watermark_url ?? null);
       }
       setLoading(false);
     };
@@ -111,6 +116,33 @@ const Settings = () => {
     setHeroImageUrl(publicUrl);
     setUploadingHero(false);
     toast({ title: "Hero image uploaded" });
+  };
+
+  const handleWatermarkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingWatermark(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user!.id}/watermark.${ext}`;
+
+    const { error: upErr } = await supabase.storage
+      .from("session-covers")
+      .upload(path, file, { upsert: true });
+
+    if (upErr) {
+      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
+      setUploadingWatermark(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + `?t=${Date.now()}`;
+
+    await supabase.from("photographers").update({ watermark_url: publicUrl } as any).eq("id", user!.id);
+    setWatermarkUrl(publicUrl);
+    setUploadingWatermark(false);
+    toast({ title: "Watermark saved" });
   };
 
   const handleSave = async () => {
@@ -306,6 +338,71 @@ const Settings = () => {
                           {bio.length}/280
                         </p>
                       </div>
+                    </div>
+                  </section>
+
+                  {/* ── Galleries ── */}
+                  <section className="flex flex-col gap-6">
+                    <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
+                      Galleries
+                    </h2>
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[11px] tracking-wider uppercase font-light">
+                        Proof Gallery Watermark
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Image (PNG with transparency recommended) applied to photos in Proof galleries.
+                      </p>
+
+                      {watermarkUrl ? (
+                        <div className="relative group border border-border flex items-center justify-center bg-muted/30 p-4 min-h-[80px]">
+                          <img
+                            src={watermarkUrl}
+                            alt="Watermark preview"
+                            className="max-h-16 w-auto object-contain opacity-80"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <button
+                              onClick={() => watermarkInputRef.current?.click()}
+                              className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
+                            >
+                              Change
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await supabase.from("photographers").update({ watermark_url: null } as any).eq("id", user!.id);
+                                setWatermarkUrl(null);
+                                toast({ title: "Watermark removed" });
+                              }}
+                              className="text-white/70 hover:text-white transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => watermarkInputRef.current?.click()}
+                          disabled={uploadingWatermark}
+                          className="w-full h-20 border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
+                        >
+                          {uploadingWatermark ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <Upload className="h-5 w-5" />
+                              <span className="text-[10px] tracking-widest uppercase">Upload watermark</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <input
+                        ref={watermarkInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleWatermarkUpload}
+                      />
                     </div>
                   </section>
 
