@@ -85,25 +85,20 @@ export function CreateGalleryDialog({
     setSessions([]);
 
     const fetchData = async () => {
-      const queries: Promise<any>[] = [
-        supabase
-          .from("bookings")
-          .select("id, client_name, client_email, session_id")
-          .eq("photographer_id", user.id)
-          .order("created_at", { ascending: false }),
-      ];
+      const bookingsRes = await supabase
+        .from("bookings")
+        .select("id, client_name, client_email, session_id")
+        .eq("photographer_id", user.id)
+        .order("created_at", { ascending: false });
 
+      let watermarksRes: { data: Watermark[] | null } = { data: null };
       if (isProof) {
-        queries.push(
-          (supabase as any)
-            .from("watermarks")
-            .select("id, name")
-            .eq("photographer_id", user.id)
-            .order("created_at", { ascending: true })
-        );
+        watermarksRes = await (supabase as any)
+          .from("watermarks")
+          .select("id, name")
+          .eq("photographer_id", user.id)
+          .order("created_at", { ascending: true });
       }
-
-      const [bookingsRes, watermarksRes] = await Promise.all(queries);
 
       if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
