@@ -60,6 +60,7 @@ import {
   ChevronRight,
   CheckSquare,
   Square,
+  Heart,
 } from "lucide-react";
 import {
   Dialog,
@@ -111,6 +112,7 @@ interface Photo {
   storage_path: string | null;
   order_index: number;
   url?: string;
+  favorite_count?: number;
 }
 
 interface UploadItem {
@@ -152,6 +154,11 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelect
     zIndex: isDragging ? 10 : undefined,
   };
 
+  // Truncate filename for display
+  const displayName = photo.filename.length > 22
+    ? photo.filename.slice(0, 10) + "…" + photo.filename.slice(-8)
+    : photo.filename;
+
   return (
     <div
       ref={setNodeRef}
@@ -178,6 +185,14 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelect
         </div>
       )}
 
+      {/* Favorite badge (top-left) */}
+      {(photo.favorite_count ?? 0) > 0 && !isSelecting && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-rose-500/90 text-white px-1.5 py-0.5 text-[9px] tracking-wider font-medium pointer-events-none">
+          <Heart className="h-2.5 w-2.5 fill-white" />
+          {photo.favorite_count}
+        </div>
+      )}
+
       {/* Selection checkbox */}
       {isSelecting && (
         <div className="absolute top-2 left-2 z-10">
@@ -193,6 +208,13 @@ const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelect
       {isSelected && (
         <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
       )}
+
+      {/* Filename bar — always visible at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 pointer-events-none">
+        <p className="text-[9px] text-white/80 truncate tracking-wide font-mono">
+          {displayName}
+        </p>
+      </div>
 
       {/* Hover actions (only when not selecting) */}
       {!isSelecting && (
@@ -309,6 +331,17 @@ const GalleryDetail = () => {
       .order("order_index", { ascending: true });
 
     if (data) {
+      // Fetch favorite counts per photo
+      const { data: favData } = await supabase
+        .from("photo_favorites")
+        .select("photo_id")
+        .eq("gallery_id", id);
+
+      const favCount: Record<string, number> = {};
+      favData?.forEach((f) => {
+        favCount[f.photo_id] = (favCount[f.photo_id] || 0) + 1;
+      });
+
       const withUrls = data.map((p) => {
         let url: string | undefined;
         if (p.storage_path) {
@@ -317,7 +350,7 @@ const GalleryDetail = () => {
             .getPublicUrl(p.storage_path);
           url = urlData.publicUrl;
         }
-        return { ...p, url };
+        return { ...p, url, favorite_count: favCount[p.id] ?? 0 };
       });
       setPhotos(withUrls);
     }
