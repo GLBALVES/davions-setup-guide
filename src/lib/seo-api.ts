@@ -53,7 +53,7 @@ export async function fetchPageSeoSettings(photographerId: string) {
 export async function upsertPageSeo(
   photographerId: string,
   pagePath: string,
-  updates: Partial<Omit<PageSeoSetting, "id" | "photographer_id" | "created_at" | "updated_at">>
+  updates: Record<string, any>
 ) {
   // Check if exists
   const { data: existing } = await supabase
@@ -63,10 +63,13 @@ export async function upsertPageSeo(
     .eq("page_path", pagePath)
     .maybeSingle();
 
+  // Remove fields that shouldn't be sent
+  const { id, photographer_id, created_at, updated_at, structured_data, ...safeUpdates } = updates;
+
   if (existing) {
     const { error } = await supabase
       .from("page_seo_settings")
-      .update(updates)
+      .update(safeUpdates)
       .eq("id", existing.id);
     if (error) throw error;
   } else {
@@ -75,8 +78,8 @@ export async function upsertPageSeo(
       .insert({
         photographer_id: photographerId,
         page_path: pagePath,
-        page_name: updates.page_name || pagePath,
-        ...updates,
+        page_name: safeUpdates.page_name || pagePath,
+        ...safeUpdates,
       });
     if (error) throw error;
   }

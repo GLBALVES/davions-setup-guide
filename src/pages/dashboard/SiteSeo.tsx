@@ -514,14 +514,14 @@ function SeoManagerTab({ photographerId }: { photographerId: string }) {
    Main Page
    ═══════════════════════════════════════════════════════ */
 export default function SiteSeo() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   if (!user) return null;
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar />
+        <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
         <div className="flex-1 flex flex-col">
           <DashboardHeader />
           <main className="flex-1 p-4 md:p-6 max-w-6xl">
