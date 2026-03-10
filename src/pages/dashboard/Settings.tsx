@@ -209,6 +209,26 @@ const Settings = () => {
     setDeletingId(null);
   };
 
+  const handleSaveBusiness = async () => {
+    setSavingBusiness(true);
+    const { error } = await (supabase as any).from("photographers").update({
+      business_name: businessName.trim() || null,
+      business_phone: businessPhone.trim() || null,
+      business_address: businessAddress.trim() || null,
+      business_city: businessCity.trim() || null,
+      business_country: businessCountry.trim() || null,
+      business_currency: businessCurrency.trim() || null,
+      business_tax_id: businessTaxId.trim() || null,
+    }).eq("id", user!.id);
+
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Business settings saved" });
+    }
+    setSavingBusiness(false);
+  };
+
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
     await navigator.clipboard.writeText(url);
