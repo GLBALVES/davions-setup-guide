@@ -117,9 +117,6 @@ const GalleryDetail = () => {
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
-  const [slugValue, setSlugValue] = useState("");
-  const [slugSaving, setSlugSaving] = useState(false);
-  const [slugError, setSlugError] = useState("");
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -175,9 +175,19 @@ export function CreateGalleryDialog({
       setUploadingCover(false);
     }
 
+    const autoSlug = title.trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+
     const insertPayload: Record<string, string | boolean | null> = {
       photographer_id: user.id,
       title: title.trim(),
+      slug: autoSlug || null,
       category: defaultCategory,
     };
 
