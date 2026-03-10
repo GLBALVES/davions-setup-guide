@@ -242,7 +242,11 @@ export function CreateGalleryDialog({
         onCreated();
       }
     } else {
-      // INSERT
+      // INSERT — apply default expiry if configured
+      const expiresAt = defaultExpiryDays
+        ? new Date(Date.now() + defaultExpiryDays * 86400000).toISOString()
+        : null;
+
       const insertPayload: Record<string, string | boolean | null> = {
         photographer_id: user.id,
         title: title.trim(),
@@ -252,6 +256,7 @@ export function CreateGalleryDialog({
       if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
       if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
       if (isProof && selectedWatermarkId) insertPayload.watermark_id = selectedWatermarkId;
+      if (expiresAt) (insertPayload as any).expires_at = expiresAt;
 
       const { error } = await supabase.from("galleries").insert([insertPayload] as any);
       if (error) {
