@@ -232,13 +232,14 @@ const Settings = () => {
               {loading ? (
                 <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
               ) : (
-                <Tabs defaultValue="profile" className="w-full">
+                <Tabs defaultValue="studio" className="w-full">
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
+                      { value: "studio", label: "Studio" },
+                      { value: "business", label: "Business" },
                       { value: "profile", label: "Profile" },
                       { value: "store", label: "Store" },
-                      { value: "studio", label: "Studio" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
                       <TabsTrigger
