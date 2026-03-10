@@ -722,7 +722,7 @@ const GalleryView = () => {
             <div className="flex items-center justify-between px-5 py-3 z-10 shrink-0" onClick={(e) => e.stopPropagation()}>
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] text-white/30 tracking-[0.2em] uppercase font-light">
-                  Foto {lightboxIndex + 1} de {photos.length}
+                  Photo {lightboxIndex + 1} of {photos.length}
                 </span>
                 <span className="text-[13px] text-white/70 font-light tracking-wide">
                   {displayName(lPhoto.filename)}
