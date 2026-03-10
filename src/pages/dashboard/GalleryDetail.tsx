@@ -151,7 +151,7 @@ const GalleryDetail = () => {
       } as Gallery);
       setAccessCode(raw.access_code ?? "");
       setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
-      setSlugValue(raw.slug ?? "");
+      
     }
   }, [id]);
 
