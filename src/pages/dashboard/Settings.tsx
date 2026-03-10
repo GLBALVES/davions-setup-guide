@@ -686,8 +686,48 @@ const Settings = () => {
                   </TabsContent>
 
                   {/* ── GALLERIES TAB ── */}
-                  <TabsContent value="galleries" className="mt-0 flex flex-col gap-6">
-                    {/* Header */}
+                  <TabsContent value="galleries" className="mt-0 flex flex-col gap-8">
+
+                    {/* Default Expiry */}
+                    <section className="flex flex-col gap-5">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Default Expiration</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Galleries created without a specific expiry date will automatically expire after this many days. Leave blank to disable automatic expiration.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                          <input
+                            type="number"
+                            min="1"
+                            max="3650"
+                            value={galleryExpiryDays}
+                            onChange={(e) => setGalleryExpiryDays(e.target.value)}
+                            placeholder="e.g. 90"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">days</span>
+                        </div>
+                        <Button
+                          onClick={handleSaveGallerySettings}
+                          disabled={savingGallerySettings}
+                          size="sm"
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {savingGallerySettings ? "Saving…" : "Save"}
+                        </Button>
+                      </div>
+                      {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 && (
+                        <p className="text-[11px] text-muted-foreground/70 -mt-2">
+                          New galleries without a set expiry will expire <strong>{galleryExpiryDays} days</strong> after creation.
+                        </p>
+                      )}
+                    </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Watermarks */}
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Watermarks</p>
