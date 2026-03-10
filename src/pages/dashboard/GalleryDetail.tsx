@@ -43,6 +43,10 @@ interface Gallery {
   status: string;
   access_code: string | null;
   created_at: string;
+  booking_id: string | null;
+  client_name?: string | null;
+  session_title?: string | null;
+  booked_date?: string | null;
 }
 
 interface Photo {
