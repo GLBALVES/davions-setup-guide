@@ -36,14 +36,11 @@ import {
   Paperclip,
   Star,
   Check,
-  ChevronDown,
-  BookOpen,
   Settings2,
   Edit3,
   Trash2,
   RotateCcw,
   Plus,
-  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
