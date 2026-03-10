@@ -1311,6 +1311,61 @@ const GalleryDetail = () => {
                 </div>
               )}
 
+              {/* Client Favorites — Lightroom Export */}
+              {(() => {
+                const favoritedPhotos = photos
+                  .filter((p) => (p.favorite_count ?? 0) > 0)
+                  .sort((a, b) => a.order_index - b.order_index);
+                const listText = favoritedPhotos.map((p) => p.filename).join("\n");
+                const copyFavorites = async () => {
+                  await navigator.clipboard.writeText(listText);
+                  setCopiedFavorites(true);
+                  setTimeout(() => setCopiedFavorites(false), 2000);
+                };
+                return (
+                  <div className="border border-border p-6 flex flex-col gap-4">
+                    <div>
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
+                        <span className="inline-block w-6 h-px bg-border" />
+                        Client Favorites
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Photos marked as favorites by the client. Copy the list to filter them in Lightroom.
+                      </p>
+                    </div>
+                    {favoritedPhotos.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/40 border border-dashed border-border">
+                        <Heart className="h-5 w-5" />
+                        <p className="text-xs tracking-wide">No favorites yet</p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">{favoritedPhotos.length}</span> photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited
+                        </p>
+                        <textarea
+                          readOnly
+                          value={listText}
+                          rows={Math.min(favoritedPhotos.length, 8)}
+                          className="w-full resize-none rounded-none border border-border bg-secondary/30 px-3 py-2 text-xs font-mono text-muted-foreground focus:outline-none leading-relaxed"
+                        />
+                        <Button
+                          variant="outline"
+                          className="w-full gap-2 text-xs tracking-wider uppercase font-light"
+                          onClick={copyFavorites}
+                        >
+                          {copiedFavorites ? (
+                            <><Check className="h-3.5 w-3.5" /> Copied!</>
+                          ) : (
+                            <><Copy className="h-3.5 w-3.5" /> Copy for Lightroom</>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Client access section */}
               <div className="border border-border p-6 flex flex-col gap-6">
                 <div>
