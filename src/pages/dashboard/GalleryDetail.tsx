@@ -58,6 +58,8 @@ import {
   ZoomIn,
   ChevronLeft,
   ChevronRight,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import {
   Dialog,
