@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Copy, AlertCircle, Store, Globe, ExternalLink, Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image } from "lucide-react";
+import {
+  Check, Copy, AlertCircle, Store, Globe, ExternalLink,
+  Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
+} from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 
@@ -21,6 +23,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
 
+  // Profile
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [heroImageUrl, setHeroImageUrl] = useState("");
@@ -44,27 +47,42 @@ const Settings = () => {
 
   const heroInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Fetch profile + watermarks ──
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("photographers")
-        .select("full_name, store_slug, custom_domain, bio, hero_image_url, watermark_url")
-        .eq("id", user!.id)
-        .single();
-      if (data) {
-        setFullName(data.full_name ?? "");
-        setStoreSlug(data.store_slug ?? "");
-        setSlugInput(data.store_slug ?? "");
-        setCustomDomain((data as any).custom_domain ?? "");
-        setCustomDomainInput((data as any).custom_domain ?? "");
-        setBio((data as any).bio ?? "");
-        setHeroImageUrl((data as any).hero_image_url ?? "");
-        setWatermarkUrl((data as any).watermark_url ?? null);
+    if (!user) return;
+    const fetchAll = async () => {
+      const [profileRes, watermarksRes] = await Promise.all([
+        supabase
+          .from("photographers")
+          .select("full_name, store_slug, custom_domain, bio, hero_image_url")
+          .eq("id", user.id)
+          .single(),
+        (supabase as any)
+          .from("watermarks")
+          .select("*")
+          .eq("photographer_id", user.id)
+          .order("created_at", { ascending: true }),
+      ]);
+
+      if (profileRes.data) {
+        const d = profileRes.data;
+        setFullName(d.full_name ?? "");
+        setStoreSlug(d.store_slug ?? "");
+        setSlugInput(d.store_slug ?? "");
+        setCustomDomain((d as any).custom_domain ?? "");
+        setCustomDomainInput((d as any).custom_domain ?? "");
+        setBio((d as any).bio ?? "");
+        setHeroImageUrl((d as any).hero_image_url ?? "");
       }
+
+      if (watermarksRes.data) {
+        setWatermarks(watermarksRes.data as WatermarkData[]);
+      }
+
       setLoading(false);
     };
-    fetchProfile();
-  }, []);
+    fetchAll();
+  }, [user]);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
@@ -98,56 +116,19 @@ const Settings = () => {
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadingHero(true);
     const ext = file.name.split(".").pop();
     const path = `${user!.id}/hero.${ext}`;
-
-    const { error: upErr } = await supabase.storage
-      .from("session-covers")
-      .upload(path, file, { upsert: true });
-
+    const { error: upErr } = await supabase.storage.from("session-covers").upload(path, file, { upsert: true });
     if (upErr) {
       toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
       setUploadingHero(false);
       return;
     }
-
-    const { data: urlData } = supabase.storage
-      .from("session-covers")
-      .getPublicUrl(path);
-
-    const publicUrl = urlData.publicUrl + `?t=${Date.now()}`;
-    setHeroImageUrl(publicUrl);
+    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
+    setHeroImageUrl(urlData.publicUrl + `?t=${Date.now()}`);
     setUploadingHero(false);
     toast({ title: "Hero image uploaded" });
-  };
-
-  const handleWatermarkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingWatermark(true);
-    const ext = file.name.split(".").pop();
-    const path = `${user!.id}/watermark.${ext}`;
-
-    const { error: upErr } = await supabase.storage
-      .from("session-covers")
-      .upload(path, file, { upsert: true });
-
-    if (upErr) {
-      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
-      setUploadingWatermark(false);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
-    const publicUrl = urlData.publicUrl + `?t=${Date.now()}`;
-
-    await supabase.from("photographers").update({ watermark_url: publicUrl } as any).eq("id", user!.id);
-    setWatermarkUrl(publicUrl);
-    setUploadingWatermark(false);
-    toast({ title: "Watermark saved" });
   };
 
   const handleSave = async () => {
@@ -157,28 +138,19 @@ const Settings = () => {
     if (domErr) { setDomainError(domErr); return; }
 
     setSaving(true);
-    const updatePayload: Record<string, string | null> = {
+    const { error } = await supabase.from("photographers").update({
       full_name: fullName,
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
       bio: bio.trim() || null,
       hero_image_url: heroImageUrl.trim() || null,
-    };
-
-    const { error } = await supabase
-      .from("photographers")
-      .update(updatePayload)
-      .eq("id", user!.id);
+    } as any).eq("id", user!.id);
 
     if (error) {
       if (error.code === "23505") {
-        if (error.message.includes("store_slug")) {
-          setSlugError("This URL is already taken. Please choose another.");
-        } else if (error.message.includes("custom_domain")) {
-          setDomainError("This domain is already linked to another account.");
-        } else {
-          toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-        }
+        if (error.message.includes("store_slug")) setSlugError("This URL is already taken. Please choose another.");
+        else if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
+        else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
       } else {
         toast({ title: "Failed to save", description: error.message, variant: "destructive" });
       }
@@ -190,16 +162,34 @@ const Settings = () => {
     setSaving(false);
   };
 
-  const storeUrl = slugInput
-    ? `${window.location.origin}/store/${slugInput}`
-    : null;
+  // ── Watermark actions ──
+  const handleWatermarkSaved = (wm: WatermarkData) => {
+    setWatermarks((prev) => {
+      const exists = prev.find((w) => w.id === wm.id);
+      return exists ? prev.map((w) => (w.id === wm.id ? wm : w)) : [...prev, wm];
+    });
+    setWatermarkEditorOpen(false);
+    setEditingWatermark(undefined);
+  };
 
+  const handleWatermarkDelete = async (id: string) => {
+    setDeletingId(id);
+    const { error } = await (supabase as any).from("watermarks").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error deleting watermark", description: error.message, variant: "destructive" });
+    } else {
+      setWatermarks((prev) => prev.filter((w) => w.id !== id));
+      toast({ title: "Watermark deleted" });
+    }
+    setDeletingId(null);
+  };
+
+  const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
     await navigator.clipboard.writeText(url);
     setCopiedFn(true);
     setTimeout(() => setCopiedFn(false), 2000);
   };
-
   const appHost = window.location.host;
 
   return (
@@ -225,9 +215,7 @@ const Settings = () => {
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">
-                  Loading…
-                </p>
+                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
               ) : (
                 <>
                   {/* ── Profile ── */}
@@ -237,30 +225,17 @@ const Settings = () => {
                     </h2>
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Full Name
-                        </Label>
-                        <Input
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Your name"
-                          className="h-9 text-sm font-light"
-                        />
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Full Name</Label>
+                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" className="h-9 text-sm font-light" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Email
-                        </Label>
-                        <Input
-                          value={user?.email ?? ""}
-                          disabled
-                          className="h-9 text-sm font-light opacity-60"
-                        />
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Email</Label>
+                        <Input value={user?.email ?? ""} disabled className="h-9 text-sm font-light opacity-60" />
                       </div>
                     </div>
                   </section>
 
-                  {/* ── Public Store Appearance ── */}
+                  {/* ── Store Appearance ── */}
                   <section className="flex flex-col gap-6">
                     <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
                       Store Appearance
@@ -268,147 +243,108 @@ const Settings = () => {
                     <div className="flex flex-col gap-5">
                       {/* Hero image */}
                       <div className="flex flex-col gap-2">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Hero Image
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Full-bleed banner displayed at the top of your public booking page.
-                        </p>
-
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Hero Image</Label>
+                        <p className="text-[11px] text-muted-foreground">Full-bleed banner displayed at the top of your public booking page.</p>
                         {heroImageUrl ? (
                           <div className="relative group w-full aspect-[16/5] overflow-hidden border border-border">
-                            <img
-                              src={heroImageUrl}
-                              alt="Hero preview"
-                              className="w-full h-full object-cover"
-                            />
+                            <img src={heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                              <button
-                                onClick={() => heroInputRef.current?.click()}
-                                className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
-                              >
-                                Change
-                              </button>
-                              <button
-                                onClick={() => setHeroImageUrl("")}
-                                className="text-white/70 hover:text-white transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
+                              <button onClick={() => heroInputRef.current?.click()} className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors">Change</button>
+                              <button onClick={() => setHeroImageUrl("")} className="text-white/70 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
                             </div>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => heroInputRef.current?.click()}
-                            disabled={uploadingHero}
-                            className="w-full aspect-[16/5] border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
-                          >
-                            {uploadingHero ? (
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                              <>
-                                <Upload className="h-5 w-5" />
-                                <span className="text-[10px] tracking-widest uppercase">
-                                  Upload hero image
-                                </span>
-                              </>
-                            )}
+                          <button onClick={() => heroInputRef.current?.click()} disabled={uploadingHero} className="w-full aspect-[16/5] border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground">
+                            {uploadingHero ? <Loader2 className="h-5 w-5 animate-spin" /> : (<><Upload className="h-5 w-5" /><span className="text-[10px] tracking-widest uppercase">Upload hero image</span></>)}
                           </button>
                         )}
-                        <input
-                          ref={heroInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleHeroUpload}
-                        />
+                        <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
                       </div>
 
                       {/* Bio */}
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Bio
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          A short introduction shown below your name in the hero section.
-                        </p>
-                        <Textarea
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Tell clients a bit about you and your style…"
-                          className="text-sm font-light resize-none min-h-[80px]"
-                          maxLength={280}
-                        />
-                        <p className="text-[10px] text-muted-foreground/60 text-right">
-                          {bio.length}/280
-                        </p>
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Bio</Label>
+                        <p className="text-[11px] text-muted-foreground">A short introduction shown below your name in the hero section.</p>
+                        <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell clients a bit about you and your style…" className="text-sm font-light resize-none min-h-[80px]" maxLength={280} />
+                        <p className="text-[10px] text-muted-foreground/60 text-right">{bio.length}/280</p>
                       </div>
                     </div>
                   </section>
 
-                  {/* ── Galleries ── */}
+                  {/* ── Galleries / Watermarks ── */}
                   <section className="flex flex-col gap-6">
                     <h2 className="text-xs tracking-[0.25em] uppercase font-light text-muted-foreground border-b border-border pb-2">
                       Galleries
                     </h2>
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">
-                        Proof Gallery Watermark
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Image (PNG with transparency recommended) applied to photos in Proof galleries.
-                      </p>
 
-                      {watermarkUrl ? (
-                        <div className="relative group border border-border flex items-center justify-center bg-muted/30 p-4 min-h-[80px]">
-                          <img
-                            src={watermarkUrl}
-                            alt="Watermark preview"
-                            className="max-h-16 w-auto object-contain opacity-80"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                            <button
-                              onClick={() => watermarkInputRef.current?.click()}
-                              className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
-                            >
-                              Change
-                            </button>
-                            <button
-                              onClick={async () => {
-                                await supabase.from("photographers").update({ watermark_url: null } as any).eq("id", user!.id);
-                                setWatermarkUrl(null);
-                                toast({ title: "Watermark removed" });
-                              }}
-                              className="text-white/70 hover:text-white transition-colors"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => watermarkInputRef.current?.click()}
-                          disabled={uploadingWatermark}
-                          className="w-full h-20 border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
-                        >
-                          {uploadingWatermark ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <>
-                              <Upload className="h-5 w-5" />
-                              <span className="text-[10px] tracking-widest uppercase">Upload watermark</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                      <input
-                        ref={watermarkInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleWatermarkUpload}
-                      />
+                    {/* Watermarks header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] tracking-wider uppercase font-light">Watermarks</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Create text or image watermarks to apply to Proof galleries.
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { setEditingWatermark(undefined); setWatermarkEditorOpen(true); }}
+                        className="gap-1.5 text-[10px] tracking-widest uppercase font-light rounded-none shrink-0"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        New watermark
+                      </Button>
                     </div>
+
+                    {/* Watermarks list */}
+                    {watermarks.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground/60 border border-dashed border-border px-3 py-4 text-center">
+                        No watermarks yet — click "New watermark" to create one.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {watermarks.map((wm) => (
+                          <div key={wm.id} className="border border-border flex items-center px-4 py-3 gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-light truncate">{wm.name}</p>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                {wm.text_enabled && wm.text_content && (
+                                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <Type className="h-2.5 w-2.5" />
+                                    {wm.text_content}
+                                  </span>
+                                )}
+                                {wm.image_enabled && wm.image_url && (
+                                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <Image className="h-2.5 w-2.5" />
+                                    Image
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => { setEditingWatermark(wm); setWatermarkEditorOpen(true); }}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                                title="Edit"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={deletingId === wm.id}
+                                onClick={() => wm.id && handleWatermarkDelete(wm.id)}
+                                className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                title="Delete"
+                              >
+                                {deletingId === wm.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </section>
 
                   {/* ── Booking Store ── */}
@@ -418,27 +354,17 @@ const Settings = () => {
                     </h2>
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Store URL
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Your unique public booking page. Share it with clients so they can browse and book sessions.
-                        </p>
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Store URL</Label>
+                        <p className="text-[11px] text-muted-foreground">Your unique public booking page. Share it with clients so they can browse and book sessions.</p>
                         <div className={`flex items-center border ${slugError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
                           <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none whitespace-nowrap">
                             {appHost}/store/
                           </span>
-                          <input
-                            value={slugInput}
-                            onChange={handleSlugChange}
-                            placeholder="your-studio"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                          />
+                          <input value={slugInput} onChange={handleSlugChange} placeholder="your-studio" className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
                         {slugError && (
                           <p className="flex items-center gap-1.5 text-[11px] text-destructive">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            {slugError}
+                            <AlertCircle className="h-3 w-3 shrink-0" />{slugError}
                           </p>
                         )}
                       </div>
@@ -446,14 +372,8 @@ const Settings = () => {
                       {storeUrl && !slugError && (
                         <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
                           <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-[11px] text-muted-foreground flex-1 truncate">
-                            {storeUrl}
-                          </span>
-                          <button
-                            onClick={() => copyUrl(storeUrl, setCopied)}
-                            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                            title="Copy store URL"
-                          >
+                          <span className="text-[11px] text-muted-foreground flex-1 truncate">{storeUrl}</span>
+                          <button onClick={() => copyUrl(storeUrl, setCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0" title="Copy store URL">
                             {copied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                         </div>
@@ -461,8 +381,7 @@ const Settings = () => {
 
                       {!storeSlug && (
                         <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground border border-border px-2 py-1.5">
-                          <AlertCircle className="h-3 w-3 shrink-0" />
-                          Set your store URL to enable Preview and Share on session cards.
+                          <AlertCircle className="h-3 w-3 shrink-0" />Set your store URL to enable Preview and Share on session cards.
                         </p>
                       )}
                     </div>
@@ -476,91 +395,53 @@ const Settings = () => {
                       </h2>
                       <p className="text-[11px] text-muted-foreground pt-2">
                         Point your own domain (e.g. <span className="font-mono">booking.yourstudio.com</span>) directly to your booking store.
-                        Clients will see your domain instead of the platform URL.
                       </p>
                     </div>
 
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light flex items-center gap-1.5">
-                          <Globe className="h-3 w-3" />
-                          Your Domain
+                          <Globe className="h-3 w-3" />Your Domain
                         </Label>
                         <div className={`flex items-center border ${domainError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
-                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">
-                            https://
-                          </span>
-                          <input
-                            value={customDomainInput}
-                            onChange={handleDomainChange}
-                            placeholder="booking.yourstudio.com"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                          />
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">https://</span>
+                          <input value={customDomainInput} onChange={handleDomainChange} placeholder="booking.yourstudio.com" className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
                         {domainError && (
                           <p className="flex items-center gap-1.5 text-[11px] text-destructive">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            {domainError}
+                            <AlertCircle className="h-3 w-3 shrink-0" />{domainError}
                           </p>
                         )}
                         {customDomain && !domainError && (
                           <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
                             <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span className="text-[11px] text-muted-foreground flex-1 truncate font-mono">
-                              https://{customDomain}
-                            </span>
-                            <button
-                              onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
-                              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                            >
+                            <span className="text-[11px] text-muted-foreground flex-1 truncate font-mono">https://{customDomain}</span>
+                            <button onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                               {domainCopied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
                             </button>
                           </div>
                         )}
                       </div>
 
-                      {/* DNS Instructions */}
                       <div className="border border-border p-4 flex flex-col gap-4">
-                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-                          DNS Configuration
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          At your domain registrar, add the following DNS record pointing to this platform:
-                        </p>
-
+                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">DNS Configuration</p>
+                        <p className="text-[11px] text-muted-foreground">At your domain registrar, add the following DNS record pointing to this platform:</p>
                         <div className="flex flex-col gap-1.5">
                           <div className="grid grid-cols-3 gap-2 text-[10px] tracking-wider uppercase text-muted-foreground/60 px-2">
-                            <span>Type</span>
-                            <span>Name</span>
-                            <span>Value</span>
+                            <span>Type</span><span>Name</span><span>Value</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 bg-muted/40 border border-border p-2 font-mono text-[11px]">
                             <span className="text-foreground">CNAME</span>
                             <span className="text-muted-foreground">booking</span>
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className="text-foreground truncate">{appHost}</span>
-                              <button
-                                onClick={() => copyUrl(appHost, () => {})}
-                                className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
+                              <button onClick={() => copyUrl(appHost, () => {})} className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"><Copy className="h-3 w-3" /></button>
                             </div>
                           </div>
                         </div>
-
-                        <p className="text-[10px] text-muted-foreground/60">
-                          DNS changes can take up to 48 hours to propagate worldwide. Once active, visitors to your custom domain will see your booking store.
-                        </p>
-
-                        <a
-                          href="https://docs.lovable.dev/features/custom-domain"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Custom domain documentation
+                        <p className="text-[10px] text-muted-foreground/60">DNS changes can take up to 48 hours to propagate worldwide.</p>
+                        <a href="https://docs.lovable.dev/features/custom-domain" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit">
+                          <ExternalLink className="h-3 w-3" />Custom domain documentation
                         </a>
                       </div>
                     </div>
@@ -568,12 +449,7 @@ const Settings = () => {
 
                   {/* Save */}
                   <div className="flex items-center gap-4">
-                    <Button
-                      onClick={handleSave}
-                      disabled={saving || !!slugError || !!domainError}
-                      size="sm"
-                      className="gap-2 text-xs tracking-wider uppercase font-light"
-                    >
+                    <Button onClick={handleSave} disabled={saving || !!slugError || !!domainError} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
                       {saving ? "Saving…" : "Save changes"}
                     </Button>
                   </div>
@@ -583,6 +459,24 @@ const Settings = () => {
           </main>
         </div>
       </div>
+
+      {/* ── Watermark Editor Dialog ── */}
+      <Dialog open={watermarkEditorOpen} onOpenChange={(open) => { setWatermarkEditorOpen(open); if (!open) setEditingWatermark(undefined); }}>
+        <DialogContent className="max-w-4xl w-full p-0 rounded-none border-border overflow-hidden" style={{ height: "90vh", maxHeight: "780px" }}>
+          <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
+            <DialogTitle className="text-sm font-light tracking-wide">
+              {editingWatermark ? "Edit Watermark" : "New Watermark"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden" style={{ height: "calc(100% - 57px)" }}>
+            <WatermarkEditor
+              initial={editingWatermark}
+              onSaved={handleWatermarkSaved}
+              onCancel={() => { setWatermarkEditorOpen(false); setEditingWatermark(undefined); }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
