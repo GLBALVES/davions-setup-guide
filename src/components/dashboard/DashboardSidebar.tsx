@@ -1,10 +1,11 @@
 import {
   LayoutDashboard,
-  FolderOpen,
   Settings,
   LogOut,
   CalendarDays,
   BookOpen,
+  ScanEye,
+  ImageCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
