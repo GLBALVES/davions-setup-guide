@@ -129,7 +129,7 @@ const groups: MenuGroup[] = [
       { title: "SEO", icon: SearchCheck, to: "/dashboard/seo" },
       { title: "Emails", icon: Mail, to: "/dashboard/emails" },
       { title: "Push", icon: Bell, to: "/dashboard/push" },
-      { title: "WhatsApp", icon: MessageCircle },
+      { title: "Chat", icon: MessageCircle, to: "/dashboard/chat" },
     ],
   },
   {
