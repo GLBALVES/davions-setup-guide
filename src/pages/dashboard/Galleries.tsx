@@ -19,7 +19,9 @@ interface Gallery {
   created_at: string;
   photo_count: number;
   cover_image_url?: string | null;
+  expires_at?: string | null;
   client_name?: string | null;
+  client_email?: string | null;
   session_title?: string | null;
 }
 
