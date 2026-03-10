@@ -34,16 +34,47 @@ interface GalleryCardProps {
     session_title?: string | null;
   };
   onEdit?: () => void;
+  onDelete?: () => void;
   /** Render as a compact single-row for list view */
   compact?: boolean;
 }
 
-export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardProps) {
+export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: GalleryCardProps) {
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
   const [email, setEmail] = useState(gallery.client_email ?? "");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      // Remove all photos from storage for this gallery
+      const { data: photos } = await supabase
+        .from("photos")
+        .select("storage_path")
+        .eq("gallery_id", gallery.id);
+
+      if (photos && photos.length > 0) {
+        const paths = photos.map((p) => p.storage_path).filter(Boolean) as string[];
+        if (paths.length > 0) {
+          await supabase.storage.from("gallery-photos").remove(paths);
+        }
+        await supabase.from("photos").delete().eq("gallery_id", gallery.id);
+      }
+
+      await supabase.from("galleries").delete().eq("id", gallery.id);
+      toast({ title: "Gallery deleted" });
+      onDelete?.();
+    } catch {
+      toast({ title: "Failed to delete gallery", variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
 
   const date = new Date(gallery.created_at).toLocaleDateString("pt-BR", {
     day: "2-digit",

@@ -213,6 +213,7 @@ const GalleryDetail = () => {
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [deleteGalleryOpen, setDeleteGalleryOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
