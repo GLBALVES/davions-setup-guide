@@ -6,50 +6,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-async function getAuthenticatedClient(req: Request) {
-  const authHeader = req.headers.get("Authorization");
-  const body = await req.clone().json().catch(() => ({}));
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.replace("Bearer ", "");
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: claims, error } = await supabase.auth.getClaims(token);
-    if (!error && claims?.claims) {
-      return { supabase, userId: claims.claims.sub as string };
-    }
-  }
-
-  if (body.photographer_id) {
-    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data } = await supabase.from("photographers").select("id").eq("id", body.photographer_id).single();
-    if (data) {
-      return { supabase, userId: body.photographer_id as string };
-    }
-  }
-
-  return null;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const auth = await getAuthenticatedClient(req);
-    if (!auth) {
-      return new Response(
-        JSON.stringify({ status: "error", message: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Parse body once at the top
+    const body = await req.json().catch(() => ({}));
+    const { photo_id, photographer_id } = body;
 
-    const { photo_id } = await req.json();
+    console.log("delete-photo called with photo_id:", photo_id, "photographer_id:", photographer_id);
 
     if (!photo_id) {
       return new Response(
@@ -58,42 +25,109 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get photo record to delete from storage too
-    const { data: photo } = await auth.supabase
+    const supabaseUrl  = Deno.env.get("SUPABASE_URL")!;
+    const anonKey      = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // --- Auth verification ---
+    let verified = false;
+
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const anonClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claims, error: claimsError } = await anonClient.auth.getClaims(token);
+      if (claimsError) {
+        console.error("Bearer auth error:", claimsError.message);
+      } else if (claims?.claims?.sub) {
+        console.log("Authenticated via Bearer token, userId:", claims.claims.sub);
+        verified = true;
+      }
+    }
+
+    // Fallback: verify photographer_id exists in DB
+    if (!verified && photographer_id) {
+      const serviceClient = createClient(supabaseUrl, serviceKey);
+      const { data, error } = await serviceClient
+        .from("photographers")
+        .select("id")
+        .eq("id", photographer_id)
+        .single();
+      if (error || !data) {
+        console.error("photographer_id auth fallback failed:", error?.message);
+      } else {
+        console.log("Authenticated via photographer_id fallback:", photographer_id);
+        verified = true;
+      }
+    }
+
+    if (!verified) {
+      return new Response(
+        JSON.stringify({ status: "error", message: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Use service role for all operations to bypass RLS
+    const serviceClient = createClient(supabaseUrl, serviceKey);
+
+    // 1. Fetch the photo record to get storage_path
+    const { data: photo, error: fetchError } = await serviceClient
       .from("photos")
       .select("storage_path")
       .eq("id", photo_id)
       .single();
 
-    // Delete from storage if exists
-    if (photo?.storage_path) {
-      const storageClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    if (fetchError || !photo) {
+      console.error("Photo not found:", fetchError?.message);
+      return new Response(
+        JSON.stringify({ status: "error", message: "Photo not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-      await storageClient.storage.from("gallery-photos").remove([photo.storage_path]);
     }
 
-    // Delete DB record
-    const { error } = await auth.supabase
+    console.log("Found photo with storage_path:", photo.storage_path);
+
+    // 2. Delete from Storage
+    if (photo.storage_path) {
+      const { error: storageError } = await serviceClient.storage
+        .from("gallery-photos")
+        .remove([photo.storage_path]);
+      if (storageError) {
+        console.error("Storage delete error:", storageError.message);
+      } else {
+        console.log("Storage file deleted:", photo.storage_path);
+      }
+    } else {
+      console.log("No storage_path on record, skipping storage delete");
+    }
+
+    // 3. Delete from DB
+    const { error: dbError } = await serviceClient
       .from("photos")
       .delete()
       .eq("id", photo_id);
 
-    if (error) {
+    if (dbError) {
+      console.error("DB delete error:", dbError.message);
       return new Response(
-        JSON.stringify({ status: "error", message: error.message }),
+        JSON.stringify({ status: "error", message: dbError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Deleted photo_id:", photo_id);
     return new Response(
-      JSON.stringify({ status: "success" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ deleted: photo_id }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (err) {
+    console.error("delete-photo error:", err);
     return new Response(
-      JSON.stringify({ status: "error", message: (err as Error).message }),
+      JSON.stringify({ status: "error", message: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

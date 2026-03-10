@@ -128,10 +128,12 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
-      console.log(`Duplicate detected, returning existing photo_id: ${existing.id}`);
+      const responseBody = { photo_id: existing.id };
+      console.log("Duplicate detected, returning existing photo_id:", existing.id);
+      console.log("Returning:", JSON.stringify(responseBody));
       return new Response(
-        JSON.stringify({ photo_id: existing.id }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify(responseBody),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -156,12 +158,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Photo record created: ${data.id}`);
-
     // Return photo_id at top level — required by the Lightroom plugin to call recordPublishedPhotoId
+    const responseBody = { photo_id: data.id };
+    console.log("Photo record created:", data.id);
+    console.log("Returning:", JSON.stringify(responseBody));
     return new Response(
-      JSON.stringify({ photo_id: data.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify(responseBody),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
