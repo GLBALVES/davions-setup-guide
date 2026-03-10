@@ -62,6 +62,8 @@ interface Gallery {
   status: string;
   access_code: string | null;
   cover_image_url: string | null;
+  cover_focal_x: number | null;
+  cover_focal_y: number | null;
   created_at: string;
   booking_id: string | null;
   watermark_id: string | null;
