@@ -529,7 +529,7 @@ const GalleryView = () => {
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
-                  {isProof ? "Prova" : "Final"}
+                  {isProof ? "Proof" : "Final"}
                 </Badge>
               </div>
             </div>
