@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail } from "lucide-react";
+import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface GalleryCardProps {
   gallery: {
@@ -24,16 +34,47 @@ interface GalleryCardProps {
     session_title?: string | null;
   };
   onEdit?: () => void;
+  onDelete?: () => void;
   /** Render as a compact single-row for list view */
   compact?: boolean;
 }
 
-export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardProps) {
+export function GalleryCard({ gallery, onEdit, onDelete, compact = false }: GalleryCardProps) {
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
   const [email, setEmail] = useState(gallery.client_email ?? "");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      // Remove all photos from storage for this gallery
+      const { data: photos } = await supabase
+        .from("photos")
+        .select("storage_path")
+        .eq("gallery_id", gallery.id);
+
+      if (photos && photos.length > 0) {
+        const paths = photos.map((p) => p.storage_path).filter(Boolean) as string[];
+        if (paths.length > 0) {
+          await supabase.storage.from("gallery-photos").remove(paths);
+        }
+        await supabase.from("photos").delete().eq("gallery_id", gallery.id);
+      }
+
+      await supabase.from("galleries").delete().eq("id", gallery.id);
+      toast({ title: "Gallery deleted" });
+      onDelete?.();
+    } catch {
+      toast({ title: "Failed to delete gallery", variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
 
   const date = new Date(gallery.created_at).toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -85,6 +126,7 @@ export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardPro
   };
 
   return (
+    <>
     <div className={`border flex group transition-colors ${
       isExpired
         ? "border-destructive/40 hover:border-destructive/60"
@@ -316,6 +358,13 @@ export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardPro
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteOpen(true); }}
+                title="Delete gallery"
+                className="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
@@ -332,9 +381,38 @@ export function GalleryCard({ gallery, onEdit, compact = false }: GalleryCardPro
                 <Pencil className="h-3.5 w-3.5" />
               </button>
             )}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteOpen(true); }}
+              title="Delete gallery"
+              className="p-1.5 text-muted-foreground/50 hover:text-destructive transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </div>
     </div>
+
+    <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete <span className="font-medium text-foreground">"{gallery.title}"</span> and all its photos. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting…" : "Delete gallery"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }

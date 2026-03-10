@@ -213,6 +213,7 @@ const GalleryDetail = () => {
   const [focalMode, setFocalMode] = useState(false);
   const [focalPreview, setFocalPreview] = useState<{ x: number; y: number } | null>(null);
   const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [deleteGalleryOpen, setDeleteGalleryOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
@@ -592,7 +593,6 @@ const GalleryDetail = () => {
   // ── Delete gallery ──────────────────────────────────────────────────────────
   const deleteGallery = async () => {
     if (!gallery) return;
-    if (!confirm(`Delete "${gallery.title}"? This cannot be undone.`)) return;
 
     // Remove all photos from storage
     if (photos.length > 0) {
@@ -951,7 +951,7 @@ const GalleryDetail = () => {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={deleteGallery}
+                      onClick={() => setDeleteGalleryOpen(true)}
                       className="gap-2 text-xs text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Delete gallery
@@ -1361,6 +1361,26 @@ const GalleryDetail = () => {
               }}
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteGalleryOpen} onOpenChange={setDeleteGalleryOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <span className="font-medium text-foreground">"{gallery?.title}"</span> and all its photos. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={deleteGallery}
+            >
+              Delete gallery
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

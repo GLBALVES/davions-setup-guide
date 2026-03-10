@@ -333,6 +333,7 @@ const Galleries = () => {
                 galleries={filtered}
                 loading={loading}
                 onEdit={setEditGallery}
+                onDelete={fetchGalleries}
                 viewMode={viewMode}
               />
             </div>
@@ -355,11 +356,13 @@ function GalleryGrid({
   galleries,
   loading,
   onEdit,
+  onDelete,
   viewMode,
 }: {
   galleries: Gallery[];
   loading: boolean;
   onEdit: (g: Gallery) => void;
+  onDelete: () => void;
   viewMode: ViewMode;
 }) {
   if (loading) {
@@ -406,6 +409,7 @@ function GalleryGrid({
             <GalleryCard
               gallery={gallery}
               onEdit={() => onEdit(gallery)}
+              onDelete={onDelete}
               compact={viewMode === "list"}
             />
           </motion.div>
