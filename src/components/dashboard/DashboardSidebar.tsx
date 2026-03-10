@@ -136,7 +136,7 @@ const groups: MenuGroup[] = [
     title: "AI",
     icon: BrainCircuit,
     items: [
-      { title: "AI Agents", icon: Bot },
+      { title: "AI Agents", icon: Bot, to: "/dashboard/agents" },
       { title: "AI Automations", icon: Zap },
       { title: "Smart Suggestions", icon: Lightbulb },
       { title: "Creative Assistant", icon: Wand2 },
@@ -165,8 +165,8 @@ const groups: MenuGroup[] = [
     title: "Workflows",
     icon: GitBranch,
     items: [
-      { title: "Kanban", icon: Columns },
-      { title: "Recurring Workflows", icon: RefreshCw },
+      { title: "Kanban", icon: Columns, to: "/dashboard/workflow" },
+      { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring" },
     ],
   },
   {

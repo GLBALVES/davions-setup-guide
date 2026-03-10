@@ -33,6 +33,10 @@ import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
 import EmailAutomatedEditor from "./pages/dashboard/EmailAutomatedEditor";
 import EmailOneoffEditor from "./pages/dashboard/EmailOneoffEditor";
 import PushNotifications from "./pages/dashboard/PushNotifications";
+import Workflows from "./pages/dashboard/Workflows";
+import WorkflowProject from "./pages/dashboard/WorkflowProject";
+import RecurringWorkflows from "./pages/dashboard/RecurringWorkflows";
+import AIAgents from "./pages/dashboard/AIAgents";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -84,6 +88,10 @@ const App = () => (
                 <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><EmailAutomatedEditor /></ProtectedRoute>} />
                 <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><EmailOneoffEditor /></ProtectedRoute>} />
                 <Route path="/dashboard/push" element={<ProtectedRoute><PushNotifications /></ProtectedRoute>} />
+                <Route path="/dashboard/workflow" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
+                <Route path="/dashboard/workflow/:projectId" element={<ProtectedRoute><WorkflowProject /></ProtectedRoute>} />
+                <Route path="/dashboard/recurring" element={<ProtectedRoute><RecurringWorkflows /></ProtectedRoute>} />
+                <Route path="/dashboard/agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
