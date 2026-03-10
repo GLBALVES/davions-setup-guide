@@ -1,0 +1,1 @@
+CREATE POLICY "Public can read watermarks" ON public.watermarks FOR SELECT TO anon USING (true);
