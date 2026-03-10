@@ -6,6 +6,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ import {
   CheckCircle,
   XCircle,
   BookOpen,
+  Images,
 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
