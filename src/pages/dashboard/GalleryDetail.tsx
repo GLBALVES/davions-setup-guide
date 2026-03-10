@@ -104,6 +104,7 @@ interface Gallery {
   booking_id: string | null;
   watermark_id: string | null;
   expires_at: string | null;
+  price_per_photo: number;
   client_name?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
