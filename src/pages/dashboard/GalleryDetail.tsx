@@ -22,6 +22,9 @@ import {
   MoreHorizontal,
   Pencil,
   X,
+  User,
+  Camera,
+  Calendar,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,6 +43,10 @@ interface Gallery {
   status: string;
   access_code: string | null;
   created_at: string;
+  booking_id: string | null;
+  client_name?: string | null;
+  session_title?: string | null;
+  booked_date?: string | null;
 }
 
 interface Photo {
@@ -81,12 +88,25 @@ const GalleryDetail = () => {
     if (!id) return;
     const { data } = await supabase
       .from("galleries")
-      .select("*")
+      .select(`
+        *,
+        bookings (
+          client_name,
+          booked_date,
+          sessions ( title )
+        )
+      `)
       .eq("id", id)
       .single();
     if (data) {
-      setGallery(data as Gallery);
-      setAccessCode(data.access_code ?? "");
+      const raw = data as any;
+      setGallery({
+        ...raw,
+        client_name: raw.bookings?.client_name ?? null,
+        session_title: raw.bookings?.sessions?.title ?? null,
+        booked_date: raw.bookings?.booked_date ?? null,
+      } as Gallery);
+      setAccessCode(raw.access_code ?? "");
     }
   }, [id]);
 
@@ -359,24 +379,50 @@ const GalleryDetail = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-lg font-light tracking-wide">{gallery.title || "Untitled Gallery"}</h1>
-                    <Badge
-                      variant={gallery.category === "proof" ? "outline" : "default"}
-                      className="text-[9px] tracking-[0.2em] uppercase font-light shrink-0 rounded-none"
-                    >
-                      {gallery.category === "proof" ? "Proof" : "Final"}
-                    </Badge>
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
-                        }`}
-                      />
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-                        {gallery.status}
-                      </span>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-lg font-light tracking-wide">{gallery.title || "Untitled Gallery"}</h1>
+                      <Badge
+                        variant={gallery.category === "proof" ? "outline" : "default"}
+                        className="text-[9px] tracking-[0.2em] uppercase font-light shrink-0 rounded-none"
+                      >
+                        {gallery.category === "proof" ? "Proof" : "Final"}
+                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            gallery.status === "published" ? "bg-green-500" : "bg-muted-foreground/30"
+                          }`}
+                        />
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+                          {gallery.status}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Booking info strip */}
+                    {(gallery.client_name || gallery.session_title) && (
+                      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+                        {gallery.client_name && (
+                          <span className="flex items-center gap-1.5">
+                            <User className="h-3 w-3" />
+                            {gallery.client_name}
+                          </span>
+                        )}
+                        {gallery.session_title && (
+                          <span className="flex items-center gap-1.5">
+                            <Camera className="h-3 w-3" />
+                            {gallery.session_title}
+                          </span>
+                        )}
+                        {gallery.booked_date && (
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3" />
+                            {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(gallery.booked_date))}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
