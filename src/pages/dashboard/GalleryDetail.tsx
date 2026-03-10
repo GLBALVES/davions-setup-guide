@@ -915,38 +915,23 @@ const GalleryDetail = () => {
                 </div>
               )}
 
-              {/* Photo grid */}
+              {/* Photo grid — drag to reorder */}
               {photos.length > 0 && (
                 <div className="flex flex-col gap-4">
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                     <span className="inline-block w-6 h-px bg-border" />
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {photos.map((photo) => (
-                      <div key={photo.id} className="relative group aspect-square bg-muted overflow-hidden">
-                        {photo.url ? (
-                          <img
-                            src={photo.url}
-                            alt={photo.filename}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-[10px] text-muted-foreground">No preview</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <button
-                            onClick={() => deletePhoto(photo)}
-                            className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={photos.map((p) => p.id)} strategy={rectSortingStrategy}>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {photos.map((photo) => (
+                          <SortablePhoto key={photo.id} photo={photo} onDelete={deletePhoto} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               )}
 
@@ -955,6 +940,7 @@ const GalleryDetail = () => {
                   <p className="text-xs text-muted-foreground/60">No photos yet — upload above to get started</p>
                 </div>
               )}
+
 
               {/* Watermark section */}
               {gallery.category === "proof" && (
