@@ -28,6 +28,11 @@ import BlogPostPage from "./pages/blog/BlogPost";
 import BlogManager from "./pages/dashboard/BlogManager";
 import BlogEditor from "./pages/dashboard/BlogEditor";
 import SiteSeo from "./pages/dashboard/SiteSeo";
+import EmailMarketing from "./pages/dashboard/EmailMarketing";
+import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
+import EmailAutomatedEditor from "./pages/dashboard/EmailAutomatedEditor";
+import EmailOneoffEditor from "./pages/dashboard/EmailOneoffEditor";
+import PushNotifications from "./pages/dashboard/PushNotifications";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -74,6 +79,11 @@ const App = () => (
                 <Route path="/dashboard/blog" element={<ProtectedRoute><BlogManager /></ProtectedRoute>} />
                 <Route path="/dashboard/blog/:id" element={<ProtectedRoute><BlogEditor /></ProtectedRoute>} />
                 <Route path="/dashboard/seo" element={<ProtectedRoute><SiteSeo /></ProtectedRoute>} />
+                <Route path="/dashboard/emails" element={<ProtectedRoute><EmailMarketing /></ProtectedRoute>} />
+                <Route path="/dashboard/emails/campaign/:id" element={<ProtectedRoute><EmailCampaignEditor /></ProtectedRoute>} />
+                <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><EmailAutomatedEditor /></ProtectedRoute>} />
+                <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><EmailOneoffEditor /></ProtectedRoute>} />
+                <Route path="/dashboard/push" element={<ProtectedRoute><PushNotifications /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
