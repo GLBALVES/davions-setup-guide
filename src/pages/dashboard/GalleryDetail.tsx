@@ -329,6 +329,49 @@ const GalleryDetail = () => {
     init();
   }, [fetchGallery, fetchPhotos, fetchWatermarks]);
 
+  // ── Realtime: auto-refresh photos when Lightroom plugin adds new ones ────────
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`gallery-photos-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "photos",
+          filter: `gallery_id=eq.${id}`,
+        },
+        (payload) => {
+          const newPhoto = payload.new as { id: string; filename: string; storage_path: string | null; order_index: number };
+          let url: string | undefined;
+          if (newPhoto.storage_path) {
+            const { data: urlData } = supabase.storage
+              .from("gallery-photos")
+              .getPublicUrl(newPhoto.storage_path);
+            url = urlData.publicUrl;
+          }
+          setPhotos((prev) => {
+            // guard against duplicates (realtime can fire more than once)
+            if (prev.some((p) => p.id === newPhoto.id)) return prev;
+            return [...prev, { ...newPhoto, url }].sort(
+              (a, b) => a.order_index - b.order_index
+            );
+          });
+          toast({
+            title: "Nova foto recebida",
+            description: newPhoto.filename,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   // ── Upload logic ─────────────────────────────────────────────────────────────
   const uploadFiles = async (files: FileList | File[]) => {
     if (!user || !id) return;
