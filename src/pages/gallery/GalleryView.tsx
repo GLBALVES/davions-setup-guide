@@ -26,6 +26,14 @@ function getClientToken(): string {
   return token;
 }
 
+// ── Persist access code per gallery ──────────────────────────────────────────
+function getStoredCode(galleryId: string): string | null {
+  return localStorage.getItem(`davions_access_${galleryId}`);
+}
+function storeCode(galleryId: string, code: string): void {
+  localStorage.setItem(`davions_access_${galleryId}`, code);
+}
+
 function formatCurrency(cents: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
@@ -110,7 +118,16 @@ const GalleryView = () => {
 
       setGallery(data as Gallery);
 
-      if (!data.access_code) {
+      // Try to auto-unlock via stored code
+      if (data.access_code) {
+        const stored = getStoredCode(data.id);
+        if (stored && stored.toUpperCase() === (data.access_code ?? "").toUpperCase()) {
+          setUnlocked(true);
+          await loadPhotos(data.id);
+          setLoading(false);
+          return;
+        }
+      } else {
         setUnlocked(true);
         await loadPhotos(data.id);
       }
@@ -119,6 +136,7 @@ const GalleryView = () => {
     };
 
     fetchGallery();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const loadPhotos = async (galleryId: string) => {
@@ -159,6 +177,7 @@ const GalleryView = () => {
     if (codeInput.trim().toUpperCase() === (gallery.access_code ?? "").toUpperCase()) {
       setUnlocked(true);
       setCodeError(false);
+      storeCode(gallery.id, codeInput.trim().toUpperCase());
       await loadPhotos(gallery.id);
     } else {
       setCodeError(true);
@@ -222,7 +241,6 @@ const GalleryView = () => {
       if (error) throw error;
 
       if (data?.free) {
-        // Free gallery — just confirm
         setPurchaseOpen(false);
         setPurchaseSuccess(true);
         return;
@@ -309,16 +327,34 @@ const GalleryView = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Navbar */}
-      <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
+      {/* ── Navbar ── */}
+      <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
         <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
+
         <div className="flex items-center gap-3">
-          {unlocked && favCount > 0 && (
-            <span className="flex items-center gap-1 text-[10px] tracking-[0.2em] uppercase text-rose-500 font-light">
-              <Heart className="h-3 w-3 fill-rose-500" />
-              {favCount}
-            </span>
+          {/* Selection summary pill — proof only, shown when 1+ favorites */}
+          {unlocked && isProof && favCount > 0 && (
+            <button
+              onClick={() => setPurchaseOpen(true)}
+              className="flex items-center gap-2.5 border border-rose-300 bg-rose-50 hover:bg-rose-100 transition-colors px-3.5 py-1.5 rounded-full"
+            >
+              <span className="flex items-center gap-1 text-rose-600">
+                <Heart className="h-3.5 w-3.5 fill-rose-500" />
+                <span className="text-xs font-medium">{favCount}</span>
+              </span>
+              {pricePerPhoto > 0 && (
+                <>
+                  <span className="text-rose-300 text-xs">·</span>
+                  <span className="text-xs text-rose-700 font-medium">{formatCurrency(totalPrice)}</span>
+                </>
+              )}
+              <span className="hidden sm:flex items-center gap-1.5 ml-0.5 text-[10px] tracking-widest uppercase text-rose-600 font-light">
+                <ShoppingCart className="h-3 w-3" />
+                {isFree ? "Submit" : "Checkout"}
+              </span>
+            </button>
           )}
+
           <Badge
             variant={isProof ? "outline" : "default"}
             className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none"
@@ -343,7 +379,7 @@ const GalleryView = () => {
         </div>
       )}
 
-      {/* Access gate */}
+      {/* ── Access gate ── */}
       {!unlocked && gallery?.access_code && (
         <div className="flex-1 flex items-center justify-center px-6 py-16">
           <div className="w-full max-w-sm flex flex-col gap-8">
@@ -381,9 +417,9 @@ const GalleryView = () => {
         </div>
       )}
 
-      {/* Gallery content */}
+      {/* ── Gallery content ── */}
       {unlocked && (
-        <main className="flex-1 flex flex-col pb-32">
+        <main className="flex-1 flex flex-col pb-10">
           {/* Cover image hero */}
           {gallery?.cover_image_url ? (
             <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0">
@@ -457,18 +493,20 @@ const GalleryView = () => {
                       </div>
                     )}
 
-                    {/* Favorite button — always visible for proof, hover for final */}
-                    <button
-                      onClick={(e) => toggleFavorite(e, photo)}
-                      className={`absolute top-2 right-2 p-1.5 rounded-full transition-all z-10
-                        ${isFav
-                          ? "bg-rose-500/90 text-white opacity-100"
-                          : "bg-black/40 text-white/70 opacity-0 group-hover:opacity-100"
-                        }`}
-                      title={isFav ? "Remove from selection" : "Add to selection"}
-                    >
-                      <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                    </button>
+                    {/* Favorite button */}
+                    {isProof && (
+                      <button
+                        onClick={(e) => toggleFavorite(e, photo)}
+                        className={`absolute top-2 right-2 p-1.5 rounded-full transition-all z-10
+                          ${isFav
+                            ? "bg-rose-500/90 text-white opacity-100"
+                            : "bg-black/40 text-white/70 opacity-0 group-hover:opacity-100"
+                          }`}
+                        title={isFav ? "Remove from selection" : "Add to selection"}
+                      >
+                        <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                      </button>
+                    )}
 
                     {gallery?.category === "final" && (
                       <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -488,39 +526,7 @@ const GalleryView = () => {
         </main>
       )}
 
-      {/* ── Sticky purchase bar — proof gallery only ───────────────────────── */}
-      {unlocked && isProof && favCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm shadow-lg">
-          <div className="max-w-2xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-rose-500">
-                <Heart className="h-4 w-4 fill-rose-500 shrink-0" />
-                <span className="text-sm font-light">
-                  <strong className="font-medium">{favCount}</strong> photo{favCount !== 1 ? "s" : ""} selected
-                </span>
-              </div>
-              {pricePerPhoto > 0 && (
-                <>
-                  <span className="text-muted-foreground/40 hidden sm:block">·</span>
-                  <span className="text-sm font-light text-muted-foreground hidden sm:block">
-                    Total: <strong className="text-foreground font-medium">{formatCurrency(totalPrice)}</strong>
-                  </span>
-                </>
-              )}
-            </div>
-            <Button
-              onClick={() => setPurchaseOpen(true)}
-              className="w-full sm:w-auto gap-2 text-xs tracking-widest uppercase font-light"
-              size="lg"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              {isFree ? "Submit Selection" : "Purchase Selection"}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Purchase / Submit modal ────────────────────────────────────────── */}
+      {/* ── Purchase / Submit modal ── */}
       <Dialog open={purchaseOpen} onOpenChange={setPurchaseOpen}>
         <DialogContent className="sm:max-w-md rounded-none border-border">
           <DialogHeader>
@@ -560,7 +566,7 @@ const GalleryView = () => {
 
             {/* Client email */}
             <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
+              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
                 Email <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -596,65 +602,92 @@ const GalleryView = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && photos[lightboxIndex] && (
-        <div
-          className="fixed inset-0 bg-background/95 z-50 flex items-center justify-center"
-          onClick={() => setLightboxIndex(null)}
-        >
-          <button
-            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl leading-none"
+      {/* ── Lightbox ── */}
+      {lightboxIndex !== null && photos[lightboxIndex] && (() => {
+        const lPhoto = photos[lightboxIndex];
+        const lIsFav = favorites.has(lPhoto.id);
+        return (
+          <div
+            className="fixed inset-0 bg-black/96 z-50 flex items-center justify-center"
             onClick={() => setLightboxIndex(null)}
           >
-            ×
-          </button>
-          {lightboxIndex > 0 && (
+            {/* Close */}
             <button
-              className="absolute left-4 text-muted-foreground hover:text-foreground text-3xl leading-none px-3 py-2"
-              onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+              className="absolute top-4 right-5 text-white/50 hover:text-white text-3xl leading-none z-10"
+              onClick={() => setLightboxIndex(null)}
             >
-              ‹
+              ×
             </button>
-          )}
-          {lightboxIndex < photos.length - 1 && (
-            <button
-              className="absolute right-4 text-muted-foreground hover:text-foreground text-3xl leading-none px-3 py-2"
-              onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+
+            {/* Prev */}
+            {lightboxIndex > 0 && (
+              <button
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl leading-none px-3 py-2 z-10"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+              >
+                ‹
+              </button>
+            )}
+
+            {/* Next */}
+            {lightboxIndex < photos.length - 1 && (
+              <button
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl leading-none px-3 py-2 z-10"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+              >
+                ›
+              </button>
+            )}
+
+            {/* Photo */}
+            <img
+              src={lPhoto.url}
+              alt={lPhoto.filename}
+              className="max-h-[88vh] max-w-[88vw] object-contain select-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* ── Bottom action bar ── */}
+            <div
+              className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 bg-gradient-to-t from-black/80 to-transparent"
+              onClick={(e) => e.stopPropagation()}
             >
-              ›
-            </button>
-          )}
-          <img
-            src={photos[lightboxIndex].url}
-            alt={photos[lightboxIndex].filename}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-          {/* Favorite button in lightbox */}
-          <button
-            onClick={(e) => toggleFavorite(e, photos[lightboxIndex!])}
-            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 text-xs tracking-widest uppercase font-light transition-colors
-              ${favorites.has(photos[lightboxIndex].id)
-                ? "bg-rose-500 text-white"
-                : "bg-background/80 text-foreground hover:bg-rose-500 hover:text-white"
-              }`}
-          >
-            <Heart className={`h-3 w-3 ${favorites.has(photos[lightboxIndex].id) ? "fill-white" : ""}`} />
-            {favorites.has(photos[lightboxIndex].id) ? "Saved" : "Save"}
-          </button>
-          {gallery?.category === "final" && (
-            <button
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-foreground text-background px-4 py-2 text-xs tracking-widest uppercase font-light hover:bg-foreground/80 transition-colors"
-              onClick={(e) => { e.stopPropagation(); downloadPhoto(photos[lightboxIndex!]); }}
-            >
-              <Download className="h-3.5 w-3.5" /> Download
-            </button>
-          )}
-          <div className="absolute bottom-6 right-6 text-xs text-muted-foreground">
-            {lightboxIndex + 1} / {photos.length}
+              {/* Counter */}
+              <span className="text-xs text-white/40 tracking-widest">
+                {lightboxIndex + 1} / {photos.length}
+              </span>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {/* Proof: save / saved button */}
+                {isProof && (
+                  <button
+                    onClick={(e) => toggleFavorite(e, lPhoto)}
+                    className={`flex items-center gap-2 px-4 py-2 text-xs tracking-widest uppercase font-light transition-all border
+                      ${lIsFav
+                        ? "bg-rose-500 border-rose-500 text-white"
+                        : "bg-white/10 border-white/20 text-white hover:bg-rose-500 hover:border-rose-500"
+                      }`}
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${lIsFav ? "fill-white" : ""}`} />
+                    {lIsFav ? "Saved" : "Save"}
+                  </button>
+                )}
+
+                {/* Final: download button */}
+                {gallery?.category === "final" && (
+                  <button
+                    className="flex items-center gap-2 bg-white/10 border border-white/20 text-white px-4 py-2 text-xs tracking-widest uppercase font-light hover:bg-white hover:text-black transition-colors"
+                    onClick={(e) => { e.stopPropagation(); downloadPhoto(lPhoto); }}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Footer */}
       <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
