@@ -358,6 +358,15 @@ const Bookings = () => {
                               <XCircle className="h-4 w-4" />
                             </button>
                           )}
+                          {booking.status === "confirmed" && (
+                            <button
+                              onClick={() => setGalleryDialog({ open: true, bookingId: booking.id })}
+                              title="Create Proof Gallery"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Images className="h-4 w-4" />
+                            </button>
+                          )}
                           {booking.status === "cancelled" && (
                             <span className="text-[10px] text-muted-foreground/40">—</span>
                           )}
