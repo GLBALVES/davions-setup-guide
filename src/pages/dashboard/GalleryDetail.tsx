@@ -27,6 +27,8 @@ import {
   Calendar,
   RefreshCw,
   XCircle,
+  Send,
+  Mail,
 } from "lucide-react";
 import {
   DropdownMenu,

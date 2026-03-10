@@ -197,57 +197,87 @@ const GalleryView = () => {
 
       {/* Gallery content */}
       {unlocked && (
-        <main className="flex-1 p-6 md:p-10 flex flex-col gap-8">
-          {/* Title */}
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
-            <p className="text-xs text-muted-foreground tracking-widest uppercase">
-              {photos.length} photo{photos.length !== 1 ? "s" : ""}
-              {gallery?.category === "final" && " · Click any photo to download"}
-            </p>
-          </div>
-
-          {photos.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Image className="h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">No photos in this gallery yet.</p>
+        <main className="flex-1 flex flex-col">
+          {/* Cover image hero */}
+          {gallery?.cover_image_url ? (
+            <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0">
+              <img
+                src={gallery.cover_image_url}
+                alt={gallery.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-6 flex items-end justify-between">
+                <div className="flex flex-col gap-1.5">
+                  <h1 className="text-2xl font-light tracking-wide text-white drop-shadow">
+                    {gallery.title}
+                  </h1>
+                  <p className="text-[11px] text-white/60 tracking-widest uppercase">
+                    {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                    {gallery.category === "final" && " · Click any photo to download"}
+                  </p>
+                </div>
+                <Badge
+                  variant={gallery.category === "proof" ? "outline" : "default"}
+                  className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0"
+                >
+                  {gallery.category === "proof" ? "Proof Gallery" : "Final Gallery"}
+                </Badge>
+              </div>
+            </div>
+          ) : (
+            <div className="px-6 md:px-10 pt-8 pb-2">
+              <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
+              <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
+                {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                {gallery?.category === "final" && " · Click any photo to download"}
+              </p>
             </div>
           )}
 
-          {/* Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {photos.map((photo, index) => (
-              <div
-                key={photo.id}
-                className="relative group aspect-square bg-muted overflow-hidden cursor-pointer"
-                onClick={() => setLightboxIndex(index)}
-              >
-                {photo.url ? (
-                  <img
-                    src={photo.url}
-                    alt={photo.filename}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Image className="h-6 w-6 text-muted-foreground/30" />
-                  </div>
-                )}
-
-                {/* Download overlay for final galleries */}
-                {gallery?.category === "final" && (
-                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); downloadPhoto(photo); }}
-                      className="bg-background/90 text-foreground p-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
+          <div className="p-6 md:p-10 flex flex-col gap-8">
+            {photos.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Image className="h-10 w-10 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">No photos in this gallery yet.</p>
               </div>
-            ))}
+            )}
+
+            {/* Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {photos.map((photo, index) => (
+                <div
+                  key={photo.id}
+                  className="relative group aspect-square bg-muted overflow-hidden cursor-pointer"
+                  onClick={() => setLightboxIndex(index)}
+                >
+                  {photo.url ? (
+                    <img
+                      src={photo.url}
+                      alt={photo.filename}
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Image className="h-6 w-6 text-muted-foreground/30" />
+                    </div>
+                  )}
+
+                  {/* Download overlay for final galleries */}
+                  {gallery?.category === "final" && (
+                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); downloadPhoto(photo); }}
+                        className="bg-background/90 text-foreground p-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </main>
       )}
