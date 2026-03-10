@@ -62,6 +62,7 @@ import {
   Square,
   Heart,
   SlidersHorizontal,
+  Download,
 } from "lucide-react";
 import {
   Dialog,
