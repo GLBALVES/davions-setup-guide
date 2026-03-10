@@ -637,10 +637,18 @@ const GalleryDetail = () => {
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="rounded-none w-44">
+                  <DropdownMenuContent align="end" className="rounded-none w-48">
                     <DropdownMenuItem onClick={startRename} className="gap-2 text-xs">
                       <Pencil className="h-3.5 w-3.5" /> Rename
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCoverPickerOpen(true)} className="gap-2 text-xs" disabled={photos.length === 0}>
+                      <ImagePlus className="h-3.5 w-3.5" /> Change cover
+                    </DropdownMenuItem>
+                    {gallery.cover_image_url && (
+                      <DropdownMenuItem onClick={removeCover} className="gap-2 text-xs">
+                        <X className="h-3.5 w-3.5" /> Remove cover
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={deleteGallery}
