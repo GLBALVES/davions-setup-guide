@@ -1348,13 +1348,13 @@ const GalleryDetail = () => {
       <AlertDialog open={!!photoToDelete} onOpenChange={(open) => { if (!open) setPhotoToDelete(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deletar foto?</AlertDialogTitle>
+            <AlertDialogTitle>Delete photo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A foto será removida permanentemente da galeria.
+              This action cannot be undone. The photo will be permanently removed from the gallery.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
@@ -1364,7 +1364,7 @@ const GalleryDetail = () => {
                 }
               }}
             >
-              Deletar
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
