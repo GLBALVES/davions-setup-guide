@@ -485,6 +485,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                             item={item}
                             isActive={isItemActive(item)}
                             collapsed={collapsed}
+                            badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
                             onUnpin={() => togglePin(item.groupTitle, item)}
                           />
                         ))}
