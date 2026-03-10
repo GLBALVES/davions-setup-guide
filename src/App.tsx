@@ -23,6 +23,10 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
+import Blog from "./pages/blog/Blog";
+import BlogPostPage from "./pages/blog/BlogPost";
+import BlogManager from "./pages/dashboard/BlogManager";
+import BlogEditor from "./pages/dashboard/BlogEditor";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -54,6 +58,8 @@ const App = () => (
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -64,6 +70,8 @@ const App = () => (
                 <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/dashboard/galleries" element={<ProtectedRoute><Galleries /></ProtectedRoute>} />
                 <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><GalleryDetail /></ProtectedRoute>} />
+                <Route path="/dashboard/blog" element={<ProtectedRoute><BlogManager /></ProtectedRoute>} />
+                <Route path="/dashboard/blog/:id" element={<ProtectedRoute><BlogEditor /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
