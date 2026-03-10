@@ -51,6 +51,16 @@ const Settings = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
+  // Business tab
+  const [businessName, setBusinessName] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [businessCity, setBusinessCity] = useState("");
+  const [businessCountry, setBusinessCountry] = useState("");
+  const [businessCurrency, setBusinessCurrency] = useState("USD");
+  const [businessTaxId, setBusinessTaxId] = useState("");
+  const [savingBusiness, setSavingBusiness] = useState(false);
+
   const heroInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSessionTypes = useCallback(async () => {
