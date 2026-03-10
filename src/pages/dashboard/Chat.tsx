@@ -140,10 +140,15 @@ export default function Chat() {
     const loadAgents = async () => {
       const { data } = await supabase
         .from("ai_agents")
-        .select("id, name, slug, enabled")
+        .select("id, name, slug, enabled, auto_reply, review_mode, model, temperature, description, system_prompt, knowledge_base")
         .eq("photographer_id", photographerId);
 
-      const allAgents = (data as Agent[]) || [];
+      const allAgents = ((data as any[]) || []).map((a) => ({
+        ...a,
+        knowledge_base: Array.isArray(a.knowledge_base) ? a.knowledge_base : [],
+        auto_reply: a.auto_reply ?? true,
+        review_mode: a.review_mode ?? false,
+      })) as Agent[];
 
       // If no agents exist at all, seed a default Customer Support agent
       if (allAgents.length === 0) {
@@ -173,10 +178,10 @@ Guidelines:
           review_mode: false,
           user_id: photographerId,
           photographer_id: photographerId,
-        } as any).select("id, name, slug, enabled").single();
+        } as any).select("*").single();
 
         if (!error && created) {
-          const agent = created as unknown as Agent;
+          const agent = { ...created, knowledge_base: Array.isArray(created.knowledge_base) ? created.knowledge_base : [] } as unknown as Agent;
           setAgents([agent]);
           setSelectedAgentSlug(agent.slug);
           toast.success("Default Customer Support agent created automatically!");
@@ -184,9 +189,11 @@ Guidelines:
         }
       }
 
-      const enabled = allAgents.filter(a => a.enabled);
-      setAgents(enabled);
-      if (enabled.length > 0) setSelectedAgentSlug(enabled[0].slug);
+      setAgents(allAgents);
+      if (allAgents.length > 0 && !selectedAgentSlug) {
+        const enabledAgent = allAgents.find(a => a.enabled);
+        setSelectedAgentSlug(enabledAgent?.slug || allAgents[0].slug);
+      }
     };
     loadAgents();
   }, [photographerId]);
