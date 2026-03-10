@@ -537,8 +537,8 @@ const GalleryView = () => {
             <div className="px-6 md:px-10 pt-8 pb-2">
               <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
-                {photos.length} foto{photos.length !== 1 ? "s" : ""}
-                {isProof && " · Clique em ♡ para selecionar"}
+                {photos.length} photo{photos.length !== 1 ? "s" : ""}
+                {isProof && " · Click ♡ to select"}
               </p>
             </div>
           )}
