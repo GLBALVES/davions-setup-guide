@@ -493,7 +493,7 @@ const GalleryView = () => {
                 value={codeInput}
                 onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(false); }}
                 onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-                placeholder="CÓDIGO DE ACESSO"
+                placeholder="ACCESS CODE"
                 autoFocus
                 className={`rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground text-center tracking-[0.4em] uppercase font-mono text-base h-12 ${codeError ? "border-destructive focus-visible:border-destructive" : ""}`}
               />
