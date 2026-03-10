@@ -29,8 +29,16 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
       className="border border-border p-5 flex flex-col gap-4 hover:border-foreground/30 transition-colors group cursor-pointer no-underline"
     >
       {/* Thumbnail placeholder */}
-      <div className="aspect-[4/3] bg-muted flex items-center justify-center">
-        <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+      <div className="aspect-[4/3] bg-muted flex items-center justify-center overflow-hidden">
+        {gallery.cover_image_url ? (
+          <img
+            src={gallery.cover_image_url}
+            alt={gallery.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <FolderOpen className="h-8 w-8 text-muted-foreground/30 group-hover:text-muted-foreground/50 transition-colors" />
+        )}
       </div>
 
       {/* Info */}
