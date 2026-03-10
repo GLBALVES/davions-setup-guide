@@ -60,6 +60,7 @@ import {
   ChevronRight,
   CheckSquare,
   Square,
+  Heart,
   SlidersHorizontal,
 } from "lucide-react";
 import {
