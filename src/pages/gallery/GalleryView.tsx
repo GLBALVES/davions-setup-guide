@@ -96,7 +96,7 @@ interface WatermarkSettings {
 function WatermarkOverlay({ wm, size }: { wm: WatermarkSettings; size: "thumb" | "full" }) {
   const scaleFactor = size === "thumb" ? 0.55 : 1;
   return (
-    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-20">
+    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-40">
       {wm.text_enabled && wm.text_content && (
         <span
           style={{
