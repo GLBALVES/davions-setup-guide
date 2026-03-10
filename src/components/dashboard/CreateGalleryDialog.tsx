@@ -25,6 +25,7 @@ interface CreateGalleryDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
   defaultCategory?: string;
+  prefilledBookingId?: string;
 }
 
 interface Booking {
@@ -49,6 +50,7 @@ export function CreateGalleryDialog({
   onOpenChange,
   onCreated,
   defaultCategory = "proof",
+  prefilledBookingId,
 }: CreateGalleryDialogProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
@@ -100,7 +102,11 @@ export function CreateGalleryDialog({
           .order("created_at", { ascending: true });
       }
 
-      if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
+      if (bookingsRes.data) {
+        setBookings(bookingsRes.data as Booking[]);
+        // Auto-select booking if prefilled
+        if (prefilledBookingId) setSelectedBookingId(prefilledBookingId);
+      }
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
     };
 

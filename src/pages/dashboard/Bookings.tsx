@@ -6,6 +6,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ import {
   CheckCircle,
   XCircle,
   BookOpen,
+  Images,
 } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
@@ -68,6 +70,10 @@ const Bookings = () => {
     open: false,
     bookingId: "",
     action: "confirm",
+  });
+  const [galleryDialog, setGalleryDialog] = useState<{ open: boolean; bookingId: string }>({
+    open: false,
+    bookingId: "",
   });
 
   const fetchBookings = async () => {
@@ -352,6 +358,15 @@ const Bookings = () => {
                               <XCircle className="h-4 w-4" />
                             </button>
                           )}
+                          {booking.status === "confirmed" && (
+                            <button
+                              onClick={() => setGalleryDialog({ open: true, bookingId: booking.id })}
+                              title="Create Proof Gallery"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Images className="h-4 w-4" />
+                            </button>
+                          )}
                           {booking.status === "cancelled" && (
                             <span className="text-[10px] text-muted-foreground/40">—</span>
                           )}
@@ -401,6 +416,14 @@ const Bookings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CreateGalleryDialog
+        open={galleryDialog.open}
+        onOpenChange={(open) => setGalleryDialog((d) => ({ ...d, open }))}
+        onCreated={() => {}}
+        defaultCategory="proof"
+        prefilledBookingId={galleryDialog.bookingId}
+      />
     </SidebarProvider>
   );
 };
