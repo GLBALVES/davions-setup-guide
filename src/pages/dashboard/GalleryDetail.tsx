@@ -361,12 +361,21 @@ const GalleryDetail = () => {
 
   const saveTitle = async () => {
     if (!gallery || !newTitle.trim()) return;
+    const trimmed = newTitle.trim();
+    const autoSlug = trimmed
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
     const { error } = await supabase
       .from("galleries")
-      .update({ title: newTitle.trim() })
+      .update({ title: trimmed, slug: autoSlug || null })
       .eq("id", gallery.id);
     if (!error) {
-      setGallery({ ...gallery, title: newTitle.trim() });
+      setGallery({ ...gallery, title: trimmed, slug: autoSlug || null });
       toast({ title: "Gallery renamed" });
     }
     setEditingTitle(false);
