@@ -427,21 +427,6 @@ const Settings = () => {
                         />
                       </div>
 
-                      {/* Bio */}
-                      <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Bio</Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          A short introduction shown below your name in the hero section.
-                        </p>
-                        <Textarea
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Tell clients a bit about you and your style…"
-                          className="text-sm font-light resize-none min-h-[80px]"
-                          maxLength={280}
-                        />
-                        <p className="text-[10px] text-muted-foreground/60 text-right">{bio.length}/280</p>
-                      </div>
                     </section>
 
                     <div>
