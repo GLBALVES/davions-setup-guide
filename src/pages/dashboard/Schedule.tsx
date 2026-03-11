@@ -316,6 +316,13 @@ const Schedule = () => {
         defaultStartTime={createDefaultTime}
         onCreated={fetchData}
       />
+
+      <BlockDayDialog
+        open={blockOpen}
+        onOpenChange={setBlockOpen}
+        defaultDate={blockDefaultDate}
+        onBlocked={fetchData}
+      />
     </SidebarProvider>
   );
 };
