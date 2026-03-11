@@ -556,7 +556,6 @@ const Personalize = () => {
                     {[
                       { value: "studio", label: "Studio" },
                       { value: "business", label: "Business" },
-                      { value: "website", label: "Website" },
                       { value: "store", label: "Store" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
