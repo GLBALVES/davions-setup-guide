@@ -268,14 +268,15 @@ const GalleryView = () => {
       if (error || !data) { setNotFound(true); setLoading(false); return; }
       setGallery(data as Gallery);
 
-      if (data.watermark_id) {
-        const { data: wmData } = await supabase
-          .from("watermarks")
-          .select("text_enabled, text_content, text_font, text_color, text_opacity, text_scale, text_position, image_enabled, image_url, image_opacity, image_scale, image_position")
-          .eq("id", data.watermark_id)
-          .single();
-        if (wmData) setWatermark(wmData as WatermarkSettings);
-      }
+      // Fetch watermark + photographer brand in parallel
+      const [wmResult, brandResult] = await Promise.all([
+        data.watermark_id
+          ? supabase.from("watermarks").select("text_enabled, text_content, text_font, text_color, text_opacity, text_scale, text_position, image_enabled, image_url, image_opacity, image_scale, image_position").eq("id", data.watermark_id).single()
+          : Promise.resolve({ data: null }),
+        supabase.from("photographers").select("business_name, full_name, hero_image_url").eq("id", data.photographer_id).single(),
+      ]);
+      if (wmResult.data) setWatermark(wmResult.data as WatermarkSettings);
+      if (brandResult.data) setPhotographerBrand(brandResult.data);
 
       // Load saved notes
       setNotes(loadNotes(data.id, clientToken));
