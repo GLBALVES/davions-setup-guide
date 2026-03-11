@@ -245,7 +245,12 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
         end={item.end}
         className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
       >
-        <item.icon className="h-4 w-4 shrink-0" />
+        <div className="relative shrink-0">
+          <item.icon className="h-4 w-4" />
+          {collapsed && badgeCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-foreground ring-1 ring-sidebar" />
+          )}
+        </div>
         <AnimatePresence initial={false}>
           {!collapsed && (
             <motion.span
@@ -259,6 +264,11 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
             </motion.span>
           )}
         </AnimatePresence>
+        {!collapsed && badgeCount > 0 && (
+          <span className="ml-auto shrink-0 bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-sm">
+            {badgeCount}
+          </span>
+        )}
       </NavLink>
     </SidebarMenuButton>
   ) : (
@@ -309,11 +319,6 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
-      {badgeCount > 0 && (
-        <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
-          {badgeCount}
-        </SidebarMenuBadge>
-      )}
     </SidebarMenuItem>
   );
 }
