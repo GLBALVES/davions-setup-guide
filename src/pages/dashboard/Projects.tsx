@@ -7,7 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +44,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done";
+type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done" | "archived";
 
 interface ClientProject {
   id: string;
@@ -79,6 +79,7 @@ const STAGE_COLORS: Record<Stage, string> = {
   editing:  "bg-orange-500/10 text-orange-600 border-orange-500/20",
   delivery: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   done:     "bg-foreground/10 text-foreground border-foreground/20",
+  archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
 const SESSION_TYPES = [
@@ -91,10 +92,12 @@ function KanbanCard({
   project,
   onEdit,
   onDelete,
+  onArchive,
 }: {
   project: ClientProject;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
@@ -123,12 +126,21 @@ function KanbanCard({
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(project)}
+              title="Edit"
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
+              className="p-0.5 text-muted-foreground hover:text-amber-500"
+              onClick={() => onArchive(project.id)}
+              title="Archive"
+            >
+              <Archive className="h-3 w-3" />
+            </button>
+            <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
               onClick={() => onDelete(project.id)}
+              title="Delete"
             >
               <X className="h-3 w-3" />
             </button>
@@ -166,12 +178,14 @@ function KanbanColumn({
   projects,
   onEdit,
   onDelete,
+  onArchive,
   onAddCard,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
   onAddCard: (stage: Stage) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
@@ -206,7 +220,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} />
+            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
           ))}
         </SortableContext>
 
@@ -344,72 +358,165 @@ function ListView({
   projects,
   onEdit,
   onDelete,
+  onArchive,
+  onUnarchive,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
+  onUnarchive: (id: string) => void;
 }) {
-  const sorted = [...projects].sort((a, b) => {
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
     if (si !== sj) return si - sj;
     return a.position - b.position;
   });
+  const archived = projects.filter((p) => p.stage === "archived").sort((a, b) => a.position - b.position);
+
+  const renderRow = (p: ClientProject, isArchived = false) => {
+    const isOverdue = p.shoot_date && new Date(p.shoot_date + "T00:00:00") < new Date();
+    return (
+      <div
+        key={p.id}
+        className={`group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border/50 last:border-b-0 transition-colors items-center ${isArchived ? "opacity-60 hover:opacity-100 hover:bg-muted/20" : "hover:bg-muted/30"}`}
+      >
+        <div className="px-4 py-3 text-sm font-medium truncate">{p.title}</div>
+        <div className="px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+          {p.client_name ? (<><User className="h-3 w-3 shrink-0" />{p.client_name}</>) : <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3 text-xs text-muted-foreground">
+          {p.session_type || <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3">
+          {isArchived ? (
+            <span className="inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase bg-muted/40 text-muted-foreground/60 border-border/50">
+              <Archive className="h-2.5 w-2.5" /> Archived
+            </span>
+          ) : (
+            <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
+              {STAGES.find((s) => s.key === p.stage)?.label}
+            </span>
+          )}
+        </div>
+        <div className="px-4 py-3 flex items-center gap-1.5 text-xs">
+          {p.shoot_date ? (
+            <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
+              <Calendar className="h-3 w-3 shrink-0" />
+              {format(new Date(p.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+            </span>
+          ) : <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3 w-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+          {isArchived ? (
+            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+              <ArchiveRestore className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <>
+              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title="Edit">
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title="Archive">
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="border border-border rounded-sm overflow-hidden">
-      {/* Header row */}
-      <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
-        {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
-          <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-16" : ""}`}>
-            {h}
+    <div className="flex flex-col gap-4">
+      <div className="border border-border rounded-sm overflow-hidden">
+        {/* Header row */}
+        <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
+          {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
+            <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-20" : ""}`}>
+              {h}
+            </div>
+          ))}
+        </div>
+        {active.length === 0 ? (
+          <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
+            No active projects
           </div>
-        ))}
+        ) : (
+          active.map((p) => renderRow(p, false))
+        )}
       </div>
 
-      {sorted.length === 0 ? (
-        <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
-          No projects yet
+      {/* Archived section */}
+      {archived.length > 0 && (
+        <div className="border border-border/50 rounded-sm overflow-hidden">
+          <button
+            onClick={() => setArchivedOpen((v) => !v)}
+            className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+          >
+            {archivedOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            <Archive className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
+            <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
+          </button>
+          {archivedOpen && archived.map((p) => renderRow(p, true))}
         </div>
-      ) : (
-        sorted.map((p) => {
-          const isOverdue = p.shoot_date && new Date(p.shoot_date + "T00:00:00") < new Date();
-          return (
-            <div
-              key={p.id}
-              className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border/50 last:border-b-0 hover:bg-muted/30 transition-colors items-center"
-            >
-              <div className="px-4 py-3 text-sm font-medium truncate">{p.title}</div>
-              <div className="px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground truncate">
-                {p.client_name ? (<><User className="h-3 w-3 shrink-0" />{p.client_name}</>) : <span className="text-muted-foreground/30">—</span>}
+      )}
+    </div>
+  );
+}
+
+// ── Archived Kanban Section ──────────────────────────────────────────────────
+function ArchivedKanbanSection({
+  projects,
+  onUnarchive,
+  onDelete,
+}: {
+  projects: ClientProject[];
+  onUnarchive: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-6 border border-border/50 rounded-sm overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+      >
+        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+        <Archive className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">Archived</span>
+        <span className="text-[10px] text-muted-foreground/50 ml-1">{projects.length}</span>
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-3 p-4">
+          {projects.map((p) => (
+            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[220px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+              <div className="flex items-start justify-between gap-1">
+                <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+                    <ArchiveRestore className="h-3 w-3" />
+                  </button>
+                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
               </div>
-              <div className="px-4 py-3 text-xs text-muted-foreground">
-                {p.session_type || <span className="text-muted-foreground/30">—</span>}
-              </div>
-              <div className="px-4 py-3">
-                <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
-                  {STAGES.find((s) => s.key === p.stage)?.label}
-                </span>
-              </div>
-              <div className="px-4 py-3 flex items-center gap-1.5 text-xs">
-                {p.shoot_date ? (
-                  <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
-                    <Calendar className="h-3 w-3 shrink-0" />
-                    {format(new Date(p.shoot_date + "T00:00:00"), "MMM d, yyyy")}
-                  </span>
-                ) : <span className="text-muted-foreground/30">—</span>}
-              </div>
-              <div className="px-4 py-3 w-16 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)}>
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              {p.client_name && (
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <User className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{p.client_name}</span>
+                </div>
+              )}
             </div>
-          );
-        })
+          ))}
+        </div>
       )}
     </div>
   );
@@ -554,6 +661,18 @@ const Projects = () => {
     toast.success("Project removed");
   };
 
+  const handleArchive = async (id: string) => {
+    await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
+    toast.success("Project archived");
+  };
+
+  const handleUnarchive = async (id: string) => {
+    await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
+    toast.success("Project restored to Lead");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -615,7 +734,13 @@ const Projects = () => {
               </div>
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
-                <ListView projects={projects} onEdit={openEdit} onDelete={handleDelete} />
+                <ListView
+                  projects={projects}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
+                />
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto px-6 md:px-10 pb-8">
@@ -627,13 +752,14 @@ const Projects = () => {
                   onDragEnd={handleDragEnd}
                 >
                   <div className="flex gap-4 h-full items-start">
-                    {STAGES.map((s) => (
+                    {STAGES.filter((s) => s.key !== "archived").map((s) => (
                       <KanbanColumn
                         key={s.key}
                         stage={s}
                         projects={projectsByStage(s.key)}
                         onEdit={openEdit}
                         onDelete={handleDelete}
+                        onArchive={handleArchive}
                         onAddCard={openAdd}
                       />
                     ))}
@@ -649,6 +775,15 @@ const Projects = () => {
                     )}
                   </DragOverlay>
                 </DndContext>
+
+                {/* Archived banner in kanban */}
+                {projectsByStage("archived").length > 0 && (
+                  <ArchivedKanbanSection
+                    projects={projectsByStage("archived")}
+                    onUnarchive={handleUnarchive}
+                    onDelete={handleDelete}
+                  />
+                )}
               </div>
             )}
           </main>
