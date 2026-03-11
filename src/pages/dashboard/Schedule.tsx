@@ -32,6 +32,14 @@ import { DayView } from "@/components/dashboard/schedule/DayView";
 import { BookingDetailSheet, type ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
 import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 
+export interface BlockedSlot {
+  id: string;
+  date: string | null;
+  start_time: string;
+  end_time: string;
+  session_id: string;
+}
+
 type ViewMode = "month" | "week" | "day";
 
 const VIEW_LABELS: Record<ViewMode, string> = {
@@ -58,6 +66,7 @@ const Schedule = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState<Date>(startOfToday());
   const [bookings, setBookings] = useState<ScheduleBooking[]>([]);
+  const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<ScheduleBooking | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -65,7 +74,7 @@ const Schedule = () => {
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
   const [createDefaultTime, setCreateDefaultTime] = useState<string | null>(null);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
@@ -81,32 +90,47 @@ const Schedule = () => {
       to = currentDate;
     }
 
-    // Extend range slightly for month view
     const fromStr = format(addDays(from, -7), "yyyy-MM-dd");
     const toStr = format(addDays(to, 7), "yyyy-MM-dd");
 
-    const { data, error } = await (supabase as any)
-      .from("bookings")
-      .select(`
-        *,
-        sessions ( title, duration_minutes, briefing_id ),
-        session_availability ( start_time, end_time, date )
-      `)
-      .eq("photographer_id", user.id)
-      .neq("status", "cancelled")
-      .order("created_at", { ascending: true });
+    const [bookingsResult, availResult] = await Promise.all([
+      (supabase as any)
+        .from("bookings")
+        .select(`
+          *,
+          sessions ( title, duration_minutes, briefing_id ),
+          session_availability ( start_time, end_time, date )
+        `)
+        .eq("photographer_id", user.id)
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: true }),
 
-    if (error) {
+      (supabase as any)
+        .from("session_availability")
+        .select("id, date, start_time, end_time, session_id")
+        .eq("photographer_id", user.id)
+        .eq("is_booked", true)
+        .not("date", "is", null)
+        .gte("date", fromStr)
+        .lte("date", toStr),
+    ]);
+
+    if (bookingsResult.error) {
       toast({ title: "Failed to load schedule", variant: "destructive" });
     } else {
-      setBookings((data as ScheduleBooking[]) ?? []);
+      setBookings((bookingsResult.data as ScheduleBooking[]) ?? []);
     }
+
+    if (!availResult.error) {
+      setBlockedSlots((availResult.data as BlockedSlot[]) ?? []);
+    }
+
     setLoading(false);
   }, [user, viewMode, currentDate, toast]);
 
   useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+    fetchData();
+  }, [fetchData]);
 
   const navigate = (direction: "prev" | "next" | "today") => {
     if (direction === "today") {
@@ -171,7 +195,6 @@ const Schedule = () => {
 
               {/* Toolbar */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                {/* Navigation */}
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="icon" onClick={() => navigate("prev")}>
                     <ChevronLeft className="h-4 w-4" />
@@ -218,6 +241,7 @@ const Schedule = () => {
                 <MonthView
                   currentDate={currentDate}
                   bookings={bookings}
+                  blockedSlots={blockedSlots}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={(date) => handleCreateBooking(date)}
                 />
@@ -225,6 +249,7 @@ const Schedule = () => {
                 <WeekView
                   currentDate={currentDate}
                   bookings={bookings}
+                  blockedSlots={blockedSlots}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
@@ -232,6 +257,7 @@ const Schedule = () => {
                 <DayView
                   currentDate={currentDate}
                   bookings={bookings}
+                  blockedSlots={blockedSlots}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
@@ -244,6 +270,7 @@ const Schedule = () => {
               {[
                 { label: "Confirmed", cls: "bg-foreground" },
                 { label: "Pending", cls: "bg-muted border border-border" },
+                { label: "Blocked", cls: "bg-muted-foreground/15 border border-dashed border-muted-foreground/30" },
               ].map(({ label, cls }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <span className={`h-2.5 w-2.5 rounded-sm ${cls}`} />
@@ -267,7 +294,7 @@ const Schedule = () => {
         onOpenChange={setCreateOpen}
         defaultDate={createDefaultDate}
         defaultStartTime={createDefaultTime}
-        onCreated={fetchBookings}
+        onCreated={fetchData}
       />
     </SidebarProvider>
   );
