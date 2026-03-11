@@ -44,6 +44,7 @@ import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
+import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -108,6 +109,7 @@ const App = () => (
                  <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
                  <Route path="/dashboard/creative" element={<ProtectedRoute><CreativeStudio /></ProtectedRoute>} />
+                 <Route path="/dashboard/website" element={<ProtectedRoute><WebsiteSettings /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
