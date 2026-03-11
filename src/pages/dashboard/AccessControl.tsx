@@ -254,25 +254,41 @@ export default function AccessControl() {
     }
   }
 
-  // ── Invite member ──────────────────────────────────────────────────────────
+  // ── Create member (via admin edge function) ───────────────────────────────
 
-  async function handleInvite() {
-    if (!inviteEmail.trim() || !inviteName.trim()) return;
+  async function handleCreateUser() {
+    if (!inviteEmail.trim() || !inviteName.trim() || !invitePassword.trim()) return;
+    if (invitePassword.trim().length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
     setInviting(true);
-    const { error } = await supabase.from("studio_members").insert({
-      photographer_id: user!.id,
-      email: inviteEmail.trim().toLowerCase(),
-      full_name: inviteName.trim(),
-      role_id: inviteRoleId || null,
-      status: "pending",
-    });
-    if (error) {
-      toast({ title: "Error inviting member", variant: "destructive" });
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-studio-user`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          full_name: inviteName.trim(),
+          email: inviteEmail.trim().toLowerCase(),
+          password: invitePassword.trim(),
+          role_id: inviteRoleId || null,
+        }),
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) {
+      toast({ title: json.error ?? "Error creating user", variant: "destructive" });
     } else {
-      toast({ title: "Member invited" });
+      toast({ title: "User created successfully" });
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
+      setInvitePassword("");
       setInviteRoleId("");
       fetchMembers();
     }
