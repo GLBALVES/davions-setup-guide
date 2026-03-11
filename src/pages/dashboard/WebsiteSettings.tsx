@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Check, Upload, Loader2, X,
+  Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image,
 } from "lucide-react";
@@ -123,6 +123,44 @@ const WebsiteSettings = () => {
   // Footer
   const [footerText, setFooterText] = useState("");
 
+  // Custom Domain
+  const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+  const [customDomain, setCustomDomain] = useState("");
+  const [customDomainInput, setCustomDomainInput] = useState("");
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [domainCopied, setDomainCopied] = useState(false);
+  const [savingDomain, setSavingDomain] = useState(false);
+
+  const validateDomain = (value: string) => {
+    if (!value.trim()) return null;
+    const v = value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (!DOMAIN_REGEX.test(v)) return "Enter a valid domain (e.g. booking.yourstudio.com).";
+    return null;
+  };
+
+  const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedFn(true);
+    setTimeout(() => setCopiedFn(false), 2000);
+  };
+
+  const handleSaveDomain = async () => {
+    const domErr = validateDomain(customDomainInput);
+    if (domErr) { setDomainError(domErr); return; }
+    setSavingDomain(true);
+    const { error } = await supabase.from("photographers").update({
+      custom_domain: customDomainInput.trim() || null,
+    } as any).eq("id", user!.id);
+    if (error) {
+      if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
+      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      setCustomDomain(customDomainInput.trim());
+      toast({ title: "Custom domain saved" });
+    }
+    setSavingDomain(false);
+  };
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -136,7 +174,7 @@ const WebsiteSettings = () => {
     const fetchAll = async () => {
       const [profileRes, siteRes] = await Promise.all([
         supabase.from("photographers")
-          .select("full_name, bio, hero_image_url")
+          .select("full_name, bio, hero_image_url, custom_domain")
           .eq("id", user.id).single(),
         (supabase as any).from("photographer_site")
           .select("*").eq("photographer_id", user.id).maybeSingle(),
@@ -147,6 +185,8 @@ const WebsiteSettings = () => {
         setFullName((d as any).full_name ?? "");
         setBio((d as any).bio ?? "");
         setHeroImageUrl((d as any).hero_image_url ?? "");
+        setCustomDomain((d as any).custom_domain ?? "");
+        setCustomDomainInput((d as any).custom_domain ?? "");
       }
 
       if (siteRes?.data) {
@@ -617,12 +657,67 @@ const WebsiteSettings = () => {
 
                   <Divider />
 
-                  {/* ── 9. Footer ── */}
+                   {/* ── 9. Footer ── */}
                   <section className="flex flex-col gap-5">
                     <SectionHeading title="Footer" description="Custom text shown at the bottom of every page." />
                     <FieldRow label="Footer Text">
                       <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder="© 2025 Jane Doe Photography · All rights reserved" className="h-9 text-sm font-light" />
                     </FieldRow>
+                  </section>
+
+                  <Divider />
+
+                  {/* ── 10. Custom Domain ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                        <SectionHeading title="Custom Domain" description="Point your own domain (e.g. booking.yourstudio.com) to your site." />
+                      </div>
+                      <a
+                        href="/dashboard/custom-domain-docs"
+                        className="shrink-0 flex items-center gap-1 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Setup guide
+                      </a>
+                    </div>
+                    <FieldRow label="Domain">
+                      <Input
+                        value={customDomainInput}
+                        onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
+                        placeholder="booking.yourstudio.com"
+                        className="h-9 text-sm font-light font-mono"
+                      />
+                      {domainError && (
+                        <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                          <AlertCircle className="h-3 w-3" />{domainError}
+                        </p>
+                      )}
+                    </FieldRow>
+                    {customDomain && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
+                        <button
+                          type="button"
+                          onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
+                          className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                          title="Copy domain URL"
+                        >
+                          {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    )}
+                    <Button
+                      onClick={handleSaveDomain}
+                      disabled={savingDomain}
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                    >
+                      {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save domain"}
+                    </Button>
                   </section>
 
                   {/* ── Save ── */}

@@ -1038,62 +1038,13 @@ const Personalize = () => {
                       )}
                     </section>
 
-                    <Divider />
-
-                    {/* Custom Domain */}
-                    <section className="flex flex-col gap-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <SectionHeading
-                          title="Custom Domain"
-                          description="Point your own domain (e.g. booking.yourstudio.com) to your store."
-                        />
-                        <a
-                          href="/dashboard/custom-domain-docs"
-                          className="shrink-0 flex items-center gap-1 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Setup guide
-                        </a>
-                      </div>
-                      <FieldRow label="Domain">
-                        <Input
-                          value={customDomainInput}
-                          onChange={(e) => {
-                            setCustomDomainInput(e.target.value.toLowerCase().trim());
-                            setDomainError(null);
-                          }}
-                          placeholder="booking.yourstudio.com"
-                          className="h-9 text-sm font-light font-mono"
-                        />
-                        {domainError && (
-                          <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
-                            <AlertCircle className="h-3 w-3" />{domainError}
-                          </p>
-                        )}
-                      </FieldRow>
-                      {customDomain && (
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
-                          <button
-                            type="button"
-                            onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                            title="Copy domain URL"
-                          >
-                            {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                          </button>
-                        </div>
-                      )}
-                    </section>
-
                     <Button
                       onClick={handleSaveStore}
                       disabled={savingStore}
                       size="sm"
                       className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
                     >
-                      {savingStore ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save URL & domain"}
+                      {savingStore ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save Store URL"}
                     </Button>
                   </TabsContent>
 
