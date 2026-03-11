@@ -519,6 +519,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const location = useLocation();
   const badges = useSidebarBadges();
   const { user } = useAuth();
+  const { isOwner, can, loading: permsLoading } = useStudioPermissions();
+
+  // Filter a group's items based on permissions
+  const filterItems = (items: MenuItem[]): MenuItem[] => {
+    if (permsLoading) return items; // show all while loading
+    if (isOwner) return items;      // owner sees everything
+    return items.filter((item) => !item.permKey || can(item.permKey));
+  };
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
   const [editMode, setEditMode] = useState(false);
