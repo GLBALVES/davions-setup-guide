@@ -132,10 +132,12 @@ export default function AccessControl() {
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
 
-  // Invite dialog
+  // Invite dialog → now "Create User" dialog
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [inviteRoleId, setInviteRoleId] = useState<string>("");
   const [inviting, setInviting] = useState(false);
 
