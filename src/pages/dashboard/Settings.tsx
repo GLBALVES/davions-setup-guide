@@ -182,24 +182,6 @@ const Settings = () => {
     setDomainError(validateDomain(val));
   };
 
-  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingHero(true);
-    const ext = file.name.split(".").pop();
-    const path = `${user!.id}/hero.${ext}`;
-    const { error: upErr } = await supabase.storage.from("session-covers").upload(path, file, { upsert: true });
-    if (upErr) {
-      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
-      setUploadingHero(false);
-      return;
-    }
-    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
-    setHeroImageUrl(urlData.publicUrl + `?t=${Date.now()}`);
-    setUploadingHero(false);
-    toast({ title: "Hero image uploaded" });
-  };
-
   const handleSave = async () => {
     const slugErr = validateSlug(slugInput);
     const domErr = validateDomain(customDomainInput);
@@ -212,7 +194,6 @@ const Settings = () => {
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
       bio: bio.trim() || null,
-      hero_image_url: heroImageUrl.trim() || null,
     } as any).eq("id", user!.id);
 
     if (error) {
