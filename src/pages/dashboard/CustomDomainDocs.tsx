@@ -64,10 +64,11 @@ const faqs = [
 ];
 
 const CustomDomainDocs = () => {
+  const { signOut, user } = useAuth();
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
-        <DashboardSidebar />
+        <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
         <div className="flex-1 flex flex-col min-h-0">
           <DashboardHeader />
           <main className="flex-1 overflow-y-auto">
