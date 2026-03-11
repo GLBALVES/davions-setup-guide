@@ -233,6 +233,10 @@ const GalleryView = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   // Downloaded photo ids (persisted in localStorage)
   const [downloaded, setDownloaded] = useState<Set<string>>(new Set());
+  // Multi-select for batch download (final only)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [downloadingSelected, setDownloadingSelected] = useState(false);
 
   // Purchase modal
   const [purchaseOpen, setPurchaseOpen] = useState(false);
