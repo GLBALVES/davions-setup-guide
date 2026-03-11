@@ -471,6 +471,57 @@ function ListView({
   );
 }
 
+// ── Archived Kanban Section ──────────────────────────────────────────────────
+function ArchivedKanbanSection({
+  projects,
+  onUnarchive,
+  onDelete,
+}: {
+  projects: ClientProject[];
+  onUnarchive: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-6 border border-border/50 rounded-sm overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+      >
+        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+        <Archive className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">Archived</span>
+        <span className="text-[10px] text-muted-foreground/50 ml-1">{projects.length}</span>
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-3 p-4">
+          {projects.map((p) => (
+            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[220px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+              <div className="flex items-start justify-between gap-1">
+                <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+                    <ArchiveRestore className="h-3 w-3" />
+                  </button>
+                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+              {p.client_name && (
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <User className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{p.client_name}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
   const { user, signOut } = useAuth();
