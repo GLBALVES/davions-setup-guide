@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ShieldCheck, Trash2, UserPlus, Check, X, RotateCcw } from "lucide-react";
+import { Plus, ShieldCheck, Trash2, UserPlus, Check, X, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -132,10 +132,12 @@ export default function AccessControl() {
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
 
-  // Invite dialog
+  // Invite dialog → now "Create User" dialog
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [inviteRoleId, setInviteRoleId] = useState<string>("");
   const [inviting, setInviting] = useState(false);
 
@@ -252,25 +254,41 @@ export default function AccessControl() {
     }
   }
 
-  // ── Invite member ──────────────────────────────────────────────────────────
+  // ── Create member (via admin edge function) ───────────────────────────────
 
-  async function handleInvite() {
-    if (!inviteEmail.trim() || !inviteName.trim()) return;
+  async function handleCreateUser() {
+    if (!inviteEmail.trim() || !inviteName.trim() || !invitePassword.trim()) return;
+    if (invitePassword.trim().length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
     setInviting(true);
-    const { error } = await supabase.from("studio_members").insert({
-      photographer_id: user!.id,
-      email: inviteEmail.trim().toLowerCase(),
-      full_name: inviteName.trim(),
-      role_id: inviteRoleId || null,
-      status: "pending",
-    });
-    if (error) {
-      toast({ title: "Error inviting member", variant: "destructive" });
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-studio-user`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          full_name: inviteName.trim(),
+          email: inviteEmail.trim().toLowerCase(),
+          password: invitePassword.trim(),
+          role_id: inviteRoleId || null,
+        }),
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) {
+      toast({ title: json.error ?? "Error creating user", variant: "destructive" });
     } else {
-      toast({ title: "Member invited" });
+      toast({ title: "User created successfully" });
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
+      setInvitePassword("");
       setInviteRoleId("");
       fetchMembers();
     }
@@ -336,7 +354,7 @@ export default function AccessControl() {
             </div>
             <Button size="sm" onClick={() => setInviteOpen(true)}>
               <UserPlus className="h-4 w-4" />
-              Invite User
+              Add User
             </Button>
           </div>
 
@@ -473,10 +491,10 @@ export default function AccessControl() {
             ) : members.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
                 <UserPlus className="h-10 w-10 opacity-20" />
-                <p className="text-xs tracking-wider">No members yet. Invite a collaborator.</p>
+                <p className="text-xs tracking-wider">No users yet. Create the first one.</p>
                 <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
                   <UserPlus className="h-4 w-4" />
-                  Invite User
+                  Add User
                 </Button>
               </div>
             ) : (
@@ -546,13 +564,16 @@ export default function AccessControl() {
         </div>{/* body flex */}
         </div>{/* flex-1 flex flex-col min-w-0 */}
 
-      {/* ── Invite Dialog ── */}
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      {/* ── Create User Dialog ── */}
+      <Dialog open={inviteOpen} onOpenChange={(o) => { setInviteOpen(o); if (!o) { setInviteEmail(""); setInviteName(""); setInvitePassword(""); setInviteRoleId(""); setShowPassword(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-sm tracking-widest uppercase font-light">
-              Invite Collaborator
+              Add Team Member
             </DialogTitle>
+            <p className="text-xs text-muted-foreground pt-1">
+              Create a login for a collaborator and assign their access level.
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
@@ -561,6 +582,7 @@ export default function AccessControl() {
                 placeholder="Ana Lima"
                 value={inviteName}
                 onChange={(e) => setInviteName(e.target.value)}
+                autoFocus
               />
             </div>
             <div className="space-y-1.5">
@@ -571,6 +593,29 @@ export default function AccessControl() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs tracking-wider uppercase font-light">Password</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 6 characters"
+                  value={invitePassword}
+                  onChange={(e) => setInvitePassword(e.target.value)}
+                  className="pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+              {invitePassword && invitePassword.length < 6 && (
+                <p className="text-[10px] text-destructive">Password must be at least 6 characters</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs tracking-wider uppercase font-light">Role</Label>
@@ -594,10 +639,10 @@ export default function AccessControl() {
             </Button>
             <Button
               size="sm"
-              onClick={handleInvite}
-              disabled={inviting || !inviteEmail.trim() || !inviteName.trim()}
+              onClick={handleCreateUser}
+              disabled={inviting || !inviteEmail.trim() || !inviteName.trim() || invitePassword.length < 6}
             >
-              {inviting ? "Inviting…" : "Send Invite"}
+              {inviting ? "Creating…" : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
