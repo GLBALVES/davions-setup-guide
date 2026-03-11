@@ -1740,6 +1740,30 @@ export type Database = {
           },
         ]
       }
+      sidebar_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          photographer_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          photographer_id: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          photographer_id?: string
+          position?: number
+        }
+        Relationships: []
+      }
       social_api_connections: {
         Row: {
           created_at: string
