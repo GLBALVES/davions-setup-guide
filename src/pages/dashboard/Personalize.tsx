@@ -661,6 +661,45 @@ const Personalize = () => {
 
                     <div className="border-t border-border" />
 
+                    {/* Reactivation Fee */}
+                    <section className="flex flex-col gap-5">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Reactivation Fee</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Amount charged to reactivate access to an expired gallery. Leave blank to allow free reactivation.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                          <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={galleryReactivationFee}
+                            onChange={(e) => setGalleryReactivationFee(e.target.value)}
+                            placeholder="0.00"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleSaveGallerySettings}
+                          disabled={savingGallerySettings}
+                          size="sm"
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {savingGallerySettings ? "Saving…" : "Save"}
+                        </Button>
+                      </div>
+                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 && (
+                        <p className="text-[11px] text-muted-foreground/70 -mt-2">
+                          Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.
+                        </p>
+                      )}
+                    </section>
+
+                    <div className="border-t border-border" />
+
                     {/* Watermarks */}
                     <div className="flex items-start justify-between gap-4">
                       <div>
