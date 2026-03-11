@@ -77,7 +77,7 @@ const Settings = () => {
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      const [profileRes, watermarksRes, gallerySettingsRes, , socialRes] = await Promise.all([
+      const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
           .select("full_name, store_slug, custom_domain, hero_image_url")
@@ -93,10 +93,6 @@ const Settings = () => {
           .select("key, value")
           .eq("photographer_id", user.id),
         fetchSessionTypes(),
-        supabase
-          .from("social_api_connections")
-          .select("*")
-          .eq("photographer_id", user.id),
       ]);
 
       if (profileRes.data) {
@@ -106,7 +102,6 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
-        
       }
 
       if (watermarksRes.data) {
@@ -116,16 +111,6 @@ const Settings = () => {
       if (gallerySettingsRes?.data) {
         const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
         if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
-      }
-
-      if (socialRes?.data) {
-        setSocialConnections((prev) => {
-          return prev.map((conn) => {
-            const existing = (socialRes.data as any[]).find((r: any) => r.platform === conn.platform);
-            if (existing) return { ...existing, credentials: existing.credentials || {} };
-            return conn;
-          });
-        });
       }
 
       setLoading(false);
