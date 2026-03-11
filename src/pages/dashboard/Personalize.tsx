@@ -207,6 +207,16 @@ const Personalize = () => {
     if (data) setSessionTypes(data as SessionType[]);
   }, [user]);
 
+  const fetchContracts = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("contracts")
+      .select("id, name, body")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setContracts(data);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
