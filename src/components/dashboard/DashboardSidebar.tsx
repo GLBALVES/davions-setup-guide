@@ -879,7 +879,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </Collapsible>
 
             {/* Regular groups */}
-            {groups.map((group) => (
+            {groups.map((group) => {
+              const visibleItems = filterItems(group.items);
+              if (visibleItems.length === 0) return null;
+              return (
               <Collapsible
                 key={group.title}
                 open={openGroups[group.title]}
@@ -900,13 +903,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {group.items.map((item) => renderRegularItem(item, group.title))}
+                        {visibleItems.map((item) => renderRegularItem(item, group.title))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
                 </SidebarGroup>
               </Collapsible>
-            ))}
+              );
+            })}
           </>
         )}
       </SidebarContent>
