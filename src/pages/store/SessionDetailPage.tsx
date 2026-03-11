@@ -135,6 +135,16 @@ const getInitials = (name: string | null | undefined): string => {
     .join("");
 };
 
+// Resolve [[key]] variable tokens stored in contract HTML
+function resolveSessionContractVariables(
+  html: string,
+  data: Record<string, string>
+): string {
+  return Object.entries(data).reduce((acc, [key, val]) => {
+    return acc.replace(new RegExp(`\\[\\[${key}\\]\\]`, "g"), val);
+  }, html);
+}
+
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────

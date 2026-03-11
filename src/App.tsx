@@ -40,6 +40,7 @@ import AIAgents from "./pages/dashboard/AIAgents";
 import Chat from "./pages/dashboard/Chat";
 import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
+import ContractEditor from "./pages/dashboard/ContractEditor";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
