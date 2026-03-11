@@ -123,6 +123,14 @@ const WebsiteSettings = () => {
   // Footer
   const [footerText, setFooterText] = useState("");
 
+  // Store URL
+  const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  const [storeSlug, setStoreSlug] = useState("");
+  const [slugInput, setSlugInput] = useState("");
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugCopied, setSlugCopied] = useState(false);
+  const [savingSlug, setSavingSlug] = useState(false);
+
   // Custom Domain
   const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
   const [customDomain, setCustomDomain] = useState("");
@@ -130,6 +138,14 @@ const WebsiteSettings = () => {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
+
+  const validateSlug = (value: string) => {
+    if (!value.trim()) return "Store URL is required.";
+    if (value.length < 3) return "Must be at least 3 characters.";
+    if (value.length > 48) return "Must be 48 characters or less.";
+    if (!SLUG_REGEX.test(value)) return "Only lowercase letters, numbers and hyphens.";
+    return null;
+  };
 
   const validateDomain = (value: string) => {
     if (!value.trim()) return null;
@@ -142,6 +158,23 @@ const WebsiteSettings = () => {
     await navigator.clipboard.writeText(url);
     setCopiedFn(true);
     setTimeout(() => setCopiedFn(false), 2000);
+  };
+
+  const handleSaveSlug = async () => {
+    const slugErr = validateSlug(slugInput);
+    if (slugErr) { setSlugError(slugErr); return; }
+    setSavingSlug(true);
+    const { error } = await supabase.from("photographers").update({
+      store_slug: slugInput,
+    } as any).eq("id", user!.id);
+    if (error) {
+      if (error.code === "23505") setSlugError("This URL is already taken.");
+      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      setStoreSlug(slugInput);
+      toast({ title: "Store URL saved" });
+    }
+    setSavingSlug(false);
   };
 
   const handleSaveDomain = async () => {
