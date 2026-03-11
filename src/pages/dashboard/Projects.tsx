@@ -712,9 +712,9 @@ const Projects = () => {
               </div>
             </div>
 
-            {/* Stage summary pills */}
+            {/* Stage summary pills + archive toggle */}
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
-              {STAGES.map((s) => {
+              {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
                 return (
                   <div
@@ -726,6 +726,20 @@ const Projects = () => {
                   </div>
                 );
               })}
+              <div className="ml-auto">
+                <button
+                  onClick={() => setShowArchived((v) => !v)}
+                  className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
+                    showArchived
+                      ? "bg-muted text-foreground border-border"
+                      : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  <Archive className="h-3 w-3" />
+                  <span>Archived</span>
+                  <span className="opacity-60">{projectsByStage("archived").length}</span>
+                </button>
+              </div>
             </div>
 
             {/* Content */}
