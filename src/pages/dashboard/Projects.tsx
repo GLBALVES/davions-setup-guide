@@ -358,72 +358,114 @@ function ListView({
   projects,
   onEdit,
   onDelete,
+  onArchive,
+  onUnarchive,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
+  onUnarchive: (id: string) => void;
 }) {
-  const sorted = [...projects].sort((a, b) => {
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
     if (si !== sj) return si - sj;
     return a.position - b.position;
   });
+  const archived = projects.filter((p) => p.stage === "archived").sort((a, b) => a.position - b.position);
+
+  const renderRow = (p: ClientProject, isArchived = false) => {
+    const isOverdue = p.shoot_date && new Date(p.shoot_date + "T00:00:00") < new Date();
+    return (
+      <div
+        key={p.id}
+        className={`group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border/50 last:border-b-0 transition-colors items-center ${isArchived ? "opacity-60 hover:opacity-100 hover:bg-muted/20" : "hover:bg-muted/30"}`}
+      >
+        <div className="px-4 py-3 text-sm font-medium truncate">{p.title}</div>
+        <div className="px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+          {p.client_name ? (<><User className="h-3 w-3 shrink-0" />{p.client_name}</>) : <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3 text-xs text-muted-foreground">
+          {p.session_type || <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3">
+          {isArchived ? (
+            <span className="inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase bg-muted/40 text-muted-foreground/60 border-border/50">
+              <Archive className="h-2.5 w-2.5" /> Archived
+            </span>
+          ) : (
+            <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
+              {STAGES.find((s) => s.key === p.stage)?.label}
+            </span>
+          )}
+        </div>
+        <div className="px-4 py-3 flex items-center gap-1.5 text-xs">
+          {p.shoot_date ? (
+            <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
+              <Calendar className="h-3 w-3 shrink-0" />
+              {format(new Date(p.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+            </span>
+          ) : <span className="text-muted-foreground/30">—</span>}
+        </div>
+        <div className="px-4 py-3 w-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+          {isArchived ? (
+            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+              <ArchiveRestore className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <>
+              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title="Edit">
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title="Archive">
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="border border-border rounded-sm overflow-hidden">
-      {/* Header row */}
-      <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
-        {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
-          <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-16" : ""}`}>
-            {h}
+    <div className="flex flex-col gap-4">
+      <div className="border border-border rounded-sm overflow-hidden">
+        {/* Header row */}
+        <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
+          {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
+            <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-20" : ""}`}>
+              {h}
+            </div>
+          ))}
+        </div>
+        {active.length === 0 ? (
+          <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
+            No active projects
           </div>
-        ))}
+        ) : (
+          active.map((p) => renderRow(p, false))
+        )}
       </div>
 
-      {sorted.length === 0 ? (
-        <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
-          No projects yet
+      {/* Archived section */}
+      {archived.length > 0 && (
+        <div className="border border-border/50 rounded-sm overflow-hidden">
+          <button
+            onClick={() => setArchivedOpen((v) => !v)}
+            className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+          >
+            {archivedOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            <Archive className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
+            <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
+          </button>
+          {archivedOpen && archived.map((p) => renderRow(p, true))}
         </div>
-      ) : (
-        sorted.map((p) => {
-          const isOverdue = p.shoot_date && new Date(p.shoot_date + "T00:00:00") < new Date();
-          return (
-            <div
-              key={p.id}
-              className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border/50 last:border-b-0 hover:bg-muted/30 transition-colors items-center"
-            >
-              <div className="px-4 py-3 text-sm font-medium truncate">{p.title}</div>
-              <div className="px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground truncate">
-                {p.client_name ? (<><User className="h-3 w-3 shrink-0" />{p.client_name}</>) : <span className="text-muted-foreground/30">—</span>}
-              </div>
-              <div className="px-4 py-3 text-xs text-muted-foreground">
-                {p.session_type || <span className="text-muted-foreground/30">—</span>}
-              </div>
-              <div className="px-4 py-3">
-                <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
-                  {STAGES.find((s) => s.key === p.stage)?.label}
-                </span>
-              </div>
-              <div className="px-4 py-3 flex items-center gap-1.5 text-xs">
-                {p.shoot_date ? (
-                  <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
-                    <Calendar className="h-3 w-3 shrink-0" />
-                    {format(new Date(p.shoot_date + "T00:00:00"), "MMM d, yyyy")}
-                  </span>
-                ) : <span className="text-muted-foreground/30">—</span>}
-              </div>
-              <div className="px-4 py-3 w-16 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)}>
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          );
-        })
       )}
     </div>
   );
