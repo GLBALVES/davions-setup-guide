@@ -259,10 +259,21 @@ const SessionForm = () => {
     if (data) setContractTemplates(data);
   }, [user]);
 
+  const fetchBriefingTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("briefings")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setBriefingTemplates(data as BriefingTemplate[]);
+  }, [user]);
+
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
-  }, [fetchSessionTypes, fetchContractTemplates]);
+    fetchBriefingTemplates();
+  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
