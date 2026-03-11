@@ -642,7 +642,7 @@ const Personalize = () => {
                     <section className="flex flex-col gap-5">
                       <SectionHeading
                         title="Custom Domain"
-                        description={<>Point your own domain (e.g. <span className="font-mono">booking.yourstudio.com</span>) directly to your booking store.</>}
+                        description="Point your own domain (e.g. booking.yourstudio.com) directly to your booking store."
                       />
                       <div className="flex flex-col gap-1.5">
                         <div className={`flex items-center border ${domainError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
