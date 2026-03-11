@@ -487,6 +487,7 @@ const SessionForm = () => {
       cover_image_url: coverImageUrl,
       status,
       contract_text: contractText.trim() || null,
+      briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
