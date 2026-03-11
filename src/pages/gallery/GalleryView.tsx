@@ -436,7 +436,7 @@ const GalleryView = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-          <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
+          <PhotographerBrand brand={photographerBrand} />
         </header>
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
           <div className="h-20 w-20 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
