@@ -6,7 +6,8 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Pencil, Check, GripVertical, Calendar, User, ChevronDown } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List } from "lucide-react";
 import {
   Dialog,
   DialogContent,
