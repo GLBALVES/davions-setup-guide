@@ -1228,7 +1228,7 @@ const GalleryDetail = () => {
                   {gallery.status === "published" ? (
                     <><EyeOff className="h-3.5 w-3.5" /> Unpublish</>
                   ) : (
-                    <><Eye className="h-3.5 w-3.5" /> Publish</>
+                    <><Globe className="h-3.5 w-3.5" /> Publish</>
                   )}
                 </Button>
 
