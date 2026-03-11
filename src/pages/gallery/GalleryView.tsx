@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
+
 
 // ── Client token ────────────────────────────────────────────────────────────
 function getClientToken(): string {
@@ -169,6 +169,15 @@ function displayName(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
 }
 
+// ── Photographer brand logo ──────────────────────────────────────────────────
+function PhotographerBrand({ brand }: { brand: { business_name: string | null; full_name: string | null; hero_image_url: string | null } | null }) {
+  if (brand?.hero_image_url) {
+    return <img src={brand.hero_image_url} alt={brand.business_name ?? brand.full_name ?? ""} className="h-7 w-auto max-w-[160px] object-contain" draggable={false} />;
+  }
+  const name = brand?.business_name || brand?.full_name || "Studio";
+  return <span className="text-sm font-light tracking-[0.22em] uppercase text-foreground">{name}</span>;
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 const GalleryView = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -184,6 +193,7 @@ const GalleryView = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [togglingFav, setTogglingFav] = useState<Set<string>>(new Set());
   const [watermark, setWatermark] = useState<WatermarkSettings | null>(null);
+  const [photographerBrand, setPhotographerBrand] = useState<{ business_name: string | null; full_name: string | null; hero_image_url: string | null } | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   // card note panel open state (photoId -> boolean)
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
@@ -267,14 +277,15 @@ const GalleryView = () => {
       if (error || !data) { setNotFound(true); setLoading(false); return; }
       setGallery(data as Gallery);
 
-      if (data.watermark_id) {
-        const { data: wmData } = await supabase
-          .from("watermarks")
-          .select("text_enabled, text_content, text_font, text_color, text_opacity, text_scale, text_position, image_enabled, image_url, image_opacity, image_scale, image_position")
-          .eq("id", data.watermark_id)
-          .single();
-        if (wmData) setWatermark(wmData as WatermarkSettings);
-      }
+      // Fetch watermark + photographer brand in parallel
+      const [wmResult, brandResult] = await Promise.all([
+        data.watermark_id
+          ? supabase.from("watermarks").select("text_enabled, text_content, text_font, text_color, text_opacity, text_scale, text_position, image_enabled, image_url, image_opacity, image_scale, image_position").eq("id", data.watermark_id).single()
+          : Promise.resolve({ data: null }),
+        supabase.from("photographers").select("business_name, full_name, hero_image_url").eq("id", data.photographer_id).single(),
+      ]);
+      if (wmResult.data) setWatermark(wmResult.data as WatermarkSettings);
+      if (brandResult.data) setPhotographerBrand(brandResult.data);
 
       // Load saved notes
       setNotes(loadNotes(data.id, clientToken));
@@ -425,7 +436,7 @@ const GalleryView = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-          <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" />
+          <PhotographerBrand brand={photographerBrand} />
         </header>
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
           <div className="h-20 w-20 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
@@ -469,7 +480,7 @@ const GalleryView = () => {
 
       {/* ── Navbar ── */}
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
-        <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" draggable={false} />
+        <PhotographerBrand brand={photographerBrand} />
         <div className="flex items-center gap-3">
           {unlocked && isProof && favCount > 0 && (
             <button
