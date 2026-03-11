@@ -126,7 +126,7 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
-        setBio((d as any).bio ?? "");
+        
       }
 
       if (watermarksRes.data) {
