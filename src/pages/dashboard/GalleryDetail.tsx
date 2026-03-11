@@ -1898,6 +1898,26 @@ const GalleryDetail = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={unpublishOpen} onOpenChange={setUnpublishOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unpublish gallery?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The gallery link will stop working and your client will lose access immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { setUnpublishOpen(false); doPublish(); }}
+            >
+              Unpublish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={deleteGalleryOpen} onOpenChange={setDeleteGalleryOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
