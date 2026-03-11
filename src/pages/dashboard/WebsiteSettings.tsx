@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Check, Upload, Loader2, X,
+  Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image,
 } from "lucide-react";
