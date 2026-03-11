@@ -365,14 +365,32 @@ const GalleryDetail = () => {
     }
   }, [id]);
 
+  const fetchAccessLog = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("analytics_pageviews")
+      .select("created_at")
+      .eq("page_path", `/gallery/${id}`)
+      .eq("action", "gallery_access")
+      .order("created_at", { ascending: true });
+    if (data && data.length > 0) {
+      setAccessLog({
+        first: data[0].created_at,
+        last: data[data.length - 1].created_at,
+      });
+    } else {
+      setAccessLog({ first: null, last: null });
+    }
+  }, [id]);
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks()]);
+      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks(), fetchAccessLog()]);
       setLoading(false);
     };
     init();
-  }, [fetchGallery, fetchPhotos, fetchWatermarks]);
+  }, [fetchGallery, fetchPhotos, fetchWatermarks, fetchAccessLog]);
 
   // ── Realtime: auto-refresh photos when Lightroom plugin adds new ones ────────
   useEffect(() => {
