@@ -379,6 +379,67 @@ const GalleryView = () => {
     setNoteOpen((prev) => ({ ...prev, [photoId]: !prev[photoId] }));
   }, []);
 
+  // ── Download (final galleries) ────────────────────────────────────────────
+  const handleDownloadSingle = useCallback(async (photo: Photo) => {
+    if (!photo.url || downloadingId) return;
+    setDownloadingId(photo.id);
+    try {
+      const res = await fetch(photo.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = photo.filename || `photo-${photo.id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download error:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  }, [downloadingId]);
+
+  const handleDownloadAll = useCallback(async () => {
+    if (!gallery || downloadingAll) return;
+    setDownloadingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("download-gallery-zip", {
+        body: { galleryId: gallery.id },
+      });
+      if (error) throw error;
+      // The function returns binary ZIP — need to use fetch directly for binary response
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/download-gallery-zip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ galleryId: gallery.id }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to generate ZIP");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeTitle = (gallery.title || "gallery").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+      a.download = `${safeTitle}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download all error:", err);
+    } finally {
+      setDownloadingAll(false);
+    }
+  }, [gallery, downloadingAll]);
+
   // ── Purchase flow ─────────────────────────────────────────────────────────
   const handlePurchaseOrSubmit = async () => {
     if (!gallery || !clientEmail.trim()) return;
