@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.create-gallery-checkout]
 verify_jwt = false
+
+[functions.download-gallery-zip]
+verify_jwt = false

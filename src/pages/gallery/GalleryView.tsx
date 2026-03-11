@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
+import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -208,6 +208,10 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
+  // Download state (final galleries)
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
   // ── Anti-piracy ──────────────────────────────────────────────────────────
   useEffect(() => {
     // Print block
@@ -375,6 +379,67 @@ const GalleryView = () => {
     setNoteOpen((prev) => ({ ...prev, [photoId]: !prev[photoId] }));
   }, []);
 
+  // ── Download (final galleries) ────────────────────────────────────────────
+  const handleDownloadSingle = useCallback(async (photo: Photo) => {
+    if (!photo.url || downloadingId) return;
+    setDownloadingId(photo.id);
+    try {
+      const res = await fetch(photo.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = photo.filename || `photo-${photo.id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download error:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  }, [downloadingId]);
+
+  const handleDownloadAll = useCallback(async () => {
+    if (!gallery || downloadingAll) return;
+    setDownloadingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("download-gallery-zip", {
+        body: { galleryId: gallery.id },
+      });
+      if (error) throw error;
+      // The function returns binary ZIP — need to use fetch directly for binary response
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/download-gallery-zip`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ galleryId: gallery.id }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to generate ZIP");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeTitle = (gallery.title || "gallery").replace(/[^a-z0-9]/gi, "-").toLowerCase();
+      a.download = `${safeTitle}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download all error:", err);
+    } finally {
+      setDownloadingAll(false);
+    }
+  }, [gallery, downloadingAll]);
+
   // ── Purchase flow ─────────────────────────────────────────────────────────
   const handlePurchaseOrSubmit = async () => {
     if (!gallery || !clientEmail.trim()) return;
@@ -482,6 +547,7 @@ const GalleryView = () => {
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
         <PhotographerBrand brand={photographerBrand} />
         <div className="flex items-center gap-3">
+          {/* Proof: purchase pill */}
           {unlocked && isProof && favCount > 0 && (
             <button
               onClick={() => setPurchaseOpen(true)}
@@ -502,6 +568,22 @@ const GalleryView = () => {
                 {isFree ? "Submit" : "Checkout"}
               </span>
             </button>
+          )}
+          {/* Final: Download All button */}
+          {unlocked && !isProof && photos.length > 0 && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={handleDownloadAll}
+              disabled={downloadingAll}
+              className="gap-2 text-xs tracking-widest uppercase font-light"
+            >
+              {downloadingAll ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing…</>
+              ) : (
+                <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All</>
+              )}
+            </Button>
           )}
           <Badge
             variant={isProof ? "outline" : "default"}
@@ -561,6 +643,28 @@ const GalleryView = () => {
       {/* ── Gallery content ── */}
       {unlocked && (
         <main className="flex-1 flex flex-col pb-10">
+
+          {/* ── Final gallery: delivery banner ── */}
+          {!isProof && (
+            <div className="bg-primary/5 border-b border-border px-6 py-3.5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <PackageOpen className="h-4 w-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-light text-foreground">Your edited photos are ready to download.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Download individually or get all photos at once as a ZIP file.</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleDownloadAll}
+                disabled={downloadingAll || photos.length === 0}
+                className="shrink-0 gap-2 text-xs tracking-widest uppercase font-light hidden sm:flex"
+              >
+                {downloadingAll ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing ZIP…</> : <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All ({photos.length})</>}
+              </Button>
+            </div>
+          )}
+
           {/* Cover hero */}
           {gallery?.cover_image_url ? (
             <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0" onContextMenu={blockContext}>
@@ -578,6 +682,7 @@ const GalleryView = () => {
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
                     {isProof && " · Click ♡ to select"}
+                    {!isProof && " · Ready for download"}
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
@@ -591,6 +696,7 @@ const GalleryView = () => {
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
                 {photos.length} photo{photos.length !== 1 ? "s" : ""}
                 {isProof && " · Click ♡ to select"}
+                {!isProof && " · Ready for download"}
               </p>
             </div>
           )}
@@ -643,12 +749,13 @@ const GalleryView = () => {
             )}
 
             {/* ── Photo grid ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={`grid gap-4 ${!isProof ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"}`}>
               {filteredPhotos.map((photo) => {
                 const index = photos.indexOf(photo);
                 const isFav = favorites.has(photo.id);
                 const noteVal = notes[photo.id] ?? "";
                 const isNoteOpen = noteOpen[photo.id] ?? false;
+                const isDownloadingThis = downloadingId === photo.id;
                 return (
                   <div key={photo.id} className="flex flex-col gap-0">
                     {/* Image card */}
@@ -673,10 +780,10 @@ const GalleryView = () => {
                         </div>
                       )}
 
-                      {/* Watermark */}
-                      {watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
+                      {/* Watermark — proof only */}
+                      {isProof && watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
 
-                      {/* Selected checkmark */}
+                      {/* Proof: selected checkmark */}
                       {isProof && isFav && (
                         <div className="absolute top-2 left-2 z-30 bg-rose-500 text-white rounded-full p-1 shadow-lg">
                           <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
@@ -690,7 +797,7 @@ const GalleryView = () => {
                         <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
                       )}
 
-      {/* Proof: hover overlay */}
+                      {/* Proof: hover overlay */}
                       {isProof && (
                         <div
                           className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
@@ -704,37 +811,68 @@ const GalleryView = () => {
                                 : "bg-white text-black hover:bg-rose-500 hover:text-white"
                               }`}
                           >
-                          <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
                             {isFav ? "Remove" : "Select"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Final: hover download overlay */}
+                      {!isProof && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-foreground/30">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                            disabled={isDownloadingThis || !!downloadingId}
+                            className="pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl bg-background text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-150 disabled:opacity-50"
+                          >
+                            {isDownloadingThis ? (
+                              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Downloading…</>
+                            ) : (
+                              <><Download className="h-3.5 w-3.5" /> Download</>
+                            )}
                           </button>
                         </div>
                       )}
                     </div>
 
-                    {/* Below card: filename + note toggle */}
+                    {/* Below card: filename + actions */}
                     <div className="bg-background border border-t-0 border-border px-3 pt-2 pb-2 flex flex-col gap-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] text-muted-foreground truncate leading-tight" title={photo.filename}>
                           {displayName(photo.filename)}
                         </span>
-                        <button
-                          onClick={(e) => toggleNotePanel(e, photo.id)}
-                          className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
-                            noteVal
-                              ? "text-foreground"
-                              : isNoteOpen
-                              ? "text-foreground"
-                              : "text-muted-foreground/50 hover:text-muted-foreground"
-                          }`}
-                          title="Add note"
-                        >
-                          <MessageSquare className="h-3 w-3" />
-                          {noteVal ? <span className="text-[9px]">Nota</span> : null}
-                        </button>
+                        {/* Proof: note toggle */}
+                        {isProof && (
+                          <button
+                            onClick={(e) => toggleNotePanel(e, photo.id)}
+                            className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
+                              noteVal
+                                ? "text-foreground"
+                                : isNoteOpen
+                                ? "text-foreground"
+                                : "text-muted-foreground/50 hover:text-muted-foreground"
+                            }`}
+                            title="Add note"
+                          >
+                            <MessageSquare className="h-3 w-3" />
+                            {noteVal ? <span className="text-[9px]">Note</span> : null}
+                          </button>
+                        )}
+                        {/* Final: inline download button */}
+                        {!isProof && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                            disabled={isDownloadingThis || !!downloadingId}
+                            className="shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors text-muted-foreground/70 hover:text-foreground disabled:opacity-40"
+                            title="Download this photo"
+                          >
+                            {isDownloadingThis ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                          </button>
+                        )}
                       </div>
 
-                      {/* Note textarea — slides open */}
-                      {isNoteOpen && (
+                      {/* Note textarea — slides open (proof only) */}
+                      {isProof && isNoteOpen && (
                         <Textarea
                           value={noteVal}
                           onChange={(e) => handleNoteChange(photo.id, e.target.value)}
@@ -848,11 +986,11 @@ const GalleryView = () => {
                 </button>
               )}
 
-              {/* Photo + watermark */}
+              {/* Photo + watermark (proof only) */}
               <div
                 className="relative inline-flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
-                onContextMenu={blockContext}
+                onContextMenu={isProof ? blockContext : undefined}
                 style={{ maxHeight: "calc(100vh - 200px)", maxWidth: "100%" }}
               >
                 <img
@@ -862,20 +1000,21 @@ const GalleryView = () => {
                   style={{ maxHeight: "calc(100vh - 200px)" }}
                   draggable={false}
                 />
-                {watermark && <WatermarkOverlay wm={watermark} size="full" />}
+                {isProof && watermark && <WatermarkOverlay wm={watermark} size="full" />}
               </div>
             </div>
 
-            {/* ── Bottom bar: CTA + note field ── */}
+            {/* ── Bottom bar: CTA (proof) or Download (final) + note ── */}
             <div className="shrink-0 flex flex-col items-center gap-3 px-6 pb-6 pt-4" onClick={(e) => e.stopPropagation()}>
+
               {/* Proof CTA */}
               {isProof && (
                 <div className="flex flex-col items-center gap-2">
-                    {pricePerPhoto > 0 && (
-                      <span className="text-[11px] text-white/30 tracking-widest uppercase">
-                        {formatCurrency(pricePerPhoto)} per photo
-                      </span>
-                    )}
+                  {pricePerPhoto > 0 && (
+                    <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                      {formatCurrency(pricePerPhoto)} per photo
+                    </span>
+                  )}
                   <button
                     onClick={(e) => toggleFavorite(e, lPhoto)}
                     className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
@@ -898,20 +1037,37 @@ const GalleryView = () => {
                 </div>
               )}
 
-              {/* Note field */}
-              <div className="w-full max-w-lg">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MessageSquare className="h-3 w-3 text-white/30" />
-                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
+              {/* Final: download this photo CTA */}
+              {!isProof && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDownloadSingle(lPhoto); }}
+                  disabled={!!downloadingId}
+                  className="flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold bg-background text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-2xl disabled:opacity-50"
+                >
+                  {downloadingId === lPhoto.id ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Downloading…</>
+                  ) : (
+                    <><Download className="h-4 w-4" /> Download Photo</>
+                  )}
+                </button>
+              )}
+
+              {/* Note field — proof only */}
+              {isProof && (
+                <div className="w-full max-w-lg">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <MessageSquare className="h-3 w-3 text-white/30" />
+                    <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
+                  </div>
+                  <Textarea
+                    value={lNoteVal}
+                    onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    placeholder="Write something about this photo… e.g. I want this one in black & white"
+                    className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
+                  />
                 </div>
-                <Textarea
-                  value={lNoteVal}
-                  onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="Write something about this photo… e.g. I want this one in black & white"
-                  className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
-                />
-              </div>
+              )}
             </div>
           </div>
         );
