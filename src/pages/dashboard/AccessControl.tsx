@@ -339,6 +339,9 @@ export default function AccessControl() {
               Invite User
             </Button>
           </div>
+
+          {/* Body */}
+          <div className="flex flex-1 overflow-hidden">
         {/* ── Left panel: Roles ── */}
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
