@@ -92,6 +92,7 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 type MenuItem = {
   title: string;
