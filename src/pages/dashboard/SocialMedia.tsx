@@ -46,8 +46,8 @@ const SocialMedia = () => {
         if (data) {
           setSocialConnections((prev) =>
             prev.map((conn) => {
-              const existing = data.find((r: any) => r.platform === conn.platform);
-              if (existing) return { ...existing, credentials: existing.credentials || {} };
+              const existing = (data as any[]).find((r) => r.platform === conn.platform);
+              if (existing) return { ...existing, credentials: (existing.credentials as SocialConnection["credentials"]) || {} } as SocialConnection;
               return conn;
             })
           );

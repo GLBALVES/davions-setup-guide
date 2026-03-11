@@ -383,9 +383,8 @@ const Settings = () => {
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                      { value: "profile", label: "Profile" },
-                      { value: "social", label: "Social Media" },
-                    ].map((tab) => (
+                   { value: "profile", label: "Profile" },
+                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
                         value={tab.value}
