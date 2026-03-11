@@ -1580,6 +1580,27 @@ const GalleryDetail = () => {
                   </p>
                 </div>
 
+                {/* Client access log */}
+                <div className="flex items-center gap-6 py-3 px-4 bg-muted/40 border border-border">
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">First Access</span>
+                    <span className="text-xs font-light text-foreground">
+                      {accessLog.first
+                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.first))
+                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-border shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">Last Access</span>
+                    <span className="text-xs font-light text-foreground">
+                      {accessLog.last
+                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.last))
+                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Publish toggle */}
                 <div className="flex items-center justify-between">
                   <div>
