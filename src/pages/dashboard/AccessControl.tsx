@@ -314,11 +314,13 @@ export default function AccessControl() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border px-8 py-6 flex items-center justify-between">
+    <div className="min-h-screen bg-background flex flex-col">
+      <DashboardHeader />
+
+      {/* Page title bar */}
+      <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
           <div>
             <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -333,7 +335,7 @@ export default function AccessControl() {
       </div>
 
       {/* Body */}
-      <div className="flex h-[calc(100vh-97px)] overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* ── Left panel: Roles ── */}
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
