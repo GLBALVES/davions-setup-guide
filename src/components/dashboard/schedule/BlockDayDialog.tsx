@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -16,7 +15,8 @@ import {
 import { Plus, Trash2, CalendarOff } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, formatTime12 } from "@/lib/utils";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 
 interface TimeRange {
   id: string;
@@ -171,19 +171,15 @@ export function BlockDayDialog({ open, onOpenChange, defaultDate, onBlocked }: B
                 Time Ranges to Block
               </Label>
               {timeRanges.map((r) => (
-                <div key={r.id} className="flex items-center gap-2">
-                  <Input
-                    type="time"
+                <div key={r.id} className="flex items-center gap-2 flex-wrap">
+                  <TimePickerInput
                     value={r.start}
-                    onChange={(e) => updateRange(r.id, "start", e.target.value)}
-                    className="rounded-none text-sm font-light h-9"
+                    onChange={(v) => updateRange(r.id, "start", v)}
                   />
                   <span className="text-muted-foreground text-xs shrink-0">to</span>
-                  <Input
-                    type="time"
+                  <TimePickerInput
                     value={r.end}
-                    onChange={(e) => updateRange(r.id, "end", e.target.value)}
-                    className="rounded-none text-sm font-light h-9"
+                    onChange={(v) => updateRange(r.id, "end", v)}
                   />
                   {timeRanges.length > 1 && (
                     <button
@@ -210,11 +206,11 @@ export function BlockDayDialog({ open, onOpenChange, defaultDate, onBlocked }: B
             <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
               Reason <span className="normal-case">(optional)</span>
             </Label>
-            <Input
+            <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. Personal appointment, vacation…"
-              className="rounded-none text-sm font-light"
+              className="flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-none font-light"
             />
           </div>
 

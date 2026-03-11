@@ -27,7 +27,8 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTime12 } from "@/lib/utils";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -1246,27 +1247,18 @@ const SessionForm = () => {
                               Business hrs
                             </span>
                             <div className="flex items-center gap-2">
-                              <Input
-                                ref={businessHrsStartRef}
-                                type="time"
-                                value={globalConfig.hours_start}
+                              <TimePickerInput
+                                value={globalConfig.hours_start || "09:00"}
                                 disabled={hasSlots}
-                                onChange={(e) => {
-                                  updateGlobalConfig({ hours_start: e.target.value });
-                                  if (e.target.value) {
-                                    setTimeout(() => businessHrsEndRef.current?.focus(), 50);
-                                  }
+                                onChange={(v) => {
+                                  updateGlobalConfig({ hours_start: v });
                                 }}
-                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               <span className="text-[10px] text-muted-foreground">→</span>
-                              <Input
-                                ref={businessHrsEndRef}
-                                type="time"
-                                value={globalConfig.hours_end}
+                              <TimePickerInput
+                                value={globalConfig.hours_end || "17:00"}
                                 disabled={hasSlots}
-                                onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
-                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                                onChange={(v) => updateGlobalConfig({ hours_end: v })}
                               />
                             </div>
                             {!hasSlots && (globalConfig.hours_start || globalConfig.hours_end) && (
@@ -1385,8 +1377,8 @@ const SessionForm = () => {
                                               )}
                                             >
                                               <Clock className="h-3 w-3 shrink-0" />
-                                              {start}
-                                              <span className={cn("opacity-60", selected && "opacity-80")}>→ {end}</span>
+                                               {formatTime12(start)}
+                                              <span className={cn("opacity-60", selected && "opacity-80")}>→ {formatTime12(end)}</span>
                                             </button>
                                           );
                                         })}

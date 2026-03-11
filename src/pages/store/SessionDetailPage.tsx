@@ -19,7 +19,7 @@ import {
   isSameDay,
 } from "date-fns";
 import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
 // Types
@@ -644,7 +644,7 @@ const SessionDetailPage = () => {
                                       : "border-border hover:border-foreground/40 text-foreground"
                                   )}
                                 >
-                                  <span>{slot.start_time}</span>
+                                  <span>{formatTime12(slot.start_time)}</span>
                                   {slot.disabled && (
                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
                                       {slot.disabledReason === "booked" ? "booked" : "unavail."}
@@ -676,7 +676,7 @@ const SessionDetailPage = () => {
               <div className="border border-border p-4 flex flex-col gap-1">
                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">Selected slot</p>
                 <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
-                <p className="text-xs text-muted-foreground">{selectedSlot.start_time} – {selectedSlot.end_time}</p>
+                <p className="text-xs text-muted-foreground">{formatTime12(selectedSlot.start_time)} – {formatTime12(selectedSlot.end_time)}</p>
               </div>
               <div className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Your details</p>
@@ -916,7 +916,7 @@ const SessionDetailPage = () => {
                           client_email: clientEmail,
                           session_title: session.title,
                           session_date: selectedSlot?.label ?? "",
-                          session_time: selectedSlot?.start_time ?? "",
+                          session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
                           session_duration: `${session.duration_minutes} min`,
                           session_price: formatCurrency(session.price),
                         })
