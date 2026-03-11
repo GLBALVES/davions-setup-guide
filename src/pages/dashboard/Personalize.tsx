@@ -16,11 +16,29 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone,
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+
+// ── Briefing types ─────────────────────────────────────────────────────────────
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+interface BriefingQuestion {
+  id: string;
+  type: QuestionType;
+  label: string;
+  required: boolean;
+  options: string[];
+}
+interface Briefing { id: string; name: string; questions: BriefingQuestion[]; }
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  short_text: "Short text",
+  long_text: "Long text",
+  multiple_choice: "Multiple choice",
+  checkboxes: "Checkboxes",
+  yes_no: "Yes / No",
+};
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
