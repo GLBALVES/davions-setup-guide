@@ -421,7 +421,7 @@ const GalleryView = () => {
 
   // ── Download (final galleries) ────────────────────────────────────────────
   const handleDownloadSingle = useCallback(async (photo: Photo) => {
-    if (!photo.url || downloadingId) return;
+    if (!photo.url || downloadingId || !gallery) return;
     setDownloadingId(photo.id);
     try {
       const res = await fetch(photo.url);
@@ -434,12 +434,15 @@ const GalleryView = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      // Mark as downloaded
+      const newSet = markDownloaded(gallery.id, photo.id);
+      setDownloaded(new Set(newSet));
     } catch (err) {
       console.error("Download error:", err);
     } finally {
       setDownloadingId(null);
     }
-  }, [downloadingId]);
+  }, [downloadingId, gallery]);
 
   const handleDownloadAll = useCallback(async () => {
     if (!gallery || downloadingAll) return;
@@ -473,12 +476,18 @@ const GalleryView = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      // Mark all photos as downloaded
+      const allIds = photos.map((p) => p.id);
+      const key = getDownloadedKey(gallery.id);
+      const merged = new Set([...loadDownloaded(gallery.id), ...allIds]);
+      localStorage.setItem(key, JSON.stringify([...merged]));
+      setDownloaded(new Set(merged));
     } catch (err) {
       console.error("Download all error:", err);
     } finally {
       setDownloadingAll(false);
     }
-  }, [gallery, downloadingAll]);
+  }, [gallery, downloadingAll, photos]);
 
   // ── Purchase flow ─────────────────────────────────────────────────────────
   const handlePurchaseOrSubmit = async () => {
