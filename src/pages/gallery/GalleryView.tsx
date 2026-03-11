@@ -547,6 +547,7 @@ const GalleryView = () => {
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
         <PhotographerBrand brand={photographerBrand} />
         <div className="flex items-center gap-3">
+          {/* Proof: purchase pill */}
           {unlocked && isProof && favCount > 0 && (
             <button
               onClick={() => setPurchaseOpen(true)}
@@ -567,6 +568,22 @@ const GalleryView = () => {
                 {isFree ? "Submit" : "Checkout"}
               </span>
             </button>
+          )}
+          {/* Final: Download All button */}
+          {unlocked && !isProof && photos.length > 0 && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={handleDownloadAll}
+              disabled={downloadingAll}
+              className="gap-2 text-xs tracking-widest uppercase font-light"
+            >
+              {downloadingAll ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing…</>
+              ) : (
+                <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All</>
+              )}
+            </Button>
           )}
           <Badge
             variant={isProof ? "outline" : "default"}
