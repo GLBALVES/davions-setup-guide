@@ -44,7 +44,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done";
+type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done" | "archived";
 
 interface ClientProject {
   id: string;
