@@ -382,6 +382,8 @@ const GalleryView = () => {
       setCodeError(false);
       storeCode(gallery.id, codeInput.trim().toUpperCase());
       await loadPhotos(gallery.id);
+      // Log access after manual unlock
+      await logAccess(gallery.photographer_id, gallery.id);
     } else {
       setCodeError(true);
     }
