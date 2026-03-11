@@ -55,6 +55,7 @@ const Personalize = () => {
 
   // Gallery settings
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
+  const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
   const [savingGallerySettings, setSavingGallerySettings] = useState(false);
 
   // Business tab
@@ -123,6 +124,8 @@ const Personalize = () => {
       if (gallerySettingsRes?.data) {
         const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
         if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
+        const feeRow = gallerySettingsRes.data.find((r: any) => r.key === "reactivation_fee");
+        if (feeRow) setGalleryReactivationFee(feeRow.value ?? "");
       }
 
       if (businessRes?.data) {
@@ -264,15 +267,25 @@ const Personalize = () => {
     if (!user) return;
     setSavingGallerySettings(true);
     const days = parseInt(galleryExpiryDays, 10);
-    const valueToSave = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
-    const { error } = await (supabase as any)
-      .from("gallery_settings")
-      .upsert(
-        { photographer_id: user.id, key: "default_expiry_days", value: valueToSave },
-        { onConflict: "photographer_id,key" }
-      );
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    const expiryValue = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
+    const fee = parseFloat(galleryReactivationFee);
+    const feeValue = (!galleryReactivationFee.trim() || isNaN(fee) || fee < 0) ? null : String(fee);
+    const [expiryRes, feeRes] = await Promise.all([
+      (supabase as any)
+        .from("gallery_settings")
+        .upsert(
+          { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
+          { onConflict: "photographer_id,key" }
+        ),
+      (supabase as any)
+        .from("gallery_settings")
+        .upsert(
+          { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
+          { onConflict: "photographer_id,key" }
+        ),
+    ]);
+    if (expiryRes.error || feeRes.error) {
+      toast({ title: "Failed to save", description: (expiryRes.error || feeRes.error).message, variant: "destructive" });
     } else {
       toast({ title: "Gallery settings saved" });
     }
@@ -642,6 +655,45 @@ const Personalize = () => {
                       {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 && (
                         <p className="text-[11px] text-muted-foreground/70 -mt-2">
                           New galleries without a set expiry will expire <strong>{galleryExpiryDays} days</strong> after creation.
+                        </p>
+                      )}
+                    </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Reactivation Fee */}
+                    <section className="flex flex-col gap-5">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Reactivation Fee</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Amount charged to reactivate access to an expired gallery. Leave blank to allow free reactivation.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                          <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={galleryReactivationFee}
+                            onChange={(e) => setGalleryReactivationFee(e.target.value)}
+                            placeholder="0.00"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                        </div>
+                        <Button
+                          onClick={handleSaveGallerySettings}
+                          disabled={savingGallerySettings}
+                          size="sm"
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {savingGallerySettings ? "Saving…" : "Save"}
+                        </Button>
+                      </div>
+                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 && (
+                        <p className="text-[11px] text-muted-foreground/70 -mt-2">
+                          Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.
                         </p>
                       )}
                     </section>
