@@ -28,6 +28,7 @@ import {
   Upload,
 } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
