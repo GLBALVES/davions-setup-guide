@@ -1,5 +1,6 @@
 import { useMemo, useRef, useEffect } from "react";
 import { isSameDay, isToday, format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import type { ScheduleBooking } from "./BookingDetailSheet";
 import type { BlockedSlot, ManualBlock } from "@/pages/dashboard/Schedule";
 
