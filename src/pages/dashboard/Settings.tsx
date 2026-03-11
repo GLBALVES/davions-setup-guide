@@ -193,7 +193,6 @@ const Settings = () => {
       full_name: fullName,
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
-      bio: bio.trim() || null,
     } as any).eq("id", user!.id);
 
     if (error) {
