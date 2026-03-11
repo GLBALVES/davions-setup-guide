@@ -1493,8 +1493,8 @@ const GalleryDetail = () => {
                 </div>
               )}
 
-              {/* Client Favorites — Lightroom Export */}
-              {(() => {
+              {/* Client Favorites — Lightroom Export (proof only) */}
+              {gallery.category === "proof" && (() => {
                 const favoritedPhotos = photos
                   .filter((p) => (p.favorite_count ?? 0) > 0)
                   .sort((a, b) => a.order_index - b.order_index);
