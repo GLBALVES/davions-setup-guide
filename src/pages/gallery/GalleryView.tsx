@@ -208,6 +208,10 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
+  // Download state (final galleries)
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
   // ── Anti-piracy ──────────────────────────────────────────────────────────
   useEffect(() => {
     // Print block
