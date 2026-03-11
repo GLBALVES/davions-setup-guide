@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
-  Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
+  Loader2, X, Plus, Pencil, Trash2, Type, Image,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
@@ -29,14 +29,12 @@ const Settings = () => {
   // Profile
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
-  const [heroImageUrl, setHeroImageUrl] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
   const [customDomainInput, setCustomDomainInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingHero, setUploadingHero] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [domainError, setDomainError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -86,8 +84,6 @@ const Settings = () => {
   const [savingSocial, setSavingSocial] = useState<string | null>(null);
   const [testingSocial, setTestingSocial] = useState<string | null>(null);
 
-  const heroInputRef = useRef<HTMLInputElement>(null);
-
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -131,7 +127,6 @@ const Settings = () => {
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
         setBio((d as any).bio ?? "");
-        setHeroImageUrl((d as any).hero_image_url ?? "");
       }
 
       if (watermarksRes.data) {
@@ -187,24 +182,6 @@ const Settings = () => {
     setDomainError(validateDomain(val));
   };
 
-  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingHero(true);
-    const ext = file.name.split(".").pop();
-    const path = `${user!.id}/hero.${ext}`;
-    const { error: upErr } = await supabase.storage.from("session-covers").upload(path, file, { upsert: true });
-    if (upErr) {
-      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
-      setUploadingHero(false);
-      return;
-    }
-    const { data: urlData } = supabase.storage.from("session-covers").getPublicUrl(path);
-    setHeroImageUrl(urlData.publicUrl + `?t=${Date.now()}`);
-    setUploadingHero(false);
-    toast({ title: "Hero image uploaded" });
-  };
-
   const handleSave = async () => {
     const slugErr = validateSlug(slugInput);
     const domErr = validateDomain(customDomainInput);
@@ -217,7 +194,6 @@ const Settings = () => {
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
       bio: bio.trim() || null,
-      hero_image_url: heroImageUrl.trim() || null,
     } as any).eq("id", user!.id);
 
     if (error) {
@@ -450,49 +426,6 @@ const Settings = () => {
                           disabled
                           className="h-9 text-sm font-light opacity-60"
                         />
-                      </div>
-
-                      {/* Hero image */}
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Hero Image</Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Full-bleed banner displayed at the top of your public booking page.
-                        </p>
-                        {heroImageUrl ? (
-                          <div className="relative group w-full aspect-[16/5] overflow-hidden border border-border">
-                            <img src={heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                              <button
-                                onClick={() => heroInputRef.current?.click()}
-                                className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
-                              >
-                                Change
-                              </button>
-                              <button
-                                onClick={() => setHeroImageUrl("")}
-                                className="text-white/70 hover:text-white transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => heroInputRef.current?.click()}
-                            disabled={uploadingHero}
-                            className="w-full aspect-[16/5] border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
-                          >
-                            {uploadingHero ? (
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                              <>
-                                <Upload className="h-5 w-5" />
-                                <span className="text-[10px] tracking-widest uppercase">Upload hero image</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                        <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
                       </div>
 
                       {/* Bio */}
