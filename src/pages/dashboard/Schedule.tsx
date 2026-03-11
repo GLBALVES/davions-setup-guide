@@ -283,14 +283,17 @@ const Schedule = () => {
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={(date) => handleCreateBooking(date)}
+                  onBlockDay={handleBlockDay}
                 />
               ) : viewMode === "week" ? (
                 <WeekView
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
@@ -299,6 +302,7 @@ const Schedule = () => {
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
