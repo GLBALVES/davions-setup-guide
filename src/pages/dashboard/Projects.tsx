@@ -360,14 +360,15 @@ function ListView({
   onDelete,
   onArchive,
   onUnarchive,
+  showArchived,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
+  showArchived: boolean;
 }) {
-  const [archivedOpen, setArchivedOpen] = useState(false);
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
@@ -452,19 +453,19 @@ function ListView({
         )}
       </div>
 
-      {/* Archived section */}
-      {archived.length > 0 && (
+      {/* Archived section — controlled by parent toggle */}
+      {showArchived && (
         <div className="border border-border/50 rounded-sm overflow-hidden">
-          <button
-            onClick={() => setArchivedOpen((v) => !v)}
-            className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
-          >
-            {archivedOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/40">
             <Archive className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
             <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
-          </button>
-          {archivedOpen && archived.map((p) => renderRow(p, true))}
+          </div>
+          {archived.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">No archived projects</div>
+          ) : (
+            archived.map((p) => renderRow(p, true))
+          )}
         </div>
       )}
     </div>
@@ -532,6 +533,7 @@ const Projects = () => {
   const [defaultStage, setDefaultStage] = useState<Stage>("lead");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [showArchived, setShowArchived] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -711,9 +713,9 @@ const Projects = () => {
               </div>
             </div>
 
-            {/* Stage summary pills */}
+            {/* Stage summary pills + archive toggle */}
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
-              {STAGES.map((s) => {
+              {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
                 return (
                   <div
@@ -725,6 +727,20 @@ const Projects = () => {
                   </div>
                 );
               })}
+              <div className="ml-auto">
+                <button
+                  onClick={() => setShowArchived((v) => !v)}
+                  className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
+                    showArchived
+                      ? "bg-muted text-foreground border-border"
+                      : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  <Archive className="h-3 w-3" />
+                  <span>Archived</span>
+                  <span className="opacity-60">{projectsByStage("archived").length}</span>
+                </button>
+              </div>
             </div>
 
             {/* Content */}
@@ -740,6 +756,7 @@ const Projects = () => {
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
+                  showArchived={showArchived}
                 />
               </div>
             ) : (
@@ -776,8 +793,8 @@ const Projects = () => {
                   </DragOverlay>
                 </DndContext>
 
-                {/* Archived banner in kanban */}
-                {projectsByStage("archived").length > 0 && (
+                {/* Archived section in kanban — always shown when toggle is on */}
+                {showArchived && (
                   <ArchivedKanbanSection
                     projects={projectsByStage("archived")}
                     onUnarchive={handleUnarchive}
