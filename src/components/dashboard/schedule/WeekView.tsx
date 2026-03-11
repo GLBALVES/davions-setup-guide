@@ -3,7 +3,6 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isSameDay,
   isToday,
   format,
 } from "date-fns";
@@ -23,6 +22,16 @@ function minutesFromStart(t: string): number {
   return timeToMinutes(t) - HOUR_START * 60;
 }
 
+function padTwo(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function minutesToTimeStr(mins: number): string {
+  const h = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  return `${padTwo(h)}:${padTwo(m)}`;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-foreground text-background border-foreground",
   pending: "bg-muted text-muted-foreground border-border",
@@ -33,9 +42,10 @@ interface WeekViewProps {
   currentDate: Date;
   bookings: ScheduleBooking[];
   onBookingClick: (booking: ScheduleBooking) => void;
+  onCreateBooking: (date: Date, startTime: string) => void;
 }
 
-export function WeekView({ currentDate, bookings, onBookingClick }: WeekViewProps) {
+export function WeekView({ currentDate, bookings, onBookingClick, onCreateBooking }: WeekViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => {
@@ -64,6 +74,15 @@ export function WeekView({ currentDate, bookings, onBookingClick }: WeekViewProp
       scrollRef.current.scrollTop = offset;
     }
   }, []);
+
+  const handleCellClick = (day: Date, hourIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const yOffset = e.clientY - rect.top;
+    const fractionalMinutes = Math.floor((yOffset / CELL_HEIGHT) * 60);
+    const totalMins = (HOUR_START + hourIndex) * 60 + fractionalMinutes;
+    const snapped = Math.round(totalMins / 15) * 15;
+    onCreateBooking(day, minutesToTimeStr(snapped));
+  };
 
   const totalHeight = HOURS.length * CELL_HEIGHT;
 
@@ -114,13 +133,19 @@ export function WeekView({ currentDate, bookings, onBookingClick }: WeekViewProp
 
               return (
                 <div key={key} className="relative border-r border-border last:border-r-0">
-                  {/* Hour lines */}
-                  {HOURS.map((h) => (
+                  {/* Hour cells — clickable to create */}
+                  {HOURS.map((h, hIdx) => (
                     <div
                       key={h}
-                      className="border-b border-border"
+                      className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
                       style={{ height: CELL_HEIGHT }}
-                    />
+                      onClick={(e) => handleCellClick(day, hIdx, e)}
+                      title={`Add booking at ${h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`}`}
+                    >
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[18px] text-muted-foreground pointer-events-none select-none">
+                        +
+                      </span>
+                    </div>
                   ))}
 
                   {/* Booking blocks */}
@@ -137,8 +162,8 @@ export function WeekView({ currentDate, bookings, onBookingClick }: WeekViewProp
                     return (
                       <button
                         key={b.id}
-                        onClick={() => onBookingClick(b)}
-                        className={`absolute left-0.5 right-0.5 rounded-sm px-1.5 py-0.5 text-left border overflow-hidden hover:opacity-80 transition-opacity ${
+                        onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
+                        className={`absolute left-0.5 right-0.5 rounded-sm px-1.5 py-0.5 text-left border overflow-hidden hover:opacity-80 transition-opacity z-10 ${
                           STATUS_COLORS[b.status] ?? STATUS_COLORS["pending"]
                         }`}
                         style={{ top, height }}

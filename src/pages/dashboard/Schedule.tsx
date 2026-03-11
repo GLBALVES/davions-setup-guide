@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
+  Plus,
 } from "lucide-react";
 import {
   format,
@@ -29,6 +30,7 @@ import { MonthView } from "@/components/dashboard/schedule/MonthView";
 import { WeekView } from "@/components/dashboard/schedule/WeekView";
 import { DayView } from "@/components/dashboard/schedule/DayView";
 import { BookingDetailSheet, type ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
+import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -59,12 +61,14 @@ const Schedule = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<ScheduleBooking | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
+  const [createDefaultTime, setCreateDefaultTime] = useState<string | null>(null);
 
   const fetchBookings = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
-    // Determine date range to fetch based on view
     let from: Date, to: Date;
     if (viewMode === "month") {
       from = startOfMonth(currentDate);
@@ -77,7 +81,7 @@ const Schedule = () => {
       to = currentDate;
     }
 
-    // Extend range slightly for month view (calendar grid may show prev/next month days)
+    // Extend range slightly for month view
     const fromStr = format(addDays(from, -7), "yyyy-MM-dd");
     const toStr = format(addDays(to, 7), "yyyy-MM-dd");
 
@@ -127,6 +131,12 @@ const Schedule = () => {
     }
   };
 
+  const handleCreateBooking = (date: Date, startTime?: string) => {
+    setCreateDefaultDate(date);
+    setCreateDefaultTime(startTime ?? null);
+    setCreateOpen(true);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -138,15 +148,25 @@ const Schedule = () => {
           <main className="flex-1 flex flex-col min-h-0 overflow-hidden px-6 py-6 md:px-10">
             {/* Page title + controls */}
             <div className="flex flex-col gap-4 mb-5 shrink-0">
-              <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  Schedule
-                </p>
-                <h1 className="text-2xl font-light tracking-wide flex items-center gap-2.5">
-                  <CalendarDays className="h-5 w-5 text-muted-foreground" />
-                  Calendar
-                </h1>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+                    <span className="inline-block w-6 h-px bg-border" />
+                    Schedule
+                  </p>
+                  <h1 className="text-2xl font-light tracking-wide flex items-center gap-2.5">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground" />
+                    Calendar
+                  </h1>
+                </div>
+                <Button
+                  size="sm"
+                  className="text-xs gap-2 shrink-0 mt-1"
+                  onClick={() => handleCreateBooking(currentDate)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  New Booking
+                </Button>
               </div>
 
               {/* Toolbar */}
@@ -199,18 +219,21 @@ const Schedule = () => {
                   currentDate={currentDate}
                   bookings={bookings}
                   onBookingClick={handleBookingClick}
+                  onCreateBooking={(date) => handleCreateBooking(date)}
                 />
               ) : viewMode === "week" ? (
                 <WeekView
                   currentDate={currentDate}
                   bookings={bookings}
                   onBookingClick={handleBookingClick}
+                  onCreateBooking={handleCreateBooking}
                 />
               ) : (
                 <DayView
                   currentDate={currentDate}
                   bookings={bookings}
                   onBookingClick={handleBookingClick}
+                  onCreateBooking={handleCreateBooking}
                 />
               )}
             </div>
@@ -237,6 +260,14 @@ const Schedule = () => {
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         onStatusChange={handleStatusChange}
+      />
+
+      <CreateBookingDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultDate={createDefaultDate}
+        defaultStartTime={createDefaultTime}
+        onCreated={fetchBookings}
       />
     </SidebarProvider>
   );
