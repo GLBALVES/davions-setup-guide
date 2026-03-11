@@ -165,6 +165,11 @@ const Schedule = () => {
     setCreateOpen(true);
   };
 
+  const handleBlockDay = (date: Date) => {
+    setBlockDefaultDate(date);
+    setBlockOpen(true);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
