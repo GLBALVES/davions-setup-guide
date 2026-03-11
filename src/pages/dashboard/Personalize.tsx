@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
 const Personalize = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Profile (needed for Store tab)
@@ -583,14 +585,12 @@ const Personalize = () => {
                         <p className="text-[10px] text-muted-foreground/60">
                           DNS changes can take up to 48 hours to propagate worldwide.
                         </p>
-                        <a
-                          href="https://docs.lovable.dev/features/custom-domain"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => navigate("/dashboard/custom-domain-docs")}
                           className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
                         >
                           <ExternalLink className="h-3 w-3" />Custom domain documentation
-                        </a>
+                        </button>
                       </div>
                     </section>
 
