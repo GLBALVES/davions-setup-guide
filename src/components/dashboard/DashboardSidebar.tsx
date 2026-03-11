@@ -555,7 +555,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
           end={item.end}
           className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
         >
-          <item.icon className="h-4 w-4 shrink-0" />
+          <div className="relative shrink-0">
+            <item.icon className="h-4 w-4" />
+            {collapsed && badgeCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-foreground ring-1 ring-sidebar" />
+            )}
+          </div>
           <AnimatePresence initial={false}>
             {!collapsed && (
               <motion.span
@@ -563,12 +568,17 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.18, ease: "easeInOut" }}
-                className="overflow-hidden whitespace-nowrap"
+                className="overflow-hidden whitespace-nowrap flex-1"
               >
                 {item.title}
               </motion.span>
             )}
           </AnimatePresence>
+          {!collapsed && badgeCount > 0 && (
+            <span className="ml-auto shrink-0 bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-sm">
+              {badgeCount}
+            </span>
+          )}
         </NavLink>
       </SidebarMenuButton>
     ) : (
@@ -611,11 +621,6 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
-        {badgeCount > 0 && (
-          <SidebarMenuBadge className="bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1">
-            {badgeCount}
-          </SidebarMenuBadge>
-        )}
       </SidebarMenuItem>
     );
   };
