@@ -376,6 +376,33 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          name: string
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       galleries: {
         Row: {
           access_code: string | null

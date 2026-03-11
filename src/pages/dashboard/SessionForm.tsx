@@ -190,6 +190,13 @@ const SessionForm = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
 
+  // ── Contract ──
+  interface ContractTemplate { id: string; name: string; body: string; }
+  const [contractTemplates, setContractTemplates] = useState<ContractTemplate[]>([]);
+  const [selectedContractId, setSelectedContractId] = useState<string>("none");
+  const [contractText, setContractText] = useState<string>("");
+  const [showFullContract, setShowFullContract] = useState(false);
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
@@ -236,9 +243,20 @@ const SessionForm = () => {
     }
   }, [user]);
 
+  const fetchContractTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("contracts")
+      .select("id, name, body")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setContractTemplates(data);
+  }, [user]);
+
   useEffect(() => {
     fetchSessionTypes();
-  }, [fetchSessionTypes]);
+    fetchContractTemplates();
+  }, [fetchSessionTypes, fetchContractTemplates]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
@@ -383,12 +401,16 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
+    // Load contract text
+    const existingContract = sAny3.contract_text ?? "";
+    setContractText(existingContract);
+    if (existingContract) setSelectedContractId("existing");
     // Sync to editor once loaded
     if (editor && bodyHtml) {
       editor.commands.setContent(bodyHtml);
@@ -445,6 +467,7 @@ const SessionForm = () => {
       location: location.trim() || null,
       cover_image_url: coverImageUrl,
       status,
+      contract_text: contractText.trim() || null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
@@ -983,6 +1006,67 @@ const SessionForm = () => {
                       />
                     </div>
 
+                    {/* Service Agreement */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs tracking-wider uppercase font-light">
+                        Service Agreement <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <select
+                        value={selectedContractId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedContractId(val);
+                          setShowFullContract(false);
+                          if (val === "none") {
+                            setContractText("");
+                          } else if (val === "existing") {
+                            // keep current contractText (loaded from DB)
+                          } else {
+                            const tpl = contractTemplates.find((c) => c.id === val);
+                            setContractText(tpl?.body ?? "");
+                          }
+                        }}
+                        className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="none">No contract</option>
+                        {selectedContractId === "existing" && (
+                          <option value="existing">Contract from a previous template</option>
+                        )}
+                        {contractTemplates.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {contractTemplates.length === 0 && selectedContractId !== "existing" && (
+                        <p className="text-[10px] text-muted-foreground">
+                          No contracts saved yet. Create templates in{" "}
+                          <button
+                            type="button"
+                            className="underline hover:no-underline"
+                            onClick={() => navigate("/dashboard/personalize")}
+                          >
+                            Personalize → Studio
+                          </button>
+                          .
+                        </p>
+                      )}
+                      {contractText && selectedContractId !== "none" && (
+                        <div className="border border-border bg-muted/30 p-3">
+                          <p className={`text-[11px] text-muted-foreground whitespace-pre-wrap ${!showFullContract ? "line-clamp-4" : ""}`}>
+                            {contractText}
+                          </p>
+                          {contractText.split("\n").length > 4 || contractText.length > 300 ? (
+                            <button
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-foreground mt-1.5 hover:underline"
+                              onClick={() => setShowFullContract((v) => !v)}
+                            >
+                              {showFullContract ? "Show less" : "View full contract"}
+                            </button>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-3 gap-4">
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
@@ -997,6 +1081,7 @@ const SessionForm = () => {
                           onChange={(e) => setDurationMinutes(e.target.value)}
                         />
                       </div>
+
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
                           Break (min)

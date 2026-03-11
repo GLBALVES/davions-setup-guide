@@ -182,6 +182,16 @@ const Personalize = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
+  // ── Contracts ───────────────────────────────────────────────────────────────
+  interface Contract { id: string; name: string; body: string; }
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [contractName, setContractName] = useState("");
+  const [contractBody, setContractBody] = useState("");
+  const [savingContract, setSavingContract] = useState(false);
+  const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
@@ -195,6 +205,16 @@ const Personalize = () => {
       .eq("photographer_id", user.id)
       .order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
+  }, [user]);
+
+  const fetchContracts = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("contracts")
+      .select("id, name, body")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setContracts(data);
   }, [user]);
 
   useEffect(() => {
@@ -214,6 +234,7 @@ const Personalize = () => {
           .select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id")
           .eq("id", user.id).single(),
         fetchSessionTypes(),
+        fetchContracts(),
       ]);
 
       if (profileRes.data) {
@@ -282,7 +303,7 @@ const Personalize = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes]);
+  }, [user, fetchSessionTypes, fetchContracts]);
 
   // ── Validators ──────────────────────────────────────────────────────────────
   const validateSlug = (value: string) => {
@@ -541,7 +562,153 @@ const Personalize = () => {
                         />
                       )}
                     </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Contracts */}
+                    <section className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                          title="Contracts"
+                          description="Create reusable service agreements to attach to your booking sessions."
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                          onClick={() => {
+                            setEditingContract(null);
+                            setContractName("");
+                            setContractBody("");
+                            setContractDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          New contract
+                        </Button>
+                      </div>
+
+                      {contracts.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">No contracts yet. Create one to attach to your sessions.</p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {contracts.map((c) => (
+                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || "Untitled"}</p>
+                                <p className="text-[11px] text-muted-foreground line-clamp-2">{c.body}</p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => {
+                                    setEditingContract(c);
+                                    setContractName(c.name);
+                                    setContractBody(c.body);
+                                    setContractDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  disabled={deletingContractId === c.id}
+                                  onClick={async () => {
+                                    setDeletingContractId(c.id);
+                                    await (supabase as any).from("contracts").delete().eq("id", c.id);
+                                    await fetchContracts();
+                                    setDeletingContractId(null);
+                                  }}
+                                >
+                                  {deletingContractId === c.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
                   </TabsContent>
+
+                  {/* Contract dialog */}
+                  <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-sm tracking-widest uppercase font-light">
+                          {editingContract ? "Edit Contract" : "New Contract"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-col gap-4 pt-2">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Name</Label>
+                          <Input
+                            value={contractName}
+                            onChange={(e) => setContractName(e.target.value)}
+                            placeholder="e.g. Standard Photography Agreement"
+                            className="text-sm font-light"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Contract Body</Label>
+                          <Textarea
+                            value={contractBody}
+                            onChange={(e) => setContractBody(e.target.value)}
+                            placeholder="By booking this session, the client agrees to…"
+                            rows={8}
+                            className="text-sm font-light resize-none"
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Plain text. Clients will see a checkbox to accept this agreement before booking.
+                          </p>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs tracking-wider uppercase font-light"
+                            onClick={() => setContractDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={savingContract || !contractName.trim()}
+                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                            onClick={async () => {
+                              if (!user || !contractName.trim()) return;
+                              setSavingContract(true);
+                              if (editingContract) {
+                                await (supabase as any)
+                                  .from("contracts")
+                                  .update({ name: contractName.trim(), body: contractBody, updated_at: new Date().toISOString() })
+                                  .eq("id", editingContract.id);
+                              } else {
+                                await (supabase as any)
+                                  .from("contracts")
+                                  .insert({ photographer_id: user.id, name: contractName.trim(), body: contractBody });
+                              }
+                              await fetchContracts();
+                              setSavingContract(false);
+                              setContractDialogOpen(false);
+                              toast({ title: editingContract ? "Contract updated" : "Contract created" });
+                            }}
+                          >
+                            {savingContract && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            Save contract
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
 
                   {/* ── BUSINESS TAB ── */}
                   <TabsContent value="business" className="mt-0 flex flex-col gap-8">
