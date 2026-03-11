@@ -455,6 +455,15 @@ const GalleryView = () => {
   const isFree = pricePerPhoto === 0;
   const blockContext = (e: React.MouseEvent) => e.preventDefault();
 
+  // Derived filtered list (only relevant for proof galleries)
+  const filteredPhotos = isProof
+    ? photos.filter((p) => {
+        if (favFilter === "favorited") return favorites.has(p.id);
+        if (favFilter === "not_favorited") return !favorites.has(p.id);
+        return true;
+      })
+    : photos;
+
   return (
     <div className="min-h-screen bg-background flex flex-col select-none">
 
