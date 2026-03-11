@@ -29,6 +29,7 @@ import {
   TrendingUp,
   BarChart3,
   CalendarDays,
+  CalendarCheck2,
   UserPlus,
   Columns,
   RefreshCw,
