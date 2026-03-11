@@ -1087,6 +1087,41 @@ const SessionForm = () => {
                       )}
                     </div>
 
+                    {/* Briefing / Questionnaire */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs tracking-wider uppercase font-light">
+                        Briefing / Questionnaire <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <select
+                        value={selectedBriefingId}
+                        onChange={(e) => setSelectedBriefingId(e.target.value)}
+                        className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="none">No briefing</option>
+                        {briefingTemplates.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                      {briefingTemplates.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground">
+                          No briefings saved yet. Create templates in{" "}
+                          <button
+                            type="button"
+                            className="underline hover:no-underline"
+                            onClick={() => navigate("/dashboard/personalize")}
+                          >
+                            Personalize → Studio
+                          </button>
+                          .
+                        </p>
+                      )}
+                      {selectedBriefingId !== "none" && (
+                        <p className="text-[10px] text-muted-foreground">
+                          After payment, clients will be prompted to fill out this questionnaire.
+                        </p>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-3 gap-4">
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
