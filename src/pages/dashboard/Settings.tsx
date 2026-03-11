@@ -7,7 +7,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -28,7 +27,7 @@ const Settings = () => {
 
   // Profile
   const [fullName, setFullName] = useState("");
-  const [bio, setBio] = useState("");
+  
   const [storeSlug, setStoreSlug] = useState("");
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
@@ -100,7 +99,7 @@ const Settings = () => {
       const [profileRes, watermarksRes, gallerySettingsRes, , socialRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, bio, hero_image_url")
+          .select("full_name, store_slug, custom_domain, hero_image_url")
           .eq("id", user.id)
           .single(),
         (supabase as any)
@@ -126,7 +125,7 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
-        setBio((d as any).bio ?? "");
+        
       }
 
       if (watermarksRes.data) {
@@ -193,7 +192,6 @@ const Settings = () => {
       full_name: fullName,
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
-      bio: bio.trim() || null,
     } as any).eq("id", user!.id);
 
     if (error) {
@@ -428,21 +426,6 @@ const Settings = () => {
                         />
                       </div>
 
-                      {/* Bio */}
-                      <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Bio</Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          A short introduction shown below your name in the hero section.
-                        </p>
-                        <Textarea
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Tell clients a bit about you and your style…"
-                          className="text-sm font-light resize-none min-h-[80px]"
-                          maxLength={280}
-                        />
-                        <p className="text-[10px] text-muted-foreground/60 text-right">{bio.length}/280</p>
-                      </div>
                     </section>
 
                     <div>
