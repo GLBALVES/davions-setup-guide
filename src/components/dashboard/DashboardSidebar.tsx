@@ -100,6 +100,8 @@ type MenuItem = {
   to?: string;
   end?: boolean;
   badgeKey?: "pendingBookings" | "draftSessions";
+  /** permission key from PERMISSION_GROUPS; undefined = always visible */
+  permKey?: string;
 };
 
 type MenuGroup = {
