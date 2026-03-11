@@ -354,7 +354,7 @@ export default function AccessControl() {
             </div>
             <Button size="sm" onClick={() => setInviteOpen(true)}>
               <UserPlus className="h-4 w-4" />
-              Invite User
+              Add User
             </Button>
           </div>
 
