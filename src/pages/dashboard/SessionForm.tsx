@@ -467,6 +467,7 @@ const SessionForm = () => {
       location: location.trim() || null,
       cover_image_url: coverImageUrl,
       status,
+      contract_text: contractText.trim() || null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
