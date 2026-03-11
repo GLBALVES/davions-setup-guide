@@ -1006,7 +1006,68 @@ const SessionForm = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    {/* Service Agreement */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs tracking-wider uppercase font-light">
+                        Service Agreement <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <select
+                        value={selectedContractId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedContractId(val);
+                          setShowFullContract(false);
+                          if (val === "none") {
+                            setContractText("");
+                          } else if (val === "existing") {
+                            // keep current contractText (loaded from DB)
+                          } else {
+                            const tpl = contractTemplates.find((c) => c.id === val);
+                            setContractText(tpl?.body ?? "");
+                          }
+                        }}
+                        className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="none">No contract</option>
+                        {selectedContractId === "existing" && (
+                          <option value="existing">Contract from a previous template</option>
+                        )}
+                        {contractTemplates.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {contractTemplates.length === 0 && selectedContractId !== "existing" && (
+                        <p className="text-[10px] text-muted-foreground">
+                          No contracts saved yet. Create templates in{" "}
+                          <button
+                            type="button"
+                            className="underline hover:no-underline"
+                            onClick={() => navigate("/dashboard/personalize")}
+                          >
+                            Personalize → Studio
+                          </button>
+                          .
+                        </p>
+                      )}
+                      {contractText && selectedContractId !== "none" && (
+                        <div className="border border-border bg-muted/30 p-3">
+                          <p className={`text-[11px] text-muted-foreground whitespace-pre-wrap ${!showFullContract ? "line-clamp-4" : ""}`}>
+                            {contractText}
+                          </p>
+                          {contractText.split("\n").length > 4 || contractText.length > 300 ? (
+                            <button
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-foreground mt-1.5 hover:underline"
+                              onClick={() => setShowFullContract((v) => !v)}
+                            >
+                              {showFullContract ? "Show less" : "View full contract"}
+                            </button>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+
+
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
                           Duration (min)
