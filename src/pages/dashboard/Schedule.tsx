@@ -107,7 +107,7 @@ const Schedule = () => {
     const fromStr = format(addDays(from, -7), "yyyy-MM-dd");
     const toStr = format(addDays(to, 7), "yyyy-MM-dd");
 
-    const [bookingsResult, availResult] = await Promise.all([
+    const [bookingsResult, availResult, blockedResult] = await Promise.all([
       (supabase as any)
         .from("bookings")
         .select(`
@@ -127,6 +127,13 @@ const Schedule = () => {
         .not("date", "is", null)
         .gte("date", fromStr)
         .lte("date", toStr),
+
+      (supabase as any)
+        .from("blocked_times")
+        .select("id, date, start_time, end_time, all_day, reason")
+        .eq("photographer_id", user.id)
+        .gte("date", fromStr)
+        .lte("date", toStr),
     ]);
 
     if (bookingsResult.error) {
@@ -137,6 +144,10 @@ const Schedule = () => {
 
     if (!availResult.error) {
       setBlockedSlots((availResult.data as BlockedSlot[]) ?? []);
+    }
+
+    if (!blockedResult.error) {
+      setManualBlocks((blockedResult.data as ManualBlock[]) ?? []);
     }
 
     setLoading(false);
