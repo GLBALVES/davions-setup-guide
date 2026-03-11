@@ -258,23 +258,21 @@ export function CreateBookingDialog({
           </div>
 
           {/* Time */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Start</Label>
-              <Input
-                type="time"
+              <TimePickerInput
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className={cn("text-xs h-8", conflictingBlock && "border-destructive focus-visible:ring-destructive")}
+                onChange={setStartTime}
+                className={cn(conflictingBlock && "ring-1 ring-destructive")}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">End</Label>
-              <Input
-                type="time"
+              <TimePickerInput
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className={cn("text-xs h-8", conflictingBlock && "border-destructive focus-visible:ring-destructive")}
+                onChange={setEndTime}
+                className={cn(conflictingBlock && "ring-1 ring-destructive")}
               />
             </div>
           </div>
@@ -286,7 +284,7 @@ export function CreateBookingDialog({
               <p className="text-[11px] text-destructive/80 font-light leading-snug">
                 {conflictingBlock.all_day
                   ? `This day is blocked${conflictingBlock.reason ? ` — ${conflictingBlock.reason}` : ""}. Choose a different date.`
-                  : `This time overlaps a blocked period (${conflictingBlock.start_time.slice(0, 5)}–${conflictingBlock.end_time.slice(0, 5)})${conflictingBlock.reason ? ` — ${conflictingBlock.reason}` : ""}. Adjust the time.`}
+                  : `This time overlaps a blocked period (${formatTime12(conflictingBlock.start_time.slice(0, 5))}–${formatTime12(conflictingBlock.end_time.slice(0, 5))})${conflictingBlock.reason ? ` — ${conflictingBlock.reason}` : ""}. Adjust the time.`}
               </p>
             </div>
           )}
