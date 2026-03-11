@@ -491,10 +491,10 @@ export default function AccessControl() {
             ) : members.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
                 <UserPlus className="h-10 w-10 opacity-20" />
-                <p className="text-xs tracking-wider">No members yet. Invite a collaborator.</p>
+                <p className="text-xs tracking-wider">No users yet. Create the first one.</p>
                 <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
                   <UserPlus className="h-4 w-4" />
-                  Invite User
+                  Add User
                 </Button>
               </div>
             ) : (
