@@ -386,7 +386,7 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: B
       <CreateGalleryDialog
         open={galleryOpen}
         onOpenChange={setGalleryOpen}
-        bookingId={booking.id}
+        prefilledBookingId={booking.id}
         onCreated={() => setGalleryOpen(false)}
       />
 
