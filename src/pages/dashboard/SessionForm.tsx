@@ -27,7 +27,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTime12 } from "@/lib/utils";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
