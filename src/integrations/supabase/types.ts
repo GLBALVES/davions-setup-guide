@@ -108,6 +108,39 @@ export type Database = {
           },
         ]
       }
+      blocked_times: {
+        Row: {
+          all_day: boolean
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          photographer_id: string
+          reason: string | null
+          start_time: string
+        }
+        Insert: {
+          all_day?: boolean
+          created_at?: string
+          date: string
+          end_time?: string
+          id?: string
+          photographer_id: string
+          reason?: string | null
+          start_time?: string
+        }
+        Update: {
+          all_day?: boolean
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          photographer_id?: string
+          reason?: string | null
+          start_time?: string
+        }
+        Relationships: []
+      }
       blog_categories: {
         Row: {
           created_at: string

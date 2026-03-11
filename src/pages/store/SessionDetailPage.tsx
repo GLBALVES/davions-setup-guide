@@ -57,6 +57,13 @@ interface WeeklySlotDef {
   start_time: string;
 }
 
+interface BlockedTime {
+  date: string;
+  start_time: string;
+  end_time: string;
+  all_day: boolean;
+}
+
 interface GeneratedSlot {
   availabilityId: string;
   date: Date;
@@ -89,12 +96,32 @@ type BookingStep = "slots" | "form" | "addons" | "review";
 const generateOccurrences = (
   defs: WeeklySlotDef[],
   bookedKeys: Set<string>,
+  blockedTimes: BlockedTime[],
   durationMin: number,
   noticeDays: number,
   windowDays: number
 ): GeneratedSlot[] => {
   const today = startOfToday();
   const result: GeneratedSlot[] = [];
+
+  // Build a map: dateKey → blocked ranges for O(1) lookup
+  const blockedByDate = new Map<string, { start: string; end: string; all_day: boolean }[]>();
+  for (const bt of blockedTimes) {
+    const key = bt.date;
+    if (!blockedByDate.has(key)) blockedByDate.set(key, []);
+    blockedByDate.get(key)!.push({ start: bt.start_time.slice(0, 5), end: bt.end_time.slice(0, 5), all_day: bt.all_day });
+  }
+
+  const isSlotBlocked = (dateKey: string, slotStart: string, slotEnd: string): boolean => {
+    const ranges = blockedByDate.get(dateKey);
+    if (!ranges) return false;
+    for (const r of ranges) {
+      if (r.all_day) return true;
+      // Overlap: slot starts before block ends AND slot ends after block starts
+      if (slotStart < r.end && slotEnd > r.start) return true;
+    }
+    return false;
+  };
 
   for (let offset = noticeDays; offset < windowDays; offset++) {
     const date = addDays(today, offset);
@@ -112,11 +139,15 @@ const generateOccurrences = (
       if (bookedKeys.has(key)) continue;
 
       const endDate = addMinutes(startDate, durationMin);
+      const endHHmm = format(endDate, "HH:mm");
+
+      if (isSlotBlocked(dateKey, startHHmm, endHHmm)) continue;
+
       result.push({
         availabilityId: def.id,
         date,
         start_time: startHHmm,
-        end_time: format(endDate, "HH:mm"),
+        end_time: endHHmm,
         label: format(date, "EEEE, MMMM d"),
       });
     }
@@ -239,7 +270,22 @@ const SessionDetailPage = () => {
           .map((b) => `${b.availability_id}_${b.booked_date}`)
       );
 
-      const occurrences = generateOccurrences(defs, bookedKeys, s.duration_minutes, noticeDays, windowDays);
+      // Fetch blocked times for this photographer in the booking window
+      const { data: blockedData } = await (supabase as any)
+        .from("blocked_times")
+        .select("date, start_time, end_time, all_day")
+        .eq("photographer_id", s.photographer_id)
+        .gte("date", fromDate)
+        .lte("date", toDate);
+
+      const blockedTimes: BlockedTime[] = (blockedData ?? []).map((b: any) => ({
+        date: b.date,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        all_day: b.all_day,
+      }));
+
+      const occurrences = generateOccurrences(defs, bookedKeys, blockedTimes, s.duration_minutes, noticeDays, windowDays);
       setGeneratedSlots(occurrences);
       setLoading(false);
     };

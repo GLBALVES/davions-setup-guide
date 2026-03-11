@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CalendarDays,
   Plus,
+  CalendarOff,
 } from "lucide-react";
 import {
   format,
@@ -31,6 +32,7 @@ import { WeekView } from "@/components/dashboard/schedule/WeekView";
 import { DayView } from "@/components/dashboard/schedule/DayView";
 import { BookingDetailSheet, type ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
 import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
+import { BlockDayDialog } from "@/components/dashboard/schedule/BlockDayDialog";
 
 export interface BlockedSlot {
   id: string;
@@ -73,6 +75,8 @@ const Schedule = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
   const [createDefaultTime, setCreateDefaultTime] = useState<string | null>(null);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockDefaultDate, setBlockDefaultDate] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -161,6 +165,11 @@ const Schedule = () => {
     setCreateOpen(true);
   };
 
+  const handleBlockDay = (date: Date) => {
+    setBlockDefaultDate(date);
+    setBlockOpen(true);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -183,14 +192,25 @@ const Schedule = () => {
                     Calendar
                   </h1>
                 </div>
-                <Button
-                  size="sm"
-                  className="text-xs gap-2 shrink-0 mt-1"
-                  onClick={() => handleCreateBooking(currentDate)}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  New Booking
-                </Button>
+                <div className="flex items-center gap-2 shrink-0 mt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-2"
+                    onClick={() => handleBlockDay(currentDate)}
+                  >
+                    <CalendarOff className="h-3.5 w-3.5" />
+                    Block Day
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs gap-2"
+                    onClick={() => handleCreateBooking(currentDate)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    New Booking
+                  </Button>
+                </div>
               </div>
 
               {/* Toolbar */}
@@ -295,6 +315,13 @@ const Schedule = () => {
         defaultDate={createDefaultDate}
         defaultStartTime={createDefaultTime}
         onCreated={fetchData}
+      />
+
+      <BlockDayDialog
+        open={blockOpen}
+        onOpenChange={setBlockOpen}
+        defaultDate={blockDefaultDate}
+        onBlocked={fetchData}
       />
     </SidebarProvider>
   );
