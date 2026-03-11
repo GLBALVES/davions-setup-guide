@@ -855,17 +855,38 @@ const GalleryView = () => {
                   </div>
                 )}
 
-                {/* Final: downloaded count + view toggle */}
+                {/* Final: downloaded count + select controls + view toggle */}
                 {!isProof && (
-                  <div className="flex items-center justify-between w-full gap-3">
-                    <span className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                  <div className="flex items-center justify-between w-full gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
                       {downloaded.size > 0 && (
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground">
                           <CheckCheck className="h-3 w-3 text-primary" />
                           {downloaded.size} of {photos.length} downloaded
                         </span>
                       )}
-                    </span>
+                      {selectMode && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={selectAll}
+                            className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            Select all
+                          </button>
+                          {selected.size > 0 && (
+                            <>
+                              <span className="text-muted-foreground/30">·</span>
+                              <button
+                                onClick={() => setSelected(new Set())}
+                                className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                Clear
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center border border-border">
                       <button
                         onClick={() => setViewMode("grid")}
