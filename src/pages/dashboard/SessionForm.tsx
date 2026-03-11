@@ -1067,7 +1067,7 @@ const SessionForm = () => {
                       )}
                     </div>
 
-
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="duration" className="text-xs tracking-wider uppercase font-light">
                           Duration (min)
@@ -1081,6 +1081,7 @@ const SessionForm = () => {
                           onChange={(e) => setDurationMinutes(e.target.value)}
                         />
                       </div>
+
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="break" className="text-xs tracking-wider uppercase font-light">
                           Break (min)
