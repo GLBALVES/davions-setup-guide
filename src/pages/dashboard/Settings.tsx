@@ -29,7 +29,6 @@ const Settings = () => {
   // Profile
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
-  const [heroImageUrl, setHeroImageUrl] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
