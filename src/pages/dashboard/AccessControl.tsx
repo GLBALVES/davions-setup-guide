@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import {
   Dialog,
   DialogContent,
