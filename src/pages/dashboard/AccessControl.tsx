@@ -564,13 +564,16 @@ export default function AccessControl() {
         </div>{/* body flex */}
         </div>{/* flex-1 flex flex-col min-w-0 */}
 
-      {/* ── Invite Dialog ── */}
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      {/* ── Create User Dialog ── */}
+      <Dialog open={inviteOpen} onOpenChange={(o) => { setInviteOpen(o); if (!o) { setInviteEmail(""); setInviteName(""); setInvitePassword(""); setInviteRoleId(""); setShowPassword(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-sm tracking-widest uppercase font-light">
-              Invite Collaborator
+              Add Team Member
             </DialogTitle>
+            <p className="text-xs text-muted-foreground pt-1">
+              Create a login for a collaborator and assign their access level.
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
@@ -579,6 +582,7 @@ export default function AccessControl() {
                 placeholder="Ana Lima"
                 value={inviteName}
                 onChange={(e) => setInviteName(e.target.value)}
+                autoFocus
               />
             </div>
             <div className="space-y-1.5">
@@ -589,6 +593,29 @@ export default function AccessControl() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs tracking-wider uppercase font-light">Password</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 6 characters"
+                  value={invitePassword}
+                  onChange={(e) => setInvitePassword(e.target.value)}
+                  className="pr-9"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+              {invitePassword && invitePassword.length < 6 && (
+                <p className="text-[10px] text-destructive">Password must be at least 6 characters</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs tracking-wider uppercase font-light">Role</Label>
@@ -612,10 +639,10 @@ export default function AccessControl() {
             </Button>
             <Button
               size="sm"
-              onClick={handleInvite}
-              disabled={inviting || !inviteEmail.trim() || !inviteName.trim()}
+              onClick={handleCreateUser}
+              disabled={inviting || !inviteEmail.trim() || !inviteName.trim() || invitePassword.length < 6}
             >
-              {inviting ? "Inviting…" : "Send Invite"}
+              {inviting ? "Creating…" : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
