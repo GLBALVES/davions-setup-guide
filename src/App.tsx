@@ -48,6 +48,7 @@ import CreativeStudio from "./pages/dashboard/CreativeStudio";
 import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
+import SocialMedia from "./pages/dashboard/SocialMedia";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -115,6 +116,7 @@ const App = () => (
                  <Route path="/dashboard/website" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteSettings /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/access-control" element={<ProtectedRoute><AccessControl /></ProtectedRoute>} />
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                 <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
