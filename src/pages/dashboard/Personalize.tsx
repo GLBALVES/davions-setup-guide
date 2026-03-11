@@ -556,6 +556,7 @@ const Personalize = () => {
                     {[
                       { value: "studio", label: "Studio" },
                       { value: "business", label: "Business" },
+                      { value: "website", label: "Website" },
                       { value: "store", label: "Store" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
@@ -992,105 +993,11 @@ const Personalize = () => {
                   </TabsContent>
 
                   {/* ══════════════════════════════════════════
-                      ── STORE TAB ──
+                      ── WEBSITE TAB ──
                   ══════════════════════════════════════════ */}
-                  <TabsContent value="store" className="mt-0 flex flex-col gap-10">
+                  <TabsContent value="website" className="mt-0 flex flex-col gap-10">
 
-                    {/* ── 1. Store URL & Domain ──────────────── */}
-                    <section className="flex flex-col gap-5">
-                      <SectionHeading
-                        title="Store URL"
-                        description="Your unique public booking page. Share it with clients so they can browse and book sessions."
-                      />
-                      <div className="flex flex-col gap-1.5">
-                        <div className={`flex items-center border ${slugError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
-                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none whitespace-nowrap">
-                            {appHost}/store/
-                          </span>
-                          <input
-                            value={slugInput}
-                            onChange={(e) => {
-                              const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
-                              setSlugInput(val);
-                              setSlugError(validateSlug(val));
-                            }}
-                            placeholder="your-studio"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                          />
-                        </div>
-                        {slugError && <p className="flex items-center gap-1.5 text-[11px] text-destructive"><AlertCircle className="h-3 w-3 shrink-0" />{slugError}</p>}
-                      </div>
-                      {storeUrl && !slugError && (
-                        <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
-                          <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-[11px] text-muted-foreground flex-1 truncate">{storeUrl}</span>
-                          <button onClick={() => copyUrl(storeUrl, setCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                            {copied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
-                          </button>
-                        </div>
-                      )}
-                    </section>
-
-                    <section className="flex flex-col gap-5">
-                      <SectionHeading
-                        title="Custom Domain"
-                        description="Point your own domain (e.g. booking.yourstudio.com) directly to your booking store."
-                      />
-                      <div className="flex flex-col gap-1.5">
-                        <div className={`flex items-center border ${domainError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
-                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">https://</span>
-                          <input
-                            value={customDomainInput}
-                            onChange={(e) => {
-                              const val = e.target.value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
-                              setCustomDomainInput(val);
-                              setDomainError(validateDomain(val));
-                            }}
-                            placeholder="booking.yourstudio.com"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                          />
-                        </div>
-                        {domainError && <p className="flex items-center gap-1.5 text-[11px] text-destructive"><AlertCircle className="h-3 w-3 shrink-0" />{domainError}</p>}
-                        {customDomain && !domainError && (
-                          <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
-                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <span className="text-[11px] text-muted-foreground flex-1 truncate font-mono">https://{customDomain}</span>
-                            <button onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                              {domainCopied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="border border-border p-4 flex flex-col gap-3">
-                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">DNS Configuration</p>
-                        <div className="flex flex-col gap-1.5">
-                          <div className="grid grid-cols-3 gap-2 text-[10px] tracking-wider uppercase text-muted-foreground/60 px-2">
-                            <span>Type</span><span>Name</span><span>Value</span>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 bg-muted/40 border border-border p-2 font-mono text-[11px]">
-                            <span className="text-foreground">CNAME</span>
-                            <span className="text-muted-foreground">booking</span>
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="text-foreground truncate">{appHost}</span>
-                              <button onClick={() => copyUrl(appHost, () => {})} className="text-muted-foreground hover:text-foreground shrink-0 transition-colors">
-                                <Copy className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/60">DNS changes can take up to 48 hours to propagate worldwide.</p>
-                        <button onClick={() => navigate("/dashboard/custom-domain-docs")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit">
-                          <ExternalLink className="h-3 w-3" />Custom domain documentation
-                        </button>
-                      </div>
-                      <Button onClick={handleSaveStore} disabled={savingStore || !!slugError || !!domainError} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
-                        {savingStore ? "Saving…" : "Save URL & domain"}
-                      </Button>
-                    </section>
-
-                    <Divider />
-
-                    {/* ── 2. Branding ────────────────────────── */}
+                    {/* ── 1. Branding ────────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <Palette className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1151,7 +1058,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 3. Hero Section ────────────────────── */}
+                    {/* ── 2. Hero Section ────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <Image className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1209,7 +1116,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 4. About Section ───────────────────── */}
+                    {/* ── 3. About Section ───────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <FileText className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1259,7 +1166,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 5. Social Media ────────────────────── */}
+                    {/* ── 4. Social Media ────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1323,7 +1230,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 6. Navigation ──────────────────────── */}
+                    {/* ── 5. Navigation ──────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <Layout className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1350,7 +1257,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 7. Template ────────────────────────── */}
+                    {/* ── 6. Template ────────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <SectionHeading title="Site Template" description="Choose the visual layout for your photographer website." />
                       <div className="grid grid-cols-2 gap-3">
@@ -1364,7 +1271,6 @@ const Personalize = () => {
                                 : "border-border hover:border-foreground/30"
                             }`}
                           >
-                            {/* Preview swatch */}
                             <div className={`w-full h-10 ${t.preview} flex items-end p-1 gap-0.5`}>
                               {t.value === "grid" && (
                                 <>
@@ -1398,7 +1304,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 8. SEO ─────────────────────────────── */}
+                    {/* ── 7. SEO ─────────────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <SectionHeading title="SEO" description="Optimize how your site appears in search results and social shares." />
                       <FieldRow label="Page Title">
@@ -1444,7 +1350,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 9. Analytics ───────────────────────── */}
+                    {/* ── 8. Analytics ───────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <div className="flex items-center gap-2">
                         <BarChart2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1462,7 +1368,7 @@ const Personalize = () => {
 
                     <Divider />
 
-                    {/* ── 10. Footer ─────────────────────────── */}
+                    {/* ── 9. Footer ─────────────────────────── */}
                     <section className="flex flex-col gap-5">
                       <SectionHeading title="Footer" description="Custom text shown at the bottom of every page." />
                       <FieldRow label="Footer Text">
@@ -1477,6 +1383,106 @@ const Personalize = () => {
                       </Button>
                       <p className="text-[10px] text-muted-foreground/60">Saves branding, hero, about, social, navigation, template, SEO, analytics & footer.</p>
                     </div>
+
+                  </TabsContent>
+
+                  {/* ══════════════════════════════════════════
+                      ── STORE TAB ──
+                  ══════════════════════════════════════════ */}
+                  <TabsContent value="store" className="mt-0 flex flex-col gap-10">
+
+                    {/* ── Store URL ──────────────────────────── */}
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading
+                        title="Store URL"
+                        description="Your unique public booking page. Share it with clients so they can browse and book sessions."
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        <div className={`flex items-center border ${slugError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none whitespace-nowrap">
+                            {appHost}/store/
+                          </span>
+                          <input
+                            value={slugInput}
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
+                              setSlugInput(val);
+                              setSlugError(validateSlug(val));
+                            }}
+                            placeholder="your-studio"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                        </div>
+                        {slugError && <p className="flex items-center gap-1.5 text-[11px] text-destructive"><AlertCircle className="h-3 w-3 shrink-0" />{slugError}</p>}
+                      </div>
+                      {storeUrl && !slugError && (
+                        <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
+                          <Store className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="text-[11px] text-muted-foreground flex-1 truncate">{storeUrl}</span>
+                          <button onClick={() => copyUrl(storeUrl, setCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                            {copied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      )}
+                    </section>
+
+                    {/* ── Custom Domain ──────────────────────── */}
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading
+                        title="Custom Domain"
+                        description="Point your own domain (e.g. booking.yourstudio.com) directly to your booking store."
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        <div className={`flex items-center border ${domainError ? "border-destructive" : "border-border"} bg-background overflow-hidden`}>
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">https://</span>
+                          <input
+                            value={customDomainInput}
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
+                              setCustomDomainInput(val);
+                              setDomainError(validateDomain(val));
+                            }}
+                            placeholder="booking.yourstudio.com"
+                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                          />
+                        </div>
+                        {domainError && <p className="flex items-center gap-1.5 text-[11px] text-destructive"><AlertCircle className="h-3 w-3 shrink-0" />{domainError}</p>}
+                        {customDomain && !domainError && (
+                          <div className="flex items-center gap-2 p-3 bg-muted/30 border border-border">
+                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-[11px] text-muted-foreground flex-1 truncate font-mono">https://{customDomain}</span>
+                            <button onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                              {domainCopied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="border border-border p-4 flex flex-col gap-3">
+                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">DNS Configuration</p>
+                        <div className="flex flex-col gap-1.5">
+                          <div className="grid grid-cols-3 gap-2 text-[10px] tracking-wider uppercase text-muted-foreground/60 px-2">
+                            <span>Type</span><span>Name</span><span>Value</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 bg-muted/40 border border-border p-2 font-mono text-[11px]">
+                            <span className="text-foreground">CNAME</span>
+                            <span className="text-muted-foreground">booking</span>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-foreground truncate">{appHost}</span>
+                              <button onClick={() => copyUrl(appHost, () => {})} className="text-muted-foreground hover:text-foreground shrink-0 transition-colors">
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/60">DNS changes can take up to 48 hours to propagate worldwide.</p>
+                        <button onClick={() => navigate("/dashboard/custom-domain-docs")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit">
+                          <ExternalLink className="h-3 w-3" />Custom domain documentation
+                        </button>
+                      </div>
+                      <Button onClick={handleSaveStore} disabled={savingStore || !!slugError || !!domainError} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                        {savingStore ? "Saving…" : "Save URL & domain"}
+                      </Button>
+                    </section>
 
                   </TabsContent>
 
