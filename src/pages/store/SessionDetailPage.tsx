@@ -70,6 +70,8 @@ interface GeneratedSlot {
   start_time: string;
   end_time: string;
   label: string;
+  disabled?: boolean;
+  disabledReason?: "booked" | "blocked";
 }
 
 interface SessionExtra {
