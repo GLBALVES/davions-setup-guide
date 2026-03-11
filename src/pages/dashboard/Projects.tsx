@@ -532,6 +532,7 @@ const Projects = () => {
   const [defaultStage, setDefaultStage] = useState<Stage>("lead");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [showArchived, setShowArchived] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
