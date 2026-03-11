@@ -192,14 +192,25 @@ const Schedule = () => {
                     Calendar
                   </h1>
                 </div>
-                <Button
-                  size="sm"
-                  className="text-xs gap-2 shrink-0 mt-1"
-                  onClick={() => handleCreateBooking(currentDate)}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  New Booking
-                </Button>
+                <div className="flex items-center gap-2 shrink-0 mt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-2"
+                    onClick={() => handleBlockDay(currentDate)}
+                  >
+                    <CalendarOff className="h-3.5 w-3.5" />
+                    Block Day
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs gap-2"
+                    onClick={() => handleCreateBooking(currentDate)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    New Booking
+                  </Button>
+                </div>
               </div>
 
               {/* Toolbar */}
