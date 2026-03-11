@@ -570,14 +570,26 @@ const Projects = () => {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">Projects</h1>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openAdd("lead")}
-                className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                New Project
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="kanban" className="text-xs gap-1.5 px-2.5">
+                      <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="text-xs gap-1.5 px-2.5">
+                      <List className="h-3.5 w-3.5" /> List
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button
+                  size="sm"
+                  onClick={() => openAdd("lead")}
+                  className="gap-2 text-xs tracking-wider uppercase font-light"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  New Project
+                </Button>
+              </div>
             </div>
 
             {/* Stage summary pills */}
@@ -596,10 +608,14 @@ const Projects = () => {
               })}
             </div>
 
-            {/* Board */}
+            {/* Content */}
             {loading ? (
               <div className="flex-1 flex items-center justify-center">
                 <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+              </div>
+            ) : view === "list" ? (
+              <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
+                <ListView projects={projects} onEdit={openEdit} onDelete={handleDelete} />
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto px-6 md:px-10 pb-8">
