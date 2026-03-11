@@ -44,6 +44,7 @@ import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
+import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
