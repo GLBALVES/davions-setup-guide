@@ -755,6 +755,7 @@ const Projects = () => {
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
+                  showArchived={showArchived}
                 />
               </div>
             ) : (
@@ -791,8 +792,8 @@ const Projects = () => {
                   </DragOverlay>
                 </DndContext>
 
-                {/* Archived banner in kanban */}
-                {projectsByStage("archived").length > 0 && (
+                {/* Archived section in kanban — always shown when toggle is on */}
+                {showArchived && (
                   <ArchivedKanbanSection
                     projects={projectsByStage("archived")}
                     onUnarchive={handleUnarchive}
