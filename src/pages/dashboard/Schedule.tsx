@@ -310,12 +310,13 @@ const Schedule = () => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-3 shrink-0">
+            <div className="flex items-center gap-4 mt-3 shrink-0 flex-wrap">
               <p className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground/50">Legend</p>
               {[
                 { label: "Confirmed", cls: "bg-foreground" },
                 { label: "Pending", cls: "bg-muted border border-border" },
-                { label: "Blocked", cls: "bg-muted-foreground/15 border border-dashed border-muted-foreground/30" },
+                { label: "Booked slot", cls: "bg-muted-foreground/15 border border-dashed border-muted-foreground/30" },
+                { label: "Manually blocked", cls: "bg-destructive/20 border border-destructive/40" },
               ].map(({ label, cls }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <span className={`h-2.5 w-2.5 rounded-sm ${cls}`} />
