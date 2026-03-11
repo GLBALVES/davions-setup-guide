@@ -928,14 +928,19 @@ const GalleryView = () => {
                   const isNoteOpen = noteOpen[photo.id] ?? false;
                   const isDownloadingThis = downloadingId === photo.id;
                   const isDownloaded = downloaded.has(photo.id);
+                  const isSelected = selected.has(photo.id);
                   return (
                     <div key={photo.id} className="flex flex-col gap-0">
                       {/* Image card */}
                       <div
                         className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
                           ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
+                          ${!isProof && selectMode && isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}
                         `}
-                        onClick={() => setLightboxIndex(index)}
+                        onClick={() => {
+                          if (!isProof && selectMode) { toggleSelect(photo.id); return; }
+                          setLightboxIndex(index);
+                        }}
                         onContextMenu={blockContext}
                       >
                         {photo.url ? (
@@ -969,12 +974,25 @@ const GalleryView = () => {
                           <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
                         )}
 
-                        {/* Final: downloaded badge */}
-                        {!isProof && isDownloaded && (
+                        {/* Final: select mode checkbox */}
+                        {!isProof && selectMode && (
+                          <div className={`absolute top-2 left-2 z-30 h-5 w-5 border-2 flex items-center justify-center transition-all
+                            ${isSelected ? "bg-primary border-primary" : "bg-background/80 border-border"}`}>
+                            {isSelected && <CheckCheck className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                        )}
+
+                        {/* Final: downloaded badge (hidden in select mode) */}
+                        {!isProof && isDownloaded && !selectMode && (
                           <div className="absolute top-2 left-2 z-30 flex items-center gap-1 bg-primary text-primary-foreground px-1.5 py-0.5 text-[9px] tracking-wider uppercase font-light">
                             <CheckCheck className="h-2.5 w-2.5" />
                             Done
                           </div>
+                        )}
+
+                        {/* Final: select tint */}
+                        {!isProof && selectMode && isSelected && (
+                          <div className="absolute inset-0 bg-primary/10 pointer-events-none z-10" />
                         )}
 
                         {/* Proof: hover overlay */}
@@ -997,8 +1015,8 @@ const GalleryView = () => {
                           </div>
                         )}
 
-                        {/* Final: hover download overlay */}
-                        {!isProof && (
+                        {/* Final: hover download overlay (only when NOT in select mode) */}
+                        {!isProof && !selectMode && (
                           <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-foreground/30">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
@@ -1026,11 +1044,7 @@ const GalleryView = () => {
                             <button
                               onClick={(e) => toggleNotePanel(e, photo.id)}
                               className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
-                                noteVal
-                                  ? "text-foreground"
-                                  : isNoteOpen
-                                  ? "text-foreground"
-                                  : "text-muted-foreground/50 hover:text-muted-foreground"
+                                noteVal ? "text-foreground" : isNoteOpen ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
                               }`}
                               title="Add note"
                             >
@@ -1038,8 +1052,8 @@ const GalleryView = () => {
                               {noteVal ? <span className="text-[9px]">Note</span> : null}
                             </button>
                           )}
-                          {/* Final: inline download button */}
-                          {!isProof && (
+                          {/* Final: inline download button (hidden in select mode) */}
+                          {!isProof && !selectMode && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
                               disabled={isDownloadingThis || !!downloadingId}
@@ -1075,15 +1089,27 @@ const GalleryView = () => {
                   const index = photos.indexOf(photo);
                   const isDownloadingThis = downloadingId === photo.id;
                   const isDownloaded = downloaded.has(photo.id);
+                  const isSelected = selected.has(photo.id);
                   return (
                     <div
                       key={photo.id}
-                      className="flex items-center gap-4 px-4 py-3 group hover:bg-muted/40 transition-colors"
+                      className={`flex items-center gap-4 px-4 py-3 group hover:bg-muted/40 transition-colors cursor-default
+                        ${selectMode && isSelected ? "bg-primary/5" : ""}
+                      `}
+                      onClick={() => selectMode && toggleSelect(photo.id)}
                     >
+                      {/* Select checkbox (select mode) or thumbnail click (normal) */}
+                      {selectMode ? (
+                        <div className={`h-5 w-5 shrink-0 border-2 flex items-center justify-center transition-all
+                          ${isSelected ? "bg-primary border-primary" : "bg-background border-border"}`}>
+                          {isSelected && <CheckCheck className="h-3 w-3 text-primary-foreground" />}
+                        </div>
+                      ) : null}
+
                       {/* Thumbnail */}
                       <div
                         className="relative h-14 w-14 shrink-0 overflow-hidden bg-muted cursor-pointer"
-                        onClick={() => setLightboxIndex(index)}
+                        onClick={(e) => { if (selectMode) return; e.stopPropagation(); setLightboxIndex(index); }}
                         onContextMenu={blockContext}
                       >
                         {photo.url ? (
@@ -1104,8 +1130,7 @@ const GalleryView = () => {
                       {/* Filename */}
                       <div className="flex-1 min-w-0">
                         <p
-                          className="text-sm font-light text-foreground truncate cursor-pointer hover:underline"
-                          onClick={() => setLightboxIndex(index)}
+                          className="text-sm font-light text-foreground truncate"
                           title={photo.filename}
                         >
                           {displayName(photo.filename)}
@@ -1118,25 +1143,27 @@ const GalleryView = () => {
                         )}
                       </div>
 
-                      {/* Download button */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
-                        disabled={isDownloadingThis || !!downloadingId}
-                        className={`shrink-0 flex items-center gap-2 px-4 py-1.5 text-[10px] tracking-widest uppercase font-light border transition-colors disabled:opacity-40
-                          ${isDownloaded
-                            ? "border-primary/30 text-primary hover:bg-primary/10"
-                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40"
-                          }`}
-                        title="Download this photo"
-                      >
-                        {isDownloadingThis ? (
-                          <><Loader2 className="h-3 w-3 animate-spin" /> Downloading…</>
-                        ) : isDownloaded ? (
-                          <><CheckCheck className="h-3 w-3" /> Download again</>
-                        ) : (
-                          <><Download className="h-3 w-3" /> Download</>
-                        )}
-                      </button>
+                      {/* Download button (hidden in select mode) */}
+                      {!selectMode && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                          disabled={isDownloadingThis || !!downloadingId}
+                          className={`shrink-0 flex items-center gap-2 px-4 py-1.5 text-[10px] tracking-widest uppercase font-light border transition-colors disabled:opacity-40
+                            ${isDownloaded
+                              ? "border-primary/30 text-primary hover:bg-primary/10"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40"
+                            }`}
+                          title="Download this photo"
+                        >
+                          {isDownloadingThis ? (
+                            <><Loader2 className="h-3 w-3 animate-spin" /> Downloading…</>
+                          ) : isDownloaded ? (
+                            <><CheckCheck className="h-3 w-3" /> Download again</>
+                          ) : (
+                            <><Download className="h-3 w-3" /> Download</>
+                          )}
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -1146,8 +1173,42 @@ const GalleryView = () => {
         </main>
       )}
 
-      {/* ── Purchase / Submit modal ── */}
-      <Dialog open={purchaseOpen} onOpenChange={setPurchaseOpen}>
+      {/* ── Sticky selection action bar (final + selectMode) ── */}
+      {!isProof && selectMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-sm px-6 py-4 flex items-center justify-between gap-4 shadow-2xl">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-light text-foreground">
+              {selected.size > 0 ? (
+                <><span className="font-medium">{selected.size}</span> photo{selected.size !== 1 ? "s" : ""} selected</>
+              ) : (
+                <span className="text-muted-foreground">Click photos to select</span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={clearSelection}
+              className="text-xs tracking-widest uppercase font-light"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleDownloadSelected}
+              disabled={selected.size === 0 || downloadingSelected}
+              className="gap-2 text-xs tracking-widest uppercase font-light"
+            >
+              {downloadingSelected ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Downloading…</>
+              ) : (
+                <><Download className="h-3.5 w-3.5" /> Download {selected.size > 0 ? `(${selected.size})` : ""}</>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
         <DialogContent className="sm:max-w-md rounded-none border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
