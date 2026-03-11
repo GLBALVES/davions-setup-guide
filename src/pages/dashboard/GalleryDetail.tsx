@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -282,6 +282,7 @@ const GalleryDetail = () => {
   const [copiedFavorites, setCopiedFavorites] = useState(false);
   const [lightroomModalOpen, setLightroomModalOpen] = useState(false);
   const [pricePerPhoto, setPricePerPhoto] = useState(0);
+  const [accessLog, setAccessLog] = useState<{ first: string | null; last: string | null }>({ first: null, last: null });
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -364,14 +365,32 @@ const GalleryDetail = () => {
     }
   }, [id]);
 
+  const fetchAccessLog = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("analytics_pageviews")
+      .select("created_at")
+      .eq("page_path", `/gallery/${id}`)
+      .eq("action", "gallery_access")
+      .order("created_at", { ascending: true });
+    if (data && data.length > 0) {
+      setAccessLog({
+        first: data[0].created_at,
+        last: data[data.length - 1].created_at,
+      });
+    } else {
+      setAccessLog({ first: null, last: null });
+    }
+  }, [id]);
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks()]);
+      await Promise.all([fetchGallery(), fetchPhotos(), fetchWatermarks(), fetchAccessLog()]);
       setLoading(false);
     };
     init();
-  }, [fetchGallery, fetchPhotos, fetchWatermarks]);
+  }, [fetchGallery, fetchPhotos, fetchWatermarks, fetchAccessLog]);
 
   // ── Realtime: auto-refresh photos when Lightroom plugin adds new ones ────────
   useEffect(() => {
@@ -1559,6 +1578,27 @@ const GalleryDetail = () => {
                   <p className="text-xs text-muted-foreground/70 mt-1">
                     Share this link with your client. Publish the gallery to make it accessible.
                   </p>
+                </div>
+
+                {/* Client access log */}
+                <div className="flex items-center gap-6 py-3 px-4 bg-muted/40 border border-border">
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">First Access</span>
+                    <span className="text-xs font-light text-foreground">
+                      {accessLog.first
+                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.first))
+                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-border shrink-0" />
+                  <div className="flex flex-col gap-0.5 flex-1">
+                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">Last Access</span>
+                    <span className="text-xs font-light text-foreground">
+                      {accessLog.last
+                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.last))
+                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Publish toggle */}
