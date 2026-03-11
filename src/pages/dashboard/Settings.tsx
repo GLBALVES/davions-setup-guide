@@ -100,7 +100,7 @@ const Settings = () => {
       const [profileRes, watermarksRes, gallerySettingsRes, , socialRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, bio, hero_image_url")
+          .select("full_name, store_slug, custom_domain, hero_image_url")
           .eq("id", user.id)
           .single(),
         (supabase as any)
