@@ -182,6 +182,16 @@ const Personalize = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
+  // ── Contracts ───────────────────────────────────────────────────────────────
+  interface Contract { id: string; name: string; body: string; }
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [contractName, setContractName] = useState("");
+  const [contractBody, setContractBody] = useState("");
+  const [savingContract, setSavingContract] = useState(false);
+  const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
