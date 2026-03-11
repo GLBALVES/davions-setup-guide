@@ -218,6 +218,11 @@ const GalleryView = () => {
   const [favFilter, setFavFilter] = useState<FavFilter>("all");
   const clientToken = getClientToken();
 
+  // Final gallery view mode (grid / list)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  // Downloaded photo ids (persisted in localStorage)
+  const [downloaded, setDownloaded] = useState<Set<string>>(new Set());
+
   // Purchase modal
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [clientName, setClientName] = useState("");
