@@ -42,6 +42,15 @@ export interface BlockedSlot {
   session_id: string;
 }
 
+export interface ManualBlock {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  all_day: boolean;
+  reason: string | null;
+}
+
 type ViewMode = "month" | "week" | "day";
 
 const VIEW_LABELS: Record<ViewMode, string> = {
