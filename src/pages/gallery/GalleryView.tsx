@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
+
 
 // ── Client token ────────────────────────────────────────────────────────────
 function getClientToken(): string {
