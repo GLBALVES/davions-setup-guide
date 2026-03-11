@@ -1246,27 +1246,23 @@ const SessionForm = () => {
                               Business hrs
                             </span>
                             <div className="flex items-center gap-2">
-                              <Input
-                                ref={businessHrsStartRef}
-                                type="time"
-                                value={globalConfig.hours_start}
+                              <TimePickerInput
+                                ref={businessHrsStartRef as any}
+                                value={globalConfig.hours_start || "09:00"}
                                 disabled={hasSlots}
-                                onChange={(e) => {
-                                  updateGlobalConfig({ hours_start: e.target.value });
-                                  if (e.target.value) {
+                                onChange={(v) => {
+                                  updateGlobalConfig({ hours_start: v });
+                                  if (v) {
                                     setTimeout(() => businessHrsEndRef.current?.focus(), 50);
                                   }
                                 }}
-                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               <span className="text-[10px] text-muted-foreground">→</span>
-                              <Input
-                                ref={businessHrsEndRef}
-                                type="time"
-                                value={globalConfig.hours_end}
+                              <TimePickerInput
+                                ref={businessHrsEndRef as any}
+                                value={globalConfig.hours_end || "17:00"}
                                 disabled={hasSlots}
-                                onChange={(e) => updateGlobalConfig({ hours_end: e.target.value })}
-                                className="w-28 h-7 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                                onChange={(v) => updateGlobalConfig({ hours_end: v })}
                               />
                             </div>
                             {!hasSlots && (globalConfig.hours_start || globalConfig.hours_end) && (

@@ -148,14 +148,17 @@ export default function EmailCampaignEditor() {
                           <Input type="number" defaultValue={em.delay_days} onBlur={(e) => updateEmail.mutate({ ...em, delay_days: Number(e.target.value) })} />
                         </div>
                         <div className="flex items-end gap-2">
-                          <div className="space-y-1 flex-1">
-                            <Label className="text-xs">Send Time</Label>
-                            <Input type="time" defaultValue={em.send_time} onBlur={(e) => updateEmail.mutate({ ...em, send_time: e.target.value })} />
-                          </div>
-                          <Button variant="ghost" size="icon" onClick={() => delEmail.mutate(em.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                           <div className="space-y-1 flex-1">
+                             <Label className="text-xs">Send Time</Label>
+                             <TimePickerInput
+                               value={em.send_time || "09:00"}
+                               onChange={(v) => updateEmail.mutate({ ...em, send_time: v })}
+                             />
+                           </div>
+                           <Button variant="ghost" size="icon" onClick={() => delEmail.mutate(em.id)}>
+                             <Trash2 className="h-4 w-4 text-destructive" />
+                           </Button>
+                         </div>
                         <div className="sm:col-span-3 space-y-1">
                           <Label className="text-xs">HTML Content</Label>
                           <Textarea rows={3} defaultValue={em.html_content || ""} onBlur={(e) => updateEmail.mutate({ ...em, html_content: e.target.value })} placeholder="<html>..." />
