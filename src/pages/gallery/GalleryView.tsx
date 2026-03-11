@@ -162,6 +162,8 @@ interface Photo {
   url?: string;
 }
 
+type FavFilter = "all" | "favorited" | "not_favorited";
+
 // ── Strip extension from filename ───────────────────────────────────────────
 function displayName(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
