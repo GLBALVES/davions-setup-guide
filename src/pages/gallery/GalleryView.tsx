@@ -169,6 +169,15 @@ function displayName(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
 }
 
+// ── Photographer brand logo ──────────────────────────────────────────────────
+function PhotographerBrand({ brand }: { brand: { business_name: string | null; full_name: string | null; hero_image_url: string | null } | null }) {
+  if (brand?.hero_image_url) {
+    return <img src={brand.hero_image_url} alt={brand.business_name ?? brand.full_name ?? ""} className="h-7 w-auto max-w-[160px] object-contain" draggable={false} />;
+  }
+  const name = brand?.business_name || brand?.full_name || "Studio";
+  return <span className="text-sm font-light tracking-[0.22em] uppercase text-foreground">{name}</span>;
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 const GalleryView = () => {
   const { slug } = useParams<{ slug: string }>();
