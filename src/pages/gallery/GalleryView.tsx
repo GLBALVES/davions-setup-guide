@@ -184,6 +184,7 @@ const GalleryView = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [togglingFav, setTogglingFav] = useState<Set<string>>(new Set());
   const [watermark, setWatermark] = useState<WatermarkSettings | null>(null);
+  const [photographerBrand, setPhotographerBrand] = useState<{ business_name: string | null; full_name: string | null; hero_image_url: string | null } | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   // card note panel open state (photoId -> boolean)
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
