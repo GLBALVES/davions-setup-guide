@@ -3,15 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Pencil, Trash2, Plus, Check, X } from "lucide-react";
+import { Pencil, Trash2, Plus, Check, X, Tag } from "lucide-react";
 
 export interface SessionType {
   id: string;
@@ -29,13 +21,10 @@ interface Props {
 const SessionTypeManager = ({
   photographerId,
   sessionTypes,
-  selectedTypeId,
-  onSelect,
   onRefetch,
 }: Props) => {
   const { toast } = useToast();
 
-  // UI state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [addingNew, setAddingNew] = useState(false);
@@ -47,18 +36,16 @@ const SessionTypeManager = ({
     const name = newName.trim();
     if (!name) return;
     setBusy(true);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("session_types")
-      .insert({ photographer_id: photographerId, name })
-      .select("id")
-      .single();
+      .insert({ photographer_id: photographerId, name });
     if (error) {
       toast({ title: "Error adding type", description: error.message, variant: "destructive" });
     } else {
-      onSelect(data.id);
       onRefetch();
       setAddingNew(false);
       setNewName("");
+      toast({ title: "Session type added" });
     }
     setBusy(false);
   };
@@ -95,145 +82,128 @@ const SessionTypeManager = ({
     if (error) {
       toast({ title: "Error deleting type", description: error.message, variant: "destructive" });
     } else {
-      if (selectedTypeId === id) onSelect(null);
       onRefetch();
     }
     setBusy(false);
   };
 
-  const selectedType = sessionTypes.find((t) => t.id === selectedTypeId);
-
   return (
-    <div className="flex flex-col gap-2">
-      <Label className="text-xs tracking-wider uppercase font-light">
-        Session Type
-      </Label>
-
-      <div className="flex items-center gap-2">
-        {/* Dropdown */}
-        <Select
-          value={selectedTypeId ?? ""}
-          onValueChange={(v) => onSelect(v || null)}
-        >
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="Select a type…" />
-          </SelectTrigger>
-          <SelectContent>
-            {sessionTypes.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Edit selected */}
-        {selectedType && editingId !== selectedType.id && (
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={() => startEdit(selectedType)}
-            disabled={busy}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-        )}
-
-        {/* Delete selected */}
-        {selectedType && editingId !== selectedType.id && (
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
-            onClick={() => handleDelete(selectedType.id)}
-            disabled={busy}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        )}
-
-        {/* New type button */}
-        {!addingNew && editingId === null && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="shrink-0 h-9 text-[10px] tracking-widest uppercase font-light gap-1.5"
-            onClick={() => {
-              setAddingNew(true);
-              setEditingId(null);
-            }}
-          >
-            <Plus className="h-3 w-3" />
-            New
-          </Button>
-        )}
-      </div>
-
-      {/* Inline edit field */}
-      {editingId !== null && (
-        <div className="flex items-center gap-2 mt-1">
-          <Input
-            value={editingName}
-            onChange={(e) => setEditingName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
-            className="h-8 text-sm flex-1"
-            autoFocus
-          />
-          <Button
-            type="button"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={handleSaveEdit}
-            disabled={busy}
-          >
-            <Check className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 shrink-0"
-            onClick={() => setEditingId(null)}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+    <div className="flex flex-col gap-1">
+      {/* List */}
+      {sessionTypes.length === 0 && !addingNew && (
+        <p className="text-xs text-muted-foreground py-3 text-center">
+          No session types yet. Add one below.
+        </p>
       )}
 
-      {/* Inline new type field */}
-      {addingNew && (
-        <div className="flex items-center gap-2 mt-1">
+      {sessionTypes.map((type) => (
+        <div
+          key={type.id}
+          className="flex items-center gap-2 group px-2 py-1.5 rounded-sm hover:bg-muted/50 transition-colors"
+        >
+          {editingId === type.id ? (
+            <>
+              <Input
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveEdit();
+                  if (e.key === "Escape") setEditingId(null);
+                }}
+                className="h-7 text-xs flex-1"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={busy}
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                aria-label="Save"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingId(null)}
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Cancel"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
+          ) : (
+            <>
+              <Tag className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+              <span className="flex-1 text-xs font-light tracking-wide truncate">
+                {type.name}
+              </span>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => startEdit(type)}
+                  disabled={busy}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Edit"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(type.id)}
+                  disabled={busy}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+
+      {/* Add new row */}
+      {addingNew ? (
+        <div className="flex items-center gap-2 px-2 py-1.5">
+          <Tag className="h-3 w-3 shrink-0 text-muted-foreground/50" />
           <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAdd();
+              if (e.key === "Escape") { setAddingNew(false); setNewName(""); }
+            }}
             placeholder="Type name…"
-            className="h-8 text-sm flex-1"
+            className="h-7 text-xs flex-1"
             autoFocus
           />
-          <Button
+          <button
             type="button"
-            size="icon"
-            className="h-8 w-8 shrink-0"
             onClick={handleAdd}
             disabled={busy || !newName.trim()}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+            aria-label="Confirm"
           >
             <Check className="h-3.5 w-3.5" />
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 shrink-0"
             onClick={() => { setAddingNew(false); setNewName(""); }}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Cancel"
           >
             <X className="h-3.5 w-3.5" />
-          </Button>
+          </button>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => { setAddingNew(true); setEditingId(null); }}
+          className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-sm hover:bg-muted/50 transition-colors w-full mt-0.5"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span className="tracking-wider uppercase font-light text-[10px]">Add type</span>
+        </button>
       )}
     </div>
   );
