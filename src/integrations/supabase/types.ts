@@ -433,6 +433,47 @@ export type Database = {
           },
         ]
       }
+      brand_assets: {
+        Row: {
+          category: string
+          created_at: string
+          file_url: string
+          height: number | null
+          id: string
+          name: string
+          photographer_id: string
+          width: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_url: string
+          height?: number | null
+          id?: string
+          name?: string
+          photographer_id: string
+          width?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_url?: string
+          height?: number | null
+          id?: string
+          name?: string
+          photographer_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_assets_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       briefings: {
         Row: {
           created_at: string
@@ -486,6 +527,88 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      creative_images: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          is_favorite: boolean
+          name: string
+          photographer_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          photographer_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_images_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creative_templates: {
+        Row: {
+          background_config: Json | null
+          category: string
+          created_at: string
+          elements: Json | null
+          footer_config: Json | null
+          format: string
+          id: string
+          name: string
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          background_config?: Json | null
+          category?: string
+          created_at?: string
+          elements?: Json | null
+          footer_config?: Json | null
+          format?: string
+          id?: string
+          name?: string
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          background_config?: Json | null
+          category?: string
+          created_at?: string
+          elements?: Json | null
+          footer_config?: Json | null
+          format?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_templates_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       galleries: {
         Row: {
@@ -836,6 +959,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "mkt_push_notifications_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mkt_social_posts: {
+        Row: {
+          caption: string | null
+          created_at: string
+          hashtags: string[] | null
+          id: string
+          media_urls: Json | null
+          name: string
+          photographer_id: string
+          platform: string
+          post_type: string
+          status: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          media_urls?: Json | null
+          name?: string
+          photographer_id: string
+          platform?: string
+          post_type?: string
+          status?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          media_urls?: Json | null
+          name?: string
+          photographer_id?: string
+          platform?: string
+          post_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mkt_social_posts_photographer_id_fkey"
             columns: ["photographer_id"]
             isOneToOne: false
             referencedRelation: "photographers"
@@ -1566,6 +1736,41 @@ export type Database = {
             columns: ["session_type_id"]
             isOneToOne: false
             referencedRelation: "session_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_api_connections: {
+        Row: {
+          created_at: string
+          credentials: Json
+          id: string
+          is_active: boolean
+          photographer_id: string
+          platform: string
+        }
+        Insert: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          photographer_id: string
+          platform?: string
+        }
+        Update: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          photographer_id?: string
+          platform?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_api_connections_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
             referencedColumns: ["id"]
           },
         ]
