@@ -543,6 +543,7 @@ export default function AccessControl() {
             )}
           </div>{/* members panel */}
         </div>{/* body flex */}
+        </div>{/* flex-1 flex flex-col */}
 
       {/* ── Invite Dialog ── */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
