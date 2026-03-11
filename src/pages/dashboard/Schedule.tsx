@@ -75,6 +75,8 @@ const Schedule = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
   const [createDefaultTime, setCreateDefaultTime] = useState<string | null>(null);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockDefaultDate, setBlockDefaultDate] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
