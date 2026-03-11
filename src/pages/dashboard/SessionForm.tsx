@@ -1248,19 +1248,14 @@ const SessionForm = () => {
                             </span>
                             <div className="flex items-center gap-2">
                               <TimePickerInput
-                                ref={businessHrsStartRef as any}
                                 value={globalConfig.hours_start || "09:00"}
                                 disabled={hasSlots}
                                 onChange={(v) => {
                                   updateGlobalConfig({ hours_start: v });
-                                  if (v) {
-                                    setTimeout(() => businessHrsEndRef.current?.focus(), 50);
-                                  }
                                 }}
                               />
                               <span className="text-[10px] text-muted-foreground">→</span>
                               <TimePickerInput
-                                ref={businessHrsEndRef as any}
                                 value={globalConfig.hours_end || "17:00"}
                                 disabled={hasSlots}
                                 onChange={(v) => updateGlobalConfig({ hours_end: v })}
