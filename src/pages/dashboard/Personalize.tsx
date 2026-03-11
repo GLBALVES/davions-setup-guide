@@ -303,7 +303,7 @@ const Personalize = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes]);
+  }, [user, fetchSessionTypes, fetchContracts]);
 
   // ── Validators ──────────────────────────────────────────────────────────────
   const validateSlug = (value: string) => {
