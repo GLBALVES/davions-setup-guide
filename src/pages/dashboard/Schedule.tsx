@@ -29,6 +29,7 @@ import { MonthView } from "@/components/dashboard/schedule/MonthView";
 import { WeekView } from "@/components/dashboard/schedule/WeekView";
 import { DayView } from "@/components/dashboard/schedule/DayView";
 import { BookingDetailSheet, type ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
+import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 
 type ViewMode = "month" | "week" | "day";
 

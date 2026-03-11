@@ -6,11 +6,10 @@ import {
   endOfWeek,
   eachDayOfInterval,
   isSameMonth,
-  isSameDay,
   isToday,
   format,
-  parseISO,
 } from "date-fns";
+import { Plus } from "lucide-react";
 import type { ScheduleBooking } from "./BookingDetailSheet";
 
 const STATUS_COLORS: Record<string, string> = {
