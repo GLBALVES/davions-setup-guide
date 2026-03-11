@@ -123,6 +123,44 @@ const WebsiteSettings = () => {
   // Footer
   const [footerText, setFooterText] = useState("");
 
+  // Custom Domain
+  const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+  const [customDomain, setCustomDomain] = useState("");
+  const [customDomainInput, setCustomDomainInput] = useState("");
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [domainCopied, setDomainCopied] = useState(false);
+  const [savingDomain, setSavingDomain] = useState(false);
+
+  const validateDomain = (value: string) => {
+    if (!value.trim()) return null;
+    const v = value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (!DOMAIN_REGEX.test(v)) return "Enter a valid domain (e.g. booking.yourstudio.com).";
+    return null;
+  };
+
+  const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedFn(true);
+    setTimeout(() => setCopiedFn(false), 2000);
+  };
+
+  const handleSaveDomain = async () => {
+    const domErr = validateDomain(customDomainInput);
+    if (domErr) { setDomainError(domErr); return; }
+    setSavingDomain(true);
+    const { error } = await supabase.from("photographers").update({
+      custom_domain: customDomainInput.trim() || null,
+    } as any).eq("id", user!.id);
+    if (error) {
+      if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
+      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      setCustomDomain(customDomainInput.trim());
+      toast({ title: "Custom domain saved" });
+    }
+    setSavingDomain(false);
+  };
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
