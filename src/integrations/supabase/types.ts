@@ -842,6 +842,108 @@ export type Database = {
           },
         ]
       }
+      photographer_site: {
+        Row: {
+          about_image_url: string | null
+          about_title: string | null
+          accent_color: string | null
+          created_at: string
+          cta_link: string | null
+          cta_text: string | null
+          facebook_pixel_id: string | null
+          facebook_url: string | null
+          footer_text: string | null
+          google_analytics_id: string | null
+          instagram_url: string | null
+          linkedin_url: string | null
+          logo_url: string | null
+          og_image_url: string | null
+          photographer_id: string
+          pinterest_url: string | null
+          seo_description: string | null
+          seo_title: string | null
+          show_about: boolean | null
+          show_blog: boolean | null
+          show_booking: boolean | null
+          show_contact: boolean | null
+          show_store: boolean | null
+          site_headline: string | null
+          site_subheadline: string | null
+          site_template: string | null
+          tagline: string | null
+          tiktok_url: string | null
+          updated_at: string
+          whatsapp: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          about_image_url?: string | null
+          about_title?: string | null
+          accent_color?: string | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          facebook_pixel_id?: string | null
+          facebook_url?: string | null
+          footer_text?: string | null
+          google_analytics_id?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
+          og_image_url?: string | null
+          photographer_id: string
+          pinterest_url?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_about?: boolean | null
+          show_blog?: boolean | null
+          show_booking?: boolean | null
+          show_contact?: boolean | null
+          show_store?: boolean | null
+          site_headline?: string | null
+          site_subheadline?: string | null
+          site_template?: string | null
+          tagline?: string | null
+          tiktok_url?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          about_image_url?: string | null
+          about_title?: string | null
+          accent_color?: string | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          facebook_pixel_id?: string | null
+          facebook_url?: string | null
+          footer_text?: string | null
+          google_analytics_id?: string | null
+          instagram_url?: string | null
+          linkedin_url?: string | null
+          logo_url?: string | null
+          og_image_url?: string | null
+          photographer_id?: string
+          pinterest_url?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_about?: boolean | null
+          show_blog?: boolean | null
+          show_booking?: boolean | null
+          show_contact?: boolean | null
+          show_store?: boolean | null
+          site_headline?: string | null
+          site_subheadline?: string | null
+          site_template?: string | null
+          tagline?: string | null
+          tiktok_url?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       photographers: {
         Row: {
           bio: string | null
