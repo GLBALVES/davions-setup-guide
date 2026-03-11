@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PermissionGate from "@/components/PermissionGate";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -83,35 +84,35 @@ const App = () => (
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/dashboard/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-                <Route path="/dashboard/sessions/new" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
-                <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><SessionForm /></ProtectedRoute>} />
-                <Route path="/dashboard/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-                <Route path="/dashboard/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+                <Route path="/dashboard/sessions" element={<ProtectedRoute><PermissionGate permKey="sessions"><Sessions /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/sessions/new" element={<ProtectedRoute><PermissionGate permKey="sessions"><SessionForm /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><PermissionGate permKey="sessions"><SessionForm /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/schedule" element={<ProtectedRoute><PermissionGate permKey="schedule"><Schedule /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/bookings" element={<ProtectedRoute><PermissionGate permKey="bookings"><Bookings /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/dashboard/galleries" element={<ProtectedRoute><Galleries /></ProtectedRoute>} />
-                <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><GalleryDetail /></ProtectedRoute>} />
-                <Route path="/dashboard/blog" element={<ProtectedRoute><BlogManager /></ProtectedRoute>} />
-                <Route path="/dashboard/blog/:id" element={<ProtectedRoute><BlogEditor /></ProtectedRoute>} />
-                <Route path="/dashboard/seo" element={<ProtectedRoute><SiteSeo /></ProtectedRoute>} />
-                <Route path="/dashboard/emails" element={<ProtectedRoute><EmailMarketing /></ProtectedRoute>} />
-                <Route path="/dashboard/emails/campaign/:id" element={<ProtectedRoute><EmailCampaignEditor /></ProtectedRoute>} />
-                <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><EmailAutomatedEditor /></ProtectedRoute>} />
-                <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><EmailOneoffEditor /></ProtectedRoute>} />
-                <Route path="/dashboard/push" element={<ProtectedRoute><PushNotifications /></ProtectedRoute>} />
-                <Route path="/dashboard/workflow" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
-                <Route path="/dashboard/workflow/:projectId" element={<ProtectedRoute><WorkflowProject /></ProtectedRoute>} />
-                <Route path="/dashboard/recurring" element={<ProtectedRoute><RecurringWorkflows /></ProtectedRoute>} />
-                <Route path="/dashboard/agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
-                <Route path="/dashboard/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/dashboard/galleries" element={<ProtectedRoute><PermissionGate permKey="galleries"><Galleries /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><PermissionGate permKey="galleries"><GalleryDetail /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/blog" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogManager /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/blog/:id" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogEditor /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/seo" element={<ProtectedRoute><PermissionGate permKey="seo"><SiteSeo /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/emails" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailMarketing /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/emails/campaign/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailCampaignEditor /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailAutomatedEditor /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailOneoffEditor /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/push" element={<ProtectedRoute><PermissionGate permKey="push"><PushNotifications /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/workflow" element={<ProtectedRoute><PermissionGate permKey="workflow"><Workflows /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/workflow/:projectId" element={<ProtectedRoute><PermissionGate permKey="workflow"><WorkflowProject /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/recurring" element={<ProtectedRoute><PermissionGate permKey="recurring"><RecurringWorkflows /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/agents" element={<ProtectedRoute><PermissionGate permKey="agents"><AIAgents /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/chat" element={<ProtectedRoute><PermissionGate permKey="chat"><Chat /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/custom-domain-docs" element={<ProtectedRoute><CustomDomainDocs /></ProtectedRoute>} />
                 <Route path="/dashboard/contracts/new" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
-                 <Route path="/dashboard/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-                 <Route path="/dashboard/creative" element={<ProtectedRoute><CreativeStudio /></ProtectedRoute>} />
-                 <Route path="/dashboard/website" element={<ProtectedRoute><WebsiteSettings /></ProtectedRoute>} />
+                 <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
+                 <Route path="/dashboard/creative" element={<ProtectedRoute><PermissionGate permKey="creative"><CreativeStudio /></PermissionGate></ProtectedRoute>} />
+                 <Route path="/dashboard/website" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteSettings /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/access-control" element={<ProtectedRoute><AccessControl /></ProtectedRoute>} />
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
 

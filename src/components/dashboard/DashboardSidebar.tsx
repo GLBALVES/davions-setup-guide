@@ -92,6 +92,7 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 type MenuItem = {
   title: string;
@@ -99,6 +100,8 @@ type MenuItem = {
   to?: string;
   end?: boolean;
   badgeKey?: "pendingBookings" | "draftSessions";
+  /** permission key from PERMISSION_GROUPS; undefined = always visible */
+  permKey?: string;
 };
 
 type MenuGroup = {
@@ -118,11 +121,11 @@ const groups: MenuGroup[] = [
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
-      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions" },
-      { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings" },
-      { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof" },
-      { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final" },
+      { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
+      { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
+      { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
+      { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
@@ -130,20 +133,20 @@ const groups: MenuGroup[] = [
     title: "Marketing",
     icon: Megaphone,
     items: [
-      { title: "Website", icon: Globe, to: "/dashboard/website" },
-      { title: "Blog", icon: BookText, to: "/dashboard/blog" },
-      { title: "Creative Studio", icon: Share2, to: "/dashboard/creative" },
-      { title: "SEO", icon: SearchCheck, to: "/dashboard/seo" },
-      { title: "Emails", icon: Mail, to: "/dashboard/emails" },
-      { title: "Push", icon: Bell, to: "/dashboard/push" },
-      { title: "Chat", icon: MessageCircle, to: "/dashboard/chat" },
+      { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
+      { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
+      { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
+      { title: "SEO", icon: SearchCheck, to: "/dashboard/seo", permKey: "seo" },
+      { title: "Emails", icon: Mail, to: "/dashboard/emails", permKey: "emails" },
+      { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
+      { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
     ],
   },
   {
     title: "AI",
     icon: BrainCircuit,
     items: [
-      { title: "AI Agents", icon: Bot, to: "/dashboard/agents" },
+      { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
       { title: "AI Automations", icon: Zap },
       { title: "Smart Suggestions", icon: Lightbulb },
       { title: "Creative Assistant", icon: Wand2 },
@@ -153,18 +156,18 @@ const groups: MenuGroup[] = [
     title: "Finance",
     icon: DollarSign,
     items: [
-      { title: "Dashboard", icon: LayoutDashboard },
-      { title: "Receivables", icon: ArrowDownCircle },
-      { title: "Payables", icon: ArrowUpCircle },
-      { title: "Cash Flow", icon: TrendingUp },
-      { title: "Reports", icon: BarChart3 },
+      { title: "Dashboard", icon: LayoutDashboard, permKey: "finance" },
+      { title: "Receivables", icon: ArrowDownCircle, permKey: "finance" },
+      { title: "Payables", icon: ArrowUpCircle, permKey: "finance" },
+      { title: "Cash Flow", icon: TrendingUp, permKey: "finance" },
+      { title: "Reports", icon: BarChart3, permKey: "finance" },
     ],
   },
   {
     title: "CRM",
     icon: Users2,
     items: [
-      { title: "Clients", icon: UserCircle, to: "/dashboard/clients" },
+      { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
       { title: "Leads", icon: UserPlus },
     ],
   },
@@ -172,8 +175,8 @@ const groups: MenuGroup[] = [
     title: "Workflows",
     icon: GitBranch,
     items: [
-      { title: "Kanban", icon: Columns, to: "/dashboard/workflow" },
-      { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring" },
+      { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
+      { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
     ],
   },
   {
@@ -516,6 +519,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const location = useLocation();
   const badges = useSidebarBadges();
   const { user } = useAuth();
+  const { isOwner, can, loading: permsLoading } = useStudioPermissions();
+
+  // Filter a group's items based on permissions
+  const filterItems = (items: MenuItem[]): MenuItem[] => {
+    if (permsLoading) return items; // show all while loading
+    if (isOwner) return items;      // owner sees everything
+    return items.filter((item) => !item.permKey || can(item.permKey));
+  };
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
   const [editMode, setEditMode] = useState(false);
@@ -763,12 +774,15 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {groups.map((group) => (
+            {groups.map((group) => {
+              const visibleItems = filterItems(group.items);
+              if (visibleItems.length === 0) return null;
+              return (
               <SidebarGroup key={group.title}>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <CollapsedGroupPopover
-                      group={group}
+                      group={{ ...group, items: visibleItems }}
                       isOpen={collapsedOpenGroup === group.title}
                       onOpenChange={(open) => setCollapsedOpenGroup(open ? group.title : null)}
                       isItemActive={isItemActive}
@@ -777,7 +791,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-            ))}
+              );
+            })}
           </>
         ) : (
           /* ── EXPANDED MODE: collapsible groups ── */
@@ -864,7 +879,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </Collapsible>
 
             {/* Regular groups */}
-            {groups.map((group) => (
+            {groups.map((group) => {
+              const visibleItems = filterItems(group.items);
+              if (visibleItems.length === 0) return null;
+              return (
               <Collapsible
                 key={group.title}
                 open={openGroups[group.title]}
@@ -885,13 +903,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {group.items.map((item) => renderRegularItem(item, group.title))}
+                        {visibleItems.map((item) => renderRegularItem(item, group.title))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
                 </SidebarGroup>
               </Collapsible>
-            ))}
+              );
+            })}
           </>
         )}
       </SidebarContent>
