@@ -190,6 +190,13 @@ const SessionForm = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
 
+  // ── Contract ──
+  interface ContractTemplate { id: string; name: string; body: string; }
+  const [contractTemplates, setContractTemplates] = useState<ContractTemplate[]>([]);
+  const [selectedContractId, setSelectedContractId] = useState<string>("none");
+  const [contractText, setContractText] = useState<string>("");
+  const [showFullContract, setShowFullContract] = useState(false);
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
