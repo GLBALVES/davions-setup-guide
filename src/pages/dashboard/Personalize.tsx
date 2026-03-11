@@ -234,6 +234,7 @@ const Personalize = () => {
           .select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id")
           .eq("id", user.id).single(),
         fetchSessionTypes(),
+        fetchContracts(),
       ]);
 
       if (profileRes.data) {
