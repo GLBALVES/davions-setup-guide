@@ -758,36 +758,71 @@ const GalleryView = () => {
               </div>
             )}
 
-            {/* ── Favorites filter (proof only, shown once photos are loaded) ── */}
-            {isProof && photos.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {(
-                  [
-                    { value: "all", label: "All", count: photos.length },
-                    { value: "favorited", label: "Favorited", count: favorites.size },
-                    { value: "not_favorited", label: "Not favorited", count: photos.length - favorites.size },
-                  ] as { value: FavFilter; label: string; count: number }[]
-                ).map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setFavFilter(opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1 text-[10px] tracking-[0.18em] uppercase font-light border transition-colors rounded-none
-                      ${favFilter === opt.value
-                        ? "bg-foreground text-background border-foreground"
-                        : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                      }`}
-                  >
-                    {opt.value === "favorited" && <Heart className="h-2.5 w-2.5 fill-current" />}
-                    {opt.label}
-                    <span className={`ml-0.5 text-[9px] ${favFilter === opt.value ? "text-background/70" : "text-muted-foreground/50"}`}>
-                      {opt.count}
+            {/* ── Toolbar: filter (proof) or view toggle (final) ── */}
+            {photos.length > 0 && (
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                {/* Proof: favorites filter */}
+                {isProof && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(
+                      [
+                        { value: "all", label: "All", count: photos.length },
+                        { value: "favorited", label: "Favorited", count: favorites.size },
+                        { value: "not_favorited", label: "Not favorited", count: photos.length - favorites.size },
+                      ] as { value: FavFilter; label: string; count: number }[]
+                    ).map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setFavFilter(opt.value)}
+                        className={`flex items-center gap-1.5 px-3 py-1 text-[10px] tracking-[0.18em] uppercase font-light border transition-colors rounded-none
+                          ${favFilter === opt.value
+                            ? "bg-foreground text-background border-foreground"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                          }`}
+                      >
+                        {opt.value === "favorited" && <Heart className="h-2.5 w-2.5 fill-current" />}
+                        {opt.label}
+                        <span className={`ml-0.5 text-[9px] ${favFilter === opt.value ? "text-background/70" : "text-muted-foreground/50"}`}>
+                          {opt.count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Final: downloaded count + view toggle */}
+                {!isProof && (
+                  <div className="flex items-center justify-between w-full gap-3">
+                    <span className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                      {downloaded.size > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <CheckCheck className="h-3 w-3 text-primary" />
+                          {downloaded.size} of {photos.length} downloaded
+                        </span>
+                      )}
                     </span>
-                  </button>
-                ))}
+                    <div className="flex items-center border border-border">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                        title="Grid view"
+                      >
+                        <LayoutGrid className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                        title="List view"
+                      >
+                        <LayoutList className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Empty state when filter yields no results */}
+            {/* Empty state when filter yields no results (proof) */}
             {isProof && photos.length > 0 && filteredPhotos.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <Heart className="h-8 w-8 text-muted-foreground/30" />
@@ -797,144 +832,230 @@ const GalleryView = () => {
               </div>
             )}
 
-            {/* ── Photo grid ── */}
-            <div className={`grid gap-4 ${!isProof ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"}`}>
-              {filteredPhotos.map((photo) => {
-                const index = photos.indexOf(photo);
-                const isFav = favorites.has(photo.id);
-                const noteVal = notes[photo.id] ?? "";
-                const isNoteOpen = noteOpen[photo.id] ?? false;
-                const isDownloadingThis = downloadingId === photo.id;
-                return (
-                  <div key={photo.id} className="flex flex-col gap-0">
-                    {/* Image card */}
-                    <div
-                      className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
-                        ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
-                      `}
-                      onClick={() => setLightboxIndex(index)}
-                      onContextMenu={blockContext}
-                    >
-                      {photo.url ? (
-                        <img
-                          src={photo.url}
-                          alt=""
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
-                          draggable={false}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Image className="h-6 w-6 text-muted-foreground/30" />
-                        </div>
-                      )}
-
-                      {/* Watermark — proof only */}
-                      {isProof && watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
-
-                      {/* Proof: selected checkmark */}
-                      {isProof && isFav && (
-                        <div className="absolute top-2 left-2 z-30 bg-rose-500 text-white rounded-full p-1 shadow-lg">
-                          <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
-                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      )}
-
-                      {/* Proof: rose tint when selected */}
-                      {isProof && isFav && (
-                        <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
-                      )}
-
-                      {/* Proof: hover overlay */}
-                      {isProof && (
-                        <div
-                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                          style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
-                        >
-                          <button
-                            onClick={(e) => toggleFavorite(e, photo)}
-                            className={`pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
-                              ${isFav
-                                ? "bg-rose-500 text-white hover:bg-rose-600"
-                                : "bg-white text-black hover:bg-rose-500 hover:text-white"
-                              }`}
-                          >
-                            <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
-                            {isFav ? "Remove" : "Select"}
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Final: hover download overlay */}
-                      {!isProof && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-foreground/30">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
-                            disabled={isDownloadingThis || !!downloadingId}
-                            className="pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl bg-background text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-150 disabled:opacity-50"
-                          >
-                            {isDownloadingThis ? (
-                              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Downloading…</>
-                            ) : (
-                              <><Download className="h-3.5 w-3.5" /> Download</>
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Below card: filename + actions */}
-                    <div className="bg-background border border-t-0 border-border px-3 pt-2 pb-2 flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] text-muted-foreground truncate leading-tight" title={photo.filename}>
-                          {displayName(photo.filename)}
-                        </span>
-                        {/* Proof: note toggle */}
-                        {isProof && (
-                          <button
-                            onClick={(e) => toggleNotePanel(e, photo.id)}
-                            className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
-                              noteVal
-                                ? "text-foreground"
-                                : isNoteOpen
-                                ? "text-foreground"
-                                : "text-muted-foreground/50 hover:text-muted-foreground"
-                            }`}
-                            title="Add note"
-                          >
-                            <MessageSquare className="h-3 w-3" />
-                            {noteVal ? <span className="text-[9px]">Note</span> : null}
-                          </button>
+            {/* ── GRID view ── */}
+            {(isProof || viewMode === "grid") && filteredPhotos.length > 0 && (
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                {filteredPhotos.map((photo) => {
+                  const index = photos.indexOf(photo);
+                  const isFav = favorites.has(photo.id);
+                  const noteVal = notes[photo.id] ?? "";
+                  const isNoteOpen = noteOpen[photo.id] ?? false;
+                  const isDownloadingThis = downloadingId === photo.id;
+                  const isDownloaded = downloaded.has(photo.id);
+                  return (
+                    <div key={photo.id} className="flex flex-col gap-0">
+                      {/* Image card */}
+                      <div
+                        className={`relative group aspect-square bg-muted overflow-hidden cursor-pointer transition-all duration-200
+                          ${isProof && isFav ? "ring-2 ring-rose-500 ring-offset-2 ring-offset-background" : ""}
+                        `}
+                        onClick={() => setLightboxIndex(index)}
+                        onContextMenu={blockContext}
+                      >
+                        {photo.url ? (
+                          <img
+                            src={photo.url}
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 pointer-events-none"
+                            draggable={false}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Image className="h-6 w-6 text-muted-foreground/30" />
+                          </div>
                         )}
-                        {/* Final: inline download button */}
-                        {!isProof && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
-                            disabled={isDownloadingThis || !!downloadingId}
-                            className="shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors text-muted-foreground/70 hover:text-foreground disabled:opacity-40"
-                            title="Download this photo"
+
+                        {/* Watermark — proof only */}
+                        {isProof && watermark && <WatermarkOverlay wm={watermark} size="thumb" />}
+
+                        {/* Proof: selected checkmark */}
+                        {isProof && isFav && (
+                          <div className="absolute top-2 left-2 z-30 bg-rose-500 text-white rounded-full p-1 shadow-lg">
+                            <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        )}
+
+                        {/* Proof: rose tint when selected */}
+                        {isProof && isFav && (
+                          <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
+                        )}
+
+                        {/* Final: downloaded badge */}
+                        {!isProof && isDownloaded && (
+                          <div className="absolute top-2 left-2 z-30 flex items-center gap-1 bg-primary text-primary-foreground px-1.5 py-0.5 text-[9px] tracking-wider uppercase font-light">
+                            <CheckCheck className="h-2.5 w-2.5" />
+                            Done
+                          </div>
+                        )}
+
+                        {/* Proof: hover overlay */}
+                        {isProof && (
+                          <div
+                            className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                            style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
                           >
-                            {isDownloadingThis ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                          </button>
+                            <button
+                              onClick={(e) => toggleFavorite(e, photo)}
+                              className={`pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl transition-all duration-150
+                                ${isFav
+                                  ? "bg-rose-500 text-white hover:bg-rose-600"
+                                  : "bg-white text-black hover:bg-rose-500 hover:text-white"
+                                }`}
+                            >
+                              <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-white" : ""}`} />
+                              {isFav ? "Remove" : "Select"}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Final: hover download overlay */}
+                        {!isProof && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-foreground/30">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                              disabled={isDownloadingThis || !!downloadingId}
+                              className="pointer-events-auto flex items-center gap-2 px-5 py-2 text-[11px] tracking-widest uppercase font-semibold shadow-xl bg-background text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-150 disabled:opacity-50"
+                            >
+                              {isDownloadingThis ? (
+                                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Downloading…</>
+                              ) : (
+                                <><Download className="h-3.5 w-3.5" /> Download</>
+                              )}
+                            </button>
+                          </div>
                         )}
                       </div>
 
-                      {/* Note textarea — slides open (proof only) */}
-                      {isProof && isNoteOpen && (
-                        <Textarea
-                          value={noteVal}
-                          onChange={(e) => handleNoteChange(photo.id, e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          placeholder="Your note about this photo…"
-                          className="text-xs rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground min-h-[60px] resize-none leading-snug placeholder:text-muted-foreground/40"
-                        />
-                      )}
+                      {/* Below card: filename + actions */}
+                      <div className="bg-background border border-t-0 border-border px-3 pt-2 pb-2 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground truncate leading-tight" title={photo.filename}>
+                            {displayName(photo.filename)}
+                          </span>
+                          {/* Proof: note toggle */}
+                          {isProof && (
+                            <button
+                              onClick={(e) => toggleNotePanel(e, photo.id)}
+                              className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors ${
+                                noteVal
+                                  ? "text-foreground"
+                                  : isNoteOpen
+                                  ? "text-foreground"
+                                  : "text-muted-foreground/50 hover:text-muted-foreground"
+                              }`}
+                              title="Add note"
+                            >
+                              <MessageSquare className="h-3 w-3" />
+                              {noteVal ? <span className="text-[9px]">Note</span> : null}
+                            </button>
+                          )}
+                          {/* Final: inline download button */}
+                          {!isProof && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                              disabled={isDownloadingThis || !!downloadingId}
+                              className={`shrink-0 flex items-center gap-1 text-[10px] tracking-widest uppercase transition-colors disabled:opacity-40 ${isDownloaded ? "text-primary" : "text-muted-foreground/70 hover:text-foreground"}`}
+                              title="Download this photo"
+                            >
+                              {isDownloadingThis ? <Loader2 className="h-3 w-3 animate-spin" /> : isDownloaded ? <CheckCheck className="h-3 w-3" /> : <Download className="h-3 w-3" />}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Note textarea — slides open (proof only) */}
+                        {isProof && isNoteOpen && (
+                          <Textarea
+                            value={noteVal}
+                            onChange={(e) => handleNoteChange(photo.id, e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Your note about this photo…"
+                            className="text-xs rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground min-h-[60px] resize-none leading-snug placeholder:text-muted-foreground/40"
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── LIST view (final galleries only) ── */}
+            {!isProof && viewMode === "list" && filteredPhotos.length > 0 && (
+              <div className="flex flex-col divide-y divide-border border border-border">
+                {filteredPhotos.map((photo) => {
+                  const index = photos.indexOf(photo);
+                  const isDownloadingThis = downloadingId === photo.id;
+                  const isDownloaded = downloaded.has(photo.id);
+                  return (
+                    <div
+                      key={photo.id}
+                      className="flex items-center gap-4 px-4 py-3 group hover:bg-muted/40 transition-colors"
+                    >
+                      {/* Thumbnail */}
+                      <div
+                        className="relative h-14 w-14 shrink-0 overflow-hidden bg-muted cursor-pointer"
+                        onClick={() => setLightboxIndex(index)}
+                        onContextMenu={blockContext}
+                      >
+                        {photo.url ? (
+                          <img
+                            src={photo.url}
+                            alt=""
+                            className="w-full h-full object-cover pointer-events-none"
+                            draggable={false}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Image className="h-4 w-4 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Filename */}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-light text-foreground truncate cursor-pointer hover:underline"
+                          onClick={() => setLightboxIndex(index)}
+                          title={photo.filename}
+                        >
+                          {displayName(photo.filename)}
+                        </p>
+                        {isDownloaded && (
+                          <span className="text-[10px] text-primary tracking-wider uppercase flex items-center gap-1 mt-0.5">
+                            <CheckCheck className="h-2.5 w-2.5" />
+                            Downloaded
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Download button */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDownloadSingle(photo); }}
+                        disabled={isDownloadingThis || !!downloadingId}
+                        className={`shrink-0 flex items-center gap-2 px-4 py-1.5 text-[10px] tracking-widest uppercase font-light border transition-colors disabled:opacity-40
+                          ${isDownloaded
+                            ? "border-primary/30 text-primary hover:bg-primary/10"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40"
+                          }`}
+                        title="Download this photo"
+                      >
+                        {isDownloadingThis ? (
+                          <><Loader2 className="h-3 w-3 animate-spin" /> Downloading…</>
+                        ) : isDownloaded ? (
+                          <><CheckCheck className="h-3 w-3" /> Download again</>
+                        ) : (
+                          <><Download className="h-3 w-3" /> Download</>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </main>
       )}
