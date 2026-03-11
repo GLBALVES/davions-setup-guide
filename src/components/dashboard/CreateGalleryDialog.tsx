@@ -257,6 +257,7 @@ export function CreateGalleryDialog({
         title: title.trim(),
         slug: autoSlug || null,
         category: defaultCategory,
+        access_code: generateAccessCode(),
       };
       if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
       if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
