@@ -567,8 +567,10 @@ const GalleryDetail = () => {
     }
   };
 
+  const [unpublishOpen, setUnpublishOpen] = useState(false);
+
   // ── Toggle publish ──────────────────────────────────────────────────────────
-  const togglePublish = async () => {
+  const doPublish = async () => {
     if (!gallery) return;
     const newStatus = gallery.status === "published" ? "draft" : "published";
     const { error } = await supabase
@@ -578,6 +580,15 @@ const GalleryDetail = () => {
     if (!error) {
       setGallery({ ...gallery, status: newStatus });
       toast({ title: newStatus === "published" ? "Gallery published" : "Gallery unpublished" });
+    }
+  };
+
+  const togglePublish = () => {
+    if (!gallery) return;
+    if (gallery.status === "published") {
+      setUnpublishOpen(true);
+    } else {
+      doPublish();
     }
   };
 
