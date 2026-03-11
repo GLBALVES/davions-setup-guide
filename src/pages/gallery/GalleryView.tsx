@@ -32,6 +32,23 @@ function storeCode(galleryId: string, code: string): void {
   localStorage.setItem(`davions_access_${galleryId}`, code);
 }
 
+// ── Downloaded photos (per gallery) ─────────────────────────────────────────
+function getDownloadedKey(galleryId: string): string {
+  return `davions_downloaded_${galleryId}`;
+}
+function loadDownloaded(galleryId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(getDownloadedKey(galleryId));
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+}
+function markDownloaded(galleryId: string, photoId: string): Set<string> {
+  const set = loadDownloaded(galleryId);
+  set.add(photoId);
+  localStorage.setItem(getDownloadedKey(galleryId), JSON.stringify([...set]));
+  return set;
+}
+
 // ── Photo notes (client-side per token+gallery) ──────────────────────────────
 function getNotesKey(galleryId: string, clientToken: string) {
   return `davions_notes_${galleryId}_${clientToken}`;
