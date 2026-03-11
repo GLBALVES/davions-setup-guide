@@ -6,6 +6,7 @@ import {
   isToday,
   format,
 } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import type { ScheduleBooking } from "./BookingDetailSheet";
 import type { BlockedSlot, ManualBlock } from "@/pages/dashboard/Schedule";
 
@@ -105,13 +106,33 @@ export function WeekView({ currentDate, bookings, blockedSlots, manualBlocks, on
     }
   }, []);
 
-  const handleCellClick = (day: Date, hourIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
+  const { toast } = useToast();
+
+  const handleCellClick = (day: Date, dayManual: ManualBlock[], hourIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
     const yOffset = e.clientY - rect.top;
     const fractionalMinutes = Math.floor((yOffset / CELL_HEIGHT) * 60);
     const totalMins = (HOUR_START + hourIndex) * 60 + fractionalMinutes;
     const snapped = Math.round(totalMins / 15) * 15;
-    onCreateBooking(day, minutesToTimeStr(snapped));
+    const clickedTime = minutesToTimeStr(snapped);
+
+    // Check if time falls in a manually blocked period
+    const isAllDay = dayManual.some((mb) => mb.all_day);
+    if (isAllDay) {
+      toast({ title: "This day is blocked", description: dayManual.find(mb => mb.all_day)?.reason ?? undefined, variant: "destructive" });
+      return;
+    }
+    const overlap = dayManual.find((mb) => {
+      const start = mb.start_time.slice(0, 5);
+      const end = mb.end_time.slice(0, 5);
+      return clickedTime >= start && clickedTime < end;
+    });
+    if (overlap) {
+      toast({ title: "This time is blocked", description: overlap.reason ?? `${overlap.start_time.slice(0,5)}–${overlap.end_time.slice(0,5)}`, variant: "destructive" });
+      return;
+    }
+
+    onCreateBooking(day, clickedTime);
   };
 
   return (
@@ -212,7 +233,7 @@ export function WeekView({ currentDate, bookings, blockedSlots, manualBlocks, on
                     key={h}
                     className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
                     style={{ height: CELL_HEIGHT }}
-                    onClick={(e) => handleCellClick(day, hIdx, e)}
+                    onClick={(e) => handleCellClick(day, dayManual, hIdx, e)}
                   >
                     <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[18px] text-muted-foreground pointer-events-none select-none">
                       +

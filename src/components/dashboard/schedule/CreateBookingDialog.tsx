@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,12 +16,20 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { AlertTriangle, CalendarIcon, Loader2 } from "lucide-react";
 
 interface Session {
   id: string;
   title: string;
   duration_minutes: number;
+}
+
+interface BlockedTime {
+  date: string;
+  start_time: string;
+  end_time: string;
+  all_day: boolean;
+  reason: string | null;
 }
 
 interface CreateBookingDialogProps {
@@ -40,6 +48,17 @@ function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + minutes;
   return `${padTwo(Math.floor(total / 60) % 24)}:${padTwo(total % 60)}`;
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** Returns true if [aStart, aEnd) overlaps [bStart, bEnd) */
+function timesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  return timeToMinutes(aStart) < timeToMinutes(bEnd) &&
+         timeToMinutes(aEnd) > timeToMinutes(bStart);
 }
 
 export function CreateBookingDialog({
@@ -61,6 +80,7 @@ export function CreateBookingDialog({
   const [clientEmail, setClientEmail] = useState("");
   const [calOpen, setCalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
 
   // Load sessions
   useEffect(() => {
@@ -78,6 +98,20 @@ export function CreateBookingDialog({
       });
   }, [user, open]);
 
+  // Fetch blocked_times whenever selected date changes
+  useEffect(() => {
+    if (!user || !date) { setBlockedTimes([]); return; }
+    const dateStr = format(date, "yyyy-MM-dd");
+    (supabase as any)
+      .from("blocked_times")
+      .select("date, start_time, end_time, all_day, reason")
+      .eq("photographer_id", user.id)
+      .eq("date", dateStr)
+      .then(({ data }: { data: BlockedTime[] | null }) => {
+        setBlockedTimes(data ?? []);
+      });
+  }, [user, date]);
+
   // Auto-compute end time when session or start time changes
   useEffect(() => {
     const session = sessions.find((s) => s.id === selectedSessionId);
@@ -94,9 +128,22 @@ export function CreateBookingDialog({
     }
   }, [open, defaultDate, defaultStartTime]);
 
+  // Check if current slot overlaps any blocked period
+  const conflictingBlock = useMemo((): BlockedTime | null => {
+    if (!date || !startTime || !endTime) return null;
+    for (const bt of blockedTimes) {
+      if (bt.all_day) return bt;
+      const bStart = bt.start_time.slice(0, 5);
+      const bEnd = bt.end_time.slice(0, 5);
+      if (timesOverlap(startTime, endTime, bStart, bEnd)) return bt;
+    }
+    return null;
+  }, [date, startTime, endTime, blockedTimes]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !date || !selectedSessionId || !clientName || !clientEmail) return;
+    if (conflictingBlock) return; // guard — button should be disabled too
 
     setSaving(true);
     const dateStr = format(date, "yyyy-MM-dd");
@@ -135,7 +182,6 @@ export function CreateBookingDialog({
       toast({ title: "Booking created successfully" });
       onCreated();
       onOpenChange(false);
-      // Reset
       setClientName("");
       setClientEmail("");
     } catch (err: any) {
@@ -145,7 +191,7 @@ export function CreateBookingDialog({
     }
   };
 
-  const isValid = Boolean(date && selectedSessionId && clientName.trim() && clientEmail.trim());
+  const isValid = Boolean(date && selectedSessionId && clientName.trim() && clientEmail.trim() && !conflictingBlock);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -218,7 +264,7 @@ export function CreateBookingDialog({
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="text-xs h-8"
+                className={cn("text-xs h-8", conflictingBlock && "border-destructive focus-visible:ring-destructive")}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -227,10 +273,22 @@ export function CreateBookingDialog({
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="text-xs h-8"
+                className={cn("text-xs h-8", conflictingBlock && "border-destructive focus-visible:ring-destructive")}
               />
             </div>
           </div>
+
+          {/* Conflict warning */}
+          {conflictingBlock && (
+            <div className="flex items-start gap-2.5 px-3 py-2.5 bg-destructive/8 border border-destructive/30 rounded-sm">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive/70 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-destructive/80 font-light leading-snug">
+                {conflictingBlock.all_day
+                  ? `This day is blocked${conflictingBlock.reason ? ` — ${conflictingBlock.reason}` : ""}. Choose a different date.`
+                  : `This time overlaps a blocked period (${conflictingBlock.start_time.slice(0, 5)}–${conflictingBlock.end_time.slice(0, 5)})${conflictingBlock.reason ? ` — ${conflictingBlock.reason}` : ""}. Adjust the time.`}
+              </p>
+            </div>
+          )}
 
           {/* Client */}
           <div className="flex flex-col gap-3">
@@ -265,7 +323,13 @@ export function CreateBookingDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={!isValid || saving} className="text-xs gap-2">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!isValid || saving}
+              className="text-xs gap-2"
+              title={conflictingBlock ? "This time slot is blocked" : undefined}
+            >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Create Booking
             </Button>
