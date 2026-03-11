@@ -360,14 +360,15 @@ function ListView({
   onDelete,
   onArchive,
   onUnarchive,
+  showArchived,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
+  showArchived: boolean;
 }) {
-  const [archivedOpen, setArchivedOpen] = useState(false);
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
