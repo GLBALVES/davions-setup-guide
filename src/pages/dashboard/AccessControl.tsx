@@ -628,12 +628,11 @@ export default function AccessControl() {
               onClick={handleCreateRole}
               disabled={creatingRole || !newRoleName.trim()}
             >
-              {creatingRole ? "Creating…" : "Create"}
+            {creatingRole ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-        </div>{/* flex-1 flex flex-col min-w-0 */}
       </div>{/* min-h-screen flex w-full */}
     </SidebarProvider>
   );
