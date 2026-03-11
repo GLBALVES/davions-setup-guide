@@ -6,7 +6,8 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X, Pencil, Check, GripVertical, Calendar, User, ChevronDown } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -338,6 +339,82 @@ function ProjectModal({
   );
 }
 
+// ── List View ────────────────────────────────────────────────────────────────
+function ListView({
+  projects,
+  onEdit,
+  onDelete,
+}: {
+  projects: ClientProject[];
+  onEdit: (p: ClientProject) => void;
+  onDelete: (id: string) => void;
+}) {
+  const sorted = [...projects].sort((a, b) => {
+    const si = STAGES.findIndex((s) => s.key === a.stage);
+    const sj = STAGES.findIndex((s) => s.key === b.stage);
+    if (si !== sj) return si - sj;
+    return a.position - b.position;
+  });
+
+  return (
+    <div className="border border-border rounded-sm overflow-hidden">
+      {/* Header row */}
+      <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
+        {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
+          <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-16" : ""}`}>
+            {h}
+          </div>
+        ))}
+      </div>
+
+      {sorted.length === 0 ? (
+        <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
+          No projects yet
+        </div>
+      ) : (
+        sorted.map((p) => {
+          const isOverdue = p.shoot_date && new Date(p.shoot_date + "T00:00:00") < new Date();
+          return (
+            <div
+              key={p.id}
+              className="group grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border/50 last:border-b-0 hover:bg-muted/30 transition-colors items-center"
+            >
+              <div className="px-4 py-3 text-sm font-medium truncate">{p.title}</div>
+              <div className="px-4 py-3 flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                {p.client_name ? (<><User className="h-3 w-3 shrink-0" />{p.client_name}</>) : <span className="text-muted-foreground/30">—</span>}
+              </div>
+              <div className="px-4 py-3 text-xs text-muted-foreground">
+                {p.session_type || <span className="text-muted-foreground/30">—</span>}
+              </div>
+              <div className="px-4 py-3">
+                <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
+                  {STAGES.find((s) => s.key === p.stage)?.label}
+                </span>
+              </div>
+              <div className="px-4 py-3 flex items-center gap-1.5 text-xs">
+                {p.shoot_date ? (
+                  <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
+                    <Calendar className="h-3 w-3 shrink-0" />
+                    {format(new Date(p.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+                  </span>
+                ) : <span className="text-muted-foreground/30">—</span>}
+              </div>
+              <div className="px-4 py-3 w-16 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
+                <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)}>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
   const { user, signOut } = useAuth();
@@ -347,6 +424,7 @@ const Projects = () => {
   const [editing, setEditing] = useState<ClientProject | null>(null);
   const [defaultStage, setDefaultStage] = useState<Stage>("lead");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [view, setView] = useState<"kanban" | "list">("kanban");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -492,14 +570,26 @@ const Projects = () => {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">Projects</h1>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openAdd("lead")}
-                className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                New Project
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="kanban" className="text-xs gap-1.5 px-2.5">
+                      <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="text-xs gap-1.5 px-2.5">
+                      <List className="h-3.5 w-3.5" /> List
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button
+                  size="sm"
+                  onClick={() => openAdd("lead")}
+                  className="gap-2 text-xs tracking-wider uppercase font-light"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  New Project
+                </Button>
+              </div>
             </div>
 
             {/* Stage summary pills */}
@@ -518,10 +608,14 @@ const Projects = () => {
               })}
             </div>
 
-            {/* Board */}
+            {/* Content */}
             {loading ? (
               <div className="flex-1 flex items-center justify-center">
                 <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+              </div>
+            ) : view === "list" ? (
+              <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
+                <ListView projects={projects} onEdit={openEdit} onDelete={handleDelete} />
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto px-6 md:px-10 pb-8">
