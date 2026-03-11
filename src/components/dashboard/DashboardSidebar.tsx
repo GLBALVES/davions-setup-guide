@@ -180,7 +180,7 @@ const groups: MenuGroup[] = [
     icon: Settings,
     items: [
       { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
-      { title: "Access Control", icon: ShieldCheck },
+      { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     ],
   },
   {

@@ -1799,6 +1799,86 @@ export type Database = {
           },
         ]
       }
+      studio_members: {
+        Row: {
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          joined_at: string | null
+          photographer_id: string
+          role_id: string | null
+          status: string
+        }
+        Insert: {
+          email: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          joined_at?: string | null
+          photographer_id: string
+          role_id?: string | null
+          status?: string
+        }
+        Update: {
+          email?: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          joined_at?: string | null
+          photographer_id?: string
+          role_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_members_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "studio_members_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "studio_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_roles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          permissions: Json
+          photographer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          permissions?: Json
+          photographer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          permissions?: Json
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_roles_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_messages: {
         Row: {
           attachment_url: string | null
