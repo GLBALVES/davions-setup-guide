@@ -42,6 +42,15 @@ export interface BlockedSlot {
   session_id: string;
 }
 
+export interface ManualBlock {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  all_day: boolean;
+  reason: string | null;
+}
+
 type ViewMode = "month" | "week" | "day";
 
 const VIEW_LABELS: Record<ViewMode, string> = {
@@ -69,6 +78,7 @@ const Schedule = () => {
   const [currentDate, setCurrentDate] = useState<Date>(startOfToday());
   const [bookings, setBookings] = useState<ScheduleBooking[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
+  const [manualBlocks, setManualBlocks] = useState<ManualBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<ScheduleBooking | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -97,7 +107,7 @@ const Schedule = () => {
     const fromStr = format(addDays(from, -7), "yyyy-MM-dd");
     const toStr = format(addDays(to, 7), "yyyy-MM-dd");
 
-    const [bookingsResult, availResult] = await Promise.all([
+    const [bookingsResult, availResult, blockedResult] = await Promise.all([
       (supabase as any)
         .from("bookings")
         .select(`
@@ -117,6 +127,13 @@ const Schedule = () => {
         .not("date", "is", null)
         .gte("date", fromStr)
         .lte("date", toStr),
+
+      (supabase as any)
+        .from("blocked_times")
+        .select("id, date, start_time, end_time, all_day, reason")
+        .eq("photographer_id", user.id)
+        .gte("date", fromStr)
+        .lte("date", toStr),
     ]);
 
     if (bookingsResult.error) {
@@ -127,6 +144,10 @@ const Schedule = () => {
 
     if (!availResult.error) {
       setBlockedSlots((availResult.data as BlockedSlot[]) ?? []);
+    }
+
+    if (!blockedResult.error) {
+      setManualBlocks((blockedResult.data as ManualBlock[]) ?? []);
     }
 
     setLoading(false);
@@ -262,14 +283,17 @@ const Schedule = () => {
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={(date) => handleCreateBooking(date)}
+                  onBlockDay={handleBlockDay}
                 />
               ) : viewMode === "week" ? (
                 <WeekView
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
@@ -278,6 +302,7 @@ const Schedule = () => {
                   currentDate={currentDate}
                   bookings={bookings}
                   blockedSlots={blockedSlots}
+                  manualBlocks={manualBlocks}
                   onBookingClick={handleBookingClick}
                   onCreateBooking={handleCreateBooking}
                 />
@@ -285,12 +310,13 @@ const Schedule = () => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-3 shrink-0">
+            <div className="flex items-center gap-4 mt-3 shrink-0 flex-wrap">
               <p className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground/50">Legend</p>
               {[
                 { label: "Confirmed", cls: "bg-foreground" },
                 { label: "Pending", cls: "bg-muted border border-border" },
-                { label: "Blocked", cls: "bg-muted-foreground/15 border border-dashed border-muted-foreground/30" },
+                { label: "Booked slot", cls: "bg-muted-foreground/15 border border-dashed border-muted-foreground/30" },
+                { label: "Manually blocked", cls: "bg-destructive/20 border border-destructive/40" },
               ].map(({ label, cls }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <span className={`h-2.5 w-2.5 rounded-sm ${cls}`} />

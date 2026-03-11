@@ -7,7 +7,7 @@ import {
   format,
 } from "date-fns";
 import type { ScheduleBooking } from "./BookingDetailSheet";
-import type { BlockedSlot } from "@/pages/dashboard/Schedule";
+import type { BlockedSlot, ManualBlock } from "@/pages/dashboard/Schedule";
 
 const HOUR_START = 6;
 const HOUR_END = 22;
@@ -33,6 +33,13 @@ function minutesToTimeStr(mins: number): string {
   return `${padTwo(h)}:${padTwo(m)}`;
 }
 
+function formatTime(t: string): string {
+  const [h, m] = t.split(":");
+  const d = new Date();
+  d.setHours(parseInt(h), parseInt(m));
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-foreground text-background border-foreground",
   pending: "bg-muted text-muted-foreground border-border",
@@ -43,11 +50,12 @@ interface WeekViewProps {
   currentDate: Date;
   bookings: ScheduleBooking[];
   blockedSlots: BlockedSlot[];
+  manualBlocks: ManualBlock[];
   onBookingClick: (booking: ScheduleBooking) => void;
   onCreateBooking: (date: Date, startTime: string) => void;
 }
 
-export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, onCreateBooking }: WeekViewProps) {
+export function WeekView({ currentDate, bookings, blockedSlots, manualBlocks, onBookingClick, onCreateBooking }: WeekViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => {
@@ -79,6 +87,16 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
     return map;
   }, [blockedSlots, days]);
 
+  const manualBlocksByDay = useMemo(() => {
+    const map = new Map<string, ManualBlock[]>();
+    days.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
+    manualBlocks.forEach((mb) => {
+      const key = mb.date.slice(0, 10);
+      if (map.has(key)) map.get(key)!.push(mb);
+    });
+    return map;
+  }, [manualBlocks, days]);
+
   useEffect(() => {
     if (scrollRef.current) {
       const now = new Date();
@@ -104,21 +122,37 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const dayBlocked = blockedByDay.get(key) ?? [];
+          const dayManual = manualBlocksByDay.get(key) ?? [];
+          const isAllDay = dayManual.some((mb) => mb.all_day);
           return (
-            <div key={key} className="py-2 text-center border-r border-border last:border-r-0">
+            <div
+              key={key}
+              className={`py-2 text-center border-r border-border last:border-r-0 ${
+                isAllDay ? "bg-destructive/5" : ""
+              }`}
+            >
               <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
                 {format(day, "EEE")}
               </p>
               <span
                 className={`text-sm font-light h-7 w-7 flex items-center justify-center rounded-full mx-auto mt-0.5 ${
-                  isToday(day) ? "bg-foreground text-background" : "text-foreground"
+                  isToday(day)
+                    ? "bg-foreground text-background"
+                    : isAllDay
+                    ? "text-destructive/70"
+                    : "text-foreground"
                 }`}
               >
                 {format(day, "d")}
               </span>
-              {dayBlocked.length > 0 && (
+              {isAllDay && (
+                <p className="text-[8px] tracking-wider uppercase text-destructive/60 mt-0.5 font-light">
+                  Blocked
+                </p>
+              )}
+              {!isAllDay && (dayBlocked.length > 0 || dayManual.length > 0) && (
                 <p className="text-[8px] tracking-wider uppercase text-muted-foreground/50 mt-0.5">
-                  {dayBlocked.length} blocked
+                  {dayBlocked.length + dayManual.length} blocked
                 </p>
               )}
             </div>
@@ -149,9 +183,29 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
             const key = format(day, "yyyy-MM-dd");
             const dayBookings = bookingsByDay.get(key) ?? [];
             const dayBlocked = blockedByDay.get(key) ?? [];
+            const dayManual = manualBlocksByDay.get(key) ?? [];
+            const isAllDay = dayManual.some((mb) => mb.all_day);
 
             return (
-              <div key={key} className="relative border-r border-border last:border-r-0">
+              <div
+                key={key}
+                className={`relative border-r border-border last:border-r-0 ${
+                  isAllDay ? "bg-destructive/3" : ""
+                }`}
+              >
+                {/* All-day blocked: full column hatch */}
+                {isAllDay && (
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[1]"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(45deg, hsl(var(--destructive)) 0, hsl(var(--destructive)) 1px, transparent 0, transparent 50%)",
+                      backgroundSize: "10px 10px",
+                      opacity: 0.06,
+                    }}
+                  />
+                )}
+
                 {/* Hour cells — clickable */}
                 {HOURS.map((h, hIdx) => (
                   <div
@@ -166,7 +220,7 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
                   </div>
                 ))}
 
-                {/* Blocked slot background strips */}
+                {/* Session-availability blocked strips (is_booked=true) */}
                 {dayBlocked.map((s) => {
                   const topMin = minutesFromStart(s.start_time);
                   const durationMin = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
@@ -176,10 +230,9 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
                   return (
                     <div
                       key={`blocked-${s.id}`}
-                      className="absolute left-0 right-0 pointer-events-none z-[1]"
+                      className="absolute left-0 right-0 pointer-events-none z-[2]"
                       style={{ top, height }}
                     >
-                      {/* Diagonal hatch pattern */}
                       <div
                         className="absolute inset-0 opacity-30"
                         style={{
@@ -189,6 +242,39 @@ export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, 
                         }}
                       />
                       <div className="absolute inset-0 border-l-2 border-muted-foreground/30 bg-muted-foreground/5" />
+                    </div>
+                  );
+                })}
+
+                {/* Manual blocked time ranges */}
+                {!isAllDay && dayManual.map((mb) => {
+                  const topMin = minutesFromStart(mb.start_time.slice(0, 5));
+                  const durationMin = timeToMinutes(mb.end_time.slice(0, 5)) - timeToMinutes(mb.start_time.slice(0, 5));
+                  const top = (topMin / 60) * CELL_HEIGHT;
+                  const height = Math.max((durationMin / 60) * CELL_HEIGHT, 20);
+                  if (topMin < 0 || topMin > (HOUR_END - HOUR_START) * 60) return null;
+                  return (
+                    <div
+                      key={`manual-${mb.id}`}
+                      className="absolute left-0 right-0 z-[3] pointer-events-none"
+                      style={{ top, height }}
+                      title={mb.reason ?? `Blocked: ${formatTime(mb.start_time)} – ${formatTime(mb.end_time)}`}
+                    >
+                      <div
+                        className="absolute inset-0 opacity-15"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, hsl(var(--destructive)) 0, hsl(var(--destructive)) 1px, transparent 0, transparent 50%)",
+                          backgroundSize: "6px 6px",
+                        }}
+                      />
+                      <div className="absolute inset-0 border-l-2 border-destructive/50 bg-destructive/8 flex items-center px-2 overflow-hidden">
+                        <span className="text-[9px] tracking-wider uppercase text-destructive/60 font-light truncate">
+                          {mb.reason
+                            ? mb.reason
+                            : `${formatTime(mb.start_time)} – ${formatTime(mb.end_time)}`}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}

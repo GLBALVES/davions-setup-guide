@@ -1,7 +1,7 @@
 import { useMemo, useRef, useEffect } from "react";
 import { isSameDay, isToday, format } from "date-fns";
 import type { ScheduleBooking } from "./BookingDetailSheet";
-import type { BlockedSlot } from "@/pages/dashboard/Schedule";
+import type { BlockedSlot, ManualBlock } from "@/pages/dashboard/Schedule";
 
 const HOUR_START = 6;
 const HOUR_END = 22;
@@ -50,11 +50,12 @@ interface DayViewProps {
   currentDate: Date;
   bookings: ScheduleBooking[];
   blockedSlots: BlockedSlot[];
+  manualBlocks: ManualBlock[];
   onBookingClick: (booking: ScheduleBooking) => void;
   onCreateBooking: (date: Date, startTime: string) => void;
 }
 
-export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, onCreateBooking }: DayViewProps) {
+export function DayView({ currentDate, bookings, blockedSlots, manualBlocks, onBookingClick, onCreateBooking }: DayViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const dayBookings = useMemo(
@@ -75,6 +76,14 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
       }),
     [blockedSlots, currentDate]
   );
+
+  const dayManualBlocks = useMemo(
+    () => manualBlocks.filter((mb) => isSameDay(new Date(mb.date), currentDate)),
+    [manualBlocks, currentDate]
+  );
+
+  const isAllDayBlocked = dayManualBlocks.some((mb) => mb.all_day);
+  const partialManualBlocks = dayManualBlocks.filter((mb) => !mb.all_day);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -98,10 +107,18 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Day header */}
-      <div className="border-b border-border px-6 py-3 flex items-center gap-3">
+      <div
+        className={`border-b border-border px-6 py-3 flex items-center gap-3 ${
+          isAllDayBlocked ? "bg-destructive/5" : ""
+        }`}
+      >
         <span
           className={`text-2xl font-light h-10 w-10 flex items-center justify-center rounded-full ${
-            today ? "bg-foreground text-background" : "text-foreground"
+            today
+              ? "bg-foreground text-background"
+              : isAllDayBlocked
+              ? "bg-destructive/10 text-destructive/70"
+              : "text-foreground"
           }`}
         >
           {format(currentDate, "d")}
@@ -113,10 +130,22 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
+          {isAllDayBlocked && (
+            <span className="text-[10px] tracking-[0.15em] uppercase text-destructive/60 flex items-center gap-1.5 font-light">
+              <span className="h-2 w-2 rounded-sm bg-destructive/30 border border-destructive/40" />
+              {dayManualBlocks.find((mb) => mb.all_day)?.reason ?? "Day blocked"}
+            </span>
+          )}
+          {partialManualBlocks.length > 0 && (
+            <span className="text-[10px] tracking-[0.15em] uppercase text-destructive/60 flex items-center gap-1.5 font-light">
+              <span className="h-2 w-2 rounded-sm bg-destructive/20 border border-destructive/30" />
+              {partialManualBlocks.length} blocked range{partialManualBlocks.length > 1 ? "s" : ""}
+            </span>
+          )}
           {dayBlocked.length > 0 && (
             <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/60 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-sm bg-muted-foreground/30 border border-dashed border-muted-foreground/40" />
-              {dayBlocked.length} blocked slot{dayBlocked.length > 1 ? "s" : ""}
+              {dayBlocked.length} booked slot{dayBlocked.length > 1 ? "s" : ""}
             </span>
           )}
           <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
@@ -130,7 +159,7 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
       </div>
 
       {/* Time grid */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className={`flex-1 overflow-y-auto ${isAllDayBlocked ? "bg-destructive/2" : ""}`}>
         <div className="grid" style={{ gridTemplateColumns: "64px 1fr" }}>
           {/* Time labels */}
           <div className="border-r border-border">
@@ -149,6 +178,19 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
 
           {/* Events column */}
           <div className="relative">
+            {/* All-day blocked: full column hatch */}
+            {isAllDayBlocked && (
+              <div
+                className="absolute inset-0 pointer-events-none z-[1]"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(45deg, hsl(var(--destructive)) 0, hsl(var(--destructive)) 1px, transparent 0, transparent 50%)",
+                  backgroundSize: "10px 10px",
+                  opacity: 0.06,
+                }}
+              />
+            )}
+
             {/* Hour cells — clickable */}
             {HOURS.map((h, hIdx) => (
               <div
@@ -163,7 +205,7 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
               </div>
             ))}
 
-            {/* Blocked slot backgrounds */}
+            {/* Session-availability blocked slot backgrounds */}
             {dayBlocked.map((s) => {
               const topMin = minutesFromStart(s.start_time);
               const durationMin = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
@@ -173,9 +215,9 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
               return (
                 <div
                   key={`blocked-${s.id}`}
-                  className="absolute left-2 right-2 pointer-events-none z-[1]"
+                  className="absolute left-2 right-2 pointer-events-none z-[2]"
                   style={{ top, height }}
-                  title={`Blocked: ${formatTime(s.start_time)} – ${formatTime(s.end_time)}`}
+                  title={`Booked: ${formatTime(s.start_time)} – ${formatTime(s.end_time)}`}
                 >
                   <div
                     className="absolute inset-0 rounded-sm opacity-25"
@@ -187,8 +229,44 @@ export function DayView({ currentDate, bookings, blockedSlots, onBookingClick, o
                   />
                   <div className="absolute inset-0 rounded-sm border border-dashed border-muted-foreground/30 bg-muted-foreground/5 flex items-center px-3">
                     <span className="text-[9px] tracking-wider uppercase text-muted-foreground/50 font-light">
-                      Blocked · {formatTime(s.start_time)} – {formatTime(s.end_time)}
+                      Booked · {formatTime(s.start_time)} – {formatTime(s.end_time)}
                     </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Manual blocked time ranges */}
+            {partialManualBlocks.map((mb) => {
+              const topMin = minutesFromStart(mb.start_time.slice(0, 5));
+              const durationMin =
+                timeToMinutes(mb.end_time.slice(0, 5)) - timeToMinutes(mb.start_time.slice(0, 5));
+              const top = (topMin / 60) * CELL_HEIGHT;
+              const height = Math.max((durationMin / 60) * CELL_HEIGHT, 28);
+              if (topMin < 0 || topMin > (HOUR_END - HOUR_START) * 60) return null;
+              return (
+                <div
+                  key={`manual-${mb.id}`}
+                  className="absolute left-2 right-2 z-[3] pointer-events-none"
+                  style={{ top, height }}
+                >
+                  <div
+                    className="absolute inset-0 rounded-sm opacity-20"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(45deg, hsl(var(--destructive)) 0, hsl(var(--destructive)) 1px, transparent 0, transparent 50%)",
+                      backgroundSize: "6px 6px",
+                    }}
+                  />
+                  <div className="absolute inset-0 rounded-sm border border-destructive/40 bg-destructive/8 flex flex-col justify-center px-3 gap-0.5">
+                    <span className="text-[9px] tracking-wider uppercase text-destructive/60 font-light">
+                      Blocked · {formatTime(mb.start_time)} – {formatTime(mb.end_time)}
+                    </span>
+                    {mb.reason && height > 40 && (
+                      <span className="text-[9px] text-destructive/50 font-light truncate">
+                        {mb.reason}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
