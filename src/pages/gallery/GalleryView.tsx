@@ -690,10 +690,10 @@ const GalleryView = () => {
                         <div className="absolute inset-0 bg-rose-500/8 pointer-events-none z-10" />
                       )}
 
-                      {/* Proof: hover overlay */}
+      {/* Proof: hover overlay */}
                       {isProof && (
                         <div
-                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                          className="absolute inset-0 flex flex-col items-center justify-end pb-3 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
                           style={{ background: isFav ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.38)" }}
                         >
                           <button
