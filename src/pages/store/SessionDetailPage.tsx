@@ -644,7 +644,7 @@ const SessionDetailPage = () => {
                                       : "border-border hover:border-foreground/40 text-foreground"
                                   )}
                                 >
-                                  <span>{slot.start_time}</span>
+                                  <span>{formatTime12(slot.start_time)}</span>
                                   {slot.disabled && (
                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
                                       {slot.disabledReason === "booked" ? "booked" : "unavail."}
