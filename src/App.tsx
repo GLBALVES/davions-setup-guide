@@ -46,6 +46,7 @@ import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
 import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 import AccessControl from "./pages/dashboard/AccessControl";
+import Projects from "./pages/dashboard/Projects";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
