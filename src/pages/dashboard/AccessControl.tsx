@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import {
   Dialog,
   DialogContent,
@@ -117,7 +120,7 @@ function StatusBadge({ status }: { status: string }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AccessControl() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
 
   const [roles, setRoles] = useState<StudioRole[]>([]);
@@ -313,26 +316,32 @@ export default function AccessControl() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage studio roles and invite collaborators
-            </p>
-          </div>
-        </div>
-        <Button size="sm" onClick={() => setInviteOpen(true)}>
-          <UserPlus className="h-4 w-4" />
-          Invite User
-        </Button>
-      </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
 
-      {/* Body */}
-      <div className="flex h-[calc(100vh-97px)] overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <DashboardHeader />
+
+          {/* Page title bar */}
+          <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Manage studio roles and invite collaborators
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="h-4 w-4" />
+              Invite User
+            </Button>
+          </div>
+
+          {/* Body */}
+          <div className="flex flex-1 overflow-hidden">
         {/* ── Left panel: Roles ── */}
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
@@ -532,9 +541,10 @@ export default function AccessControl() {
                 </TableBody>
               </Table>
             )}
-          </div>
-        </div>
-      </div>
+          </div>{/* right panel scroll */}
+        </div>{/* right panel */}
+        </div>{/* body flex */}
+        </div>{/* flex-1 flex flex-col min-w-0 */}
 
       {/* ── Invite Dialog ── */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
@@ -619,11 +629,12 @@ export default function AccessControl() {
               onClick={handleCreateRole}
               disabled={creatingRole || !newRoleName.trim()}
             >
-              {creatingRole ? "Creating…" : "Create"}
+            {creatingRole ? "Creating…" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>{/* min-h-screen flex w-full */}
+    </SidebarProvider>
   );
 }
