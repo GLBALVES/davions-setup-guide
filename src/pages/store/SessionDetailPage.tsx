@@ -676,7 +676,7 @@ const SessionDetailPage = () => {
               <div className="border border-border p-4 flex flex-col gap-1">
                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-2">Selected slot</p>
                 <p className="text-sm font-light capitalize">{selectedSlot.label}</p>
-                <p className="text-xs text-muted-foreground">{selectedSlot.start_time} – {selectedSlot.end_time}</p>
+                <p className="text-xs text-muted-foreground">{formatTime12(selectedSlot.start_time)} – {formatTime12(selectedSlot.end_time)}</p>
               </div>
               <div className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Your details</p>
