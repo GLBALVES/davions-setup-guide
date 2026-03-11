@@ -662,7 +662,7 @@ const SessionDetailPage = () => {
               </div>
               <Button
                 onClick={() => setStep("form")}
-                disabled={!selectedSlot}
+                disabled={!selectedSlot || selectedSlot.disabled}
                 className="w-full text-xs tracking-wider uppercase font-light rounded-none h-11"
               >
                 Continue →
