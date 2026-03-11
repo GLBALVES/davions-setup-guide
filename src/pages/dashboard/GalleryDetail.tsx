@@ -1126,7 +1126,7 @@ const GalleryDetail = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                {(() => {
+                {gallery.category === "proof" && (() => {
                   const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
                   return (
                     <Button
@@ -1143,8 +1143,8 @@ const GalleryDetail = () => {
                   );
                 })()}
 
-                {/* Lightroom Export Modal */}
-                {(() => {
+                {/* Lightroom Export Modal — proof only */}
+                {gallery.category === "proof" && (() => {
                   const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
                   const csvText = favoritedPhotos.map((p) => p.filename).join(",");
                   const copyText = async () => {
@@ -1493,8 +1493,8 @@ const GalleryDetail = () => {
                 </div>
               )}
 
-              {/* Client Favorites — Lightroom Export */}
-              {(() => {
+              {/* Client Favorites — Lightroom Export (proof only) */}
+              {gallery.category === "proof" && (() => {
                 const favoritedPhotos = photos
                   .filter((p) => (p.favorite_count ?? 0) > 0)
                   .sort((a, b) => a.order_index - b.order_index);

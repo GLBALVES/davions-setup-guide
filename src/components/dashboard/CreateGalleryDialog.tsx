@@ -66,6 +66,11 @@ function generateSlug(title: string) {
     .replace(/-+/g, "-");
 }
 
+function generateAccessCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
 export function CreateGalleryDialog({
   open,
   onOpenChange,
@@ -252,6 +257,7 @@ export function CreateGalleryDialog({
         title: title.trim(),
         slug: autoSlug || null,
         category: defaultCategory,
+        access_code: generateAccessCode(),
       };
       if (coverImageUrl) insertPayload.cover_image_url = coverImageUrl;
       if (selectedBookingId) insertPayload.booking_id = selectedBookingId;
