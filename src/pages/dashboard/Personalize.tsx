@@ -674,6 +674,82 @@ const Personalize = () => {
                         </div>
                       )}
                     </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Briefings */}
+                    <section className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                          title="Briefings"
+                          description="Build questionnaires to understand your clients before the session."
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                          onClick={() => {
+                            setEditingBriefing(null);
+                            setBriefingName("");
+                            setBriefingQuestions([]);
+                            setBriefingDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          New briefing
+                        </Button>
+                      </div>
+
+                      {briefings.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">No briefings yet. Create one to collect info from clients after they book.</p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {briefings.map((b) => (
+                            <div key={b.id} className="border border-border p-4 flex items-start justify-between gap-4">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{b.name || "Untitled"}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {b.questions.length} question{b.questions.length !== 1 ? "s" : ""}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => {
+                                    setEditingBriefing(b);
+                                    setBriefingName(b.name);
+                                    setBriefingQuestions(b.questions);
+                                    setBriefingDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  disabled={deletingBriefingId === b.id}
+                                  onClick={async () => {
+                                    setDeletingBriefingId(b.id);
+                                    await (supabase as any).from("briefings").delete().eq("id", b.id);
+                                    await fetchBriefings();
+                                    setDeletingBriefingId(null);
+                                  }}
+                                >
+                                  {deletingBriefingId === b.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
                   </TabsContent>
 
                   {/* Contract dialog */}
