@@ -79,6 +79,7 @@ const STAGE_COLORS: Record<Stage, string> = {
   editing:  "bg-orange-500/10 text-orange-600 border-orange-500/20",
   delivery: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   done:     "bg-foreground/10 text-foreground border-foreground/20",
+  archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
 const SESSION_TYPES = [
