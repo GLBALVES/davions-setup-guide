@@ -501,6 +501,72 @@ export type Database = {
         }
         Relationships: []
       }
+      client_projects: {
+        Row: {
+          booking_id: string | null
+          client_email: string | null
+          client_name: string
+          color: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          photographer_id: string
+          position: number
+          session_type: string | null
+          shoot_date: string | null
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_email?: string | null
+          client_name?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photographer_id: string
+          position?: number
+          session_type?: string | null
+          shoot_date?: string | null
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_email?: string | null
+          client_name?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photographer_id?: string
+          position?: number
+          session_type?: string | null
+          shoot_date?: string | null
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_projects_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_projects_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           body: string
