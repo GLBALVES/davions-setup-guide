@@ -270,7 +270,22 @@ const SessionDetailPage = () => {
           .map((b) => `${b.availability_id}_${b.booked_date}`)
       );
 
-      const occurrences = generateOccurrences(defs, bookedKeys, s.duration_minutes, noticeDays, windowDays);
+      // Fetch blocked times for this photographer in the booking window
+      const { data: blockedData } = await (supabase as any)
+        .from("blocked_times")
+        .select("date, start_time, end_time, all_day")
+        .eq("photographer_id", s.photographer_id)
+        .gte("date", fromDate)
+        .lte("date", toDate);
+
+      const blockedTimes: BlockedTime[] = (blockedData ?? []).map((b: any) => ({
+        date: b.date,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        all_day: b.all_day,
+      }));
+
+      const occurrences = generateOccurrences(defs, bookedKeys, blockedTimes, s.duration_minutes, noticeDays, windowDays);
       setGeneratedSlots(occurrences);
       setLoading(false);
     };
