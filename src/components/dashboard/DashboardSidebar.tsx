@@ -55,7 +55,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuBadge,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
