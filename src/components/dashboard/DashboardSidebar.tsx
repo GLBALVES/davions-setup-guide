@@ -136,6 +136,7 @@ const groups: MenuGroup[] = [
       { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
       { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
       { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
+      { title: "Social Media", icon: Instagram, to: "/dashboard/social-media" },
       { title: "SEO", icon: SearchCheck, to: "/dashboard/seo", permKey: "seo" },
       { title: "Emails", icon: Mail, to: "/dashboard/emails", permKey: "emails" },
       { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },

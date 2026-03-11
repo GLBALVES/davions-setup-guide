@@ -63,25 +63,6 @@ const Settings = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
-  // Social Media API connections
-  interface SocialConnection {
-    id?: string;
-    platform: string;
-    credentials: {
-      app_id?: string;
-      app_secret?: string;
-      page_access_token?: string;
-      page_id?: string;
-      instagram_account_id?: string;
-    };
-    is_active: boolean;
-  }
-  const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([
-    { platform: "facebook", credentials: {}, is_active: false },
-    { platform: "instagram", credentials: {}, is_active: false },
-  ]);
-  const [savingSocial, setSavingSocial] = useState<string | null>(null);
-  const [testingSocial, setTestingSocial] = useState<string | null>(null);
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
