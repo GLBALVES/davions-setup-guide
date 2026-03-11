@@ -23,6 +23,16 @@ function formatTime(t: string): string {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+function padTwo(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function minutesToTimeStr(mins: number): string {
+  const h = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  return `${padTwo(h)}:${padTwo(m)}`;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-foreground text-background border-foreground",
   pending: "bg-muted text-muted-foreground border-border",
@@ -39,9 +49,10 @@ interface DayViewProps {
   currentDate: Date;
   bookings: ScheduleBooking[];
   onBookingClick: (booking: ScheduleBooking) => void;
+  onCreateBooking: (date: Date, startTime: string) => void;
 }
 
-export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps) {
+export function DayView({ currentDate, bookings, onBookingClick, onCreateBooking }: DayViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const dayBookings = useMemo(
@@ -63,6 +74,15 @@ export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps)
   }, [currentDate]);
 
   const today = isToday(currentDate);
+
+  const handleCellClick = (hourIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const yOffset = e.clientY - rect.top;
+    const fractionalMinutes = Math.floor((yOffset / CELL_HEIGHT) * 60);
+    const totalMins = (HOUR_START + hourIndex) * 60 + fractionalMinutes;
+    const snapped = Math.round(totalMins / 15) * 15;
+    onCreateBooking(currentDate, minutesToTimeStr(snapped));
+  };
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -92,10 +112,7 @@ export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps)
 
       {/* Time grid */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div
-          className="relative"
-          style={{ gridTemplateColumns: "64px 1fr" }}
-        >
+        <div className="relative">
           <div className="grid" style={{ gridTemplateColumns: "64px 1fr" }}>
             {/* Time labels */}
             <div className="border-r border-border">
@@ -114,17 +131,25 @@ export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps)
 
             {/* Events column */}
             <div className="relative">
-              {HOURS.map((h) => (
-                <div key={h} className="border-b border-border" style={{ height: CELL_HEIGHT }} />
+              {/* Hour cells — clickable */}
+              {HOURS.map((h, hIdx) => (
+                <div
+                  key={h}
+                  className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
+                  style={{ height: CELL_HEIGHT }}
+                  onClick={(e) => handleCellClick(hIdx, e)}
+                  title={`Add booking at ${h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`}`}
+                >
+                  <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[22px] text-muted-foreground pointer-events-none select-none">
+                    +
+                  </span>
+                </div>
               ))}
 
               {/* Booking blocks */}
               {dayBookings.map((b) => {
                 const avail = b.session_availability;
-                if (!avail?.start_time || !avail?.end_time) {
-                  // No time info — render as all-day-ish card
-                  return null;
-                }
+                if (!avail?.start_time || !avail?.end_time) return null;
                 const topMin = minutesFromStart(avail.start_time);
                 const durationMin = timeToMinutes(avail.end_time) - timeToMinutes(avail.start_time);
                 const top = (topMin / 60) * CELL_HEIGHT;
@@ -135,8 +160,8 @@ export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps)
                 return (
                   <button
                     key={b.id}
-                    onClick={() => onBookingClick(b)}
-                    className={`absolute left-2 right-2 rounded-sm px-3 py-1.5 text-left border overflow-hidden hover:opacity-80 transition-opacity ${
+                    onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
+                    className={`absolute left-2 right-2 rounded-sm px-3 py-1.5 text-left border overflow-hidden hover:opacity-80 transition-opacity z-10 ${
                       STATUS_COLORS[b.status] ?? STATUS_COLORS["pending"]
                     }`}
                     style={{ top, height }}
@@ -171,7 +196,7 @@ export function DayView({ currentDate, bookings, onBookingClick }: DayViewProps)
                 .map((b) => (
                   <button
                     key={`notime-${b.id}`}
-                    onClick={() => onBookingClick(b)}
+                    onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
                     className={`w-[calc(100%-1rem)] mx-2 mt-2 rounded-sm px-3 py-2 text-left border flex items-center justify-between gap-2 hover:opacity-80 transition-opacity ${
                       STATUS_COLORS[b.status] ?? STATUS_COLORS["pending"]
                     }`}
