@@ -683,7 +683,13 @@ const Projects = () => {
               </div>
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
-                <ListView projects={projects} onEdit={openEdit} onDelete={handleDelete} />
+                <ListView
+                  projects={projects}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
+                />
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto px-6 md:px-10 pb-8">
@@ -695,13 +701,14 @@ const Projects = () => {
                   onDragEnd={handleDragEnd}
                 >
                   <div className="flex gap-4 h-full items-start">
-                    {STAGES.map((s) => (
+                    {STAGES.filter((s) => s.key !== "archived").map((s) => (
                       <KanbanColumn
                         key={s.key}
                         stage={s}
                         projects={projectsByStage(s.key)}
                         onEdit={openEdit}
                         onDelete={handleDelete}
+                        onArchive={handleArchive}
                         onAddCard={openAdd}
                       />
                     ))}
@@ -717,6 +724,15 @@ const Projects = () => {
                     )}
                   </DragOverlay>
                 </DndContext>
+
+                {/* Archived banner in kanban */}
+                {projectsByStage("archived").length > 0 && (
+                  <ArchivedKanbanSection
+                    projects={projectsByStage("archived")}
+                    onUnarchive={handleUnarchive}
+                    onDelete={handleDelete}
+                  />
+                )}
               </div>
             )}
           </main>
