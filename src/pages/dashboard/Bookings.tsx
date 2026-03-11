@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,8 +29,8 @@ import {
   XCircle,
   BookOpen,
   Images,
+  ClipboardList,
 } from "lucide-react";
-import logoPrincipal from "@/assets/logo_principal_preto.png";
 
 interface Booking {
   id: string;
@@ -41,7 +42,7 @@ interface Booking {
   created_at: string;
   session_id: string;
   availability_id: string;
-  sessions?: { title: string } | null;
+  sessions?: { title: string; briefing_id?: string | null } | null;
   session_availability?: { start_time: string; end_time: string; date: string | null } | null;
 }
 
@@ -60,6 +61,93 @@ const PAYMENT_META: Record<string, { label: string; className: string }> = {
   refunded: { label: "Refunded", className: "text-muted-foreground" },
 };
 
+// ── Briefing response viewer ──────────────────────────────────────────────────
+
+interface BriefingQuestion {
+  id: string;
+  type: string;
+  label: string;
+  required: boolean;
+  options: string[];
+}
+
+interface BriefingResponseDialogProps {
+  open: boolean;
+  onClose: () => void;
+  bookingId: string;
+  briefingId: string;
+}
+
+function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: BriefingResponseDialogProps) {
+  const [questions, setQuestions] = useState<BriefingQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [briefingName, setBriefingName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [hasResponse, setHasResponse] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const load = async () => {
+      setLoading(true);
+      const [{ data: briefingData }, { data: responseData }] = await Promise.all([
+        (supabase as any).from("briefings").select("name, questions").eq("id", briefingId).single(),
+        (supabase as any).from("booking_briefing_responses").select("answers").eq("booking_id", bookingId).eq("briefing_id", briefingId).maybeSingle(),
+      ]);
+      if (briefingData) {
+        setBriefingName(briefingData.name ?? "");
+        setQuestions((briefingData.questions as BriefingQuestion[]) ?? []);
+      }
+      if (responseData) {
+        setAnswers((responseData.answers as Record<string, string | string[]>) ?? {});
+        setHasResponse(true);
+      } else {
+        setHasResponse(false);
+        setAnswers({});
+      }
+      setLoading(false);
+    };
+    load();
+  }, [open, bookingId, briefingId]);
+
+  const formatAnswer = (q: BriefingQuestion): string => {
+    const ans = answers[q.id];
+    if (!ans) return "—";
+    if (Array.isArray(ans)) return ans.length ? ans.join(", ") : "—";
+    return ans || "—";
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-sm tracking-widest uppercase font-light flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            {briefingName || "Briefing"}
+          </DialogTitle>
+        </DialogHeader>
+        {loading ? (
+          <p className="text-xs text-muted-foreground py-4 text-center animate-pulse">Loading…</p>
+        ) : !hasResponse ? (
+          <p className="text-[11px] text-muted-foreground italic py-4 text-center">
+            The client hasn't submitted their briefing yet.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-4 pt-1">
+            {questions.map((q) => (
+              <div key={q.id} className="flex flex-col gap-1">
+                <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{q.label}</p>
+                <p className="text-sm font-light">{formatAnswer(q)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 const Bookings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
@@ -76,14 +164,19 @@ const Bookings = () => {
     open: false,
     bookingId: "",
   });
+  const [briefingDialog, setBriefingDialog] = useState<{ open: boolean; bookingId: string; briefingId: string }>({
+    open: false,
+    bookingId: "",
+    briefingId: "",
+  });
 
   const fetchBookings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(`
         *,
-        sessions ( title ),
+        sessions ( title, briefing_id ),
         session_availability ( start_time, end_time, date )
       `)
       .eq("photographer_id", user!.id)
@@ -272,6 +365,7 @@ const Bookings = () => {
                         : null;
                     const statusMeta = STATUS_META[booking.status] ?? STATUS_META["pending"];
                     const paymentMeta = PAYMENT_META[booking.payment_status] ?? PAYMENT_META["pending"];
+                    const hasBriefing = Boolean(booking.sessions?.briefing_id);
 
                     return (
                       <div
@@ -363,7 +457,20 @@ const Bookings = () => {
                               <Images className="h-4 w-4" />
                             </button>
                           )}
-                          {booking.status === "cancelled" && (
+                          {hasBriefing && (
+                            <button
+                              onClick={() => setBriefingDialog({
+                                open: true,
+                                bookingId: booking.id,
+                                briefingId: booking.sessions!.briefing_id!,
+                              })}
+                              title="View briefing responses"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <ClipboardList className="h-4 w-4" />
+                            </button>
+                          )}
+                          {booking.status === "cancelled" && !hasBriefing && (
                             <span className="text-[10px] text-muted-foreground/40">—</span>
                           )}
                         </div>
@@ -420,6 +527,15 @@ const Bookings = () => {
         defaultCategory="proof"
         prefilledBookingId={galleryDialog.bookingId}
       />
+
+      {briefingDialog.open && (
+        <BriefingResponseDialog
+          open={briefingDialog.open}
+          onClose={() => setBriefingDialog({ open: false, bookingId: "", briefingId: "" })}
+          bookingId={briefingDialog.bookingId}
+          briefingId={briefingDialog.briefingId}
+        />
+      )}
     </SidebarProvider>
   );
 };
