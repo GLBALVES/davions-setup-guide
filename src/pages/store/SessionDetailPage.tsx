@@ -57,6 +57,13 @@ interface WeeklySlotDef {
   start_time: string;
 }
 
+interface BlockedTime {
+  date: string;
+  start_time: string;
+  end_time: string;
+  all_day: boolean;
+}
+
 interface GeneratedSlot {
   availabilityId: string;
   date: Date;
