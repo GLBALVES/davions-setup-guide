@@ -42,6 +42,7 @@ import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
+import Clients from "./pages/dashboard/Clients";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -103,7 +104,8 @@ const App = () => (
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/custom-domain-docs" element={<ProtectedRoute><CustomDomainDocs /></ProtectedRoute>} />
                 <Route path="/dashboard/contracts/new" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
-                <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
+                 <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
+                 <Route path="/dashboard/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

@@ -159,7 +159,7 @@ const groups: MenuGroup[] = [
     title: "CRM",
     icon: Users2,
     items: [
-      { title: "Sessions", icon: CalendarDays },
+      { title: "Clients", icon: UserCircle, to: "/dashboard/clients" },
       { title: "Leads", icon: UserPlus },
     ],
   },
