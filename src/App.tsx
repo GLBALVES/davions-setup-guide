@@ -45,6 +45,7 @@ import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
 import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
+import AccessControl from "./pages/dashboard/AccessControl";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
