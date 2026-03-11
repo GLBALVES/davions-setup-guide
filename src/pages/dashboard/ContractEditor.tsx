@@ -84,9 +84,6 @@ const VariableNode = Node.create({
   renderText({ node }) {
     return `[[${node.attrs.key}]]`;
   },
-  toDOM() {
-    return ["span", { "data-variable": "" }, 0];
-  },
 });
 
 // ── Main component ─────────────────────────────────────────────────────────────
