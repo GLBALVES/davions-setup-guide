@@ -7,11 +7,12 @@ import {
   format,
 } from "date-fns";
 import type { ScheduleBooking } from "./BookingDetailSheet";
+import type { BlockedSlot } from "@/pages/dashboard/Schedule";
 
 const HOUR_START = 6;
 const HOUR_END = 22;
 const HOURS = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i);
-const CELL_HEIGHT = 64; // px per hour
+const CELL_HEIGHT = 64;
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
@@ -41,11 +42,12 @@ const STATUS_COLORS: Record<string, string> = {
 interface WeekViewProps {
   currentDate: Date;
   bookings: ScheduleBooking[];
+  blockedSlots: BlockedSlot[];
   onBookingClick: (booking: ScheduleBooking) => void;
   onCreateBooking: (date: Date, startTime: string) => void;
 }
 
-export function WeekView({ currentDate, bookings, onBookingClick, onCreateBooking }: WeekViewProps) {
+export function WeekView({ currentDate, bookings, blockedSlots, onBookingClick, onCreateBooking }: WeekViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => {
@@ -66,7 +68,17 @@ export function WeekView({ currentDate, bookings, onBookingClick, onCreateBookin
     return map;
   }, [bookings, days]);
 
-  // Scroll to current time on mount
+  const blockedByDay = useMemo(() => {
+    const map = new Map<string, BlockedSlot[]>();
+    days.forEach((d) => map.set(format(d, "yyyy-MM-dd"), []));
+    blockedSlots.forEach((s) => {
+      if (!s.date) return;
+      const key = s.date.slice(0, 10);
+      if (map.has(key)) map.get(key)!.push(s);
+    });
+    return map;
+  }, [blockedSlots, days]);
+
   useEffect(() => {
     if (scrollRef.current) {
       const now = new Date();
@@ -84,103 +96,131 @@ export function WeekView({ currentDate, bookings, onBookingClick, onCreateBookin
     onCreateBooking(day, minutesToTimeStr(snapped));
   };
 
-  const totalHeight = HOURS.length * CELL_HEIGHT;
-
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Day headers */}
       <div className="grid border-b border-border" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
         <div className="border-r border-border" />
-        {days.map((day) => (
-          <div key={format(day, "yyyy-MM-dd")} className="py-2 text-center border-r border-border last:border-r-0">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              {format(day, "EEE")}
-            </p>
-            <span
-              className={`text-sm font-light h-7 w-7 flex items-center justify-center rounded-full mx-auto mt-0.5 ${
-                isToday(day) ? "bg-foreground text-background" : "text-foreground"
-              }`}
-            >
-              {format(day, "d")}
-            </span>
-          </div>
-        ))}
+        {days.map((day) => {
+          const key = format(day, "yyyy-MM-dd");
+          const dayBlocked = blockedByDay.get(key) ?? [];
+          return (
+            <div key={key} className="py-2 text-center border-r border-border last:border-r-0">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+                {format(day, "EEE")}
+              </p>
+              <span
+                className={`text-sm font-light h-7 w-7 flex items-center justify-center rounded-full mx-auto mt-0.5 ${
+                  isToday(day) ? "bg-foreground text-background" : "text-foreground"
+                }`}
+              >
+                {format(day, "d")}
+              </span>
+              {dayBlocked.length > 0 && (
+                <p className="text-[8px] tracking-wider uppercase text-muted-foreground/50 mt-0.5">
+                  {dayBlocked.length} blocked
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Time grid */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="relative" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
-          <div className="grid" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
-            {/* Time labels column */}
-            <div className="relative border-r border-border">
-              {HOURS.map((h) => (
-                <div
-                  key={h}
-                  className="border-b border-border flex items-start justify-end pr-2 pt-1"
-                  style={{ height: CELL_HEIGHT }}
-                >
-                  <span className="text-[10px] text-muted-foreground/50 font-light leading-none -translate-y-1.5">
-                    {h === 12 ? "12pm" : h < 12 ? `${h}am` : `${h - 12}pm`}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Day columns */}
-            {days.map((day) => {
-              const key = format(day, "yyyy-MM-dd");
-              const dayBookings = bookingsByDay.get(key) ?? [];
-
-              return (
-                <div key={key} className="relative border-r border-border last:border-r-0">
-                  {/* Hour cells — clickable to create */}
-                  {HOURS.map((h, hIdx) => (
-                    <div
-                      key={h}
-                      className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
-                      style={{ height: CELL_HEIGHT }}
-                      onClick={(e) => handleCellClick(day, hIdx, e)}
-                      title={`Add booking at ${h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`}`}
-                    >
-                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[18px] text-muted-foreground pointer-events-none select-none">
-                        +
-                      </span>
-                    </div>
-                  ))}
-
-                  {/* Booking blocks */}
-                  {dayBookings.map((b) => {
-                    const avail = b.session_availability;
-                    if (!avail?.start_time || !avail?.end_time) return null;
-                    const topMin = minutesFromStart(avail.start_time);
-                    const durationMin = timeToMinutes(avail.end_time) - timeToMinutes(avail.start_time);
-                    const top = (topMin / 60) * CELL_HEIGHT;
-                    const height = Math.max((durationMin / 60) * CELL_HEIGHT, 20);
-
-                    if (topMin < 0 || topMin > (HOUR_END - HOUR_START) * 60) return null;
-
-                    return (
-                      <button
-                        key={b.id}
-                        onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
-                        className={`absolute left-0.5 right-0.5 rounded-sm px-1.5 py-0.5 text-left border overflow-hidden hover:opacity-80 transition-opacity z-10 ${
-                          STATUS_COLORS[b.status] ?? STATUS_COLORS["pending"]
-                        }`}
-                        style={{ top, height }}
-                      >
-                        <p className="text-[10px] font-light leading-tight truncate">{b.client_name}</p>
-                        {height > 32 && (
-                          <p className="text-[9px] opacity-70 leading-tight truncate">
-                            {b.sessions?.title}
-                          </p>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
+        <div className="grid" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
+          {/* Time labels column */}
+          <div className="border-r border-border">
+            {HOURS.map((h) => (
+              <div
+                key={h}
+                className="border-b border-border flex items-start justify-end pr-2 pt-1"
+                style={{ height: CELL_HEIGHT }}
+              >
+                <span className="text-[10px] text-muted-foreground/50 font-light leading-none -translate-y-1.5">
+                  {h === 12 ? "12pm" : h < 12 ? `${h}am` : `${h - 12}pm`}
+                </span>
+              </div>
+            ))}
           </div>
+
+          {/* Day columns */}
+          {days.map((day) => {
+            const key = format(day, "yyyy-MM-dd");
+            const dayBookings = bookingsByDay.get(key) ?? [];
+            const dayBlocked = blockedByDay.get(key) ?? [];
+
+            return (
+              <div key={key} className="relative border-r border-border last:border-r-0">
+                {/* Hour cells — clickable */}
+                {HOURS.map((h, hIdx) => (
+                  <div
+                    key={h}
+                    className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
+                    style={{ height: CELL_HEIGHT }}
+                    onClick={(e) => handleCellClick(day, hIdx, e)}
+                  >
+                    <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[18px] text-muted-foreground pointer-events-none select-none">
+                      +
+                    </span>
+                  </div>
+                ))}
+
+                {/* Blocked slot background strips */}
+                {dayBlocked.map((s) => {
+                  const topMin = minutesFromStart(s.start_time);
+                  const durationMin = timeToMinutes(s.end_time) - timeToMinutes(s.start_time);
+                  const top = (topMin / 60) * CELL_HEIGHT;
+                  const height = Math.max((durationMin / 60) * CELL_HEIGHT, 16);
+                  if (topMin < 0 || topMin > (HOUR_END - HOUR_START) * 60) return null;
+                  return (
+                    <div
+                      key={`blocked-${s.id}`}
+                      className="absolute left-0 right-0 pointer-events-none z-[1]"
+                      style={{ top, height }}
+                    >
+                      {/* Diagonal hatch pattern */}
+                      <div
+                        className="absolute inset-0 opacity-30"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, hsl(var(--muted-foreground)) 0, hsl(var(--muted-foreground)) 1px, transparent 0, transparent 50%)",
+                          backgroundSize: "6px 6px",
+                        }}
+                      />
+                      <div className="absolute inset-0 border-l-2 border-muted-foreground/30 bg-muted-foreground/5" />
+                    </div>
+                  );
+                })}
+
+                {/* Booking blocks */}
+                {dayBookings.map((b) => {
+                  const avail = b.session_availability;
+                  if (!avail?.start_time || !avail?.end_time) return null;
+                  const topMin = minutesFromStart(avail.start_time);
+                  const durationMin = timeToMinutes(avail.end_time) - timeToMinutes(avail.start_time);
+                  const top = (topMin / 60) * CELL_HEIGHT;
+                  const height = Math.max((durationMin / 60) * CELL_HEIGHT, 20);
+                  if (topMin < 0 || topMin > (HOUR_END - HOUR_START) * 60) return null;
+                  return (
+                    <button
+                      key={b.id}
+                      onClick={(e) => { e.stopPropagation(); onBookingClick(b); }}
+                      className={`absolute left-0.5 right-0.5 rounded-sm px-1.5 py-0.5 text-left border overflow-hidden hover:opacity-80 transition-opacity z-10 ${
+                        STATUS_COLORS[b.status] ?? STATUS_COLORS["pending"]
+                      }`}
+                      style={{ top, height }}
+                    >
+                      <p className="text-[10px] font-light leading-tight truncate">{b.client_name}</p>
+                      {height > 32 && (
+                        <p className="text-[9px] opacity-70 leading-tight truncate">{b.sessions?.title}</p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
