@@ -244,6 +244,16 @@ const Personalize = () => {
     if (data) setContracts(data);
   }, [user]);
 
+  const fetchBriefings = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("briefings")
+      .select("id, name, questions")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setBriefings(data as Briefing[]);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
@@ -262,6 +272,7 @@ const Personalize = () => {
           .eq("id", user.id).single(),
         fetchSessionTypes(),
         fetchContracts(),
+        fetchBriefings(),
       ]);
 
       if (profileRes.data) {
