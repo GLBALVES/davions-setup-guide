@@ -203,11 +203,6 @@ const Personalize = () => {
   // ── Contracts ───────────────────────────────────────────────────────────────
   interface Contract { id: string; name: string; body: string; }
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [contractName, setContractName] = useState("");
-  const [contractBody, setContractBody] = useState("");
-  const [savingContract, setSavingContract] = useState(false);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
   // ── Briefings ────────────────────────────────────────────────────────────────
