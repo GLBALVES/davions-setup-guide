@@ -233,7 +233,7 @@ export function WeekView({ currentDate, bookings, blockedSlots, manualBlocks, on
                     key={h}
                     className="border-b border-border group cursor-pointer hover:bg-muted/30 transition-colors relative"
                     style={{ height: CELL_HEIGHT }}
-                    onClick={(e) => handleCellClick(day, hIdx, e)}
+                    onClick={(e) => handleCellClick(day, dayManual, hIdx, e)}
                   >
                     <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity text-[18px] text-muted-foreground pointer-events-none select-none">
                       +
