@@ -19,6 +19,7 @@ import {
   Mail,
   Bell,
   MessageCircle,
+  Instagram,
   Bot,
   Zap,
   Lightbulb,
