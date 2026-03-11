@@ -587,12 +587,16 @@ const SessionDetailPage = () => {
                         components={{
                           DayContent: ({ date }) => {
                             const key = format(date, "yyyy-MM-dd");
-                            const hasSlots = availableDateKeys.has(key);
+                            const hasAvailable = availableDateKeys.has(key);
+                            const hasAny = allSlotDateKeys.has(key);
                             return (
                               <div className="flex flex-col items-center justify-center h-full gap-[2px]">
                                 <span>{date.getDate()}</span>
-                                {hasSlots && (
-                                  <span className="h-[3px] w-[3px] rounded-full bg-current opacity-60" />
+                                {hasAny && (
+                                  <span className={cn(
+                                    "h-[3px] w-[3px] rounded-full",
+                                    hasAvailable ? "bg-current opacity-60" : "bg-muted-foreground/30"
+                                  )} />
                                 )}
                               </div>
                             );
@@ -619,17 +623,32 @@ const SessionDetailPage = () => {
                               {slotsForSelectedDate.map((slot, i) => (
                                 <button
                                   key={i}
-                                  onClick={() => setSelectedSlot(slot)}
+                                  disabled={slot.disabled}
+                                  onClick={() => !slot.disabled && setSelectedSlot(slot)}
+                                  title={
+                                    slot.disabledReason === "booked"
+                                      ? "Already booked"
+                                      : slot.disabledReason === "blocked"
+                                      ? "Unavailable"
+                                      : undefined
+                                  }
                                   className={cn(
-                                    "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left",
-                                    selectedSlot &&
-                                      selectedSlot.availabilityId === slot.availabilityId &&
-                                      isSameDay(selectedSlot.date, slot.date)
+                                    "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left relative",
+                                    slot.disabled
+                                      ? "border-border/40 text-muted-foreground/40 cursor-not-allowed bg-muted/30 line-through"
+                                      : selectedSlot &&
+                                        selectedSlot.availabilityId === slot.availabilityId &&
+                                        isSameDay(selectedSlot.date, slot.date)
                                       ? "border-foreground bg-foreground text-background"
                                       : "border-border hover:border-foreground/40 text-foreground"
                                   )}
                                 >
-                                  {slot.start_time}
+                                  <span>{slot.start_time}</span>
+                                  {slot.disabled && (
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
+                                      {slot.disabledReason === "booked" ? "booked" : "unavail."}
+                                    </span>
+                                  )}
                                 </button>
                               ))}
                             </div>
