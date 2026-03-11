@@ -207,7 +207,7 @@ const WebsiteSettings = () => {
     const fetchAll = async () => {
       const [profileRes, siteRes] = await Promise.all([
         supabase.from("photographers")
-          .select("full_name, bio, hero_image_url, custom_domain")
+          .select("full_name, bio, hero_image_url, custom_domain, store_slug")
           .eq("id", user.id).single(),
         (supabase as any).from("photographer_site")
           .select("*").eq("photographer_id", user.id).maybeSingle(),
@@ -220,6 +220,8 @@ const WebsiteSettings = () => {
         setHeroImageUrl((d as any).hero_image_url ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
+        setStoreSlug((d as any).store_slug ?? "");
+        setSlugInput((d as any).store_slug ?? "");
       }
 
       if (siteRes?.data) {
