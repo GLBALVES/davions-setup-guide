@@ -313,20 +313,25 @@ const GalleryView = () => {
       if (wmResult.data) setWatermark(wmResult.data as WatermarkSettings);
       if (brandResult.data) setPhotographerBrand(brandResult.data);
 
-      // Load saved notes
+      // Load saved notes + downloaded markers
       setNotes(loadNotes(data.id, clientToken));
+      setDownloaded(loadDownloaded(data.id));
 
       if (data.access_code) {
         const stored = getStoredCode(data.id);
         if (stored && stored.toUpperCase() === (data.access_code ?? "").toUpperCase()) {
           setUnlocked(true);
           await loadPhotos(data.id);
+          // Log access (returning visitor with stored code)
+          await logAccess(data.photographer_id, data.id);
           setLoading(false);
           return;
         }
       } else {
         setUnlocked(true);
         await loadPhotos(data.id);
+        // Log access (no code required)
+        await logAccess(data.photographer_id, data.id);
       }
       setLoading(false);
     };
