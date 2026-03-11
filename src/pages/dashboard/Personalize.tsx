@@ -747,6 +747,198 @@ const Personalize = () => {
                     </DialogContent>
                   </Dialog>
 
+                  {/* Briefing dialog */}
+                  <Dialog open={briefingDialogOpen} onOpenChange={(open) => {
+                    setBriefingDialogOpen(open);
+                  }}>
+                    <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+                      <DialogHeader>
+                        <DialogTitle className="text-sm tracking-widest uppercase font-light">
+                          {editingBriefing ? "Edit Briefing" : "New Briefing"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-col gap-5 pt-2">
+                        {/* Briefing name */}
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Briefing Name</Label>
+                          <Input
+                            value={briefingName}
+                            onChange={(e) => setBriefingName(e.target.value)}
+                            placeholder="e.g. Newborn Briefing"
+                            className="text-sm font-light"
+                          />
+                        </div>
+
+                        {/* Questions */}
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[11px] tracking-wider uppercase font-light">Questions</Label>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
+                              onClick={() => {
+                                const newQ: BriefingQuestion = {
+                                  id: crypto.randomUUID(),
+                                  type: "short_text",
+                                  label: "",
+                                  required: false,
+                                  options: [],
+                                };
+                                setBriefingQuestions((prev) => [...prev, newQ]);
+                              }}
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add question
+                            </Button>
+                          </div>
+
+                          {briefingQuestions.length === 0 && (
+                            <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
+                              No questions yet — click "Add question" to start building.
+                            </p>
+                          )}
+
+                          {briefingQuestions.map((q, idx) => (
+                            <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
+                              {/* Question header */}
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">Question {idx + 1}</span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                    onClick={() => setBriefingQuestions((prev) => prev.filter((_, i) => i !== idx))}
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Type + Required row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <select
+                                  value={q.type}
+                                  onChange={(e) => {
+                                    const newType = e.target.value as QuestionType;
+                                    setBriefingQuestions((prev) => prev.map((item, i) =>
+                                      i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? (item.options.length ? item.options : [""]) : [] } : item
+                                    ));
+                                  }}
+                                  className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                >
+                                  {(Object.entries(QUESTION_TYPE_LABELS) as [QuestionType, string][]).map(([val, label]) => (
+                                    <option key={val} value={val}>{label}</option>
+                                  ))}
+                                </select>
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    id={`req-${q.id}`}
+                                    checked={q.required}
+                                    onCheckedChange={(v) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, required: v } : item))}
+                                  />
+                                  <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">Required</label>
+                                </div>
+                              </div>
+
+                              {/* Question label */}
+                              <Input
+                                value={q.label}
+                                onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
+                                placeholder="Type your question here…"
+                                className="text-sm font-light h-8"
+                              />
+
+                              {/* Options (for multiple_choice / checkboxes) */}
+                              {(q.type === "multiple_choice" || q.type === "checkboxes") && (
+                                <div className="flex flex-col gap-2 pl-1">
+                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Options</p>
+                                  {q.options.map((opt, optIdx) => (
+                                    <div key={optIdx} className="flex items-center gap-2">
+                                      <Input
+                                        value={opt}
+                                        onChange={(e) => {
+                                          const updated = [...q.options];
+                                          updated[optIdx] = e.target.value;
+                                          setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                        }}
+                                        placeholder={`Option ${optIdx + 1}`}
+                                        className="h-7 text-xs font-light flex-1"
+                                      />
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                                        onClick={() => {
+                                          const updated = q.options.filter((_, oi) => oi !== optIdx);
+                                          setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                        }}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  <button
+                                    type="button"
+                                    className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                                    onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                    Add option
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Footer actions */}
+                        <div className="flex justify-end gap-2 pt-1 border-t border-border">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs tracking-wider uppercase font-light"
+                            onClick={() => setBriefingDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={savingBriefing || !briefingName.trim()}
+                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                            onClick={async () => {
+                              if (!user || !briefingName.trim()) return;
+                              setSavingBriefing(true);
+                              const payload = {
+                                name: briefingName.trim(),
+                                questions: briefingQuestions,
+                                updated_at: new Date().toISOString(),
+                              };
+                              if (editingBriefing) {
+                                await (supabase as any).from("briefings").update(payload).eq("id", editingBriefing.id);
+                              } else {
+                                await (supabase as any).from("briefings").insert({ ...payload, photographer_id: user.id });
+                              }
+                              await fetchBriefings();
+                              setSavingBriefing(false);
+                              setBriefingDialogOpen(false);
+                              toast({ title: editingBriefing ? "Briefing updated" : "Briefing created" });
+                            }}
+                          >
+                            {savingBriefing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            Save briefing
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
 
                   {/* ── BUSINESS TAB ── */}
                   <TabsContent value="business" className="mt-0 flex flex-col gap-8">
