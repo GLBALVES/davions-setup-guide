@@ -17,6 +17,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { Switch } from "@/components/ui/switch";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
