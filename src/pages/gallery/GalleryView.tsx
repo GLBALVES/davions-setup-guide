@@ -584,7 +584,7 @@ const GalleryView = () => {
             </div>
           )}
 
-          <div className="p-6 md:p-10 flex flex-col gap-8">
+          <div className="p-6 md:p-10 flex flex-col gap-6">
             {photos.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Image className="h-10 w-10 text-muted-foreground/30" />
@@ -592,9 +592,49 @@ const GalleryView = () => {
               </div>
             )}
 
+            {/* ── Favorites filter (proof only, shown once photos are loaded) ── */}
+            {isProof && photos.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {(
+                  [
+                    { value: "all", label: "All", count: photos.length },
+                    { value: "favorited", label: "Favorited", count: favorites.size },
+                    { value: "not_favorited", label: "Not favorited", count: photos.length - favorites.size },
+                  ] as { value: FavFilter; label: string; count: number }[]
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFavFilter(opt.value)}
+                    className={`flex items-center gap-1.5 px-3 py-1 text-[10px] tracking-[0.18em] uppercase font-light border transition-colors rounded-none
+                      ${favFilter === opt.value
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                      }`}
+                  >
+                    {opt.value === "favorited" && <Heart className="h-2.5 w-2.5 fill-current" />}
+                    {opt.label}
+                    <span className={`ml-0.5 text-[9px] ${favFilter === opt.value ? "text-background/70" : "text-muted-foreground/50"}`}>
+                      {opt.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Empty state when filter yields no results */}
+            {isProof && photos.length > 0 && filteredPhotos.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Heart className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">
+                  {favFilter === "favorited" ? "No favorited photos yet." : "No photos here."}
+                </p>
+              </div>
+            )}
+
             {/* ── Photo grid ── */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {photos.map((photo, index) => {
+              {filteredPhotos.map((photo) => {
+                const index = photos.indexOf(photo);
                 const isFav = favorites.has(photo.id);
                 const noteVal = notes[photo.id] ?? "";
                 const isNoteOpen = noteOpen[photo.id] ?? false;
