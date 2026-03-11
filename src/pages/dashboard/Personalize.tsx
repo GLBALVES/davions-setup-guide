@@ -210,6 +210,15 @@ const Personalize = () => {
   const [savingContract, setSavingContract] = useState(false);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
+  // ── Briefings ────────────────────────────────────────────────────────────────
+  const [briefings, setBriefings] = useState<Briefing[]>([]);
+  const [briefingDialogOpen, setBriefingDialogOpen] = useState(false);
+  const [editingBriefing, setEditingBriefing] = useState<Briefing | null>(null);
+  const [briefingName, setBriefingName] = useState("");
+  const [briefingQuestions, setBriefingQuestions] = useState<BriefingQuestion[]>([]);
+  const [savingBriefing, setSavingBriefing] = useState(false);
+  const [deletingBriefingId, setDeletingBriefingId] = useState<string | null>(null);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
