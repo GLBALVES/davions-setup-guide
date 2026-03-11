@@ -70,6 +70,8 @@ interface GeneratedSlot {
   start_time: string;
   end_time: string;
   label: string;
+  disabled?: boolean;
+  disabledReason?: "booked" | "blocked";
 }
 
 interface SessionExtra {
@@ -136,12 +138,11 @@ const generateOccurrences = (
 
       const dateKey = format(date, "yyyy-MM-dd");
       const key = `${def.id}_${dateKey}`;
-      if (bookedKeys.has(key)) continue;
-
       const endDate = addMinutes(startDate, durationMin);
       const endHHmm = format(endDate, "HH:mm");
 
-      if (isSlotBlocked(dateKey, startHHmm, endHHmm)) continue;
+      const isBooked = bookedKeys.has(key);
+      const isBlocked = isSlotBlocked(dateKey, startHHmm, endHHmm);
 
       result.push({
         availabilityId: def.id,
@@ -149,6 +150,8 @@ const generateOccurrences = (
         start_time: startHHmm,
         end_time: endHHmm,
         label: format(date, "EEEE, MMMM d"),
+        disabled: isBooked || isBlocked,
+        disabledReason: isBooked ? "booked" : isBlocked ? "blocked" : undefined,
       });
     }
   }
@@ -340,12 +343,17 @@ const SessionDetailPage = () => {
   // Calendar helpers
   // ────────────────────────────────────────────
 
-  const availableDateKeys = new Set(
+  // Dates that have at least one slot (enabled or disabled) — shown in calendar
+  const allSlotDateKeys = new Set(
     generatedSlots.map((s) => format(s.date, "yyyy-MM-dd"))
+  );
+  // Dates that have at least one selectable slot
+  const availableDateKeys = new Set(
+    generatedSlots.filter((s) => !s.disabled).map((s) => format(s.date, "yyyy-MM-dd"))
   );
 
   const isDayDisabled = (date: Date) => {
-    return !availableDateKeys.has(format(date, "yyyy-MM-dd"));
+    return !allSlotDateKeys.has(format(date, "yyyy-MM-dd"));
   };
 
   const slotsForSelectedDate = selectedDate
@@ -541,6 +549,7 @@ const SessionDetailPage = () => {
                 {generatedSlots.length === 0 ? (
                   <div className="p-8 text-center">
                     <p className="text-sm font-light text-muted-foreground">No available slots at this time.</p>
+
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
@@ -579,12 +588,16 @@ const SessionDetailPage = () => {
                         components={{
                           DayContent: ({ date }) => {
                             const key = format(date, "yyyy-MM-dd");
-                            const hasSlots = availableDateKeys.has(key);
+                            const hasAvailable = availableDateKeys.has(key);
+                            const hasAny = allSlotDateKeys.has(key);
                             return (
                               <div className="flex flex-col items-center justify-center h-full gap-[2px]">
                                 <span>{date.getDate()}</span>
-                                {hasSlots && (
-                                  <span className="h-[3px] w-[3px] rounded-full bg-current opacity-60" />
+                                {hasAny && (
+                                  <span className={cn(
+                                    "h-[3px] w-[3px] rounded-full",
+                                    hasAvailable ? "bg-current opacity-60" : "bg-muted-foreground/30"
+                                  )} />
                                 )}
                               </div>
                             );
@@ -611,17 +624,32 @@ const SessionDetailPage = () => {
                               {slotsForSelectedDate.map((slot, i) => (
                                 <button
                                   key={i}
-                                  onClick={() => setSelectedSlot(slot)}
+                                  disabled={slot.disabled}
+                                  onClick={() => !slot.disabled && setSelectedSlot(slot)}
+                                  title={
+                                    slot.disabledReason === "booked"
+                                      ? "Already booked"
+                                      : slot.disabledReason === "blocked"
+                                      ? "Unavailable"
+                                      : undefined
+                                  }
                                   className={cn(
-                                    "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left",
-                                    selectedSlot &&
-                                      selectedSlot.availabilityId === slot.availabilityId &&
-                                      isSameDay(selectedSlot.date, slot.date)
+                                    "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left relative",
+                                    slot.disabled
+                                      ? "border-border/40 text-muted-foreground/40 cursor-not-allowed bg-muted/30 line-through"
+                                      : selectedSlot &&
+                                        selectedSlot.availabilityId === slot.availabilityId &&
+                                        isSameDay(selectedSlot.date, slot.date)
                                       ? "border-foreground bg-foreground text-background"
                                       : "border-border hover:border-foreground/40 text-foreground"
                                   )}
                                 >
-                                  {slot.start_time}
+                                  <span>{slot.start_time}</span>
+                                  {slot.disabled && (
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
+                                      {slot.disabledReason === "booked" ? "booked" : "unavail."}
+                                    </span>
+                                  )}
                                 </button>
                               ))}
                             </div>
@@ -634,7 +662,7 @@ const SessionDetailPage = () => {
               </div>
               <Button
                 onClick={() => setStep("form")}
-                disabled={!selectedSlot}
+                disabled={!selectedSlot || selectedSlot.disabled}
                 className="w-full text-xs tracking-wider uppercase font-light rounded-none h-11"
               >
                 Continue →
