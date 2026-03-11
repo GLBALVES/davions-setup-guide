@@ -267,15 +267,25 @@ const Personalize = () => {
     if (!user) return;
     setSavingGallerySettings(true);
     const days = parseInt(galleryExpiryDays, 10);
-    const valueToSave = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
-    const { error } = await (supabase as any)
-      .from("gallery_settings")
-      .upsert(
-        { photographer_id: user.id, key: "default_expiry_days", value: valueToSave },
-        { onConflict: "photographer_id,key" }
-      );
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    const expiryValue = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
+    const fee = parseFloat(galleryReactivationFee);
+    const feeValue = (!galleryReactivationFee.trim() || isNaN(fee) || fee < 0) ? null : String(fee);
+    const [expiryRes, feeRes] = await Promise.all([
+      (supabase as any)
+        .from("gallery_settings")
+        .upsert(
+          { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
+          { onConflict: "photographer_id,key" }
+        ),
+      (supabase as any)
+        .from("gallery_settings")
+        .upsert(
+          { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
+          { onConflict: "photographer_id,key" }
+        ),
+    ]);
+    if (expiryRes.error || feeRes.error) {
+      toast({ title: "Failed to save", description: (expiryRes.error || feeRes.error).message, variant: "destructive" });
     } else {
       toast({ title: "Gallery settings saved" });
     }
