@@ -418,7 +418,7 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
@@ -428,6 +428,8 @@ const SessionForm = () => {
     const existingContract = sAny3.contract_text ?? "";
     setContractText(existingContract);
     if (existingContract) setSelectedContractId("existing");
+    // Load briefing
+    if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
     // Sync to editor once loaded
     if (editor && bodyHtml) {
       editor.commands.setContent(bodyHtml);
