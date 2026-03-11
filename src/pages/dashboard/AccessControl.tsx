@@ -633,6 +633,8 @@ export default function AccessControl() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>{/* flex-1 flex flex-col */}
+      </div>{/* min-h-screen flex */}
+    </SidebarProvider>
   );
 }
