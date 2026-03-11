@@ -1209,6 +1209,9 @@ const GalleryView = () => {
           </div>
         </div>
       )}
+
+      {/* ── Purchase / Submit modal ── */}
+      <Dialog open={purchaseOpen} onOpenChange={setPurchaseOpen}>
         <DialogContent className="sm:max-w-md rounded-none border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
