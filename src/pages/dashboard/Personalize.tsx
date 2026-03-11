@@ -55,6 +55,7 @@ const Personalize = () => {
 
   // Gallery settings
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
+  const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
   const [savingGallerySettings, setSavingGallerySettings] = useState(false);
 
   // Business tab
