@@ -316,28 +316,32 @@ export default function AccessControl() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <DashboardHeader />
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
 
-      {/* Page title bar */}
-      <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage studio roles and invite collaborators
-            </p>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <DashboardHeader />
+
+          {/* Page title bar */}
+          <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Manage studio roles and invite collaborators
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="h-4 w-4" />
+              Invite User
+            </Button>
           </div>
-        </div>
-        <Button size="sm" onClick={() => setInviteOpen(true)}>
-          <UserPlus className="h-4 w-4" />
-          Invite User
-        </Button>
-      </div>
 
-      {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
+          {/* Body */}
+          <div className="flex flex-1 overflow-hidden">
         {/* ── Left panel: Roles ── */}
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
