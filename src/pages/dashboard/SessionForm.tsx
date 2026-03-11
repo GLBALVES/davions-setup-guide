@@ -197,6 +197,12 @@ const SessionForm = () => {
   const [contractText, setContractText] = useState<string>("");
   const [showFullContract, setShowFullContract] = useState(false);
 
+  // ── Briefing ──
+  type BriefingQuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+  interface BriefingTemplate { id: string; name: string; }
+  const [briefingTemplates, setBriefingTemplates] = useState<BriefingTemplate[]>([]);
+  const [selectedBriefingId, setSelectedBriefingId] = useState<string>("none");
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
@@ -253,10 +259,21 @@ const SessionForm = () => {
     if (data) setContractTemplates(data);
   }, [user]);
 
+  const fetchBriefingTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("briefings")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setBriefingTemplates(data as BriefingTemplate[]);
+  }, [user]);
+
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
-  }, [fetchSessionTypes, fetchContractTemplates]);
+    fetchBriefingTemplates();
+  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
@@ -401,7 +418,7 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
@@ -411,6 +428,8 @@ const SessionForm = () => {
     const existingContract = sAny3.contract_text ?? "";
     setContractText(existingContract);
     if (existingContract) setSelectedContractId("existing");
+    // Load briefing
+    if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
     // Sync to editor once loaded
     if (editor && bodyHtml) {
       editor.commands.setContent(bodyHtml);
@@ -468,6 +487,7 @@ const SessionForm = () => {
       cover_image_url: coverImageUrl,
       status,
       contract_text: contractText.trim() || null,
+      briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
@@ -1064,6 +1084,41 @@ const SessionForm = () => {
                             </button>
                           ) : null}
                         </div>
+                      )}
+                    </div>
+
+                    {/* Briefing / Questionnaire */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs tracking-wider uppercase font-light">
+                        Briefing / Questionnaire <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <select
+                        value={selectedBriefingId}
+                        onChange={(e) => setSelectedBriefingId(e.target.value)}
+                        className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      >
+                        <option value="none">No briefing</option>
+                        {briefingTemplates.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                      {briefingTemplates.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground">
+                          No briefings saved yet. Create templates in{" "}
+                          <button
+                            type="button"
+                            className="underline hover:no-underline"
+                            onClick={() => navigate("/dashboard/personalize")}
+                          >
+                            Personalize → Studio
+                          </button>
+                          .
+                        </p>
+                      )}
+                      {selectedBriefingId !== "none" && (
+                        <p className="text-[10px] text-muted-foreground">
+                          After payment, clients will be prompted to fill out this questionnaire.
+                        </p>
                       )}
                     </div>
 

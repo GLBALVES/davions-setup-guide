@@ -309,6 +309,30 @@ export type Database = {
           },
         ]
       }
+      booking_briefing_responses: {
+        Row: {
+          answers: Json
+          booking_id: string
+          briefing_id: string
+          id: string
+          submitted_at: string
+        }
+        Insert: {
+          answers?: Json
+          booking_id: string
+          briefing_id: string
+          id?: string
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          booking_id?: string
+          briefing_id?: string
+          id?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           availability_id: string
@@ -375,6 +399,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      briefings: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          photographer_id: string
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id: string
+          questions?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          questions?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       contracts: {
         Row: {
@@ -1383,6 +1434,7 @@ export type Database = {
           booking_notice_days: number
           booking_window_days: number
           break_after_minutes: number
+          briefing_id: string | null
           confirmation_email_body: string
           contract_text: string | null
           cover_image_url: string | null
@@ -1410,6 +1462,7 @@ export type Database = {
           booking_notice_days?: number
           booking_window_days?: number
           break_after_minutes?: number
+          briefing_id?: string | null
           confirmation_email_body?: string
           contract_text?: string | null
           cover_image_url?: string | null
@@ -1437,6 +1490,7 @@ export type Database = {
           booking_notice_days?: number
           booking_window_days?: number
           break_after_minutes?: number
+          briefing_id?: string | null
           confirmation_email_body?: string
           contract_text?: string | null
           cover_image_url?: string | null
@@ -1460,6 +1514,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sessions_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sessions_photographer_id_fkey"
             columns: ["photographer_id"]
