@@ -702,7 +702,49 @@ const WebsiteSettings = () => {
 
                   <Divider />
 
-                  {/* ── 10. Custom Domain ── */}
+                  {/* ── 10. Store URL ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title="Store URL" description="Your public booking store address. Share this link with clients." />
+                    </div>
+                    <FieldRow label="Store Slug">
+                      <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                        <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
+                          {window.location.host}/store/
+                        </span>
+                        <input
+                          value={slugInput}
+                          onChange={(e) => { setSlugInput(e.target.value.toLowerCase().replace(/\s/g, "-")); setSlugError(null); }}
+                          placeholder="your-studio"
+                          className="flex-1 h-9 px-1 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                        />
+                      </div>
+                      {slugError && (
+                        <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                          <AlertCircle className="h-3 w-3" />{slugError}
+                        </p>
+                      )}
+                    </FieldRow>
+                    {storeSlug && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{window.location.origin}/store/{storeSlug}</p>
+                        <button type="button" onClick={() => copyUrl(`${window.location.origin}/store/${storeSlug}`, setSlugCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy URL">
+                          {slugCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                        <a href={`${window.location.origin}/store/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    )}
+                    <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                      {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save store URL"}
+                    </Button>
+                  </section>
+
+                  <Divider />
+
+                  {/* ── 11. Custom Domain ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-2">

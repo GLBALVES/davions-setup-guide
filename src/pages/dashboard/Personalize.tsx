@@ -991,62 +991,7 @@ const Personalize = () => {
                     </Button>
                   </TabsContent>
 
-                  {/* ── STORE TAB ── */}
-                  <TabsContent value="store" className="mt-0 flex flex-col gap-8">
-                    {/* Store URL */}
-                    <section className="flex flex-col gap-5">
-                      <SectionHeading
-                        title="Store URL"
-                        description="Your public booking store address. Share this link with clients."
-                      />
-                      <FieldRow label="Store Slug">
-                        <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
-                          <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
-                            {appHost}/store/
-                          </span>
-                          <input
-                            value={slugInput}
-                            onChange={(e) => {
-                              setSlugInput(e.target.value.toLowerCase().replace(/\s/g, "-"));
-                              setSlugError(null);
-                            }}
-                            placeholder="your-studio"
-                            className="flex-1 h-9 px-1 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
-                          />
-                        </div>
-                        {slugError && (
-                          <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
-                            <AlertCircle className="h-3 w-3" />{slugError}
-                          </p>
-                        )}
-                      </FieldRow>
-                      {storeUrl && (
-                        <div className="flex items-center gap-2">
-                          <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{storeUrl}</p>
-                          <button
-                            type="button"
-                            onClick={() => copyUrl(storeUrl, setCopied)}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                            title="Copy URL"
-                          >
-                            {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                          </button>
-                          <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
-                        </div>
-                      )}
-                    </section>
 
-                    <Button
-                      onClick={handleSaveStore}
-                      disabled={savingStore}
-                      size="sm"
-                      className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                    >
-                      {savingStore ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save Store URL"}
-                    </Button>
-                  </TabsContent>
 
                   {/* ── GALLERIES TAB ── */}
                   <TabsContent value="galleries" className="mt-0 flex flex-col gap-8">
