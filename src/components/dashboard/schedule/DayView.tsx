@@ -95,13 +95,31 @@ export function DayView({ currentDate, bookings, blockedSlots, manualBlocks, onB
 
   const today = isToday(currentDate);
 
+  const { toast } = useToast();
+
   const handleCellClick = (hourIndex: number, e: React.MouseEvent<HTMLDivElement>) => {
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
     const yOffset = e.clientY - rect.top;
     const fractionalMinutes = Math.floor((yOffset / CELL_HEIGHT) * 60);
     const totalMins = (HOUR_START + hourIndex) * 60 + fractionalMinutes;
     const snapped = Math.round(totalMins / 15) * 15;
-    onCreateBooking(currentDate, minutesToTimeStr(snapped));
+    const clickedTime = minutesToTimeStr(snapped);
+
+    if (isAllDayBlocked) {
+      toast({ title: "This day is blocked", description: dayManualBlocks.find(mb => mb.all_day)?.reason ?? undefined, variant: "destructive" });
+      return;
+    }
+    const overlap = partialManualBlocks.find((mb) => {
+      const start = mb.start_time.slice(0, 5);
+      const end = mb.end_time.slice(0, 5);
+      return clickedTime >= start && clickedTime < end;
+    });
+    if (overlap) {
+      toast({ title: "This time is blocked", description: overlap.reason ?? `${overlap.start_time.slice(0,5)}–${overlap.end_time.slice(0,5)}`, variant: "destructive" });
+      return;
+    }
+
+    onCreateBooking(currentDate, clickedTime);
   };
 
   return (
