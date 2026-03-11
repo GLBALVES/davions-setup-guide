@@ -282,6 +282,7 @@ const GalleryDetail = () => {
   const [copiedFavorites, setCopiedFavorites] = useState(false);
   const [lightroomModalOpen, setLightroomModalOpen] = useState(false);
   const [pricePerPhoto, setPricePerPhoto] = useState(0);
+  const [accessLog, setAccessLog] = useState<{ first: string | null; last: string | null }>({ first: null, last: null });
   const coverRef = useRef<HTMLDivElement>(null);
   const focalImgRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
