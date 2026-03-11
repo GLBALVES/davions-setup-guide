@@ -986,11 +986,11 @@ const GalleryView = () => {
                 </button>
               )}
 
-              {/* Photo + watermark */}
+              {/* Photo + watermark (proof only) */}
               <div
                 className="relative inline-flex items-center justify-center"
                 onClick={(e) => e.stopPropagation()}
-                onContextMenu={blockContext}
+                onContextMenu={isProof ? blockContext : undefined}
                 style={{ maxHeight: "calc(100vh - 200px)", maxWidth: "100%" }}
               >
                 <img
@@ -1000,20 +1000,21 @@ const GalleryView = () => {
                   style={{ maxHeight: "calc(100vh - 200px)" }}
                   draggable={false}
                 />
-                {watermark && <WatermarkOverlay wm={watermark} size="full" />}
+                {isProof && watermark && <WatermarkOverlay wm={watermark} size="full" />}
               </div>
             </div>
 
-            {/* ── Bottom bar: CTA + note field ── */}
+            {/* ── Bottom bar: CTA (proof) or Download (final) + note ── */}
             <div className="shrink-0 flex flex-col items-center gap-3 px-6 pb-6 pt-4" onClick={(e) => e.stopPropagation()}>
+
               {/* Proof CTA */}
               {isProof && (
                 <div className="flex flex-col items-center gap-2">
-                    {pricePerPhoto > 0 && (
-                      <span className="text-[11px] text-white/30 tracking-widest uppercase">
-                        {formatCurrency(pricePerPhoto)} per photo
-                      </span>
-                    )}
+                  {pricePerPhoto > 0 && (
+                    <span className="text-[11px] text-white/30 tracking-widest uppercase">
+                      {formatCurrency(pricePerPhoto)} per photo
+                    </span>
+                  )}
                   <button
                     onClick={(e) => toggleFavorite(e, lPhoto)}
                     className={`flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold transition-all duration-200 shadow-2xl
@@ -1036,20 +1037,37 @@ const GalleryView = () => {
                 </div>
               )}
 
-              {/* Note field */}
-              <div className="w-full max-w-lg">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MessageSquare className="h-3 w-3 text-white/30" />
-                  <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
+              {/* Final: download this photo CTA */}
+              {!isProof && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDownloadSingle(lPhoto); }}
+                  disabled={!!downloadingId}
+                  className="flex items-center gap-3 px-10 py-3.5 text-sm tracking-widest uppercase font-semibold bg-background text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-2xl disabled:opacity-50"
+                >
+                  {downloadingId === lPhoto.id ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Downloading…</>
+                  ) : (
+                    <><Download className="h-4 w-4" /> Download Photo</>
+                  )}
+                </button>
+              )}
+
+              {/* Note field — proof only */}
+              {isProof && (
+                <div className="w-full max-w-lg">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <MessageSquare className="h-3 w-3 text-white/30" />
+                    <span className="text-[10px] text-white/30 tracking-widest uppercase">Note</span>
+                  </div>
+                  <Textarea
+                    value={lNoteVal}
+                    onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    placeholder="Write something about this photo… e.g. I want this one in black & white"
+                    className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
+                  />
                 </div>
-                <Textarea
-                  value={lNoteVal}
-                  onChange={(e) => handleNoteChange(lPhoto.id, e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  placeholder="Write something about this photo… e.g. I want this one in black & white"
-                  className="w-full text-xs bg-white/5 border-white/10 text-white/80 placeholder:text-white/20 rounded-none focus-visible:ring-0 focus-visible:border-white/30 min-h-[52px] resize-none leading-snug"
-                />
-              </div>
+              )}
             </div>
           </div>
         );
