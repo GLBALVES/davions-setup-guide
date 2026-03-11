@@ -343,12 +343,17 @@ const SessionDetailPage = () => {
   // Calendar helpers
   // ────────────────────────────────────────────
 
-  const availableDateKeys = new Set(
+  // Dates that have at least one slot (enabled or disabled) — shown in calendar
+  const allSlotDateKeys = new Set(
     generatedSlots.map((s) => format(s.date, "yyyy-MM-dd"))
+  );
+  // Dates that have at least one selectable slot
+  const availableDateKeys = new Set(
+    generatedSlots.filter((s) => !s.disabled).map((s) => format(s.date, "yyyy-MM-dd"))
   );
 
   const isDayDisabled = (date: Date) => {
-    return !availableDateKeys.has(format(date, "yyyy-MM-dd"));
+    return !allSlotDateKeys.has(format(date, "yyyy-MM-dd"));
   };
 
   const slotsForSelectedDate = selectedDate
