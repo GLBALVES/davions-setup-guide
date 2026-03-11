@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine } from "lucide-react";
+import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine, LayoutGrid, LayoutList, CheckCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
