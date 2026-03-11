@@ -78,6 +78,7 @@ const Schedule = () => {
   const [currentDate, setCurrentDate] = useState<Date>(startOfToday());
   const [bookings, setBookings] = useState<ScheduleBooking[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
+  const [manualBlocks, setManualBlocks] = useState<ManualBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<ScheduleBooking | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
