@@ -38,6 +38,7 @@ import WorkflowProject from "./pages/dashboard/WorkflowProject";
 import RecurringWorkflows from "./pages/dashboard/RecurringWorkflows";
 import AIAgents from "./pages/dashboard/AIAgents";
 import Chat from "./pages/dashboard/Chat";
+import Personalize from "./pages/dashboard/Personalize";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -94,6 +95,7 @@ const App = () => (
                 <Route path="/dashboard/recurring" element={<ProtectedRoute><RecurringWorkflows /></ProtectedRoute>} />
                 <Route path="/dashboard/agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
                 <Route path="/dashboard/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

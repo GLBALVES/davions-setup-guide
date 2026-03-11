@@ -117,6 +117,7 @@ const groups: MenuGroup[] = [
       { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings" },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final" },
+      { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
   {
