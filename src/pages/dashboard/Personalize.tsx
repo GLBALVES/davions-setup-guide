@@ -1029,7 +1029,7 @@ const Personalize = () => {
                             className="text-muted-foreground hover:text-foreground transition-colors p-1"
                             title="Copy URL"
                           >
-                            {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                            {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                           <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
                             <ExternalLink className="h-3.5 w-3.5" />
