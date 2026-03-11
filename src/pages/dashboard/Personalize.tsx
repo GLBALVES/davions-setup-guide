@@ -203,11 +203,6 @@ const Personalize = () => {
   // ── Contracts ───────────────────────────────────────────────────────────────
   interface Contract { id: string; name: string; body: string; }
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [contractName, setContractName] = useState("");
-  const [contractBody, setContractBody] = useState("");
-  const [savingContract, setSavingContract] = useState(false);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
   // ── Briefings ────────────────────────────────────────────────────────────────
@@ -614,12 +609,7 @@ const Personalize = () => {
                           size="sm"
                           variant="outline"
                           className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
-                          onClick={() => {
-                            setEditingContract(null);
-                            setContractName("");
-                            setContractBody("");
-                            setContractDialogOpen(true);
-                          }}
+                          onClick={() => navigate("/dashboard/contracts/new")}
                         >
                           <Plus className="h-3.5 w-3.5" />
                           New contract
@@ -631,24 +621,24 @@ const Personalize = () => {
                       ) : (
                         <div className="flex flex-col gap-2">
                           {contracts.map((c) => (
-                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4">
-                              <div className="flex flex-col gap-0.5 min-w-0">
+                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
+                              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || "Untitled"}</p>
-                                <p className="text-[11px] text-muted-foreground line-clamp-2">{c.body}</p>
+                                <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                                  {c.body
+                                    ? c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "")
+                                    : "No content yet"}
+                                </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7"
-                                  onClick={() => {
-                                    setEditingContract(c);
-                                    setContractName(c.name);
-                                    setContractBody(c.body);
-                                    setContractDialogOpen(true);
-                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-3 text-[10px] tracking-wider uppercase font-light"
+                                  onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}
                                 >
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  <Pencil className="h-3 w-3 mr-1" />
+                                  Edit
                                 </Button>
                                 <Button
                                   size="icon"
@@ -751,77 +741,6 @@ const Personalize = () => {
                       )}
                     </section>
                   </TabsContent>
-
-                  {/* Contract dialog */}
-                  <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
-                    <DialogContent className="max-w-lg">
-                      <DialogHeader>
-                        <DialogTitle className="text-sm tracking-widest uppercase font-light">
-                          {editingContract ? "Edit Contract" : "New Contract"}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="flex flex-col gap-4 pt-2">
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Name</Label>
-                          <Input
-                            value={contractName}
-                            onChange={(e) => setContractName(e.target.value)}
-                            placeholder="e.g. Standard Photography Agreement"
-                            className="text-sm font-light"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Contract Body</Label>
-                          <Textarea
-                            value={contractBody}
-                            onChange={(e) => setContractBody(e.target.value)}
-                            placeholder="By booking this session, the client agrees to…"
-                            rows={8}
-                            className="text-sm font-light resize-none"
-                          />
-                          <p className="text-[10px] text-muted-foreground">
-                            Plain text. Clients will see a checkbox to accept this agreement before booking.
-                          </p>
-                        </div>
-                        <div className="flex justify-end gap-2 pt-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs tracking-wider uppercase font-light"
-                            onClick={() => setContractDialogOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            disabled={savingContract || !contractName.trim()}
-                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
-                            onClick={async () => {
-                              if (!user || !contractName.trim()) return;
-                              setSavingContract(true);
-                              if (editingContract) {
-                                await (supabase as any)
-                                  .from("contracts")
-                                  .update({ name: contractName.trim(), body: contractBody, updated_at: new Date().toISOString() })
-                                  .eq("id", editingContract.id);
-                              } else {
-                                await (supabase as any)
-                                  .from("contracts")
-                                  .insert({ photographer_id: user.id, name: contractName.trim(), body: contractBody });
-                              }
-                              await fetchContracts();
-                              setSavingContract(false);
-                              setContractDialogOpen(false);
-                              toast({ title: editingContract ? "Contract updated" : "Contract created" });
-                            }}
-                          >
-                            {savingContract && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                            Save contract
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
 
                   {/* Briefing dialog */}
                   <Dialog open={briefingDialogOpen} onOpenChange={(open) => {

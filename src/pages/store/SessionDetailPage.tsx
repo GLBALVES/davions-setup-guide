@@ -135,6 +135,16 @@ const getInitials = (name: string | null | undefined): string => {
     .join("");
 };
 
+// Resolve [[key]] variable tokens stored in contract HTML
+function resolveSessionContractVariables(
+  html: string,
+  data: Record<string, string>
+): string {
+  return Object.entries(data).reduce((acc, [key, val]) => {
+    return acc.replace(new RegExp(`\\[\\[${key}\\]\\]`, "g"), val);
+  }, html);
+}
+
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────
@@ -821,14 +831,23 @@ const SessionDetailPage = () => {
                   <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-4">
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Service agreement</p>
                     <div
-                      className="max-h-[55vh] overflow-y-auto text-xs font-light text-foreground leading-relaxed whitespace-pre-wrap border border-border p-4"
+                      className="max-h-[55vh] overflow-y-auto text-xs font-light text-foreground leading-relaxed border border-border p-4 prose prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_strong]:font-medium [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
                       style={{
                         maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
                         WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
                       }}
-                    >
-                      {session.contract_text}
-                    </div>
+                      dangerouslySetInnerHTML={{
+                        __html: resolveSessionContractVariables(session.contract_text, {
+                          client_name: clientName,
+                          client_email: clientEmail,
+                          session_title: session.title,
+                          session_date: selectedSlot?.label ?? "",
+                          session_time: selectedSlot?.start_time ?? "",
+                          session_duration: `${session.duration_minutes} min`,
+                          session_price: formatCurrency(session.price),
+                        })
+                      }}
+                    />
                     <div
                       className="flex items-start gap-3 cursor-pointer select-none"
                       onClick={() => setContractAgreed(!contractAgreed)}
