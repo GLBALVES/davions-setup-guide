@@ -453,19 +453,19 @@ function ListView({
         )}
       </div>
 
-      {/* Archived section */}
-      {archived.length > 0 && (
+      {/* Archived section — controlled by parent toggle */}
+      {showArchived && (
         <div className="border border-border/50 rounded-sm overflow-hidden">
-          <button
-            onClick={() => setArchivedOpen((v) => !v)}
-            className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
-          >
-            {archivedOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/40">
             <Archive className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
             <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
-          </button>
-          {archivedOpen && archived.map((p) => renderRow(p, true))}
+          </div>
+          {archived.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">No archived projects</div>
+          ) : (
+            archived.map((p) => renderRow(p, true))
+          )}
         </div>
       )}
     </div>
