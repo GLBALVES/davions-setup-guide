@@ -541,9 +541,8 @@ export default function AccessControl() {
                 </TableBody>
               </Table>
             )}
-          </div>
-        </div>
-      </div>
+          </div>{/* members panel */}
+        </div>{/* body flex */}
 
       {/* ── Invite Dialog ── */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
