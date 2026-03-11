@@ -610,6 +610,18 @@ const Projects = () => {
     toast.success("Project removed");
   };
 
+  const handleArchive = async (id: string) => {
+    await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
+    toast.success("Project archived");
+  };
+
+  const handleUnarchive = async (id: string) => {
+    await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
+    toast.success("Project restored to Lead");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
