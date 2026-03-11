@@ -643,6 +643,28 @@ const GalleryView = () => {
       {/* ── Gallery content ── */}
       {unlocked && (
         <main className="flex-1 flex flex-col pb-10">
+
+          {/* ── Final gallery: delivery banner ── */}
+          {!isProof && (
+            <div className="bg-primary/5 border-b border-border px-6 py-3.5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <PackageOpen className="h-4 w-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-light text-foreground">Your edited photos are ready to download.</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Download individually or get all photos at once as a ZIP file.</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleDownloadAll}
+                disabled={downloadingAll || photos.length === 0}
+                className="shrink-0 gap-2 text-xs tracking-widest uppercase font-light hidden sm:flex"
+              >
+                {downloadingAll ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing ZIP…</> : <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All ({photos.length})</>}
+              </Button>
+            </div>
+          )}
+
           {/* Cover hero */}
           {gallery?.cover_image_url ? (
             <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0" onContextMenu={blockContext}>
@@ -660,6 +682,7 @@ const GalleryView = () => {
                   <p className="text-[11px] text-white/60 tracking-widest uppercase">
                     {photos.length} photo{photos.length !== 1 ? "s" : ""}
                     {isProof && " · Click ♡ to select"}
+                    {!isProof && " · Ready for download"}
                   </p>
                 </div>
                 <Badge variant={isProof ? "outline" : "default"} className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white shrink-0">
@@ -673,6 +696,7 @@ const GalleryView = () => {
               <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1">
                 {photos.length} photo{photos.length !== 1 ? "s" : ""}
                 {isProof && " · Click ♡ to select"}
+                {!isProof && " · Ready for download"}
               </p>
             </div>
           )}
