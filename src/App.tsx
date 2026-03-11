@@ -95,6 +95,7 @@ const App = () => (
                 <Route path="/dashboard/recurring" element={<ProtectedRoute><RecurringWorkflows /></ProtectedRoute>} />
                 <Route path="/dashboard/agents" element={<ProtectedRoute><AIAgents /></ProtectedRoute>} />
                 <Route path="/dashboard/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
