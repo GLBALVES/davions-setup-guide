@@ -120,7 +120,7 @@ function StatusBadge({ status }: { status: string }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AccessControl() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
 
   const [roles, setRoles] = useState<StudioRole[]>([]);
