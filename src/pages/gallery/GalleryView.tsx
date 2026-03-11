@@ -187,8 +187,7 @@ const GalleryView = () => {
   const [notes, setNotes] = useState<Record<string, string>>({});
   // card note panel open state (photoId -> boolean)
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
-  // favorites filter: "all" | "favorited" | "not_favorited"
-  type FavFilter = "all" | "favorited" | "not_favorited";
+  // favorites filter
   const [favFilter, setFavFilter] = useState<FavFilter>("all");
   const clientToken = getClientToken();
 
