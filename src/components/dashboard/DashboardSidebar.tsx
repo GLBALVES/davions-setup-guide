@@ -129,7 +129,7 @@ const groups: MenuGroup[] = [
     title: "Marketing",
     icon: Megaphone,
     items: [
-      { title: "Website", icon: Globe },
+      { title: "Website", icon: Globe, to: "/dashboard/website" },
       { title: "Blog", icon: BookText, to: "/dashboard/blog" },
       { title: "Creative Studio", icon: Share2, to: "/dashboard/creative" },
       { title: "SEO", icon: SearchCheck, to: "/dashboard/seo" },
