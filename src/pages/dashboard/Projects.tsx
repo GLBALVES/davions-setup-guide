@@ -178,12 +178,14 @@ function KanbanColumn({
   projects,
   onEdit,
   onDelete,
+  onArchive,
   onAddCard,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
   onAddCard: (stage: Stage) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
@@ -218,7 +220,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} />
+            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
           ))}
         </SortableContext>
 
