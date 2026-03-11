@@ -174,7 +174,7 @@ const WebsiteSettings = () => {
     const fetchAll = async () => {
       const [profileRes, siteRes] = await Promise.all([
         supabase.from("photographers")
-          .select("full_name, bio, hero_image_url")
+          .select("full_name, bio, hero_image_url, custom_domain")
           .eq("id", user.id).single(),
         (supabase as any).from("photographer_site")
           .select("*").eq("photographer_id", user.id).maybeSingle(),
