@@ -493,6 +493,56 @@ const GalleryView = () => {
     }
   }, [gallery, downloadingAll, photos]);
 
+  // ── Download selected photos (sequential fetch + mark downloaded) ──────────
+  const handleDownloadSelected = useCallback(async () => {
+    if (!gallery || downloadingSelected || selected.size === 0) return;
+    setDownloadingSelected(true);
+    const selectedPhotos = photos.filter((p) => selected.has(p.id));
+    try {
+      for (const photo of selectedPhotos) {
+        if (!photo.url) continue;
+        const res = await fetch(photo.url);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = photo.filename || `photo-${photo.id}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      // Mark all selected as downloaded
+      const merged = new Set([...loadDownloaded(gallery.id), ...selected]);
+      localStorage.setItem(getDownloadedKey(gallery.id), JSON.stringify([...merged]));
+      setDownloaded(new Set(merged));
+    } catch (err) {
+      console.error("Download selected error:", err);
+    } finally {
+      setDownloadingSelected(false);
+      setSelected(new Set());
+      setSelectMode(false);
+    }
+  }, [gallery, downloadingSelected, selected, photos]);
+
+  // ── Select mode helpers ───────────────────────────────────────────────────
+  const toggleSelect = useCallback((photoId: string) => {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      if (s.has(photoId)) s.delete(photoId); else s.add(photoId);
+      return s;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelected(new Set(photos.map((p) => p.id)));
+  }, [photos]);
+
+  const clearSelection = useCallback(() => {
+    setSelected(new Set());
+    setSelectMode(false);
+  }, []);
+
   // ── Purchase flow ─────────────────────────────────────────────────────────
   const handlePurchaseOrSubmit = async () => {
     if (!gallery || !clientEmail.trim()) return;
