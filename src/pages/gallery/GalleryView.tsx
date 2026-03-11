@@ -67,7 +67,18 @@ function formatCurrency(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-// ── Watermark position helper ────────────────────────────────────────────────
+// ── Log gallery access to analytics ─────────────────────────────────────────
+async function logAccess(photographerId: string, galleryId: string) {
+  try {
+    await supabase.from("analytics_pageviews").insert({
+      photographer_id: photographerId,
+      page_path: `/gallery/${galleryId}`,
+      action: "gallery_access",
+    });
+  } catch { /* non-blocking */ }
+}
+
+
 type WmPosition =
   | "top-left" | "top-center" | "top-right"
   | "center-left" | "center" | "center-right"
