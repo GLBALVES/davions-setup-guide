@@ -556,7 +556,6 @@ const Personalize = () => {
                     {[
                       { value: "studio", label: "Studio" },
                       { value: "business", label: "Business" },
-                      { value: "store", label: "Store" },
                       { value: "galleries", label: "Galleries" },
                     ].map((tab) => (
                       <TabsTrigger
