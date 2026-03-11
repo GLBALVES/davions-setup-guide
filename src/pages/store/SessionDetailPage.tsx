@@ -138,12 +138,11 @@ const generateOccurrences = (
 
       const dateKey = format(date, "yyyy-MM-dd");
       const key = `${def.id}_${dateKey}`;
-      if (bookedKeys.has(key)) continue;
-
       const endDate = addMinutes(startDate, durationMin);
       const endHHmm = format(endDate, "HH:mm");
 
-      if (isSlotBlocked(dateKey, startHHmm, endHHmm)) continue;
+      const isBooked = bookedKeys.has(key);
+      const isBlocked = isSlotBlocked(dateKey, startHHmm, endHHmm);
 
       result.push({
         availabilityId: def.id,
@@ -151,6 +150,8 @@ const generateOccurrences = (
         start_time: startHHmm,
         end_time: endHHmm,
         label: format(date, "EEEE, MMMM d"),
+        disabled: isBooked || isBlocked,
+        disabledReason: isBooked ? "booked" : isBlocked ? "blocked" : undefined,
       });
     }
   }
