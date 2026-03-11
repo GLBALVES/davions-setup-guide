@@ -185,6 +185,8 @@ const WebsiteSettings = () => {
         setFullName((d as any).full_name ?? "");
         setBio((d as any).bio ?? "");
         setHeroImageUrl((d as any).hero_image_url ?? "");
+        setCustomDomain((d as any).custom_domain ?? "");
+        setCustomDomainInput((d as any).custom_domain ?? "");
       }
 
       if (siteRes?.data) {
