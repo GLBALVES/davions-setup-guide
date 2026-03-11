@@ -84,8 +84,6 @@ const Settings = () => {
   const [savingSocial, setSavingSocial] = useState<string | null>(null);
   const [testingSocial, setTestingSocial] = useState<string | null>(null);
 
-  const heroInputRef = useRef<HTMLInputElement>(null);
-
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
