@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle,
+  Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image,
 } from "lucide-react";
@@ -123,6 +123,14 @@ const WebsiteSettings = () => {
   // Footer
   const [footerText, setFooterText] = useState("");
 
+  // Store URL
+  const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  const [storeSlug, setStoreSlug] = useState("");
+  const [slugInput, setSlugInput] = useState("");
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugCopied, setSlugCopied] = useState(false);
+  const [savingSlug, setSavingSlug] = useState(false);
+
   // Custom Domain
   const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
   const [customDomain, setCustomDomain] = useState("");
@@ -130,6 +138,14 @@ const WebsiteSettings = () => {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
+
+  const validateSlug = (value: string) => {
+    if (!value.trim()) return "Store URL is required.";
+    if (value.length < 3) return "Must be at least 3 characters.";
+    if (value.length > 48) return "Must be 48 characters or less.";
+    if (!SLUG_REGEX.test(value)) return "Only lowercase letters, numbers and hyphens.";
+    return null;
+  };
 
   const validateDomain = (value: string) => {
     if (!value.trim()) return null;
@@ -142,6 +158,23 @@ const WebsiteSettings = () => {
     await navigator.clipboard.writeText(url);
     setCopiedFn(true);
     setTimeout(() => setCopiedFn(false), 2000);
+  };
+
+  const handleSaveSlug = async () => {
+    const slugErr = validateSlug(slugInput);
+    if (slugErr) { setSlugError(slugErr); return; }
+    setSavingSlug(true);
+    const { error } = await supabase.from("photographers").update({
+      store_slug: slugInput,
+    } as any).eq("id", user!.id);
+    if (error) {
+      if (error.code === "23505") setSlugError("This URL is already taken.");
+      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      setStoreSlug(slugInput);
+      toast({ title: "Store URL saved" });
+    }
+    setSavingSlug(false);
   };
 
   const handleSaveDomain = async () => {
@@ -174,7 +207,7 @@ const WebsiteSettings = () => {
     const fetchAll = async () => {
       const [profileRes, siteRes] = await Promise.all([
         supabase.from("photographers")
-          .select("full_name, bio, hero_image_url, custom_domain")
+          .select("full_name, bio, hero_image_url, custom_domain, store_slug")
           .eq("id", user.id).single(),
         (supabase as any).from("photographer_site")
           .select("*").eq("photographer_id", user.id).maybeSingle(),
@@ -187,6 +220,8 @@ const WebsiteSettings = () => {
         setHeroImageUrl((d as any).hero_image_url ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
+        setStoreSlug((d as any).store_slug ?? "");
+        setSlugInput((d as any).store_slug ?? "");
       }
 
       if (siteRes?.data) {
@@ -667,7 +702,49 @@ const WebsiteSettings = () => {
 
                   <Divider />
 
-                  {/* ── 10. Custom Domain ── */}
+                  {/* ── 10. Store URL ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title="Store URL" description="Your public booking store address. Share this link with clients." />
+                    </div>
+                    <FieldRow label="Store Slug">
+                      <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                        <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
+                          {window.location.host}/store/
+                        </span>
+                        <input
+                          value={slugInput}
+                          onChange={(e) => { setSlugInput(e.target.value.toLowerCase().replace(/\s/g, "-")); setSlugError(null); }}
+                          placeholder="your-studio"
+                          className="flex-1 h-9 px-1 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                        />
+                      </div>
+                      {slugError && (
+                        <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                          <AlertCircle className="h-3 w-3" />{slugError}
+                        </p>
+                      )}
+                    </FieldRow>
+                    {storeSlug && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{window.location.origin}/store/{storeSlug}</p>
+                        <button type="button" onClick={() => copyUrl(`${window.location.origin}/store/${storeSlug}`, setSlugCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy URL">
+                          {slugCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                        <a href={`${window.location.origin}/store/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    )}
+                    <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                      {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save store URL"}
+                    </Button>
+                  </section>
+
+                  <Divider />
+
+                  {/* ── 11. Custom Domain ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-2">
