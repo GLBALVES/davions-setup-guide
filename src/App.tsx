@@ -42,6 +42,7 @@ import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
+import Clients from "./pages/dashboard/Clients";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
