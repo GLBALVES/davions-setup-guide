@@ -428,49 +428,6 @@ const Settings = () => {
                         />
                       </div>
 
-                      {/* Hero image */}
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Hero Image</Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Full-bleed banner displayed at the top of your public booking page.
-                        </p>
-                        {heroImageUrl ? (
-                          <div className="relative group w-full aspect-[16/5] overflow-hidden border border-border">
-                            <img src={heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                              <button
-                                onClick={() => heroInputRef.current?.click()}
-                                className="text-white text-[10px] tracking-widest uppercase border border-white/60 px-3 py-1.5 hover:bg-white/10 transition-colors"
-                              >
-                                Change
-                              </button>
-                              <button
-                                onClick={() => setHeroImageUrl("")}
-                                className="text-white/70 hover:text-white transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => heroInputRef.current?.click()}
-                            disabled={uploadingHero}
-                            className="w-full aspect-[16/5] border border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-foreground/40 transition-colors text-muted-foreground hover:text-foreground"
-                          >
-                            {uploadingHero ? (
-                              <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                              <>
-                                <Upload className="h-5 w-5" />
-                                <span className="text-[10px] tracking-widest uppercase">Upload hero image</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                        <input ref={heroInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroUpload} />
-                      </div>
-
                       {/* Bio */}
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">Bio</Label>
