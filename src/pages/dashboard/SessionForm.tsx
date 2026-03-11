@@ -243,9 +243,20 @@ const SessionForm = () => {
     }
   }, [user]);
 
+  const fetchContractTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("contracts")
+      .select("id, name, body")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setContractTemplates(data);
+  }, [user]);
+
   useEffect(() => {
     fetchSessionTypes();
-  }, [fetchSessionTypes]);
+    fetchContractTemplates();
+  }, [fetchSessionTypes, fetchContractTemplates]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
