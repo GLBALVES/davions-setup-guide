@@ -584,9 +584,7 @@ const Personalize = () => {
                           DNS changes can take up to 48 hours to propagate worldwide.
                         </p>
                         <a
-                          href="https://docs.lovable.dev/features/custom-domain"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href="/dashboard/custom-domain-docs"
                           className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
                         >
                           <ExternalLink className="h-3 w-3" />Custom domain documentation
