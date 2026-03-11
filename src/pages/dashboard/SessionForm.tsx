@@ -197,6 +197,12 @@ const SessionForm = () => {
   const [contractText, setContractText] = useState<string>("");
   const [showFullContract, setShowFullContract] = useState(false);
 
+  // ── Briefing ──
+  type BriefingQuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+  interface BriefingTemplate { id: string; name: string; }
+  const [briefingTemplates, setBriefingTemplates] = useState<BriefingTemplate[]>([]);
+  const [selectedBriefingId, setSelectedBriefingId] = useState<string>("none");
+
   // ── Weekly slots ──
   const [slots, setSlots] = useState<WeeklySlot[]>([]);
   const [expandedDays, setExpandedDays] = useState<number[]>([...DAY_ORDER]);
