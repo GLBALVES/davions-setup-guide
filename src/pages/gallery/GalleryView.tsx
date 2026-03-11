@@ -672,21 +672,32 @@ const GalleryView = () => {
               </span>
             </button>
           )}
-          {/* Final: Download All button */}
+          {/* Final: Select + Download All buttons */}
           {unlocked && !isProof && photos.length > 0 && (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={handleDownloadAll}
-              disabled={downloadingAll}
-              className="gap-2 text-xs tracking-widest uppercase font-light"
-            >
-              {downloadingAll ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing…</>
-              ) : (
-                <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All</>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={selectMode ? "outline" : "secondary"}
+                onClick={() => { setSelectMode((v) => !v); setSelected(new Set()); }}
+                className="gap-1.5 text-xs tracking-widest uppercase font-light"
+              >
+                <MousePointerSquareDashed className="h-3.5 w-3.5" />
+                {selectMode ? "Cancel" : "Select"}
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                className="gap-2 text-xs tracking-widest uppercase font-light"
+              >
+                {downloadingAll ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing…</>
+                ) : (
+                  <><ArrowDownToLine className="h-3.5 w-3.5" /> Download All</>
+                )}
+              </Button>
+            </div>
           )}
           <Badge
             variant={isProof ? "outline" : "default"}
