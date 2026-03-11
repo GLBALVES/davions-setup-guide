@@ -63,6 +63,7 @@ import {
   Heart,
   SlidersHorizontal,
   Download,
+  Globe,
 } from "lucide-react";
 import {
   Dialog,
