@@ -92,10 +92,12 @@ function KanbanCard({
   project,
   onEdit,
   onDelete,
+  onArchive,
 }: {
   project: ClientProject;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
+  onArchive: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
@@ -124,12 +126,21 @@ function KanbanCard({
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(project)}
+              title="Edit"
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
+              className="p-0.5 text-muted-foreground hover:text-amber-500"
+              onClick={() => onArchive(project.id)}
+              title="Archive"
+            >
+              <Archive className="h-3 w-3" />
+            </button>
+            <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
               onClick={() => onDelete(project.id)}
+              title="Delete"
             >
               <X className="h-3 w-3" />
             </button>
