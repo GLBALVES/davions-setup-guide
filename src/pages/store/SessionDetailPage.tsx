@@ -549,6 +549,7 @@ const SessionDetailPage = () => {
                 {generatedSlots.length === 0 ? (
                   <div className="p-8 text-center">
                     <p className="text-sm font-light text-muted-foreground">No available slots at this time.</p>
+
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
