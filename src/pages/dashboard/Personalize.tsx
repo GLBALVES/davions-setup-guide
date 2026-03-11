@@ -614,12 +614,7 @@ const Personalize = () => {
                           size="sm"
                           variant="outline"
                           className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
-                          onClick={() => {
-                            setEditingContract(null);
-                            setContractName("");
-                            setContractBody("");
-                            setContractDialogOpen(true);
-                          }}
+                          onClick={() => navigate("/dashboard/contracts/new")}
                         >
                           <Plus className="h-3.5 w-3.5" />
                           New contract
@@ -631,24 +626,24 @@ const Personalize = () => {
                       ) : (
                         <div className="flex flex-col gap-2">
                           {contracts.map((c) => (
-                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4">
-                              <div className="flex flex-col gap-0.5 min-w-0">
+                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
+                              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || "Untitled"}</p>
-                                <p className="text-[11px] text-muted-foreground line-clamp-2">{c.body}</p>
+                                <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                                  {c.body
+                                    ? c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "")
+                                    : "No content yet"}
+                                </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7"
-                                  onClick={() => {
-                                    setEditingContract(c);
-                                    setContractName(c.name);
-                                    setContractBody(c.body);
-                                    setContractDialogOpen(true);
-                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-3 text-[10px] tracking-wider uppercase font-light"
+                                  onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}
                                 >
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  <Pencil className="h-3 w-3 mr-1" />
+                                  Edit
                                 </Button>
                                 <Button
                                   size="icon"
