@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
@@ -42,6 +42,8 @@ import {
   Pin,
   PinOff,
   GripVertical,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -88,6 +90,8 @@ import { CSS } from "@dnd-kit/utilities";
 import seloPreto from "@/assets/selo_preto.png";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type MenuItem = {
   title: string;
@@ -193,21 +197,6 @@ groups.forEach((g) => {
     ALL_ITEMS.push({ ...item, groupTitle: g.title });
   });
 });
-
-const FAVORITES_KEY = "davions_sidebar_favorites";
-
-function loadFavorites(): string[] {
-  try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveFavorites(keys: string[]) {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(keys));
-}
 
 function itemKey(groupTitle: string, itemTitle: string) {
   return `${groupTitle}:${itemTitle}`;
@@ -473,6 +462,47 @@ function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItem
   );
 }
 
+// ── Edit Favorites Panel ─────────────────────────────────────────────────────
+interface EditFavoritesPanelProps {
+  pinnedKeys: string[];
+  onToggle: (groupTitle: string, item: MenuItem) => void;
+}
+
+function EditFavoritesPanel({ pinnedKeys, onToggle }: EditFavoritesPanelProps) {
+  return (
+    <div className="max-h-[60vh] overflow-y-auto py-1">
+      {groups.map((group) => (
+        <div key={group.title} className="mb-2">
+          <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light px-2 pt-1.5 pb-1">
+            {group.title}
+          </p>
+          {group.items.map((item) => {
+            const key = itemKey(group.title, item.title);
+            const pinned = pinnedKeys.includes(key);
+            return (
+              <button
+                key={key}
+                onClick={() => onToggle(group.title, item)}
+                className="flex items-center gap-2.5 w-full px-2 py-1.5 text-xs tracking-wider uppercase font-light rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                <item.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-left truncate">{item.title}</span>
+                <Star
+                  className={`h-3.5 w-3.5 shrink-0 transition-colors ${
+                    pinned
+                      ? "fill-foreground text-foreground"
+                      : "text-muted-foreground/30"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Main sidebar ─────────────────────────────────────────────────────────────
 interface DashboardSidebarProps {
   onSignOut: () => void;
@@ -484,8 +514,11 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const collapsed = state === "collapsed";
   const location = useLocation();
   const badges = useSidebarBadges();
+  const { user } = useAuth();
 
-  const [pinnedKeys, setPinnedKeys] = useState<string[]>(loadFavorites);
+  const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
+  const [editMode, setEditMode] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   // Which group popover is open in collapsed mode
   const [collapsedOpenGroup, setCollapsedOpenGroup] = useState<string | null>(null);
 
@@ -493,16 +526,58 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
-  const togglePin = useCallback((groupTitle: string, item: MenuItem) => {
-    const key = itemKey(groupTitle, item.title);
-    setPinnedKeys((prev) => {
-      const next = prev.includes(key)
-        ? prev.filter((k) => k !== key)
-        : [...prev, key];
-      saveFavorites(next);
-      return next;
-    });
-  }, []);
+  // Load favorites from DB
+  useEffect(() => {
+    if (!user) return;
+    const fetchFavorites = async () => {
+      const { data } = await supabase
+        .from("sidebar_favorites")
+        .select("item_key, position")
+        .eq("photographer_id", user.id)
+        .order("position", { ascending: true });
+      if (data) {
+        setPinnedKeys(data.map((r) => r.item_key));
+      }
+      setLoaded(true);
+    };
+    fetchFavorites();
+  }, [user]);
+
+  // Persist favorites to DB
+  const persistFavorites = useCallback(
+    async (keys: string[]) => {
+      if (!user) return;
+      // Delete all then re-insert in order
+      await supabase
+        .from("sidebar_favorites")
+        .delete()
+        .eq("photographer_id", user.id);
+      if (keys.length > 0) {
+        await supabase.from("sidebar_favorites").insert(
+          keys.map((key, idx) => ({
+            photographer_id: user.id,
+            item_key: key,
+            position: idx,
+          }))
+        );
+      }
+    },
+    [user]
+  );
+
+  const togglePin = useCallback(
+    (groupTitle: string, item: MenuItem) => {
+      const key = itemKey(groupTitle, item.title);
+      setPinnedKeys((prev) => {
+        const next = prev.includes(key)
+          ? prev.filter((k) => k !== key)
+          : [...prev, key];
+        persistFavorites(next);
+        return next;
+      });
+    },
+    [persistFavorites]
+  );
 
   const isPinned = (groupTitle: string, itemTitle: string) =>
     pinnedKeys.includes(itemKey(groupTitle, itemTitle));
@@ -518,7 +593,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
       const oldIdx = prev.indexOf(active.id as string);
       const newIdx = prev.indexOf(over.id as string);
       const next = arrayMove(prev, oldIdx, newIdx);
-      saveFavorites(next);
+      persistFavorites(next);
       return next;
     });
   };
@@ -716,6 +791,24 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                     <Star className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 text-left">Favorites</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditMode((prev) => !prev);
+                        // Ensure favorites group is open when entering edit mode
+                        if (!openGroups["Favorites"]) {
+                          setOpenGroups((prev) => ({ ...prev, Favorites: true }));
+                        }
+                      }}
+                      className="shrink-0 p-0.5 rounded-sm text-muted-foreground/50 hover:text-foreground transition-colors"
+                      aria-label={editMode ? "Done editing favorites" : "Edit favorites"}
+                    >
+                      {editMode ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Pencil className="h-3 w-3" />
+                      )}
+                    </button>
                     <ChevronRight
                       className="h-3 w-3 shrink-0 transition-transform duration-200"
                       style={{ transform: openGroups["Favorites"] ? "rotate(90deg)" : "rotate(0deg)" }}
@@ -725,36 +818,45 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
                 <CollapsibleContent>
                   <SidebarGroupContent>
-                    <SidebarMenu className="pl-3">
-                      {favoriteItems.length === 0 ? (
-                        <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
-                          Right-click any item to pin it here
-                        </p>
-                      ) : (
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={handleDragEnd}
-                        >
-                          <SortableContext
-                            items={pinnedKeys}
-                            strategy={verticalListSortingStrategy}
+                    {editMode ? (
+                      <div className="pl-3">
+                        <EditFavoritesPanel
+                          pinnedKeys={pinnedKeys}
+                          onToggle={togglePin}
+                        />
+                      </div>
+                    ) : (
+                      <SidebarMenu className="pl-3">
+                        {favoriteItems.length === 0 ? (
+                          <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
+                            Right-click any item to pin it here
+                          </p>
+                        ) : (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
                           >
-                            {favoriteItems.map((item) => (
-                              <SortableFavoriteItem
-                                key={itemKey(item.groupTitle, item.title)}
-                                id={itemKey(item.groupTitle, item.title)}
-                                item={item}
-                                isActive={isItemActive(item)}
-                                collapsed={false}
-                                badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
-                                onUnpin={() => togglePin(item.groupTitle, item)}
-                              />
-                            ))}
-                          </SortableContext>
-                        </DndContext>
-                      )}
-                    </SidebarMenu>
+                            <SortableContext
+                              items={pinnedKeys}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              {favoriteItems.map((item) => (
+                                <SortableFavoriteItem
+                                  key={itemKey(item.groupTitle, item.title)}
+                                  id={itemKey(item.groupTitle, item.title)}
+                                  item={item}
+                                  isActive={isItemActive(item)}
+                                  collapsed={false}
+                                  badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
+                                  onUnpin={() => togglePin(item.groupTitle, item)}
+                                />
+                              ))}
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </SidebarMenu>
+                    )}
                   </SidebarGroupContent>
                 </CollapsibleContent>
               </SidebarGroup>
