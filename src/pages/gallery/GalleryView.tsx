@@ -480,7 +480,7 @@ const GalleryView = () => {
 
       {/* ── Navbar ── */}
       <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm sticky top-0 z-30">
-        <img src={logoPrincipal} alt="Davions" className="h-5 w-auto" draggable={false} />
+        <PhotographerBrand brand={photographerBrand} />
         <div className="flex items-center gap-3">
           {unlocked && isProof && favCount > 0 && (
             <button
