@@ -127,7 +127,6 @@ const Settings = () => {
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
         setBio((d as any).bio ?? "");
-        setHeroImageUrl((d as any).hero_image_url ?? "");
       }
 
       if (watermarksRes.data) {
