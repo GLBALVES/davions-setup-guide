@@ -333,6 +333,9 @@ interface CollapsedGroupPopoverProps {
 
 function CollapsedGroupPopover({ group, isOpen, onOpenChange, isItemActive, badges }: CollapsedGroupPopoverProps) {
   const hasActive = group.items.some((item) => isItemActive(item));
+  const totalBadge = group.items.reduce((sum, item) => {
+    return sum + (item.badgeKey ? (badges[item.badgeKey] ?? 0) : 0);
+  }, 0);
 
   return (
     <SidebarMenuItem>
@@ -343,7 +346,12 @@ function CollapsedGroupPopover({ group, isOpen, onOpenChange, isItemActive, badg
             isActive={hasActive}
             className="gap-3 text-xs tracking-wider uppercase font-light"
           >
-            <group.icon className="h-4 w-4 shrink-0" />
+            <div className="relative shrink-0">
+              <group.icon className="h-4 w-4" />
+              {totalBadge > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-foreground ring-1 ring-sidebar" />
+              )}
+            </div>
           </SidebarMenuButton>
         </PopoverTrigger>
         <PopoverContent
