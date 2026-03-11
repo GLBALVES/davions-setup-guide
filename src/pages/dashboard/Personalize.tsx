@@ -124,6 +124,8 @@ const Personalize = () => {
       if (gallerySettingsRes?.data) {
         const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
         if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
+        const feeRow = gallerySettingsRes.data.find((r: any) => r.key === "reactivation_fee");
+        if (feeRow) setGalleryReactivationFee(feeRow.value ?? "");
       }
 
       if (businessRes?.data) {
