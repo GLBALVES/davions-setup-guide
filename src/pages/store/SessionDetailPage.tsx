@@ -916,7 +916,7 @@ const SessionDetailPage = () => {
                           client_email: clientEmail,
                           session_title: session.title,
                           session_date: selectedSlot?.label ?? "",
-                          session_time: selectedSlot?.start_time ?? "",
+                          session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
                           session_duration: `${session.duration_minutes} min`,
                           session_price: formatCurrency(session.price),
                         })

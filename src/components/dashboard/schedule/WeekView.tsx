@@ -128,7 +128,7 @@ export function WeekView({ currentDate, bookings, blockedSlots, manualBlocks, on
       return clickedTime >= start && clickedTime < end;
     });
     if (overlap) {
-      toast({ title: "This time is blocked", description: overlap.reason ?? `${overlap.start_time.slice(0,5)}–${overlap.end_time.slice(0,5)}`, variant: "destructive" });
+      toast({ title: "This time is blocked", description: overlap.reason ?? `${formatTime(overlap.start_time.slice(0,5))}–${formatTime(overlap.end_time.slice(0,5))}`, variant: "destructive" });
       return;
     }
 

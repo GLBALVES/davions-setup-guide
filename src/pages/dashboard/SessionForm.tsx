@@ -1385,8 +1385,8 @@ const SessionForm = () => {
                                               )}
                                             >
                                               <Clock className="h-3 w-3 shrink-0" />
-                                              {start}
-                                              <span className={cn("opacity-60", selected && "opacity-80")}>→ {end}</span>
+                                               {formatTime12(start)}
+                                              <span className={cn("opacity-60", selected && "opacity-80")}>→ {formatTime12(end)}</span>
                                             </button>
                                           );
                                         })}
