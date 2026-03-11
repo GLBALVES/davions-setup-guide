@@ -774,12 +774,15 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {groups.map((group) => (
+            {groups.map((group) => {
+              const visibleItems = filterItems(group.items);
+              if (visibleItems.length === 0) return null;
+              return (
               <SidebarGroup key={group.title}>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <CollapsedGroupPopover
-                      group={group}
+                      group={{ ...group, items: visibleItems }}
                       isOpen={collapsedOpenGroup === group.title}
                       onOpenChange={(open) => setCollapsedOpenGroup(open ? group.title : null)}
                       isItemActive={isItemActive}
@@ -788,7 +791,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-            ))}
+              );
+            })}
           </>
         ) : (
           /* ── EXPANDED MODE: collapsible groups ── */
