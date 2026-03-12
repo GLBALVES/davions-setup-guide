@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, Crown, Zap, Building2, ExternalLink, RefreshCw,
-  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2
+  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle
 } from "lucide-react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
 import { ConnectComponentsProvider, ConnectAccountManagement, ConnectNotificationBanner } from "@stripe/react-connect-js";
