@@ -164,6 +164,12 @@ function KanbanCard({
               {project.session_type}
             </span>
           )}
+          {project.session_title && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+              <span className="shrink-0 text-[9px]">📷</span>
+              <span className="truncate italic">{project.session_title}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
