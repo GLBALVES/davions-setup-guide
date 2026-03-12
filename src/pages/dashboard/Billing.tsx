@@ -257,77 +257,134 @@ const Billing = () => {
               <section className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                   <span className="inline-block w-6 h-px bg-border" />
-                  {sub?.subscribed ? "Change Plan" : "Choose a Plan"}
+                  {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {PLANS.map((plan) => {
-                    const isCurrent = sub?.plan === plan.key;
-                    const PlanIcon = plan.icon;
-                    return (
-                      <div
-                        key={plan.key}
-                        className={`border p-6 flex flex-col gap-5 relative ${
-                          plan.highlight
-                            ? "border-foreground"
-                            : "border-border"
-                        }`}
-                      >
-                        {plan.highlight && (
-                          <span className="absolute -top-px left-6 bg-foreground text-background text-[9px] tracking-[0.2em] uppercase font-light px-2 py-0.5">
-                            Most Popular
-                          </span>
-                        )}
-                        {isCurrent && (
-                          <span className="absolute -top-px right-6 bg-primary text-primary-foreground text-[9px] tracking-[0.2em] uppercase font-light px-2 py-0.5 flex items-center gap-1">
+                {/* Subscribed: show banner only */}
+                {!loadingSub && sub?.subscribed && activePlan ? (
+                  <div className="border border-foreground p-8 flex flex-col sm:flex-row sm:items-center gap-6 justify-between relative overflow-hidden">
+                    {/* background decoration */}
+                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                      <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-foreground" />
+                      <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-foreground" />
+                    </div>
+
+                    <div className="flex items-center gap-5 relative">
+                      <div className="w-14 h-14 border border-foreground flex items-center justify-center shrink-0">
+                        <activePlan.icon className="h-6 w-6" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground font-light">Active Plan</span>
+                          <span className="inline-flex items-center gap-1 bg-foreground text-background text-[9px] tracking-[0.15em] uppercase font-light px-2 py-0.5">
                             <Star className="h-2.5 w-2.5 fill-current" />
-                            Current
+                            Active
                           </span>
-                        )}
-
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 border border-border flex items-center justify-center shrink-0">
-                            <PlanIcon className="h-3.5 w-3.5" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-light tracking-widest uppercase">{plan.name}</h3>
-                            <p className="text-[10px] text-muted-foreground font-light">{plan.split}% on sales</p>
-                          </div>
                         </div>
-
-                        <div>
-                          <span className="text-3xl font-light">${plan.price}</span>
-                          <span className="text-xs text-muted-foreground font-light">/month</span>
-                        </div>
-
-                        <ul className="flex flex-col gap-2 flex-1">
-                          {plan.features.map((f) => (
-                            <li key={f} className="flex items-start gap-2 text-xs font-light text-muted-foreground">
-                              <Check className="h-3.5 w-3.5 shrink-0 mt-0.5 text-foreground" />
+                        <h2 className="text-2xl font-light tracking-wide">{activePlan.name}</h2>
+                        <p className="text-sm text-muted-foreground font-light">
+                          ${activePlan.price}/month · {activePlan.split}% fee on sales
+                        </p>
+                        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                          {activePlan.features.map((f) => (
+                            <li key={f} className="flex items-center gap-1.5 text-[11px] font-light text-muted-foreground">
+                              <Check className="h-3 w-3 shrink-0 text-foreground" />
                               {f}
                             </li>
                           ))}
                         </ul>
-
-                        <Button
-                          variant={isCurrent ? "secondary" : plan.highlight ? "default" : "outline"}
-                          size="sm"
-                          disabled={isCurrent || checkingOut === plan.key}
-                          onClick={() => !isCurrent && handleSubscribe(plan.price_id, plan.key)}
-                          className="w-full"
-                        >
-                          {checkingOut === plan.key ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : isCurrent ? (
-                            "Current Plan"
-                          ) : (
-                            "Get Started"
-                          )}
-                        </Button>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 shrink-0 relative">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleManage}
+                        disabled={openingPortal}
+                        className="gap-2"
+                      >
+                        {openingPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                        Manage Plan
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchAll}
+                        className="gap-2"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Refresh
+                      </Button>
+                      {sub.subscription_end && (
+                        <p className="text-[10px] text-muted-foreground font-light text-center">
+                          Renews {new Date(sub.subscription_end).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : !loadingSub && !sub?.subscribed ? (
+                  /* Not subscribed: show plan cards */
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {PLANS.map((plan) => {
+                      const PlanIcon = plan.icon;
+                      return (
+                        <div
+                          key={plan.key}
+                          className={`border p-6 flex flex-col gap-5 relative ${
+                            plan.highlight ? "border-foreground" : "border-border"
+                          }`}
+                        >
+                          {plan.highlight && (
+                            <span className="absolute -top-px left-6 bg-foreground text-background text-[9px] tracking-[0.2em] uppercase font-light px-2 py-0.5">
+                              Most Popular
+                            </span>
+                          )}
+
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 border border-border flex items-center justify-center shrink-0">
+                              <PlanIcon className="h-3.5 w-3.5" />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-light tracking-widest uppercase">{plan.name}</h3>
+                              <p className="text-[10px] text-muted-foreground font-light">{plan.split}% on sales</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-3xl font-light">${plan.price}</span>
+                            <span className="text-xs text-muted-foreground font-light">/month</span>
+                          </div>
+
+                          <ul className="flex flex-col gap-2 flex-1">
+                            {plan.features.map((f) => (
+                              <li key={f} className="flex items-start gap-2 text-xs font-light text-muted-foreground">
+                                <Check className="h-3.5 w-3.5 shrink-0 mt-0.5 text-foreground" />
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+
+                          <Button
+                            variant={plan.highlight ? "default" : "outline"}
+                            size="sm"
+                            disabled={checkingOut === plan.key}
+                            onClick={() => handleSubscribe(plan.price_id, plan.key)}
+                            className="w-full"
+                          >
+                            {checkingOut === plan.key ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              "Get Started"
+                            )}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : loadingSub ? (
+                  <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                ) : null}
               </section>
 
               {/* Stripe balance */}
