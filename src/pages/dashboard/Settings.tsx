@@ -16,6 +16,14 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import {
+  loadConnectAndInitialize,
+  StripeConnectInstance,
+} from "@stripe/connect-js";
+import {
+  ConnectAccountOnboarding,
+  ConnectComponentsProvider,
+} from "@stripe/react-connect-js";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -25,43 +33,16 @@ const Settings = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Handle Stripe Connect OAuth callback (code in URL)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (!code || !user) return;
-
-    // Clean the URL
-    navigate("/dashboard/settings", { replace: true });
-
-    const exchangeCode = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const { data, error } = await supabase.functions.invoke("stripe-connect-callback", {
-          body: { code },
-          headers: { Authorization: `Bearer ${session?.access_token}` },
-        });
-        if (error || !data?.stripe_account_id) throw new Error(error?.message ?? "Connection failed");
-        setStripeAccountId(data.stripe_account_id);
-        setStripeConnectedAt(new Date().toISOString());
-        toast({ title: "Payments connected!", description: "Your account is now ready to receive payments." });
-      } catch (err: any) {
-        toast({ title: "Payment connection failed", description: err.message, variant: "destructive" });
-      }
-    };
-    exchangeCode();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
   // Payments tab — Stripe Connect
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
   const [connectingStripe, setConnectingStripe] = useState(false);
   const [disconnectingStripe, setDisconnectingStripe] = useState(false);
+  const [stripeInstance, setStripeInstance] = useState<StripeConnectInstance | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Profile
   const [fullName, setFullName] = useState("");
-  
   const [storeSlug, setStoreSlug] = useState("");
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
@@ -79,7 +60,7 @@ const Settings = () => {
   const [editingWatermark, setEditingWatermark] = useState<WatermarkData | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Session Types (Studio tab)
+  // Session Types
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
@@ -96,7 +77,6 @@ const Settings = () => {
   const [businessCurrency, setBusinessCurrency] = useState("USD");
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
-
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
@@ -272,23 +252,77 @@ const Settings = () => {
     setSavingGallerySettings(false);
   };
 
-  // ── Stripe Connect handlers ──
-  const handleConnectStripe = async () => {
+  // ── Stripe Connect Embedded Onboarding ──
+  const handleActivatePayment = async () => {
     if (!user) return;
     setConnectingStripe(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const redirectUri = `${window.location.origin}/dashboard/settings`;
-      const { data, error } = await supabase.functions.invoke("stripe-connect-url", {
-        body: { redirectUri },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+      const authHeader = { Authorization: `Bearer ${session?.access_token}` };
+
+      // Step 1: Create (or fetch existing) Connect account
+      const { data: accountData, error: accountError } = await supabase.functions.invoke(
+        "create-stripe-connect-account",
+        { headers: authHeader }
+      );
+      if (accountError || !accountData?.stripe_account_id) {
+        throw new Error(accountError?.message ?? "Failed to create payment account");
+      }
+      const accountId = accountData.stripe_account_id;
+
+      // Step 2: Create an Account Session for the embedded component
+      const { data: sessionData, error: sessionError } = await supabase.functions.invoke(
+        "create-stripe-account-session",
+        {
+          body: { stripe_account_id: accountId },
+          headers: authHeader,
+        }
+      );
+      if (sessionError || !sessionData?.client_secret) {
+        throw new Error(sessionError?.message ?? "Failed to create account session");
+      }
+
+      // Step 3: Initialize Stripe Connect JS
+      const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      if (!publishableKey) throw new Error("Stripe publishable key not configured");
+
+      const instance = loadConnectAndInitialize({
+        publishableKey,
+        fetchClientSecret: async () => sessionData.client_secret,
+        appearance: {
+          overlays: "dialog",
+          variables: {
+            colorPrimary: "#000000",
+            fontFamily: "inherit",
+            borderRadius: "0px",
+          },
+        },
       });
-      if (error || !data?.url) throw new Error(error?.message ?? "Failed to get OAuth URL");
-      window.location.href = data.url;
+
+      setStripeAccountId(accountId);
+      setStripeInstance(instance);
+      setShowOnboarding(true);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
-      setConnectingStripe(false);
     }
+    setConnectingStripe(false);
+  };
+
+  const handleOnboardingExit = async () => {
+    // Refresh the account status from DB
+    if (!user) return;
+    const { data } = await supabase
+      .from("photographers")
+      .select("stripe_account_id, stripe_connected_at")
+      .eq("id", user.id)
+      .single();
+    if (data) {
+      setStripeAccountId((data as any).stripe_account_id ?? null);
+      setStripeConnectedAt((data as any).stripe_connected_at ?? null);
+    }
+    setShowOnboarding(false);
+    setStripeInstance(null);
+    toast({ title: "Payment setup saved", description: "Your payment account has been updated." });
   };
 
   const handleDisconnectStripe = async () => {
@@ -302,7 +336,9 @@ const Settings = () => {
       if (error) throw new Error(error.message);
       setStripeAccountId(null);
       setStripeConnectedAt(null);
-      toast({ title: "Payments disconnected" });
+      setShowOnboarding(false);
+      setStripeInstance(null);
+      toast({ title: "Payments deactivated" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -343,9 +379,9 @@ const Settings = () => {
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                   { value: "profile", label: "Profile" },
-                   { value: "payments", label: "Payments" },
-                     ].map((tab) => (
+                      { value: "profile", label: "Profile" },
+                      { value: "payments", label: "Payments" },
+                    ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
                         value={tab.value}
@@ -385,7 +421,6 @@ const Settings = () => {
                           className="h-9 text-sm font-light opacity-60"
                         />
                       </div>
-
                     </section>
 
                     <div>
@@ -403,12 +438,12 @@ const Settings = () => {
                   {/* ── PAYMENTS TAB ── */}
                   <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
 
-                    {stripeAccountId ? (
+                    {stripeAccountId && !showOnboarding ? (
                       /* ── Connected state ── */
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-foreground">
                           <Check className="h-3 w-3" />
-                           Activated
+                          Activated
                         </div>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
@@ -427,10 +462,22 @@ const Settings = () => {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments from your clients go directly to this payment account. To switch accounts, disconnect and reconnect.
+                          Payments from your clients go directly to this payment account. To switch accounts, deactivate and reconnect.
                         </p>
 
-                        <div>
+                        <div className="flex gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleActivatePayment}
+                            disabled={connectingStripe}
+                            className="gap-2 text-xs tracking-wider uppercase font-light"
+                          >
+                            {connectingStripe
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : null}
+                            Update details
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -445,6 +492,28 @@ const Settings = () => {
                           </Button>
                         </div>
                       </div>
+                    ) : showOnboarding && stripeInstance ? (
+                      /* ── Embedded onboarding ── */
+                      <div className="flex flex-col gap-5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] tracking-wider uppercase font-light text-muted-foreground">
+                            Complete your payment setup
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleOnboardingExit}
+                            className="text-xs tracking-wider uppercase font-light"
+                          >
+                            Done
+                          </Button>
+                        </div>
+                        <div className="border border-border overflow-hidden">
+                          <ConnectComponentsProvider connectInstance={stripeInstance}>
+                            <ConnectAccountOnboarding onExit={handleOnboardingExit} />
+                          </ConnectComponentsProvider>
+                        </div>
+                      </div>
                     ) : (
                       /* ── Not connected state ── */
                       <div className="flex flex-col gap-5">
@@ -455,16 +524,16 @@ const Settings = () => {
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
                           Connect your payment account so your clients pay directly to you.
-                          You'll be redirected to your payment provider to authorize the connection — no keys to copy or paste.
+                          Fill in your banking details right here — no redirects, no external pages.
                         </p>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
                           {[
                             "Click the button below",
-                            "Log in or create your payment account",
-                            "Authorize the connection",
-                            "You're redirected back here — done",
+                            "Fill in your banking and identity details",
+                            "Submit — everything stays on this page",
+                            "You're ready to receive payments",
                           ].map((step, i) => (
                             <div key={i} className="flex items-start gap-3">
                               <span className="text-[10px] text-muted-foreground shrink-0 w-4">{i + 1}.</span>
@@ -476,14 +545,14 @@ const Settings = () => {
                         <div>
                           <Button
                             size="sm"
-                            onClick={handleConnectStripe}
+                            onClick={handleActivatePayment}
                             disabled={connectingStripe}
                             className="gap-2 text-xs tracking-wider uppercase font-light"
                           >
                             {connectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              : <ExternalLink className="h-3.5 w-3.5" />}
-                            {connectingStripe ? "Redirecting…" : "Activate payment"}
+                              : <CreditCard className="h-3.5 w-3.5" />}
+                            {connectingStripe ? "Setting up…" : "Activate payment"}
                           </Button>
                         </div>
                       </div>
