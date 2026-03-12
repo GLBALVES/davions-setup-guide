@@ -1054,7 +1054,7 @@ const SessionDetailPage = () => {
                           <button
                             key={tab}
                             type="button"
-                            onClick={() => { setSigTab(tab); modalSigCanvasRef.current?.clear(); setSigPendingData(null); setSigTyped(""); }}
+                            onClick={() => { setSigTab(tab); modalSigCanvasRef.current?.clear(); const typed = tab === "type" ? clientName : ""; setSigTyped(typed); setSigPendingData(typed || null); }}
                             className={cn(
                               "px-1 pb-3 mr-5 text-xs tracking-wider capitalize transition-colors border-b-2 -mb-px",
                               sigTab === tab
