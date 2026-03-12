@@ -3,6 +3,12 @@ project_id = "pjcegphrngpedujeatrl"
 [functions.get-gallery-id]
 verify_jwt = false
 
+[functions.create-stripe-connect-account]
+verify_jwt = false
+
+[functions.create-stripe-account-session]
+verify_jwt = false
+
 [functions.ai-chat]
 verify_jwt = false
 
