@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { format, addMinutes, parse } from "date-fns";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Bell,
@@ -100,6 +101,9 @@ const SessionForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Stripe configured check ──
+  const [stripeConfigured, setStripeConfigured] = useState<boolean | null>(null);
 
   // ── Wizard step ──
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
@@ -270,11 +274,23 @@ const SessionForm = () => {
     if (data) setBriefingTemplates(data as BriefingTemplate[]);
   }, [user]);
 
+
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
-  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates]);
+    // Check if photographer has Stripe configured
+    if (user) {
+      (supabase as any)
+        .from("photographers")
+        .select("stripe_secret_key, stripe_publishable_key")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }: { data: any }) => {
+          setStripeConfigured(Boolean(data?.stripe_secret_key && data?.stripe_publishable_key));
+        });
+    }
+  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates, user]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
@@ -1429,6 +1445,23 @@ const SessionForm = () => {
                         Configure how clients pay when booking this session.
                       </p>
                     </div>
+
+                    {/* ── Stripe not configured warning ── */}
+                    {stripeConfigured === false && (
+                      <div className="flex items-start gap-3 border border-border bg-muted/50 p-4">
+                        <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-light tracking-wide">Stripe not configured</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            Payment collection is disabled until you connect your Stripe account.{" "}
+                            <a href="/dashboard/settings" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                              Go to Settings → Payments
+                            </a>{" "}
+                            to add your keys.
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* ── Require Payment Toggle ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">

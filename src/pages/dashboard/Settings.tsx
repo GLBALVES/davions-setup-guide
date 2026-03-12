@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Loader2, X, Plus, Pencil, Trash2, Type, Image,
+  Eye, EyeOff, CreditCard, ExternalLink as LinkIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
@@ -62,6 +63,14 @@ const Settings = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
+  // Payments tab
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showPublishableKey, setShowPublishableKey] = useState(false);
+  const [savingStripe, setSavingStripe] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
+
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
@@ -79,7 +88,7 @@ const Settings = () => {
       const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, hero_image_url")
+          .select("full_name, store_slug, custom_domain, hero_image_url, stripe_secret_key, stripe_publishable_key")
           .eq("id", user.id)
           .single(),
         (supabase as any)
@@ -95,12 +104,17 @@ const Settings = () => {
       ]);
 
       if (profileRes.data) {
-        const d = profileRes.data;
+        const d = profileRes.data as any;
         setFullName(d.full_name ?? "");
         setStoreSlug(d.store_slug ?? "");
         setSlugInput(d.store_slug ?? "");
-        setCustomDomain((d as any).custom_domain ?? "");
-        setCustomDomainInput((d as any).custom_domain ?? "");
+        setCustomDomain(d.custom_domain ?? "");
+        setCustomDomainInput(d.custom_domain ?? "");
+        const sk = d.stripe_secret_key ?? "";
+        const pk = d.stripe_publishable_key ?? "";
+        setStripeSecretKey(sk);
+        setStripePublishableKey(pk);
+        setStripeConnected(Boolean(sk && pk));
       }
 
       if (watermarksRes.data) {
@@ -235,6 +249,22 @@ const Settings = () => {
     setSavingGallerySettings(false);
   };
 
+  const handleSaveStripe = async () => {
+    if (!user) return;
+    setSavingStripe(true);
+    const { error } = await (supabase as any).from("photographers").update({
+      stripe_secret_key: stripeSecretKey.trim() || null,
+      stripe_publishable_key: stripePublishableKey.trim() || null,
+    }).eq("id", user.id);
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      const connected = Boolean(stripeSecretKey.trim() && stripePublishableKey.trim());
+      setStripeConnected(connected);
+      toast({ title: connected ? "Stripe connected" : "Stripe keys cleared" });
+    }
+    setSavingStripe(false);
+  };
 
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
@@ -271,6 +301,7 @@ const Settings = () => {
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
                    { value: "profile", label: "Profile" },
+                   { value: "payments", label: "Payments" },
                      ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
@@ -322,6 +353,95 @@ const Settings = () => {
                         className="gap-2 text-xs tracking-wider uppercase font-light"
                       >
                         {saving ? "Saving…" : "Save changes"}
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* ── PAYMENTS TAB ── */}
+                  <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
+                    {/* Status badge */}
+                    <div className="flex items-center gap-3">
+                      <div className={`flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border ${stripeConnected ? "border-green-600/40 text-green-600 bg-green-600/5" : "border-border text-muted-foreground"}`}>
+                        {stripeConnected ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <CreditCard className="h-3 w-3" />
+                        )}
+                        {stripeConnected ? "Connected" : "Not configured"}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Connect your Stripe account so clients pay directly to you. Paste your API keys from{" "}
+                      <a
+                        href="https://dashboard.stripe.com/apikeys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-2 hover:text-foreground transition-colors inline-flex items-center gap-1"
+                      >
+                        Stripe Dashboard → Developers → API keys
+                        <LinkIcon className="h-3 w-3" />
+                      </a>
+                    </p>
+
+                    <div className="flex flex-col gap-4 border border-border p-5">
+                      {/* Secret Key */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">
+                          Secret Key <span className="normal-case text-muted-foreground">(sk_live_… or sk_test_…)</span>
+                        </Label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={showSecretKey ? "text" : "password"}
+                              value={stripeSecretKey}
+                              onChange={(e) => setStripeSecretKey(e.target.value)}
+                              placeholder="sk_live_••••••••••••••••"
+                              className="h-9 text-sm font-light pr-10 font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowSecretKey((v) => !v)}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showSecretKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Publishable Key */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">
+                          Publishable Key <span className="normal-case text-muted-foreground">(pk_live_… or pk_test_…)</span>
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            type={showPublishableKey ? "text" : "password"}
+                            value={stripePublishableKey}
+                            onChange={(e) => setStripePublishableKey(e.target.value)}
+                            placeholder="pk_live_••••••••••••••••"
+                            className="h-9 text-sm font-light pr-10 font-mono"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPublishableKey((v) => !v)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showPublishableKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Button
+                        onClick={handleSaveStripe}
+                        disabled={savingStripe}
+                        size="sm"
+                        className="gap-2 text-xs tracking-wider uppercase font-light"
+                      >
+                        {savingStripe ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save Stripe keys"}
                       </Button>
                     </div>
                   </TabsContent>
