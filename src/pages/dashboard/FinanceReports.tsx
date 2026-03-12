@@ -34,7 +34,7 @@ function calcPaid(r: BookingRow) {
   const total = calcTotal(r);
   if (r.payment_status === "paid") return total;
   if (!r.deposit_enabled) return 0;
-  return r.deposit_type === "percentage" ? total * (r.deposit_amount / 100) : r.deposit_amount;
+  return (r.deposit_type === "percent" || r.deposit_type === "percentage") ? total * (r.deposit_amount / 100) : r.deposit_amount;
 }
 function calcBalance(r: BookingRow) { return calcTotal(r) - calcPaid(r); }
 

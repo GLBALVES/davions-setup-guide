@@ -120,8 +120,9 @@ serve(async (req) => {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
     if (isDeposit) {
-      // Bug fix: use "percentage" to match DB value (was "percent")
-      const depositBase = sessionData.deposit_type === "percentage"
+      const depositType = sessionData.deposit_type as string;
+      const isPercentDeposit = depositType === "percent" || depositType === "percentage";
+      const depositBase = isPercentDeposit
         ? Math.round(fullTotal * ((sessionData.deposit_amount as number) / 100))
         : (sessionData.deposit_amount as number);
       lineItems.push({
