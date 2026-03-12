@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, Crown, Zap, Building2, ExternalLink, RefreshCw,
-  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2
+  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle
 } from "lucide-react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
 import { ConnectComponentsProvider, ConnectAccountManagement, ConnectNotificationBanner } from "@stripe/react-connect-js";
@@ -141,6 +141,8 @@ const Billing = () => {
   const [openingPortal, setOpeningPortal] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [loadingManage, setLoadingManage] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
 
   const fetchAll = async () => {
     if (!user) return;
@@ -153,13 +155,22 @@ const Billing = () => {
     setLoadingInvoices(true);
     setLoadingPayouts(true);
 
-    const [subRes, balanceRes, invoicesRes] = await Promise.all([
+    const [subRes, balanceRes, invoicesRes, profileRes] = await Promise.all([
       supabase.functions.invoke("check-subscription", { headers: authHeaders }),
       supabase.functions.invoke("get-stripe-balance", { headers: authHeaders }),
       supabase.functions.invoke("get-billing-invoices", { headers: authHeaders }),
+      supabase.from("photographers").select("stripe_account_id, stripe_connected_at").eq("id", user.id).single(),
     ]);
 
     if (subRes.data && !subRes.error) setSub(subRes.data);
+    setLoadingSub(false);
+
+    if (profileRes.data) {
+      setStripeAccountId((profileRes.data as any).stripe_account_id ?? null);
+      setStripeConnectedAt((profileRes.data as any).stripe_connected_at ?? null);
+    }
+
+    if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
     setLoadingSub(false);
 
     if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
@@ -272,6 +283,30 @@ const Billing = () => {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">Billing</h1>
               </div>
+
+              {/* Onboarding pending banner */}
+              {stripeAccountId && !stripeConnectedAt && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 border border-border bg-muted/40 p-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs font-light tracking-wide text-foreground">Payment account created — setup pending</p>
+                      <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                        Your payment account exists but banking details haven't been submitted yet. Funds from client payments are held in custody until onboarding is complete.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.location.href = "/dashboard/settings?tab=payments"}
+                    className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Complete Setup
+                  </Button>
+                </div>
+              )}
 
               {/* Plans */}
               <section className="flex flex-col gap-4">
