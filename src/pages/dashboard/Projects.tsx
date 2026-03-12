@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   DndContext,
   DragOverlay,
@@ -82,10 +83,6 @@ const STAGE_COLORS: Record<Stage, string> = {
   archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
-const SESSION_TYPES = [
-  "Newborn", "Family", "Wedding", "Corporate", "Portrait",
-  "Events", "Fashion", "Product", "Real Estate", "Other",
-];
 
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
@@ -244,17 +241,23 @@ function ProjectModal({
   onSave,
   initial,
   defaultStage,
+  photographerId,
+  sessionTypes,
+  onRefetchSessionTypes,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<ClientProject>) => void;
   initial?: ClientProject | null;
   defaultStage?: Stage;
+  photographerId: string;
+  sessionTypes: SessionType[];
+  onRefetchSessionTypes: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-  const [sessionType, setSessionType] = useState("");
+  const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
   const [shootDate, setShootDate] = useState("");
   const [stage, setStage] = useState<Stage>("lead");
   const [notes, setNotes] = useState("");
@@ -264,16 +267,19 @@ function ProjectModal({
       setTitle(initial?.title ?? "");
       setClientName(initial?.client_name ?? "");
       setClientEmail(initial?.client_email ?? "");
-      setSessionType(initial?.session_type ?? "");
+      // Match existing string name to an id for pre-selection
+      const matched = sessionTypes.find((t) => t.name === initial?.session_type);
+      setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
       setStage(initial?.stage ?? defaultStage ?? "lead");
       setNotes(initial?.notes ?? "");
     }
-  }, [open, initial, defaultStage]);
+  }, [open, initial, defaultStage, sessionTypes]);
 
   const handleSave = () => {
     if (!title.trim()) { toast.error("Title is required"); return; }
-    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: sessionType || null, shoot_date: shootDate || null, stage, notes: notes || null });
+    const resolvedName = sessionTypes.find((t) => t.id === sessionTypeId)?.name ?? null;
+    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
   };
 
   return (
@@ -302,17 +308,14 @@ function ProjectModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Session type</label>
-              <Select value={sessionType} onValueChange={setSessionType}>
-                <SelectTrigger className="h-10 text-sm">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SESSION_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SessionTypeManager
+                photographerId={photographerId}
+                sessionTypes={sessionTypes}
+                selectedTypeId={sessionTypeId}
+                onSelect={setSessionTypeId}
+                onRefetch={onRefetchSessionTypes}
+                mode="select"
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date</label>
@@ -534,10 +537,21 @@ const Projects = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
+
+  const fetchSessionTypes = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) setSessionTypes(data as SessionType[]);
+  };
 
   const fetchProjects = async () => {
     const { data, error } = await supabase
@@ -548,7 +562,7 @@ const Projects = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchProjects(); }, []);
+  useEffect(() => { fetchProjects(); fetchSessionTypes(); }, [user?.id]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);
@@ -813,6 +827,9 @@ const Projects = () => {
         onSave={handleSave}
         initial={editing}
         defaultStage={defaultStage}
+        photographerId={user?.id ?? ""}
+        sessionTypes={sessionTypes}
+        onRefetchSessionTypes={fetchSessionTypes}
       />
     </SidebarProvider>
   );
