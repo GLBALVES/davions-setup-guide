@@ -413,7 +413,7 @@ const Settings = () => {
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Stripe Account</p>
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Payment Account</p>
                             <p className="text-sm font-mono font-light tracking-wide">{stripeAccountId}</p>
                           </div>
                           {stripeConnectedAt && (
