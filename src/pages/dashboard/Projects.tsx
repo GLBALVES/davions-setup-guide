@@ -83,10 +83,6 @@ const STAGE_COLORS: Record<Stage, string> = {
   archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
-const SESSION_TYPES = [
-  "Newborn", "Family", "Wedding", "Corporate", "Portrait",
-  "Events", "Fashion", "Product", "Real Estate", "Other",
-];
 
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
