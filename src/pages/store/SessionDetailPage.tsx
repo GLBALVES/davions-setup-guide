@@ -355,7 +355,7 @@ const SessionDetailPage = () => {
 
   // percent deposit: X% of total (subtotal + tax); fixed: stored value in cents
   const depositAmountCents = session
-    ? session.deposit_type === "percent"
+    ? (session.deposit_type === "percent" || session.deposit_type === "percentage")
       ? Math.round(total * (session.deposit_amount / 100))
       : session.deposit_amount
     : 0;
