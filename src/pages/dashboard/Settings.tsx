@@ -249,6 +249,22 @@ const Settings = () => {
     setSavingGallerySettings(false);
   };
 
+  const handleSaveStripe = async () => {
+    if (!user) return;
+    setSavingStripe(true);
+    const { error } = await (supabase as any).from("photographers").update({
+      stripe_secret_key: stripeSecretKey.trim() || null,
+      stripe_publishable_key: stripePublishableKey.trim() || null,
+    }).eq("id", user.id);
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      const connected = Boolean(stripeSecretKey.trim() && stripePublishableKey.trim());
+      setStripeConnected(connected);
+      toast({ title: connected ? "Stripe connected" : "Stripe keys cleared" });
+    }
+    setSavingStripe(false);
+  };
 
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
