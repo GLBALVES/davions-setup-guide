@@ -28,7 +28,7 @@ serve(async (req) => {
       );
     }
 
-    // Fetch gallery to get price_per_photo, title, slug
+    // Fetch gallery
     const { data: gallery, error: galleryError } = await supabase
       .from("galleries")
       .select("id, title, slug, price_per_photo, photographer_id")
@@ -46,35 +46,37 @@ serve(async (req) => {
     const totalAmount = pricePerPhoto * photoCount;
 
     if (pricePerPhoto === 0 || totalAmount === 0) {
-      // Free gallery — no Stripe needed
       return new Response(
         JSON.stringify({ free: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    // Fetch photographer's own Stripe key
+    // Fetch photographer's Stripe Connect account ID
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("stripe_secret_key")
+      .select("stripe_account_id")
       .eq("id", gallery.photographer_id)
       .single();
 
-    const stripeKey = (photoData as any)?.stripe_secret_key ?? Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+    const stripeAccountId = (photoData as any)?.stripe_account_id;
 
-    if (!stripeKey) {
+    if (!stripeAccountId) {
       return new Response(
         JSON.stringify({ error: "stripe_not_configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: clientEmail, limit: 1 });
+    // Check for existing customer on the connected account
+    const customers = await stripe.customers.list(
+      { email: clientEmail, limit: 1 },
+      { stripeAccount: stripeAccountId }
+    );
     let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -83,32 +85,35 @@ serve(async (req) => {
     const gallerySlug = gallery.slug ?? galleryId;
     const origin = req.headers.get("origin") ?? "https://davions-page-builder.lovable.app";
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : clientEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: "brl",
-            unit_amount: pricePerPhoto,
-            product_data: {
-              name: `${gallery.title} — Photo Selection`,
-              description: `${photoCount} photo${photoCount !== 1 ? "s" : ""} selected`,
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : clientEmail,
+        line_items: [
+          {
+            price_data: {
+              currency: "brl",
+              unit_amount: pricePerPhoto,
+              product_data: {
+                name: `${gallery.title} — Photo Selection`,
+                description: `${photoCount} photo${photoCount !== 1 ? "s" : ""} selected`,
+              },
             },
+            quantity: photoCount,
           },
-          quantity: photoCount,
+        ],
+        mode: "payment",
+        success_url: `${origin}/gallery/${gallerySlug}?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/gallery/${gallerySlug}`,
+        metadata: {
+          gallery_id: galleryId,
+          client_token: clientToken,
+          client_name: clientName ?? "",
+          photo_count: String(photoCount),
         },
-      ],
-      mode: "payment",
-      success_url: `${origin}/gallery/${gallerySlug}?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/gallery/${gallerySlug}`,
-      metadata: {
-        gallery_id: galleryId,
-        client_token: clientToken,
-        client_name: clientName ?? "",
-        photo_count: String(photoCount),
       },
-    });
+      { stripeAccount: stripeAccountId }
+    );
 
     return new Response(
       JSON.stringify({ url: session.url }),

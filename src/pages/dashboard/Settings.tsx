@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -10,9 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Check, Copy, AlertCircle, Store, Globe, ExternalLink,
-  Loader2, X, Plus, Pencil, Trash2, Type, Image,
-  Eye, EyeOff, CreditCard, ExternalLink as LinkIcon,
+  Check, AlertCircle, Loader2, CreditCard, ExternalLink, Unlink,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
@@ -24,6 +23,41 @@ const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Handle Stripe Connect OAuth callback (code in URL)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code || !user) return;
+
+    // Clean the URL
+    navigate("/dashboard/settings", { replace: true });
+
+    const exchangeCode = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data, error } = await supabase.functions.invoke("stripe-connect-callback", {
+          body: { code },
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        });
+        if (error || !data?.stripe_account_id) throw new Error(error?.message ?? "Connection failed");
+        setStripeAccountId(data.stripe_account_id);
+        setStripeConnectedAt(new Date().toISOString());
+        toast({ title: "Stripe connected!", description: "Your account is now ready to receive payments." });
+      } catch (err: any) {
+        toast({ title: "Stripe connection failed", description: err.message, variant: "destructive" });
+      }
+    };
+    exchangeCode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Payments tab — Stripe Connect
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [disconnectingStripe, setDisconnectingStripe] = useState(false);
 
   // Profile
   const [fullName, setFullName] = useState("");
@@ -63,14 +97,6 @@ const Settings = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
-  // Payments tab
-  const [stripeSecretKey, setStripeSecretKey] = useState("");
-  const [stripePublishableKey, setStripePublishableKey] = useState("");
-  const [showSecretKey, setShowSecretKey] = useState(false);
-  const [showPublishableKey, setShowPublishableKey] = useState(false);
-  const [savingStripe, setSavingStripe] = useState(false);
-  const [stripeConnected, setStripeConnected] = useState(false);
-
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
@@ -88,7 +114,7 @@ const Settings = () => {
       const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, hero_image_url, stripe_secret_key, stripe_publishable_key")
+          .select("full_name, store_slug, custom_domain, hero_image_url, stripe_account_id, stripe_connected_at")
           .eq("id", user.id)
           .single(),
         (supabase as any)
@@ -110,11 +136,8 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain(d.custom_domain ?? "");
         setCustomDomainInput(d.custom_domain ?? "");
-        const sk = d.stripe_secret_key ?? "";
-        const pk = d.stripe_publishable_key ?? "";
-        setStripeSecretKey(sk);
-        setStripePublishableKey(pk);
-        setStripeConnected(Boolean(sk && pk));
+        setStripeAccountId((d as any).stripe_account_id ?? null);
+        setStripeConnectedAt((d as any).stripe_connected_at ?? null);
       }
 
       if (watermarksRes.data) {
@@ -249,21 +272,41 @@ const Settings = () => {
     setSavingGallerySettings(false);
   };
 
-  const handleSaveStripe = async () => {
+  // ── Stripe Connect handlers ──
+  const handleConnectStripe = async () => {
     if (!user) return;
-    setSavingStripe(true);
-    const { error } = await (supabase as any).from("photographers").update({
-      stripe_secret_key: stripeSecretKey.trim() || null,
-      stripe_publishable_key: stripePublishableKey.trim() || null,
-    }).eq("id", user.id);
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-    } else {
-      const connected = Boolean(stripeSecretKey.trim() && stripePublishableKey.trim());
-      setStripeConnected(connected);
-      toast({ title: connected ? "Stripe connected" : "Stripe keys cleared" });
+    setConnectingStripe(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const redirectUri = `${window.location.origin}/dashboard/settings`;
+      const { data, error } = await supabase.functions.invoke("stripe-connect-url", {
+        body: { redirectUri },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? "Failed to get OAuth URL");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+      setConnectingStripe(false);
     }
-    setSavingStripe(false);
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!user) return;
+    setDisconnectingStripe(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.functions.invoke("stripe-connect-disconnect", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw new Error(error.message);
+      setStripeAccountId(null);
+      setStripeConnectedAt(null);
+      toast({ title: "Stripe disconnected" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setDisconnectingStripe(false);
   };
 
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
@@ -359,91 +402,92 @@ const Settings = () => {
 
                   {/* ── PAYMENTS TAB ── */}
                   <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
-                    {/* Status badge */}
-                    <div className="flex items-center gap-3">
-                      <div className={`flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border ${stripeConnected ? "border-green-600/40 text-green-600 bg-green-600/5" : "border-border text-muted-foreground"}`}>
-                        {stripeConnected ? (
+
+                    {stripeAccountId ? (
+                      /* ── Connected state ── */
+                      <div className="flex flex-col gap-5">
+                        <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-foreground">
                           <Check className="h-3 w-3" />
-                        ) : (
-                          <CreditCard className="h-3 w-3" />
-                        )}
-                        {stripeConnected ? "Connected" : "Not configured"}
-                      </div>
-                    </div>
+                          Connected
+                        </div>
 
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Connect your Stripe account so clients pay directly to you. Paste your API keys from{" "}
-                      <a
-                        href="https://dashboard.stripe.com/apikeys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline underline-offset-2 hover:text-foreground transition-colors inline-flex items-center gap-1"
-                      >
-                        Stripe Dashboard → Developers → API keys
-                        <LinkIcon className="h-3 w-3" />
-                      </a>
-                    </p>
-
-                    <div className="flex flex-col gap-4 border border-border p-5">
-                      {/* Secret Key */}
-                      <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Secret Key <span className="normal-case text-muted-foreground">(sk_live_… or sk_test_…)</span>
-                        </Label>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Input
-                              type={showSecretKey ? "text" : "password"}
-                              value={stripeSecretKey}
-                              onChange={(e) => setStripeSecretKey(e.target.value)}
-                              placeholder="sk_live_••••••••••••••••"
-                              className="h-9 text-sm font-light pr-10 font-mono"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowSecretKey((v) => !v)}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {showSecretKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                            </button>
+                        <div className="border border-border p-5 flex flex-col gap-3">
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Stripe Account</p>
+                            <p className="text-sm font-mono font-light tracking-wide">{stripeAccountId}</p>
                           </div>
+                          {stripeConnectedAt && (
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Connected on</p>
+                              <p className="text-xs font-light text-muted-foreground">
+                                {new Date(stripeConnectedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </div>
 
-                      {/* Publishable Key */}
-                      <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">
-                          Publishable Key <span className="normal-case text-muted-foreground">(pk_live_… or pk_test_…)</span>
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            type={showPublishableKey ? "text" : "password"}
-                            value={stripePublishableKey}
-                            onChange={(e) => setStripePublishableKey(e.target.value)}
-                            placeholder="pk_live_••••••••••••••••"
-                            className="h-9 text-sm font-light pr-10 font-mono"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPublishableKey((v) => !v)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Payments from your clients go directly to this Stripe account. To switch accounts, disconnect and reconnect.
+                        </p>
+
+                        <div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleDisconnectStripe}
+                            disabled={disconnectingStripe}
+                            className="gap-2 text-xs tracking-wider uppercase font-light border-destructive/40 text-destructive hover:bg-destructive/5"
                           >
-                            {showPublishableKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                          </button>
+                            {disconnectingStripe
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <Unlink className="h-3.5 w-3.5" />}
+                            Disconnect Stripe
+                          </Button>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* ── Not connected state ── */
+                      <div className="flex flex-col gap-5">
+                        <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-muted-foreground">
+                          <CreditCard className="h-3 w-3" />
+                          Not connected
+                        </div>
 
-                    <div>
-                      <Button
-                        onClick={handleSaveStripe}
-                        disabled={savingStripe}
-                        size="sm"
-                        className="gap-2 text-xs tracking-wider uppercase font-light"
-                      >
-                        {savingStripe ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save Stripe keys"}
-                      </Button>
-                    </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Connect your Stripe account so your clients pay directly to you.
+                          You'll be redirected to Stripe to authorize the connection — no keys to copy or paste.
+                        </p>
+
+                        <div className="border border-border p-5 flex flex-col gap-3">
+                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
+                          {[
+                            "Click the button below",
+                            "Log in to (or create) your Stripe account",
+                            "Authorize the connection",
+                            "You're redirected back here — done",
+                          ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <span className="text-[10px] text-muted-foreground shrink-0 w-4">{i + 1}.</span>
+                              <p className="text-[11px] font-light leading-relaxed">{step}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div>
+                          <Button
+                            size="sm"
+                            onClick={handleConnectStripe}
+                            disabled={connectingStripe}
+                            className="gap-2 text-xs tracking-wider uppercase font-light"
+                          >
+                            {connectingStripe
+                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              : <ExternalLink className="h-3.5 w-3.5" />}
+                            {connectingStripe ? "Redirecting…" : "Connect with Stripe"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
 
                 </Tabs>
