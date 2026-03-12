@@ -12,6 +12,7 @@ import {
   ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2
 } from "lucide-react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
+import { ConnectComponentsProvider, ConnectAccountManagement, ConnectNotificationBanner } from "@stripe/react-connect-js";
 
 // ── Plan config ──────────────────────────────────────────────────────────────
 const PLANS = [
@@ -184,7 +185,6 @@ const Billing = () => {
 
   useEffect(() => {
     fetchAll();
-    // Check for success redirect
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
       toast({ title: "Subscription activated!", description: "Welcome to your new plan." });
@@ -208,6 +208,21 @@ const Billing = () => {
     setCheckingOut(null);
   };
 
+  const handleManage = async () => {
+    setOpeningPortal(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("customer-portal", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? "Failed to open portal");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setOpeningPortal(false);
+  };
+
   const handleManageAccount = async () => {
     setLoadingManage(true);
     setManageOpen(true);
@@ -223,10 +238,7 @@ const Billing = () => {
         fetchClientSecret: async () => data.client_secret,
         appearance: {
           overlays: "dialog",
-          variables: {
-            colorPrimary: "#000000",
-            fontFamily: "inherit",
-          },
+          variables: { colorPrimary: "#000000", fontFamily: "inherit" },
         },
         locale: "en-US",
       });
@@ -239,7 +251,6 @@ const Billing = () => {
   };
 
   const activePlan = sub?.subscribed ? PLANS.find((p) => p.key === sub.plan) : null;
-
   const totalAvailable = balance?.available?.reduce((s, a) => s + a.amount, 0) ?? 0;
   const totalPending = balance?.pending?.reduce((s, a) => s + a.amount, 0) ?? 0;
   const balanceCurrency = balance?.available?.[0]?.currency ?? balance?.pending?.[0]?.currency ?? "usd";
@@ -262,7 +273,6 @@ const Billing = () => {
                 <h1 className="text-2xl font-light tracking-wide">Billing</h1>
               </div>
 
-
               {/* Plans */}
               <section className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
@@ -270,15 +280,12 @@ const Billing = () => {
                   {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
                 </p>
 
-                {/* Subscribed: show banner only */}
                 {!loadingSub && sub?.subscribed && activePlan ? (
                   <div className="border border-foreground p-8 flex flex-col sm:flex-row sm:items-center gap-6 justify-between relative overflow-hidden">
-                    {/* background decoration */}
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                       <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-foreground" />
                       <div className="absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-foreground" />
                     </div>
-
                     <div className="flex items-center gap-5 relative">
                       <div className="w-14 h-14 border border-foreground flex items-center justify-center shrink-0">
                         <activePlan.icon className="h-6 w-6" />
@@ -287,44 +294,27 @@ const Billing = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground font-light">Active Plan</span>
                           <span className="inline-flex items-center gap-1 bg-foreground text-background text-[9px] tracking-[0.15em] uppercase font-light px-2 py-0.5">
-                            <Star className="h-2.5 w-2.5 fill-current" />
-                            Active
+                            <Star className="h-2.5 w-2.5 fill-current" />Active
                           </span>
                         </div>
                         <h2 className="text-2xl font-light tracking-wide">{activePlan.name}</h2>
-                        <p className="text-sm text-muted-foreground font-light">
-                          ${activePlan.price}/month · {activePlan.split}% fee on sales
-                        </p>
+                        <p className="text-sm text-muted-foreground font-light">${activePlan.price}/month · {activePlan.split}% fee on sales</p>
                         <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                           {activePlan.features.map((f) => (
                             <li key={f} className="flex items-center gap-1.5 text-[11px] font-light text-muted-foreground">
-                              <Check className="h-3 w-3 shrink-0 text-foreground" />
-                              {f}
+                              <Check className="h-3 w-3 shrink-0 text-foreground" />{f}
                             </li>
                           ))}
                         </ul>
                       </div>
                     </div>
-
                     <div className="flex flex-col gap-2 shrink-0 relative">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={handleManage}
-                        disabled={openingPortal}
-                        className="gap-2"
-                      >
+                      <Button variant="default" size="sm" onClick={handleManage} disabled={openingPortal} className="gap-2">
                         {openingPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
                         Manage Plan
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={fetchAll}
-                        className="gap-2"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Refresh
+                      <Button variant="outline" size="sm" onClick={fetchAll} className="gap-2">
+                        <RefreshCw className="h-3.5 w-3.5" />Refresh
                       </Button>
                       {sub.subscription_end && (
                         <p className="text-[10px] text-muted-foreground font-light text-center">
@@ -334,23 +324,16 @@ const Billing = () => {
                     </div>
                   </div>
                 ) : !loadingSub && !sub?.subscribed ? (
-                  /* Not subscribed: show plan cards */
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {PLANS.map((plan) => {
                       const PlanIcon = plan.icon;
                       return (
-                        <div
-                          key={plan.key}
-                          className={`border p-6 flex flex-col gap-5 relative ${
-                            plan.highlight ? "border-foreground" : "border-border"
-                          }`}
-                        >
+                        <div key={plan.key} className={`border p-6 flex flex-col gap-5 relative ${plan.highlight ? "border-foreground" : "border-border"}`}>
                           {plan.highlight && (
                             <span className="absolute -top-px left-6 bg-foreground text-background text-[9px] tracking-[0.2em] uppercase font-light px-2 py-0.5">
                               Most Popular
                             </span>
                           )}
-
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 border border-border flex items-center justify-center shrink-0">
                               <PlanIcon className="h-3.5 w-3.5" />
@@ -360,33 +343,19 @@ const Billing = () => {
                               <p className="text-[10px] text-muted-foreground font-light">{plan.split}% on sales</p>
                             </div>
                           </div>
-
                           <div>
                             <span className="text-3xl font-light">${plan.price}</span>
                             <span className="text-xs text-muted-foreground font-light">/month</span>
                           </div>
-
                           <ul className="flex flex-col gap-2 flex-1">
                             {plan.features.map((f) => (
                               <li key={f} className="flex items-start gap-2 text-xs font-light text-muted-foreground">
-                                <Check className="h-3.5 w-3.5 shrink-0 mt-0.5 text-foreground" />
-                                {f}
+                                <Check className="h-3.5 w-3.5 shrink-0 mt-0.5 text-foreground" />{f}
                               </li>
                             ))}
                           </ul>
-
-                          <Button
-                            variant={plan.highlight ? "default" : "outline"}
-                            size="sm"
-                            disabled={checkingOut === plan.key}
-                            onClick={() => handleSubscribe(plan.price_id, plan.key)}
-                            className="w-full"
-                          >
-                            {checkingOut === plan.key ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              "Get Started"
-                            )}
+                          <Button variant={plan.highlight ? "default" : "outline"} size="sm" disabled={checkingOut === plan.key} onClick={() => handleSubscribe(plan.price_id, plan.key)} className="w-full">
+                            {checkingOut === plan.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Get Started"}
                           </Button>
                         </div>
                       );
@@ -399,10 +368,18 @@ const Billing = () => {
 
               {/* Stripe balance */}
               <section className="flex flex-col gap-4">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  Payment Account Balance
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                    <span className="inline-block w-6 h-px bg-border" />
+                    Payment Account Balance
+                  </p>
+                  {balance !== null && (
+                    <Button variant="outline" size="sm" onClick={handleManageAccount} disabled={loadingManage} className="gap-2">
+                      {loadingManage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Settings2 className="h-3.5 w-3.5" />}
+                      Manage Bank & Payouts
+                    </Button>
+                  )}
+                </div>
                 {loadingBalance ? (
                   <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
                 ) : !balance ? (
@@ -442,9 +419,7 @@ const Billing = () => {
                   {loadingPayouts ? (
                     <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
                   ) : payouts.length === 0 ? (
-                    <div className="border border-border p-5 text-sm font-light text-muted-foreground">
-                      No payouts yet.
-                    </div>
+                    <div className="border border-border p-5 text-sm font-light text-muted-foreground">No payouts yet.</div>
                   ) : (
                     <div className="border border-border">
                       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border">
@@ -454,24 +429,11 @@ const Billing = () => {
                         <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Destination</span>
                       </div>
                       {payouts.map((p) => {
-                        const dotColor =
-                          p.status === "paid" ? "bg-green-500" :
-                          p.status === "in_transit" ? "bg-amber-400" :
-                          p.status === "pending" ? "bg-muted-foreground" :
-                          "bg-destructive";
-                        const statusLabel =
-                          p.status === "paid" ? "Paid" :
-                          p.status === "in_transit" ? "In Transit" :
-                          p.status === "pending" ? "Pending" :
-                          p.status === "canceled" ? "Canceled" : "Failed";
-                        const destination = p.bank_name && p.last4
-                          ? `${p.bank_name} ••••${p.last4}`
-                          : p.last4 ? `••••${p.last4}` : "—";
+                        const dotColor = p.status === "paid" ? "bg-green-500" : p.status === "in_transit" ? "bg-amber-400" : p.status === "pending" ? "bg-muted-foreground" : "bg-destructive";
+                        const statusLabel = p.status === "paid" ? "Paid" : p.status === "in_transit" ? "In Transit" : p.status === "pending" ? "Pending" : p.status === "canceled" ? "Canceled" : "Failed";
+                        const destination = p.bank_name && p.last4 ? `${p.bank_name} ••••${p.last4}` : p.last4 ? `••••${p.last4}` : "—";
                         return (
-                          <div
-                            key={p.id}
-                            className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border last:border-0 items-center"
-                          >
+                          <div key={p.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border last:border-0 items-center">
                             <span className="text-xs font-light">{formatDate(p.arrival_date)}</span>
                             <span className="text-xs font-light whitespace-nowrap">{formatCurrency(p.amount, p.currency)}</span>
                             <span className="flex items-center gap-1.5 text-xs font-light whitespace-nowrap">
@@ -496,9 +458,7 @@ const Billing = () => {
                 {loadingInvoices ? (
                   <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
                 ) : invoices.length === 0 ? (
-                  <div className="border border-border p-5 text-sm font-light text-muted-foreground">
-                    No invoices yet.
-                  </div>
+                  <div className="border border-border p-5 text-sm font-light text-muted-foreground">No invoices yet.</div>
                 ) : (
                   <div className="border border-border">
                     <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border">
@@ -508,31 +468,18 @@ const Billing = () => {
                       <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Receipt</span>
                     </div>
                     {invoices.map((inv) => (
-                      <div
-                        key={inv.id}
-                        className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border last:border-0 items-center"
-                      >
+                      <div key={inv.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border last:border-0 items-center">
                         <span className="text-xs font-light truncate">{inv.description}</span>
                         <span className="text-xs font-light text-muted-foreground whitespace-nowrap">{formatDate(inv.created)}</span>
                         <span className="text-xs font-light whitespace-nowrap">{formatCurrency(inv.amount_paid, inv.currency)}</span>
                         <div className="flex gap-2">
                           {inv.hosted_invoice_url && (
-                            <a
-                              href={inv.hosted_invoice_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
+                            <a href={inv.hosted_invoice_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
                               <Receipt className="h-3.5 w-3.5" />
                             </a>
                           )}
                           {inv.invoice_pdf && (
-                            <a
-                              href={inv.invoice_pdf}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
+                            <a href={inv.invoice_pdf} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
                               <ArrowDownToLine className="h-3.5 w-3.5" />
                             </a>
                           )}
@@ -547,6 +494,27 @@ const Billing = () => {
           </main>
         </div>
       </div>
+
+      {/* Stripe Connect Account Management Modal */}
+      <Dialog open={manageOpen} onOpenChange={(open) => { setManageOpen(open); if (!open) connectInstanceRef.current = null; }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base font-light tracking-widest uppercase">Payment Account Settings</DialogTitle>
+          </DialogHeader>
+          {loadingManage ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : connectInstanceRef.current ? (
+            <ConnectComponentsProvider connectInstance={connectInstanceRef.current}>
+              <div className="flex flex-col gap-4">
+                <ConnectNotificationBanner />
+                <ConnectAccountManagement />
+              </div>
+            </ConnectComponentsProvider>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
