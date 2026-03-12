@@ -1088,10 +1088,11 @@ const SessionForm = () => {
                       )}
                       {contractText && selectedContractId !== "none" && (
                         <div className="border border-border bg-muted/30 p-3">
-                          <p className={`text-[11px] text-muted-foreground whitespace-pre-wrap ${!showFullContract ? "line-clamp-4" : ""}`}>
-                            {contractText}
-                          </p>
-                          {contractText.split("\n").length > 4 || contractText.length > 300 ? (
+                          <div
+                            className={`prose prose-sm max-w-none text-[11px] text-muted-foreground [&_*]:text-muted-foreground [&_h1]:text-xs [&_h2]:text-xs [&_h3]:text-xs ${!showFullContract ? "line-clamp-4 overflow-hidden" : ""}`}
+                            dangerouslySetInnerHTML={{ __html: contractText }}
+                          />
+                          {contractText.length > 300 ? (
                             <button
                               type="button"
                               className="text-[10px] tracking-wider uppercase text-foreground mt-1.5 hover:underline"
