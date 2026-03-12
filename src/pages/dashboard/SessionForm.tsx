@@ -101,6 +101,9 @@ const SessionForm = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Stripe configured check ──
+  const [stripeConfigured, setStripeConfigured] = useState<boolean | null>(null);
+
   // ── Wizard step ──
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [sessionId, setSessionId] = useState<string | undefined>(isEdit ? id : undefined);
