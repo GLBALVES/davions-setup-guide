@@ -23,6 +23,35 @@ const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Handle Stripe Connect OAuth callback (code in URL)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code || !user) return;
+
+    // Clean the URL
+    navigate("/dashboard/settings", { replace: true });
+
+    const exchangeCode = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data, error } = await supabase.functions.invoke("stripe-connect-callback", {
+          body: { code },
+          headers: { Authorization: `Bearer ${session?.access_token}` },
+        });
+        if (error || !data?.stripe_account_id) throw new Error(error?.message ?? "Connection failed");
+        setStripeAccountId(data.stripe_account_id);
+        setStripeConnectedAt(new Date().toISOString());
+        toast({ title: "Stripe connected!", description: "Your account is now ready to receive payments." });
+      } catch (err: any) {
+        toast({ title: "Stripe connection failed", description: err.message, variant: "destructive" });
+      }
+    };
+    exchangeCode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Profile
   const [fullName, setFullName] = useState("");
