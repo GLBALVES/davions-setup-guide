@@ -290,12 +290,18 @@ const Settings = () => {
       const instance = loadConnectAndInitialize({
         publishableKey,
         fetchClientSecret: async () => clientSecret,
+        locale: "en-US",
         appearance: {
           overlays: "dialog",
           variables: {
             colorPrimary: "#000000",
             fontFamily: "inherit",
-            borderRadius: "0px",
+            borderRadius: "2px",
+            colorBackground: "#ffffff",
+            colorText: "#111111",
+            colorSecondaryText: "#6b7280",
+            colorBorder: "#e5e7eb",
+            spacingUnit: "10px",
           },
         },
       });
@@ -363,7 +369,7 @@ const Settings = () => {
           <DashboardHeader />
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            <div className="max-w-2xl flex flex-col gap-8">
+            <div className={`flex flex-col gap-8 transition-all duration-300 ${showOnboarding ? "max-w-3xl" : "max-w-2xl"}`}>
               {/* Page title */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
@@ -495,21 +501,26 @@ const Settings = () => {
                       </div>
                     ) : showOnboarding && stripeInstance ? (
                       /* ── Embedded onboarding ── */
-                      <div className="flex flex-col gap-5">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] tracking-wider uppercase font-light text-muted-foreground">
-                            Complete your payment setup
-                          </p>
+                      <div className="flex flex-col gap-6">
+                        {/* Header bar */}
+                        <div className="flex items-center justify-between pb-4 border-b border-border">
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-light tracking-wide">Payment Setup</p>
+                            <p className="text-[10px] text-muted-foreground tracking-wider">
+                              Fill in your details to start receiving payments
+                            </p>
+                          </div>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={handleOnboardingExit}
-                            className="text-xs tracking-wider uppercase font-light"
+                            className="text-[11px] tracking-widest uppercase font-light h-8 px-4"
                           >
-                            Done
+                            Close
                           </Button>
                         </div>
-                        <div className="border border-border overflow-hidden">
+                        {/* Stripe embedded component */}
+                        <div className="rounded-none overflow-hidden">
                           <ConnectComponentsProvider connectInstance={stripeInstance}>
                             <ConnectAccountOnboarding onExit={handleOnboardingExit} />
                           </ConnectComponentsProvider>
