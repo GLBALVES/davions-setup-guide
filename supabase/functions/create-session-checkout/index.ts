@@ -46,17 +46,17 @@ serve(async (req) => {
       throw new Error("Session not found");
     }
 
-    // Fetch photographer data (store slug + Stripe key)
+    // Fetch photographer data (store slug + Stripe Connect account)
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug, stripe_secret_key")
+      .select("store_slug, stripe_account_id")
       .eq("id", sessionData.photographer_id)
       .single();
 
     const storeSlug = photoData?.store_slug ?? "";
-    const stripeKey = (photoData as any)?.stripe_secret_key ?? Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+    const stripeAccountId = (photoData as any)?.stripe_account_id;
 
-    if (!stripeKey) {
+    if (!stripeAccountId) {
       return new Response(
         JSON.stringify({ error: "stripe_not_configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -65,12 +65,15 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") ?? "https://localhost:5173";
 
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: clientEmail, limit: 1 });
+    // Check for existing Stripe customer on the connected account
+    const customers = await stripe.customers.list(
+      { email: clientEmail, limit: 1 },
+      { stripeAccount: stripeAccountId }
+    );
     let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -87,8 +90,7 @@ serve(async (req) => {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
     if (sessionData.deposit_enabled) {
-      // Charge only deposit + extras + tax
-      const depositBase = sessionData.deposit_type === 'percent'
+      const depositBase = sessionData.deposit_type === "percent"
         ? Math.round(subtotal * ((sessionData.deposit_amount as number) / 100))
         : (sessionData.deposit_amount as number);
       lineItems.push({
@@ -116,7 +118,6 @@ serve(async (req) => {
       });
     }
 
-    // Add extras as individual line items
     for (const extra of extras) {
       lineItems.push({
         price_data: {
@@ -128,7 +129,6 @@ serve(async (req) => {
       });
     }
 
-    // Add tax as separate line item if applicable
     if (taxAmount > 0) {
       lineItems.push({
         price_data: {
@@ -140,22 +140,25 @@ serve(async (req) => {
       });
     }
 
-    // Create checkout session
-    const checkout = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : clientEmail,
-      line_items: lineItems,
-      mode: "payment",
-      metadata: {
-        booking_id: bookingId,
-        slot_id: slotId,
-        store_slug: storeSlug,
-        client_name: clientName,
-        session_id: sessionId,
+    // Create checkout session on the connected account
+    const checkout = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        customer_email: customerId ? undefined : clientEmail,
+        line_items: lineItems,
+        mode: "payment",
+        metadata: {
+          booking_id: bookingId,
+          slot_id: slotId,
+          store_slug: storeSlug,
+          client_name: clientName,
+          session_id: sessionId,
+        },
+        success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`,
+        cancel_url: `${origin}/store/${storeSlug}/${sessionId}`,
       },
-      success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`,
-      cancel_url: `${origin}/store/${storeSlug}/${sessionId}`,
-    });
+      { stripeAccount: stripeAccountId }
+    );
 
     // Save checkout session id to booking
     await supabase
