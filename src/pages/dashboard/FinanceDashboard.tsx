@@ -189,6 +189,57 @@ export default function FinanceDashboard() {
                     </div>
                   </div>
 
+                  {/* Deposit payment breakdown */}
+                  {depositRows.length > 0 && (
+                    <div className="border border-border p-5 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Deposit Payment Breakdown</p>
+                        <span className="text-[10px] text-muted-foreground font-light">{depositRows.length} booking{depositRows.length !== 1 ? "s" : ""} with deposit</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Stripe confirmed */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Confirmed via Stripe</span>
+                          </div>
+                          <p className="text-xl font-light tabular-nums">{fmt(stripeDepositTotal)}</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{stripeDeposits.length} booking{stripeDeposits.length !== 1 ? "s" : ""} — real Stripe payments</p>
+                          {totalDepositAmount > 0 && (
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-green-500 rounded-full transition-all"
+                                style={{ width: `${(stripeDepositTotal / totalDepositAmount) * 100}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {/* Manually recorded */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Manually Recorded</span>
+                          </div>
+                          <p className="text-xl font-light tabular-nums">{fmt(manualDepositTotal)}</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{manualDeposits.length} booking{manualDeposits.length !== 1 ? "s" : ""} — no Stripe transaction</p>
+                          {totalDepositAmount > 0 && (
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-400 rounded-full transition-all"
+                                style={{ width: `${(manualDepositTotal / totalDepositAmount) * 100}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {manualDeposits.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 font-light border-t border-border pt-3">
+                          ⚠ {manualDeposits.length} booking{manualDeposits.length !== 1 ? "s were" : " was"} manually marked as <span className="font-mono">deposit_paid</span> without a corresponding Stripe payment. These amounts are not reflected in your payment account balance.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Chart */}
                   <div className="border border-border p-5 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
