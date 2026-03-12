@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { ProjectDetailSheet } from "@/components/dashboard/ProjectDetailSheet";
 import {
   DndContext,
   DragOverlay,
