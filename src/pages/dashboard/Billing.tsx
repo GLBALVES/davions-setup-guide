@@ -96,6 +96,17 @@ interface Invoice {
   status: string | null;
 }
 
+interface Payout {
+  id: string;
+  amount: number;
+  currency: string;
+  arrival_date: number;
+  status: string;
+  description: string | null;
+  bank_name: string | null;
+  last4: string | null;
+}
+
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -120,6 +131,8 @@ const Billing = () => {
   const [loadingSub, setLoadingSub] = useState(true);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [loadingPayouts, setLoadingPayouts] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
 
@@ -132,6 +145,7 @@ const Billing = () => {
     setLoadingSub(true);
     setLoadingBalance(true);
     setLoadingInvoices(true);
+    setLoadingPayouts(true);
 
     const [subRes, balanceRes, invoicesRes] = await Promise.all([
       supabase.functions.invoke("check-subscription", { headers: authHeaders }),
@@ -143,7 +157,21 @@ const Billing = () => {
     setLoadingSub(false);
 
     if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
+    if (balanceRes.data?.payouts) {
+      const raw = balanceRes.data.payouts as any[];
+      setPayouts(raw.map((p) => ({
+        id: p.id,
+        amount: p.amount,
+        currency: p.currency,
+        arrival_date: p.arrival_date,
+        status: p.status,
+        description: p.description ?? null,
+        bank_name: p.destination?.bank_name ?? p.bank_account?.bank_name ?? null,
+        last4: p.destination?.last4 ?? p.bank_account?.last4 ?? null,
+      })));
+    }
     setLoadingBalance(false);
+    setLoadingPayouts(false);
 
     if (invoicesRes.data?.invoices) setInvoices(invoicesRes.data.invoices);
     setLoadingInvoices(false);
@@ -383,6 +411,61 @@ const Billing = () => {
                   </div>
                 )}
               </section>
+
+              {/* Recent Payouts */}
+              {balance !== null && (
+                <section className="flex flex-col gap-4">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                    <span className="inline-block w-6 h-px bg-border" />
+                    Recent Payouts
+                  </p>
+                  {loadingPayouts ? (
+                    <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                  ) : payouts.length === 0 ? (
+                    <div className="border border-border p-5 text-sm font-light text-muted-foreground">
+                      No payouts yet.
+                    </div>
+                  ) : (
+                    <div className="border border-border">
+                      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border">
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Date</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Amount</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Status</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Destination</span>
+                      </div>
+                      {payouts.map((p) => {
+                        const dotColor =
+                          p.status === "paid" ? "bg-green-500" :
+                          p.status === "in_transit" ? "bg-amber-400" :
+                          p.status === "pending" ? "bg-muted-foreground" :
+                          "bg-destructive";
+                        const statusLabel =
+                          p.status === "paid" ? "Paid" :
+                          p.status === "in_transit" ? "In Transit" :
+                          p.status === "pending" ? "Pending" :
+                          p.status === "canceled" ? "Canceled" : "Failed";
+                        const destination = p.bank_name && p.last4
+                          ? `${p.bank_name} ••••${p.last4}`
+                          : p.last4 ? `••••${p.last4}` : "—";
+                        return (
+                          <div
+                            key={p.id}
+                            className="grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-5 py-3 border-b border-border last:border-0 items-center"
+                          >
+                            <span className="text-xs font-light">{formatDate(p.arrival_date)}</span>
+                            <span className="text-xs font-light whitespace-nowrap">{formatCurrency(p.amount, p.currency)}</span>
+                            <span className="flex items-center gap-1.5 text-xs font-light whitespace-nowrap">
+                              <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+                              {statusLabel}
+                            </span>
+                            <span className="text-xs font-light text-muted-foreground whitespace-nowrap">{destination}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
 
               {/* Billing history */}
               <section className="flex flex-col gap-4">
