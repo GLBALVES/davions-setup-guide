@@ -1445,6 +1445,23 @@ const SessionForm = () => {
                       </p>
                     </div>
 
+                    {/* ── Stripe not configured warning ── */}
+                    {stripeConfigured === false && (
+                      <div className="flex items-start gap-3 border border-amber-500/40 bg-amber-500/5 p-4">
+                        <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs font-light tracking-wide text-amber-600">Stripe not configured</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            Payment collection is disabled until you connect your Stripe account.{" "}
+                            <a href="/dashboard/settings" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                              Go to Settings → Payments
+                            </a>{" "}
+                            to add your keys.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Require Payment Toggle ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
                       <div className="flex flex-col gap-1">
