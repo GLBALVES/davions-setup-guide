@@ -44,9 +44,9 @@ const Settings = () => {
         if (error || !data?.stripe_account_id) throw new Error(error?.message ?? "Connection failed");
         setStripeAccountId(data.stripe_account_id);
         setStripeConnectedAt(new Date().toISOString());
-        toast({ title: "Stripe connected!", description: "Your account is now ready to receive payments." });
+        toast({ title: "Payments connected!", description: "Your account is now ready to receive payments." });
       } catch (err: any) {
-        toast({ title: "Stripe connection failed", description: err.message, variant: "destructive" });
+        toast({ title: "Payment connection failed", description: err.message, variant: "destructive" });
       }
     };
     exchangeCode();
@@ -302,7 +302,7 @@ const Settings = () => {
       if (error) throw new Error(error.message);
       setStripeAccountId(null);
       setStripeConnectedAt(null);
-      toast({ title: "Stripe disconnected" });
+      toast({ title: "Payments disconnected" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -413,7 +413,7 @@ const Settings = () => {
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Stripe Account</p>
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Payment Account</p>
                             <p className="text-sm font-mono font-light tracking-wide">{stripeAccountId}</p>
                           </div>
                           {stripeConnectedAt && (
@@ -427,7 +427,7 @@ const Settings = () => {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments from your clients go directly to this Stripe account. To switch accounts, disconnect and reconnect.
+                          Payments from your clients go directly to this payment account. To switch accounts, disconnect and reconnect.
                         </p>
 
                         <div>
@@ -441,7 +441,7 @@ const Settings = () => {
                             {disconnectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <Unlink className="h-3.5 w-3.5" />}
-                            Disconnect Stripe
+                            Disconnect
                           </Button>
                         </div>
                       </div>
@@ -454,15 +454,15 @@ const Settings = () => {
                         </div>
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Connect your Stripe account so your clients pay directly to you.
-                          You'll be redirected to Stripe to authorize the connection — no keys to copy or paste.
+                          Connect your payment account so your clients pay directly to you.
+                          You'll be redirected to your payment provider to authorize the connection — no keys to copy or paste.
                         </p>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
                           {[
                             "Click the button below",
-                            "Log in to (or create) your Stripe account",
+                            "Log in or create your payment account",
                             "Authorize the connection",
                             "You're redirected back here — done",
                           ].map((step, i) => (
@@ -483,7 +483,7 @@ const Settings = () => {
                             {connectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <ExternalLink className="h-3.5 w-3.5" />}
-                            {connectingStripe ? "Redirecting…" : "Connect with Stripe"}
+                            {connectingStripe ? "Redirecting…" : "Connect payment account"}
                           </Button>
                         </div>
                       </div>

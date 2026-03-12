@@ -1251,7 +1251,7 @@ const GalleryView = () => {
               )}
             </Button>
             {!isFree && (
-              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment via Stripe</p>
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment</p>
             )}
           </div>
         </DialogContent>
