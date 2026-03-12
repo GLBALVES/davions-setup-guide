@@ -155,13 +155,22 @@ const Billing = () => {
     setLoadingInvoices(true);
     setLoadingPayouts(true);
 
-    const [subRes, balanceRes, invoicesRes] = await Promise.all([
+    const [subRes, balanceRes, invoicesRes, profileRes] = await Promise.all([
       supabase.functions.invoke("check-subscription", { headers: authHeaders }),
       supabase.functions.invoke("get-stripe-balance", { headers: authHeaders }),
       supabase.functions.invoke("get-billing-invoices", { headers: authHeaders }),
+      supabase.from("photographers").select("stripe_account_id, stripe_connected_at").eq("id", user.id).single(),
     ]);
 
     if (subRes.data && !subRes.error) setSub(subRes.data);
+    setLoadingSub(false);
+
+    if (profileRes.data) {
+      setStripeAccountId((profileRes.data as any).stripe_account_id ?? null);
+      setStripeConnectedAt((profileRes.data as any).stripe_connected_at ?? null);
+    }
+
+    if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
     setLoadingSub(false);
 
     if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
