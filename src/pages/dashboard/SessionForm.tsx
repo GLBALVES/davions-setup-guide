@@ -273,11 +273,23 @@ const SessionForm = () => {
     if (data) setBriefingTemplates(data as BriefingTemplate[]);
   }, [user]);
 
+
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
-  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates]);
+    // Check if photographer has Stripe configured
+    if (user) {
+      (supabase as any)
+        .from("photographers")
+        .select("stripe_secret_key, stripe_publishable_key")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }: { data: any }) => {
+          setStripeConfigured(Boolean(data?.stripe_secret_key && data?.stripe_publishable_key));
+        });
+    }
+  }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates, user]);
 
   // ────────────────────────────────────────────
   // Load (edit mode)
