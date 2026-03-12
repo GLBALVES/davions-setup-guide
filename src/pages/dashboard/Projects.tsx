@@ -829,6 +829,7 @@ const Projects = () => {
                         key={s.key}
                         stage={s}
                         projects={projectsByStage(s.key)}
+                        onView={openView}
                         onEdit={openEdit}
                         onDelete={handleDelete}
                         onArchive={handleArchive}
