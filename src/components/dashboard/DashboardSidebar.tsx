@@ -158,12 +158,12 @@ const groups: MenuGroup[] = [
     title: "Finance",
     icon: DollarSign,
     items: [
-      { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
-      { title: "Dashboard", icon: LayoutDashboard, permKey: "finance" },
-      { title: "Receivables", icon: ArrowDownCircle, permKey: "finance" },
-      { title: "Payables", icon: ArrowUpCircle, permKey: "finance" },
-      { title: "Cash Flow", icon: TrendingUp, permKey: "finance" },
-      { title: "Reports", icon: BarChart3, permKey: "finance" },
+      { title: "Revenue",     icon: TrendingUp,      to: "/dashboard/revenue" },
+      { title: "Dashboard",   icon: LayoutDashboard, to: "/dashboard/finance", end: true },
+      { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
+      { title: "Payables",    icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
+      { title: "Cash Flow",   icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
+      { title: "Reports",     icon: BarChart3,        to: "/dashboard/finance/reports" },
     ],
   },
   {
