@@ -88,7 +88,7 @@ const Settings = () => {
       const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, hero_image_url")
+          .select("full_name, store_slug, custom_domain, hero_image_url, stripe_secret_key, stripe_publishable_key")
           .eq("id", user.id)
           .single(),
         (supabase as any)
@@ -104,12 +104,17 @@ const Settings = () => {
       ]);
 
       if (profileRes.data) {
-        const d = profileRes.data;
+        const d = profileRes.data as any;
         setFullName(d.full_name ?? "");
         setStoreSlug(d.store_slug ?? "");
         setSlugInput(d.store_slug ?? "");
-        setCustomDomain((d as any).custom_domain ?? "");
-        setCustomDomainInput((d as any).custom_domain ?? "");
+        setCustomDomain(d.custom_domain ?? "");
+        setCustomDomainInput(d.custom_domain ?? "");
+        const sk = d.stripe_secret_key ?? "";
+        const pk = d.stripe_publishable_key ?? "";
+        setStripeSecretKey(sk);
+        setStripePublishableKey(pk);
+        setStripeConnected(Boolean(sk && pk));
       }
 
       if (watermarksRes.data) {
