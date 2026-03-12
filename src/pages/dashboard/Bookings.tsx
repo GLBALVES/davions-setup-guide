@@ -156,10 +156,13 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
 const Bookings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; bookingId: string; action: "confirm" | "cancel" }>({
     open: false,
     bookingId: "",
@@ -177,21 +180,34 @@ const Bookings = () => {
 
   const fetchBookings = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("bookings")
-      .select(`
-        *,
-        sessions ( title, briefing_id ),
-        session_availability ( start_time, end_time, date )
-      `)
-      .eq("photographer_id", user!.id)
-      .order("created_at", { ascending: false });
+    const [bookingsRes, profileRes] = await Promise.all([
+      (supabase as any)
+        .from("bookings")
+        .select(`
+          *,
+          sessions ( title, briefing_id ),
+          session_availability ( start_time, end_time, date )
+        `)
+        .eq("photographer_id", user!.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("photographers")
+        .select("stripe_account_id, stripe_connected_at")
+        .eq("id", user!.id)
+        .single(),
+    ]);
 
-    if (error) {
+    if (bookingsRes.error) {
       toast({ title: "Failed to load bookings", variant: "destructive" });
     } else {
-      setBookings((data as Booking[]) ?? []);
+      setBookings((bookingsRes.data as Booking[]) ?? []);
     }
+
+    if (profileRes.data) {
+      setStripeAccountId((profileRes.data as any).stripe_account_id ?? null);
+      setStripeConnectedAt((profileRes.data as any).stripe_connected_at ?? null);
+    }
+
     setLoading(false);
   };
 
