@@ -554,6 +554,8 @@ const Projects = () => {
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
