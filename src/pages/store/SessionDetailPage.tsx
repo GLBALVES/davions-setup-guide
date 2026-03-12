@@ -938,13 +938,43 @@ const SessionDetailPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-background rounded-sm shadow-sm p-5 flex items-center gap-4">
-                    <div className="h-9 w-9 rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
-                      <Check className="h-4 w-4 text-muted-foreground" />
+                  <div className="bg-background rounded-sm shadow-sm p-5 flex flex-col gap-4">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Your information</p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground font-light">Full Name</p>
+                        <p className="text-foreground font-light mt-0.5">{clientName}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-light">Email</p>
+                        <p className="text-foreground font-light mt-0.5">{clientEmail}</p>
+                      </div>
+                      {clientPhone && (
+                        <div>
+                          <p className="text-muted-foreground font-light">Phone</p>
+                          <p className="text-foreground font-light mt-0.5">{clientPhone}</p>
+                        </div>
+                      )}
+                      {clientNotes && (
+                        <div className={clientPhone ? "col-span-2" : "col-span-2"}>
+                          <p className="text-muted-foreground font-light">Notes</p>
+                          <p className="text-foreground font-light mt-0.5 italic">"{clientNotes}"</p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-sm font-light text-foreground">Everything looks good!</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Review your order summary and proceed to payment.</p>
+                    <div
+                      className="flex items-start gap-3 cursor-pointer select-none pt-2 border-t border-border"
+                      onClick={() => setContractAgreed(!contractAgreed)}
+                    >
+                      <div className={cn(
+                        "mt-0.5 h-4 w-4 border shrink-0 flex items-center justify-center transition-colors",
+                        contractAgreed ? "border-foreground bg-foreground" : "border-border"
+                      )}>
+                        {contractAgreed && <Check className="h-2.5 w-2.5 text-background" />}
+                      </div>
+                      <p className="text-xs font-light text-foreground leading-relaxed">
+                        I confirm the above information is correct and agree to proceed with this booking.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -956,7 +986,7 @@ const SessionDetailPage = () => {
                   </Button>
                   <Button
                     onClick={handleCheckout}
-                    disabled={submitting || (!!session.contract_text && !contractAgreed)}
+                    disabled={submitting || !contractAgreed}
                     className="flex-1 gap-2 text-xs tracking-wider uppercase font-light rounded-none h-11"
                   >
                     {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
