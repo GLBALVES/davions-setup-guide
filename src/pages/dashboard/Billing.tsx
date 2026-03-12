@@ -131,6 +131,8 @@ const Billing = () => {
   const [loadingSub, setLoadingSub] = useState(true);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [loadingPayouts, setLoadingPayouts] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
 
