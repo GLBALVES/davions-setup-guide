@@ -1670,21 +1670,6 @@ const SessionForm = () => {
                       <Switch checked={allowTip} onCheckedChange={setAllowTip} />
                     </div>
 
-                    {/* ── Stripe info ── */}
-                    <div className="border border-border bg-muted/5 p-4 flex items-start gap-3">
-                      <CreditCard className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Stripe Payments</p>
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments are processed securely via Stripe Checkout. You receive funds directly to your connected Stripe account after the booking is confirmed.
-                        </p>
-                        {!requirePayment && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-1 italic">
-                            Payment is disabled — clients will book without paying upfront.
-                          </p>
-                        )}
-                      </div>
-                    </div>
                   </section>
 
                   {/* Step 3 Actions */}
