@@ -106,11 +106,8 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain(d.custom_domain ?? "");
         setCustomDomainInput(d.custom_domain ?? "");
-        const sk = d.stripe_secret_key ?? "";
-        const pk = d.stripe_publishable_key ?? "";
-        setStripeSecretKey(sk);
-        setStripePublishableKey(pk);
-        setStripeConnected(Boolean(sk && pk));
+        setStripeAccountId((d as any).stripe_account_id ?? null);
+        setStripeConnectedAt((d as any).stripe_connected_at ?? null);
       }
 
       if (watermarksRes.data) {
