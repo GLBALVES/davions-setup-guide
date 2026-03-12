@@ -934,10 +934,6 @@ const SessionDetailPage = () => {
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Service agreement</p>
                     <div
                       className="max-h-[55vh] overflow-y-auto text-xs font-light text-foreground leading-relaxed border border-border p-4 prose prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_strong]:font-medium [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
-                      style={{
-                        maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                        WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                      }}
                       dangerouslySetInnerHTML={{
                         __html: resolveSessionContractVariables(session.contract_text, {
                           client_name: clientName,
@@ -950,56 +946,51 @@ const SessionDetailPage = () => {
                         })
                       }}
                     />
-                    {/* Signature pad */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                          Sign below to accept
+
+                    {/* Signatures section */}
+                    <div className="flex flex-col gap-3">
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Signatures</p>
+                      <div
+                        className={cn(
+                          "border p-4 flex flex-col gap-2 cursor-pointer transition-colors group",
+                          contractAgreed ? "border-foreground" : "border-border hover:border-foreground/40"
+                        )}
+                        onClick={() => !contractAgreed && setSigModalOpen(true)}
+                      >
+                        {contractAgreed && signatureData ? (
+                          <>
+                            {signatureData.startsWith("data:image") ? (
+                              <img src={signatureData} alt="Signature" className="h-12 object-contain object-left" />
+                            ) : (
+                              <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: 28, lineHeight: 1.2 }} className="text-foreground">
+                                {signatureData}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <p className="text-[10px] text-muted-foreground">{clientName}</p>
+                              <button
+                                type="button"
+                                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                                onClick={(e) => { e.stopPropagation(); setSignatureData(null); setContractAgreed(false); }}
+                              >
+                                Change
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <PenLine className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                            <p className="text-xs font-light text-muted-foreground group-hover:text-foreground transition-colors">
+                              Click here to sign
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {!contractAgreed && (
+                        <p className="text-[10px] text-muted-foreground font-light">
+                          Your signature is required to proceed with the booking.
                         </p>
-                        {signatureData && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              sigCanvasRef.current?.clear();
-                              setSignatureData(null);
-                              setContractAgreed(false);
-                            }}
-                            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
-                          >
-                            <RotateCcw className="h-2.5 w-2.5" />
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                      <div className={cn(
-                        "border transition-colors relative bg-muted/20",
-                        contractAgreed ? "border-foreground" : "border-border"
-                      )}>
-                        <SignatureCanvas
-                          ref={sigCanvasRef}
-                          penColor="hsl(var(--foreground))"
-                          canvasProps={{
-                            width: 600,
-                            height: 120,
-                            className: "w-full h-[120px] touch-none",
-                            style: { display: "block" },
-                          }}
-                          onEnd={() => {
-                            if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
-                              setSignatureData(sigCanvasRef.current.toDataURL());
-                              setContractAgreed(true);
-                            }
-                          }}
-                        />
-                        {!signatureData && (
-                          <p className="absolute inset-0 flex items-center justify-center text-[11px] text-muted-foreground/40 pointer-events-none font-light italic">
-                            Draw your signature here
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground font-light">
-                        By signing, you confirm you have read and agree to the service agreement above.
-                      </p>
+                      )}
                     </div>
                   </div>
                 ) : (
