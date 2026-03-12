@@ -427,7 +427,7 @@ const Settings = () => {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments from your clients go directly to this Stripe account. To switch accounts, disconnect and reconnect.
+                          Payments from your clients go directly to this payment account. To switch accounts, disconnect and reconnect.
                         </p>
 
                         <div>
