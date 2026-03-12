@@ -373,6 +373,7 @@ export type Database = {
           client_email: string
           client_name: string
           created_at: string
+          extras_total: number
           id: string
           payment_status: string
           photographer_id: string
@@ -387,6 +388,7 @@ export type Database = {
           client_email: string
           client_name: string
           created_at?: string
+          extras_total?: number
           id?: string
           payment_status?: string
           photographer_id: string
@@ -401,6 +403,7 @@ export type Database = {
           client_email?: string
           client_name?: string
           created_at?: string
+          extras_total?: number
           id?: string
           payment_status?: string
           photographer_id?: string
