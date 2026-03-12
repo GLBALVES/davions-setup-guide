@@ -1013,8 +1013,8 @@ const Personalize = () => {
                             className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                           <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">days</span>
                         </div>
-                        <Button onClick={handleSaveGallerySettings} disabled={savingGallerySettings} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingGallerySettings ? "Saving…" : "Save"}
+                        <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingExpiry ? "Saving…" : "Save"}
                         </Button>
                       </div>
                       {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 && (
@@ -1032,8 +1032,8 @@ const Personalize = () => {
                           <input type="number" min="0" step="0.01" value={galleryReactivationFee} onChange={(e) => setGalleryReactivationFee(e.target.value)} placeholder="0.00"
                             className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
-                        <Button onClick={handleSaveGallerySettings} disabled={savingGallerySettings} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingGallerySettings ? "Saving…" : "Save"}
+                        <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingFee ? "Saving…" : "Save"}
                         </Button>
                       </div>
                       {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 && (
