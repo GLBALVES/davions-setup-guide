@@ -7,7 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +62,7 @@ interface ClientProject {
   position: number;
   created_at: string;
   updated_at: string;
+  session_title?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -162,6 +163,12 @@ function KanbanCard({
             <span className="self-start text-[9px] tracking-widest uppercase border border-border px-1.5 py-0.5 text-muted-foreground">
               {project.session_type}
             </span>
+          )}
+          {project.session_title && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+              <Camera className="h-2.5 w-2.5 shrink-0" />
+              <span className="truncate italic">{project.session_title}</span>
+            </div>
           )}
         </div>
       </div>
@@ -556,9 +563,15 @@ const Projects = () => {
   const fetchProjects = async () => {
     const { data, error } = await supabase
       .from("client_projects" as any)
-      .select("*")
+      .select("*, bookings(sessions(title))")
       .order("position", { ascending: true });
-    if (!error && data) setProjects(data as unknown as ClientProject[]);
+    if (!error && data) {
+      const mapped = (data as any[]).map((p) => ({
+        ...p,
+        session_title: (p.bookings as any)?.sessions?.title ?? null,
+      }));
+      setProjects(mapped as ClientProject[]);
+    }
     setLoading(false);
   };
 
