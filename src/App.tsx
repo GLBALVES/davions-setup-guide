@@ -49,6 +49,7 @@ import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
+import Revenue from "./pages/dashboard/Revenue";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 

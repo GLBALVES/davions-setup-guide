@@ -158,6 +158,7 @@ const groups: MenuGroup[] = [
     title: "Finance",
     icon: DollarSign,
     items: [
+      { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
       { title: "Dashboard", icon: LayoutDashboard, permKey: "finance" },
       { title: "Receivables", icon: ArrowDownCircle, permKey: "finance" },
       { title: "Payables", icon: ArrowUpCircle, permKey: "finance" },
