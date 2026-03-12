@@ -46,7 +46,7 @@ function calcPaid(row: BookingRow) {
   const total = calcTotal(row);
   if (row.payment_status === "paid") return total;
   if (!row.deposit_enabled) return 0;
-  if (row.deposit_type === "percentage") return total * (row.deposit_amount / 100);
+  if (row.deposit_type === "percent" || row.deposit_type === "percentage") return total * (row.deposit_amount / 100);
   return row.deposit_amount;
 }
 
