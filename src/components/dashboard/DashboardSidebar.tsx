@@ -187,6 +187,7 @@ const groups: MenuGroup[] = [
     icon: Settings,
     items: [
       { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
+      { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
       { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     ],
   },
