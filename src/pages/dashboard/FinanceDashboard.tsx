@@ -93,7 +93,7 @@ export default function FinanceDashboard() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, stripe_checkout_session_id, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: false });
       if (data) {
@@ -110,6 +110,7 @@ export default function FinanceDashboard() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          stripe_checkout_session_id: b.stripe_checkout_session_id ?? null,
         })));
       }
       setLoading(false);
