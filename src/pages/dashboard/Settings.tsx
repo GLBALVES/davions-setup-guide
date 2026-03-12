@@ -302,7 +302,7 @@ const Settings = () => {
       if (error) throw new Error(error.message);
       setStripeAccountId(null);
       setStripeConnectedAt(null);
-      toast({ title: "Stripe disconnected" });
+      toast({ title: "Payments disconnected" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
