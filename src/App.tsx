@@ -49,6 +49,7 @@ import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
+import Revenue from "./pages/dashboard/Revenue";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -117,6 +118,7 @@ const App = () => (
                  <Route path="/dashboard/access-control" element={<ProtectedRoute><AccessControl /></ProtectedRoute>} />
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                  <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
+                 <Route path="/dashboard/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
