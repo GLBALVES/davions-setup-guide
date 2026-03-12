@@ -141,17 +141,6 @@ const Billing = () => {
   const [manageOpen, setManageOpen] = useState(false);
   const [loadingManage, setLoadingManage] = useState(false);
 
-  const [sub, setSub] = useState<SubscriptionStatus | null>(null);
-  const [balance, setBalance] = useState<StripeBalance | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loadingSub, setLoadingSub] = useState(true);
-  const [loadingBalance, setLoadingBalance] = useState(true);
-  const [loadingInvoices, setLoadingInvoices] = useState(true);
-  const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [loadingPayouts, setLoadingPayouts] = useState(true);
-  const [checkingOut, setCheckingOut] = useState<string | null>(null);
-  const [openingPortal, setOpeningPortal] = useState(false);
-
   const fetchAll = async () => {
     if (!user) return;
     const { data: { session } } = await supabase.auth.getSession();
