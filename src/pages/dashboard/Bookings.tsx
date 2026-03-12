@@ -236,62 +236,21 @@ const Bookings = () => {
     return list;
   }, [bookings, filter, search]);
 
+  // Show custody banner when: stripe account exists but onboarding incomplete AND there are confirmed+paid bookings
+  const hasFundsInCustody = useMemo(() => {
+    if (!stripeAccountId || stripeConnectedAt) return false;
+    return bookings.some(
+      (b) => b.status === "confirmed" && (b.payment_status === "paid" || b.payment_status === "deposit_paid")
+    );
+  }, [bookings, stripeAccountId, stripeConnectedAt]);
+
+  const confirmedPaidCount = useMemo(
+    () => bookings.filter((b) => b.status === "confirmed" && (b.payment_status === "paid" || b.payment_status === "deposit_paid")).length,
+    [bookings]
+  );
+
   const updateStatus = async (bookingId: string, status: "confirmed" | "cancelled") => {
-    const { error } = await supabase
-      .from("bookings")
-      .update({ status })
-      .eq("id", bookingId);
-
-    if (error) {
-      toast({ title: "Failed to update booking", variant: "destructive" });
-    } else {
-      toast({
-        title: status === "confirmed" ? "Booking confirmed" : "Booking cancelled",
-        description: status === "confirmed"
-          ? "The client will be notified."
-          : "The booking has been cancelled.",
-      });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
-      );
-    }
-    setConfirmDialog({ open: false, bookingId: "", action: "confirm" });
-  };
-
-  const FILTERS: { key: FilterStatus; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "pending", label: "Pending" },
-    { key: "confirmed", label: "Confirmed" },
-    { key: "cancelled", label: "Cancelled" },
-  ];
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return null;
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }).format(new Date(dateStr));
-  };
-
-  const formatTime = (timeStr: string) => {
-    const [h, m] = timeStr.split(":");
-    const d = new Date();
-    d.setHours(parseInt(h), parseInt(m));
-    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  };
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <DashboardHeader />
-
-          <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            <div className="flex flex-col gap-8 max-w-6xl">
-
+...
               {/* Header */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
@@ -300,6 +259,32 @@ const Bookings = () => {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">Bookings</h1>
               </div>
+
+              {/* Funds-in-custody banner */}
+              {hasFundsInCustody && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 border border-border bg-muted/40 p-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs font-light tracking-wide text-foreground">
+                        Funds held in custody — payment setup incomplete
+                      </p>
+                      <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                        You have {confirmedPaidCount} confirmed booking{confirmedPaidCount !== 1 ? "s" : ""} with payments received, but your banking details haven't been submitted yet. Complete your payment setup to release the funds to your account.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate("/dashboard/settings?tab=payments")}
+                    className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
+                  >
+                    Complete Setup
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
 
               {/* Filters + Search */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
