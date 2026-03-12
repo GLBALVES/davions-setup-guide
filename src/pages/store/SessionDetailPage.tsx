@@ -200,12 +200,28 @@ const SessionDetailPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
-  const [clientNotes, setClientNotes] = useState("");
+  const clientStorageKey = `booking_client_${sessionSlug}`;
+  const [clientName, setClientName] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(clientStorageKey) ?? "{}").name ?? ""; } catch { return ""; }
+  });
+  const [clientEmail, setClientEmail] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(clientStorageKey) ?? "{}").email ?? ""; } catch { return ""; }
+  });
+  const [clientPhone, setClientPhone] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(clientStorageKey) ?? "{}").phone ?? ""; } catch { return ""; }
+  });
+  const [clientNotes, setClientNotes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(clientStorageKey) ?? "{}").notes ?? ""; } catch { return ""; }
+  });
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
+
+  // Persist client form data to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(clientStorageKey, JSON.stringify({ name: clientName, email: clientEmail, phone: clientPhone, notes: clientNotes }));
+    } catch { /* ignore */ }
+  }, [clientName, clientEmail, clientPhone, clientNotes, clientStorageKey]);
 
   // ────────────────────────────────────────────
   // Load
@@ -422,6 +438,7 @@ const SessionDetailPage = () => {
       if (fnError || !checkoutData?.url) {
         throw new Error(fnError?.message || "No payment URL returned");
       }
+      try { localStorage.removeItem(clientStorageKey); } catch { /* ignore */ }
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
