@@ -483,7 +483,7 @@ const Settings = () => {
                             {connectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <ExternalLink className="h-3.5 w-3.5" />}
-                            {connectingStripe ? "Redirecting…" : "Connect payment account"}
+                            {connectingStripe ? "Redirecting…" : "Activate payment"}
                           </Button>
                         </div>
                       </div>
