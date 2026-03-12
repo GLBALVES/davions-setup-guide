@@ -310,7 +310,7 @@ export default function Revenue() {
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {["Date", "Client", "Session", "Total", "Paid", "Balance", "Payment", "Booking"].map((h) => (
+                       {["Date", "Client", "Session", "Total", "Deposit", "Paid", "Balance", "Payment", "Booking"].map((h) => (
                           <th
                             key={h}
                             className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap"
