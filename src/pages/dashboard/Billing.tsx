@@ -214,44 +214,6 @@ const Billing = () => {
                 <h1 className="text-2xl font-light tracking-wide">Billing</h1>
               </div>
 
-              {/* Current plan banner */}
-              {!loadingSub && sub?.subscribed && activePlan && (
-                <div className="border border-border p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 border border-border flex items-center justify-center shrink-0">
-                      <activePlan.icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Current Plan</p>
-                      <p className="text-base font-light tracking-wide">{activePlan.name} — ${activePlan.price}/month</p>
-                      <p className="text-xs text-muted-foreground font-light">
-                        {activePlan.split}% fee on sales · Renews {sub.subscription_end ? new Date(sub.subscription_end).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={fetchAll}
-                      className="gap-2"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      Refresh
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleManage}
-                      disabled={openingPortal}
-                      className="gap-2"
-                    >
-                      {openingPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-              )}
 
               {/* Plans */}
               <section className="flex flex-col gap-4">
