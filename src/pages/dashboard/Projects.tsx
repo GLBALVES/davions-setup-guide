@@ -89,11 +89,13 @@ const STAGE_COLORS: Record<Stage, string> = {
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
   project,
+  onView,
   onEdit,
   onDelete,
   onArchive,
 }: {
   project: ClientProject;
+  onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
@@ -109,7 +111,10 @@ function KanbanCard({
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
-      <div className="border border-border bg-card rounded-sm p-3 flex flex-col gap-2 hover:border-foreground/30 transition-colors cursor-default">
+      <div
+        className="border border-border bg-card rounded-sm p-3 flex flex-col gap-2 hover:border-foreground/30 transition-colors cursor-pointer"
+        onClick={() => onView(project)}
+      >
         {/* drag handle + actions */}
         <div className="flex items-start justify-between gap-1">
           <button
@@ -117,6 +122,7 @@ function KanbanCard({
             {...listeners}
             className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing mt-0.5"
             aria-label="Drag"
+            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
@@ -124,21 +130,21 @@ function KanbanCard({
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
-              onClick={() => onEdit(project)}
+              onClick={(e) => { e.stopPropagation(); onEdit(project); }}
               title="Edit"
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-amber-500"
-              onClick={() => onArchive(project.id)}
+              onClick={(e) => { e.stopPropagation(); onArchive(project.id); }}
               title="Archive"
             >
               <Archive className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
-              onClick={() => onDelete(project.id)}
+              onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
               title="Delete"
             >
               <X className="h-3 w-3" />
