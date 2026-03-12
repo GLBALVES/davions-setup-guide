@@ -216,6 +216,13 @@ const SessionDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
 
+  // Persist client form data to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(clientStorageKey, JSON.stringify({ name: clientName, email: clientEmail, phone: clientPhone, notes: clientNotes }));
+    } catch { /* ignore */ }
+  }, [clientName, clientEmail, clientPhone, clientNotes, clientStorageKey]);
+
   // ────────────────────────────────────────────
   // Load
   // ────────────────────────────────────────────
