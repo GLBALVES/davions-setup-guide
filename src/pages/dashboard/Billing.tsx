@@ -126,6 +126,20 @@ function formatDate(ts: number) {
 const Billing = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const connectInstanceRef = useRef<any>(null);
+
+  const [sub, setSub] = useState<SubscriptionStatus | null>(null);
+  const [balance, setBalance] = useState<StripeBalance | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [loadingSub, setLoadingSub] = useState(true);
+  const [loadingBalance, setLoadingBalance] = useState(true);
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
+  const [loadingPayouts, setLoadingPayouts] = useState(true);
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [openingPortal, setOpeningPortal] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [loadingManage, setLoadingManage] = useState(false);
 
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [balance, setBalance] = useState<StripeBalance | null>(null);
