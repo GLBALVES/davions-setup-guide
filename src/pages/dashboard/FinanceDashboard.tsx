@@ -27,6 +27,7 @@ interface BookingRow {
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  stripe_checkout_session_id: string | null;
 }
 
 function calcTotal(r: BookingRow) {
