@@ -208,26 +208,35 @@ const Billing = () => {
     setCheckingOut(null);
   };
 
-  const handleManage = async () => {
-    setOpeningPortal(true);
+  const handleManageAccount = async () => {
+    setLoadingManage(true);
+    setManageOpen(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke("customer-portal", {
+      const { data, error } = await supabase.functions.invoke("create-stripe-management-session", {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
-      if (error || !data?.url) throw new Error(error?.message ?? "Failed to open portal");
-      window.location.href = data.url;
+      if (error || !data?.client_secret) throw new Error(error?.message ?? "Failed to create session");
+
+      const instance = await loadConnectAndInitialize({
+        publishableKey: data.publishable_key,
+        fetchClientSecret: async () => data.client_secret,
+        appearance: {
+          overlays: "dialog",
+          variables: {
+            colorPrimary: "#000000",
+            fontFamily: "inherit",
+          },
+        },
+        locale: "en-US",
+      });
+      connectInstanceRef.current = instance;
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
+      setManageOpen(false);
     }
-    setOpeningPortal(false);
+    setLoadingManage(false);
   };
-
-  const activePlan = sub?.subscribed ? PLANS.find((p) => p.key === sub.plan) : null;
-
-  const totalAvailable = balance?.available?.reduce((s, a) => s + a.amount, 0) ?? 0;
-  const totalPending = balance?.pending?.reduce((s, a) => s + a.amount, 0) ?? 0;
-  const balanceCurrency = balance?.available?.[0]?.currency ?? balance?.pending?.[0]?.currency ?? "usd";
 
   return (
     <SidebarProvider>
