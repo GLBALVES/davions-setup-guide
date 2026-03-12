@@ -166,7 +166,7 @@ function KanbanCard({
           )}
           {project.session_title && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
-              <span className="shrink-0 text-[9px]">📷</span>
+              <Camera className="h-2.5 w-2.5 shrink-0" />
               <span className="truncate italic">{project.session_title}</span>
             </div>
           )}
