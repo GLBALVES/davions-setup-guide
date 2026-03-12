@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   DndContext,
   DragOverlay,
