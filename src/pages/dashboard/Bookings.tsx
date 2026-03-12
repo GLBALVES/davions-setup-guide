@@ -55,10 +55,11 @@ const STATUS_META: Record<string, { label: string; variant: "default" | "seconda
 };
 
 const PAYMENT_META: Record<string, { label: string; className: string }> = {
-  pending: { label: "Unpaid", className: "text-muted-foreground" },
-  paid: { label: "Paid", className: "text-green-600" },
-  failed: { label: "Failed", className: "text-destructive" },
-  refunded: { label: "Refunded", className: "text-muted-foreground" },
+  pending:      { label: "Unpaid",   className: "text-muted-foreground" },
+  paid:         { label: "Paid",     className: "text-green-600" },
+  deposit_paid: { label: "Partial",  className: "text-amber-600" },
+  failed:       { label: "Failed",   className: "text-destructive" },
+  refunded:     { label: "Refunded", className: "text-muted-foreground" },
 };
 
 // ── Briefing response viewer ──────────────────────────────────────────────────
