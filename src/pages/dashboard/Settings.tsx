@@ -441,7 +441,7 @@ const Settings = () => {
                             {disconnectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <Unlink className="h-3.5 w-3.5" />}
-                            Disconnect Stripe
+                            Disconnect
                           </Button>
                         </div>
                       </div>
