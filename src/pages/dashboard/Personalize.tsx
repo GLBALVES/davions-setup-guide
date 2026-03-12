@@ -188,7 +188,8 @@ const Personalize = () => {
   // ── Gallery settings ────────────────────────────────────────────────────────
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
-  const [savingGallerySettings, setSavingGallerySettings] = useState(false);
+  const [savingExpiry, setSavingExpiry] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
 
   // ── Watermarks ──────────────────────────────────────────────────────────────
   const [watermarks, setWatermarks] = useState<WatermarkData[]>([]);
@@ -477,29 +478,38 @@ const Personalize = () => {
     setSavingBusiness(false);
   };
 
-  const handleSaveGallerySettings = async () => {
+  const handleSaveExpiry = async () => {
     if (!user) return;
-    setSavingGallerySettings(true);
+    setSavingExpiry(true);
     const days = parseInt(galleryExpiryDays, 10);
     const expiryValue = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
+    const { error } = await (supabase as any).from("gallery_settings").upsert(
+      { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
+      { onConflict: "photographer_id,key" }
+    );
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Default expiration saved" });
+    }
+    setSavingExpiry(false);
+  };
+
+  const handleSaveReactivationFee = async () => {
+    if (!user) return;
+    setSavingFee(true);
     const fee = parseFloat(galleryReactivationFee);
     const feeValue = (!galleryReactivationFee.trim() || isNaN(fee) || fee < 0) ? null : String(fee);
-    const [expiryRes, feeRes] = await Promise.all([
-      (supabase as any).from("gallery_settings").upsert(
-        { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
-        { onConflict: "photographer_id,key" }
-      ),
-      (supabase as any).from("gallery_settings").upsert(
-        { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
-        { onConflict: "photographer_id,key" }
-      ),
-    ]);
-    if (expiryRes.error || feeRes.error) {
-      toast({ title: "Failed to save", description: (expiryRes.error || feeRes.error).message, variant: "destructive" });
+    const { error } = await (supabase as any).from("gallery_settings").upsert(
+      { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
+      { onConflict: "photographer_id,key" }
+    );
+    if (error) {
+      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Gallery settings saved" });
+      toast({ title: "Reactivation fee saved" });
     }
-    setSavingGallerySettings(false);
+    setSavingFee(false);
   };
 
   const handleWatermarkSaved = (wm: WatermarkData) => {
@@ -1003,8 +1013,8 @@ const Personalize = () => {
                             className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                           <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">days</span>
                         </div>
-                        <Button onClick={handleSaveGallerySettings} disabled={savingGallerySettings} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingGallerySettings ? "Saving…" : "Save"}
+                        <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingExpiry ? "Saving…" : "Save"}
                         </Button>
                       </div>
                       {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 && (
@@ -1022,8 +1032,8 @@ const Personalize = () => {
                           <input type="number" min="0" step="0.01" value={galleryReactivationFee} onChange={(e) => setGalleryReactivationFee(e.target.value)} placeholder="0.00"
                             className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
-                        <Button onClick={handleSaveGallerySettings} disabled={savingGallerySettings} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingGallerySettings ? "Saving…" : "Save"}
+                        <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingFee ? "Saving…" : "Save"}
                         </Button>
                       </div>
                       {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 && (
