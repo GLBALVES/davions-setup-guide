@@ -501,21 +501,26 @@ const Settings = () => {
                       </div>
                     ) : showOnboarding && stripeInstance ? (
                       /* ── Embedded onboarding ── */
-                      <div className="flex flex-col gap-5">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] tracking-wider uppercase font-light text-muted-foreground">
-                            Complete your payment setup
-                          </p>
+                      <div className="flex flex-col gap-6">
+                        {/* Header bar */}
+                        <div className="flex items-center justify-between pb-4 border-b border-border">
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-light tracking-wide">Payment Setup</p>
+                            <p className="text-[10px] text-muted-foreground tracking-wider">
+                              Fill in your details to start receiving payments
+                            </p>
+                          </div>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={handleOnboardingExit}
-                            className="text-xs tracking-wider uppercase font-light"
+                            className="text-[11px] tracking-widest uppercase font-light h-8 px-4"
                           >
-                            Done
+                            Close
                           </Button>
                         </div>
-                        <div className="border border-border overflow-hidden">
+                        {/* Stripe embedded component */}
+                        <div className="rounded-none overflow-hidden">
                           <ConnectComponentsProvider connectInstance={stripeInstance}>
                             <ConnectAccountOnboarding onExit={handleOnboardingExit} />
                           </ConnectComponentsProvider>
