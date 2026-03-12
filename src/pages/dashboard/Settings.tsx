@@ -242,21 +242,41 @@ const Settings = () => {
     setSavingGallerySettings(false);
   };
 
-  const handleSaveStripe = async () => {
+  // ── Stripe Connect handlers ──
+  const handleConnectStripe = async () => {
     if (!user) return;
-    setSavingStripe(true);
-    const { error } = await (supabase as any).from("photographers").update({
-      stripe_secret_key: stripeSecretKey.trim() || null,
-      stripe_publishable_key: stripePublishableKey.trim() || null,
-    }).eq("id", user.id);
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-    } else {
-      const connected = Boolean(stripeSecretKey.trim() && stripePublishableKey.trim());
-      setStripeConnected(connected);
-      toast({ title: connected ? "Stripe connected" : "Stripe keys cleared" });
+    setConnectingStripe(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const redirectUri = `${window.location.origin}/dashboard/settings`;
+      const { data, error } = await supabase.functions.invoke("stripe-connect-url", {
+        body: { redirectUri },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? "Failed to get OAuth URL");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+      setConnectingStripe(false);
     }
-    setSavingStripe(false);
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!user) return;
+    setDisconnectingStripe(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.functions.invoke("stripe-connect-disconnect", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw new Error(error.message);
+      setStripeAccountId(null);
+      setStripeConnectedAt(null);
+      toast({ title: "Stripe disconnected" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setDisconnectingStripe(false);
   };
 
   const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
