@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useCustomDomainSlug } from "@/contexts/CustomDomainSlugContext";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import SignatureCanvas from "react-signature-canvas";
 import {
   addDays,
   format,
@@ -18,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, RotateCcw } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
@@ -215,6 +216,8 @@ const SessionDetailPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const sigCanvasRef = useRef<SignatureCanvas | null>(null);
 
   // Persist client form data to localStorage
   useEffect(() => {
@@ -939,18 +942,55 @@ const SessionDetailPage = () => {
                         })
                       }}
                     />
-                    <div
-                      className="flex items-start gap-3 cursor-pointer select-none"
-                      onClick={() => setContractAgreed(!contractAgreed)}
-                    >
-                      <div className={cn(
-                        "mt-0.5 h-4 w-4 border shrink-0 flex items-center justify-center transition-colors",
-                        contractAgreed ? "border-foreground bg-foreground" : "border-border"
-                      )}>
-                        {contractAgreed && <Check className="h-2.5 w-2.5 text-background" />}
+                    {/* Signature pad */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                          Sign below to accept
+                        </p>
+                        {signatureData && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sigCanvasRef.current?.clear();
+                              setSignatureData(null);
+                              setContractAgreed(false);
+                            }}
+                            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                          >
+                            <RotateCcw className="h-2.5 w-2.5" />
+                            Clear
+                          </button>
+                        )}
                       </div>
-                      <p className="text-xs font-light text-foreground leading-relaxed">
-                        I have read and agree to the service agreement above.
+                      <div className={cn(
+                        "border transition-colors relative bg-muted/20",
+                        contractAgreed ? "border-foreground" : "border-border"
+                      )}>
+                        <SignatureCanvas
+                          ref={sigCanvasRef}
+                          penColor="hsl(var(--foreground))"
+                          canvasProps={{
+                            width: 600,
+                            height: 120,
+                            className: "w-full h-[120px] touch-none",
+                            style: { display: "block" },
+                          }}
+                          onEnd={() => {
+                            if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+                              setSignatureData(sigCanvasRef.current.toDataURL());
+                              setContractAgreed(true);
+                            }
+                          }}
+                        />
+                        {!signatureData && (
+                          <p className="absolute inset-0 flex items-center justify-center text-[11px] text-muted-foreground/40 pointer-events-none font-light italic">
+                            Draw your signature here
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-light">
+                        By signing, you confirm you have read and agree to the service agreement above.
                       </p>
                     </div>
                   </div>
