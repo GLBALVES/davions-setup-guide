@@ -19,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, RotateCcw } from "lucide-react";
+import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
