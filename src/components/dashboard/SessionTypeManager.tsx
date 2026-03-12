@@ -24,14 +24,11 @@ interface Props {
 const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSelect, onRefetch, mode = "select" }: Props) => {
   const { toast } = useToast();
 
-  // shared state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
-
-  // dropdown-only
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -106,10 +103,7 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
       <div className="flex flex-wrap gap-2 items-center">
         {sessionTypes.map((type) =>
           editingId === type.id ? (
-            <div
-              key={type.id}
-              className="flex items-center gap-1 border border-border rounded-sm px-2 py-1 bg-background"
-            >
+            <div key={type.id} className="flex items-center gap-1 border border-border rounded-sm px-2 py-1 bg-background">
               <Input
                 value={editingName}
                 onChange={(e) => setEditingName(e.target.value)}
@@ -128,10 +122,7 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
               </button>
             </div>
           ) : (
-            <div
-              key={type.id}
-              className="group flex items-center gap-1.5 border border-border rounded-sm px-2.5 py-1 bg-muted/30 hover:bg-muted/60 transition-colors"
-            >
+            <div key={type.id} className="group flex items-center gap-1.5 border border-border rounded-sm px-2.5 py-1 bg-muted/30 hover:bg-muted/60 transition-colors">
               <span className="text-xs font-light tracking-wide">{type.name}</span>
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -270,23 +261,6 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Pencil className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setEditingId(type.id); setEditingName(type.name); setAddingNew(false); }}
-                      disabled={busy}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <Pencil className="h-2.5 w-2.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDelete(type.id, e)}
-                      disabled={busy}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="h-2.5 w-2.5" />
                     </button>
                   </div>
                 </div>
