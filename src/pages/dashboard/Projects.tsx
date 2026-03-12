@@ -873,6 +873,20 @@ const Projects = () => {
         sessionTypes={sessionTypes}
         onRefetchSessionTypes={fetchSessionTypes}
       />
+
+      <ProjectDetailSheet
+        project={sheetProject}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onUpdate={handleSheetUpdate}
+        onDelete={(id) => { handleDelete(id); }}
+        onArchive={handleArchive}
+        onUnarchive={handleUnarchive}
+        onOpenEdit={(p) => { setSheetOpen(false); openEdit(p); }}
+        photographerId={user?.id ?? ""}
+        sessionTypes={sessionTypes}
+        onRefetchSessionTypes={fetchSessionTypes}
+      />
     </SidebarProvider>
   );
 };
