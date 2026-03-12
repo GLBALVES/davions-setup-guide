@@ -48,18 +48,18 @@ interface Booking {
 
 type FilterStatus = "all" | "pending" | "confirmed" | "cancelled";
 
-const STATUS_META: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "Pending", variant: "secondary" },
-  confirmed: { label: "Confirmed", variant: "default" },
-  cancelled: { label: "Cancelled", variant: "destructive" },
+const STATUS_META: Record<string, { label: string; className: string }> = {
+  pending:   { label: "Pending",   className: "bg-amber-50 text-amber-700 border border-amber-200" },
+  confirmed: { label: "Confirmed", className: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  cancelled: { label: "Cancelled", className: "bg-red-50 text-red-600 border border-red-200" },
 };
 
-const PAYMENT_META: Record<string, { label: string; className: string }> = {
-  pending:      { label: "Unpaid",   className: "text-muted-foreground" },
-  paid:         { label: "Paid",     className: "text-green-600" },
-  deposit_paid: { label: "Partial",  className: "text-amber-600" },
-  failed:       { label: "Failed",   className: "text-destructive" },
-  refunded:     { label: "Refunded", className: "text-muted-foreground" },
+const PAYMENT_META: Record<string, { label: string; dot: string }> = {
+  pending:      { label: "Unpaid",   dot: "bg-muted-foreground/40" },
+  paid:         { label: "Paid",     dot: "bg-emerald-500" },
+  deposit_paid: { label: "Partial",  dot: "bg-amber-500" },
+  failed:       { label: "Failed",   dot: "bg-destructive" },
+  refunded:     { label: "Refunded", dot: "bg-muted-foreground/40" },
 };
 
 // ── Briefing response viewer ──────────────────────────────────────────────────
@@ -270,7 +270,8 @@ const Bookings = () => {
           <DashboardHeader />
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-8 max-w-6xl">
+
               {/* Header */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
@@ -281,8 +282,8 @@ const Bookings = () => {
               </div>
 
               {/* Filters + Search */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-1 border-b border-border pb-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                <div className="flex items-center gap-1 border-b border-border">
                   {FILTERS.map(({ key, label }) => {
                     const count =
                       key === "all"
@@ -292,25 +293,25 @@ const Bookings = () => {
                       <button
                         key={key}
                         onClick={() => setFilter(key)}
-                        className={`px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
+                        className={`px-3 py-2 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-b-2 -mb-px ${
                           filter === key
                             ? "border-foreground text-foreground"
                             : "border-transparent text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {label}
-                        <span className="ml-1.5 opacity-50">{count}</span>
+                        <span className="ml-1.5 opacity-40 tabular-nums">{count}</span>
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="relative max-w-xs">
+                <div className="relative sm:ml-auto w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by client or session…"
+                    placeholder="Search client or session…"
                     className="pl-9 h-8 text-xs"
                   />
                 </div>
@@ -324,7 +325,7 @@ const Bookings = () => {
                   </span>
                 </div>
               ) : filteredBookings.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border">
+                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border rounded-sm">
                   <BookOpen className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
@@ -342,15 +343,14 @@ const Bookings = () => {
                   </div>
                 </div>
               ) : (
-                <div className="border border-border overflow-hidden">
+                <div className="border border-border rounded-sm overflow-hidden">
                   {/* Table header */}
-                  <div className="hidden md:grid grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-4 px-5 py-2.5 bg-muted/40 border-b border-border text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-                    <span>Client</span>
-                    <span>Session</span>
-                    <span>Date & Time</span>
-                    <span>Payment</span>
-                    <span>Status</span>
-                    <span>Actions</span>
+                  <div className="hidden md:grid grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 px-5 py-3 bg-muted/30 border-b border-border">
+                    {["Client", "Session", "Date & Time", "Payment", "Status", "Actions"].map((h) => (
+                      <span key={h} className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-medium">
+                        {h}
+                      </span>
+                    ))}
                   </div>
 
                   {filteredBookings.map((booking, idx) => {
@@ -371,69 +371,72 @@ const Bookings = () => {
                     return (
                       <div
                         key={booking.id}
-                        className={`grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-3 md:gap-4 px-5 py-4 items-center ${
+                        className={`group flex flex-col md:grid md:grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 gap-y-2 px-5 py-4 items-center transition-colors hover:bg-muted/20 ${
                           idx < filteredBookings.length - 1 ? "border-b border-border" : ""
-                        } hover:bg-muted/20 transition-colors`}
+                        }`}
                       >
                         {/* Client */}
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="flex items-center gap-1.5 text-sm font-light truncate">
-                            <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <div className="flex flex-col gap-0.5 min-w-0 w-full">
+                          <span className="text-sm font-light truncate text-foreground leading-snug">
                             {booking.client_name}
                           </span>
-                          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
-                            <Mail className="h-3 w-3 shrink-0" />
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                            <Mail className="h-2.5 w-2.5 shrink-0 opacity-60" />
                             {booking.client_email}
                           </span>
                         </div>
 
                         {/* Session */}
-                        <div className="text-xs font-light text-muted-foreground truncate">
-                          {booking.sessions?.title ?? "—"}
+                        <div className="min-w-0 w-full">
+                          <span className="text-xs font-light text-muted-foreground truncate block leading-snug">
+                            {booking.sessions?.title ?? "—"}
+                          </span>
                         </div>
 
                         {/* Date & Time */}
-                        <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5 min-w-0">
                           {dateLabel ? (
                             <>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
+                              <span className="flex items-center gap-1.5 text-xs text-foreground font-light whitespace-nowrap">
+                                <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
                                 {dateLabel}
                               </span>
                               {timeLabel && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
+                                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                                  <Clock className="h-2.5 w-2.5 shrink-0" />
                                   {timeLabel}
                                 </span>
                               )}
                             </>
                           ) : (
-                            <span className="text-muted-foreground/40">—</span>
+                            <span className="text-[11px] text-muted-foreground/40">—</span>
                           )}
                         </div>
 
                         {/* Payment */}
-                        <span className={`text-[11px] font-light whitespace-nowrap ${paymentMeta.className}`}>
-                          {paymentMeta.label}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${paymentMeta.dot}`} />
+                          <span className="text-xs font-light text-foreground whitespace-nowrap">
+                            {paymentMeta.label}
+                          </span>
+                        </div>
 
                         {/* Status badge */}
-                        <Badge
-                          variant={statusMeta.variant}
-                          className="text-[9px] tracking-wider uppercase font-light w-fit"
-                        >
-                          {statusMeta.label}
-                        </Badge>
+                        <div>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] tracking-wider uppercase font-light whitespace-nowrap ${statusMeta.className}`}>
+                            {statusMeta.label}
+                          </span>
+                        </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                           {booking.status !== "confirmed" && booking.status !== "cancelled" && (
                             <button
                               onClick={() =>
                                 setConfirmDialog({ open: true, bookingId: booking.id, action: "confirm" })
                               }
                               title="Confirm booking"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
+                              className="text-muted-foreground hover:text-emerald-600 transition-colors"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </button>
@@ -472,7 +475,7 @@ const Bookings = () => {
                             </button>
                           )}
                           {booking.status === "cancelled" && !hasBriefing && (
-                            <span className="text-[10px] text-muted-foreground/40">—</span>
+                            <span className="text-[10px] text-muted-foreground/30">—</span>
                           )}
                         </div>
                       </div>
