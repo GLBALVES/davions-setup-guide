@@ -1302,6 +1302,7 @@ const SessionForm = () => {
                                   type="number"
                                   min="0"
                                   step="5"
+                                  disabled={hasSlots}
                                   value={globalConfig.buffer_before_min || ""}
                                   onChange={(e) => updateGlobalConfig({ buffer_before_min: parseInt(e.target.value) || 0 })}
                                   className="w-16 h-7 text-xs"
@@ -1314,6 +1315,7 @@ const SessionForm = () => {
                                   type="number"
                                   min="0"
                                   step="5"
+                                  disabled={hasSlots}
                                   value={globalConfig.buffer_after_min || ""}
                                   onChange={(e) => updateGlobalConfig({ buffer_after_min: parseInt(e.target.value) || 0 })}
                                   className="w-16 h-7 text-xs"
