@@ -15,6 +15,13 @@ interface SelectedExtra {
   qty: number;
 }
 
+// Split % by subscription product ID
+const PLAN_SPLITS: Record<string, number> = {
+  "prod_U8PSBb6bJj3mQV": 5,  // Starter
+  "prod_U8PXjCdBxWHHvT": 3,  // Pro
+  "prod_U8PYo2ocBqxIFO": 1,  // Studio
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -46,10 +53,10 @@ serve(async (req) => {
       throw new Error("Session not found");
     }
 
-    // Fetch photographer data (store slug + Stripe Connect account)
+    // Fetch photographer data
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug, stripe_account_id, id")
+      .select("store_slug, stripe_account_id, email")
       .eq("id", sessionData.photographer_id)
       .single();
 
@@ -64,10 +71,31 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") ?? "https://localhost:5173";
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Determine split % from photographer's platform subscription
+    let splitPercent = 5; // default
+    try {
+      const photographerEmail = (photoData as any)?.email;
+      if (photographerEmail) {
+        const platformCustomers = await stripe.customers.list({ email: photographerEmail, limit: 1 });
+        if (platformCustomers.data.length > 0) {
+          const subs = await stripe.subscriptions.list({
+            customer: platformCustomers.data[0].id,
+            status: "active",
+            limit: 1,
+          });
+          if (subs.data.length > 0) {
+            const productId = subs.data[0].items.data[0].price.product as string;
+            if (PLAN_SPLITS[productId] !== undefined) {
+              splitPercent = PLAN_SPLITS[productId];
+            }
+          }
+        }
+      }
+    } catch (_) { /* non-fatal — use default */ }
 
     // Check for existing Stripe customer on the connected account
     const customers = await stripe.customers.list(
@@ -140,25 +168,7 @@ serve(async (req) => {
       });
     }
 
-    // Determine platform fee based on photographer's subscription plan
-    // Default 5% (Starter), reduced for Pro (3%) and Studio (1%)
-    // We fetch the subscription split from check-subscription logic inline
-    const PLAN_SPLITS: Record<string, number> = {
-      "prod_U8PSBb6bJj3mQV": 5,  // Starter
-      "prod_U8PXjCdBxWHHvT": 3,  // Pro
-      "prod_U8PYo2ocBqxIFO": 1,  // Studio
-    };
-    let splitPercent = 5; // default
-    try {
-      const photographerCustomers = await stripe.customers.list({ limit: 1 });
-      // Check subscription for the platform account (photographer's own subscription)
-      const platformCustomers = await stripe.customers.list(
-        // We need the photographer's email to find their platform subscription
-        // Fetch from DB
-      );
-    } catch (_) { /* non-fatal */ }
-
-    // Calculate total for fee
+    // Calculate total for application fee
     const checkoutTotal = lineItems.reduce((sum, item) => {
       const unitAmount = (item.price_data as any)?.unit_amount ?? 0;
       const qty = item.quantity ?? 1;
