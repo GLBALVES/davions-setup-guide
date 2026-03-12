@@ -438,6 +438,7 @@ const SessionDetailPage = () => {
       if (fnError || !checkoutData?.url) {
         throw new Error(fnError?.message || "No payment URL returned");
       }
+      try { localStorage.removeItem(clientStorageKey); } catch { /* ignore */ }
       window.location.href = checkoutData.url;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
