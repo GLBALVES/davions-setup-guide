@@ -224,7 +224,7 @@ serve(async (req) => {
       .update({ stripe_checkout_session_id: checkout.id, extras_total: extrasTotal })
       .eq("id", bookingId);
 
-    return new Response(JSON.stringify({ url: checkout.url }), {
+    return new Response(JSON.stringify({ url: checkout.url, onboarding_required: onboardingRequired }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

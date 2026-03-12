@@ -445,6 +445,31 @@ const Settings = () => {
                   {/* ── PAYMENTS TAB ── */}
                   <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
 
+                    {/* ── Onboarding pending banner ── */}
+                    {stripeAccountId && !stripeConnectedAt && !showOnboarding && (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 border border-amber-400/50 bg-amber-50/40 dark:bg-amber-950/20 p-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="flex flex-col gap-0.5">
+                            <p className="text-xs font-light tracking-wide text-foreground">Payment account created — setup pending</p>
+                            <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                              Your payment account exists but banking details haven't been filled in yet. Funds from client payments are held in custody until onboarding is complete.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleActivatePayment}
+                          disabled={connectingStripe}
+                          className="gap-2 text-xs tracking-wider uppercase font-light shrink-0 border-amber-400/60 hover:bg-amber-50"
+                        >
+                          {connectingStripe ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                          Complete Setup
+                        </Button>
+                      </div>
+                    )}
+
                     {stripeAccountId && !showOnboarding ? (
                       /* ── Connected state ── */
                       <div className="flex flex-col gap-5">
