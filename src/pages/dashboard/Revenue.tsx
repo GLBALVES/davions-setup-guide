@@ -5,10 +5,18 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, CheckCircle2, Clock, XCircle, Search } from "lucide-react";
+import {
+  DollarSign, TrendingUp, CheckCircle2, Clock, XCircle,
+  Search, ArrowUpRight, Wallet, BarChart3,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 
 interface BookingRow {
   id: string;
@@ -41,12 +49,20 @@ function calcPaid(row: BookingRow) {
   return row.deposit_amount;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
-  paid:          { label: "Paid",          variant: "default",     icon: CheckCircle2 },
-  deposit_paid:  { label: "Deposit Paid",  variant: "secondary",   icon: Clock },
-  pending:       { label: "Pending",       variant: "outline",     icon: Clock },
-  failed:        { label: "Failed",        variant: "destructive", icon: XCircle },
-  refunded:      { label: "Refunded",      variant: "outline",     icon: XCircle },
+function calcBalance(row: BookingRow) {
+  return calcTotal(row) - calcPaid(row);
+}
+
+const STATUS_CONFIG: Record<string, {
+  label: string;
+  variant: "default" | "secondary" | "destructive" | "outline";
+  icon: React.ElementType;
+}> = {
+  paid:         { label: "Paid",         variant: "default",     icon: CheckCircle2 },
+  deposit_paid: { label: "Deposit Paid", variant: "secondary",   icon: Clock },
+  pending:      { label: "Pending",      variant: "outline",     icon: Clock },
+  failed:       { label: "Failed",       variant: "destructive", icon: XCircle },
+  refunded:     { label: "Refunded",     variant: "outline",     icon: XCircle },
 };
 
 const BOOKING_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -54,6 +70,37 @@ const BOOKING_STATUS_CONFIG: Record<string, { label: string; color: string }> = 
   pending:   { label: "Pending",   color: "text-yellow-600" },
   cancelled: { label: "Cancelled", color: "text-destructive" },
 };
+
+function buildMonthlyChart(rows: BookingRow[]) {
+  const now = new Date();
+  const months = eachMonthOfInterval({
+    start: subMonths(startOfMonth(now), 5),
+    end: startOfMonth(now),
+  });
+
+  return months.map((m) => {
+    const label = format(m, "MMM");
+    const monthStr = format(m, "yyyy-MM");
+    const revenue = rows
+      .filter((r) => {
+        const d = r.booked_date || r.created_at;
+        return d.startsWith(monthStr) && (r.payment_status === "paid" || r.payment_status === "deposit_paid");
+      })
+      .reduce((sum, r) => sum + calcPaid(r), 0);
+    return { label, revenue };
+  });
+}
+
+// Custom tooltip for the chart
+function ChartTooltip({ active, payload, label, fmt }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="border border-border bg-background px-3 py-2 text-xs shadow-sm">
+      <p className="text-muted-foreground mb-1 tracking-wide uppercase text-[10px]">{label}</p>
+      <p className="font-normal text-foreground">{fmt(payload[0].value)}</p>
+    </div>
+  );
+}
 
 export default function Revenue() {
   const { user, signOut } = useAuth();
@@ -64,26 +111,14 @@ export default function Revenue() {
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("bookings")
         .select(`
-          id,
-          client_name,
-          client_email,
-          created_at,
-          booked_date,
-          payment_status,
-          status,
-          sessions (
-            title,
-            price,
-            deposit_enabled,
-            deposit_amount,
-            deposit_type,
-            tax_rate
-          )
+          id, client_name, client_email, created_at, booked_date,
+          payment_status, status,
+          sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
         `)
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: false });
@@ -108,7 +143,7 @@ export default function Revenue() {
       }
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [user]);
 
   const filtered = rows.filter((r) => {
@@ -121,10 +156,12 @@ export default function Revenue() {
     return matchSearch && matchPayment;
   });
 
-  const totalRevenue = rows.reduce((sum, r) => sum + calcPaid(r), 0);
-  const paidCount = rows.filter((r) => r.payment_status === "paid").length;
-  const pendingCount = rows.filter((r) => r.payment_status === "pending").length;
-  const totalBookings = rows.length;
+  const totalRevenue     = rows.reduce((s, r) => s + calcPaid(r), 0);
+  const totalBalance     = rows.reduce((s, r) => s + calcBalance(r), 0);
+  const paidCount        = rows.filter((r) => r.payment_status === "paid").length;
+  const pendingCount     = rows.filter((r) => r.payment_status === "pending").length;
+  const avgBookingValue  = rows.length ? rows.reduce((s, r) => s + calcTotal(r), 0) / rows.length : 0;
+  const chartData        = buildMonthlyChart(rows);
 
   const fmt = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -139,6 +176,7 @@ export default function Revenue() {
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+
               {/* Page heading */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
@@ -149,11 +187,72 @@ export default function Revenue() {
               </div>
 
               {/* KPI cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <KpiCard icon={DollarSign} label="Total Revenue" value={fmt(totalRevenue)} />
-                <KpiCard icon={TrendingUp} label="Total Bookings" value={String(totalBookings)} />
-                <KpiCard icon={CheckCircle2} label="Paid" value={String(paidCount)} />
-                <KpiCard icon={Clock} label="Pending Payment" value={String(pendingCount)} />
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <KpiCard icon={DollarSign}    label="Total Collected"   value={fmt(totalRevenue)}    highlight />
+                <KpiCard icon={Wallet}         label="Balance Due"       value={fmt(totalBalance)} />
+                <KpiCard icon={TrendingUp}     label="Avg Booking Value" value={fmt(avgBookingValue)} />
+                <KpiCard icon={CheckCircle2}   label="Fully Paid"        value={String(paidCount)} />
+                <KpiCard icon={Clock}          label="Pending Payment"   value={String(pendingCount)} />
+              </div>
+
+              {/* Chart + mini-summary row */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Monthly Revenue Chart */}
+                <div className="lg:col-span-2 border border-border p-5 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Monthly Revenue</p>
+                      <p className="text-lg font-light mt-0.5">{fmt(totalRevenue)}</p>
+                    </div>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground/40" />
+                  </div>
+                  <div className="h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} barSize={20}>
+                        <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                        <XAxis
+                          dataKey="label"
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => `$${(v / 100).toFixed(0)}`}
+                          width={48}
+                        />
+                        <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
+                        <Bar dataKey="revenue" fill="hsl(var(--foreground))" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Summary breakdown */}
+                <div className="border border-border p-5 flex flex-col gap-5 justify-center">
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Payment Breakdown</p>
+                  {[
+                    { label: "Fully Paid",    val: rows.filter((r) => r.payment_status === "paid").reduce((s, r) => s + calcPaid(r), 0),    dot: "bg-foreground" },
+                    { label: "Deposit Paid",  val: rows.filter((r) => r.payment_status === "deposit_paid").reduce((s, r) => s + calcPaid(r), 0), dot: "bg-muted-foreground" },
+                    { label: "Pending",       val: rows.filter((r) => r.payment_status === "pending").reduce((s, r) => s + calcTotal(r), 0),   dot: "bg-border" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${item.dot}`} />
+                        <span className="text-xs font-light text-muted-foreground">{item.label}</span>
+                      </div>
+                      <span className="text-xs font-normal tabular-nums">{fmt(item.val)}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-border pt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-light text-muted-foreground">Total Bookings</span>
+                      <span className="text-xs font-normal">{rows.length}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Filters */}
@@ -172,14 +271,17 @@ export default function Revenue() {
                     <SelectValue placeholder="Payment status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all" className="text-xs">All statuses</SelectItem>
-                    <SelectItem value="paid" className="text-xs">Paid</SelectItem>
+                    <SelectItem value="all"          className="text-xs">All statuses</SelectItem>
+                    <SelectItem value="paid"         className="text-xs">Paid</SelectItem>
                     <SelectItem value="deposit_paid" className="text-xs">Deposit Paid</SelectItem>
-                    <SelectItem value="pending" className="text-xs">Pending</SelectItem>
-                    <SelectItem value="failed" className="text-xs">Failed</SelectItem>
-                    <SelectItem value="refunded" className="text-xs">Refunded</SelectItem>
+                    <SelectItem value="pending"      className="text-xs">Pending</SelectItem>
+                    <SelectItem value="failed"       className="text-xs">Failed</SelectItem>
+                    <SelectItem value="refunded"     className="text-xs">Refunded</SelectItem>
                   </SelectContent>
                 </Select>
+                <span className="text-[10px] text-muted-foreground ml-auto hidden sm:block">
+                  {filtered.length} booking{filtered.length !== 1 ? "s" : ""}
+                </span>
               </div>
 
               {/* Table */}
@@ -191,14 +293,16 @@ export default function Revenue() {
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center border border-border">
                   <DollarSign className="h-8 w-8 text-muted-foreground/30" />
                   <p className="text-sm font-light text-muted-foreground">No bookings found</p>
-                  <p className="text-[10px] text-muted-foreground/50">Bookings will appear here once clients start booking sessions</p>
+                  <p className="text-[10px] text-muted-foreground/50">
+                    Bookings will appear here once clients start booking sessions
+                  </p>
                 </div>
               ) : (
                 <div className="border border-border overflow-x-auto">
                   <table className="w-full text-xs font-light">
                     <thead>
-                      <tr className="border-b border-border">
-                        {["Date", "Client", "Session", "Total", "Paid", "Payment", "Booking"].map((h) => (
+                      <tr className="border-b border-border bg-muted/20">
+                        {["Date", "Client", "Session", "Total", "Paid", "Balance", "Payment", "Booking"].map((h) => (
                           <th
                             key={h}
                             className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap"
@@ -210,18 +314,20 @@ export default function Revenue() {
                     </thead>
                     <tbody>
                       {filtered.map((row) => {
-                        const payConf = STATUS_CONFIG[row.payment_status] ?? STATUS_CONFIG["pending"];
-                        const bookConf = BOOKING_STATUS_CONFIG[row.status] ?? BOOKING_STATUS_CONFIG["pending"];
-                        const PayIcon = payConf.icon;
+                        const payConf  = STATUS_CONFIG[row.payment_status] ?? STATUS_CONFIG["pending"];
+                        const bookConf = BOOKING_STATUS_CONFIG[row.status]  ?? BOOKING_STATUS_CONFIG["pending"];
+                        const PayIcon  = payConf.icon;
+                        const balance  = calcBalance(row);
                         return (
                           <tr
                             key={row.id}
                             className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
                           >
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {row.booked_date
-                                ? format(new Date(row.booked_date), "MMM d, yyyy")
-                                : format(new Date(row.created_at), "MMM d, yyyy")}
+                              {format(
+                                new Date(row.booked_date || row.created_at),
+                                "MMM d, yyyy",
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <p className="font-normal">{row.client_name}</p>
@@ -234,8 +340,21 @@ export default function Revenue() {
                             <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">
                               {fmt(calcPaid(row))}
                             </td>
+                            <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                              {balance > 0 ? (
+                                <span className="flex items-center gap-1 text-yellow-600">
+                                  <ArrowUpRight className="h-3 w-3" />
+                                  {fmt(balance)}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/50">—</span>
+                              )}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <Badge variant={payConf.variant} className="gap-1 text-[10px] tracking-wide uppercase font-light">
+                              <Badge
+                                variant={payConf.variant}
+                                className="gap-1 text-[10px] tracking-wide uppercase font-light"
+                              >
                                 <PayIcon className="h-2.5 w-2.5" />
                                 {payConf.label}
                               </Badge>
@@ -260,10 +379,24 @@ export default function Revenue() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function KpiCard({
+  icon: Icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="border border-border p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-muted-foreground">
+    <div
+      className={`border border-border p-4 flex flex-col gap-2 ${
+        highlight ? "bg-foreground text-background" : ""
+      }`}
+    >
+      <div className={`flex items-center gap-2 ${highlight ? "text-background/60" : "text-muted-foreground"}`}>
         <Icon className="h-3.5 w-3.5" />
         <span className="text-[10px] tracking-[0.2em] uppercase font-light">{label}</span>
       </div>
