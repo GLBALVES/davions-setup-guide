@@ -462,7 +462,7 @@ const Settings = () => {
                           <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
                           {[
                             "Click the button below",
-                            "Log in to (or create) your Stripe account",
+                            "Log in or create your payment account",
                             "Authorize the connection",
                             "You're redirected back here — done",
                           ].map((step, i) => (
