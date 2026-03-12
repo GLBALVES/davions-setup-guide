@@ -1048,10 +1048,16 @@ const SessionDetailPage = () => {
                       <span>{formatCurrency(total)}</span>
                     </div>
                     {session.deposit_enabled && (
-                      <div className="flex justify-between text-xs font-light text-primary pt-1.5 mt-0.5 border-t border-border">
-                        <span>Due today</span>
-                        <span className="font-normal">{formatCurrency(chargeAmount)}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between text-xs font-light text-primary pt-1.5 mt-0.5 border-t border-border">
+                          <span>Due today</span>
+                          <span className="font-normal">{formatCurrency(chargeAmount)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-light text-muted-foreground pt-1.5 mt-0.5 border-t border-dashed border-border">
+                          <span>Balance due after delivery</span>
+                          <span>{formatCurrency(total - chargeAmount)}</span>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
