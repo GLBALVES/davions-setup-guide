@@ -187,6 +187,7 @@ function KanbanCard({
 function KanbanColumn({
   stage,
   projects,
+  onView,
   onEdit,
   onDelete,
   onArchive,
@@ -194,6 +195,7 @@ function KanbanColumn({
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
+  onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
@@ -231,7 +233,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
           ))}
         </SortableContext>
 
