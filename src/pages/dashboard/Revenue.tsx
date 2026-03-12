@@ -41,13 +41,19 @@ function calcTotal(row: BookingRow) {
   return base + tax;
 }
 
+function calcDepositAmount(row: BookingRow) {
+  if (!row.deposit_enabled) return 0;
+  const total = calcTotal(row);
+  if (row.deposit_type === "percent" || row.deposit_type === "percentage")
+    return Math.round(total * (row.deposit_amount / 100));
+  return row.deposit_amount;
+}
+
 function calcPaid(row: BookingRow) {
   if (row.payment_status !== "paid" && row.payment_status !== "deposit_paid") return 0;
   const total = calcTotal(row);
   if (row.payment_status === "paid") return total;
-  if (!row.deposit_enabled) return 0;
-  if (row.deposit_type === "percent" || row.deposit_type === "percentage") return total * (row.deposit_amount / 100);
-  return row.deposit_amount;
+  return calcDepositAmount(row);
 }
 
 function calcBalance(row: BookingRow) {
