@@ -50,6 +50,11 @@ import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
 import Revenue from "./pages/dashboard/Revenue";
+import FinanceDashboard from "./pages/dashboard/FinanceDashboard";
+import FinanceReceivables from "./pages/dashboard/FinanceReceivables";
+import FinancePayables from "./pages/dashboard/FinancePayables";
+import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
+import FinanceReports from "./pages/dashboard/FinanceReports";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
