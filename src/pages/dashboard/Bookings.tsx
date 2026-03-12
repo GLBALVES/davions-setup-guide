@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,6 +32,8 @@ import {
   BookOpen,
   Images,
   ClipboardList,
+  AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 
 interface Booking {
@@ -152,10 +156,13 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
 const Bookings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; bookingId: string; action: "confirm" | "cancel" }>({
     open: false,
     bookingId: "",
@@ -173,21 +180,34 @@ const Bookings = () => {
 
   const fetchBookings = async () => {
     setLoading(true);
-    const { data, error } = await (supabase as any)
-      .from("bookings")
-      .select(`
-        *,
-        sessions ( title, briefing_id ),
-        session_availability ( start_time, end_time, date )
-      `)
-      .eq("photographer_id", user!.id)
-      .order("created_at", { ascending: false });
+    const [bookingsRes, profileRes] = await Promise.all([
+      (supabase as any)
+        .from("bookings")
+        .select(`
+          *,
+          sessions ( title, briefing_id ),
+          session_availability ( start_time, end_time, date )
+        `)
+        .eq("photographer_id", user!.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("photographers")
+        .select("stripe_account_id, stripe_connected_at")
+        .eq("id", user!.id)
+        .single(),
+    ]);
 
-    if (error) {
+    if (bookingsRes.error) {
       toast({ title: "Failed to load bookings", variant: "destructive" });
     } else {
-      setBookings((data as Booking[]) ?? []);
+      setBookings((bookingsRes.data as Booking[]) ?? []);
     }
+
+    if (profileRes.data) {
+      setStripeAccountId((profileRes.data as any).stripe_account_id ?? null);
+      setStripeConnectedAt((profileRes.data as any).stripe_connected_at ?? null);
+    }
+
     setLoading(false);
   };
 
@@ -215,6 +235,19 @@ const Bookings = () => {
 
     return list;
   }, [bookings, filter, search]);
+
+  // Show custody banner when: stripe account exists but onboarding incomplete AND there are confirmed+paid bookings
+  const hasFundsInCustody = useMemo(() => {
+    if (!stripeAccountId || stripeConnectedAt) return false;
+    return bookings.some(
+      (b) => b.status === "confirmed" && (b.payment_status === "paid" || b.payment_status === "deposit_paid")
+    );
+  }, [bookings, stripeAccountId, stripeConnectedAt]);
+
+  const confirmedPaidCount = useMemo(
+    () => bookings.filter((b) => b.status === "confirmed" && (b.payment_status === "paid" || b.payment_status === "deposit_paid")).length,
+    [bookings]
+  );
 
   const updateStatus = async (bookingId: string, status: "confirmed" | "cancelled") => {
     const { error } = await supabase
@@ -280,6 +313,32 @@ const Bookings = () => {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">Bookings</h1>
               </div>
+
+              {/* Funds-in-custody banner */}
+              {hasFundsInCustody && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 border border-border bg-muted/40 p-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs font-light tracking-wide text-foreground">
+                        Funds held in custody — payment setup incomplete
+                      </p>
+                      <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                        You have {confirmedPaidCount} confirmed booking{confirmedPaidCount !== 1 ? "s" : ""} with payments received, but your banking details haven't been submitted yet. Complete your payment setup to release the funds to your account.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate("/dashboard/settings?tab=payments")}
+                    className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
+                  >
+                    Complete Setup
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
 
               {/* Filters + Search */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
