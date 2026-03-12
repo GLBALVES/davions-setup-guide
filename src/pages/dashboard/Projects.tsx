@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { ProjectDetailSheet } from "@/components/dashboard/ProjectDetailSheet";
 import {
   DndContext,
   DragOverlay,
@@ -88,11 +89,13 @@ const STAGE_COLORS: Record<Stage, string> = {
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
   project,
+  onView,
   onEdit,
   onDelete,
   onArchive,
 }: {
   project: ClientProject;
+  onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
@@ -108,7 +111,10 @@ function KanbanCard({
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
-      <div className="border border-border bg-card rounded-sm p-3 flex flex-col gap-2 hover:border-foreground/30 transition-colors cursor-default">
+      <div
+        className="border border-border bg-card rounded-sm p-3 flex flex-col gap-2 hover:border-foreground/30 transition-colors cursor-pointer"
+        onClick={() => onView(project)}
+      >
         {/* drag handle + actions */}
         <div className="flex items-start justify-between gap-1">
           <button
@@ -116,6 +122,7 @@ function KanbanCard({
             {...listeners}
             className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing mt-0.5"
             aria-label="Drag"
+            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
@@ -123,21 +130,21 @@ function KanbanCard({
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
-              onClick={() => onEdit(project)}
+              onClick={(e) => { e.stopPropagation(); onEdit(project); }}
               title="Edit"
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-amber-500"
-              onClick={() => onArchive(project.id)}
+              onClick={(e) => { e.stopPropagation(); onArchive(project.id); }}
               title="Archive"
             >
               <Archive className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
-              onClick={() => onDelete(project.id)}
+              onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
               title="Delete"
             >
               <X className="h-3 w-3" />
@@ -180,6 +187,7 @@ function KanbanCard({
 function KanbanColumn({
   stage,
   projects,
+  onView,
   onEdit,
   onDelete,
   onArchive,
@@ -187,6 +195,7 @@ function KanbanColumn({
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
+  onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
@@ -224,7 +233,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
           ))}
         </SortableContext>
 
@@ -545,6 +554,8 @@ const Projects = () => {
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+  const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -660,6 +671,21 @@ const Projects = () => {
     setModalOpen(true);
   };
 
+  const openView = (p: ClientProject) => {
+    setSheetProject(p);
+    setSheetOpen(true);
+  };
+
+  const handleSheetUpdate = async (id: string, data: Partial<ClientProject>) => {
+    const { error } = await supabase
+      .from("client_projects" as any)
+      .update(data as any)
+      .eq("id", id);
+    if (error) { toast.error("Failed to update"); return; }
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...data } : p));
+    setSheetProject((prev) => prev ? { ...prev, ...data } : prev);
+  };
+
   const handleSave = async (data: Partial<ClientProject>) => {
     if (editing) {
       const { error } = await supabase
@@ -693,12 +719,14 @@ const Projects = () => {
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "archived" as Stage } : prev);
     toast.success("Project archived");
   };
 
   const handleUnarchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
     toast.success("Project restored to Lead");
   };
 
@@ -801,6 +829,7 @@ const Projects = () => {
                         key={s.key}
                         stage={s}
                         projects={projectsByStage(s.key)}
+                        onView={openView}
                         onEdit={openEdit}
                         onDelete={handleDelete}
                         onArchive={handleArchive}
@@ -840,6 +869,20 @@ const Projects = () => {
         onSave={handleSave}
         initial={editing}
         defaultStage={defaultStage}
+        photographerId={user?.id ?? ""}
+        sessionTypes={sessionTypes}
+        onRefetchSessionTypes={fetchSessionTypes}
+      />
+
+      <ProjectDetailSheet
+        project={sheetProject}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onUpdate={handleSheetUpdate}
+        onDelete={(id) => { handleDelete(id); }}
+        onArchive={handleArchive}
+        onUnarchive={handleUnarchive}
+        onOpenEdit={(p) => { setSheetOpen(false); openEdit(p); }}
         photographerId={user?.id ?? ""}
         sessionTypes={sessionTypes}
         onRefetchSessionTypes={fetchSessionTypes}
