@@ -557,9 +557,15 @@ const Projects = () => {
   const fetchProjects = async () => {
     const { data, error } = await supabase
       .from("client_projects" as any)
-      .select("*")
+      .select("*, bookings(sessions(title))")
       .order("position", { ascending: true });
-    if (!error && data) setProjects(data as unknown as ClientProject[]);
+    if (!error && data) {
+      const mapped = (data as any[]).map((p) => ({
+        ...p,
+        session_title: (p.bookings as any)?.sessions?.title ?? null,
+      }));
+      setProjects(mapped as ClientProject[]);
+    }
     setLoading(false);
   };
 
