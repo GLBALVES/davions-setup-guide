@@ -283,12 +283,13 @@ const Settings = () => {
       }
 
       // Step 3: Initialize Stripe Connect JS
-      const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      const publishableKey = sessionData.publishable_key;
       if (!publishableKey) throw new Error("Stripe publishable key not configured");
 
+      const clientSecret = sessionData.client_secret;
       const instance = loadConnectAndInitialize({
         publishableKey,
-        fetchClientSecret: async () => sessionData.client_secret,
+        fetchClientSecret: async () => clientSecret,
         appearance: {
           overlays: "dialog",
           variables: {
