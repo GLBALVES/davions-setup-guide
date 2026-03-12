@@ -27,6 +27,7 @@ interface BookingRow {
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  stripe_checkout_session_id: string | null;
 }
 
 function calcTotal(r: BookingRow) {
@@ -92,7 +93,7 @@ export default function FinanceDashboard() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, stripe_checkout_session_id, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: false });
       if (data) {
@@ -109,6 +110,7 @@ export default function FinanceDashboard() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          stripe_checkout_session_id: b.stripe_checkout_session_id ?? null,
         })));
       }
       setLoading(false);
@@ -125,6 +127,14 @@ export default function FinanceDashboard() {
   const thisMonthRev   = thisMonth.reduce((s, r) => s + calcPaid(r), 0);
   const lastMonthRev   = lastMonth.reduce((s, r) => s + calcPaid(r), 0);
   const monthDelta     = lastMonthRev === 0 ? null : ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100;
+
+  // Deposit breakdown: Stripe-confirmed vs manually recorded
+  const depositRows = rows.filter((r) => r.payment_status === "deposit_paid");
+  const stripeDeposits = depositRows.filter((r) => !!r.stripe_checkout_session_id);
+  const manualDeposits = depositRows.filter((r) => !r.stripe_checkout_session_id);
+  const stripeDepositTotal = stripeDeposits.reduce((s, r) => s + calcPaid(r), 0);
+  const manualDepositTotal = manualDeposits.reduce((s, r) => s + calcPaid(r), 0);
+  const totalDepositAmount = stripeDepositTotal + manualDepositTotal;
 
   const chartData = buildChart(rows);
 
@@ -178,6 +188,57 @@ export default function FinanceDashboard() {
                       )}
                     </div>
                   </div>
+
+                  {/* Deposit payment breakdown */}
+                  {depositRows.length > 0 && (
+                    <div className="border border-border p-5 flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Deposit Payment Breakdown</p>
+                        <span className="text-[10px] text-muted-foreground font-light">{depositRows.length} booking{depositRows.length !== 1 ? "s" : ""} with deposit</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Stripe confirmed */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Confirmed via Stripe</span>
+                          </div>
+                          <p className="text-xl font-light tabular-nums">{fmt(stripeDepositTotal)}</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{stripeDeposits.length} booking{stripeDeposits.length !== 1 ? "s" : ""} — real Stripe payments</p>
+                          {totalDepositAmount > 0 && (
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-green-500 rounded-full transition-all"
+                                style={{ width: `${(stripeDepositTotal / totalDepositAmount) * 100}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {/* Manually recorded */}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Manually Recorded</span>
+                          </div>
+                          <p className="text-xl font-light tabular-nums">{fmt(manualDepositTotal)}</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{manualDeposits.length} booking{manualDeposits.length !== 1 ? "s" : ""} — no Stripe transaction</p>
+                          {totalDepositAmount > 0 && (
+                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-400 rounded-full transition-all"
+                                style={{ width: `${(manualDepositTotal / totalDepositAmount) * 100}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {manualDeposits.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 font-light border-t border-border pt-3">
+                          ⚠ {manualDeposits.length} booking{manualDeposits.length !== 1 ? "s were" : " was"} manually marked as <span className="font-mono">deposit_paid</span> without a corresponding Stripe payment. These amounts are not reflected in your payment account balance.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Chart */}
                   <div className="border border-border p-5 flex flex-col gap-4">
