@@ -18,6 +18,7 @@ interface BookingRow {
   status: string;
   session_title: string;
   session_price: number;
+  extras_total: number;
   deposit_enabled: boolean;
   deposit_amount: number;
   deposit_type: string;
@@ -25,7 +26,8 @@ interface BookingRow {
 }
 
 function calcTotal(r: BookingRow) {
-  return r.session_price + r.session_price * (r.tax_rate / 100);
+  const base = r.session_price + r.extras_total;
+  return base + base * (r.tax_rate / 100);
 }
 function calcPaid(r: BookingRow) {
   if (r.payment_status !== "paid" && r.payment_status !== "deposit_paid") return 0;

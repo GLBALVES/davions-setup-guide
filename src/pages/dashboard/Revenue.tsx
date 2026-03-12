@@ -118,7 +118,7 @@ export default function Revenue() {
         .from("bookings")
         .select(`
           id, client_name, client_email, created_at, booked_date,
-          payment_status, status,
+          payment_status, status, extras_total,
           sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
         `)
         .eq("photographer_id", user.id)
