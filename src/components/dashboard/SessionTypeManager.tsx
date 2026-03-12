@@ -17,22 +17,28 @@ interface Props {
   selectedTypeId: string | null;
   onSelect: (id: string | null) => void;
   onRefetch: () => void;
+  /** "manage" = tag-cloud (Personalize page). "select" = dropdown (SessionForm). Default: "select" */
+  mode?: "manage" | "select";
 }
 
-const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSelect, onRefetch }: Props) => {
+const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSelect, onRefetch, mode = "select" }: Props) => {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [addingNew, setAddingNew] = useState(false);
-  const [newName, setNewName] = useState("");
+
+  // shared state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [addingNew, setAddingNew] = useState(false);
+  const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // dropdown-only
+  const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = sessionTypes.find((t) => t.id === selectedTypeId);
 
-  // Close on outside click
   useEffect(() => {
+    if (mode !== "select") return;
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -43,9 +49,9 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [mode]);
 
-  const handleAdd = async () => {
+  const handleAdd = async (autoSelect = false) => {
     const name = newName.trim();
     if (!name) return;
     setBusy(true);
@@ -58,10 +64,10 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
       toast({ title: "Error adding type", description: error.message, variant: "destructive" });
     } else {
       onRefetch();
-      if (data) onSelect(data.id);
+      if (autoSelect && data) onSelect(data.id);
       setAddingNew(false);
       setNewName("");
-      setOpen(false);
+      if (autoSelect) setOpen(false);
     }
     setBusy(false);
   };
@@ -81,8 +87,8 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
     setBusy(false);
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setBusy(true);
     const { error } = await supabase.from("session_types").delete().eq("id", id);
     if (error) {
@@ -94,11 +100,102 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
     setBusy(false);
   };
 
+  // ── MANAGE MODE (tag cloud) ──────────────────────────────────────────────────
+  if (mode === "manage") {
+    return (
+      <div className="flex flex-wrap gap-2 items-center">
+        {sessionTypes.map((type) =>
+          editingId === type.id ? (
+            <div
+              key={type.id}
+              className="flex items-center gap-1 border border-border rounded-sm px-2 py-1 bg-background"
+            >
+              <Input
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveEdit();
+                  if (e.key === "Escape") setEditingId(null);
+                }}
+                className="h-5 text-xs border-0 p-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 w-24"
+                autoFocus
+              />
+              <button type="button" onClick={handleSaveEdit} disabled={busy} className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40">
+                <Check className="h-3 w-3" />
+              </button>
+              <button type="button" onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <div
+              key={type.id}
+              className="group flex items-center gap-1.5 border border-border rounded-sm px-2.5 py-1 bg-muted/30 hover:bg-muted/60 transition-colors"
+            >
+              <span className="text-xs font-light tracking-wide">{type.name}</span>
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => { setEditingId(type.id); setEditingName(type.name); setAddingNew(false); }}
+                  disabled={busy}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Edit"
+                >
+                  <Pencil className="h-2.5 w-2.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(type.id)}
+                  disabled={busy}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Delete"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            </div>
+          )
+        )}
+
+        {addingNew ? (
+          <div className="flex items-center gap-1 border border-primary/50 rounded-sm px-2 py-1 bg-background">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAdd(false);
+                if (e.key === "Escape") { setAddingNew(false); setNewName(""); }
+              }}
+              placeholder="New type…"
+              className="h-5 text-xs border-0 p-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 w-24 placeholder:text-muted-foreground/50"
+              autoFocus
+            />
+            <button type="button" onClick={() => handleAdd(false)} disabled={busy || !newName.trim()} className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40">
+              <Check className="h-3 w-3" />
+            </button>
+            <button type="button" onClick={() => { setAddingNew(false); setNewName(""); }} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { setAddingNew(true); setEditingId(null); }}
+            className="flex items-center gap-1 border border-dashed border-border rounded-sm px-2.5 py-1 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+          >
+            <Plus className="h-3 w-3" />
+            <span className="text-[10px] tracking-widest uppercase font-light">Add</span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ── SELECT MODE (dropdown) ────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-2">
       <Label className="text-xs tracking-wider uppercase font-light">Session Type</Label>
       <div ref={ref} className="relative">
-        {/* Trigger */}
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -126,7 +223,6 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
           </div>
         </button>
 
-        {/* Dropdown */}
         {open && (
           <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border shadow-md rounded-none overflow-hidden">
             {sessionTypes.length === 0 && !addingNew && (
@@ -188,7 +284,6 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
               )
             )}
 
-            {/* Add new row */}
             <div className="border-t border-border">
               {addingNew ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5">
@@ -196,14 +291,14 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAdd();
+                      if (e.key === "Enter") handleAdd(true);
                       if (e.key === "Escape") { setAddingNew(false); setNewName(""); }
                     }}
                     placeholder="New type…"
                     className="h-5 flex-1 text-xs border-0 p-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50"
                     autoFocus
                   />
-                  <button type="button" onClick={handleAdd} disabled={busy || !newName.trim()} className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40">
+                  <button type="button" onClick={() => handleAdd(true)} disabled={busy || !newName.trim()} className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40">
                     <Check className="h-3 w-3" />
                   </button>
                   <button type="button" onClick={() => { setAddingNew(false); setNewName(""); }} className="text-muted-foreground hover:text-foreground transition-colors">

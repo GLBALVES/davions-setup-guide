@@ -591,6 +591,7 @@ const Personalize = () => {
                           selectedTypeId={selectedTypeId}
                           onSelect={setSelectedTypeId}
                           onRefetch={fetchSessionTypes}
+                          mode="manage"
                         />
                       )}
                     </section>
