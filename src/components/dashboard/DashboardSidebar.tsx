@@ -45,6 +45,7 @@ import {
   GripVertical,
   Pencil,
   Check,
+  CreditCard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -187,6 +188,7 @@ const groups: MenuGroup[] = [
     icon: Settings,
     items: [
       { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
+      { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
       { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     ],
   },

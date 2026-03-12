@@ -55,6 +55,7 @@ import FinanceReceivables from "./pages/dashboard/FinanceReceivables";
 import FinancePayables from "./pages/dashboard/FinancePayables";
 import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
 import FinanceReports from "./pages/dashboard/FinanceReports";
+import Billing from "./pages/dashboard/Billing";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -129,6 +130,7 @@ const App = () => (
                  <Route path="/dashboard/finance/payables" element={<ProtectedRoute><FinancePayables /></ProtectedRoute>} />
                  <Route path="/dashboard/finance/cashflow" element={<ProtectedRoute><FinanceCashFlow /></ProtectedRoute>} />
                  <Route path="/dashboard/finance/reports" element={<ProtectedRoute><FinanceReports /></ProtectedRoute>} />
+                 <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

@@ -15,6 +15,13 @@ interface SelectedExtra {
   qty: number;
 }
 
+// Split % by subscription product ID
+const PLAN_SPLITS: Record<string, number> = {
+  "prod_U8PSBb6bJj3mQV": 5,  // Starter
+  "prod_U8PXjCdBxWHHvT": 3,  // Pro
+  "prod_U8PYo2ocBqxIFO": 1,  // Studio
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -46,10 +53,10 @@ serve(async (req) => {
       throw new Error("Session not found");
     }
 
-    // Fetch photographer data (store slug + Stripe Connect account)
+    // Fetch photographer data
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug, stripe_account_id")
+      .select("store_slug, stripe_account_id, email")
       .eq("id", sessionData.photographer_id)
       .single();
 
@@ -64,10 +71,31 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") ?? "https://localhost:5173";
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // Determine split % from photographer's platform subscription
+    let splitPercent = 5; // default
+    try {
+      const photographerEmail = (photoData as any)?.email;
+      if (photographerEmail) {
+        const platformCustomers = await stripe.customers.list({ email: photographerEmail, limit: 1 });
+        if (platformCustomers.data.length > 0) {
+          const subs = await stripe.subscriptions.list({
+            customer: platformCustomers.data[0].id,
+            status: "active",
+            limit: 1,
+          });
+          if (subs.data.length > 0) {
+            const productId = subs.data[0].items.data[0].price.product as string;
+            if (PLAN_SPLITS[productId] !== undefined) {
+              splitPercent = PLAN_SPLITS[productId];
+            }
+          }
+        }
+      }
+    } catch (_) { /* non-fatal — use default */ }
 
     // Check for existing Stripe customer on the connected account
     const customers = await stripe.customers.list(
@@ -140,6 +168,14 @@ serve(async (req) => {
       });
     }
 
+    // Calculate total for application fee
+    const checkoutTotal = lineItems.reduce((sum, item) => {
+      const unitAmount = (item.price_data as any)?.unit_amount ?? 0;
+      const qty = item.quantity ?? 1;
+      return sum + unitAmount * qty;
+    }, 0);
+    const applicationFeeAmount = Math.round(checkoutTotal * (splitPercent / 100));
+
     // Create checkout session on the connected account
     const checkout = await stripe.checkout.sessions.create(
       {
@@ -147,6 +183,9 @@ serve(async (req) => {
         customer_email: customerId ? undefined : clientEmail,
         line_items: lineItems,
         mode: "payment",
+        payment_intent_data: applicationFeeAmount > 0 ? {
+          application_fee_amount: applicationFeeAmount,
+        } : undefined,
         metadata: {
           booking_id: bookingId,
           slot_id: slotId,
