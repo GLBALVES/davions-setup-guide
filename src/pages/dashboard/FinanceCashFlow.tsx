@@ -15,6 +15,7 @@ interface BookingRow {
   booked_date: string | null;
   payment_status: string;
   session_price: number;
+  extras_total: number;
   deposit_enabled: boolean;
   deposit_amount: number;
   deposit_type: string;
@@ -22,7 +23,8 @@ interface BookingRow {
 }
 
 function calcTotal(r: BookingRow) {
-  return r.session_price + r.session_price * (r.tax_rate / 100);
+  const base = r.session_price + r.extras_total;
+  return base + base * (r.tax_rate / 100);
 }
 function calcPaid(r: BookingRow) {
   if (r.payment_status !== "paid" && r.payment_status !== "deposit_paid") return 0;
@@ -76,7 +78,7 @@ export default function FinanceCashFlow() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`created_at, booked_date, payment_status, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id);
       if (data) {
         setRows((data as any[]).map((b) => ({
@@ -84,6 +86,7 @@ export default function FinanceCashFlow() {
           booked_date: b.booked_date,
           payment_status: b.payment_status ?? "pending",
           session_price: b.sessions?.price ?? 0,
+          extras_total: b.extras_total ?? 0,
           deposit_enabled: b.sessions?.deposit_enabled ?? false,
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",

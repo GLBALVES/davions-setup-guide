@@ -28,6 +28,7 @@ interface BookingRow {
   status: string;
   session_title: string;
   session_price: number;
+  extras_total: number;
   deposit_enabled: boolean;
   deposit_amount: number;
   deposit_type: string;
@@ -35,7 +36,7 @@ interface BookingRow {
 }
 
 function calcTotal(row: BookingRow) {
-  const base = row.session_price;
+  const base = row.session_price + row.extras_total;
   const tax = base * (row.tax_rate / 100);
   return base + tax;
 }
@@ -117,7 +118,7 @@ export default function Revenue() {
         .from("bookings")
         .select(`
           id, client_name, client_email, created_at, booked_date,
-          payment_status, status,
+          payment_status, status, extras_total,
           sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
         `)
         .eq("photographer_id", user.id)
@@ -134,6 +135,7 @@ export default function Revenue() {
           status: b.status ?? "pending",
           session_title: b.sessions?.title ?? "—",
           session_price: b.sessions?.price ?? 0,
+          extras_total: b.extras_total ?? 0,
           deposit_enabled: b.sessions?.deposit_enabled ?? false,
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",

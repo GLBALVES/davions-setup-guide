@@ -58,7 +58,7 @@ export default function FinanceReceivables() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, client_email, created_at, booked_date, payment_status, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, client_email, created_at, booked_date, payment_status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id)
         .in("payment_status", ["pending", "deposit_paid"])
         .order("created_at", { ascending: false });
@@ -73,6 +73,7 @@ export default function FinanceReceivables() {
           payment_status: b.payment_status ?? "pending",
           session_title: b.sessions?.title ?? "—",
           session_price: b.sessions?.price ?? 0,
+          extras_total: b.extras_total ?? 0,
           deposit_enabled: b.sessions?.deposit_enabled ?? false,
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
