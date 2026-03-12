@@ -46,17 +46,26 @@ serve(async (req) => {
       throw new Error("Session not found");
     }
 
-    // Fetch photographer store slug for redirect
+    // Fetch photographer data (store slug + Stripe key)
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug")
+      .select("store_slug, stripe_secret_key")
       .eq("id", sessionData.photographer_id)
       .single();
 
     const storeSlug = photoData?.store_slug ?? "";
+    const stripeKey = (photoData as any)?.stripe_secret_key ?? Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+
+    if (!stripeKey) {
+      return new Response(
+        JSON.stringify({ error: "stripe_not_configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     const origin = req.headers.get("origin") ?? "https://localhost:5173";
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
 

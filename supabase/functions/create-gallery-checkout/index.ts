@@ -15,7 +15,7 @@ serve(async (req) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
   try {
@@ -53,7 +53,23 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+    // Fetch photographer's own Stripe key
+    const { data: photoData } = await supabase
+      .from("photographers")
+      .select("stripe_secret_key")
+      .eq("id", gallery.photographer_id)
+      .single();
+
+    const stripeKey = (photoData as any)?.stripe_secret_key ?? Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+
+    if (!stripeKey) {
+      return new Response(
+        JSON.stringify({ error: "stripe_not_configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
 
