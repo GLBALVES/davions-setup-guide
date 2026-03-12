@@ -290,12 +290,18 @@ const Settings = () => {
       const instance = loadConnectAndInitialize({
         publishableKey,
         fetchClientSecret: async () => clientSecret,
+        locale: "en-US",
         appearance: {
           overlays: "dialog",
           variables: {
             colorPrimary: "#000000",
             fontFamily: "inherit",
-            borderRadius: "0px",
+            borderRadius: "2px",
+            colorBackground: "#ffffff",
+            colorText: "#111111",
+            colorSecondaryText: "#6b7280",
+            colorBorder: "#e5e7eb",
+            spacingUnit: "10px",
           },
         },
       });
