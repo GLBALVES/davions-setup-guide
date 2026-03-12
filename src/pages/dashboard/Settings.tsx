@@ -454,8 +454,8 @@ const Settings = () => {
                         </div>
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Connect your Stripe account so your clients pay directly to you.
-                          You'll be redirected to Stripe to authorize the connection — no keys to copy or paste.
+                          Connect your payment account so your clients pay directly to you.
+                          You'll be redirected to your payment provider to authorize the connection — no keys to copy or paste.
                         </p>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
