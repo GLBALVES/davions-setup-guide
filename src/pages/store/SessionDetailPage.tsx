@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useCustomDomainSlug } from "@/contexts/CustomDomainSlugContext";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import SignatureCanvas from "react-signature-canvas";
 import {
   addDays,
   format,
@@ -18,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, RotateCcw } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
