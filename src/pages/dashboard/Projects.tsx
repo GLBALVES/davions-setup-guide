@@ -62,6 +62,7 @@ interface ClientProject {
   position: number;
   created_at: string;
   updated_at: string;
+  session_title?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
