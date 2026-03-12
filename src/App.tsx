@@ -50,6 +50,11 @@ import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
 import Revenue from "./pages/dashboard/Revenue";
+import FinanceDashboard from "./pages/dashboard/FinanceDashboard";
+import FinanceReceivables from "./pages/dashboard/FinanceReceivables";
+import FinancePayables from "./pages/dashboard/FinancePayables";
+import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
+import FinanceReports from "./pages/dashboard/FinanceReports";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -119,6 +124,11 @@ const App = () => (
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                  <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
                  <Route path="/dashboard/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance" element={<ProtectedRoute><FinanceDashboard /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance/receivables" element={<ProtectedRoute><FinanceReceivables /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance/payables" element={<ProtectedRoute><FinancePayables /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance/cashflow" element={<ProtectedRoute><FinanceCashFlow /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance/reports" element={<ProtectedRoute><FinanceReports /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
