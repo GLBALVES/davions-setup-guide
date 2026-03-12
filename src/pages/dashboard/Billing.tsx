@@ -157,7 +157,21 @@ const Billing = () => {
     setLoadingSub(false);
 
     if (balanceRes.data?.balance) setBalance(balanceRes.data.balance);
+    if (balanceRes.data?.payouts) {
+      const raw = balanceRes.data.payouts as any[];
+      setPayouts(raw.map((p) => ({
+        id: p.id,
+        amount: p.amount,
+        currency: p.currency,
+        arrival_date: p.arrival_date,
+        status: p.status,
+        description: p.description ?? null,
+        bank_name: p.destination?.bank_name ?? p.bank_account?.bank_name ?? null,
+        last4: p.destination?.last4 ?? p.bank_account?.last4 ?? null,
+      })));
+    }
     setLoadingBalance(false);
+    setLoadingPayouts(false);
 
     if (invoicesRes.data?.invoices) setInvoices(invoicesRes.data.invoices);
     setLoadingInvoices(false);
