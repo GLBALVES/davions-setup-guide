@@ -97,12 +97,6 @@ const Settings = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
-  // Payments tab — Stripe Connect
-  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
-  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
-  const [connectingStripe, setConnectingStripe] = useState(false);
-  const [disconnectingStripe, setDisconnectingStripe] = useState(false);
-
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
