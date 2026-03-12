@@ -44,9 +44,9 @@ const Settings = () => {
         if (error || !data?.stripe_account_id) throw new Error(error?.message ?? "Connection failed");
         setStripeAccountId(data.stripe_account_id);
         setStripeConnectedAt(new Date().toISOString());
-        toast({ title: "Stripe connected!", description: "Your account is now ready to receive payments." });
+        toast({ title: "Payments connected!", description: "Your account is now ready to receive payments." });
       } catch (err: any) {
-        toast({ title: "Stripe connection failed", description: err.message, variant: "destructive" });
+        toast({ title: "Payment connection failed", description: err.message, variant: "destructive" });
       }
     };
     exchangeCode();
