@@ -61,19 +61,33 @@ serve(async (req) => {
       .single();
 
     const storeSlug = photoData?.store_slug ?? "";
-    const stripeAccountId = (photoData as any)?.stripe_account_id;
-
-    if (!stripeAccountId) {
-      return new Response(
-        JSON.stringify({ error: "stripe_not_configured" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
+    let stripeAccountId = (photoData as any)?.stripe_account_id as string | null;
 
     const origin = req.headers.get("origin") ?? "https://localhost:5173";
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
       apiVersion: "2025-08-27.basil",
     });
+
+    // ── Lazy Connect: auto-create account on first checkout ──
+    let onboardingRequired = false;
+    if (!stripeAccountId) {
+      const photographerEmail = (photoData as any)?.email as string | undefined;
+      const account = await stripe.accounts.create({
+        type: "custom",
+        email: photographerEmail,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      });
+      stripeAccountId = account.id;
+      onboardingRequired = true;
+      // Persist the new account id (no stripe_connected_at yet — onboarding still pending)
+      await supabase
+        .from("photographers")
+        .update({ stripe_account_id: stripeAccountId } as any)
+        .eq("id", sessionData.photographer_id);
+    }
 
     // Determine split % from photographer's platform subscription
     let splitPercent = 5; // default
