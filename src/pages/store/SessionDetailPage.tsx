@@ -1035,6 +1035,140 @@ const SessionDetailPage = () => {
                   </div>
                 )}
 
+                {/* ── Signature Modal ── */}
+                {sigModalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                      className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                      onClick={() => setSigModalOpen(false)}
+                    />
+                    <div className="relative bg-background w-full max-w-xl shadow-xl flex flex-col">
+                      {/* Header */}
+                      <div className="px-7 pt-7 pb-4 border-b border-border">
+                        <p className="text-xs tracking-[0.35em] uppercase font-medium text-foreground">Signature</p>
+                      </div>
+
+                      {/* Tabs */}
+                      <div className="px-7 pt-4 flex gap-0 border-b border-border">
+                        {(["draw", "type"] as const).map((tab) => (
+                          <button
+                            key={tab}
+                            type="button"
+                            onClick={() => { setSigTab(tab); modalSigCanvasRef.current?.clear(); setSigPendingData(null); setSigTyped(""); }}
+                            className={cn(
+                              "px-1 pb-3 mr-5 text-xs tracking-wider capitalize transition-colors border-b-2 -mb-px",
+                              sigTab === tab
+                                ? "border-foreground text-foreground"
+                                : "border-transparent text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {tab}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Content */}
+                      <div className="px-7 py-5 flex flex-col gap-4">
+                        {sigTab === "draw" ? (
+                          <div className="flex flex-col gap-2">
+                            <div className="relative border border-border bg-muted/20">
+                              <SignatureCanvas
+                                ref={modalSigCanvasRef}
+                                penColor="#000000"
+                                canvasProps={{
+                                  width: 520,
+                                  height: 160,
+                                  className: "w-full h-[160px] touch-none",
+                                  style: { display: "block" },
+                                }}
+                                onEnd={() => {
+                                  if (modalSigCanvasRef.current && !modalSigCanvasRef.current.isEmpty()) {
+                                    setSigPendingData(modalSigCanvasRef.current.toDataURL());
+                                  }
+                                }}
+                              />
+                              {!sigPendingData && (
+                                <p className="absolute inset-0 flex items-end justify-center pb-4 text-[11px] text-muted-foreground/40 pointer-events-none font-light italic">
+                                  Sign in the space above
+                                </p>
+                              )}
+                              {/* baseline */}
+                              <div className="absolute bottom-10 left-4 right-4 border-b border-dashed border-border/60 pointer-events-none" />
+                              <button
+                                type="button"
+                                onClick={() => { modalSigCanvasRef.current?.clear(); setSigPendingData(null); }}
+                                className="absolute top-2 right-3 text-[10px] text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-3">
+                            <Input
+                              autoFocus
+                              placeholder="Type your full name"
+                              value={sigTyped}
+                              onChange={(e) => { setSigTyped(e.target.value); setSigPendingData(e.target.value || null); }}
+                              className="rounded-none text-sm font-light"
+                              style={{ fontFamily: "'Dancing Script', cursive", fontSize: 22 }}
+                            />
+                            {sigTyped && (
+                              <div className="border border-border/50 p-4 bg-muted/10 flex items-center justify-center min-h-[80px]">
+                                <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: 32, lineHeight: 1.2 }} className="text-foreground">
+                                  {sigTyped}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Legal checkbox */}
+                        <div
+                          className="flex items-start gap-3 cursor-pointer select-none"
+                          onClick={() => setSigLegalChecked(!sigLegalChecked)}
+                        >
+                          <div className={cn(
+                            "mt-0.5 h-4 w-4 border shrink-0 flex items-center justify-center transition-colors",
+                            sigLegalChecked ? "border-foreground bg-foreground" : "border-border"
+                          )}>
+                            {sigLegalChecked && <Check className="h-2.5 w-2.5 text-background" />}
+                          </div>
+                          <p className="text-xs font-light text-foreground leading-relaxed">
+                            By signing, I understand that this is a legally binding contract.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Footer buttons */}
+                      <div className="px-7 pb-7 flex gap-3 justify-end border-t border-border pt-4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => { setSigModalOpen(false); setSigPendingData(null); setSigLegalChecked(false); setSigTyped(""); modalSigCanvasRef.current?.clear(); }}
+                          className="text-xs tracking-wider uppercase font-light rounded-none"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          disabled={!sigPendingData || !sigLegalChecked}
+                          onClick={() => {
+                            if (!sigPendingData) return;
+                            const finalSig = sigTab === "draw" ? sigPendingData : sigTyped;
+                            setSignatureData(finalSig);
+                            setContractAgreed(true);
+                            setSigModalOpen(false);
+                            setSigLegalChecked(false);
+                          }}
+                          className="text-xs tracking-wider uppercase font-light rounded-none"
+                        >
+                          Accept and sign
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Action buttons */}
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep("addons")} className="text-xs tracking-wider uppercase font-light rounded-none">
