@@ -53,6 +53,12 @@ const Settings = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Payments tab — Stripe Connect
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [disconnectingStripe, setDisconnectingStripe] = useState(false);
+
   // Profile
   const [fullName, setFullName] = useState("");
   
