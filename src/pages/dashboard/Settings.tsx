@@ -369,7 +369,7 @@ const Settings = () => {
           <DashboardHeader />
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            <div className="max-w-2xl flex flex-col gap-8">
+            <div className={`flex flex-col gap-8 transition-all duration-300 ${showOnboarding ? "max-w-3xl" : "max-w-2xl"}`}>
               {/* Page title */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
