@@ -35,12 +35,15 @@ serve(async (req) => {
     const slotId = session.metadata?.slot_id;
     const sessionId = session.metadata?.session_id;
 
+    // Bug fix: correctly detect deposit vs full payment
+    const wasDeposit = session.metadata?.is_deposit === "true";
+
     if (bookingId) {
       await supabase
         .from("bookings")
         .update({
           status: "confirmed",
-          payment_status: "paid",
+          payment_status: wasDeposit ? "deposit_paid" : "paid",
           stripe_payment_intent_id: session.payment_intent as string,
         })
         .eq("id", bookingId);

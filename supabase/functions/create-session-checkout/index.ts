@@ -114,12 +114,15 @@ serve(async (req) => {
     const subtotal = sessionPrice + extrasTotal;
     const taxRate = (sessionData.tax_rate as number) ?? 0;
     const taxAmount = Math.round(subtotal * (taxRate / 100));
+    const fullTotal = subtotal + taxAmount;
 
+    const isDeposit = sessionData.deposit_enabled as boolean;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-    if (sessionData.deposit_enabled) {
-      const depositBase = sessionData.deposit_type === "percent"
-        ? Math.round(subtotal * ((sessionData.deposit_amount as number) / 100))
+    if (isDeposit) {
+      // Bug fix: use "percentage" to match DB value (was "percent")
+      const depositBase = sessionData.deposit_type === "percentage"
+        ? Math.round(fullTotal * ((sessionData.deposit_amount as number) / 100))
         : (sessionData.deposit_amount as number);
       lineItems.push({
         price_data: {
@@ -144,28 +147,28 @@ serve(async (req) => {
         },
         quantity: 1,
       });
-    }
 
-    for (const extra of extras) {
-      lineItems.push({
-        price_data: {
-          currency: "brl",
-          product_data: { name: extra.description },
-          unit_amount: extra.price,
-        },
-        quantity: extra.qty,
-      });
-    }
+      for (const extra of extras) {
+        lineItems.push({
+          price_data: {
+            currency: "brl",
+            product_data: { name: extra.description },
+            unit_amount: extra.price,
+          },
+          quantity: extra.qty,
+        });
+      }
 
-    if (taxAmount > 0) {
-      lineItems.push({
-        price_data: {
-          currency: "brl",
-          product_data: { name: `Tax (${taxRate}%)` },
-          unit_amount: taxAmount,
-        },
-        quantity: 1,
-      });
+      if (taxAmount > 0) {
+        lineItems.push({
+          price_data: {
+            currency: "brl",
+            product_data: { name: `Tax (${taxRate}%)` },
+            unit_amount: taxAmount,
+          },
+          quantity: 1,
+        });
+      }
     }
 
     // Calculate total for application fee
@@ -192,6 +195,7 @@ serve(async (req) => {
           store_slug: storeSlug,
           client_name: clientName,
           session_id: sessionId,
+          is_deposit: isDeposit ? "true" : "false",
         },
         success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`,
         cancel_url: `${origin}/store/${storeSlug}/${sessionId}`,
@@ -199,10 +203,10 @@ serve(async (req) => {
       { stripeAccount: stripeAccountId }
     );
 
-    // Save checkout session id to booking
+    // Save checkout session id + extras_total to booking
     await supabase
       .from("bookings")
-      .update({ stripe_checkout_session_id: checkout.id })
+      .update({ stripe_checkout_session_id: checkout.id, extras_total: extrasTotal })
       .eq("id", bookingId);
 
     return new Response(JSON.stringify({ url: checkout.url }), {
