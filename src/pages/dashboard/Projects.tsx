@@ -241,17 +241,23 @@ function ProjectModal({
   onSave,
   initial,
   defaultStage,
+  photographerId,
+  sessionTypes,
+  onRefetchSessionTypes,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<ClientProject>) => void;
   initial?: ClientProject | null;
   defaultStage?: Stage;
+  photographerId: string;
+  sessionTypes: SessionType[];
+  onRefetchSessionTypes: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-  const [sessionType, setSessionType] = useState("");
+  const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
   const [shootDate, setShootDate] = useState("");
   const [stage, setStage] = useState<Stage>("lead");
   const [notes, setNotes] = useState("");
@@ -261,16 +267,19 @@ function ProjectModal({
       setTitle(initial?.title ?? "");
       setClientName(initial?.client_name ?? "");
       setClientEmail(initial?.client_email ?? "");
-      setSessionType(initial?.session_type ?? "");
+      // Match existing string name to an id for pre-selection
+      const matched = sessionTypes.find((t) => t.name === initial?.session_type);
+      setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
       setStage(initial?.stage ?? defaultStage ?? "lead");
       setNotes(initial?.notes ?? "");
     }
-  }, [open, initial, defaultStage]);
+  }, [open, initial, defaultStage, sessionTypes]);
 
   const handleSave = () => {
     if (!title.trim()) { toast.error("Title is required"); return; }
-    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: sessionType || null, shoot_date: shootDate || null, stage, notes: notes || null });
+    const resolvedName = sessionTypes.find((t) => t.id === sessionTypeId)?.name ?? null;
+    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
   };
 
   return (
@@ -299,17 +308,14 @@ function ProjectModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Session type</label>
-              <Select value={sessionType} onValueChange={setSessionType}>
-                <SelectTrigger className="h-10 text-sm">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SESSION_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SessionTypeManager
+                photographerId={photographerId}
+                sessionTypes={sessionTypes}
+                selectedTypeId={sessionTypeId}
+                onSelect={setSessionTypeId}
+                onRefetch={onRefetchSessionTypes}
+                mode="select"
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date</label>
