@@ -104,6 +104,7 @@ export default function FinanceDashboard() {
           payment_status: b.payment_status ?? "pending",
           session_title: b.sessions?.title ?? "—",
           session_price: b.sessions?.price ?? 0,
+          extras_total: b.extras_total ?? 0,
           deposit_enabled: b.sessions?.deposit_enabled ?? false,
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
