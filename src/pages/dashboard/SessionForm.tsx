@@ -1448,7 +1448,7 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-                    )}
+
 
                     {/* ── Require Payment Toggle ── */}
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
