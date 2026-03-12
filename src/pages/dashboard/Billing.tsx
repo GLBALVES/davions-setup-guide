@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, Crown, Zap, Building2, ExternalLink, RefreshCw,
-  ArrowDownToLine, Wallet, Receipt, Loader2, Star
+  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2
 } from "lucide-react";
+import { loadConnectAndInitialize } from "@stripe/connect-js";
 
 // ── Plan config ──────────────────────────────────────────────────────────────
 const PLANS = [
