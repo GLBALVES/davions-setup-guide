@@ -141,6 +141,8 @@ const Billing = () => {
   const [openingPortal, setOpeningPortal] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [loadingManage, setLoadingManage] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
 
   const fetchAll = async () => {
     if (!user) return;
