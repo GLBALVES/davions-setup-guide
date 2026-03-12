@@ -238,6 +238,12 @@ const Billing = () => {
     setLoadingManage(false);
   };
 
+  const activePlan = sub?.subscribed ? PLANS.find((p) => p.key === sub.plan) : null;
+
+  const totalAvailable = balance?.available?.reduce((s, a) => s + a.amount, 0) ?? 0;
+  const totalPending = balance?.pending?.reduce((s, a) => s + a.amount, 0) ?? 0;
+  const balanceCurrency = balance?.available?.[0]?.currency ?? balance?.pending?.[0]?.currency ?? "usd";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
