@@ -49,7 +49,7 @@ serve(async (req) => {
     // Fetch photographer data (store slug + Stripe Connect account)
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug, stripe_account_id")
+      .select("store_slug, stripe_account_id, id")
       .eq("id", sessionData.photographer_id)
       .single();
 
