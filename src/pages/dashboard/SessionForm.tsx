@@ -61,8 +61,8 @@ interface DayConfig {
 }
 
 const DEFAULT_DAY_CONFIG = (): DayConfig => ({
-  hours_start: "",
-  hours_end: "",
+  hours_start: "09:00",
+  hours_end: "17:00",
   buffer_before_min: 0,
   buffer_after_min: 0,
 });
