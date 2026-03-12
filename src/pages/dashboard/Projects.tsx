@@ -537,10 +537,21 @@ const Projects = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
+  const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
+
+  const fetchSessionTypes = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("session_types")
+      .select("id, name")
+      .eq("photographer_id", user.id)
+      .order("name");
+    if (data) setSessionTypes(data as SessionType[]);
+  };
 
   const fetchProjects = async () => {
     const { data, error } = await supabase
@@ -551,7 +562,7 @@ const Projects = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchProjects(); }, []);
+  useEffect(() => { fetchProjects(); fetchSessionTypes(); }, [user?.id]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);
