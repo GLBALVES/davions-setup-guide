@@ -100,7 +100,7 @@ export default function FinanceReports() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, client_email, created_at, booked_date, payment_status, status, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, client_email, created_at, booked_date, payment_status, status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: false });
       if (data) {

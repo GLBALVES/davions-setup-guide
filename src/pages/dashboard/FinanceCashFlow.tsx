@@ -78,7 +78,7 @@ export default function FinanceCashFlow() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`created_at, booked_date, payment_status, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
         .eq("photographer_id", user.id);
       if (data) {
         setRows((data as any[]).map((b) => ({
