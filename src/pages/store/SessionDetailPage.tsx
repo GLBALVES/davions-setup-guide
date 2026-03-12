@@ -217,7 +217,6 @@ const SessionDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const sigCanvasRef = useRef<SignatureCanvas | null>(null);
 
   // Signature modal state
   const [sigModalOpen, setSigModalOpen] = useState(false);
