@@ -63,6 +63,14 @@ const Settings = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
+  // Payments tab
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showPublishableKey, setShowPublishableKey] = useState(false);
+  const [savingStripe, setSavingStripe] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
+
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
