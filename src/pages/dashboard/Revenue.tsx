@@ -325,55 +325,71 @@ export default function Revenue() {
                         const payConf  = STATUS_CONFIG[row.payment_status] ?? STATUS_CONFIG["pending"];
                         const bookConf = BOOKING_STATUS_CONFIG[row.status]  ?? BOOKING_STATUS_CONFIG["pending"];
                         const PayIcon  = payConf.icon;
+                        const depositAmt = calcDepositAmount(row);
                         const balance  = calcBalance(row);
-                        return (
-                          <tr
-                            key={row.id}
-                            className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                          >
-                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {format(
-                                new Date(row.booked_date || row.created_at),
-                                "MMM d, yyyy",
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              <p className="font-normal">{row.client_name}</p>
-                              <p className="text-[10px] text-muted-foreground">{row.client_email}</p>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.session_title}</td>
-                            <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">
-                              {fmt(calcTotal(row))}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">
-                              {fmt(calcPaid(row))}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                              {balance > 0 ? (
-                                <span className="flex items-center gap-1 text-yellow-600">
-                                  <ArrowUpRight className="h-3 w-3" />
-                                  {fmt(balance)}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground/50">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <Badge
-                                variant={payConf.variant}
-                                className="gap-1 text-[10px] tracking-wide uppercase font-light"
-                              >
-                                <PayIcon className="h-2.5 w-2.5" />
-                                {payConf.label}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
-                                {bookConf.label}
-                              </span>
-                            </td>
-                          </tr>
-                        );
+                         return (
+                           <tr
+                             key={row.id}
+                             className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
+                           >
+                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                               {format(
+                                 new Date(row.booked_date || row.created_at),
+                                 "MMM d, yyyy",
+                               )}
+                             </td>
+                             <td className="px-4 py-3">
+                               <p className="font-normal">{row.client_name}</p>
+                               <p className="text-[10px] text-muted-foreground">{row.client_email}</p>
+                             </td>
+                             <td className="px-4 py-3 whitespace-nowrap">{row.session_title}</td>
+                             <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">
+                               {fmt(calcTotal(row))}
+                             </td>
+                             {/* Deposit column */}
+                             <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                               {row.deposit_enabled ? (
+                                 <div className="flex flex-col gap-0.5">
+                                   <span className="font-normal">{fmt(depositAmt)}</span>
+                                   <span className="text-[10px] text-muted-foreground">
+                                     {(row.deposit_type === "percent" || row.deposit_type === "percentage")
+                                       ? `${row.deposit_amount}%`
+                                       : "Fixed"}
+                                   </span>
+                                 </div>
+                               ) : (
+                                 <span className="text-muted-foreground/40">—</span>
+                               )}
+                             </td>
+                             <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">
+                               {fmt(calcPaid(row))}
+                             </td>
+                             <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                               {balance > 0 ? (
+                                 <span className="flex items-center gap-1 text-amber-600">
+                                   <ArrowUpRight className="h-3 w-3" />
+                                   {fmt(balance)}
+                                 </span>
+                               ) : (
+                                 <span className="text-muted-foreground/50">—</span>
+                               )}
+                             </td>
+                             <td className="px-4 py-3 whitespace-nowrap">
+                               <Badge
+                                 variant={payConf.variant}
+                                 className="gap-1 text-[10px] tracking-wide uppercase font-light"
+                               >
+                                 <PayIcon className="h-2.5 w-2.5" />
+                                 {payConf.label}
+                               </Badge>
+                             </td>
+                             <td className="px-4 py-3 whitespace-nowrap">
+                               <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
+                                 {bookConf.label}
+                               </span>
+                             </td>
+                           </tr>
+                         );
                       })}
                     </tbody>
                   </table>
