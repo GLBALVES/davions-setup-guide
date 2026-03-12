@@ -96,6 +96,17 @@ interface Invoice {
   status: string | null;
 }
 
+interface Payout {
+  id: string;
+  amount: number;
+  currency: string;
+  arrival_date: number;
+  status: string;
+  description: string | null;
+  bank_name: string | null;
+  last4: string | null;
+}
+
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
