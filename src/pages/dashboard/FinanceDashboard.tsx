@@ -128,6 +128,14 @@ export default function FinanceDashboard() {
   const lastMonthRev   = lastMonth.reduce((s, r) => s + calcPaid(r), 0);
   const monthDelta     = lastMonthRev === 0 ? null : ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100;
 
+  // Deposit breakdown: Stripe-confirmed vs manually recorded
+  const depositRows = rows.filter((r) => r.payment_status === "deposit_paid");
+  const stripeDeposits = depositRows.filter((r) => !!r.stripe_checkout_session_id);
+  const manualDeposits = depositRows.filter((r) => !r.stripe_checkout_session_id);
+  const stripeDepositTotal = stripeDeposits.reduce((s, r) => s + calcPaid(r), 0);
+  const manualDepositTotal = manualDeposits.reduce((s, r) => s + calcPaid(r), 0);
+  const totalDepositAmount = stripeDepositTotal + manualDepositTotal;
+
   const chartData = buildChart(rows);
 
   // Top clients by total bookings value
