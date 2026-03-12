@@ -95,7 +95,9 @@ serve(async (req) => {
     const sub = subscriptions.data[0];
     const productId = sub.items.data[0].price.product as string;
     const priceId = sub.items.data[0].price.id;
-    const subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+    const subscriptionEnd = sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toISOString()
+      : null;
 
     // Determine plan
     let planKey: string | null = null;
