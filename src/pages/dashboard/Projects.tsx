@@ -671,6 +671,21 @@ const Projects = () => {
     setModalOpen(true);
   };
 
+  const openView = (p: ClientProject) => {
+    setSheetProject(p);
+    setSheetOpen(true);
+  };
+
+  const handleSheetUpdate = async (id: string, data: Partial<ClientProject>) => {
+    const { error } = await supabase
+      .from("client_projects" as any)
+      .update(data as any)
+      .eq("id", id);
+    if (error) { toast.error("Failed to update"); return; }
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...data } : p));
+    setSheetProject((prev) => prev ? { ...prev, ...data } : prev);
+  };
+
   const handleSave = async (data: Partial<ClientProject>) => {
     if (editing) {
       const { error } = await supabase
@@ -704,12 +719,14 @@ const Projects = () => {
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "archived" as Stage } : prev);
     toast.success("Project archived");
   };
 
   const handleUnarchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
     toast.success("Project restored to Lead");
   };
 
