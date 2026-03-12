@@ -188,7 +188,8 @@ const Personalize = () => {
   // ── Gallery settings ────────────────────────────────────────────────────────
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
-  const [savingGallerySettings, setSavingGallerySettings] = useState(false);
+  const [savingExpiry, setSavingExpiry] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
 
   // ── Watermarks ──────────────────────────────────────────────────────────────
   const [watermarks, setWatermarks] = useState<WatermarkData[]>([]);
