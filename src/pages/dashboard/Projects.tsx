@@ -827,6 +827,9 @@ const Projects = () => {
         onSave={handleSave}
         initial={editing}
         defaultStage={defaultStage}
+        photographerId={user?.id ?? ""}
+        sessionTypes={sessionTypes}
+        onRefetchSessionTypes={fetchSessionTypes}
       />
     </SidebarProvider>
   );
