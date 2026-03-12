@@ -408,7 +408,7 @@ const Settings = () => {
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-foreground">
                           <Check className="h-3 w-3" />
-                          Connected
+                           Activated
                         </div>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
