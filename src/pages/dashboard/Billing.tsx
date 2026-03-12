@@ -145,6 +145,7 @@ const Billing = () => {
     setLoadingSub(true);
     setLoadingBalance(true);
     setLoadingInvoices(true);
+    setLoadingPayouts(true);
 
     const [subRes, balanceRes, invoicesRes] = await Promise.all([
       supabase.functions.invoke("check-subscription", { headers: authHeaders }),
