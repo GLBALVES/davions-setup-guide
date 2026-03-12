@@ -1308,6 +1308,8 @@ export type Database = {
           hero_image_url: string | null
           id: string
           store_slug: string | null
+          stripe_publishable_key: string | null
+          stripe_secret_key: string | null
           watermark_url: string | null
         }
         Insert: {
@@ -1326,6 +1328,8 @@ export type Database = {
           hero_image_url?: string | null
           id: string
           store_slug?: string | null
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
           watermark_url?: string | null
         }
         Update: {
@@ -1344,6 +1348,8 @@ export type Database = {
           hero_image_url?: string | null
           id?: string
           store_slug?: string | null
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
           watermark_url?: string | null
         }
         Relationships: []
