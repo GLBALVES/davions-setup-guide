@@ -271,6 +271,15 @@ const SessionTypeManager = ({ photographerId, sessionTypes, selectedTypeId, onSe
                     >
                       <Pencil className="h-2.5 w-2.5" />
                     </button>
+                  </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setEditingId(type.id); setEditingName(type.name); setAddingNew(false); }}
+                      disabled={busy}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Pencil className="h-2.5 w-2.5" />
+                    </button>
                     <button
                       type="button"
                       onClick={(e) => handleDelete(type.id, e)}
