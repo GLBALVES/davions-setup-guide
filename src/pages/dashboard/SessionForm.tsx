@@ -61,8 +61,8 @@ interface DayConfig {
 }
 
 const DEFAULT_DAY_CONFIG = (): DayConfig => ({
-  hours_start: "",
-  hours_end: "",
+  hours_start: "09:00",
+  hours_end: "17:00",
   buffer_before_min: 0,
   buffer_after_min: 0,
 });
@@ -391,8 +391,8 @@ const SessionForm = () => {
       const globalRow = rows.find((r) => r.day_of_week === -1) ?? rows[0];
       setGlobalConfig({
         db_id: globalRow.id,
-        hours_start: globalRow.hours_start ? globalRow.hours_start.slice(0, 5) : "",
-        hours_end: globalRow.hours_end ? globalRow.hours_end.slice(0, 5) : "",
+        hours_start: globalRow.hours_start ? globalRow.hours_start.slice(0, 5) : "09:00",
+        hours_end: globalRow.hours_end ? globalRow.hours_end.slice(0, 5) : "17:00",
         buffer_before_min: globalRow.buffer_before_min ?? 0,
         buffer_after_min: globalRow.buffer_after_min ?? 0,
       });
