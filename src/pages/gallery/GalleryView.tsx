@@ -340,11 +340,12 @@ const GalleryView = () => {
     if (!gallery) return;
     reactivationHandled.current = true;
     const sessionId = searchParams.get("session_id") ?? undefined;
+    const storedEmail = sessionStorage.getItem(`davions_renewal_email_${gallery.id}`) ?? undefined;
     const confirmReactivation = async () => {
       setRenewalLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("confirm-gallery-reactivation", {
-          body: { galleryId: gallery.id, sessionId },
+          body: { galleryId: gallery.id, sessionId, clientEmail: storedEmail },
         });
         if (error) throw error;
         if (data?.success) {
