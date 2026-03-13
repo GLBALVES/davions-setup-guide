@@ -682,9 +682,18 @@ const GalleryView = () => {
         setTimeout(() => window.location.reload(), 1500);
         return;
       }
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) {
+        // Store email so confirm step can re-validate after Stripe redirect
+        sessionStorage.setItem(`davions_renewal_email_${gallery.id}`, renewalEmail.trim());
+        window.location.href = data.url;
+      }
     } catch (err: any) {
-      setRenewalError(err?.message ?? "Something went wrong. Please try again.");
+      const msg = err?.message ?? "";
+      if (msg.includes("email_mismatch") || msg.includes("403")) {
+        setRenewalError("This email is not associated with this gallery. Please use the email you provided when booking.");
+      } else {
+        setRenewalError(msg || "Something went wrong. Please try again.");
+      }
     } finally {
       setRenewalLoading(false);
     }
