@@ -35,10 +35,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch gallery + photographer
+    // Fetch gallery + photographer + booking link
     const { data: gallery, error: galleryError } = await supabase
       .from("galleries")
-      .select("id, title, slug, photographer_id")
+      .select("id, title, slug, photographer_id, booking_id")
       .eq("id", galleryId)
       .single();
 
@@ -47,6 +47,24 @@ serve(async (req) => {
         JSON.stringify({ error: "Gallery not found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
       );
+    }
+
+    // ── Validate client email against booking ────────────────────────────────
+    if (gallery.booking_id) {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("client_email")
+        .eq("id", gallery.booking_id)
+        .single();
+
+      if (booking?.client_email) {
+        if (booking.client_email.trim().toLowerCase() !== clientEmail.trim().toLowerCase()) {
+          return new Response(
+            JSON.stringify({ error: "email_mismatch" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+          );
+        }
+      }
     }
 
     // Fetch reactivation_fee and default_expiry_days from gallery_settings
