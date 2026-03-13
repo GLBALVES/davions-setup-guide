@@ -451,6 +451,7 @@ const Settings = () => {
                     {[
                       { value: "profile", label: "Profile" },
                       { value: "payments", label: "Payments" },
+                      { value: "security", label: "Security" },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
