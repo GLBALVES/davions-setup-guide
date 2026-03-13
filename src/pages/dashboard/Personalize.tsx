@@ -1094,7 +1094,7 @@ const Personalize = () => {
                     <section className="flex flex-col gap-5">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                          title="Lightroom Plugin"
+                          title="Davions Connect - Lightroom Plugin"
                           description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin."
                         />
                         <a
