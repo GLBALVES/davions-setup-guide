@@ -814,13 +814,6 @@ const Settings = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-
-              )}
-            </div>
-          </main>
-        </div>
-      </div>
-
       {/* Watermark Editor Dialog */}
       <Dialog
         open={watermarkEditorOpen}
