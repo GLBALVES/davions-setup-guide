@@ -41,6 +41,7 @@ import AIAgents from "./pages/dashboard/AIAgents";
 import Chat from "./pages/dashboard/Chat";
 import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
+import LightroomPlugin from "./pages/dashboard/LightroomPlugin";
 import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
@@ -116,6 +117,7 @@ const App = () => (
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/custom-domain-docs" element={<ProtectedRoute><CustomDomainDocs /></ProtectedRoute>} />
+                <Route path="/dashboard/lightroom-plugin" element={<ProtectedRoute><LightroomPlugin /></ProtectedRoute>} />
                 <Route path="/dashboard/contracts/new" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
