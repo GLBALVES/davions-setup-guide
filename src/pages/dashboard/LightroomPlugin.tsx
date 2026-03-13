@@ -179,37 +179,6 @@ const LightroomPlugin = () => {
                 </div>
               </section>
 
-              {/* API Token */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Your API Token</h2>
-                <p className="text-[12px] text-muted-foreground leading-relaxed">
-                  Paste this token in the plugin settings inside Lightroom's Plug-in Manager. Keep it private — it
-                  authenticates your account.
-                </p>
-                <div className="flex items-center gap-0 border border-border overflow-hidden">
-                  <div className="flex items-center gap-2.5 flex-1 px-4 py-3 bg-muted/30">
-                    <Key className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-mono text-[12px] text-foreground truncate">{apiToken}</span>
-                  </div>
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-4 py-3 border-l border-border bg-card hover:bg-accent text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                  >
-                    {copied ? (
-                      <Check className="h-3.5 w-3.5 text-primary" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {copied ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <div className="flex items-start gap-2.5 p-4 border border-border bg-muted/20">
-                  <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-muted-foreground leading-relaxed">
-                    This token identifies your photographer account. Do not share it publicly.
-                  </p>
-                </div>
-              </section>
 
               {/* How it works */}
               <section className="space-y-4">
