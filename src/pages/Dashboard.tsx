@@ -4,64 +4,192 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { GalleryCard } from "@/components/dashboard/GalleryCard";
-import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Image, FolderOpen, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  CalendarDays, Clock, Users, FolderKanban, Image,
+  TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
+  Camera, BookOpen, CircleDollarSign, Layers,
+} from "lucide-react";
 
-interface Gallery {
+// ── Types ────────────────────────────────────────────────────────────
+interface TodayBooking {
   id: string;
-  title: string;
-  slug: string | null;
-  category: string;
+  client_name: string;
+  client_email: string;
+  booked_date: string | null;
   status: string;
-  created_at: string;
-  photo_count: number;
+  payment_status: string;
+  session_title: string;
+  start_time: string;
+  end_time: string;
 }
+
+interface ProjectStage {
+  stage: string;
+  count: number;
+}
+
+interface DashboardStats {
+  totalBookings: number;
+  pendingBookings: number;
+  activeProjects: number;
+  deliveryProjects: number;
+  totalGalleries: number;
+  publishedGalleries: number;
+  monthRevenue: number;
+  pendingRevenue: number;
+}
+
+// ── Stage config ─────────────────────────────────────────────────────
+const STAGE_ORDER = ["lead", "briefing", "shooting", "editing", "delivery", "done"];
+const STAGE_LABELS: Record<string, string> = {
+  lead: "Lead", briefing: "Briefing", shooting: "Shooting",
+  editing: "Editing", delivery: "Delivery", done: "Done",
+};
+const STAGE_COLORS: Record<string, string> = {
+  lead: "bg-muted-foreground/20",
+  briefing: "bg-primary/20",
+  shooting: "bg-primary/40",
+  editing: "bg-primary/60",
+  delivery: "bg-primary/80",
+  done: "bg-primary",
+};
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBookings: 0, pendingBookings: 0,
+    activeProjects: 0, deliveryProjects: 0,
+    totalGalleries: 0, publishedGalleries: 0,
+    monthRevenue: 0, pendingRevenue: 0,
+  });
+  const [photographerName, setPhotographerName] = useState("");
 
-  const fetchGalleries = async () => {
+  useEffect(() => {
+    if (!user) return;
+    fetchAll();
+  }, [user]);
+
+  const fetchAll = async () => {
     setLoading(true);
-    const { data: galleriesData } = await supabase
-      .from("galleries")
-      .select("id, title, slug, category, status, created_at")
-      .order("created_at", { ascending: false });
+    const today = new Date().toISOString().split("T")[0];
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-    if (galleriesData) {
-      // Get photo counts per gallery
-      const { data: photoCounts } = await supabase
-        .from("photos")
-        .select("gallery_id");
+    const [
+      profileRes,
+      bookingsRes,
+      allBookingsRes,
+      projectsRes,
+      galleriesRes,
+      paymentsRes,
+    ] = await Promise.all([
+      supabase.from("photographers").select("full_name, business_name").eq("id", user!.id).single(),
+      // Today's bookings with session info
+      supabase.from("bookings")
+        .select(`id, client_name, client_email, booked_date, status, payment_status,
+          sessions!inner(title),
+          session_availability!inner(start_time, end_time)`)
+        .eq("photographer_id", user!.id)
+        .eq("booked_date", today)
+        .order("session_availability(start_time)", { ascending: true }),
+      // All bookings for stats
+      supabase.from("bookings")
+        .select("id, status, payment_status, created_at")
+        .eq("photographer_id", user!.id),
+      // Projects by stage
+      supabase.from("client_projects")
+        .select("stage")
+        .eq("photographer_id", user!.id),
+      // Galleries
+      supabase.from("galleries")
+        .select("id, status")
+        .eq("photographer_id", user!.id),
+      // Revenue this month (from bookings with payment_status = paid)
+      supabase.from("bookings")
+        .select("extras_total, sessions!inner(price, deposit_amount, deposit_enabled, deposit_type)")
+        .eq("photographer_id", user!.id)
+        .gte("created_at", monthStart),
+    ]);
 
-      const countMap: Record<string, number> = {};
-      photoCounts?.forEach((p: { gallery_id: string }) => {
-        countMap[p.gallery_id] = (countMap[p.gallery_id] || 0) + 1;
-      });
-
-      setGalleries(
-        galleriesData.map((g) => ({
-          ...g,
-          category: (g as Record<string, unknown>).category as string ?? "proof",
-          photo_count: countMap[g.id] || 0,
-        }))
-      );
+    // Profile
+    if (profileRes.data) {
+      const d = profileRes.data as any;
+      setPhotographerName(d.business_name || d.full_name || "");
     }
+
+    // Today's schedule
+    if (bookingsRes.data) {
+      const mapped: TodayBooking[] = bookingsRes.data.map((b: any) => ({
+        id: b.id,
+        client_name: b.client_name,
+        client_email: b.client_email,
+        booked_date: b.booked_date,
+        status: b.status,
+        payment_status: b.payment_status,
+        session_title: b.sessions?.title ?? "Session",
+        start_time: b.session_availability?.start_time ?? "",
+        end_time: b.session_availability?.end_time ?? "",
+      }));
+      setTodayBookings(mapped);
+    }
+
+    // Booking stats
+    if (allBookingsRes.data) {
+      const all = allBookingsRes.data as any[];
+      setStats((prev) => ({
+        ...prev,
+        totalBookings: all.length,
+        pendingBookings: all.filter((b) => b.status === "pending").length,
+      }));
+    }
+
+    // Projects by stage
+    if (projectsRes.data) {
+      const stageMap: Record<string, number> = {};
+      (projectsRes.data as any[]).forEach((p) => {
+        stageMap[p.stage] = (stageMap[p.stage] || 0) + 1;
+      });
+      const stages = STAGE_ORDER.map((s) => ({ stage: s, count: stageMap[s] || 0 }));
+      setProjectStages(stages);
+      const activeCount = (projectsRes.data as any[]).filter((p) => p.stage !== "done").length;
+      const deliveryCount = (projectsRes.data as any[]).filter((p) => p.stage === "delivery").length;
+      setStats((prev) => ({ ...prev, activeProjects: activeCount, deliveryProjects: deliveryCount }));
+    }
+
+    // Gallery stats
+    if (galleriesRes.data) {
+      const all = galleriesRes.data as any[];
+      setStats((prev) => ({
+        ...prev,
+        totalGalleries: all.length,
+        publishedGalleries: all.filter((g) => g.status === "published").length,
+      }));
+    }
+
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchGalleries();
-  }, []);
+  const totalProjects = projectStages.reduce((sum, s) => sum + s.count, 0);
+  const maxStageCount = Math.max(...projectStages.map((s) => s.count), 1);
 
-  const proofGalleries = galleries.filter((g) => g.category === "proof");
-  const finalGalleries = galleries.filter((g) => g.category === "final");
-  const totalPhotos = galleries.reduce((sum, g) => sum + g.photo_count, 0);
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const todayLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric",
+  });
+
+  const formatTime = (t: string) =>
+    t ? t.slice(0, 5) : "";
 
   return (
     <SidebarProvider>
@@ -71,117 +199,271 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader />
 
-          {/* Content */}
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-            {/* Stats */}
-            <div className="flex flex-col gap-8">
-              <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+            <div className="max-w-6xl mx-auto flex flex-col gap-8">
+
+              {/* ── Header ── */}
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                   <span className="inline-block w-6 h-px bg-border" />
                   Overview
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Dashboard</h1>
+                <h1 className="text-2xl font-light tracking-wide">
+                  {greeting()}{photographerName ? `, ${photographerName}` : ""}
+                </h1>
+                <p className="text-[11px] text-muted-foreground font-light tracking-wide">{todayLabel}</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={FolderOpen} label="Total Galleries" value={galleries.length} />
-                <StatCard icon={Image} label="Total Photos" value={totalPhotos} />
-                <StatCard icon={CheckCircle} label="Proof Galleries" value={proofGalleries.length} />
-                <StatCard icon={FolderOpen} label="Final Galleries" value={finalGalleries.length} />
-              </div>
-
-              {/* Gallery Tabs */}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                    <span className="inline-block w-6 h-px bg-border" />
-                    Galleries
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => setCreateOpen(true)}
-                    className="gap-2 text-xs tracking-wider uppercase font-light"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    New Gallery
-                  </Button>
+              {loading ? (
+                <div className="flex items-center justify-center py-24">
+                  <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
                 </div>
+              ) : (
+                <>
+                  {/* ── KPI Row ── */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <KpiCard
+                      icon={CalendarDays}
+                      label="Bookings this month"
+                      value={stats.totalBookings}
+                      sub={stats.pendingBookings > 0 ? `${stats.pendingBookings} pending` : "All confirmed"}
+                      subWarning={stats.pendingBookings > 0}
+                      onClick={() => navigate("/dashboard/bookings")}
+                    />
+                    <KpiCard
+                      icon={FolderKanban}
+                      label="Active projects"
+                      value={stats.activeProjects}
+                      sub={stats.deliveryProjects > 0 ? `${stats.deliveryProjects} ready for delivery` : "All up to date"}
+                      subWarning={stats.deliveryProjects > 0}
+                      onClick={() => navigate("/dashboard/projects")}
+                    />
+                    <KpiCard
+                      icon={Image}
+                      label="Published galleries"
+                      value={stats.publishedGalleries}
+                      sub={`${stats.totalGalleries} total`}
+                      onClick={() => navigate("/dashboard/galleries")}
+                    />
+                    <KpiCard
+                      icon={CircleDollarSign}
+                      label="Today's sessions"
+                      value={todayBookings.length}
+                      sub={todayBookings.length === 0 ? "No sessions today" : `${todayBookings.length} scheduled`}
+                      onClick={() => navigate("/dashboard/schedule")}
+                    />
+                  </div>
 
-                <Tabs defaultValue="all">
-                  <TabsList className="bg-secondary/50 rounded-none border border-border">
-                    <TabsTrigger value="all" className="rounded-none text-xs tracking-wider uppercase font-light">
-                      All ({galleries.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="proof" className="rounded-none text-xs tracking-wider uppercase font-light">
-                      Proof ({proofGalleries.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="final" className="rounded-none text-xs tracking-wider uppercase font-light">
-                      Final ({finalGalleries.length})
-                    </TabsTrigger>
-                  </TabsList>
+                  {/* ── Main Grid ── */}
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-                  <TabsContent value="all" className="mt-4">
-                    <GalleryGrid galleries={galleries} loading={loading} />
-                  </TabsContent>
-                  <TabsContent value="proof" className="mt-4">
-                    <GalleryGrid galleries={proofGalleries} loading={loading} />
-                  </TabsContent>
-                  <TabsContent value="final" className="mt-4">
-                    <GalleryGrid galleries={finalGalleries} loading={loading} />
-                  </TabsContent>
-                </Tabs>
-              </div>
+                    {/* ── Today's Schedule (3/5) ── */}
+                    <div className="lg:col-span-3 flex flex-col gap-4">
+                      <SectionHeader
+                        icon={Clock}
+                        label="Today's Schedule"
+                        action={{ label: "Full Schedule", onClick: () => navigate("/dashboard/schedule") }}
+                      />
+
+                      {todayBookings.length === 0 ? (
+                        <div className="border border-border p-8 flex flex-col items-center gap-3 text-center">
+                          <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
+                          <p className="text-sm font-light text-muted-foreground">No sessions scheduled for today</p>
+                          <p className="text-[10px] text-muted-foreground/60 tracking-wide">
+                            Your next bookings will appear here
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {todayBookings.map((b) => (
+                            <div
+                              key={b.id}
+                              onClick={() => navigate("/dashboard/schedule")}
+                              className="border border-border p-4 flex items-center gap-4 hover:bg-muted/30 cursor-pointer transition-colors group"
+                            >
+                              {/* Time */}
+                              <div className="shrink-0 flex flex-col items-center gap-0.5 w-14">
+                                <span className="text-sm font-light tabular-nums">{formatTime(b.start_time)}</span>
+                                <span className="text-[9px] text-muted-foreground tracking-wide">—</span>
+                                <span className="text-[10px] text-muted-foreground tabular-nums">{formatTime(b.end_time)}</span>
+                              </div>
+
+                              {/* Divider */}
+                              <div className="w-px h-10 bg-border shrink-0" />
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-light tracking-wide truncate">{b.client_name}</p>
+                                <p className="text-[10px] text-muted-foreground tracking-wider uppercase truncate">{b.session_title}</p>
+                              </div>
+
+                              {/* Status */}
+                              <div className="shrink-0 flex flex-col items-end gap-1">
+                                <StatusDot status={b.status} />
+                                <PaymentDot status={b.payment_status} />
+                              </div>
+
+                              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-foreground transition-colors" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Project Pipeline (2/5) ── */}
+                    <div className="lg:col-span-2 flex flex-col gap-4">
+                      <SectionHeader
+                        icon={Layers}
+                        label="Project Pipeline"
+                        action={{ label: "View all", onClick: () => navigate("/dashboard/projects") }}
+                      />
+
+                      <div className="border border-border p-5 flex flex-col gap-4">
+                        {totalProjects === 0 ? (
+                          <p className="text-xs text-muted-foreground font-light text-center py-4">No projects yet</p>
+                        ) : (
+                          <>
+                            {projectStages.map(({ stage, count }) => (
+                              <div key={stage} className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">
+                                    {STAGE_LABELS[stage]}
+                                  </span>
+                                  <span className="text-[10px] font-light text-foreground tabular-nums">{count}</span>
+                                </div>
+                                <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-500 ${STAGE_COLORS[stage]}`}
+                                    style={{ width: `${(count / maxStageCount) * 100}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+
+                            <div className="pt-2 border-t border-border flex items-center justify-between">
+                              <span className="text-[10px] tracking-wider uppercase text-muted-foreground">Total</span>
+                              <span className="text-sm font-light">{totalProjects}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Quick Actions ── */}
+                  <div className="flex flex-col gap-4">
+                    <SectionHeader icon={TrendingUp} label="Quick Access" />
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[
+                        { icon: Camera, label: "Galleries", sub: "Manage & share", path: "/dashboard/galleries" },
+                        { icon: BookOpen, label: "Sessions", sub: "Booking pages", path: "/dashboard/sessions" },
+                        { icon: Users, label: "Clients", sub: "CRM & projects", path: "/dashboard/projects" },
+                        { icon: CheckCircle2, label: "Workflows", sub: "Tasks & automation", path: "/dashboard/workflows" },
+                      ].map(({ icon: Icon, label, sub, path }) => (
+                        <button
+                          key={label}
+                          onClick={() => navigate(path)}
+                          className="border border-border p-4 flex flex-col gap-3 text-left hover:bg-muted/30 transition-colors group"
+                        >
+                          <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                          <div>
+                            <p className="text-xs font-light tracking-wide">{label}</p>
+                            <p className="text-[10px] text-muted-foreground">{sub}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </>
+              )}
             </div>
           </main>
         </div>
       </div>
-
-      <CreateGalleryDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={fetchGalleries}
-      />
     </SidebarProvider>
   );
 };
 
-function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
+// ── Sub-components ────────────────────────────────────────────────────
+
+function KpiCard({
+  icon: Icon, label, value, sub, subWarning = false, onClick,
+}: {
+  icon: React.ElementType; label: string; value: number;
+  sub?: string; subWarning?: boolean; onClick?: () => void;
+}) {
   return (
-    <div className="border border-border p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" />
-        <span className="text-[10px] tracking-[0.2em] uppercase font-light">{label}</span>
+    <div
+      onClick={onClick}
+      className="border border-border p-4 flex flex-col gap-3 cursor-pointer hover:bg-muted/30 transition-colors group"
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+        <ArrowRight className="h-3 w-3 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
       </div>
-      <span className="text-2xl font-light">{value}</span>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-2xl font-light tabular-nums">{value}</span>
+        <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">{label}</span>
+      </div>
+      {sub && (
+        <span className={`text-[10px] font-light ${subWarning ? "text-amber-500" : "text-muted-foreground"}`}>
+          {subWarning && <AlertCircle className="h-2.5 w-2.5 inline mr-1" />}
+          {sub}
+        </span>
+      )}
     </div>
   );
 }
 
-function GalleryGrid({ galleries, loading }: { galleries: Gallery[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
-      </div>
-    );
-  }
-
-  if (galleries.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-        <FolderOpen className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm font-light text-muted-foreground">No galleries yet</p>
-        <p className="text-[10px] text-muted-foreground/60">Create a gallery or upload from Lightroom</p>
-      </div>
-    );
-  }
-
+function SectionHeader({
+  icon: Icon, label, action,
+}: {
+  icon: React.ElementType; label: string; action?: { label: string; onClick: () => void };
+}) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {galleries.map((gallery) => (
-        <GalleryCard key={gallery.id} gallery={gallery} />
-      ))}
+    <div className="flex items-center justify-between">
+      <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground flex items-center gap-2">
+        <Icon className="h-3 w-3" />
+        {label}
+      </p>
+      {action && (
+        <button
+          onClick={action.onClick}
+          className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
+          {action.label}
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      )}
     </div>
+  );
+}
+
+function StatusDot({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    confirmed: { color: "bg-green-500", label: "Confirmed" },
+    pending: { color: "bg-amber-500", label: "Pending" },
+    cancelled: { color: "bg-muted-foreground/40", label: "Cancelled" },
+  };
+  const cfg = map[status] ?? { color: "bg-muted-foreground/40", label: status };
+  return (
+    <span className="flex items-center gap-1">
+      <span className={`h-1.5 w-1.5 rounded-full ${cfg.color}`} />
+      <span className="text-[9px] text-muted-foreground tracking-wide">{cfg.label}</span>
+    </span>
+  );
+}
+
+function PaymentDot({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    paid: { color: "text-green-500", label: "Paid" },
+    partial: { color: "text-amber-500", label: "Partial" },
+    pending: { color: "text-muted-foreground/50", label: "Unpaid" },
+  };
+  const cfg = map[status] ?? { color: "text-muted-foreground/50", label: status };
+  return (
+    <span className={`text-[9px] tracking-wide font-light ${cfg.color}`}>{cfg.label}</span>
   );
 }
 
