@@ -99,7 +99,9 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 const Personalize = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const defaultTab = searchParams.get("tab") ?? "studio";
 
   // ── Store / Domain ───────────────────────────────────────────────────────────
   const [storeSlug, setStoreSlug] = useState("");
