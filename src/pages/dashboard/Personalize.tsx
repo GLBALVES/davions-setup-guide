@@ -563,7 +563,7 @@ const Personalize = () => {
               {loading ? (
                 <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
               ) : (
-                <Tabs defaultValue="studio" className="w-full">
+                <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
                       { value: "studio", label: "Studio" },
