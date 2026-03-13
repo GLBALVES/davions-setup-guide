@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.download-gallery-zip]
 verify_jwt = false
+
+[functions.reactivate-gallery]
+verify_jwt = false
+
+[functions.confirm-gallery-reactivation]
+verify_jwt = false
