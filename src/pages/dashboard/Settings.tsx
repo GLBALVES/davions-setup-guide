@@ -269,7 +269,7 @@ const Settings = () => {
 
   // ── Security: Change Password ──
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       toast({ title: "Fill in all fields", variant: "destructive" });
       return;
     }
@@ -281,7 +281,21 @@ const Settings = () => {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
+    if (newPassword === currentPassword) {
+      toast({ title: "Same password", description: "The new password must be different from the current one.", variant: "destructive" });
+      return;
+    }
     setSavingPassword(true);
+    // Re-authenticate with current password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user!.email!,
+      password: currentPassword,
+    });
+    if (signInError) {
+      toast({ title: "Incorrect current password", description: "Please check your current password and try again.", variant: "destructive" });
+      setSavingPassword(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
       toast({ title: "Failed to update password", description: error.message, variant: "destructive" });
