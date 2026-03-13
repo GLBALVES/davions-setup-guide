@@ -245,6 +245,17 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
+  // Renewal state
+  const [renewalFee, setRenewalFee] = useState<number>(0);
+  const [renewalDays, setRenewalDays] = useState<number>(30);
+  const [renewalName, setRenewalName] = useState("");
+  const [renewalEmail, setRenewalEmail] = useState("");
+  const [renewalLoading, setRenewalLoading] = useState(false);
+  const [renewalSuccess, setRenewalSuccess] = useState(false);
+  const [renewalError, setRenewalError] = useState<string | null>(null);
+  const [settingsFetched, setSettingsFetched] = useState(false);
+  const reactivationHandled = useRef(false);
+
   // Download state (final galleries)
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
