@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -7,10 +6,6 @@ import {
   SlidersHorizontal,
   ChevronRight,
   Download,
-  Key,
-  Copy,
-  Check,
-  AlertTriangle,
   Layers,
   RefreshCw,
   Trash2,
