@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine, LayoutGrid, LayoutList, CheckCheck, MousePointerSquareDashed } from "lucide-react";
+import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine, LayoutGrid, LayoutList, CheckCheck, MousePointerSquareDashed, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
