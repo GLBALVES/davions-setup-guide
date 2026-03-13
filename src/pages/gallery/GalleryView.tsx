@@ -340,11 +340,12 @@ const GalleryView = () => {
     if (!gallery) return;
     reactivationHandled.current = true;
     const sessionId = searchParams.get("session_id") ?? undefined;
+    const storedEmail = sessionStorage.getItem(`davions_renewal_email_${gallery.id}`) ?? undefined;
     const confirmReactivation = async () => {
       setRenewalLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("confirm-gallery-reactivation", {
-          body: { galleryId: gallery.id, sessionId },
+          body: { galleryId: gallery.id, sessionId, clientEmail: storedEmail },
         });
         if (error) throw error;
         if (data?.success) {
@@ -676,14 +677,27 @@ const GalleryView = () => {
         },
       });
       if (error) throw error;
+      if (data?.error === "email_mismatch") {
+        setRenewalError("This email is not associated with this gallery. Please use the email provided at the time of booking.");
+        return;
+      }
       if (data?.free) {
         setRenewalSuccess(true);
         setTimeout(() => window.location.reload(), 1500);
         return;
       }
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) {
+        // Store email so confirm step can re-validate after Stripe redirect
+        sessionStorage.setItem(`davions_renewal_email_${gallery.id}`, renewalEmail.trim());
+        window.location.href = data.url;
+      }
     } catch (err: any) {
-      setRenewalError(err?.message ?? "Something went wrong. Please try again.");
+      const msg = err?.message ?? "";
+      if (msg.includes("email_mismatch") || msg.includes("403")) {
+        setRenewalError("This email is not associated with this gallery. Please use the email you provided when booking.");
+      } else {
+        setRenewalError(msg || "Something went wrong. Please try again.");
+      }
     } finally {
       setRenewalLoading(false);
     }

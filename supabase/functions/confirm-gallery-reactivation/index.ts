@@ -19,7 +19,7 @@ serve(async (req) => {
   );
 
   try {
-    const { galleryId, sessionId } = await req.json();
+    const { galleryId, sessionId, clientEmail } = await req.json();
 
     if (!galleryId) {
       return new Response(
@@ -28,10 +28,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch gallery + photographer for Connect account
+    // Fetch gallery + booking link
     const { data: gallery, error: galleryError } = await supabase
       .from("galleries")
-      .select("id, photographer_id")
+      .select("id, photographer_id, booking_id")
       .eq("id", galleryId)
       .single();
 
@@ -40,6 +40,24 @@ serve(async (req) => {
         JSON.stringify({ error: "Gallery not found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
       );
+    }
+
+    // ── Validate client email against booking ────────────────────────────────
+    if (gallery.booking_id && clientEmail) {
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("client_email")
+        .eq("id", gallery.booking_id)
+        .single();
+
+      if (booking?.client_email) {
+        if (booking.client_email.trim().toLowerCase() !== clientEmail.trim().toLowerCase()) {
+          return new Response(
+            JSON.stringify({ error: "email_mismatch" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+          );
+        }
+      }
     }
 
     // Fetch extension days from settings
