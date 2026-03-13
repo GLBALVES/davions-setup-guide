@@ -92,17 +92,6 @@ const faqs = [
 
 const LightroomPlugin = () => {
   const { signOut, user } = useAuth();
-  const [copied, setCopied] = useState(false);
-
-  const apiToken = user?.id ?? "—";
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(apiToken).then(() => {
-      setCopied(true);
-      toast.success("API Token copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
 
   return (
     <SidebarProvider>
