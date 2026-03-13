@@ -690,97 +690,171 @@ const GalleryView = () => {
   };
 
   if (isExpired) {
+    const expiredDate = gallery?.expires_at
+      ? new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : null;
+    const studioName = photographerBrand?.business_name || photographerBrand?.full_name || "your photographer";
+
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
+        {/* Header */}
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/95 backdrop-blur-sm">
           <PhotographerBrand brand={photographerBrand} />
         </header>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+
+        {/* Blurred cover background */}
+        {gallery?.cover_image_url && (
+          <div
+            className="fixed inset-0 z-0 pointer-events-none"
+            style={{
+              backgroundImage: `url(${gallery.cover_image_url})`,
+              backgroundSize: "cover",
+              backgroundPosition: `${(gallery.cover_focal_x ?? 0.5) * 100}% ${(gallery.cover_focal_y ?? 0.5) * 100}%`,
+              filter: "blur(24px) brightness(0.18)",
+              transform: "scale(1.05)",
+            }}
+          />
+        )}
+
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 relative z-10">
           {renewalLoading && !renewalSuccess ? (
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground tracking-wide">Processing renewal…</p>
+            <div className="flex flex-col items-center gap-5">
+              <Loader2 className="h-8 w-8 animate-spin text-foreground/40" />
+              <p className="text-sm text-muted-foreground tracking-widest uppercase">Processing renewal…</p>
             </div>
           ) : renewalSuccess ? (
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-primary" />
+            <div className="flex flex-col items-center gap-5 text-center">
+              <div className="h-20 w-20 rounded-full border border-primary/40 bg-primary/10 flex items-center justify-center">
+                <CheckCircle className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-xl font-light tracking-wide">Access Renewed!</h2>
-              <p className="text-sm text-muted-foreground">Reloading your gallery…</p>
+              <div>
+                <h2 className="text-2xl font-light tracking-wide">Access Renewed!</h2>
+                <p className="text-sm text-muted-foreground mt-1">Your gallery is being unlocked…</p>
+              </div>
             </div>
           ) : (
-            <div className="w-full max-w-md flex flex-col gap-8">
-              {/* Expired notice */}
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="h-16 w-16 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
-                  <CalendarX2 className="h-8 w-8" />
+            <div className="w-full max-w-lg flex flex-col gap-6">
+
+              {/* ── Hero expired banner ── */}
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-5 flex items-start gap-4">
+                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <CalendarX2 className="h-5 w-5 text-destructive" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
-                  {gallery?.expires_at && (
-                    <p className="text-xs text-muted-foreground/60 tracking-widest uppercase mt-1.5">
-                      Expired on {new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-medium text-destructive tracking-wide">This gallery has expired</p>
+                  {expiredDate && (
+                    <p className="text-xs text-destructive/70">
+                      Access ended on <strong>{expiredDate}</strong>. Your photos are still safe — renew to view them again.
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Renewal card */}
-              <div className="border border-border rounded-lg p-6 flex flex-col gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <h2 className="text-sm font-medium tracking-wide">Renew gallery access</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {renewalFee > 0
-                      ? `Regain access for ${renewalDays} days for $${renewalFee.toFixed(2)}.`
-                      : `Regain access for ${renewalDays} days, free of charge.`}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs">Your name</Label>
-                    <Input
-                      placeholder="Jane Smith"
-                      value={renewalName}
-                      onChange={(e) => setRenewalName(e.target.value)}
-                      disabled={renewalLoading}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs">Email address <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="email"
-                      placeholder="jane@example.com"
-                      value={renewalEmail}
-                      onChange={(e) => setRenewalEmail(e.target.value)}
-                      disabled={renewalLoading}
-                    />
-                  </div>
-                </div>
-
-                {renewalError && (
-                  <p className="text-xs text-destructive">{renewalError}</p>
-                )}
-
-                <Button
-                  onClick={handleRenewal}
-                  disabled={!renewalEmail.trim() || renewalLoading}
-                  className="w-full"
-                >
-                  {renewalLoading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
-                  ) : renewalFee > 0 ? (
-                    <><RefreshCw className="h-4 w-4" /> Renew — ${renewalFee.toFixed(2)}</>
-                  ) : (
-                    <><RefreshCw className="h-4 w-4" /> Renew Access</>
-                  )}
-                </Button>
+              {/* ── Gallery title ── */}
+              <div className="text-center px-2">
+                <h1 className="text-3xl font-light tracking-wide text-foreground">{gallery?.title}</h1>
+                <p className="text-sm text-muted-foreground mt-1.5">by {studioName}</p>
               </div>
+
+              {/* ── Offer card ── */}
+              <div className="rounded-xl border border-border bg-background/80 backdrop-blur-sm shadow-sm overflow-hidden">
+
+                {/* Offer header */}
+                <div className="border-b border-border px-6 py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs tracking-widest uppercase text-muted-foreground">Renew gallery access</p>
+                    <p className="text-foreground font-light mt-0.5 text-sm">
+                      Get back access to all your photos for another{" "}
+                      <strong className="font-medium">{renewalDays} days</strong>
+                    </p>
+                  </div>
+                  {renewalFee > 0 ? (
+                    <div className="shrink-0 text-right">
+                      <p className="text-2xl font-light tracking-tight text-foreground">${renewalFee.toFixed(2)}</p>
+                      <p className="text-[10px] text-muted-foreground tracking-widest uppercase">one-time</p>
+                    </div>
+                  ) : (
+                    <div className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-3 py-1">
+                      <p className="text-xs font-medium text-primary tracking-wide">Free</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* What's included */}
+                <div className="px-6 py-4 flex flex-col gap-2 border-b border-border">
+                  {[
+                    `Access for ${renewalDays} days from today`,
+                    "Full gallery restored — all photos included",
+                    renewalFee > 0 ? "Secure checkout via Stripe" : "Instant access, no payment required",
+                  ].map((item) => (
+                    <div key={item} className="flex items-center gap-2.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-xs text-muted-foreground">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Form */}
+                <div className="px-6 py-5 flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs text-muted-foreground">Your name</Label>
+                      <Input
+                        placeholder="Jane Smith"
+                        value={renewalName}
+                        onChange={(e) => setRenewalName(e.target.value)}
+                        disabled={renewalLoading}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Email <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        type="email"
+                        placeholder="jane@example.com"
+                        value={renewalEmail}
+                        onChange={(e) => setRenewalEmail(e.target.value)}
+                        disabled={renewalLoading}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {renewalError && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+                      <p className="text-xs text-destructive">{renewalError}</p>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleRenewal}
+                    disabled={!renewalEmail.trim() || renewalLoading}
+                    className="w-full h-11 text-sm"
+                  >
+                    {renewalLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+                    ) : renewalFee > 0 ? (
+                      `Renew Access — $${renewalFee.toFixed(2)}`
+                    ) : (
+                      "Unlock Gallery — Free"
+                    )}
+                  </Button>
+
+                  {renewalFee > 0 && (
+                    <p className="text-center text-[10px] text-muted-foreground/60 tracking-wide">
+                      Secure payment powered by Stripe. Your card details are never stored.
+                    </p>
+                  )}
+                </div>
+              </div>
+
             </div>
           )}
         </div>
-        <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
+
+        <footer className="relative z-10 border-t border-border py-4 px-6 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50">Powered by Davions</p>
         </footer>
       </div>
