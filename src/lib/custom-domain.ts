@@ -13,6 +13,7 @@ const APP_HOSTNAMES = [
   "lovable.dev",
   "lovableproject.com",
   "nevoxholding.com",
+  "www.nevoxholding.com",
 ];
 
 /** Returns true when the visitor is on a photographer's custom domain. */
