@@ -16,8 +16,8 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight,
-} from "lucide-react";
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight } from
+"lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
@@ -31,13 +31,13 @@ interface BriefingQuestion {
   required: boolean;
   options: string[];
 }
-interface Briefing { id: string; name: string; questions: BriefingQuestion[]; }
+interface Briefing {id: string;name: string;questions: BriefingQuestion[];}
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   short_text: "Short text",
   long_text: "Long text",
   multiple_choice: "Multiple choice",
   checkboxes: "Checkboxes",
-  yes_no: "Yes / No",
+  yes_no: "Yes / No"
 };
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -45,40 +45,40 @@ const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
-  {
-    value: "editorial",
-    label: "Editorial",
-    description: "Full-bleed hero, minimal typography, luxury feel.",
-    preview: "bg-foreground",
-  },
-  {
-    value: "grid",
-    label: "Grid",
-    description: "Photo-first grid layout with sidebar details.",
-    preview: "bg-muted",
-  },
-  {
-    value: "magazine",
-    label: "Magazine",
-    description: "Bold columns, mixed-size cards, editorial headlines.",
-    preview: "bg-muted/60",
-  },
-  {
-    value: "clean",
-    label: "Clean",
-    description: "Centered, whitespace-heavy, distraction-free.",
-    preview: "bg-background border border-border",
-  },
-];
+{
+  value: "editorial",
+  label: "Editorial",
+  description: "Full-bleed hero, minimal typography, luxury feel.",
+  preview: "bg-foreground"
+},
+{
+  value: "grid",
+  label: "Grid",
+  description: "Photo-first grid layout with sidebar details.",
+  preview: "bg-muted"
+},
+{
+  value: "magazine",
+  label: "Magazine",
+  description: "Bold columns, mixed-size cards, editorial headlines.",
+  preview: "bg-muted/60"
+},
+{
+  value: "clean",
+  label: "Clean",
+  description: "Centered, whitespace-heavy, distraction-free.",
+  preview: "bg-background border border-border"
+}];
+
 
 // ── Section label ──────────────────────────────────────────────────────────────
-function SectionHeading({ title, description }: { title: string; description?: string }) {
+function SectionHeading({ title, description }: {title: string;description?: string;}) {
   return (
     <div>
       <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{title}</p>
       {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
-    </div>
-  );
+    </div>);
+
 }
 
 // ── Divider ───────────────────────────────────────────────────────────────────
@@ -87,13 +87,13 @@ function Divider() {
 }
 
 // ── Field row ─────────────────────────────────────────────────────────────────
-function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldRow({ label, children }: {label: string;children: React.ReactNode;}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-[11px] tracking-wider uppercase font-light">{label}</Label>
       {children}
-    </div>
-  );
+    </div>);
+
 }
 
 const Personalize = () => {
@@ -204,7 +204,7 @@ const Personalize = () => {
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
   // ── Contracts ───────────────────────────────────────────────────────────────
-  interface Contract { id: string; name: string; body: string; }
+  interface Contract {id: string;name: string;body: string;}
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
@@ -224,31 +224,31 @@ const Personalize = () => {
 
   const fetchSessionTypes = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("session_types")
-      .select("id, name")
-      .eq("photographer_id", user.id)
-      .order("created_at", { ascending: true });
+    const { data } = await supabase.
+    from("session_types").
+    select("id, name").
+    eq("photographer_id", user.id).
+    order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
   }, [user]);
 
   const fetchContracts = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
-      .from("contracts")
-      .select("id, name, body")
-      .eq("photographer_id", user.id)
-      .order("created_at", { ascending: true });
+    const { data } = await (supabase as any).
+    from("contracts").
+    select("id, name, body").
+    eq("photographer_id", user.id).
+    order("created_at", { ascending: true });
     if (data) setContracts(data);
   }, [user]);
 
   const fetchBriefings = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any)
-      .from("briefings")
-      .select("id, name, questions")
-      .eq("photographer_id", user.id)
-      .order("created_at", { ascending: true });
+    const { data } = await (supabase as any).
+    from("briefings").
+    select("id, name, questions").
+    eq("photographer_id", user.id).
+    order("created_at", { ascending: true });
     if (data) setBriefings(data as Briefing[]);
   }, [user]);
 
@@ -256,22 +256,22 @@ const Personalize = () => {
     if (!user) return;
     const fetchAll = async () => {
       const [profileRes, siteRes, watermarksRes, gallerySettingsRes, businessRes] = await Promise.all([
-        supabase.from("photographers")
-          .select("full_name, store_slug, custom_domain, bio, hero_image_url")
-          .eq("id", user.id).single(),
-        (supabase as any).from("photographer_site")
-          .select("*").eq("photographer_id", user.id).maybeSingle(),
-        (supabase as any).from("watermarks")
-          .select("*").eq("photographer_id", user.id).order("created_at", { ascending: true }),
-        (supabase as any).from("gallery_settings")
-          .select("key, value").eq("photographer_id", user.id),
-        (supabase as any).from("photographers")
-          .select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id")
-          .eq("id", user.id).single(),
-        fetchSessionTypes(),
-        fetchContracts(),
-        fetchBriefings(),
-      ]);
+      supabase.from("photographers").
+      select("full_name, store_slug, custom_domain, bio, hero_image_url").
+      eq("id", user.id).single(),
+      (supabase as any).from("photographer_site").
+      select("*").eq("photographer_id", user.id).maybeSingle(),
+      (supabase as any).from("watermarks").
+      select("*").eq("photographer_id", user.id).order("created_at", { ascending: true }),
+      (supabase as any).from("gallery_settings").
+      select("key, value").eq("photographer_id", user.id),
+      (supabase as any).from("photographers").
+      select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id").
+      eq("id", user.id).single(),
+      fetchSessionTypes(),
+      fetchContracts(),
+      fetchBriefings()]
+      );
 
       if (profileRes.data) {
         const d = profileRes.data;
@@ -347,7 +347,7 @@ const Personalize = () => {
     if (value.length < 3) return "Must be at least 3 characters.";
     if (value.length > 48) return "Must be 48 characters or less.";
     if (!SLUG_REGEX.test(value))
-      return "Only lowercase letters, numbers and hyphens.";
+    return "Only lowercase letters, numbers and hyphens.";
     return null;
   };
 
@@ -360,13 +360,13 @@ const Personalize = () => {
 
   // ── Upload helpers ───────────────────────────────────────────────────────────
   const uploadImage = async (
-    file: File,
-    pathKey: string,
-    bucket: string,
-    setUrl: (u: string) => void,
-    setUploading: (v: boolean) => void,
-    label: string,
-  ) => {
+  file: File,
+  pathKey: string,
+  bucket: string,
+  setUrl: (u: string) => void,
+  setUploading: (v: boolean) => void,
+  label: string) =>
+  {
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${user!.id}/${pathKey}.${ext}`;
@@ -386,19 +386,19 @@ const Personalize = () => {
   const handleSaveStore = async () => {
     const slugErr = validateSlug(slugInput);
     const domErr = validateDomain(customDomainInput);
-    if (slugErr) { setSlugError(slugErr); return; }
-    if (domErr) { setDomainError(domErr); return; }
+    if (slugErr) {setSlugError(slugErr);return;}
+    if (domErr) {setDomainError(domErr);return;}
     setSavingStore(true);
     const { error } = await supabase.from("photographers").update({
       full_name: fullName,
       store_slug: slugInput,
-      custom_domain: customDomainInput.trim() || null,
+      custom_domain: customDomainInput.trim() || null
     } as any).eq("id", user!.id);
     if (error) {
       if (error.code === "23505") {
-        if (error.message.includes("store_slug")) setSlugError("This URL is already taken.");
-        else if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
-        else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        if (error.message.includes("store_slug")) setSlugError("This URL is already taken.");else
+        if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");else
+        toast({ title: "Failed to save", description: error.message, variant: "destructive" });
       } else {
         toast({ title: "Failed to save", description: error.message, variant: "destructive" });
       }
@@ -418,7 +418,7 @@ const Personalize = () => {
     await supabase.from("photographers").update({
       full_name: fullName.trim() || null,
       bio: bio.trim() || null,
-      hero_image_url: heroImageUrl.trim() || null,
+      hero_image_url: heroImageUrl.trim() || null
     } as any).eq("id", user.id);
 
     const { error } = await (supabase as any).from("photographer_site").upsert({
@@ -450,7 +450,7 @@ const Personalize = () => {
       og_image_url: ogImageUrl.trim() || null,
       google_analytics_id: googleAnalyticsId.trim() || null,
       facebook_pixel_id: facebookPixelId.trim() || null,
-      footer_text: footerText.trim() || null,
+      footer_text: footerText.trim() || null
     }, { onConflict: "photographer_id" });
 
     if (error) {
@@ -470,7 +470,7 @@ const Personalize = () => {
       business_city: businessCity.trim() || null,
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
-      business_tax_id: businessTaxId.trim() || null,
+      business_tax_id: businessTaxId.trim() || null
     }).eq("id", user!.id);
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
@@ -484,7 +484,7 @@ const Personalize = () => {
     if (!user) return;
     setSavingExpiry(true);
     const days = parseInt(galleryExpiryDays, 10);
-    const expiryValue = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
+    const expiryValue = !galleryExpiryDays.trim() || isNaN(days) || days <= 0 ? null : String(days);
     const { error } = await (supabase as any).from("gallery_settings").upsert(
       { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
       { onConflict: "photographer_id,key" }
@@ -501,7 +501,7 @@ const Personalize = () => {
     if (!user) return;
     setSavingFee(true);
     const fee = parseFloat(galleryReactivationFee);
-    const feeValue = (!galleryReactivationFee.trim() || isNaN(fee) || fee < 0) ? null : String(fee);
+    const feeValue = !galleryReactivationFee.trim() || isNaN(fee) || fee < 0 ? null : String(fee);
     const { error } = await (supabase as any).from("gallery_settings").upsert(
       { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
       { onConflict: "photographer_id,key" }
@@ -517,7 +517,7 @@ const Personalize = () => {
   const handleWatermarkSaved = (wm: WatermarkData) => {
     setWatermarks((prev) => {
       const exists = prev.find((w) => w.id === wm.id);
-      return exists ? prev.map((w) => (w.id === wm.id ? wm : w)) : [...prev, wm];
+      return exists ? prev.map((w) => w.id === wm.id ? wm : w) : [...prev, wm];
     });
     setWatermarkEditorOpen(false);
     setEditingWatermark(undefined);
@@ -560,20 +560,20 @@ const Personalize = () => {
                 <h1 className="text-2xl font-light tracking-wide">Personalize</h1>
               </div>
 
-              {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
-              ) : (
-                <Tabs defaultValue={defaultTab} className="w-full">
+              {loading ?
+              <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p> :
+
+              <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                      { value: "studio", label: "Studio" },
-                      { value: "business", label: "Business" },
-                      { value: "galleries", label: "Galleries" },
-                    ].map((tab) => (
-                      <TabsTrigger
-                        key={tab.value}
-                        value={tab.value}
-                        className="
+                  { value: "studio", label: "Studio" },
+                  { value: "business", label: "Business" },
+                  { value: "galleries", label: "Galleries" }].
+                  map((tab) =>
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="
                           rounded-none bg-transparent px-5 py-2.5
                           text-[11px] tracking-[0.2em] uppercase font-light
                           text-muted-foreground border-b-2 border-transparent
@@ -582,30 +582,30 @@ const Personalize = () => {
                           data-[state=active]:bg-transparent
                           data-[state=active]:shadow-none
                           hover:text-foreground transition-colors
-                        "
-                      >
+                        ">
+                    
                         {tab.label}
                       </TabsTrigger>
-                    ))}
+                  )}
                   </TabsList>
 
                   {/* ── STUDIO TAB ── */}
                   <TabsContent value="studio" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-4">
                       <SectionHeading
-                        title="Session Types"
-                        description="Categorize your sessions by type (e.g. Newborn, Wedding, Portrait)."
-                      />
-                      {user && (
-                        <SessionTypeManager
-                          photographerId={user.id}
-                          sessionTypes={sessionTypes}
-                          selectedTypeId={selectedTypeId}
-                          onSelect={setSelectedTypeId}
-                          onRefetch={fetchSessionTypes}
-                          mode="manage"
-                        />
-                      )}
+                      title="Session Types"
+                      description="Categorize your sessions by type (e.g. Newborn, Wedding, Portrait)." />
+                    
+                      {user &&
+                    <SessionTypeManager
+                      photographerId={user.id}
+                      sessionTypes={sessionTypes}
+                      selectedTypeId={selectedTypeId}
+                      onSelect={setSelectedTypeId}
+                      onRefetch={fetchSessionTypes}
+                      mode="manage" />
+
+                    }
                     </section>
 
                     <div className="border-t border-border" />
@@ -614,67 +614,67 @@ const Personalize = () => {
                     <section className="flex flex-col gap-4">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                          title="Contracts"
-                          description="Create reusable service agreements to attach to your booking sessions."
-                        />
+                        title="Contracts"
+                        description="Create reusable service agreements to attach to your booking sessions." />
+                      
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
-                          onClick={() => navigate("/dashboard/contracts/new")}
-                        >
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                        onClick={() => navigate("/dashboard/contracts/new")}>
+                        
                           <Plus className="h-3.5 w-3.5" />
                           New contract
                         </Button>
                       </div>
 
-                      {contracts.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">No contracts yet. Create one to attach to your sessions.</p>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {contracts.map((c) => (
-                            <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
+                      {contracts.length === 0 ?
+                    <p className="text-xs text-muted-foreground italic">No contracts yet. Create one to attach to your sessions.</p> :
+
+                    <div className="flex flex-col gap-2">
+                          {contracts.map((c) =>
+                      <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
                               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || "Untitled"}</p>
                                 <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
-                                  {c.body
-                                    ? c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "")
-                                    : "No content yet"}
+                                  {c.body ?
+                            c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "") :
+                            "No content yet"}
                                 </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-3 text-[10px] tracking-wider uppercase font-light"
-                                  onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}
-                                >
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-3 text-[10px] tracking-wider uppercase font-light"
+                            onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}>
+                            
                                   <Pencil className="h-3 w-3 mr-1" />
                                   Edit
                                 </Button>
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  disabled={deletingContractId === c.id}
-                                  onClick={async () => {
-                                    setDeletingContractId(c.id);
-                                    await (supabase as any).from("contracts").delete().eq("id", c.id);
-                                    await fetchContracts();
-                                    setDeletingContractId(null);
-                                  }}
-                                >
-                                  {deletingContractId === c.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  )}
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            disabled={deletingContractId === c.id}
+                            onClick={async () => {
+                              setDeletingContractId(c.id);
+                              await (supabase as any).from("contracts").delete().eq("id", c.id);
+                              await fetchContracts();
+                              setDeletingContractId(null);
+                            }}>
+                            
+                                  {deletingContractId === c.id ?
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+
+                            <Trash2 className="h-3.5 w-3.5" />
+                            }
                                 </Button>
                               </div>
                             </div>
-                          ))}
-                        </div>
                       )}
+                        </div>
+                    }
                     </section>
 
                     <div className="border-t border-border" />
@@ -683,31 +683,31 @@ const Personalize = () => {
                     <section className="flex flex-col gap-4">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                          title="Briefings"
-                          description="Build questionnaires to understand your clients before the session."
-                        />
+                        title="Briefings"
+                        description="Build questionnaires to understand your clients before the session." />
+                      
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
-                          onClick={() => {
-                            setEditingBriefing(null);
-                            setBriefingName("");
-                            setBriefingQuestions([]);
-                            setBriefingDialogOpen(true);
-                          }}
-                        >
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                        onClick={() => {
+                          setEditingBriefing(null);
+                          setBriefingName("");
+                          setBriefingQuestions([]);
+                          setBriefingDialogOpen(true);
+                        }}>
+                        
                           <Plus className="h-3.5 w-3.5" />
                           New briefing
                         </Button>
                       </div>
 
-                      {briefings.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">No briefings yet. Create one to collect info from clients after they book.</p>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {briefings.map((b) => (
-                            <div key={b.id} className="border border-border p-4 flex items-start justify-between gap-4">
+                      {briefings.length === 0 ?
+                    <p className="text-xs text-muted-foreground italic">No briefings yet. Create one to collect info from clients after they book.</p> :
+
+                    <div className="flex flex-col gap-2">
+                          {briefings.map((b) =>
+                      <div key={b.id} className="border border-border p-4 flex items-start justify-between gap-4">
                               <div className="flex flex-col gap-0.5 min-w-0">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{b.name || "Untitled"}</p>
                                 <p className="text-[11px] text-muted-foreground">
@@ -716,48 +716,48 @@ const Personalize = () => {
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7"
-                                  onClick={() => {
-                                    setEditingBriefing(b);
-                                    setBriefingName(b.name);
-                                    setBriefingQuestions(b.questions);
-                                    setBriefingDialogOpen(true);
-                                  }}
-                                >
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setEditingBriefing(b);
+                              setBriefingName(b.name);
+                              setBriefingQuestions(b.questions);
+                              setBriefingDialogOpen(true);
+                            }}>
+                            
                                   <Pencil className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  disabled={deletingBriefingId === b.id}
-                                  onClick={async () => {
-                                    setDeletingBriefingId(b.id);
-                                    await (supabase as any).from("briefings").delete().eq("id", b.id);
-                                    await fetchBriefings();
-                                    setDeletingBriefingId(null);
-                                  }}
-                                >
-                                  {deletingBriefingId === b.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  )}
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            disabled={deletingBriefingId === b.id}
+                            onClick={async () => {
+                              setDeletingBriefingId(b.id);
+                              await (supabase as any).from("briefings").delete().eq("id", b.id);
+                              await fetchBriefings();
+                              setDeletingBriefingId(null);
+                            }}>
+                            
+                                  {deletingBriefingId === b.id ?
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+
+                            <Trash2 className="h-3.5 w-3.5" />
+                            }
                                 </Button>
                               </div>
                             </div>
-                          ))}
-                        </div>
                       )}
+                        </div>
+                    }
                     </section>
                   </TabsContent>
 
                   {/* Briefing dialog */}
                   <Dialog open={briefingDialogOpen} onOpenChange={(open) => {
-                    setBriefingDialogOpen(open);
-                  }}>
+                  setBriefingDialogOpen(open);
+                }}>
                     <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
                       <DialogHeader>
                         <DialogTitle className="text-sm tracking-widest uppercase font-light">
@@ -769,11 +769,11 @@ const Personalize = () => {
                         <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">Briefing Name</Label>
                           <Input
-                            value={briefingName}
-                            onChange={(e) => setBriefingName(e.target.value)}
-                            placeholder="e.g. Newborn Briefing"
-                            className="text-sm font-light"
-                          />
+                          value={briefingName}
+                          onChange={(e) => setBriefingName(e.target.value)}
+                          placeholder="e.g. Newborn Briefing"
+                          className="text-sm font-light" />
+                        
                         </div>
 
                         {/* Questions */}
@@ -781,45 +781,45 @@ const Personalize = () => {
                           <div className="flex items-center justify-between">
                             <Label className="text-[11px] tracking-wider uppercase font-light">Questions</Label>
                             <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
-                              onClick={() => {
-                                const newQ: BriefingQuestion = {
-                                  id: crypto.randomUUID(),
-                                  type: "short_text",
-                                  label: "",
-                                  required: false,
-                                  options: [],
-                                };
-                                setBriefingQuestions((prev) => [...prev, newQ]);
-                              }}
-                            >
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
+                            onClick={() => {
+                              const newQ: BriefingQuestion = {
+                                id: crypto.randomUUID(),
+                                type: "short_text",
+                                label: "",
+                                required: false,
+                                options: []
+                              };
+                              setBriefingQuestions((prev) => [...prev, newQ]);
+                            }}>
+                            
                               <Plus className="h-3 w-3" />
                               Add question
                             </Button>
                           </div>
 
-                          {briefingQuestions.length === 0 && (
-                            <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
+                          {briefingQuestions.length === 0 &&
+                        <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
                               No questions yet — click "Add question" to start building.
                             </p>
-                          )}
+                        }
 
-                          {briefingQuestions.map((q, idx) => (
-                            <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
+                          {briefingQuestions.map((q, idx) =>
+                        <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[10px] tracking-wider uppercase text-muted-foreground">Question {idx + 1}</span>
                                 <div className="flex items-center gap-1">
                                   <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                    onClick={() => setBriefingQuestions((prev) => prev.filter((_, i) => i !== idx))}
-                                  >
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                onClick={() => setBriefingQuestions((prev) => prev.filter((_, i) => i !== idx))}>
+                                
                                     <X className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
@@ -828,116 +828,116 @@ const Personalize = () => {
                               {/* Type + Required row */}
                               <div className="flex items-center gap-3 flex-wrap">
                                 <select
-                                  value={q.type}
-                                  onChange={(e) => {
-                                    const newType = e.target.value as QuestionType;
-                                    setBriefingQuestions((prev) => prev.map((item, i) =>
-                                      i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? (item.options.length ? item.options : [""]) : [] } : item
-                                    ));
-                                  }}
-                                  className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                                >
-                                  {(Object.entries(QUESTION_TYPE_LABELS) as [QuestionType, string][]).map(([val, label]) => (
-                                    <option key={val} value={val}>{label}</option>
-                                  ))}
+                              value={q.type}
+                              onChange={(e) => {
+                                const newType = e.target.value as QuestionType;
+                                setBriefingQuestions((prev) => prev.map((item, i) =>
+                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
+                                ));
+                              }}
+                              className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                              
+                                  {(Object.entries(QUESTION_TYPE_LABELS) as [QuestionType, string][]).map(([val, label]) =>
+                              <option key={val} value={val}>{label}</option>
+                              )}
                                 </select>
                                 <div className="flex items-center gap-2">
                                   <Switch
-                                    id={`req-${q.id}`}
-                                    checked={q.required}
-                                    onCheckedChange={(v) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, required: v } : item))}
-                                  />
+                                id={`req-${q.id}`}
+                                checked={q.required}
+                                onCheckedChange={(v) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, required: v } : item))} />
+                              
                                   <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">Required</label>
                                 </div>
                               </div>
 
                               {/* Question label */}
                               <Input
-                                value={q.label}
-                                onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
-                                placeholder="Type your question here…"
-                                className="text-sm font-light h-8"
-                              />
+                            value={q.label}
+                            onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
+                            placeholder="Type your question here…"
+                            className="text-sm font-light h-8" />
+                          
 
                               {/* Options (for multiple_choice / checkboxes) */}
-                              {(q.type === "multiple_choice" || q.type === "checkboxes") && (
-                                <div className="flex flex-col gap-2 pl-1">
+                              {(q.type === "multiple_choice" || q.type === "checkboxes") &&
+                          <div className="flex flex-col gap-2 pl-1">
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Options</p>
-                                  {q.options.map((opt, optIdx) => (
-                                    <div key={optIdx} className="flex items-center gap-2">
+                                  {q.options.map((opt, optIdx) =>
+                            <div key={optIdx} className="flex items-center gap-2">
                                       <Input
-                                        value={opt}
-                                        onChange={(e) => {
-                                          const updated = [...q.options];
-                                          updated[optIdx] = e.target.value;
-                                          setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
-                                        }}
-                                        placeholder={`Option ${optIdx + 1}`}
-                                        className="h-7 text-xs font-light flex-1"
-                                      />
+                                value={opt}
+                                onChange={(e) => {
+                                  const updated = [...q.options];
+                                  updated[optIdx] = e.target.value;
+                                  setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                }}
+                                placeholder={`Option ${optIdx + 1}`}
+                                className="h-7 text-xs font-light flex-1" />
+                              
                                       <Button
-                                        type="button"
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                                        onClick={() => {
-                                          const updated = q.options.filter((_, oi) => oi !== optIdx);
-                                          setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
-                                        }}
-                                      >
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => {
+                                  const updated = q.options.filter((_, oi) => oi !== optIdx);
+                                  setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                }}>
+                                
                                         <X className="h-3 w-3" />
                                       </Button>
                                     </div>
-                                  ))}
+                            )}
                                   <button
-                                    type="button"
-                                    className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
-                                    onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}
-                                  >
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
+                              
                                     <Plus className="h-3 w-3" />
                                     Add option
                                   </button>
                                 </div>
-                              )}
+                          }
                             </div>
-                          ))}
+                        )}
                         </div>
 
                         {/* Footer actions */}
                         <div className="flex justify-end gap-2 pt-1 border-t border-border">
                           <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-xs tracking-wider uppercase font-light"
-                            onClick={() => setBriefingDialogOpen(false)}
-                          >
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs tracking-wider uppercase font-light"
+                          onClick={() => setBriefingDialogOpen(false)}>
+                          
                             Cancel
                           </Button>
                           <Button
-                            type="button"
-                            size="sm"
-                            disabled={savingBriefing || !briefingName.trim()}
-                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
-                            onClick={async () => {
-                              if (!user || !briefingName.trim()) return;
-                              setSavingBriefing(true);
-                              const payload = {
-                                name: briefingName.trim(),
-                                questions: briefingQuestions,
-                                updated_at: new Date().toISOString(),
-                              };
-                              if (editingBriefing) {
-                                await (supabase as any).from("briefings").update(payload).eq("id", editingBriefing.id);
-                              } else {
-                                await (supabase as any).from("briefings").insert({ ...payload, photographer_id: user.id });
-                              }
-                              await fetchBriefings();
-                              setSavingBriefing(false);
-                              setBriefingDialogOpen(false);
-                              toast({ title: editingBriefing ? "Briefing updated" : "Briefing created" });
-                            }}
-                          >
+                          type="button"
+                          size="sm"
+                          disabled={savingBriefing || !briefingName.trim()}
+                          className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                          onClick={async () => {
+                            if (!user || !briefingName.trim()) return;
+                            setSavingBriefing(true);
+                            const payload = {
+                              name: briefingName.trim(),
+                              questions: briefingQuestions,
+                              updated_at: new Date().toISOString()
+                            };
+                            if (editingBriefing) {
+                              await (supabase as any).from("briefings").update(payload).eq("id", editingBriefing.id);
+                            } else {
+                              await (supabase as any).from("briefings").insert({ ...payload, photographer_id: user.id });
+                            }
+                            await fetchBriefings();
+                            setSavingBriefing(false);
+                            setBriefingDialogOpen(false);
+                            toast({ title: editingBriefing ? "Briefing updated" : "Briefing created" });
+                          }}>
+                          
                             {savingBriefing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                             Save briefing
                           </Button>
@@ -951,9 +951,9 @@ const Personalize = () => {
                   <TabsContent value="business" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
                       <SectionHeading
-                        title="Business Information"
-                        description="Details used on invoices, contracts, and client-facing documents."
-                      />
+                      title="Business Information"
+                      description="Details used on invoices, contracts, and client-facing documents." />
+                    
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FieldRow label="Business Name">
                           <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Acme Photography LLC" className="h-9 text-sm font-light" />
@@ -976,21 +976,21 @@ const Personalize = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FieldRow label="Currency">
                           <select
-                            value={businessCurrency}
-                            onChange={(e) => setBusinessCurrency(e.target.value)}
-                            className="h-9 px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                          >
+                          value={businessCurrency}
+                          onChange={(e) => setBusinessCurrency(e.target.value)}
+                          className="h-9 px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                          
                             {[
-                              { code: "USD", label: "USD — US Dollar" },
-                              { code: "EUR", label: "EUR — Euro" },
-                              { code: "GBP", label: "GBP — British Pound" },
-                              { code: "CAD", label: "CAD — Canadian Dollar" },
-                              { code: "AUD", label: "AUD — Australian Dollar" },
-                              { code: "BRL", label: "BRL — Brazilian Real" },
-                              { code: "MXN", label: "MXN — Mexican Peso" },
-                            ].map((c) => (
-                              <option key={c.code} value={c.code}>{c.label}</option>
-                            ))}
+                          { code: "USD", label: "USD — US Dollar" },
+                          { code: "EUR", label: "EUR — Euro" },
+                          { code: "GBP", label: "GBP — British Pound" },
+                          { code: "CAD", label: "CAD — Canadian Dollar" },
+                          { code: "AUD", label: "AUD — Australian Dollar" },
+                          { code: "BRL", label: "BRL — Brazilian Real" },
+                          { code: "MXN", label: "MXN — Mexican Peso" }].
+                          map((c) =>
+                          <option key={c.code} value={c.code}>{c.label}</option>
+                          )}
                           </select>
                         </FieldRow>
                         <FieldRow label="Tax ID / VAT Number">
@@ -1012,16 +1012,16 @@ const Personalize = () => {
                       <div className="flex items-center gap-3">
                         <div className="flex items-center border border-border bg-background overflow-hidden w-40">
                           <input type="number" min="1" max="3650" value={galleryExpiryDays} onChange={(e) => setGalleryExpiryDays(e.target.value)} placeholder="e.g. 90"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
+                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                           <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">days</span>
                         </div>
                         <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
                           {savingExpiry ? "Saving…" : "Save"}
                         </Button>
                       </div>
-                      {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 && (
-                        <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} days</strong> after creation.</p>
-                      )}
+                      {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 &&
+                    <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} days</strong> after creation.</p>
+                    }
                     </section>
 
                     <Divider />
@@ -1032,15 +1032,15 @@ const Personalize = () => {
                         <div className="flex items-center border border-border bg-background overflow-hidden w-40">
                           <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
                           <input type="number" min="0" step="0.01" value={galleryReactivationFee} onChange={(e) => setGalleryReactivationFee(e.target.value)} placeholder="0.00"
-                            className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
+                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
                         <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
                           {savingFee ? "Saving…" : "Save"}
                         </Button>
                       </div>
-                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 && (
-                        <p className="text-[11px] text-muted-foreground/70 -mt-2">Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.</p>
-                      )}
+                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 &&
+                    <p className="text-[11px] text-muted-foreground/70 -mt-2">Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.</p>
+                    }
                     </section>
 
                     <Divider />
@@ -1051,32 +1051,32 @@ const Personalize = () => {
                         <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Watermarks</p>
                         <p className="text-[11px] text-muted-foreground">Create text or image watermarks to apply to Proof galleries.</p>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => { setEditingWatermark(undefined); setWatermarkEditorOpen(true); }}
-                        className="gap-1.5 text-[10px] tracking-widest uppercase font-light rounded-none shrink-0">
+                      <Button size="sm" variant="outline" onClick={() => {setEditingWatermark(undefined);setWatermarkEditorOpen(true);}}
+                    className="gap-1.5 text-[10px] tracking-widest uppercase font-light rounded-none shrink-0">
                         <Plus className="h-3.5 w-3.5" />New watermark
                       </Button>
                     </div>
-                    {watermarks.length === 0 ? (
-                      <p className="text-[11px] text-muted-foreground/60 border border-dashed border-border px-3 py-6 text-center">
+                    {watermarks.length === 0 ?
+                  <p className="text-[11px] text-muted-foreground/60 border border-dashed border-border px-3 py-6 text-center">
                         No watermarks yet — click "New watermark" to create one.
-                      </p>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {watermarks.map((wm) => (
-                          <div key={wm.id} className="border border-border flex items-center px-4 py-3 gap-4">
+                      </p> :
+
+                  <div className="flex flex-col gap-2">
+                        {watermarks.map((wm) =>
+                    <div key={wm.id} className="border border-border flex items-center px-4 py-3 gap-4">
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-light truncate">{wm.name}</p>
                               <div className="flex items-center gap-3 mt-0.5">
-                                {wm.text_enabled && wm.text_content && (
-                                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Type className="h-2.5 w-2.5" />{wm.text_content}</span>
-                                )}
-                                {wm.image_enabled && wm.image_url && (
-                                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Image className="h-2.5 w-2.5" />Image</span>
-                                )}
+                                {wm.text_enabled && wm.text_content &&
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Type className="h-2.5 w-2.5" />{wm.text_content}</span>
+                          }
+                                {wm.image_enabled && wm.image_url &&
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Image className="h-2.5 w-2.5" />Image</span>
+                          }
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <button type="button" onClick={() => { setEditingWatermark(wm); setWatermarkEditorOpen(true); }} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                              <button type="button" onClick={() => {setEditingWatermark(wm);setWatermarkEditorOpen(true);}} className="text-muted-foreground hover:text-foreground transition-colors p-1">
                                 <Pencil className="h-3.5 w-3.5" />
                               </button>
                               <button type="button" disabled={deletingId === wm.id} onClick={() => wm.id && handleWatermarkDelete(wm.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
@@ -1084,9 +1084,9 @@ const Personalize = () => {
                               </button>
                             </div>
                           </div>
-                        ))}
-                      </div>
                     )}
+                      </div>
+                  }
 
                     <Divider />
 
@@ -1094,13 +1094,13 @@ const Personalize = () => {
                     <section className="flex flex-col gap-5">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                          title="Davions Connect - Lightroom Plugin"
-                          description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin."
-                        />
+                        title="Davions Connect - Lightroom Plugin"
+                        description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin." />
+                      
                         <a
-                          href="/dashboard/lightroom-plugin-help"
-                          className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-light text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
-                        >
+                        href="/dashboard/lightroom-plugin-help"
+                        className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-light text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5">
+                        
                           View help
                           <ChevronRight className="h-3 w-3" />
                         </a>
@@ -1109,16 +1109,16 @@ const Personalize = () => {
                         <Download className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div className="flex-1 space-y-2">
                           <div className="space-y-0.5">
-                            <p className="text-sm font-light">DavionsConnect-1.0.lrplugin</p>
+                            <p className="text-sm font-light">Davions Connect 1.0</p>
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
                               Compatible with Lightroom Classic 9 (2019) and later. macOS and Windows.
                             </p>
                           </div>
                           <a
-                            href="/downloads/DavionsConnect-1.0.lrplugin.zip"
-                            download="DavionsConnect-1.0.lrplugin.zip"
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[11px] font-light tracking-wide transition-colors"
-                          >
+                          href="/downloads/DavionsConnect-1.0.lrplugin.zip"
+                          download="DavionsConnect-1.0.lrplugin.zip"
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[11px] font-light tracking-wide transition-colors">
+                          
                             <Download className="h-3.5 w-3.5" />
                             Download Plugin (.zip)
                           </a>
@@ -1126,32 +1126,32 @@ const Personalize = () => {
                       </div>
                       <div className="space-y-px">
                         {[
-                          { n: "01", title: "Download and unzip the plugin", desc: "Click the download button above to get the latest DavionsConnect package. Unzip it to a permanent folder — do not move it after installation." },
-                          { n: "02", title: "Open the Plug-in Manager in Lightroom Classic", desc: 'Go to File → Plug-in Manager (or press Ctrl/⌘ + Alt + Shift + ,). Click "Add" and navigate to the unzipped .lrplugin folder.' },
-                          { n: "03", title: "Sign in with your Davions account", desc: "In the plugin settings panel, enter the same email and password you use to log in to Davions. This authenticates the plugin with your account." },
-                          { n: "04", title: "Create a Publish Service collection", desc: 'In the Library module, go to Publish Services and click "Set Up" next to Davions. Create a collection for each gallery you want to sync.' },
-                        ].map((step) => (
-                          <div key={step.n} className="flex gap-4 p-4 border border-border bg-card">
+                      { n: "01", title: "Download and unzip the plugin", desc: "Click the download button above to get the latest DavionsConnect package. Unzip it to a permanent folder — do not move it after installation." },
+                      { n: "02", title: "Open the Plug-in Manager in Lightroom Classic", desc: 'Go to File → Plug-in Manager (or press Ctrl/⌘ + Alt + Shift + ,). Click "Add" and navigate to the unzipped .lrplugin folder.' },
+                      { n: "03", title: "Sign in with your Davions account", desc: "In the plugin settings panel, enter the same email and password you use to log in to Davions. This authenticates the plugin with your account." },
+                      { n: "04", title: "Create a Publish Service collection", desc: 'In the Library module, go to Publish Services and click "Set Up" next to Davions. Create a collection for each gallery you want to sync.' }].
+                      map((step) =>
+                      <div key={step.n} className="flex gap-4 p-4 border border-border bg-card">
                             <span className="text-xl font-light text-muted-foreground/30 shrink-0 w-7 text-right leading-none mt-0.5">{step.n}</span>
                             <div className="space-y-0.5">
                               <p className="text-[12px] font-light">{step.title}</p>
                               <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
                             </div>
                           </div>
-                        ))}
+                      )}
                       </div>
                     </section>
                   </TabsContent>
 
                 </Tabs>
-              )}
+              }
             </div>
           </main>
         </div>
       </div>
 
       {/* Watermark Editor Dialog */}
-      <Dialog open={watermarkEditorOpen} onOpenChange={(open) => { setWatermarkEditorOpen(open); if (!open) setEditingWatermark(undefined); }}>
+      <Dialog open={watermarkEditorOpen} onOpenChange={(open) => {setWatermarkEditorOpen(open);if (!open) setEditingWatermark(undefined);}}>
         <DialogContent className="max-w-4xl w-full p-0 rounded-none border-border overflow-hidden" style={{ height: "90vh", maxHeight: "780px" }}>
           <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
             <DialogTitle className="text-sm font-light tracking-wide">{editingWatermark ? "Edit Watermark" : "New Watermark"}</DialogTitle>
@@ -1160,13 +1160,13 @@ const Personalize = () => {
             <WatermarkEditor
               initial={editingWatermark}
               onSaved={handleWatermarkSaved}
-              onCancel={() => { setWatermarkEditorOpen(false); setEditingWatermark(undefined); }}
-            />
+              onCancel={() => {setWatermarkEditorOpen(false);setEditingWatermark(undefined);}} />
+            
           </div>
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
-  );
+    </SidebarProvider>);
+
 };
 
 export default Personalize;
