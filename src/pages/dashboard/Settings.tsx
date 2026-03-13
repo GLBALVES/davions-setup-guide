@@ -691,6 +691,26 @@ const Settings = () => {
 
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Current Password</Label>
+                          <div className="relative">
+                            <Input
+                              type={showCurrentPw ? "text" : "password"}
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="h-9 text-sm font-light pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPw((v) => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showCurrentPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">New Password</Label>
                           <div className="relative">
                             <Input
