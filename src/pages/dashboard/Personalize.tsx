@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -16,7 +16,7 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp,
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
@@ -99,7 +99,9 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 const Personalize = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const defaultTab = searchParams.get("tab") ?? "studio";
 
   // ── Store / Domain ───────────────────────────────────────────────────────────
   const [storeSlug, setStoreSlug] = useState("");
@@ -561,7 +563,7 @@ const Personalize = () => {
               {loading ? (
                 <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
               ) : (
-                <Tabs defaultValue="studio" className="w-full">
+                <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
                       { value: "studio", label: "Studio" },
@@ -1085,6 +1087,51 @@ const Personalize = () => {
                         ))}
                       </div>
                     )}
+
+                    <Divider />
+
+                    {/* Lightroom Plugin */}
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading
+                        title="Lightroom Plugin"
+                        description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin."
+                      />
+                      <div className="flex items-start gap-4 p-5 border border-border bg-card">
+                        <Download className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <div className="flex-1 space-y-2">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-light">DavionsConnect-1.0.lrplugin</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              Compatible with Lightroom Classic 9 (2019) and later. macOS and Windows.
+                            </p>
+                          </div>
+                          <a
+                            href="/downloads/DavionsConnect-1.0.lrplugin.zip"
+                            download="DavionsConnect-1.0.lrplugin.zip"
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[11px] font-light tracking-wide transition-colors"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Download Plugin (.zip)
+                          </a>
+                        </div>
+                      </div>
+                      <div className="space-y-px">
+                        {[
+                          { n: "01", title: "Download and unzip the plugin", desc: "Click the download button above to get the latest DavionsConnect package. Unzip it to a permanent folder — do not move it after installation." },
+                          { n: "02", title: "Open the Plug-in Manager in Lightroom Classic", desc: 'Go to File → Plug-in Manager (or press Ctrl/⌘ + Alt + Shift + ,). Click "Add" and navigate to the unzipped .lrplugin folder.' },
+                          { n: "03", title: "Sign in with your Davions account", desc: "In the plugin settings panel, enter the same email and password you use to log in to Davions. This authenticates the plugin with your account." },
+                          { n: "04", title: "Create a Publish Service collection", desc: 'In the Library module, go to Publish Services and click "Set Up" next to Davions. Create a collection for each gallery you want to sync.' },
+                        ].map((step) => (
+                          <div key={step.n} className="flex gap-4 p-4 border border-border bg-card">
+                            <span className="text-xl font-light text-muted-foreground/30 shrink-0 w-7 text-right leading-none mt-0.5">{step.n}</span>
+                            <div className="space-y-0.5">
+                              <p className="text-[12px] font-light">{step.title}</p>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
                   </TabsContent>
 
                 </Tabs>
