@@ -119,6 +119,7 @@ const App = () => (
                 <Route path="/dashboard/personalize" element={<ProtectedRoute><Personalize /></ProtectedRoute>} />
                 <Route path="/dashboard/custom-domain-docs" element={<ProtectedRoute><CustomDomainDocs /></ProtectedRoute>} />
                  <Route path="/dashboard/lightroom-plugin" element={<Navigate to="/dashboard/personalize?tab=galleries" replace />} />
+                 <Route path="/dashboard/lightroom-plugin-help" element={<ProtectedRoute><LightroomPluginHelp /></ProtectedRoute>} />
                 <Route path="/dashboard/contracts/new" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
