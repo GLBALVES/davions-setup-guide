@@ -311,6 +311,57 @@ const GalleryView = () => {
     if (searchParams.get("purchased") === "true") setPurchaseSuccess(true);
   }, [searchParams]);
 
+  // ── Fetch renewal settings when gallery is expired ───────────────────────
+  useEffect(() => {
+    if (!gallery?.expires_at) return;
+    const expired = new Date(gallery.expires_at) < new Date();
+    if (!expired || settingsFetched) return;
+    const fetchSettings = async () => {
+      const { data } = await supabase
+        .from("gallery_settings")
+        .select("key, value")
+        .eq("photographer_id", gallery.photographer_id)
+        .in("key", ["reactivation_fee", "default_expiry_days"]);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((s: { key: string; value: string | null }) => {
+        if (s.value != null) map[s.key] = s.value;
+      });
+      setRenewalFee(parseFloat(map["reactivation_fee"] ?? "0"));
+      setRenewalDays(parseInt(map["default_expiry_days"] ?? "30", 10));
+      setSettingsFetched(true);
+    };
+    fetchSettings();
+  }, [gallery, settingsFetched]);
+
+  // ── Auto-confirm reactivation on return from Stripe ──────────────────────
+  useEffect(() => {
+    if (reactivationHandled.current) return;
+    if (searchParams.get("reactivated") !== "true") return;
+    if (!gallery) return;
+    reactivationHandled.current = true;
+    const sessionId = searchParams.get("session_id") ?? undefined;
+    const confirmReactivation = async () => {
+      setRenewalLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("confirm-gallery-reactivation", {
+          body: { galleryId: gallery.id, sessionId },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          setRenewalSuccess(true);
+          // Reload gallery to reflect new expiry
+          window.location.href = window.location.pathname;
+        }
+      } catch (err: any) {
+        setRenewalError(err?.message ?? "Could not confirm renewal");
+      } finally {
+        setRenewalLoading(false);
+      }
+    };
+    confirmReactivation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gallery, searchParams]);
+
   // ── Fetch gallery ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchGallery = async () => {
