@@ -269,7 +269,7 @@ const Settings = () => {
 
   // ── Security: Change Password ──
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       toast({ title: "Fill in all fields", variant: "destructive" });
       return;
     }
@@ -281,7 +281,21 @@ const Settings = () => {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
+    if (newPassword === currentPassword) {
+      toast({ title: "Same password", description: "The new password must be different from the current one.", variant: "destructive" });
+      return;
+    }
     setSavingPassword(true);
+    // Re-authenticate with current password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user!.email!,
+      password: currentPassword,
+    });
+    if (signInError) {
+      toast({ title: "Incorrect current password", description: "Please check your current password and try again.", variant: "destructive" });
+      setSavingPassword(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
       toast({ title: "Failed to update password", description: error.message, variant: "destructive" });
@@ -677,6 +691,26 @@ const Settings = () => {
 
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Current Password</Label>
+                          <div className="relative">
+                            <Input
+                              type={showCurrentPw ? "text" : "password"}
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="h-9 text-sm font-light pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPw((v) => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showCurrentPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">New Password</Label>
                           <div className="relative">
                             <Input
@@ -721,7 +755,7 @@ const Settings = () => {
                         <Button
                           size="sm"
                           onClick={handleChangePassword}
-                          disabled={savingPassword || !newPassword || !confirmPassword}
+                          disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
                           className="gap-2 text-xs tracking-wider uppercase font-light"
                         >
                           {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
