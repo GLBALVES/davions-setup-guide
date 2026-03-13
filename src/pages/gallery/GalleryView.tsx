@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine, LayoutGrid, LayoutList, CheckCheck, MousePointerSquareDashed } from "lucide-react";
+import { Lock, Image, CalendarX2, Heart, ShoppingCart, X, Loader2, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, Download, PackageOpen, ArrowDownToLine, LayoutGrid, LayoutList, CheckCheck, MousePointerSquareDashed, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -245,6 +245,17 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
+  // Renewal state
+  const [renewalFee, setRenewalFee] = useState<number>(0);
+  const [renewalDays, setRenewalDays] = useState<number>(30);
+  const [renewalName, setRenewalName] = useState("");
+  const [renewalEmail, setRenewalEmail] = useState("");
+  const [renewalLoading, setRenewalLoading] = useState(false);
+  const [renewalSuccess, setRenewalSuccess] = useState(false);
+  const [renewalError, setRenewalError] = useState<string | null>(null);
+  const [settingsFetched, setSettingsFetched] = useState(false);
+  const reactivationHandled = useRef(false);
+
   // Download state (final galleries)
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -299,6 +310,57 @@ const GalleryView = () => {
   useEffect(() => {
     if (searchParams.get("purchased") === "true") setPurchaseSuccess(true);
   }, [searchParams]);
+
+  // ── Fetch renewal settings when gallery is expired ───────────────────────
+  useEffect(() => {
+    if (!gallery?.expires_at) return;
+    const expired = new Date(gallery.expires_at) < new Date();
+    if (!expired || settingsFetched) return;
+    const fetchSettings = async () => {
+      const { data } = await supabase
+        .from("gallery_settings")
+        .select("key, value")
+        .eq("photographer_id", gallery.photographer_id)
+        .in("key", ["reactivation_fee", "default_expiry_days"]);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((s: { key: string; value: string | null }) => {
+        if (s.value != null) map[s.key] = s.value;
+      });
+      setRenewalFee(parseFloat(map["reactivation_fee"] ?? "0"));
+      setRenewalDays(parseInt(map["default_expiry_days"] ?? "30", 10));
+      setSettingsFetched(true);
+    };
+    fetchSettings();
+  }, [gallery, settingsFetched]);
+
+  // ── Auto-confirm reactivation on return from Stripe ──────────────────────
+  useEffect(() => {
+    if (reactivationHandled.current) return;
+    if (searchParams.get("reactivated") !== "true") return;
+    if (!gallery) return;
+    reactivationHandled.current = true;
+    const sessionId = searchParams.get("session_id") ?? undefined;
+    const confirmReactivation = async () => {
+      setRenewalLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("confirm-gallery-reactivation", {
+          body: { galleryId: gallery.id, sessionId },
+        });
+        if (error) throw error;
+        if (data?.success) {
+          setRenewalSuccess(true);
+          // Reload gallery to reflect new expiry
+          window.location.href = window.location.pathname;
+        }
+      } catch (err: any) {
+        setRenewalError(err?.message ?? "Could not confirm renewal");
+      } finally {
+        setRenewalLoading(false);
+      }
+    };
+    confirmReactivation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gallery, searchParams]);
 
   // ── Fetch gallery ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -600,25 +662,123 @@ const GalleryView = () => {
 
   const isExpired = gallery?.expires_at ? new Date(gallery.expires_at) < new Date() : false;
 
+  // ── Renewal handler ───────────────────────────────────────────────────────
+  const handleRenewal = async () => {
+    if (!gallery || !renewalEmail.trim()) return;
+    setRenewalLoading(true);
+    setRenewalError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("reactivate-gallery", {
+        body: {
+          galleryId: gallery.id,
+          clientEmail: renewalEmail.trim(),
+          clientName: renewalName.trim() || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.free) {
+        setRenewalSuccess(true);
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      setRenewalError(err?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setRenewalLoading(false);
+    }
+  };
+
   if (isExpired) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
           <PhotographerBrand brand={photographerBrand} />
         </header>
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
-          <div className="h-20 w-20 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
-            <CalendarX2 className="h-9 w-9" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
-            <p className="text-sm text-muted-foreground max-w-xs">This gallery has expired and is no longer available.</p>
-            {gallery?.expires_at && (
-              <p className="text-[11px] text-muted-foreground/50 tracking-wider uppercase mt-1">
-                Expired on {new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-              </p>
-            )}
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+          {renewalLoading && !renewalSuccess ? (
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground tracking-wide">Processing renewal…</p>
+            </div>
+          ) : renewalSuccess ? (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-light tracking-wide">Access Renewed!</h2>
+              <p className="text-sm text-muted-foreground">Reloading your gallery…</p>
+            </div>
+          ) : (
+            <div className="w-full max-w-md flex flex-col gap-8">
+              {/* Expired notice */}
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="h-16 w-16 rounded-full border border-border flex items-center justify-center text-muted-foreground/40">
+                  <CalendarX2 className="h-8 w-8" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-light tracking-wide">{gallery?.title}</h1>
+                  {gallery?.expires_at && (
+                    <p className="text-xs text-muted-foreground/60 tracking-widest uppercase mt-1.5">
+                      Expired on {new Date(gallery.expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Renewal card */}
+              <div className="border border-border rounded-lg p-6 flex flex-col gap-5">
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-sm font-medium tracking-wide">Renew gallery access</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {renewalFee > 0
+                      ? `Regain access for ${renewalDays} days for $${renewalFee.toFixed(2)}.`
+                      : `Regain access for ${renewalDays} days, free of charge.`}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs">Your name</Label>
+                    <Input
+                      placeholder="Jane Smith"
+                      value={renewalName}
+                      onChange={(e) => setRenewalName(e.target.value)}
+                      disabled={renewalLoading}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs">Email address <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="email"
+                      placeholder="jane@example.com"
+                      value={renewalEmail}
+                      onChange={(e) => setRenewalEmail(e.target.value)}
+                      disabled={renewalLoading}
+                    />
+                  </div>
+                </div>
+
+                {renewalError && (
+                  <p className="text-xs text-destructive">{renewalError}</p>
+                )}
+
+                <Button
+                  onClick={handleRenewal}
+                  disabled={!renewalEmail.trim() || renewalLoading}
+                  className="w-full"
+                >
+                  {renewalLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+                  ) : renewalFee > 0 ? (
+                    <><RefreshCw className="h-4 w-4" /> Renew — ${renewalFee.toFixed(2)}</>
+                  ) : (
+                    <><RefreshCw className="h-4 w-4" /> Renew Access</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         <footer className="border-t border-border py-4 px-6 flex items-center justify-center">
           <p className="text-[10px] tracking-widest uppercase text-muted-foreground/50">Powered by Davions</p>
