@@ -28,9 +28,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Configure your API Token",
+    title: "Sign in with your Davions account",
     description:
-      "In the plugin settings panel (left sidebar of the Plug-in Manager), paste your API Token from the section below. This authenticates the plugin with your account.",
+      "In the plugin settings panel (left sidebar of the Plug-in Manager), enter the same email and password you use to log in to Davions. This authenticates the plugin with your account.",
   },
   {
     number: "04",
