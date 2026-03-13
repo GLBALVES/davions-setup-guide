@@ -16,7 +16,7 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download,
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
