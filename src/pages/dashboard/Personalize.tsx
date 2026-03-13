@@ -16,7 +16,7 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download,
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
@@ -1092,10 +1092,19 @@ const Personalize = () => {
 
                     {/* Lightroom Plugin */}
                     <section className="flex flex-col gap-5">
-                      <SectionHeading
-                        title="Lightroom Plugin"
-                        description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin."
-                      />
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                          title="Lightroom Plugin"
+                          description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin."
+                        />
+                        <a
+                          href="/dashboard/lightroom-plugin-help"
+                          className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-light text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
+                        >
+                          View help
+                          <ChevronRight className="h-3 w-3" />
+                        </a>
+                      </div>
                       <div className="flex items-start gap-4 p-5 border border-border bg-card">
                         <Download className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div className="flex-1 space-y-2">
