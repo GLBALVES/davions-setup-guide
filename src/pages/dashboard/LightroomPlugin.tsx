@@ -11,7 +11,7 @@ import {
   Trash2,
   UploadCloud,
 } from "lucide-react";
-import { toast } from "sonner";
+
 
 const steps = [
   {
@@ -124,18 +124,14 @@ const LightroomPlugin = () => {
                   <Download className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-3">
                     <div className="space-y-1">
-                      <p className="text-sm font-light">davions.lrplugin</p>
+                      <p className="text-sm font-light">DavionsConnect-1.0.lrplugin</p>
                       <p className="text-[12px] text-muted-foreground leading-relaxed">
                         Compatible with Lightroom Classic 9 (2019) and later. macOS and Windows.
                       </p>
                     </div>
-                    {/* Replace the href below with the actual hosted .zip URL when available */}
                     <a
-                      href="#download-placeholder"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toast.info("Plugin download link coming soon.");
-                      }}
+                      href="/downloads/DavionsConnect-1.0.lrplugin.zip"
+                      download="DavionsConnect-1.0.lrplugin.zip"
                       className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[12px] font-light tracking-wide transition-colors"
                     >
                       <Download className="h-3.5 w-3.5" />
