@@ -41,6 +41,7 @@ import AIAgents from "./pages/dashboard/AIAgents";
 import Chat from "./pages/dashboard/Chat";
 import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
+import LightroomPlugin from "./pages/dashboard/LightroomPlugin";
 import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";

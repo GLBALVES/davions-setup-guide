@@ -46,6 +46,7 @@ import {
   Pencil,
   Check,
   CreditCard,
+  SlidersHorizontal,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
