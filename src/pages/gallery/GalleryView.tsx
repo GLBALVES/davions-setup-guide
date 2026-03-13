@@ -677,6 +677,10 @@ const GalleryView = () => {
         },
       });
       if (error) throw error;
+      if (data?.error === "email_mismatch") {
+        setRenewalError("This email is not associated with this gallery. Please use the email provided at the time of booking.");
+        return;
+      }
       if (data?.free) {
         setRenewalSuccess(true);
         setTimeout(() => window.location.reload(), 1500);
