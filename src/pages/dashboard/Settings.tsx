@@ -660,7 +660,161 @@ const Settings = () => {
                     )}
                   </TabsContent>
 
+                  {/* ── SECURITY TAB ── */}
+                  <TabsContent value="security" className="mt-0 flex flex-col gap-10">
+
+                    {/* Change Password */}
+                    <section className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-widest uppercase font-light text-foreground flex items-center gap-2">
+                          <KeyRound className="h-3.5 w-3.5" />
+                          Change Password
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-light">
+                          Enter a new password for your account. Minimum 8 characters.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">New Password</Label>
+                          <div className="relative">
+                            <Input
+                              type={showNewPw ? "text" : "password"}
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="h-9 text-sm font-light pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPw((v) => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showNewPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">Confirm New Password</Label>
+                          <div className="relative">
+                            <Input
+                              type={showConfirmPw ? "text" : "password"}
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="h-9 text-sm font-light pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPw((v) => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showConfirmPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Button
+                          size="sm"
+                          onClick={handleChangePassword}
+                          disabled={savingPassword || !newPassword || !confirmPassword}
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                          {savingPassword ? "Updating…" : "Update Password"}
+                        </Button>
+                      </div>
+                    </section>
+
+                    {/* Divider */}
+                    <div className="border-t border-border" />
+
+                    {/* Delete Account */}
+                    <section className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-widest uppercase font-light text-destructive flex items-center gap-2">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete Account
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                          Permanently delete your account and all associated data. This action is irreversible and cannot be undone.
+                        </p>
+                      </div>
+
+                      <div className="border border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-3">
+                        <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                          The following data will be permanently deleted:
+                        </p>
+                        {["Your profile and settings", "All galleries and photos", "All sessions and bookings", "All creative content and templates"].map((item) => (
+                          <div key={item} className="flex items-center gap-2">
+                            <span className="h-1 w-1 rounded-full bg-destructive/60 shrink-0" />
+                            <p className="text-[11px] font-light text-foreground/80">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setDeleteDialogOpen(true); setDeleteConfirmInput(""); }}
+                          className="gap-2 text-xs tracking-wider uppercase font-light border-destructive/40 text-destructive hover:bg-destructive/5"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete My Account
+                        </Button>
+                      </div>
+                    </section>
+
+                  </TabsContent>
+
                 </Tabs>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Delete Account Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-light tracking-wide">Delete Account</AlertDialogTitle>
+            <AlertDialogDescription className="text-[11px] leading-relaxed">
+              This action is permanent and cannot be undone. All your data will be erased.
+              <br /><br />
+              Type <strong className="text-foreground">DELETE</strong> below to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Input
+              value={deleteConfirmInput}
+              onChange={(e) => setDeleteConfirmInput(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="h-9 text-sm font-light"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-xs tracking-wider uppercase font-light h-9">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmInput !== "DELETE" || deletingAccount}
+              className="text-xs tracking-wider uppercase font-light h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive disabled:opacity-40"
+            >
+              {deletingAccount ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : null}
+              {deletingAccount ? "Deleting…" : "Delete Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
               )}
             </div>
           </main>
