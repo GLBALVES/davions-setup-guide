@@ -755,7 +755,7 @@ const Settings = () => {
                         <Button
                           size="sm"
                           onClick={handleChangePassword}
-                          disabled={savingPassword || !newPassword || !confirmPassword}
+                          disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
                           className="gap-2 text-xs tracking-wider uppercase font-light"
                         >
                           {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
