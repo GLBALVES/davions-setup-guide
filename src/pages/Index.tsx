@@ -385,7 +385,7 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-start justify-between gap-8">
             {/* Brand */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 items-start">
               <img src={logoPrincipal} alt="Davions" className="h-6 w-auto object-contain" />
               <p className="text-xs font-light text-muted-foreground max-w-xs leading-relaxed">
                 The all-in-one platform for photographers to deliver, showcase, and sell their work.
