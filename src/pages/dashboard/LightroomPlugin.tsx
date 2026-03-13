@@ -196,7 +196,7 @@ const LightroomPlugin = () => {
                     className="flex items-center gap-1.5 px-4 py-3 border-l border-border bg-card hover:bg-accent text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   >
                     {copied ? (
-                      <Check className="h-3.5 w-3.5 text-green-500" />
+                      <Check className="h-3.5 w-3.5 text-primary" />
                     ) : (
                       <Copy className="h-3.5 w-3.5" />
                     )}
