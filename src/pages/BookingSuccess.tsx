@@ -67,6 +67,35 @@ const BookingSuccess = () => {
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
 
+  // ── Confirm payment fallback (runs once when status is still pending) ───────
+  const confirmPaymentIfNeeded = async (
+    currentBooking: BookingDetails,
+    checkoutSessionId: string | null
+  ) => {
+    if (!checkoutSessionId || currentBooking.status === "confirmed") return currentBooking;
+
+    setConfirmingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("confirm-booking", {
+        body: { bookingId, checkoutSessionId },
+      });
+      if (!error && data?.confirmed) {
+        // Re-fetch the booking to get the updated status
+        const { data: refreshed } = await supabase
+          .from("bookings")
+          .select("client_name, client_email, booked_date, status, payment_status, availability_id")
+          .eq("id", bookingId!)
+          .single();
+        if (refreshed) return refreshed as BookingDetails;
+      }
+    } catch (e) {
+      console.error("confirm-booking failed:", e);
+    } finally {
+      setConfirmingPayment(false);
+    }
+    return currentBooking;
+  };
+
   // ── Load booking + session + briefing ─────────────────────────────────────
   useEffect(() => {
     if (!bookingId || !sessionId) {
@@ -75,10 +104,13 @@ const BookingSuccess = () => {
     }
 
     const load = async () => {
+      // Get checkout session id from URL params
+      const checkoutSessionId = searchParams.get("checkout_session_id");
+
       const [{ data: bookingData }, { data: sessionData }] = await Promise.all([
         supabase
           .from("bookings")
-          .select("client_name, client_email, booked_date, status, payment_status, availability_id")
+          .select("client_name, client_email, booked_date, status, payment_status, availability_id, stripe_checkout_session_id")
           .eq("id", bookingId)
           .single(),
         (supabase as any)
