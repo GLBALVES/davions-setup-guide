@@ -191,9 +191,9 @@ export function MonthView({
                 </div>
               ))}
 
-              {/* Bookings */}
-              <div className="flex flex-col gap-0.5 overflow-hidden relative z-10">
-                {dayBookings.slice(0, 3).map((b) => (
+              {/* Bookings — all shown, cell grows to fit */}
+              <div className="flex flex-col gap-0.5 relative z-10">
+                {dayBookings.map((b) => (
                   <button
                     key={b.id}
                     onClick={() => onBookingClick(b)}
@@ -204,11 +204,6 @@ export function MonthView({
                     {b.client_name}
                   </button>
                 ))}
-                {dayBookings.length > 3 && (
-                  <span className="text-[9px] text-muted-foreground/60 px-1">
-                    +{dayBookings.length - 3} more
-                  </span>
-                )}
                 {extraBlocked > 0 && (
                   <div className="flex items-center gap-1 px-1 py-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
