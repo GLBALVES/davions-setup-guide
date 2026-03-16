@@ -1025,136 +1025,179 @@ const GalleryView = () => {
                   </span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="end" sideOffset={8} className="w-80 p-0 rounded-none border-border shadow-2xl">
+              <PopoverContent align="end" sideOffset={8} className="w-[340px] p-0 rounded-lg border-border shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="px-4 py-2.5 bg-muted/40 border-b border-border flex items-center justify-between">
-                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Order Summary</p>
-                  <span className="flex items-center gap-1 text-rose-600">
-                    <Heart className="h-3 w-3 fill-rose-500" />
-                    <span className="text-xs font-medium">{favCount} selected</span>
+                <div className="px-5 py-3 bg-foreground flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-background/70 font-light">Order Summary</p>
+                  <span className="flex items-center gap-1.5 text-background">
+                    <Heart className="h-3.5 w-3.5 fill-background" />
+                    <span className="text-xs font-medium">{favCount} photo{favCount !== 1 ? "s" : ""} selected</span>
                   </span>
                 </div>
 
-                <div className="px-4 py-3 flex flex-col gap-0">
-                  {/* Session block */}
+                <div className="flex flex-col divide-y divide-border">
+
+                  {/* ── SESSION BLOCK ── */}
                   {inlineSummary && (
-                    <>
-                      <div className="flex flex-col gap-1.5 pb-3">
-                        {inlineSummary.bi.session_title && (
-                          <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">{inlineSummary.bi.session_title}</p>
-                        )}
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground font-light">Session fee</span>
-                          <span className="tabular-nums">{formatCurrency(inlineSummary.bi.session_price)}</span>
-                        </div>
-                        {inlineSummary.bi.extras_total > 0 && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground font-light">Add-ons / Extras</span>
-                            <span className="tabular-nums">{formatCurrency(inlineSummary.bi.extras_total)}</span>
-                          </div>
-                        )}
-                        {inlineSummary.taxAmount > 0 && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground font-light">Tax ({inlineSummary.bi.tax_rate}%)</span>
-                            <span className="tabular-nums">{formatCurrency(inlineSummary.taxAmount)}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between text-xs border-t border-border pt-1.5 mt-0.5">
-                          <span className="font-medium text-foreground">Session total</span>
-                          <span className="tabular-nums font-medium">{formatCurrency(inlineSummary.sessionTotal)}</span>
-                        </div>
-                        {inlineSummary.sessionPaid > 0 && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground font-light">
-                              {inlineSummary.bi.payment_status === "paid" ? "Paid in full" : "Deposit paid"}
-                            </span>
-                            <span className="tabular-nums text-primary">− {formatCurrency(inlineSummary.sessionPaid)}</span>
-                          </div>
-                        )}
-                        {inlineSummary.sessionBalance > 0 && (
-                          <div className="flex items-center justify-between text-xs bg-amber-50 dark:bg-amber-950/20 -mx-4 px-4 py-1.5 mt-0.5 border-t border-amber-200 dark:border-amber-800">
-                            <span className="text-amber-700 dark:text-amber-400 font-medium">Session balance due</span>
-                            <span className="tabular-nums text-amber-700 dark:text-amber-400 font-medium">{formatCurrency(inlineSummary.sessionBalance)}</span>
-                          </div>
-                        )}
-                        {inlineSummary.sessionBalance === 0 && inlineSummary.sessionPaid > 0 && (
-                          <div className="flex items-center justify-between text-xs bg-primary/5 -mx-4 px-4 py-1.5 mt-0.5 border-t border-border">
-                            <span className="text-muted-foreground font-light">Session balance</span>
-                            <span className="tabular-nums text-primary font-medium">Paid in full ✓</span>
-                          </div>
-                        )}
+                    <div className="px-5 py-4 flex flex-col gap-2.5">
+                      {inlineSummary.bi.session_title && (
+                        <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">{inlineSummary.bi.session_title}</p>
+                      )}
+
+                      {/* Session fee */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-light">Session fee</span>
+                        <span className="text-xs tabular-nums text-foreground">{formatCurrency(inlineSummary.bi.session_price)}</span>
                       </div>
 
-                      {/* Photo selection block */}
-                      {pricePerPhoto > 0 && (
-                        <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-                          <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">Photo Selection</p>
-                          {/* Tiered pricing table */}
-                          {photoTiers.length > 0 && (
-                            <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2 mb-1 border-y border-border">
-                              <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1">Extra photo pricing tiers</p>
-                              {photoTiers.map((t) => (
-                                <div key={t.id} className={`flex items-center justify-between text-[10px] ${inlineSummary.activeTier?.id === t.id && inlineSummary.extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
-                                  <span>{t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
-                                  <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {inlineSummary.includedPhotos > 0 && (
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground font-light">Included in session</span>
-                              <span className="text-muted-foreground tabular-nums">{inlineSummary.includedPhotos} photo{inlineSummary.includedPhotos !== 1 ? "s" : ""}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground font-light">Selected</span>
-                            <span className="tabular-nums font-medium text-foreground flex items-center gap-1.5">
-                              <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
-                              {favCount} photo{favCount !== 1 ? "s" : ""}
-                            </span>
-                          </div>
-                          {inlineSummary.extraPhotos > 0 ? (
-                            <div className="flex items-center justify-between text-xs bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2 mt-0.5 border-t border-rose-100 dark:border-rose-900">
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
-                                <span className="text-[10px] text-rose-500/70 font-light">
-                                  {inlineSummary.extraPhotos} photo{inlineSummary.extraPhotos !== 1 ? "s" : ""} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} each
-                                  {inlineSummary.activeTier && (
-                                    <> · tier {inlineSummary.activeTier.min_photos}{inlineSummary.activeTier.max_photos ? `–${inlineSummary.activeTier.max_photos}` : "+"} photos</>
-                                  )}
-                                </span>
-                              </div>
-                              <span className="tabular-nums font-medium text-rose-700 dark:text-rose-400">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
-                            </div>
-                          ) : inlineSummary.includedPhotos > 0 ? (
-                            <div className="flex items-center justify-between text-xs text-muted-foreground/60">
-                              <span className="font-light italic">Within included quantity</span>
-                              <span className="tabular-nums">No extra charge</span>
-                            </div>
-                          ) : null}
-                          {pricePerPhoto > 0 && inlineSummary.includedPhotos === 0 && (
-                            <div className="flex items-center justify-between text-xs border-t border-border pt-1.5 mt-0.5">
-                              <span className="font-medium text-foreground">Photos total</span>
-                              <span className="tabular-nums font-medium">{formatCurrency(inlineSummary.photoSelectionCost)}</span>
-                            </div>
-                          )}
+                      {/* Add-ons */}
+                      {inlineSummary.bi.extras_total > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground font-light">Add-ons</span>
+                          <span className="text-xs tabular-nums text-foreground">{formatCurrency(inlineSummary.bi.extras_total)}</span>
                         </div>
                       )}
-                    </>
+
+                      {/* Tax */}
+                      {inlineSummary.taxAmount > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground font-light">Tax ({inlineSummary.bi.tax_rate}%)</span>
+                          <span className="text-xs tabular-nums text-foreground">{formatCurrency(inlineSummary.taxAmount)}</span>
+                        </div>
+                      )}
+
+                      {/* Session subtotal */}
+                      <div className="flex items-center justify-between pt-1.5 border-t border-border">
+                        <span className="text-xs font-semibold text-foreground tracking-wide">Session total</span>
+                        <span className="text-xs tabular-nums font-semibold text-foreground">{formatCurrency(inlineSummary.sessionTotal)}</span>
+                      </div>
+
+                      {/* Deposit paid */}
+                      {inlineSummary.sessionPaid > 0 && (
+                        <div className="flex items-center justify-between rounded-md bg-primary/8 px-3 py-2 -mx-0.5">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] tracking-[0.18em] uppercase text-primary/70 font-medium">Deposit paid</span>
+                            <span className="text-[10px] text-muted-foreground font-light">
+                              {inlineSummary.bi.payment_status === "paid" ? "Paid in full" : "Partial deposit"}
+                            </span>
+                          </div>
+                          <span className="text-sm tabular-nums font-semibold text-primary">− {formatCurrency(inlineSummary.sessionPaid)}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
 
-                  {/* Fallback when no booking info */}
+                  {/* ── EXTRA PHOTOS BLOCK ── */}
+                  {inlineSummary && pricePerPhoto > 0 && (
+                    <div className="px-5 py-4 flex flex-col gap-2.5">
+                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">Extra Photos</p>
+
+                      {/* Included */}
+                      {inlineSummary.includedPhotos > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground font-light">Included in session</span>
+                          <span className="text-xs tabular-nums text-muted-foreground">{inlineSummary.includedPhotos} photos</span>
+                        </div>
+                      )}
+
+                      {/* Selected */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-light">You selected</span>
+                        <span className="text-xs tabular-nums font-medium text-foreground flex items-center gap-1">
+                          <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
+                          {favCount} photos
+                        </span>
+                      </div>
+
+                      {/* Pricing tiers */}
+                      {photoTiers.length > 0 && (
+                        <div className="flex flex-col gap-1 bg-muted/40 rounded-md px-3 py-2.5 -mx-0.5">
+                          <p className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground/50 font-light mb-0.5">Pricing tiers</p>
+                          {photoTiers.map((t) => {
+                            const isActive = inlineSummary.activeTier?.id === t.id && inlineSummary.extraPhotos > 0;
+                            return (
+                              <div key={t.id} className={`flex items-center justify-between text-[11px] ${isActive ? "text-rose-700 font-semibold" : "text-muted-foreground font-light"}`}>
+                                <span className="flex items-center gap-1.5">
+                                  {isActive && <span className="h-1.5 w-1.5 rounded-full bg-rose-500 inline-block" />}
+                                  {!isActive && <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/20 inline-block" />}
+                                  {t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}
+                                </span>
+                                <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Extra photos cost */}
+                      {inlineSummary.extraPhotos > 0 ? (
+                        <div className="flex items-center justify-between rounded-md bg-rose-50 dark:bg-rose-950/30 px-3 py-2.5 -mx-0.5 border border-rose-200 dark:border-rose-900">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] tracking-[0.18em] uppercase text-rose-700 dark:text-rose-400 font-semibold">Extra Photos</span>
+                            <span className="text-[10px] text-rose-500/80 font-light">
+                              {inlineSummary.extraPhotos} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} / photo
+                            </span>
+                          </div>
+                          <span className="text-sm tabular-nums font-bold text-rose-700 dark:text-rose-400">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
+                        </div>
+                      ) : inlineSummary.includedPhotos > 0 && (
+                        <div className="flex items-center justify-between text-xs text-muted-foreground/60 italic">
+                          <span>Within included quantity</span>
+                          <span className="tabular-nums text-primary/70 font-medium not-italic">No extra charge</span>
+                        </div>
+                      )}
+
+                      {/* Photos total (no booking) */}
+                      {inlineSummary.includedPhotos === 0 && (
+                        <div className="flex items-center justify-between pt-1.5 border-t border-border">
+                          <span className="text-xs font-semibold text-foreground">Photos total</span>
+                          <span className="text-xs tabular-nums font-semibold text-foreground">{formatCurrency(inlineSummary.photoSelectionCost)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Fallback: no booking */}
                   {!inlineSummary && pricePerPhoto > 0 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
-                      <span className="tabular-nums font-medium">{formatCurrency(totalPrice)}</span>
+                    <div className="px-5 py-4 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
+                      <span className="text-xs tabular-nums font-semibold text-foreground">{formatCurrency(totalPrice)}</span>
+                    </div>
+                  )}
+
+                  {/* ── BALANCE DUE ── */}
+                  {inlineSummary && (inlineSummary.sessionBalance > 0 || inlineSummary.extraPhotoCost > 0) && (
+                    <div className="px-5 py-4 bg-foreground/[0.03] flex flex-col gap-2">
+                      {inlineSummary.sessionBalance > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground font-light">Session balance</span>
+                          <span className="text-xs tabular-nums text-amber-700 dark:text-amber-400 font-semibold">{formatCurrency(inlineSummary.sessionBalance)}</span>
+                        </div>
+                      )}
+                      {inlineSummary.extraPhotoCost > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground font-light">Extra photos</span>
+                          <span className="text-xs tabular-nums text-rose-700 dark:text-rose-400 font-semibold">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <span className="text-sm font-bold text-foreground tracking-wide">Balance due today</span>
+                        <span className="text-base tabular-nums font-bold text-foreground">{formatCurrency(inlineSummary.sessionBalance + inlineSummary.extraPhotoCost)}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fully paid, no extras */}
+                  {inlineSummary && inlineSummary.sessionBalance === 0 && inlineSummary.extraPhotoCost === 0 && inlineSummary.sessionPaid > 0 && (
+                    <div className="px-5 py-3 bg-primary/5 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-light">Balance</span>
+                      <span className="text-xs tabular-nums text-primary font-semibold">Paid in full ✓</span>
                     </div>
                   )}
                 </div>
 
                 {/* CTA */}
-                <div className="px-4 pb-4 pt-1 border-t border-border mt-1">
+                <div className="px-5 py-4 border-t border-border bg-background">
                   <Button
                     onClick={() => setPurchaseOpen(true)}
                     className="w-full gap-2 text-xs tracking-widest uppercase font-light"
