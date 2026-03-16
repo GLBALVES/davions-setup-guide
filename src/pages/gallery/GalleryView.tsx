@@ -1328,6 +1328,18 @@ const GalleryView = () => {
                       {pricePerPhoto > 0 && (
                         <div className="flex flex-col gap-1.5 border-t border-border pt-3">
                           <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">Photo Selection</p>
+                          {/* Tiered pricing table */}
+                          {photoTiers.length > 0 && (
+                            <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2 mb-1 border-y border-border">
+                              <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1">Extra photo pricing tiers</p>
+                              {photoTiers.map((t) => (
+                                <div key={t.id} className={`flex items-center justify-between text-[10px] ${inlineSummary.activeTier?.id === t.id && inlineSummary.extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
+                                  <span>{t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
+                                  <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           {inlineSummary.includedPhotos > 0 && (
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-muted-foreground font-light">Included in session</span>
