@@ -434,11 +434,12 @@ const GalleryView = () => {
         try {
           const { data: bookingData } = await supabase
             .from("bookings")
-            .select("payment_status, extras_total, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
+            .select("payment_status, extras_total, session_id, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
             .eq("id", data.booking_id)
             .single();
           if (bookingData) {
             const s = (bookingData as any).sessions;
+            const sessionId = bookingData.session_id as string;
             setBookingInfo({
               payment_status: bookingData.payment_status ?? "pending",
               extras_total: bookingData.extras_total ?? 0,
@@ -449,7 +450,19 @@ const GalleryView = () => {
               deposit_type: s?.deposit_type ?? "fixed",
               num_photos: s?.num_photos ?? 0,
               session_title: s?.title ?? "",
+              session_id: sessionId,
             });
+            // Fetch photo tiers for this session
+            if (sessionId) {
+              const { data: tiersData } = await supabase
+                .from("session_photo_tiers")
+                .select("id, min_photos, max_photos, price_per_photo")
+                .eq("session_id", sessionId)
+                .order("min_photos", { ascending: true });
+              if (tiersData && tiersData.length > 0) {
+                setPhotoTiers(tiersData as PhotoTier[]);
+              }
+            }
           }
         } catch { /* non-blocking */ }
       }
