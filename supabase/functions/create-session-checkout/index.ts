@@ -29,7 +29,7 @@ serve(async (req) => {
 
   try {
     const {
-      bookingId,
+      bookingId: existingBookingId,
       sessionId,
       slotId,
       bookedDate,
