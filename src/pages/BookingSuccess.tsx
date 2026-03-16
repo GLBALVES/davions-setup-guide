@@ -121,9 +121,16 @@ const BookingSuccess = () => {
       ]);
 
       if (bookingData) {
-        setBooking(bookingData as BookingDetails);
+        // If booking is still pending, try to confirm it via Stripe verification
+        const rawBooking = bookingData as BookingDetails & { stripe_checkout_session_id?: string };
+        const csId = checkoutSessionId || rawBooking.stripe_checkout_session_id || null;
+        const confirmedBooking = rawBooking.status === "pending"
+          ? await confirmPaymentIfNeeded(rawBooking, csId)
+          : rawBooking;
 
-        const availId = (bookingData as { availability_id: string }).availability_id;
+        setBooking(confirmedBooking);
+
+        const availId = confirmedBooking.availability_id;
         if (availId) {
           const { data: availData } = await supabase
             .from("session_availability")
