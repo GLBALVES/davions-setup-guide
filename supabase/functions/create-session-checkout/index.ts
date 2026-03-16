@@ -32,10 +32,27 @@ serve(async (req) => {
       bookingId,
       sessionId,
       slotId,
+      bookedDate,
+      startTime,
       clientEmail,
       clientName,
       selectedExtras = [],
     } = await req.json();
+
+    // Format booking date & time for display (12-hour AM/PM)
+    const formatBookedDate = (dateStr: string): string => {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const date = new Date(y, m - 1, d);
+      return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    };
+    const formatTime12 = (time: string): string => {
+      const [h, min] = time.split(":").map(Number);
+      const period = h >= 12 ? "PM" : "AM";
+      const hour12 = h % 12 || 12;
+      return `${hour12}:${String(min).padStart(2, "0")} ${period}`;
+    };
+    const bookingDateLabel = bookedDate ? formatBookedDate(bookedDate) : null;
+    const bookingTimeLabel = startTime ? formatTime12(startTime) : null;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
