@@ -121,6 +121,10 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // ── Helper: format BRL cents to readable string ──
+    const fmt = (cents: number) =>
+      (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
     // ── Build line items ──
     const extras: SelectedExtra[] = selectedExtras ?? [];
     const extrasTotal = extras.reduce((sum: number, e: SelectedExtra) => sum + e.price * e.qty, 0);
@@ -130,8 +134,17 @@ serve(async (req) => {
     const taxAmount = Math.round(subtotal * (taxRate / 100));
     const fullTotal = subtotal + taxAmount;
 
+    const durationMin = (sessionData.duration_minutes as number) ?? null;
+    const location = (sessionData.location as string) ?? null;
+
     const isDeposit = sessionData.deposit_enabled as boolean;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+    // Build session meta line for description
+    const sessionMeta = [
+      durationMin ? `${durationMin} min` : null,
+      location ?? null,
+    ].filter(Boolean).join(" · ");
 
     if (isDeposit) {
       const depositType = sessionData.deposit_type as string;
@@ -139,23 +152,48 @@ serve(async (req) => {
       const depositBase = isPercentDeposit
         ? Math.round(fullTotal * ((sessionData.deposit_amount as number) / 100))
         : (sessionData.deposit_amount as number);
+      const remaining = fullTotal - depositBase;
+
+      // Build full breakdown for product description
+      const descLines: string[] = [];
+      descLines.push(`Session: ${fmt(sessionPrice)}`);
+      if (extrasTotal > 0) descLines.push(`Add-ons: ${fmt(extrasTotal)}`);
+      if (taxAmount > 0) descLines.push(`Tax (${taxRate}%): ${fmt(taxAmount)}`);
+      descLines.push(`──────────────`);
+      descLines.push(`Total session value: ${fmt(fullTotal)}`);
+      descLines.push(`Paid today (deposit): ${fmt(depositBase)}`);
+      descLines.push(`Remaining balance: ${fmt(remaining)}`);
+      if (sessionMeta) descLines.push(`\n${sessionMeta}`);
+
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: `${sessionData.title} — Deposit`,
+            description: descLines.join("\n"),
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: depositBase,
         },
         quantity: 1,
       });
+
+      // Store remaining for custom_text below
+      (globalThis as any).__remainingBalance = remaining;
+      (globalThis as any).__depositBase = depositBase;
     } else {
+      // Full payment description
+      const fullDescLines: string[] = [];
+      if (sessionMeta) fullDescLines.push(sessionMeta);
+      if (extrasTotal > 0) fullDescLines.push(`Includes add-ons: ${fmt(extrasTotal)}`);
+      if (taxAmount > 0) fullDescLines.push(`Tax (${taxRate}%) included`);
+
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: sessionData.title,
+            description: fullDescLines.length > 0 ? fullDescLines.join(" · ") : undefined,
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: sessionPrice,
@@ -167,7 +205,10 @@ serve(async (req) => {
         lineItems.push({
           price_data: {
             currency: "brl",
-            product_data: { name: extra.description },
+            product_data: {
+              name: extra.description,
+              description: extra.qty > 1 ? `Quantity: ${extra.qty} × ${fmt(extra.price)}` : undefined,
+            },
             unit_amount: extra.price,
           },
           quantity: extra.qty,
@@ -178,7 +219,10 @@ serve(async (req) => {
         lineItems.push({
           price_data: {
             currency: "brl",
-            product_data: { name: `Tax (${taxRate}%)` },
+            product_data: {
+              name: `Tax (${taxRate}%)`,
+              description: `Applied on session + add-ons subtotal of ${fmt(subtotal)}`,
+            },
             unit_amount: taxAmount,
           },
           quantity: 1,
@@ -194,6 +238,15 @@ serve(async (req) => {
     }, 0);
     const applicationFeeAmount = Math.round(checkoutTotal * (splitPercent / 100));
 
+    // Build deposit-specific custom_text
+    const remainingBalance = (globalThis as any).__remainingBalance as number | undefined;
+    const depositCustomText = isDeposit && remainingBalance !== undefined
+      ? {
+          submit: { message: `**Deposit only.** The remaining balance of **${fmt(remainingBalance)}** will be due after your session, before delivery.` },
+          after_submit: { message: `Your session is confirmed upon payment. The photographer will collect the remaining ${fmt(remainingBalance)} balance at the time of delivery.` },
+        }
+      : undefined;
+
     // Create checkout session on the connected account
     const checkout = await stripe.checkout.sessions.create(
       {
@@ -201,6 +254,7 @@ serve(async (req) => {
         customer_email: customerId ? undefined : clientEmail,
         line_items: lineItems,
         mode: "payment",
+        ...(depositCustomText ? { custom_text: depositCustomText } : {}),
         payment_intent_data: applicationFeeAmount > 0 ? {
           application_fee_amount: applicationFeeAmount,
         } : undefined,
