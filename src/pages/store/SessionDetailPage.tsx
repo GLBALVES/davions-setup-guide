@@ -401,35 +401,11 @@ const SessionDetailPage = () => {
 
     const bookedDate = format(selectedSlot.date, "yyyy-MM-dd");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const insertPayload: any = {
-      session_id: session.id,
-      availability_id: selectedSlot.availabilityId,
-      photographer_id: session.photographer_id,
-      client_name: clientName.trim(),
-      client_email: clientEmail.trim(),
-      status: "pending",
-      payment_status: "pending",
-      booked_date: bookedDate,
-    };
-    const { data: bookingData, error: bookingError } = await supabase
-      .from("bookings")
-      .insert(insertPayload)
-      .select("id")
-      .single();
-
-    if (bookingError || !bookingData) {
-      toast({ title: "Failed to create booking", description: bookingError?.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
-    }
-
     try {
       const { data: checkoutData, error: fnError } = await supabase.functions.invoke(
         "create-session-checkout",
         {
           body: {
-            bookingId: bookingData.id,
             sessionId: session.id,
             slotId: selectedSlot.availabilityId,
             bookedDate,
@@ -454,7 +430,6 @@ const SessionDetailPage = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       toast({ title: "Payment error", description: message, variant: "destructive" });
-      await supabase.from("bookings").delete().eq("id", bookingData.id);
       setSubmitting(false);
     }
   };
