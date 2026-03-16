@@ -1720,8 +1720,11 @@ const GalleryView = () => {
               // Photos: beyond the included num_photos
               const includedPhotos = bi.num_photos;
               const extraPhotos = Math.max(0, favCount - includedPhotos);
-              const photoSelectionCost = pricePerPhoto * favCount;
-              const extraPhotoCost = pricePerPhoto * extraPhotos;
+              const { cost: extraPhotoCost, tier: activeTier } = photoTiers.length > 0
+                ? calcTieredCost(extraPhotos, photoTiers)
+                : { cost: pricePerPhoto * extraPhotos, tier: null };
+              const effectivePPP = extraPhotos > 0 && activeTier ? activeTier.price_per_photo : pricePerPhoto;
+              const photoSelectionCost = includedPhotos === 0 ? pricePerPhoto * favCount : extraPhotoCost;
 
               return (
                 <div className="flex flex-col gap-0 border border-border">
