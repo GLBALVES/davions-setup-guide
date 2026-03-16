@@ -180,6 +180,21 @@ interface Gallery {
   expires_at: string | null;
   price_per_photo: number;
   watermark_id: string | null;
+  booking_id: string | null;
+}
+
+interface BookingSessionInfo {
+  // booking fields
+  payment_status: string;
+  extras_total: number;
+  // session fields
+  session_price: number;
+  tax_rate: number;
+  deposit_enabled: boolean;
+  deposit_amount: number;
+  deposit_type: string;
+  num_photos: number;
+  session_title: string;
 }
 
 interface Photo {
@@ -244,6 +259,7 @@ const GalleryView = () => {
   const [clientEmail, setClientEmail] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+  const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
@@ -372,7 +388,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo, watermark_id")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo, watermark_id, booking_id")
         .eq("status", "published");
       if (isUuid) query = query.eq("id", slug);
       else query = query.eq("slug", slug);
@@ -390,6 +406,31 @@ const GalleryView = () => {
       ]);
       if (wmResult.data) setWatermark(wmResult.data as WatermarkSettings);
       if (brandResult.data) setPhotographerBrand(brandResult.data);
+
+      // Fetch booking + session info for price breakdown (if gallery has a booking)
+      if (data.booking_id) {
+        try {
+          const { data: bookingData } = await supabase
+            .from("bookings")
+            .select("payment_status, extras_total, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
+            .eq("id", data.booking_id)
+            .single();
+          if (bookingData) {
+            const s = (bookingData as any).sessions;
+            setBookingInfo({
+              payment_status: bookingData.payment_status ?? "pending",
+              extras_total: bookingData.extras_total ?? 0,
+              session_price: s?.price ?? 0,
+              tax_rate: s?.tax_rate ?? 0,
+              deposit_enabled: s?.deposit_enabled ?? false,
+              deposit_amount: s?.deposit_amount ?? 0,
+              deposit_type: s?.deposit_type ?? "fixed",
+              num_photos: s?.num_photos ?? 0,
+              session_title: s?.title ?? "",
+            });
+          }
+        } catch { /* non-blocking */ }
+      }
 
       // Load saved notes + downloaded markers
       setNotes(loadNotes(data.id, clientToken));
@@ -1460,7 +1501,7 @@ const GalleryView = () => {
 
       {/* ── Purchase / Submit modal ── */}
       <Dialog open={purchaseOpen} onOpenChange={setPurchaseOpen}>
-        <DialogContent className="sm:max-w-md rounded-none border-border">
+        <DialogContent className="sm:max-w-lg rounded-none border-border">
           <DialogHeader>
             <DialogTitle className="text-base font-light tracking-wide flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
@@ -1468,38 +1509,163 @@ const GalleryView = () => {
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               {favCount} photo{favCount !== 1 ? "s" : ""} selected
-              {pricePerPhoto > 0 && ` · ${formatCurrency(pricePerPhoto)} each · Total: ${formatCurrency(totalPrice)}`}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4 pt-2">
-            {pricePerPhoto > 0 && (
+          <div className="flex flex-col gap-5 pt-1">
+
+            {/* ── Booking / Session financial breakdown ── */}
+            {bookingInfo && (() => {
+              const bi = bookingInfo;
+              const sessionBase = bi.session_price + bi.extras_total;
+              const taxAmount = Math.round(sessionBase * (bi.tax_rate / 100));
+              const sessionTotal = sessionBase + taxAmount;
+
+              // Deposit paid
+              const depositCalc = bi.deposit_type === "percent" || bi.deposit_type === "percentage"
+                ? Math.round(sessionTotal * (bi.deposit_amount / 100))
+                : bi.deposit_amount;
+              let sessionPaid = 0;
+              if (bi.payment_status === "paid") sessionPaid = sessionTotal;
+              else if (bi.payment_status === "deposit_paid") sessionPaid = bi.deposit_enabled ? depositCalc : 0;
+              const sessionBalance = Math.max(0, sessionTotal - sessionPaid);
+
+              // Photos: beyond the included num_photos
+              const includedPhotos = bi.num_photos;
+              const extraPhotos = Math.max(0, favCount - includedPhotos);
+              const photoSelectionCost = pricePerPhoto * favCount;
+              const extraPhotoCost = pricePerPhoto * extraPhotos;
+
+              return (
+                <div className="flex flex-col gap-0 border border-border">
+                  {/* Section header */}
+                  <div className="px-4 py-2 bg-muted/30 border-b border-border">
+                    <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Session Summary</p>
+                    {bi.session_title && <p className="text-xs font-light text-foreground mt-0.5">{bi.session_title}</p>}
+                  </div>
+
+                  <div className="px-4 py-3 flex flex-col gap-2">
+                    {/* Session fee */}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-light">Session fee</span>
+                      <span className="tabular-nums">{formatCurrency(bi.session_price)}</span>
+                    </div>
+
+                    {/* Extras */}
+                    {bi.extras_total > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-light">Add-ons / Extras</span>
+                        <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
+                      </div>
+                    )}
+
+                    {/* Tax */}
+                    {taxAmount > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-light">Tax ({bi.tax_rate}%)</span>
+                        <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+                      </div>
+                    )}
+
+                    {/* Subtotal */}
+                    <div className="flex items-center justify-between text-xs border-t border-border pt-2 mt-0.5">
+                      <span className="text-foreground font-medium">Session total</span>
+                      <span className="tabular-nums font-medium">{formatCurrency(sessionTotal)}</span>
+                    </div>
+
+                    {/* Paid */}
+                    {sessionPaid > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground font-light">
+                          {bi.payment_status === "paid" ? "Paid in full" : "Deposit paid"}
+                        </span>
+                        <span className="tabular-nums text-primary">− {formatCurrency(sessionPaid)}</span>
+                      </div>
+                    )}
+
+                    {/* Balance */}
+                    {sessionBalance > 0 && (
+                      <div className="flex items-center justify-between text-xs bg-amber-50 dark:bg-amber-950/20 -mx-4 px-4 py-2 mt-1 border-t border-amber-200 dark:border-amber-800">
+                        <span className="text-amber-700 dark:text-amber-400 font-medium">Session balance due</span>
+                        <span className="tabular-nums text-amber-700 dark:text-amber-400 font-medium">{formatCurrency(sessionBalance)}</span>
+                      </div>
+                    )}
+                    {sessionBalance === 0 && sessionPaid > 0 && (
+                      <div className="flex items-center justify-between text-xs bg-primary/5 -mx-4 px-4 py-2 mt-1 border-t border-border">
+                        <span className="text-muted-foreground font-light">Session balance</span>
+                        <span className="tabular-nums text-primary font-medium">Paid in full ✓</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Photo selection section */}
+                  {pricePerPhoto > 0 && (
+                    <>
+                      <div className="px-4 py-2 bg-muted/30 border-t border-border">
+                        <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Photo Selection</p>
+                      </div>
+                      <div className="px-4 py-3 flex flex-col gap-2">
+                        {includedPhotos > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">Included in session</span>
+                            <span className="text-muted-foreground tabular-nums">{includedPhotos} photo{includedPhotos !== 1 ? "s" : ""}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light">
+                            {favCount} photo{favCount !== 1 ? "s" : ""} selected × {formatCurrency(pricePerPhoto)} each
+                          </span>
+                          <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
+                        </div>
+                        {includedPhotos > 0 && extraPhotos > 0 && (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground/70">
+                            <span className="font-light italic">↳ {extraPhotos} beyond included ({formatCurrency(pricePerPhoto)} each)</span>
+                            <span className="tabular-nums">{formatCurrency(extraPhotoCost)}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-xs border-t border-border pt-2 mt-0.5 font-medium">
+                          <span>Due today for photos</span>
+                          <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Fallback simple summary when no booking info */}
+            {!bookingInfo && pricePerPhoto > 0 && (
               <div className="border border-border bg-muted/20 px-4 py-3 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
                 <span className="font-medium text-foreground">{formatCurrency(totalPrice)}</span>
               </div>
             )}
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                Your name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
-              </Label>
-              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jane Smith" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                  Your name <span className="normal-case tracking-normal text-muted-foreground/50">(optional)</span>
+                </Label>
+                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jane Smith" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                  E-mail <span className="text-destructive">*</span>
+                </Label>
+                <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jane@example.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                E-mail <span className="text-destructive">*</span>
-              </Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jane@example.com" className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground" />
-            </div>
-            <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full mt-2 gap-2" size="lg">
+
+            <Button onClick={handlePurchaseOrSubmit} disabled={!clientEmail.trim() || checkingOut} className="w-full gap-2" size="lg">
               {checkingOut ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
               ) : isFree ? "Submit Selection" : (
-                <><ShoppingCart className="h-4 w-4" /> Go to Checkout</>
+                <><ShoppingCart className="h-4 w-4" /> Go to Checkout · {formatCurrency(totalPrice)}</>
               )}
             </Button>
             {!isFree && (
-              <p className="text-[10px] text-center text-muted-foreground/50 -mt-2">Secure payment</p>
+              <p className="text-[10px] text-center text-muted-foreground/50 -mt-3">Secure payment powered by Stripe</p>
             )}
           </div>
         </DialogContent>
