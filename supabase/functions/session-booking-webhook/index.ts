@@ -56,15 +56,15 @@ serve(async (req) => {
         .eq("id", slotId);
     }
 
-    // Send confirmation email via Resend if available
+    // Send emails via Resend if available
     if (bookingId && sessionId) {
       try {
         const resendKey = Deno.env.get("RESEND_API_KEY");
         if (resendKey) {
-          // Fetch booking + session details for email
+          // Fetch booking + session + photographer details for email
           const { data: bookingData } = await supabase
             .from("bookings")
-            .select("client_email, client_name, booked_date, availability_id")
+            .select("client_email, client_name, booked_date, availability_id, photographer_id")
             .eq("id", bookingId)
             .single();
 
@@ -80,10 +80,19 @@ serve(async (req) => {
             .eq("id", bookingData?.availability_id)
             .single();
 
+          const { data: photographerData } = await supabase
+            .from("photographers")
+            .select("email, full_name, business_name")
+            .eq("id", bookingData?.photographer_id)
+            .single();
+
           if (bookingData && sessionData) {
+            const timeStr = availData ? availData.start_time.slice(0, 5) : "";
+
+            // 1. Confirmation email to the client
             const emailBody = sessionData.confirmation_email_body
               ? sessionData.confirmation_email_body
-                  .replace(/<[^>]*>/g, "") // strip HTML tags for plain text fallback
+                  .replace(/<[^>]*>/g, "")
               : `Hi ${bookingData.client_name}, your session "${sessionData.title}" has been confirmed!`;
 
             await fetch("https://api.resend.com/emails", {
@@ -100,7 +109,7 @@ serve(async (req) => {
                   <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #111;">
                     <h2 style="font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">${sessionData.title}</h2>
                     <p><strong>Date:</strong> ${bookingData.booked_date}</p>
-                    ${availData ? `<p><strong>Time:</strong> ${availData.start_time.slice(0, 5)}</p>` : ""}
+                    ${timeStr ? `<p><strong>Time:</strong> ${timeStr}</p>` : ""}
                     <p><strong>Duration:</strong> ${sessionData.duration_minutes} minutes</p>
                     ${sessionData.location ? `<p><strong>Location:</strong> ${sessionData.location}</p>` : ""}
                     <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
@@ -109,6 +118,71 @@ serve(async (req) => {
                 `,
               }),
             });
+
+            // 2. Notification email to the photographer
+            if (photographerData?.email) {
+              const studioName = photographerData.business_name || photographerData.full_name || "Your Studio";
+              const paymentLabel = wasDeposit ? "Deposit paid" : "Full payment received";
+
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${resendKey}`,
+                },
+                body: JSON.stringify({
+                  from: "noreply@davions.app",
+                  to: photographerData.email,
+                  subject: `New Booking — ${bookingData.client_name} booked ${sessionData.title}`,
+                  html: `
+                    <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #111;">
+                      <h2 style="font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">New Booking Confirmed</h2>
+                      <p style="color: #555; margin-bottom: 24px;">A new booking has been confirmed for <strong>${studioName}</strong>.</p>
+
+                      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr>
+                          <td style="padding: 8px 0; color: #888; width: 140px;">Client</td>
+                          <td style="padding: 8px 0; font-weight: 500;">${bookingData.client_name}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Email</td>
+                          <td style="padding: 8px 0;">${bookingData.client_email}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Session</td>
+                          <td style="padding: 8px 0; font-weight: 500;">${sessionData.title}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Date</td>
+                          <td style="padding: 8px 0;">${bookingData.booked_date}</td>
+                        </tr>
+                        ${timeStr ? `
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Time</td>
+                          <td style="padding: 8px 0;">${timeStr}</td>
+                        </tr>` : ""}
+                        ${sessionData.location ? `
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Location</td>
+                          <td style="padding: 8px 0;">${sessionData.location}</td>
+                        </tr>` : ""}
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Duration</td>
+                          <td style="padding: 8px 0;">${sessionData.duration_minutes} minutes</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: #888;">Payment</td>
+                          <td style="padding: 8px 0; color: #16a34a; font-weight: 500;">${paymentLabel}</td>
+                        </tr>
+                      </table>
+
+                      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                      <p style="font-size: 12px; color: #aaa;">This notification was sent automatically by Davions.</p>
+                    </div>
+                  `,
+                }),
+              });
+            }
           }
         }
       } catch (emailErr) {
