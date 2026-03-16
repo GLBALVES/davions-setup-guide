@@ -923,6 +923,27 @@ const GalleryView = () => {
   const isFree = pricePerPhoto === 0;
   const blockContext = (e: React.MouseEvent) => e.preventDefault();
 
+  // Inline summary calculations (mirrors modal logic)
+  const inlineSummary = (() => {
+    if (!bookingInfo || favCount === 0) return null;
+    const bi = bookingInfo;
+    const sessionBase = bi.session_price + bi.extras_total;
+    const taxAmount = Math.round(sessionBase * (bi.tax_rate / 100));
+    const sessionTotal = sessionBase + taxAmount;
+    const depositCalc = bi.deposit_type === "percent" || bi.deposit_type === "percentage"
+      ? Math.round(sessionTotal * (bi.deposit_amount / 100))
+      : bi.deposit_amount;
+    let sessionPaid = 0;
+    if (bi.payment_status === "paid") sessionPaid = sessionTotal;
+    else if (bi.payment_status === "deposit_paid") sessionPaid = bi.deposit_enabled ? depositCalc : 0;
+    const sessionBalance = Math.max(0, sessionTotal - sessionPaid);
+    const includedPhotos = bi.num_photos;
+    const extraPhotos = Math.max(0, favCount - includedPhotos);
+    const extraPhotoCost = pricePerPhoto * extraPhotos;
+    const photoSelectionCost = pricePerPhoto * favCount;
+    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost };
+  })();
+
   // Derived filtered list (only relevant for proof galleries)
   const filteredPhotos = isProof
     ? photos.filter((p) => {
