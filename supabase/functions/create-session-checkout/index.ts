@@ -312,7 +312,7 @@ serve(async (req) => {
         customer_email: customerId ? undefined : clientEmail,
         line_items: lineItems,
         mode: "payment",
-        ...(depositCustomText ? { custom_text: depositCustomText } : {}),
+        ...(customText ? { custom_text: customText } : {}),
         payment_intent_data: applicationFeeAmount > 0 ? {
           application_fee_amount: applicationFeeAmount,
         } : undefined,
