@@ -176,6 +176,7 @@ serve(async (req) => {
 
       // Build rich product description visible in Stripe Checkout left panel
       const descLines: string[] = [];
+      if (bookingDateLabel) descLines.push(`📅 ${bookingDateLabel}${bookingTimeLabel ? ` at ${bookingTimeLabel}` : ""}`);
       if (sessionMeta) descLines.push(`📍 ${sessionMeta}`);
       descLines.push(``);
       descLines.push(`Session:  ${fmt(sessionPrice)}`);
@@ -201,6 +202,7 @@ serve(async (req) => {
     } else {
       // Full payment — session line item with context
       const fullDescLines: string[] = [];
+      if (bookingDateLabel) fullDescLines.push(`📅 ${bookingDateLabel}${bookingTimeLabel ? ` at ${bookingTimeLabel}` : ""}`);
       if (sessionMeta) fullDescLines.push(`📍 ${sessionMeta}`);
       if (extrasTotal > 0) fullDescLines.push(`Includes add-ons: ${fmt(extrasTotal)}`);
       if (taxAmount > 0) fullDescLines.push(`Tax (${taxRate}%) included`);
