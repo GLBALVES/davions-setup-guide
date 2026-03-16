@@ -281,6 +281,7 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
+  const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
