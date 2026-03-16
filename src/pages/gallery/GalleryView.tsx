@@ -277,12 +277,14 @@ const GalleryView = () => {
 
   // Purchase modal
   const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+  const prevFavCountRef = useRef(0);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
