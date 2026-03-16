@@ -100,7 +100,7 @@ export function MonthView({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 flex-1" style={{ gridAutoRows: "minmax(100px, 1fr)" }}>
+      <div className="grid grid-cols-7" style={{ gridAutoRows: "minmax(90px, auto)" }}>
         {days.map((day, idx) => {
           const key = format(day, "yyyy-MM-dd");
           const dayBookings = bookingsByDate.get(key) ?? [];
