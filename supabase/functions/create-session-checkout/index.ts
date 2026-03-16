@@ -198,6 +198,16 @@ serve(async (req) => {
     // ── Local variable for deposit custom_text (set in deposit branch) ──
     let remainingBalance: number | undefined;
 
+    // ── Short description: date + time + location (Stripe renders description inline, no line breaks) ──
+    const shortDesc = [
+      bookingDateLabel && bookingTimeLabel
+        ? `📅 ${bookingDateLabel} at ${bookingTimeLabel}`
+        : bookingDateLabel
+        ? `📅 ${bookingDateLabel}`
+        : null,
+      sessionMeta ? `📍 ${sessionMeta}` : null,
+    ].filter(Boolean).join("  ·  ") || undefined;
+
     if (isDeposit) {
       const depositType = sessionData.deposit_type as string;
       const isPercentDeposit = depositType === "percent" || depositType === "percentage";
@@ -206,25 +216,12 @@ serve(async (req) => {
         : (sessionData.deposit_amount as number);
       remainingBalance = fullTotal - depositBase;
 
-      // Build rich product description visible in Stripe Checkout left panel
-      const descLines: string[] = [];
-      if (bookingDateLabel) descLines.push(`📅 ${bookingDateLabel}${bookingTimeLabel ? ` at ${bookingTimeLabel}` : ""}`);
-      if (sessionMeta) descLines.push(`📍 ${sessionMeta}`);
-      descLines.push(``);
-      descLines.push(`Session:  ${fmt(sessionPrice)}`);
-      if (extrasTotal > 0) descLines.push(`Add-ons:  ${fmt(extrasTotal)}`);
-      if (taxAmount > 0) descLines.push(`Tax (${taxRate}%):  ${fmt(taxAmount)}`);
-      descLines.push(`Total session value:  ${fmt(fullTotal)}`);
-      descLines.push(``);
-      descLines.push(`✅ Paid today (deposit):  ${fmt(depositBase)}`);
-      descLines.push(`⏳ Remaining balance:  ${fmt(remainingBalance)}`);
-
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: `${sessionData.title} — Deposit`,
-            description: descLines.filter(l => l !== undefined).join("\n"),
+            description: shortDesc,
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: depositBase,
@@ -232,19 +229,13 @@ serve(async (req) => {
         quantity: 1,
       });
     } else {
-      // Full payment — session line item with context
-      const fullDescLines: string[] = [];
-      if (bookingDateLabel) fullDescLines.push(`📅 ${bookingDateLabel}${bookingTimeLabel ? ` at ${bookingTimeLabel}` : ""}`);
-      if (sessionMeta) fullDescLines.push(`📍 ${sessionMeta}`);
-      if (extrasTotal > 0) fullDescLines.push(`Includes add-ons: ${fmt(extrasTotal)}`);
-      if (taxAmount > 0) fullDescLines.push(`Tax (${taxRate}%) included`);
-
+      // Full payment: each line item is its own row → natural column layout ✓
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: sessionData.title,
-            description: fullDescLines.length > 0 ? fullDescLines.join("  ·  ") : undefined,
+            description: shortDesc,
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: sessionPrice,
@@ -274,7 +265,7 @@ serve(async (req) => {
             currency: "brl",
             product_data: {
               name: `Tax (${taxRate}%)`,
-              description: `Applied on subtotal of ${fmt(subtotal)} (session + add-ons)`,
+              description: `Applied on subtotal of ${fmt(subtotal)}`,
             },
             unit_amount: taxAmount,
           },
@@ -291,17 +282,28 @@ serve(async (req) => {
     }, 0);
     const applicationFeeAmount = Math.round(checkoutTotal * (splitPercent / 100));
 
-    // Build deposit-specific custom_text using the local remainingBalance
-    const depositCustomText = isDeposit && remainingBalance !== undefined
-      ? {
-          submit: {
-            message: `**Deposit only — ${fmt(remainingBalance)} remaining.** The balance is due after your session, before photo delivery.`,
-          },
-          after_submit: {
-            message: `✅ Your session is confirmed. The photographer will collect the remaining **${fmt(remainingBalance)}** balance before delivering your photos.`,
-          },
-        }
-      : undefined;
+    // ── custom_text: financial breakdown in column format (markdown supported) ──
+    // For deposits: show the full breakdown above the Pay button since description is inline-only
+    let customText: Record<string, { message: string }> | undefined;
+    if (isDeposit && remainingBalance !== undefined) {
+      const depositBase = fullTotal - remainingBalance;
+      const rows = [
+        `Session: **${fmt(sessionPrice)}**`,
+        extrasTotal > 0 ? `Add-ons: **${fmt(extrasTotal)}**` : null,
+        taxAmount > 0 ? `Tax (${taxRate}%): **${fmt(taxAmount)}**` : null,
+        `Total: **${fmt(fullTotal)}**`,
+        `Deposit paid today: **${fmt(depositBase)}**`,
+        `Remaining balance: **${fmt(remainingBalance)}**`,
+      ].filter(Boolean).join("  ·  ");
+      customText = {
+        submit: {
+          message: `${rows}\n\nThe remaining balance is due after your session, before photo delivery.`,
+        },
+        after_submit: {
+          message: `✅ Session confirmed. The photographer will collect the **${fmt(remainingBalance)}** balance before delivering your photos.`,
+        },
+      };
+    }
 
     // Create checkout session on the connected account
     const checkout = await stripe.checkout.sessions.create(
