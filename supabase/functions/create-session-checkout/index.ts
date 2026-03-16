@@ -240,12 +240,15 @@ serve(async (req) => {
     }, 0);
     const applicationFeeAmount = Math.round(checkoutTotal * (splitPercent / 100));
 
-    // Build deposit-specific custom_text
-    const remainingBalance = (globalThis as any).__remainingBalance as number | undefined;
+    // Build deposit-specific custom_text using the local remainingBalance
     const depositCustomText = isDeposit && remainingBalance !== undefined
       ? {
-          submit: { message: `**Deposit only.** The remaining balance of **${fmt(remainingBalance)}** will be due after your session, before delivery.` },
-          after_submit: { message: `Your session is confirmed upon payment. The photographer will collect the remaining ${fmt(remainingBalance)} balance at the time of delivery.` },
+          submit: {
+            message: `**Deposit only — ${fmt(remainingBalance)} remaining.** The balance is due after your session, before photo delivery.`,
+          },
+          after_submit: {
+            message: `✅ Your session is confirmed. The photographer will collect the remaining **${fmt(remainingBalance)}** balance before delivering your photos.`,
+          },
         }
       : undefined;
 
