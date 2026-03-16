@@ -1746,22 +1746,43 @@ const GalleryView = () => {
                         <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Photo Selection</p>
                       </div>
                       <div className="px-4 py-3 flex flex-col gap-2">
+                        {/* Selected count */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light flex items-center gap-1.5">
+                            <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
+                            Photos selected
+                          </span>
+                          <span className="tabular-nums font-medium text-foreground">{favCount} photo{favCount !== 1 ? "s" : ""}</span>
+                        </div>
+                        {/* Included in session */}
                         {includedPhotos > 0 && (
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground font-light">Included in session</span>
-                            <span className="text-muted-foreground tabular-nums">{includedPhotos} photo{includedPhotos !== 1 ? "s" : ""}</span>
+                            <span className="text-muted-foreground tabular-nums">{includedPhotos} photo{includedPhotos !== 1 ? "s" : ""} · free</span>
                           </div>
                         )}
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground font-light">
-                            {favCount} photo{favCount !== 1 ? "s" : ""} selected × {formatCurrency(pricePerPhoto)} each
-                          </span>
-                          <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
-                        </div>
-                        {includedPhotos > 0 && extraPhotos > 0 && (
-                          <div className="flex items-center justify-between text-xs text-muted-foreground/70">
-                            <span className="font-light italic">↳ {extraPhotos} beyond included ({formatCurrency(pricePerPhoto)} each)</span>
-                            <span className="tabular-nums">{formatCurrency(extraPhotoCost)}</span>
+                        {/* Extra photos block */}
+                        {extraPhotos > 0 ? (
+                          <div className="flex flex-col gap-1 bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2.5 mt-0.5 border-t border-rose-100 dark:border-rose-900">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-rose-700 dark:text-rose-400">Extra photos</span>
+                              <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
+                            </div>
+                            <p className="text-[10px] text-rose-500/80 font-light">
+                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} beyond the {includedPhotos} included × {formatCurrency(pricePerPhoto)} each
+                            </p>
+                          </div>
+                        ) : includedPhotos > 0 ? (
+                          <div className="flex items-center justify-between text-xs text-primary/70">
+                            <span className="font-light">Within included quantity</span>
+                            <span className="tabular-nums">No extra charge</span>
+                          </div>
+                        ) : null}
+                        {/* Total for photos (no included photos = all are charged) */}
+                        {includedPhotos === 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
+                            <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
                           </div>
                         )}
                         <div className="flex items-center justify-between text-xs border-t border-border pt-2 mt-0.5 font-medium">
