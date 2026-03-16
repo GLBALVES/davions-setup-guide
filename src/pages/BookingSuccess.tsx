@@ -224,11 +224,11 @@ const BookingSuccess = () => {
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
-  if (loading) {
+  if (loading || confirmingPayment) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-          Loading…
+          {confirmingPayment ? "Confirming your booking…" : "Loading…"}
         </span>
       </div>
     );
