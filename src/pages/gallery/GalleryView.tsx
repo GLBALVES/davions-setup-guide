@@ -180,6 +180,21 @@ interface Gallery {
   expires_at: string | null;
   price_per_photo: number;
   watermark_id: string | null;
+  booking_id: string | null;
+}
+
+interface BookingSessionInfo {
+  // booking fields
+  payment_status: string;
+  extras_total: number;
+  // session fields
+  session_price: number;
+  tax_rate: number;
+  deposit_enabled: boolean;
+  deposit_amount: number;
+  deposit_type: string;
+  num_photos: number;
+  session_title: string;
 }
 
 interface Photo {
