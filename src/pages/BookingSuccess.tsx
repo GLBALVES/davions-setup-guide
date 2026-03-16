@@ -249,6 +249,28 @@ const BookingSuccess = () => {
     );
   }
 
+  // ── Confirmation error ─────────────────────────────────────────────────────
+  if (confirmError && !booking) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16 gap-6">
+        <div className="w-full max-w-md border border-border p-6 flex flex-col gap-4 text-center">
+          <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground">Payment received</p>
+          <h1 className="text-xl font-light tracking-wide">Almost there…</h1>
+          <p className="text-sm font-light text-muted-foreground">{confirmError}</p>
+          {slug && (
+            <button
+              onClick={() => navigate(`/store/${slug}`)}
+              className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground underline mt-2"
+            >
+              ← Back to Store
+            </button>
+          )}
+        </div>
+        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">Powered by Davions</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-md flex flex-col gap-8">
