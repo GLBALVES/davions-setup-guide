@@ -1022,7 +1022,7 @@ const GalleryView = () => {
         <div className="flex items-center gap-3">
           {/* Proof: purchase pill with summary popover */}
           {unlocked && isProof && favCount > 0 && (
-            <Popover>
+            <Popover open={summaryOpen} onOpenChange={setSummaryOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-2.5 border border-rose-300 bg-rose-50 hover:bg-rose-100 transition-colors px-3.5 py-1.5 rounded-full">
                   <span className="flex items-center gap-1 text-rose-600">
