@@ -195,6 +195,27 @@ interface BookingSessionInfo {
   deposit_type: string;
   num_photos: number;
   session_title: string;
+  session_id: string;
+}
+
+interface PhotoTier {
+  id: string;
+  min_photos: number;
+  max_photos: number | null;
+  price_per_photo: number;
+}
+
+// Find matching tier for a given extra photo count
+function calcTieredCost(extraPhotos: number, tiers: PhotoTier[]): { cost: number; tier: PhotoTier | null } {
+  if (extraPhotos <= 0 || tiers.length === 0) return { cost: 0, tier: null };
+  const sorted = [...tiers].sort((a, b) => a.min_photos - b.min_photos);
+  const match = sorted.find((t) => extraPhotos >= t.min_photos && (t.max_photos == null || extraPhotos <= t.max_photos));
+  if (!match) {
+    // If beyond all tiers, use the last one (largest min)
+    const last = sorted[sorted.length - 1];
+    return { cost: last.price_per_photo * extraPhotos, tier: last };
+  }
+  return { cost: match.price_per_photo * extraPhotos, tier: match };
 }
 
 interface Photo {
@@ -260,6 +281,7 @@ const GalleryView = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
+  const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
@@ -412,11 +434,12 @@ const GalleryView = () => {
         try {
           const { data: bookingData } = await supabase
             .from("bookings")
-            .select("payment_status, extras_total, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
+            .select("payment_status, extras_total, session_id, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
             .eq("id", data.booking_id)
             .single();
           if (bookingData) {
             const s = (bookingData as any).sessions;
+            const sessionId = bookingData.session_id as string;
             setBookingInfo({
               payment_status: bookingData.payment_status ?? "pending",
               extras_total: bookingData.extras_total ?? 0,
@@ -427,7 +450,19 @@ const GalleryView = () => {
               deposit_type: s?.deposit_type ?? "fixed",
               num_photos: s?.num_photos ?? 0,
               session_title: s?.title ?? "",
+              session_id: sessionId,
             });
+            // Fetch photo tiers for this session
+            if (sessionId) {
+              const { data: tiersData } = await supabase
+                .from("session_photo_tiers")
+                .select("id, min_photos, max_photos, price_per_photo")
+                .eq("session_id", sessionId)
+                .order("min_photos", { ascending: true });
+              if (tiersData && tiersData.length > 0) {
+                setPhotoTiers(tiersData as PhotoTier[]);
+              }
+            }
           }
         } catch { /* non-blocking */ }
       }
@@ -939,10 +974,18 @@ const GalleryView = () => {
     const sessionBalance = Math.max(0, sessionTotal - sessionPaid);
     const includedPhotos = bi.num_photos;
     const extraPhotos = Math.max(0, favCount - includedPhotos);
-    const extraPhotoCost = pricePerPhoto * extraPhotos;
-    const photoSelectionCost = pricePerPhoto * favCount;
-    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost };
+    // Use tiered pricing if available, otherwise fallback to flat price_per_photo
+    const { cost: extraPhotoCost, tier: activeTier } = photoTiers.length > 0
+      ? calcTieredCost(extraPhotos, photoTiers)
+      : { cost: pricePerPhoto * extraPhotos, tier: null };
+    const effectivePricePerPhoto = extraPhotos > 0 && activeTier
+      ? activeTier.price_per_photo
+      : pricePerPhoto;
+    const photoSelectionCost = includedPhotos === 0 ? pricePerPhoto * favCount : extraPhotoCost;
+    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost, activeTier, effectivePricePerPhoto };
   })();
+
+
 
   // Derived filtered list (only relevant for proof galleries)
   const filteredPhotos = isProof
@@ -1285,6 +1328,18 @@ const GalleryView = () => {
                       {pricePerPhoto > 0 && (
                         <div className="flex flex-col gap-1.5 border-t border-border pt-3">
                           <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">Photo Selection</p>
+                          {/* Tiered pricing table */}
+                          {photoTiers.length > 0 && (
+                            <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2 mb-1 border-y border-border">
+                              <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1">Extra photo pricing tiers</p>
+                              {photoTiers.map((t) => (
+                                <div key={t.id} className={`flex items-center justify-between text-[10px] ${inlineSummary.activeTier?.id === t.id && inlineSummary.extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
+                                  <span>{t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
+                                  <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           {inlineSummary.includedPhotos > 0 && (
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-muted-foreground font-light">Included in session</span>
@@ -1302,10 +1357,13 @@ const GalleryView = () => {
                             <>
                               <div className="flex items-center justify-between text-xs bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2 mt-0.5 border-t border-rose-100 dark:border-rose-900">
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
-                                  <span className="text-[10px] text-rose-500/70 font-light">
-                                    {inlineSummary.extraPhotos} × {formatCurrency(pricePerPhoto)} beyond {inlineSummary.includedPhotos} included
-                                  </span>
+                                   <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
+                                   <span className="text-[10px] text-rose-500/70 font-light">
+                                     {inlineSummary.extraPhotos} photo{inlineSummary.extraPhotos !== 1 ? "s" : ""} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} each
+                                     {inlineSummary.activeTier && (
+                                       <> · tier {formatCurrency(inlineSummary.activeTier.min_photos * 100 / 100)}{inlineSummary.activeTier.max_photos ? `–${inlineSummary.activeTier.max_photos}` : "+"} photos</>
+                                     )}
+                                   </span>
                                 </div>
                                 <span className="tabular-nums font-medium text-rose-700 dark:text-rose-400">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
                               </div>
@@ -1674,8 +1732,11 @@ const GalleryView = () => {
               // Photos: beyond the included num_photos
               const includedPhotos = bi.num_photos;
               const extraPhotos = Math.max(0, favCount - includedPhotos);
-              const photoSelectionCost = pricePerPhoto * favCount;
-              const extraPhotoCost = pricePerPhoto * extraPhotos;
+              const { cost: extraPhotoCost, tier: activeTier } = photoTiers.length > 0
+                ? calcTieredCost(extraPhotos, photoTiers)
+                : { cost: pricePerPhoto * extraPhotos, tier: null };
+              const effectivePPP = extraPhotos > 0 && activeTier ? activeTier.price_per_photo : pricePerPhoto;
+              const photoSelectionCost = includedPhotos === 0 ? pricePerPhoto * favCount : extraPhotoCost;
 
               return (
                 <div className="flex flex-col gap-0 border border-border">
@@ -1746,6 +1807,18 @@ const GalleryView = () => {
                         <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Photo Selection</p>
                       </div>
                       <div className="px-4 py-3 flex flex-col gap-2">
+                        {/* Tiered pricing table */}
+                        {photoTiers.length > 0 && (
+                          <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2.5 border-b border-border mb-1">
+                            <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1.5">Extra photo pricing tiers</p>
+                            {photoTiers.map((t) => (
+                              <div key={t.id} className={`flex items-center justify-between text-[11px] ${activeTier?.id === t.id && extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
+                                <span>{t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
+                                <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {/* Selected count */}
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground font-light flex items-center gap-1.5">
@@ -1769,7 +1842,12 @@ const GalleryView = () => {
                               <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
                             </div>
                             <p className="text-[10px] text-rose-500/80 font-light">
-                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} beyond the {includedPhotos} included × {formatCurrency(pricePerPhoto)} each
+                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} × {formatCurrency(effectivePPP)} each
+                              {activeTier && (
+                                <span className="ml-1 opacity-70">
+                                  (tier: {activeTier.min_photos}{activeTier.max_photos ? `–${activeTier.max_photos}` : "+"} photos)
+                                </span>
+                              )}
                             </p>
                           </div>
                         ) : includedPhotos > 0 ? (
