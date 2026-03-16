@@ -388,7 +388,7 @@ const GalleryView = () => {
 
       let query = supabase
         .from("galleries")
-        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo, watermark_id")
+        .select("id, title, slug, category, status, access_code, photographer_id, cover_image_url, cover_focal_x, cover_focal_y, expires_at, price_per_photo, watermark_id, booking_id")
         .eq("status", "published");
       if (isUuid) query = query.eq("id", slug);
       else query = query.eq("slug", slug);
@@ -406,6 +406,31 @@ const GalleryView = () => {
       ]);
       if (wmResult.data) setWatermark(wmResult.data as WatermarkSettings);
       if (brandResult.data) setPhotographerBrand(brandResult.data);
+
+      // Fetch booking + session info for price breakdown (if gallery has a booking)
+      if (data.booking_id) {
+        try {
+          const { data: bookingData } = await supabase
+            .from("bookings")
+            .select("payment_status, extras_total, sessions(title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, num_photos)")
+            .eq("id", data.booking_id)
+            .single();
+          if (bookingData) {
+            const s = (bookingData as any).sessions;
+            setBookingInfo({
+              payment_status: bookingData.payment_status ?? "pending",
+              extras_total: bookingData.extras_total ?? 0,
+              session_price: s?.price ?? 0,
+              tax_rate: s?.tax_rate ?? 0,
+              deposit_enabled: s?.deposit_enabled ?? false,
+              deposit_amount: s?.deposit_amount ?? 0,
+              deposit_type: s?.deposit_type ?? "fixed",
+              num_photos: s?.num_photos ?? 0,
+              session_title: s?.title ?? "",
+            });
+          }
+        } catch { /* non-blocking */ }
+      }
 
       // Load saved notes + downloaded markers
       setNotes(loadNotes(data.id, clientToken));
