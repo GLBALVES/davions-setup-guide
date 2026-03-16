@@ -106,6 +106,38 @@ serve(async (req) => {
         .eq("id", sessionData.photographer_id);
     }
 
+    // ── Sync photographer branding to Stripe Connect account ──
+    try {
+      const { data: siteData } = await supabase
+        .from("photographer_site")
+        .select("logo_url, accent_color")
+        .eq("photographer_id", sessionData.photographer_id)
+        .single();
+
+      if (siteData?.logo_url && stripeAccountId) {
+        const imgResp = await fetch(siteData.logo_url);
+        if (imgResp.ok) {
+          const imgBlob = await imgResp.blob();
+          const uploadedFile = await stripe.files.create(
+            { purpose: "business_logo", file: imgBlob },
+            { stripeAccount: stripeAccountId }
+          );
+          const brandingParams: Record<string, string> = { logo: uploadedFile.id };
+          if (siteData.accent_color) {
+            const hex = siteData.accent_color.startsWith("#")
+              ? siteData.accent_color
+              : `#${siteData.accent_color}`;
+            brandingParams.primary_color = hex;
+          }
+          await stripe.accounts.update(stripeAccountId, {
+            settings: { branding: brandingParams as any },
+          });
+        }
+      }
+    } catch (_brandingErr) {
+      // Non-fatal: branding failure must not block checkout
+    }
+
     // Determine split % from photographer's platform subscription
     let splitPercent = 5; // default
     try {
