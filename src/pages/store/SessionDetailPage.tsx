@@ -433,6 +433,7 @@ const SessionDetailPage = () => {
             sessionId: session.id,
             slotId: selectedSlot.availabilityId,
             bookedDate,
+            startTime: selectedSlot.start_time,
             clientEmail: clientEmail.trim(),
             clientName: clientName.trim(),
             selectedExtras: selectedExtras.map((e) => ({
