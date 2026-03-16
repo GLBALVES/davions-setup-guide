@@ -259,6 +259,7 @@ const GalleryView = () => {
   const [clientEmail, setClientEmail] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+  const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
