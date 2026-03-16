@@ -116,7 +116,7 @@ export function MonthView({
           return (
             <div
               key={key}
-              className={`group border-r border-b border-border p-1.5 flex flex-col gap-1 min-h-0 overflow-hidden relative ${
+              className={`group border-r border-b border-border p-1.5 flex flex-col gap-1 relative ${
                 !inMonth ? "bg-muted/20" : ""
               } ${idx % 7 === 0 ? "border-l border-border" : ""} ${
                 isAllDayBlocked ? "bg-destructive/5" : ""
