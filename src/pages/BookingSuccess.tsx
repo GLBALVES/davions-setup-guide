@@ -60,11 +60,41 @@ const BookingSuccess = () => {
   const [briefing, setBriefing] = useState<BriefingData | null>(null);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   // Briefing form answers: { [questionId]: string | string[] }
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
+
+  // ── Confirm payment fallback (runs once when status is still pending) ───────
+  const confirmPaymentIfNeeded = async (
+    currentBooking: BookingDetails,
+    checkoutSessionId: string | null
+  ) => {
+    if (!checkoutSessionId || currentBooking.status === "confirmed") return currentBooking;
+
+    setConfirmingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("confirm-booking", {
+        body: { bookingId, checkoutSessionId },
+      });
+      if (!error && data?.confirmed) {
+        // Re-fetch the booking to get the updated status
+        const { data: refreshed } = await supabase
+          .from("bookings")
+          .select("client_name, client_email, booked_date, status, payment_status, availability_id")
+          .eq("id", bookingId!)
+          .single();
+        if (refreshed) return refreshed as BookingDetails;
+      }
+    } catch (e) {
+      console.error("confirm-booking failed:", e);
+    } finally {
+      setConfirmingPayment(false);
+    }
+    return currentBooking;
+  };
 
   // ── Load booking + session + briefing ─────────────────────────────────────
   useEffect(() => {
@@ -74,10 +104,13 @@ const BookingSuccess = () => {
     }
 
     const load = async () => {
+      // Get checkout session id from URL params
+      const checkoutSessionId = searchParams.get("checkout_session_id");
+
       const [{ data: bookingData }, { data: sessionData }] = await Promise.all([
         supabase
           .from("bookings")
-          .select("client_name, client_email, booked_date, status, payment_status, availability_id")
+          .select("client_name, client_email, booked_date, status, payment_status, availability_id, stripe_checkout_session_id")
           .eq("id", bookingId)
           .single(),
         (supabase as any)
@@ -88,9 +121,16 @@ const BookingSuccess = () => {
       ]);
 
       if (bookingData) {
-        setBooking(bookingData as BookingDetails);
+        // If booking is still pending, try to confirm it via Stripe verification
+        const rawBooking = bookingData as BookingDetails & { stripe_checkout_session_id?: string };
+        const csId = checkoutSessionId || rawBooking.stripe_checkout_session_id || null;
+        const confirmedBooking = rawBooking.status === "pending"
+          ? await confirmPaymentIfNeeded(rawBooking, csId)
+          : rawBooking;
 
-        const availId = (bookingData as { availability_id: string }).availability_id;
+        setBooking(confirmedBooking);
+
+        const availId = confirmedBooking.availability_id;
         if (availId) {
           const { data: availData } = await supabase
             .from("session_availability")
@@ -184,11 +224,11 @@ const BookingSuccess = () => {
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
-  if (loading) {
+  if (loading || confirmingPayment) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-          Loading…
+          {confirmingPayment ? "Confirming your booking…" : "Loading…"}
         </span>
       </div>
     );
