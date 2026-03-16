@@ -1345,10 +1345,13 @@ const GalleryView = () => {
                             <>
                               <div className="flex items-center justify-between text-xs bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2 mt-0.5 border-t border-rose-100 dark:border-rose-900">
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
-                                  <span className="text-[10px] text-rose-500/70 font-light">
-                                    {inlineSummary.extraPhotos} × {formatCurrency(pricePerPhoto)} beyond {inlineSummary.includedPhotos} included
-                                  </span>
+                                   <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
+                                   <span className="text-[10px] text-rose-500/70 font-light">
+                                     {inlineSummary.extraPhotos} photo{inlineSummary.extraPhotos !== 1 ? "s" : ""} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} each
+                                     {inlineSummary.activeTier && (
+                                       <> · tier {formatCurrency(inlineSummary.activeTier.min_photos * 100 / 100)}{inlineSummary.activeTier.max_photos ? `–${inlineSummary.activeTier.max_photos}` : "+"} photos</>
+                                     )}
+                                   </span>
                                 </div>
                                 <span className="tabular-nums font-medium text-rose-700 dark:text-rose-400">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
                               </div>
