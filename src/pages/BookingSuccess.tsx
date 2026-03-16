@@ -60,6 +60,7 @@ const BookingSuccess = () => {
   const [briefing, setBriefing] = useState<BriefingData | null>(null);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   // Briefing form answers: { [questionId]: string | string[] }
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
