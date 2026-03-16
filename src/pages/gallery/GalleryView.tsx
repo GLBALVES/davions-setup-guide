@@ -195,6 +195,27 @@ interface BookingSessionInfo {
   deposit_type: string;
   num_photos: number;
   session_title: string;
+  session_id: string;
+}
+
+interface PhotoTier {
+  id: string;
+  min_photos: number;
+  max_photos: number | null;
+  price_per_photo: number;
+}
+
+// Find matching tier for a given extra photo count
+function calcTieredCost(extraPhotos: number, tiers: PhotoTier[]): { cost: number; tier: PhotoTier | null } {
+  if (extraPhotos <= 0 || tiers.length === 0) return { cost: 0, tier: null };
+  const sorted = [...tiers].sort((a, b) => a.min_photos - b.min_photos);
+  const match = sorted.find((t) => extraPhotos >= t.min_photos && (t.max_photos == null || extraPhotos <= t.max_photos));
+  if (!match) {
+    // If beyond all tiers, use the last one (largest min)
+    const last = sorted[sorted.length - 1];
+    return { cost: last.price_per_photo * extraPhotos, tier: last };
+  }
+  return { cost: match.price_per_photo * extraPhotos, tier: match };
 }
 
 interface Photo {
