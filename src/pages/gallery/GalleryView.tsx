@@ -1818,7 +1818,12 @@ const GalleryView = () => {
                               <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
                             </div>
                             <p className="text-[10px] text-rose-500/80 font-light">
-                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} beyond the {includedPhotos} included × {formatCurrency(pricePerPhoto)} each
+                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} × {formatCurrency(effectivePPP)} each
+                              {activeTier && (
+                                <span className="ml-1 opacity-70">
+                                  (tier: {activeTier.min_photos}{activeTier.max_photos ? `–${activeTier.max_photos}` : "+"} photos)
+                                </span>
+                              )}
                             </p>
                           </div>
                         ) : includedPhotos > 0 ? (
