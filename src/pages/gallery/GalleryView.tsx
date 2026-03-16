@@ -277,12 +277,14 @@ const GalleryView = () => {
 
   // Purchase modal
   const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+  const prevFavCountRef = useRef(0);
 
   // Renewal state
   const [renewalFee, setRenewalFee] = useState<number>(0);
@@ -515,9 +517,23 @@ const GalleryView = () => {
         .select("photo_id")
         .eq("gallery_id", galleryId)
         .eq("client_token", clientToken);
-      if (favData) setFavorites(new Set(favData.map((f) => f.photo_id)));
+      if (favData) {
+        const loadedFavs = new Set(favData.map((f) => f.photo_id));
+        setFavorites(loadedFavs);
+        // Auto-open summary if there are already favorites on load
+        if (loadedFavs.size > 0) setSummaryOpen(true);
+      }
     }
   };
+
+  // Auto-open summary when first photo is selected
+  useEffect(() => {
+    const currentCount = favorites.size;
+    if (prevFavCountRef.current === 0 && currentCount === 1) {
+      setSummaryOpen(true);
+    }
+    prevFavCountRef.current = currentCount;
+  }, [favorites.size]);
 
   const handleUnlock = async () => {
     if (!gallery) return;
@@ -1006,7 +1022,7 @@ const GalleryView = () => {
         <div className="flex items-center gap-3">
           {/* Proof: purchase pill with summary popover */}
           {unlocked && isProof && favCount > 0 && (
-            <Popover>
+            <Popover open={summaryOpen} onOpenChange={setSummaryOpen}>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-2.5 border border-rose-300 bg-rose-50 hover:bg-rose-100 transition-colors px-3.5 py-1.5 rounded-full">
                   <span className="flex items-center gap-1 text-rose-600">
