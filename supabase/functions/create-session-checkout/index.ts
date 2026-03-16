@@ -85,6 +85,29 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
+    // ── Create or reuse booking (service role bypasses RLS) ──
+    let bookingId = existingBookingId as string | undefined;
+    if (!bookingId) {
+      const { data: newBooking, error: bookingError } = await supabase
+        .from("bookings")
+        .insert({
+          session_id: sessionId,
+          availability_id: slotId,
+          photographer_id: sessionData.photographer_id,
+          client_name: clientName,
+          client_email: clientEmail,
+          status: "pending",
+          payment_status: "pending",
+          booked_date: bookedDate,
+        })
+        .select("id")
+        .single();
+      if (bookingError || !newBooking) {
+        throw new Error(bookingError?.message ?? "Failed to create booking");
+      }
+      bookingId = newBooking.id;
+    }
+
     // ── Lazy Connect: auto-create account on first checkout ──
     let onboardingRequired = false;
     if (!stripeAccountId) {
