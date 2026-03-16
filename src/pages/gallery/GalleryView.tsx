@@ -974,10 +974,18 @@ const GalleryView = () => {
     const sessionBalance = Math.max(0, sessionTotal - sessionPaid);
     const includedPhotos = bi.num_photos;
     const extraPhotos = Math.max(0, favCount - includedPhotos);
-    const extraPhotoCost = pricePerPhoto * extraPhotos;
-    const photoSelectionCost = pricePerPhoto * favCount;
-    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost };
+    // Use tiered pricing if available, otherwise fallback to flat price_per_photo
+    const { cost: extraPhotoCost, tier: activeTier } = photoTiers.length > 0
+      ? calcTieredCost(extraPhotos, photoTiers)
+      : { cost: pricePerPhoto * extraPhotos, tier: null };
+    const effectivePricePerPhoto = extraPhotos > 0 && activeTier
+      ? activeTier.price_per_photo
+      : pricePerPhoto;
+    const photoSelectionCost = includedPhotos === 0 ? pricePerPhoto * favCount : extraPhotoCost;
+    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost, activeTier, effectivePricePerPhoto };
   })();
+
+
 
   // Derived filtered list (only relevant for proof galleries)
   const filteredPhotos = isProof
