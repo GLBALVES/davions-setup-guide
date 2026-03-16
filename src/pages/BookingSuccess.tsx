@@ -61,39 +61,50 @@ const BookingSuccess = () => {
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   // Briefing form answers: { [questionId]: string | string[] }
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
 
-  // ── Confirm payment fallback (runs once when status is still pending) ───────
-  const confirmPaymentIfNeeded = async (
-    currentBooking: BookingDetails,
-    checkoutSessionId: string | null
-  ) => {
-    if (!checkoutSessionId || currentBooking.status === "confirmed") return currentBooking;
-
+  // ── Confirm payment (always try when we have a checkoutSessionId) ─────────
+  const tryConfirmBooking = async (
+    checkoutSessionId: string
+  ): Promise<BookingDetails | null> => {
     setConfirmingPayment(true);
+    setConfirmError(null);
     try {
       const { data, error } = await supabase.functions.invoke("confirm-booking", {
         body: { bookingId, checkoutSessionId },
       });
-      if (!error && data?.confirmed) {
-        // Re-fetch the booking to get the updated status
-        const { data: refreshed } = await supabase
-          .from("bookings")
-          .select("client_name, client_email, booked_date, status, payment_status, availability_id")
-          .eq("id", bookingId!)
-          .single();
-        if (refreshed) return refreshed as BookingDetails;
+
+      if (error) {
+        console.error("confirm-booking edge function error:", error);
+        setConfirmError("We're having trouble confirming your booking. Please contact us if this persists.");
+        return null;
       }
+
+      if (!data?.confirmed) {
+        // Payment not completed in Stripe yet (abandoned checkout)
+        return null;
+      }
+
+      // Re-fetch the now-confirmed booking
+      const { data: refreshed } = await supabase
+        .from("bookings")
+        .select("client_name, client_email, booked_date, status, payment_status, availability_id")
+        .eq("id", bookingId!)
+        .single();
+
+      return refreshed as BookingDetails | null;
     } catch (e) {
       console.error("confirm-booking failed:", e);
+      setConfirmError("We're having trouble confirming your booking. Please contact us if this persists.");
+      return null;
     } finally {
       setConfirmingPayment(false);
     }
-    return currentBooking;
   };
 
   // ── Load booking + session + briefing ─────────────────────────────────────
@@ -104,7 +115,6 @@ const BookingSuccess = () => {
     }
 
     const load = async () => {
-      // Get checkout session id from URL params
       const checkoutSessionId = searchParams.get("checkout_session_id");
 
       const [{ data: bookingData }, { data: sessionData }] = await Promise.all([
@@ -120,17 +130,24 @@ const BookingSuccess = () => {
           .single(),
       ]);
 
-      if (bookingData) {
-        // If booking is still pending, try to confirm it via Stripe verification
-        const rawBooking = bookingData as BookingDetails & { stripe_checkout_session_id?: string };
-        const csId = checkoutSessionId || rawBooking.stripe_checkout_session_id || null;
-        const confirmedBooking = rawBooking.status === "pending"
-          ? await confirmPaymentIfNeeded(rawBooking, csId)
-          : rawBooking;
+      // Determine the checkout session ID to use for confirmation
+      const rawBooking = bookingData as (BookingDetails & { stripe_checkout_session_id?: string }) | null;
+      const csId = checkoutSessionId || rawBooking?.stripe_checkout_session_id || null;
 
-        setBooking(confirmedBooking);
+      let resolvedBooking: BookingDetails | null = rawBooking;
 
-        const availId = confirmedBooking.availability_id;
+      // Always attempt confirmation if:
+      // - We have a Stripe checkout session ID in the URL (user just came from Stripe)
+      // - AND the booking is still pending (or we couldn't read it due to RLS timing)
+      if (csId && (!rawBooking || rawBooking.status === "pending")) {
+        const confirmed = await tryConfirmBooking(csId);
+        if (confirmed) resolvedBooking = confirmed;
+      }
+
+      if (resolvedBooking) {
+        setBooking(resolvedBooking);
+
+        const availId = resolvedBooking.availability_id;
         if (availId) {
           const { data: availData } = await supabase
             .from("session_availability")
@@ -146,7 +163,6 @@ const BookingSuccess = () => {
         setSession(s);
 
         if (s.briefing_id) {
-          // Fetch briefing questions
           const { data: briefingData } = await (supabase as any)
             .from("briefings")
             .select("id, name, questions")
@@ -156,7 +172,6 @@ const BookingSuccess = () => {
           if (briefingData) {
             setBriefing(briefingData as BriefingData);
 
-            // Check if already submitted
             const { data: existing } = await (supabase as any)
               .from("booking_briefing_responses")
               .select("id")
@@ -230,6 +245,28 @@ const BookingSuccess = () => {
         <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
           {confirmingPayment ? "Confirming your booking…" : "Loading…"}
         </span>
+      </div>
+    );
+  }
+
+  // ── Confirmation error ─────────────────────────────────────────────────────
+  if (confirmError && !booking) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-16 gap-6">
+        <div className="w-full max-w-md border border-border p-6 flex flex-col gap-4 text-center">
+          <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground">Payment received</p>
+          <h1 className="text-xl font-light tracking-wide">Almost there…</h1>
+          <p className="text-sm font-light text-muted-foreground">{confirmError}</p>
+          {slug && (
+            <button
+              onClick={() => navigate(`/store/${slug}`)}
+              className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground underline mt-2"
+            >
+              ← Back to Store
+            </button>
+          )}
+        </div>
+        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">Powered by Davions</p>
       </div>
     );
   }
