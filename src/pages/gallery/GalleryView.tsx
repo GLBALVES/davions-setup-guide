@@ -923,6 +923,27 @@ const GalleryView = () => {
   const isFree = pricePerPhoto === 0;
   const blockContext = (e: React.MouseEvent) => e.preventDefault();
 
+  // Inline summary calculations (mirrors modal logic)
+  const inlineSummary = (() => {
+    if (!bookingInfo || favCount === 0) return null;
+    const bi = bookingInfo;
+    const sessionBase = bi.session_price + bi.extras_total;
+    const taxAmount = Math.round(sessionBase * (bi.tax_rate / 100));
+    const sessionTotal = sessionBase + taxAmount;
+    const depositCalc = bi.deposit_type === "percent" || bi.deposit_type === "percentage"
+      ? Math.round(sessionTotal * (bi.deposit_amount / 100))
+      : bi.deposit_amount;
+    let sessionPaid = 0;
+    if (bi.payment_status === "paid") sessionPaid = sessionTotal;
+    else if (bi.payment_status === "deposit_paid") sessionPaid = bi.deposit_enabled ? depositCalc : 0;
+    const sessionBalance = Math.max(0, sessionTotal - sessionPaid);
+    const includedPhotos = bi.num_photos;
+    const extraPhotos = Math.max(0, favCount - includedPhotos);
+    const extraPhotoCost = pricePerPhoto * extraPhotos;
+    const photoSelectionCost = pricePerPhoto * favCount;
+    return { bi, sessionTotal, taxAmount, sessionPaid, sessionBalance, includedPhotos, extraPhotos, extraPhotoCost, photoSelectionCost };
+  })();
+
   // Derived filtered list (only relevant for proof galleries)
   const filteredPhotos = isProof
     ? photos.filter((p) => {
@@ -1194,6 +1215,126 @@ const GalleryView = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── Inline selection summary (shows as soon as 1st photo is selected) ── */}
+            {isProof && favCount > 0 && (
+              <div className="border border-border bg-card overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="px-4 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Order Summary</p>
+                  <button
+                    onClick={() => setPurchaseOpen(true)}
+                    className="text-[10px] tracking-[0.18em] uppercase text-primary hover:underline font-light"
+                  >
+                    View & Checkout →
+                  </button>
+                </div>
+
+                <div className="px-4 py-3 flex flex-col gap-0">
+                  {/* Session block */}
+                  {inlineSummary && (
+                    <>
+                      <div className="flex flex-col gap-1.5 pb-3">
+                        {inlineSummary.bi.session_title && (
+                          <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">{inlineSummary.bi.session_title}</p>
+                        )}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light">Session fee</span>
+                          <span className="tabular-nums">{formatCurrency(inlineSummary.bi.session_price)}</span>
+                        </div>
+                        {inlineSummary.bi.extras_total > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">Add-ons / Extras</span>
+                            <span className="tabular-nums">{formatCurrency(inlineSummary.bi.extras_total)}</span>
+                          </div>
+                        )}
+                        {inlineSummary.taxAmount > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">Tax ({inlineSummary.bi.tax_rate}%)</span>
+                            <span className="tabular-nums">{formatCurrency(inlineSummary.taxAmount)}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-xs border-t border-border pt-1.5 mt-0.5">
+                          <span className="font-medium text-foreground">Session total</span>
+                          <span className="tabular-nums font-medium">{formatCurrency(inlineSummary.sessionTotal)}</span>
+                        </div>
+                        {inlineSummary.sessionPaid > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">
+                              {inlineSummary.bi.payment_status === "paid" ? "Paid in full" : "Deposit paid"}
+                            </span>
+                            <span className="tabular-nums text-primary">− {formatCurrency(inlineSummary.sessionPaid)}</span>
+                          </div>
+                        )}
+                        {inlineSummary.sessionBalance > 0 && (
+                          <div className="flex items-center justify-between text-xs bg-amber-50 dark:bg-amber-950/20 -mx-4 px-4 py-1.5 mt-0.5 border-t border-amber-200 dark:border-amber-800">
+                            <span className="text-amber-700 dark:text-amber-400 font-medium">Session balance due</span>
+                            <span className="tabular-nums text-amber-700 dark:text-amber-400 font-medium">{formatCurrency(inlineSummary.sessionBalance)}</span>
+                          </div>
+                        )}
+                        {inlineSummary.sessionBalance === 0 && inlineSummary.sessionPaid > 0 && (
+                          <div className="flex items-center justify-between text-xs bg-primary/5 -mx-4 px-4 py-1.5 mt-0.5 border-t border-border">
+                            <span className="text-muted-foreground font-light">Session balance</span>
+                            <span className="tabular-nums text-primary font-medium">Paid in full ✓</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Photo selection block */}
+                      {pricePerPhoto > 0 && (
+                        <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+                          <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-light mb-0.5">Photo Selection</p>
+                          {inlineSummary.includedPhotos > 0 && (
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground font-light">Included in session</span>
+                              <span className="text-muted-foreground tabular-nums">{inlineSummary.includedPhotos} photo{inlineSummary.includedPhotos !== 1 ? "s" : ""}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">Selected</span>
+                            <span className="tabular-nums font-medium text-foreground flex items-center gap-1.5">
+                              <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
+                              {favCount} photo{favCount !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          {inlineSummary.extraPhotos > 0 ? (
+                            <>
+                              <div className="flex items-center justify-between text-xs bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2 mt-0.5 border-t border-rose-100 dark:border-rose-900">
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-medium text-rose-700 dark:text-rose-400">Extra photos</span>
+                                  <span className="text-[10px] text-rose-500/70 font-light">
+                                    {inlineSummary.extraPhotos} × {formatCurrency(pricePerPhoto)} beyond {inlineSummary.includedPhotos} included
+                                  </span>
+                                </div>
+                                <span className="tabular-nums font-medium text-rose-700 dark:text-rose-400">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
+                              </div>
+                            </>
+                          ) : inlineSummary.includedPhotos > 0 ? (
+                            <div className="flex items-center justify-between text-xs text-muted-foreground/60">
+                              <span className="font-light italic">Within included quantity</span>
+                              <span className="tabular-nums">No extra charge</span>
+                            </div>
+                          ) : null}
+                          {pricePerPhoto > 0 && inlineSummary.includedPhotos === 0 && (
+                            <div className="flex items-center justify-between text-xs border-t border-border pt-1.5 mt-0.5">
+                              <span className="font-medium text-foreground">Photos total</span>
+                              <span className="tabular-nums font-medium">{formatCurrency(inlineSummary.photoSelectionCost)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Fallback when no booking info */}
+                  {!inlineSummary && pricePerPhoto > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
+                      <span className="tabular-nums font-medium">{formatCurrency(totalPrice)}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1605,22 +1746,43 @@ const GalleryView = () => {
                         <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">Photo Selection</p>
                       </div>
                       <div className="px-4 py-3 flex flex-col gap-2">
+                        {/* Selected count */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light flex items-center gap-1.5">
+                            <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
+                            Photos selected
+                          </span>
+                          <span className="tabular-nums font-medium text-foreground">{favCount} photo{favCount !== 1 ? "s" : ""}</span>
+                        </div>
+                        {/* Included in session */}
                         {includedPhotos > 0 && (
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground font-light">Included in session</span>
-                            <span className="text-muted-foreground tabular-nums">{includedPhotos} photo{includedPhotos !== 1 ? "s" : ""}</span>
+                            <span className="text-muted-foreground tabular-nums">{includedPhotos} photo{includedPhotos !== 1 ? "s" : ""} · free</span>
                           </div>
                         )}
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground font-light">
-                            {favCount} photo{favCount !== 1 ? "s" : ""} selected × {formatCurrency(pricePerPhoto)} each
-                          </span>
-                          <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
-                        </div>
-                        {includedPhotos > 0 && extraPhotos > 0 && (
-                          <div className="flex items-center justify-between text-xs text-muted-foreground/70">
-                            <span className="font-light italic">↳ {extraPhotos} beyond included ({formatCurrency(pricePerPhoto)} each)</span>
-                            <span className="tabular-nums">{formatCurrency(extraPhotoCost)}</span>
+                        {/* Extra photos block */}
+                        {extraPhotos > 0 ? (
+                          <div className="flex flex-col gap-1 bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2.5 mt-0.5 border-t border-rose-100 dark:border-rose-900">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-rose-700 dark:text-rose-400">Extra photos</span>
+                              <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
+                            </div>
+                            <p className="text-[10px] text-rose-500/80 font-light">
+                              {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} beyond the {includedPhotos} included × {formatCurrency(pricePerPhoto)} each
+                            </p>
+                          </div>
+                        ) : includedPhotos > 0 ? (
+                          <div className="flex items-center justify-between text-xs text-primary/70">
+                            <span className="font-light">Within included quantity</span>
+                            <span className="tabular-nums">No extra charge</span>
+                          </div>
+                        ) : null}
+                        {/* Total for photos (no included photos = all are charged) */}
+                        {includedPhotos === 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-light">{favCount} × {formatCurrency(pricePerPhoto)}</span>
+                            <span className="tabular-nums">{formatCurrency(photoSelectionCost)}</span>
                           </div>
                         )}
                         <div className="flex items-center justify-between text-xs border-t border-border pt-2 mt-0.5 font-medium">
