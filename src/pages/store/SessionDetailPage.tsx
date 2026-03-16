@@ -291,7 +291,7 @@ const SessionDetailPage = () => {
         .in("availability_id", defs.map((d) => d.id))
         .gte("booked_date", fromDate)
         .lte("booked_date", toDate)
-        .in("status", ["pending", "confirmed"]);
+        .eq("status", "confirmed");
 
       const bookedKeys = new Set<string>(
         (bookingsData ?? [])
