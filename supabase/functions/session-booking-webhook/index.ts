@@ -192,6 +192,64 @@ serve(async (req) => {
     }
   }
 
+  if (event.type === "payment_intent.payment_failed") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("id, client_email, client_name, session_id, photographer_id")
+      .eq("stripe_payment_intent_id", paymentIntent.id)
+      .maybeSingle();
+
+    if (booking) {
+      await supabase
+        .from("bookings")
+        .update({ status: "failed", payment_status: "failed" })
+        .eq("id", booking.id);
+
+      // Send failure notification email to client if RESEND_API_KEY is available
+      try {
+        const resendKey = Deno.env.get("RESEND_API_KEY");
+        if (resendKey && booking.session_id) {
+          const { data: sessionData } = await supabase
+            .from("sessions")
+            .select("title")
+            .eq("id", booking.session_id)
+            .single();
+
+          const failureReason =
+            paymentIntent.last_payment_error?.message ?? "Your payment was declined.";
+
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${resendKey}`,
+            },
+            body: JSON.stringify({
+              from: "noreply@davions.app",
+              to: booking.client_email,
+              subject: `Payment Failed — ${sessionData?.title ?? "Booking"}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #111;">
+                  <h2 style="font-weight: 300; letter-spacing: 2px; text-transform: uppercase;">Payment Not Processed</h2>
+                  <p>Hi ${booking.client_name},</p>
+                  <p>Unfortunately, your payment for <strong>${sessionData?.title ?? "your session"}</strong> could not be processed.</p>
+                  <p style="color: #dc2626;"><strong>Reason:</strong> ${failureReason}</p>
+                  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                  <p>Please try booking again or contact us for assistance.</p>
+                  <p style="font-size: 12px; color: #aaa;">This notification was sent automatically by Davions.</p>
+                </div>
+              `,
+            }),
+          });
+        }
+      } catch (emailErr) {
+        console.error("Failure email send failed:", emailErr);
+      }
+    }
+  }
+
   return new Response(JSON.stringify({ received: true }), {
     headers: { "Content-Type": "application/json" },
     status: 200,
