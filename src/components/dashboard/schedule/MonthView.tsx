@@ -100,7 +100,7 @@ export function MonthView({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 flex-1" style={{ gridAutoRows: "minmax(100px, 1fr)" }}>
+      <div className="grid grid-cols-7" style={{ gridAutoRows: "minmax(90px, auto)" }}>
         {days.map((day, idx) => {
           const key = format(day, "yyyy-MM-dd");
           const dayBookings = bookingsByDate.get(key) ?? [];
@@ -116,7 +116,7 @@ export function MonthView({
           return (
             <div
               key={key}
-              className={`group border-r border-b border-border p-1.5 flex flex-col gap-1 min-h-0 overflow-hidden relative ${
+              className={`group border-r border-b border-border p-1.5 flex flex-col gap-1 relative ${
                 !inMonth ? "bg-muted/20" : ""
               } ${idx % 7 === 0 ? "border-l border-border" : ""} ${
                 isAllDayBlocked ? "bg-destructive/5" : ""
@@ -191,9 +191,9 @@ export function MonthView({
                 </div>
               ))}
 
-              {/* Bookings */}
-              <div className="flex flex-col gap-0.5 overflow-hidden relative z-10">
-                {dayBookings.slice(0, 3).map((b) => (
+              {/* Bookings — all shown, cell grows to fit */}
+              <div className="flex flex-col gap-0.5 relative z-10">
+                {dayBookings.map((b) => (
                   <button
                     key={b.id}
                     onClick={() => onBookingClick(b)}
@@ -204,11 +204,6 @@ export function MonthView({
                     {b.client_name}
                   </button>
                 ))}
-                {dayBookings.length > 3 && (
-                  <span className="text-[9px] text-muted-foreground/60 px-1">
-                    +{dayBookings.length - 3} more
-                  </span>
-                )}
                 {extraBlocked > 0 && (
                   <div className="flex items-center gap-1 px-1 py-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
