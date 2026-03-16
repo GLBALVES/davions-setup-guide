@@ -517,9 +517,23 @@ const GalleryView = () => {
         .select("photo_id")
         .eq("gallery_id", galleryId)
         .eq("client_token", clientToken);
-      if (favData) setFavorites(new Set(favData.map((f) => f.photo_id)));
+      if (favData) {
+        const loadedFavs = new Set(favData.map((f) => f.photo_id));
+        setFavorites(loadedFavs);
+        // Auto-open summary if there are already favorites on load
+        if (loadedFavs.size > 0) setSummaryOpen(true);
+      }
     }
   };
+
+  // Auto-open summary when first photo is selected
+  useEffect(() => {
+    const currentCount = favorites.size;
+    if (prevFavCountRef.current === 0 && currentCount === 1) {
+      setSummaryOpen(true);
+    }
+    prevFavCountRef.current = currentCount;
+  }, [favorites.size]);
 
   const handleUnlock = async () => {
     if (!gallery) return;
