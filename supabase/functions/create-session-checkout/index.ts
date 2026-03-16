@@ -146,45 +146,45 @@ serve(async (req) => {
       location ?? null,
     ].filter(Boolean).join(" · ");
 
+    // ── Local variable for deposit custom_text (set in deposit branch) ──
+    let remainingBalance: number | undefined;
+
     if (isDeposit) {
       const depositType = sessionData.deposit_type as string;
       const isPercentDeposit = depositType === "percent" || depositType === "percentage";
       const depositBase = isPercentDeposit
         ? Math.round(fullTotal * ((sessionData.deposit_amount as number) / 100))
         : (sessionData.deposit_amount as number);
-      const remaining = fullTotal - depositBase;
+      remainingBalance = fullTotal - depositBase;
 
-      // Build full breakdown for product description
+      // Build rich product description visible in Stripe Checkout left panel
       const descLines: string[] = [];
-      descLines.push(`Session: ${fmt(sessionPrice)}`);
-      if (extrasTotal > 0) descLines.push(`Add-ons: ${fmt(extrasTotal)}`);
-      if (taxAmount > 0) descLines.push(`Tax (${taxRate}%): ${fmt(taxAmount)}`);
-      descLines.push(`──────────────`);
-      descLines.push(`Total session value: ${fmt(fullTotal)}`);
-      descLines.push(`Paid today (deposit): ${fmt(depositBase)}`);
-      descLines.push(`Remaining balance: ${fmt(remaining)}`);
-      if (sessionMeta) descLines.push(`\n${sessionMeta}`);
+      if (sessionMeta) descLines.push(`📍 ${sessionMeta}`);
+      descLines.push(``);
+      descLines.push(`Session:  ${fmt(sessionPrice)}`);
+      if (extrasTotal > 0) descLines.push(`Add-ons:  ${fmt(extrasTotal)}`);
+      if (taxAmount > 0) descLines.push(`Tax (${taxRate}%):  ${fmt(taxAmount)}`);
+      descLines.push(`Total session value:  ${fmt(fullTotal)}`);
+      descLines.push(``);
+      descLines.push(`✅ Paid today (deposit):  ${fmt(depositBase)}`);
+      descLines.push(`⏳ Remaining balance:  ${fmt(remainingBalance)}`);
 
       lineItems.push({
         price_data: {
           currency: "brl",
           product_data: {
             name: `${sessionData.title} — Deposit`,
-            description: descLines.join("\n"),
+            description: descLines.filter(l => l !== undefined).join("\n"),
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: depositBase,
         },
         quantity: 1,
       });
-
-      // Store remaining for custom_text below
-      (globalThis as any).__remainingBalance = remaining;
-      (globalThis as any).__depositBase = depositBase;
     } else {
-      // Full payment description
+      // Full payment — session line item with context
       const fullDescLines: string[] = [];
-      if (sessionMeta) fullDescLines.push(sessionMeta);
+      if (sessionMeta) fullDescLines.push(`📍 ${sessionMeta}`);
       if (extrasTotal > 0) fullDescLines.push(`Includes add-ons: ${fmt(extrasTotal)}`);
       if (taxAmount > 0) fullDescLines.push(`Tax (${taxRate}%) included`);
 
@@ -193,7 +193,7 @@ serve(async (req) => {
           currency: "brl",
           product_data: {
             name: sessionData.title,
-            description: fullDescLines.length > 0 ? fullDescLines.join(" · ") : undefined,
+            description: fullDescLines.length > 0 ? fullDescLines.join("  ·  ") : undefined,
             metadata: { booking_id: bookingId, session_id: sessionId },
           },
           unit_amount: sessionPrice,
@@ -207,7 +207,9 @@ serve(async (req) => {
             currency: "brl",
             product_data: {
               name: extra.description,
-              description: extra.qty > 1 ? `Quantity: ${extra.qty} × ${fmt(extra.price)}` : undefined,
+              description: extra.qty > 1
+                ? `${extra.qty} units × ${fmt(extra.price)} each`
+                : undefined,
             },
             unit_amount: extra.price,
           },
@@ -221,7 +223,7 @@ serve(async (req) => {
             currency: "brl",
             product_data: {
               name: `Tax (${taxRate}%)`,
-              description: `Applied on session + add-ons subtotal of ${fmt(subtotal)}`,
+              description: `Applied on subtotal of ${fmt(subtotal)} (session + add-ons)`,
             },
             unit_amount: taxAmount,
           },
