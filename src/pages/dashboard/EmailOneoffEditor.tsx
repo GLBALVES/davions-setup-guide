@@ -86,7 +86,7 @@ export default function EmailOneoffEditor() {
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/emails")}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-2xl font-bold">{isNew ? "New One-off Email" : "Edit One-off Email"}</h1>
+              <h1 className="text-2xl font-bold">{isNew ? em.newOneoff : em.edit}</h1>
             </div>
 
             <Card className="mb-6">

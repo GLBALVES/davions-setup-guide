@@ -35,6 +35,8 @@ export default function EmailAutomatedEditor() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const em = t.emailMarketing;
 
   const [form, setForm] = useState({
     name: "", trigger_type: "new_booking", trigger_config: {} as Record<string, unknown>,

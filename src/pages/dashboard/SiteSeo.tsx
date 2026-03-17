@@ -516,6 +516,8 @@ function SeoManagerTab({ photographerId }: { photographerId: string }) {
    ═══════════════════════════════════════════════════════ */
 export default function SiteSeo() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const ss = t.siteSeo;
 
   if (!user) return null;
 
@@ -527,19 +529,17 @@ export default function SiteSeo() {
           <DashboardHeader />
           <main className="flex-1 p-4 md:p-6 max-w-6xl">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold tracking-tight">Site & SEO</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Monitor traffic analytics and manage SEO settings for your pages.
-              </p>
+              <h1 className="text-2xl font-bold tracking-tight">{ss.title}</h1>
+              <p className="text-muted-foreground text-sm mt-1">{ss.subtitle}</p>
             </div>
 
             <Tabs defaultValue="analytics">
               <TabsList className="mb-4">
                 <TabsTrigger value="analytics" className="gap-1.5">
-                  <TrendingUp className="h-4 w-4" /> Analytics
+                  <TrendingUp className="h-4 w-4" /> {ss.analyticsTab}
                 </TabsTrigger>
                 <TabsTrigger value="seo" className="gap-1.5">
-                  <Search className="h-4 w-4" /> SEO Manager
+                  <Search className="h-4 w-4" /> {ss.seoTab}
                 </TabsTrigger>
               </TabsList>
 
