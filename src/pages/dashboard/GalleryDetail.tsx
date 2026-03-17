@@ -1070,7 +1070,7 @@ const GalleryDetail = () => {
                   className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground/60 hover:text-muted-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <ImagePlus className="h-3.5 w-3.5" />
-                  {photos.length === 0 ? "Upload photos to set a cover" : "Set cover image"}
+                  {photos.length === 0 ? gd.uploadPhotosToSetCover : gd.setCoverImage}
                 </button>
               </div>
             )}
