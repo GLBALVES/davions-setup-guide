@@ -988,9 +988,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               if (visibleItems.length === 0) return null;
               return (
               <Collapsible
-                key={group.title}
-                open={openGroups[group.title]}
-                onOpenChange={() => toggleGroup(group.title)}
+                key={group.stableKey}
+                open={openGroups[group.stableKey]}
+                onOpenChange={() => toggleGroup(group.stableKey)}
               >
                 <SidebarGroup>
                   <SidebarGroupLabel asChild>
@@ -999,7 +999,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       <span className="flex-1 text-left">{group.title}</span>
                       <ChevronRight
                         className="h-3 w-3 shrink-0 transition-transform duration-200"
-                        style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
+                        style={{ transform: openGroups[group.stableKey] ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
                     </CollapsibleTrigger>
                   </SidebarGroupLabel>
@@ -1007,7 +1007,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {visibleItems.map((item) => renderRegularItem(item, group.title))}
+                        {visibleItems.map((item) => renderRegularItem(item, group.stableKey))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
