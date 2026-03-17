@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchSections, fetchTasks, createTask, updateTask, deleteTask,
@@ -22,24 +23,10 @@ import { toast } from "sonner";
 import { TaskDetailSheet } from "@/components/workflow/TaskDetailSheet";
 import {
   DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors,
-  DragStartEvent, DragEndEvent, DragOverEvent, useDroppable,
+  DragStartEvent, DragEndEvent, useDroppable,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-const priorityConfig: Record<string, { label: string; color: string; icon: typeof Flag }> = {
-  urgent: { label: "Urgent", color: "text-red-500", icon: AlertCircle },
-  high: { label: "High", color: "text-orange-500", icon: Flag },
-  medium: { label: "Medium", color: "text-amber-500", icon: Flag },
-  low: { label: "Low", color: "text-blue-500", icon: Flag },
-};
-
-const statusConfig: Record<string, { label: string; dotColor: string }> = {
-  pending: { label: "Pending", dotColor: "bg-amber-400" },
-  in_progress: { label: "In Progress", dotColor: "bg-blue-500" },
-  done: { label: "Done", dotColor: "bg-emerald-500" },
-  archived: { label: "Archived", dotColor: "bg-muted-foreground" },
-};
 
 const sectionToStatusMap: Record<string, string> = {
   "to do": "pending",
@@ -78,12 +65,28 @@ export default function WorkflowProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const wp = t.workflowProject;
   const queryClient = useQueryClient();
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState<Record<string, string>>({});
   const [projectName, setProjectName] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const priorityConfig: Record<string, { label: string; color: string; icon: typeof Flag }> = {
+    urgent: { label: wp.urgent, color: "text-red-500", icon: AlertCircle },
+    high: { label: wp.high, color: "text-orange-500", icon: Flag },
+    medium: { label: wp.medium, color: "text-amber-500", icon: Flag },
+    low: { label: wp.low, color: "text-blue-500", icon: Flag },
+  };
+
+  const statusConfig: Record<string, { label: string; dotColor: string }> = {
+    pending: { label: wp.pending, dotColor: "bg-amber-400" },
+    in_progress: { label: wp.inProgress, dotColor: "bg-blue-500" },
+    done: { label: wp.done, dotColor: "bg-emerald-500" },
+    archived: { label: wp.archivedStatus, dotColor: "bg-muted-foreground" },
+  };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -137,7 +140,7 @@ export default function WorkflowProjectPage() {
     onSuccess: (task) => {
       queryClient.invalidateQueries({ queryKey: ["workflow-tasks", projectId] });
       logActivity(task.id, user!.id, "created the task");
-      toast.success("Task created");
+      toast.success(wp.taskCreated);
     },
   });
 
@@ -151,7 +154,7 @@ export default function WorkflowProjectPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflow-tasks", projectId] });
       setSelectedTask(null);
-      toast.success("Task deleted");
+      toast.success(wp.taskDeleted);
     },
   });
 
@@ -174,13 +177,10 @@ export default function WorkflowProjectPage() {
       .from("workflow_tasks" as any)
       .update({ project_id: newProjectId, section_id: newSectionId } as any)
       .eq("id", taskId);
-    if (error) {
-      toast.error("Error moving task: " + error.message);
-      return;
-    }
+    if (error) { toast.error(wp.errorMovingTask + error.message); return; }
     queryClient.invalidateQueries({ queryKey: ["workflow-tasks", projectId] });
     setSelectedTask(null);
-    toast.success("Task moved to another project");
+    toast.success(wp.taskMovedProject);
   };
 
   const isLoading = loadingSections || loadingTasks;
@@ -258,10 +258,10 @@ export default function WorkflowProjectPage() {
               <Tabs value={view} onValueChange={(v) => setView(v as any)}>
                 <TabsList className="h-9">
                   <TabsTrigger value="kanban" className="text-xs gap-1.5">
-                    <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+                    <LayoutGrid className="h-3.5 w-3.5" /> {wp.kanban}
                   </TabsTrigger>
                   <TabsTrigger value="list" className="text-xs gap-1.5">
-                    <List className="h-3.5 w-3.5" /> List
+                    <List className="h-3.5 w-3.5" /> {wp.list}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -293,7 +293,6 @@ export default function WorkflowProjectPage() {
                             </div>
                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-semibold">{sectionTasks.length}</Badge>
                           </div>
-
                           <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <DroppableColumn sectionId={section.id}>
                               {sectionTasks.map((task) => (
@@ -303,10 +302,9 @@ export default function WorkflowProjectPage() {
                               ))}
                             </DroppableColumn>
                           </SortableContext>
-
                           <div className="flex gap-1.5 px-2 pb-3">
                             <Input
-                              placeholder="New task..."
+                              placeholder={wp.newTaskPlaceholder}
                               className="h-8 text-xs bg-background/60"
                               value={newTaskTitle[section.id] || ""}
                               onChange={(e) => setNewTaskTitle((prev) => ({ ...prev, [section.id]: e.target.value }))}
@@ -321,7 +319,6 @@ export default function WorkflowProjectPage() {
                     );
                   })}
                 </div>
-
                 <DragOverlay>
                   {activeTask ? (
                     <div className="w-[260px] opacity-90 rotate-2">
@@ -336,15 +333,15 @@ export default function WorkflowProjectPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b text-xs text-muted-foreground">
-                        <th className="text-left p-3 font-medium">Task</th>
-                        <th className="text-left p-3 font-medium">Section</th>
-                        <th className="text-left p-3 font-medium">Priority</th>
-                        <th className="text-left p-3 font-medium">Due Date</th>
+                        <th className="text-left p-3 font-medium">{wp.columnTask}</th>
+                        <th className="text-left p-3 font-medium">{wp.columnSection}</th>
+                        <th className="text-left p-3 font-medium">{wp.columnPriority}</th>
+                        <th className="text-left p-3 font-medium">{wp.columnDueDate}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {tasks.length === 0 ? (
-                        <tr><td colSpan={4} className="text-center py-8 text-muted-foreground text-sm">No tasks</td></tr>
+                        <tr><td colSpan={4} className="text-center py-8 text-muted-foreground text-sm">{wp.noTasks}</td></tr>
                       ) : (
                         tasks.map((task) => {
                           const pri = priorityConfig[task.priority] || priorityConfig.medium;
@@ -393,7 +390,7 @@ export default function WorkflowProjectPage() {
           onOpenChange={(open) => !open && setSelectedTask(null)}
           onUpdate={(updates) => {
             updateTaskMut.mutate({ id: selectedTask.id, ...updates } as any);
-            setSelectedTask((prev) => prev ? { ...prev, ...updates } : null);
+            setSelectedTask({ ...selectedTask, ...updates });
           }}
           onDelete={() => deleteTaskMut.mutate(selectedTask.id)}
           onMoveToProject={handleMoveToProject}
