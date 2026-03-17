@@ -1347,10 +1347,10 @@ const GalleryDetail = () => {
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                       <span className="inline-block w-6 h-px bg-border" />
                       {isSelecting
-                        ? `${selectedPhotos.size} selected`
+                        ? `${selectedPhotos.size} ${gd.selected}`
                         : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
                       {!isSelecting && (
-                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
+                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— {gd.dragToReorder}</span>
                       )}
                     </p>
                     <div className="flex items-center gap-2">
