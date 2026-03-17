@@ -56,24 +56,10 @@ type StatusFilter = "all" | "draft" | "published" | "expired" | "unassigned";
 type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc";
 type ViewMode = "grid" | "list";
 
-const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementType }[] = [
-  { value: "all", label: "All", icon: SlidersHorizontal },
-  { value: "draft", label: "Draft", icon: Clock4 },
-  { value: "published", label: "Published", icon: CheckCheck },
-  { value: "expired", label: "Expired", icon: CalendarX2 },
-  { value: "unassigned", label: "No client", icon: UserX },
-];
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "newest", label: "Newest first" },
-  { value: "oldest", label: "Oldest first" },
-  { value: "title_asc", label: "Title A → Z" },
-  { value: "title_desc", label: "Title Z → A" },
-  { value: "photos_desc", label: "Most photos" },
-];
-
 const Galleries = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const g = t.galleries;
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);

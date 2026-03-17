@@ -39,7 +39,49 @@ const Sessions = () => {
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
-...
+
+  const fetchSessions = async () => {
+    setLoading(true);
+    const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
+      supabase.from("sessions").select("*").order("created_at", { ascending: false }),
+      supabase.from("photographers").select("store_slug").eq("id", user!.id).single(),
+    ]);
+    setSessions(sessionsData ?? []);
+    setStoreSlug(photoData?.store_slug ?? null);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const filteredSessions = useMemo(() => {
+    let list = sessions.filter((sess) => {
+      if (filter === "active") return sess.status === "active";
+      if (filter === "draft") return sess.status !== "active";
+      return true;
+    });
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (sess) =>
+          sess.title.toLowerCase().includes(q) ||
+          (sess.description ?? "").toLowerCase().includes(q) ||
+          (sess.location ?? "").toLowerCase().includes(q)
+      );
+    }
+    list = [...list].sort((a, b) => {
+      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sort === "az") return a.title.localeCompare(b.title);
+      if (sort === "za") return b.title.localeCompare(a.title);
+      if (sort === "price_asc") return a.price - b.price;
+      if (sort === "price_desc") return b.price - a.price;
+      return 0;
+    });
+    return list;
+  }, [sessions, filter, search, sort]);
+
   const SORT_OPTIONS: { key: typeof sort; label: string; icon: React.ReactNode }[] = [
     { key: "newest", label: s.newest, icon: <ArrowUpDown className="h-3 w-3" /> },
     { key: "oldest", label: s.oldest, icon: <ArrowUpDown className="h-3 w-3" /> },
@@ -69,9 +111,9 @@ const Sessions = () => {
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                     <span className="inline-block w-6 h-px bg-border" />
-                    Products
+                    {s.products}
                   </p>
-                  <h1 className="text-2xl font-light tracking-wide">Sessions</h1>
+                  <h1 className="text-2xl font-light tracking-wide">{s.title}</h1>
                 </div>
                 <Button
                   size="sm"
@@ -79,7 +121,7 @@ const Sessions = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  New Session
+                  {s.newSession}
                 </Button>
               </div>
 
@@ -87,7 +129,7 @@ const Sessions = () => {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-1 border-b border-border pb-1">
                   {FILTERS.map(({ key, label }) => {
-                    const count = key === "all" ? sessions.length : sessions.filter(s => key === "active" ? s.status === "active" : s.status !== "active").length;
+                    const count = key === "all" ? sessions.length : sessions.filter(sess => key === "active" ? sess.status === "active" : sess.status !== "active").length;
                     return (
                       <button
                         key={key}
@@ -112,7 +154,7 @@ const Sessions = () => {
                     <Input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search sessions…"
+                      placeholder={s.searchPlaceholder}
                       className="pl-9 h-8 text-xs"
                     />
                   </div>
@@ -137,7 +179,7 @@ const Sessions = () => {
               {loading ? (
                 <div className="flex items-center justify-center py-16">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-                    Loading…
+                    {s.loading}
                   </span>
                 </div>
               ) : filteredSessions.length === 0 ? (
@@ -145,10 +187,10 @@ const Sessions = () => {
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {sessions.length === 0 ? "No sessions yet" : search ? `No results for "${search}"` : "No sessions match this filter"}
+                      {sessions.length === 0 ? s.noSessionsYet : search ? `${s.noResults} "${search}"` : s.noMatch}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {sessions.length === 0 ? "Create your first bookable session product" : search ? "Try a different search term" : "Try a different filter"}
+                      {sessions.length === 0 ? s.createFirst : search ? s.differentSearch : s.differentFilter}
                     </p>
                   </div>
                   {sessions.length === 0 && (
@@ -159,7 +201,7 @@ const Sessions = () => {
                       className="gap-2 text-xs tracking-wider uppercase font-light mt-2"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      New Session
+                      {s.newSession}
                     </Button>
                   )}
                 </div>
@@ -193,6 +235,8 @@ function SessionCard({
   onClick: () => void;
 }) {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const s = t.sessions;
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -213,13 +257,11 @@ function SessionCard({
     if (!bookingUrl) return;
     try {
       await navigator.clipboard.writeText(bookingUrl);
-      toast({ title: "Link copied!", description: "Booking URL copied to clipboard." });
+      toast({ title: s.linkCopied, description: s.bookingUrlCopied });
     } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
+      toast({ title: s.failedToCopy, variant: "destructive" });
     }
   };
-
-  const noSlugMsg = "Configure your store URL first in Settings";
 
   return (
     <TooltipProvider>
@@ -244,7 +286,7 @@ function SessionCard({
               variant={session.status === "active" ? "default" : "secondary"}
               className="text-[9px] tracking-wider uppercase font-light"
             >
-              {session.status === "active" ? "Published" : "Unpublished"}
+              {session.status === "active" ? s.published : s.unpublished}
             </Badge>
           </div>
         </div>
@@ -264,7 +306,7 @@ function SessionCard({
             </span>
             <span className="flex items-center gap-1">
               <Camera className="h-3 w-3" />
-              {session.num_photos} photos
+              {session.num_photos} {s.photos}
             </span>
             {session.location && (
               <span className="flex items-center gap-1">
@@ -277,7 +319,6 @@ function SessionCard({
           <div className="flex items-center justify-between border-t border-border pt-3">
             <span className="text-base font-light">{priceFormatted}</span>
             <div className="flex items-center gap-2">
-              {/* Preview */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -289,11 +330,10 @@ function SessionCard({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {bookingUrl ? "Preview booking page" : noSlugMsg}
+                  {bookingUrl ? s.previewBooking : s.configureStore}
                 </TooltipContent>
               </Tooltip>
 
-              {/* Share */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -305,13 +345,13 @@ function SessionCard({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {bookingUrl ? "Copy booking link" : noSlugMsg}
+                  {bookingUrl ? s.copyBookingLink : s.configureStore}
                 </TooltipContent>
               </Tooltip>
 
               <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1 ml-1">
                 <Calendar className="h-3 w-3" />
-                Manage
+                {s.manage}
               </span>
             </div>
           </div>
