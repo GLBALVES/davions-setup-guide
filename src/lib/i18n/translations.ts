@@ -437,6 +437,17 @@ export const translations = {
       paymentAccountSettings: "Payment Account Settings",
       // Payables
       payables: "Payables",
+      payablesComingSoon: "Payables — Coming Soon",
+      payablesDesc: "Track your business expenses, vendor invoices, and outgoing payments in one place. Coming in a future update.",
+      plannedCategories: "Planned Categories",
+      supplierInvoices: "Supplier Invoices",
+      supplierInvoicesDesc: "Track payments to equipment & prop suppliers.",
+      equipmentRepairs: "Equipment & Repairs",
+      equipmentRepairsDesc: "Lens repairs, camera services, accessories.",
+      contractors: "Contractors",
+      contractorsDesc: "Assistants, second shooters, retouchers.",
+      studioRent: "Studio & Rent",
+      studioRentDesc: "Studio rental, coworking, location fees.",
     },
     // ── Personalize ──
     personalize: {
