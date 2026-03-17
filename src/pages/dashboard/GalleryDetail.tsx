@@ -1248,8 +1248,8 @@ const GalleryDetail = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
                   title="Preview public gallery"
                 >
-                  <a href={publicUrl} target="_blank" rel="noopener noreferrer">
-                    <Eye className="h-3.5 w-3.5" /> Preview
+                   <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                    <Eye className="h-3.5 w-3.5" /> {gd.preview}
                   </a>
                 </Button>
 
@@ -1260,9 +1260,9 @@ const GalleryDetail = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   {gallery.status === "published" ? (
-                    <><EyeOff className="h-3.5 w-3.5" /> Unpublish</>
+                    <><EyeOff className="h-3.5 w-3.5" /> {gd.unpublish}</>
                   ) : (
-                    <><Globe className="h-3.5 w-3.5" /> Publish</>
+                    <><Globe className="h-3.5 w-3.5" /> {gd.publish}</>
                   )}
                 </Button>
 
