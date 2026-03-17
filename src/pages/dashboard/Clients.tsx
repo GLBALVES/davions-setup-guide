@@ -271,19 +271,19 @@ export default function Clients() {
                 <div className="px-8 py-5 border-b border-border grid grid-cols-3 gap-6">
                   <div>
                     <p className="text-3xl font-light">{selected.bookingCount}</p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Total bookings</p>
+                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.totalBookings}</p>
                   </div>
                   <div>
                     <p className="text-3xl font-light">
                       ${(selected.totalSpent / 100).toFixed(0)}
                     </p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Total paid</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.totalPaid}</p>
                   </div>
                   <div>
                     <p className="text-3xl font-light">
                       {selected.lastBookingDate ? format(parseISO(selected.lastBookingDate), "MMM d") : "—"}
                     </p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Last session</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.lastSession}</p>
                   </div>
                 </div>
 
