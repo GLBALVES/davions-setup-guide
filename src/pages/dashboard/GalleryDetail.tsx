@@ -1386,7 +1386,7 @@ const GalleryDetail = () => {
                           className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
                         >
                           <CheckSquare className="h-3.5 w-3.5" />
-                          Select
+                          {gd.select}
                         </button>
                       )}
                     </div>
