@@ -878,7 +878,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                 <SidebarGroupLabel asChild>
                   <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                     <Star className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1 text-left">Favorites</span>
+                    <span className="flex-1 text-left">{t.nav.favorites}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
