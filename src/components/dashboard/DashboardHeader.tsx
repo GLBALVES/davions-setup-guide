@@ -12,6 +12,7 @@ import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 export function DashboardHeader() {
   const { user } = useAuth();
   const { state } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
