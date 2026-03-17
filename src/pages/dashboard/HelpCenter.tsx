@@ -384,80 +384,44 @@ const HelpCenter = () => {
               </div>
             </div>
 
-            {/* ── Body: sidebar + content ───────────────────────── */}
-            <div className="max-w-5xl mx-auto px-6 py-8 flex gap-8">
-
-              {/* Category sidebar */}
-              <aside className="hidden md:flex flex-col w-52 shrink-0 gap-1">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2 px-2">
-                  Categories
-                </p>
-                <button
-                  onClick={() => { setActiveCategory(null); setQuery(""); }}
-                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-sm text-sm transition-colors text-left ${
-                    !activeCategory && !query
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Zap className="h-3.5 w-3.5 shrink-0" />
-                    <span className="font-light text-[13px]">All</span>
-                  </span>
-                  <span className="text-[10px] opacity-60 tabular-nums">{totalArticles}</span>
-                </button>
-                {categories.map((cat) => {
-                  const Icon = cat.icon;
-                  const isActive = activeCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleCategoryClick(cat.id)}
-                      className={`flex items-center justify-between gap-2 px-3 py-2 rounded-sm text-sm transition-colors text-left border-l-2 ${
-                        isActive
-                          ? "bg-muted border-foreground text-foreground"
-                          : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-border"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <Icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="font-light text-[13px] truncate">{cat.title}</span>
-                      </span>
-                      <span className="text-[10px] opacity-50 tabular-nums shrink-0">{cat.articles.length}</span>
-                    </button>
-                  );
-                })}
-              </aside>
+            {/* ── Body ─────────────────────────────────────────── */}
+            <div className="max-w-5xl mx-auto px-6 py-8">
 
               {/* Main content */}
-              <div className="flex-1 min-w-0 space-y-10">
+              <div className="space-y-8">
 
-                {/* Mobile category tabs */}
-                <div className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                  <button
-                    onClick={() => { setActiveCategory(null); setQuery(""); }}
-                    className={`flex-shrink-0 px-3 py-1.5 text-[11px] tracking-wider uppercase font-light border transition-colors rounded-none ${
-                      !activeCategory && !query
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
-                    }`}
-                  >
-                    All
-                  </button>
-                  {categories.map((cat) => (
+                {/* Category chip cloud */}
+                {!query && (
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      key={cat.id}
-                      onClick={() => handleCategoryClick(cat.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 text-[11px] tracking-wider uppercase font-light border transition-colors rounded-none ${
-                        activeCategory === cat.id
+                      onClick={() => setActiveCategory(null)}
+                      className={`px-3 py-1.5 text-[11px] tracking-wider uppercase font-light border transition-colors rounded-none ${
+                        !activeCategory
                           ? "border-foreground bg-foreground text-background"
                           : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                       }`}
                     >
-                      {cat.title}
+                      All
                     </button>
-                  ))}
-                </div>
+                    {categories.map((cat) => {
+                      const Icon = cat.icon;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryClick(cat.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] tracking-wider uppercase font-light border transition-colors rounded-none ${
+                            activeCategory === cat.id
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Icon className="h-3 w-3 shrink-0" />
+                          {cat.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Search results label */}
                 {query && (
