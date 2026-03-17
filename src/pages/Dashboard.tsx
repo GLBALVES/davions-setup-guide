@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   CalendarDays, Clock, Users, FolderKanban, Image,
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
@@ -58,6 +59,7 @@ const STAGE_COLORS: Record<string, string> = {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
@@ -179,14 +181,15 @@ const Dashboard = () => {
 
   const greeting = () => {
     const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 18) return "Good afternoon";
-    return "Good evening";
+    if (h < 12) return t.dashboard.goodMorning;
+    if (h < 18) return t.dashboard.goodAfternoon;
+    return t.dashboard.goodEvening;
   };
 
-  const todayLabel = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric",
-  });
+  const todayLabel = new Date().toLocaleDateString(
+    lang === "pt" ? "pt-BR" : lang === "es" ? "es-ES" : "en-US",
+    { weekday: "long", month: "long", day: "numeric" }
+  );
 
   const formatTime = (t: string) =>
     t ? t.slice(0, 5) : "";

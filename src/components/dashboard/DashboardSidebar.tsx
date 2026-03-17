@@ -97,6 +97,7 @@ import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
   title: string;
@@ -117,11 +118,99 @@ type MenuGroup = {
 
 const ALL_ITEMS: (MenuItem & { groupTitle: string })[] = [];
 
+function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
+  return [
+    {
+      title: "Photographers",
+      icon: Camera,
+      defaultOpen: true,
+      items: [
+        { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
+        { title: t.nav.projects, icon: Columns, to: "/dashboard/projects" },
+        { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
+        { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
+        { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
+        { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
+        { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
+        { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
+      ],
+    },
+    {
+      title: "Marketing",
+      icon: Megaphone,
+      items: [
+        { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
+        { title: t.nav.blog, icon: BookText, to: "/dashboard/blog", permKey: "blog" },
+        { title: t.nav.creativeStudio, icon: Share2, to: "/dashboard/creative", permKey: "creative" },
+        { title: t.nav.socialMedia, icon: Instagram, to: "/dashboard/social-media" },
+        { title: t.nav.seo, icon: SearchCheck, to: "/dashboard/seo", permKey: "seo" },
+        { title: t.nav.emails, icon: Mail, to: "/dashboard/emails", permKey: "emails" },
+        { title: t.nav.push, icon: Bell, to: "/dashboard/push", permKey: "push" },
+        { title: t.nav.chat, icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
+      ],
+    },
+    {
+      title: "AI",
+      icon: BrainCircuit,
+      items: [
+        { title: t.nav.aiAgents, icon: Bot, to: "/dashboard/agents", permKey: "agents" },
+        { title: t.nav.aiAutomations, icon: Zap },
+        { title: t.nav.smartSuggestions, icon: Lightbulb },
+        { title: t.nav.creativeAssistant, icon: Wand2 },
+      ],
+    },
+    {
+      title: "Finance",
+      icon: DollarSign,
+      items: [
+        { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
+        { title: t.nav.financeDashboard,  icon: LayoutDashboard, to: "/dashboard/finance", end: true },
+        { title: t.nav.receivables,       icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
+        { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
+        { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
+        { title: t.nav.reports,           icon: BarChart3,        to: "/dashboard/finance/reports" },
+      ],
+    },
+    {
+      title: "CRM",
+      icon: Users2,
+      items: [
+        { title: t.nav.clients, icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
+        { title: t.nav.leads, icon: UserPlus },
+      ],
+    },
+    {
+      title: "Workflows",
+      icon: GitBranch,
+      items: [
+        { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
+        { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
+      ],
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      items: [
+        { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
+        { title: t.nav.billing, icon: CreditCard, to: "/dashboard/billing" },
+        { title: t.nav.accessControl, icon: ShieldCheck, to: "/dashboard/access-control" },
+        { title: t.nav.helpCenter, icon: HelpCircle, to: "/dashboard/help" },
+      ],
+    },
+    {
+      title: "My Features",
+      icon: Puzzle,
+      items: [
+        { title: t.nav.createFeature, icon: PlusSquare },
+      ],
+    },
+  ];
+}
+
+// Static groups for ALL_ITEMS reference (keys only, titles don't matter for routing)
 const groups: MenuGroup[] = [
   {
-    title: "Photographers",
-    icon: Camera,
-    defaultOpen: true,
+    title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
@@ -133,75 +222,47 @@ const groups: MenuGroup[] = [
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
-  {
-    title: "Marketing",
-    icon: Megaphone,
-    items: [
-      { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
-      { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
-      { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
-      { title: "Social Media", icon: Instagram, to: "/dashboard/social-media" },
-      { title: "SEO", icon: SearchCheck, to: "/dashboard/seo", permKey: "seo" },
-      { title: "Emails", icon: Mail, to: "/dashboard/emails", permKey: "emails" },
-      { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
-      { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
-    ],
-  },
-  {
-    title: "AI",
-    icon: BrainCircuit,
-    items: [
-      { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
-      { title: "AI Automations", icon: Zap },
-      { title: "Smart Suggestions", icon: Lightbulb },
-      { title: "Creative Assistant", icon: Wand2 },
-    ],
-  },
-  {
-    title: "Finance",
-    icon: DollarSign,
-    items: [
-      { title: "Revenue",     icon: TrendingUp,      to: "/dashboard/revenue" },
-      { title: "Dashboard",   icon: LayoutDashboard, to: "/dashboard/finance", end: true },
-      { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
-      { title: "Payables",    icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
-      { title: "Cash Flow",   icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
-      { title: "Reports",     icon: BarChart3,        to: "/dashboard/finance/reports" },
-    ],
-  },
-  {
-    title: "CRM",
-    icon: Users2,
-    items: [
-      { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
-      { title: "Leads", icon: UserPlus },
-    ],
-  },
-  {
-    title: "Workflows",
-    icon: GitBranch,
-    items: [
-      { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
-      { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
-    ],
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    items: [
-      { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
-      { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
-      { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
-      { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
-    ],
-  },
-  {
-    title: "My Features",
-    icon: Puzzle,
-    items: [
-      { title: "Create Feature", icon: PlusSquare },
-    ],
-  },
+  { title: "Marketing", icon: Megaphone, items: [
+    { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
+    { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
+    { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
+    { title: "Social Media", icon: Instagram, to: "/dashboard/social-media" },
+    { title: "SEO", icon: SearchCheck, to: "/dashboard/seo", permKey: "seo" },
+    { title: "Emails", icon: Mail, to: "/dashboard/emails", permKey: "emails" },
+    { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
+    { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
+  ]},
+  { title: "AI", icon: BrainCircuit, items: [
+    { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
+    { title: "AI Automations", icon: Zap },
+    { title: "Smart Suggestions", icon: Lightbulb },
+    { title: "Creative Assistant", icon: Wand2 },
+  ]},
+  { title: "Finance", icon: DollarSign, items: [
+    { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
+    { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
+    { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
+    { title: "Payables", icon: ArrowUpCircle, to: "/dashboard/finance/payables" },
+    { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
+    { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
+  ]},
+  { title: "CRM", icon: Users2, items: [
+    { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
+    { title: "Leads", icon: UserPlus },
+  ]},
+  { title: "Workflows", icon: GitBranch, items: [
+    { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
+    { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
+  ]},
+  { title: "Settings", icon: Settings, items: [
+    { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
+    { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
+    { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
+    { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
+  ]},
+  { title: "My Features", icon: Puzzle, items: [
+    { title: "Create Feature", icon: PlusSquare },
+  ]},
 ];
 
 groups.forEach((g) => {
@@ -528,6 +589,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const badges = useSidebarBadges();
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
+  const { t } = useLanguage();
+  const translatedGroups = buildGroups(t);
 
   // Filter a group's items based on permissions
   const filterItems = (items: MenuItem[]): MenuItem[] => {
@@ -782,7 +845,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {groups.map((group) => {
+            {translatedGroups.map((group) => {
+              const staticGroup = groups.find(g => g.items.some(i => group.items.some(ti => ti.to === i.to)));
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
@@ -814,7 +878,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                 <SidebarGroupLabel asChild>
                   <CollapsibleTrigger className="flex w-full items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-light hover:text-foreground transition-colors">
                     <Star className="h-3.5 w-3.5 shrink-0" />
-                    <span className="flex-1 text-left">Favorites</span>
+                    <span className="flex-1 text-left">{t.nav.favorites}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -887,7 +951,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </Collapsible>
 
             {/* Regular groups */}
-            {groups.map((group) => {
+            {translatedGroups.map((group) => {
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
