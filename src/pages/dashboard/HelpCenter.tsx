@@ -266,7 +266,7 @@ function RichText({ text, highlight }: { text: string; highlight?: string }) {
           return (
             <span key={i}>
               {part.slice(0, idx)}
-              <mark className="bg-yellow-100 dark:bg-yellow-900/40 text-foreground rounded-[2px] px-0.5">
+              <mark className="bg-muted text-foreground rounded-[2px] px-0.5 font-medium">
                 {part.slice(idx, idx + highlight.length)}
               </mark>
               {part.slice(idx + highlight.length)}
