@@ -842,6 +842,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                     onOpenChange={(open) => setCollapsedOpenGroup(open ? "Favorites" : null)}
                     isItemActive={isItemActive}
                     badges={badgesAsRecord}
+                    favoritesLabel={t.nav.favorites}
+                    noPinnedLabel={t.nav.noPinnedItems}
                   />
                 </SidebarMenu>
               </SidebarGroupContent>
