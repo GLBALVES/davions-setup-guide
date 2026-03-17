@@ -283,6 +283,7 @@ interface SortableFavoriteItemProps {
   collapsed: boolean;
   badgeCount?: number;
   onUnpin: () => void;
+  unpinLabel: string;
 }
 
 function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, onUnpin }: SortableFavoriteItemProps) {
