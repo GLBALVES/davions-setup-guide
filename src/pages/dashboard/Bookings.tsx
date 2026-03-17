@@ -275,10 +275,10 @@ const Bookings = () => {
   };
 
   const FILTERS: { key: FilterStatus; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "pending", label: "Pending" },
-    { key: "confirmed", label: "Confirmed" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "all", label: bk.all },
+    { key: "pending", label: bk.pending },
+    { key: "confirmed", label: bk.confirmed },
+    { key: "cancelled", label: bk.cancelled },
   ];
 
   const formatDate = (dateStr: string | null) => {
