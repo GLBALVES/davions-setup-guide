@@ -140,8 +140,8 @@ export default function Clients() {
               {/* Header */}
               <div className="px-6 py-5 border-b border-border flex flex-col gap-3">
                 <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">CRM</p>
-                  <h1 className="text-lg font-light tracking-wide">Clients</h1>
+                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
+                  <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
