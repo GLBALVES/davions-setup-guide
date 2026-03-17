@@ -915,10 +915,10 @@ const GalleryDetail = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
               </span>
-              Sincronizando com Lightroom
+              {gd.syncingLightroom}
               {syncCount > 0 && (
                 <span className="ml-auto text-primary/60">
-                  {syncCount} foto{syncCount !== 1 ? "s" : ""} recebida{syncCount !== 1 ? "s" : ""}
+                  {syncCount} {syncCount !== 1 ? gd.photosReceived : gd.photoReceived}
                 </span>
               )}
             </div>
