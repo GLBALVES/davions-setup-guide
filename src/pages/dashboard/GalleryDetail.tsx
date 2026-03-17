@@ -1200,11 +1200,11 @@ const GalleryDetail = () => {
                       <DialogContent className="w-[90vw] max-w-sm">
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2 text-sm tracking-wider uppercase font-light">
-                            <SlidersHorizontal className="h-4 w-4" />
-                            Export to Lightroom
+                           <SlidersHorizontal className="h-4 w-4" />
+                            {gd.exportToLightroom}
                           </DialogTitle>
                           <DialogDescription className="text-xs">
-                            {favoritedPhotos.length} photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited by your client
+                            {favoritedPhotos.length} {favoritedPhotos.length !== 1 ? gd.photosFavoritedByClient : gd.photoFavoritedByClient}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="flex flex-col gap-3">
