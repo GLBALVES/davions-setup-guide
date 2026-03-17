@@ -55,6 +55,8 @@ export const translations = {
       pinToFavorites: "Pin to Favorites",
       editFavorites: "Edit Favorites",
       done: "Done",
+      pinHint: "Right-click any item to pin it here",
+      signOut: "Sign Out",
     },
     // ── Dashboard page ──
     dashboard: {
@@ -365,6 +367,8 @@ export const translations = {
       pinToFavorites: "Fixar nos Favoritos",
       editFavorites: "Editar Favoritos",
       done: "Concluído",
+      pinHint: "Clique com o botão direito em qualquer item para fixá-lo aqui",
+      signOut: "Sair",
     },
     dashboard: {
       overview: "Visão Geral",
@@ -664,6 +668,8 @@ export const translations = {
       pinToFavorites: "Fijar en Favoritos",
       editFavorites: "Editar Favoritos",
       done: "Listo",
+      pinHint: "Haga clic derecho en cualquier elemento para fijarlo aquí",
+      signOut: "Cerrar Sesión",
     },
     dashboard: {
       overview: "Resumen",

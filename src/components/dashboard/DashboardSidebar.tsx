@@ -283,9 +283,10 @@ interface SortableFavoriteItemProps {
   collapsed: boolean;
   badgeCount?: number;
   onUnpin: () => void;
+  unpinLabel: string;
 }
 
-function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, onUnpin }: SortableFavoriteItemProps) {
+function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, onUnpin, unpinLabel }: SortableFavoriteItemProps) {
   const {
     attributes,
     listeners,
@@ -378,7 +379,7 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
         <ContextMenuContent className="text-xs">
           <ContextMenuItem className="gap-2 text-xs cursor-pointer" onClick={onUnpin}>
             <PinOff className="h-3.5 w-3.5" />
-            Unpin from Favorites
+            {unpinLabel}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -474,24 +475,26 @@ interface CollapsedFavoritesPopoverProps {
   onOpenChange: (open: boolean) => void;
   isItemActive: (item: MenuItem) => boolean;
   badges: Record<string, number>;
+  favoritesLabel: string;
+  noPinnedLabel: string;
 }
 
-function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItemActive, badges }: CollapsedFavoritesPopoverProps) {
+function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItemActive, badges, favoritesLabel, noPinnedLabel }: CollapsedFavoritesPopoverProps) {
   return (
     <SidebarMenuItem>
       <Popover open={isOpen} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>
-          <SidebarMenuButton tooltip="Favorites" className="gap-3 text-xs tracking-wider uppercase font-light">
+          <SidebarMenuButton tooltip={favoritesLabel} className="gap-3 text-xs tracking-wider uppercase font-light">
             <Star className="h-4 w-4 shrink-0" />
           </SidebarMenuButton>
         </PopoverTrigger>
         <PopoverContent side="right" align="start" sideOffset={8} className="w-52 p-1.5">
           <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light px-2 pt-1 pb-1.5">
-            Favorites
+            {favoritesLabel}
           </p>
           {favoriteItems.length === 0 ? (
             <p className="px-2 py-2 text-[10px] text-muted-foreground/50 font-light italic">
-              No pinned items
+              {noPinnedLabel}
             </p>
           ) : (
             <div className="flex flex-col gap-0.5">
@@ -781,9 +784,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               onClick={() => togglePin(groupTitle, item)}
             >
               {pinned ? (
-                <><PinOff className="h-3.5 w-3.5" />Unpin from Favorites</>
+                <><PinOff className="h-3.5 w-3.5" />{t.nav.unpinFromFavorites}</>
               ) : (
-                <><Pin className="h-3.5 w-3.5" />Pin to Favorites</>
+                <><Pin className="h-3.5 w-3.5" />{t.nav.pinToFavorites}</>
               )}
             </ContextMenuItem>
           </ContextMenuContent>
@@ -839,6 +842,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                     onOpenChange={(open) => setCollapsedOpenGroup(open ? "Favorites" : null)}
                     isItemActive={isItemActive}
                     badges={badgesAsRecord}
+                    favoritesLabel={t.nav.favorites}
+                    noPinnedLabel={t.nav.noPinnedItems}
                   />
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -917,7 +922,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       <SidebarMenu className="pl-3">
                         {favoriteItems.length === 0 ? (
                           <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
-                            Right-click any item to pin it here
+                            {t.nav.pinHint}
                           </p>
                         ) : (
                           <DndContext
@@ -930,7 +935,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                               strategy={verticalListSortingStrategy}
                             >
                               {favoriteItems.map((item) => (
-                                <SortableFavoriteItem
+                                 <SortableFavoriteItem
                                   key={itemKey(item.groupTitle, item.title)}
                                   id={itemKey(item.groupTitle, item.title)}
                                   item={item}
@@ -938,6 +943,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                                   collapsed={false}
                                   badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
                                   onUnpin={() => togglePin(item.groupTitle, item)}
+                                  unpinLabel={t.nav.unpinFromFavorites}
                                 />
                               ))}
                             </SortableContext>
@@ -1018,7 +1024,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                     transition={{ duration: 0.18, ease: "easeInOut" }}
                     className="overflow-hidden whitespace-nowrap"
                   >
-                    Sign Out
+                    {t.nav.signOut}
                   </motion.span>
                 )}
               </AnimatePresence>
