@@ -221,8 +221,8 @@ const Galleries = () => {
                   onClick={() => setCreateOpen(true)}
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  New Gallery
+                   <Plus className="h-3.5 w-3.5" />
+                  {g.newGallery}
                 </Button>
               </div>
 
