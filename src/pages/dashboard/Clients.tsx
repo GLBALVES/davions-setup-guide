@@ -227,7 +227,7 @@ export default function Clients() {
                             <div className={cn("flex items-center gap-3 mt-1.5 text-[10px] tracking-wide", isActive ? "text-background/50" : "text-muted-foreground/60")}>
                               <span className="flex items-center gap-1">
                                 <Hash className="h-2.5 w-2.5" />
-                                {client.bookingCount} {client.bookingCount === 1 ? "booking" : "bookings"}
+                                {client.bookingCount} {client.bookingCount === 1 ? cl.booking : cl.bookings_plural}
                               </span>
                               {client.lastBookingDate && (
                                 <span className="flex items-center gap-1">

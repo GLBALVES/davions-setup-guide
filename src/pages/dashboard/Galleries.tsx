@@ -368,7 +368,7 @@ const Galleries = () => {
                         className="flex items-center gap-1 text-[10px] tracking-wider uppercase font-light text-muted-foreground hover:text-destructive transition-colors ml-1"
                       >
                         <X className="h-2.5 w-2.5" />
-                        Clear filters
+                        {g.clearFilters}
                       </motion.button>
                     )}
                   </AnimatePresence>
