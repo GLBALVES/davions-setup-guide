@@ -680,8 +680,23 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const isPinned = (groupTitle: string, itemTitle: string) =>
     pinnedKeys.includes(itemKey(groupTitle, itemTitle));
 
+  // Build a map from stable English key → translated item (matched by URL)
+  const keyToTranslated = useMemo<Map<string, MenuItem & { groupTitle: string }>>(() => {
+    const map = new Map<string, MenuItem & { groupTitle: string }>();
+    translatedGroups.forEach((tg, gi) => {
+      const sg = groups[gi];
+      tg.items.forEach((tItem, ii) => {
+        const sItem = sg?.items[ii];
+        if (sItem) {
+          map.set(itemKey(sg.stableKey, sItem.title), { ...tItem, groupTitle: sg.stableKey });
+        }
+      });
+    });
+    return map;
+  }, [translatedGroups]);
+
   const favoriteItems: (MenuItem & { groupTitle: string })[] = pinnedKeys
-    .map((key) => ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
+    .map((key) => keyToTranslated.get(key) ?? ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
     .filter((i): i is MenuItem & { groupTitle: string } => !!i);
 
   const handleDragEnd = (event: DragEndEvent) => {
