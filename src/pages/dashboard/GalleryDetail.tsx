@@ -877,7 +877,7 @@ const GalleryDetail = () => {
         <div className="min-h-screen flex w-full bg-background">
           <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+            <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{gd.loading}</span>
           </div>
         </div>
       </SidebarProvider>
