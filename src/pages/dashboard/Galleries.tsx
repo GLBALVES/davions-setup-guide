@@ -354,7 +354,7 @@ const Galleries = () => {
 
                   {/* Count + clear */}
                   <span className="ml-1 text-[10px] text-muted-foreground/60 tracking-wider">
-                    {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+                    {filtered.length} {filtered.length !== 1 ? g.results : g.result}
                   </span>
 
                   <AnimatePresence>
