@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Session {
   id: string;

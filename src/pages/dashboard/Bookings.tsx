@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
