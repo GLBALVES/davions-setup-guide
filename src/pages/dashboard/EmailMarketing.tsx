@@ -112,9 +112,9 @@ export default function EmailMarketing() {
 
             <Tabs defaultValue="campaigns">
               <TabsList>
-                <TabsTrigger value="campaigns" className="gap-1"><Send className="h-4 w-4" /> Campaigns</TabsTrigger>
-                <TabsTrigger value="automated" className="gap-1"><Zap className="h-4 w-4" /> Automated</TabsTrigger>
-                <TabsTrigger value="oneoff" className="gap-1"><CalendarClock className="h-4 w-4" /> One-off</TabsTrigger>
+               <TabsTrigger value="campaigns" className="gap-1"><Send className="h-4 w-4" /> {em.campaigns}</TabsTrigger>
+                <TabsTrigger value="automated" className="gap-1"><Zap className="h-4 w-4" /> {em.automated}</TabsTrigger>
+                <TabsTrigger value="oneoff" className="gap-1"><CalendarClock className="h-4 w-4" /> {em.oneoff}</TabsTrigger>
               </TabsList>
 
               {/* CAMPAIGNS */}
