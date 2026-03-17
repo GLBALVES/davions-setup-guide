@@ -1172,7 +1172,7 @@ const GalleryDetail = () => {
                       title={favoritedPhotos.length === 0 ? "No favorites yet" : `Export ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" />
-                      {`Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
+                      {`${gd.exportToLightroom}${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
                     </Button>
                   );
                 })()}
