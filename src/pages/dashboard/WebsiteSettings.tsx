@@ -329,9 +329,9 @@ const WebsiteSettings = () => {
     }, { onConflict: "photographer_id" });
 
     if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+      toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Website settings saved", description: "Your website configuration has been updated." });
+      toast({ title: ws.settingsSaved, description: ws.settingsSavedDesc });
     }
     setSaving(false);
   };
