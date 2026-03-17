@@ -97,6 +97,7 @@ import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
   title: string;
