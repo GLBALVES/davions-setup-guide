@@ -123,6 +123,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function AccessControl() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const ac = t.accessControl;
 
   const [roles, setRoles] = useState<StudioRole[]>([]);
   const [members, setMembers] = useState<StudioMember[]>([]);
