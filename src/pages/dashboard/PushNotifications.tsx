@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Bell, Plus, Trash2, Pencil, Clock } from "lucide-react";
 import { fetchPushNotifications, upsertPushNotification, deletePushNotification } from "@/lib/push-api";
@@ -31,6 +32,8 @@ const emptyForm = {
 export default function PushNotifications() {
   const qc = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const p = t.push;
   const photographerId = user?.id || "";
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -50,15 +53,15 @@ export default function PushNotifications() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mkt-push"] });
-      toast.success(editId ? "Notification updated" : "Notification created");
+      toast.success(editId ? p.notificationUpdated : p.notificationCreated);
       setOpen(false); setForm(emptyForm); setEditId(null);
     },
-    onError: () => toast.error("Failed to save"),
+    onError: () => toast.error(p.failedToSave),
   });
 
   const del = useMutation({
     mutationFn: deletePushNotification,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["mkt-push"] }); toast.success("Deleted"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["mkt-push"] }); toast.success(p.deleted); },
   });
 
   const openEdit = (item: any) => {
@@ -87,15 +90,15 @@ export default function PushNotifications() {
               <div className="flex items-center gap-3">
                 <Bell className="h-7 w-7 text-primary" />
                 <div>
-                  <h1 className="text-2xl font-bold">Push Notifications</h1>
-                  <p className="text-sm text-muted-foreground">Create and schedule push notifications</p>
+                  <h1 className="text-2xl font-bold">{p.title}</h1>
+                  <p className="text-sm text-muted-foreground">{p.subtitle}</p>
                 </div>
               </div>
-              <Button onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> New Notification</Button>
+              <Button onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> {p.newNotification}</Button>
             </div>
 
-            {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : items.length === 0 ? (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">No notifications created yet.</CardContent></Card>
+            {isLoading ? <p className="text-sm text-muted-foreground">{p.loading}</p> : items.length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">{p.noNotifications}</CardContent></Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {items.map((item: any) => (
@@ -110,15 +113,15 @@ export default function PushNotifications() {
                     </CardHeader>
                     <CardContent className="flex items-center justify-between">
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        {item.scheduled_at ? <><Clock className="h-3 w-3" /> {new Date(item.scheduled_at).toLocaleDateString()}</> : <span>Not scheduled</span>}
+                        {item.scheduled_at ? <><Clock className="h-3 w-3" /> {new Date(item.scheduled_at).toLocaleDateString()}</> : <span>{p.notScheduled}</span>}
                       </div>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
                           <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Delete?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => del.mutate(item.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                            <AlertDialogHeader><AlertDialogTitle>{p.deleteTitle}</AlertDialogTitle><AlertDialogDescription>{p.deleteDesc}</AlertDialogDescription></AlertDialogHeader>
+                            <AlertDialogFooter><AlertDialogCancel>{p.cancel}</AlertDialogCancel><AlertDialogAction onClick={() => del.mutate(item.id)}>{p.delete}</AlertDialogAction></AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
@@ -130,26 +133,26 @@ export default function PushNotifications() {
 
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetContent className="sm:max-w-lg overflow-y-auto">
-                <SheetHeader><SheetTitle>{editId ? "Edit Notification" : "New Notification"}</SheetTitle></SheetHeader>
+                <SheetHeader><SheetTitle>{editId ? p.editNotification : p.newNotification}</SheetTitle></SheetHeader>
                 <div className="grid gap-4 mt-6">
-                  <div className="space-y-1"><Label>Internal Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Body</Label><Textarea rows={3} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
-                  <div className="space-y-1"><Label>Action URL</Label><Input value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })} placeholder="/page" /></div>
+                  <div className="space-y-1"><Label>{p.internalName}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>{p.titleLabel}</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>{p.body}</Label><Textarea rows={3} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>{p.imageUrl}</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
+                  <div className="space-y-1"><Label>{p.actionUrl}</Label><Input value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })} placeholder="/page" /></div>
                   <div className="space-y-1">
-                    <Label>Status</Label>
+                    <Label>{p.status}</Label>
                     <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="draft">{p.draft}</SelectItem>
+                        <SelectItem value="scheduled">{p.scheduled}</SelectItem>
+                        <SelectItem value="sent">{p.sent}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1"><Label>Schedule</Label><Input type="datetime-local" value={form.scheduled_at} onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })} /></div>
-                  <Button onClick={() => save.mutate()} disabled={save.isPending || !form.name || !form.title} className="mt-2">Save</Button>
+                  <div className="space-y-1"><Label>{p.schedule}</Label><Input type="datetime-local" value={form.scheduled_at} onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })} /></div>
+                  <Button onClick={() => save.mutate()} disabled={save.isPending || !form.name || !form.title} className="mt-2">{p.saveBtn}</Button>
                 </div>
               </SheetContent>
             </Sheet>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -27,6 +28,8 @@ interface SocialConnection {
 const SocialMedia = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const sm = t.socialMedia;
 
   const [loading, setLoading] = useState(true);
   const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([
@@ -87,17 +90,10 @@ const SocialMedia = () => {
 
     let error: any;
     if (conn.id) {
-      const res = await supabase
-        .from("social_api_connections")
-        .update(payload)
-        .eq("id", conn.id);
+      const res = await supabase.from("social_api_connections").update(payload).eq("id", conn.id);
       error = res.error;
     } else {
-      const res = await supabase
-        .from("social_api_connections")
-        .insert(payload)
-        .select()
-        .single();
+      const res = await supabase.from("social_api_connections").insert(payload).select().single();
       error = res.error;
       if (res.data) {
         setSocialConnections((prev) =>
@@ -107,7 +103,7 @@ const SocialMedia = () => {
     }
 
     if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+      toast({ title: sm.failedToSave, description: error.message, variant: "destructive" });
     } else {
       toast({ title: `${platform.charAt(0).toUpperCase() + platform.slice(1)} settings saved` });
     }
@@ -123,12 +119,12 @@ const SocialMedia = () => {
       });
       if (error) throw error;
       if (data?.success) {
-        toast({ title: "Connection successful", description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} API is working.` });
+        toast({ title: sm.connectionSuccessful, description: `${platform.charAt(0).toUpperCase() + platform.slice(1)} ${sm.apiWorking}` });
       } else {
-        toast({ title: "Connection failed", description: data?.error || "Could not connect.", variant: "destructive" });
+        toast({ title: sm.connectionFailed, description: data?.error || "Could not connect.", variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Test failed", description: err.message, variant: "destructive" });
+      toast({ title: sm.testFailed, description: err.message, variant: "destructive" });
     }
     setTestingSocial(null);
   };
@@ -145,18 +141,16 @@ const SocialMedia = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Marketing
+                  {sm.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Social Media</h1>
+                <h1 className="text-2xl font-light tracking-wide">{sm.title}</h1>
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{sm.loading}</p>
               ) : (
                 <div className="flex flex-col gap-8">
-                  <p className="text-xs text-muted-foreground">
-                    Configure your social media API credentials to enable direct publishing from Creative Studio.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{sm.configDesc}</p>
 
                   {socialConnections.map((conn) => {
                     const pLabel = conn.platform.charAt(0).toUpperCase() + conn.platform.slice(1);
@@ -167,7 +161,7 @@ const SocialMedia = () => {
                           <h3 className="text-sm font-medium tracking-wide">{pLabel}</h3>
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                              {conn.is_active ? "Active" : "Inactive"}
+                              {conn.is_active ? sm.active : sm.inactive}
                             </span>
                             <Switch checked={conn.is_active} onCheckedChange={() => toggleSocialActive(conn.platform)} />
                           </div>
@@ -175,7 +169,7 @@ const SocialMedia = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="flex flex-col gap-1.5">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">App ID</Label>
+                            <Label className="text-[11px] tracking-wider uppercase font-light">{sm.appId}</Label>
                             <Input
                               value={conn.credentials.app_id ?? ""}
                               onChange={(e) => updateSocialField(conn.platform, "app_id", e.target.value)}
@@ -184,7 +178,7 @@ const SocialMedia = () => {
                             />
                           </div>
                           <div className="flex flex-col gap-1.5">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">App Secret</Label>
+                            <Label className="text-[11px] tracking-wider uppercase font-light">{sm.appSecret}</Label>
                             <Input
                               type="password"
                               value={conn.credentials.app_secret ?? ""}
@@ -194,7 +188,7 @@ const SocialMedia = () => {
                             />
                           </div>
                           <div className="flex flex-col gap-1.5">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">Page Access Token</Label>
+                            <Label className="text-[11px] tracking-wider uppercase font-light">{sm.pageAccessToken}</Label>
                             <Input
                               type="password"
                               value={conn.credentials.page_access_token ?? ""}
@@ -205,7 +199,7 @@ const SocialMedia = () => {
                           </div>
                           <div className="flex flex-col gap-1.5">
                             <Label className="text-[11px] tracking-wider uppercase font-light">
-                              {isFb ? "Page ID" : "Instagram Account ID"}
+                              {isFb ? sm.pageId : sm.instagramAccountId}
                             </Label>
                             <Input
                               value={(isFb ? conn.credentials.page_id : conn.credentials.instagram_account_id) ?? ""}
@@ -226,7 +220,7 @@ const SocialMedia = () => {
                             className="gap-2 text-xs tracking-wider uppercase font-light"
                           >
                             {savingSocial === conn.platform ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                            Save
+                            {sm.save}
                           </Button>
                           <Button
                             size="sm"
@@ -236,7 +230,7 @@ const SocialMedia = () => {
                             className="gap-2 text-xs tracking-wider uppercase font-light"
                           >
                             {testingSocial === conn.platform ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                            Test Connection
+                            {sm.testConnection}
                           </Button>
                         </div>
                       </section>
@@ -244,12 +238,12 @@ const SocialMedia = () => {
                   })}
 
                   <div className="border border-dashed border-border p-4 text-xs text-muted-foreground flex flex-col gap-2">
-                    <p className="font-medium text-foreground text-[11px] tracking-wider uppercase">Prerequisites</p>
+                    <p className="font-medium text-foreground text-[11px] tracking-wider uppercase">{sm.prerequisites}</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Create an app at <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Meta for Developers</a></li>
-                      <li>Add <strong>Facebook Login</strong> and <strong>Instagram Graph API</strong> products</li>
-                      <li>Generate a Page Access Token with <code className="text-[10px] bg-muted px-1 py-0.5">pages_manage_posts</code> and <code className="text-[10px] bg-muted px-1 py-0.5">instagram_basic, instagram_content_publish</code> permissions</li>
-                      <li>Use a long-lived token for uninterrupted publishing</li>
+                      <li>{sm.prereqList1} <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Meta for Developers</a></li>
+                      <li>{sm.prereqList2}</li>
+                      <li>{sm.prereqList3}</li>
+                      <li>{sm.prereqList4}</li>
                     </ul>
                   </div>
                 </div>
