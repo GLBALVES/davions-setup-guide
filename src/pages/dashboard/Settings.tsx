@@ -453,21 +453,21 @@ const Settings = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Account
+                  {t.settings.account}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Settings</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.settings.settingsTitle}</h1>
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{t.common.loading}</p>
               ) : (
                 <Tabs defaultValue="profile" className="w-full">
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                      { value: "profile", label: "Profile" },
-                      { value: "payments", label: "Payments" },
-                      { value: "security", label: "Security" },
+                      { value: "profile", label: t.settings.profile },
+                      { value: "payments", label: t.settings.payments },
+                      { value: "security", label: t.settings.security },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
