@@ -878,17 +878,16 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Group popovers */}
             {translatedGroups.map((group) => {
-              const staticGroup = groups.find(g => g.items.some(i => group.items.some(ti => ti.to === i.to)));
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
-              <SidebarGroup key={group.title}>
+              <SidebarGroup key={group.stableKey}>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <CollapsedGroupPopover
                       group={{ ...group, items: visibleItems }}
-                      isOpen={collapsedOpenGroup === group.title}
-                      onOpenChange={(open) => setCollapsedOpenGroup(open ? group.title : null)}
+                      isOpen={collapsedOpenGroup === group.stableKey}
+                      onOpenChange={(open) => setCollapsedOpenGroup(open ? group.stableKey : null)}
                       isItemActive={isItemActive}
                       badges={badgesAsRecord}
                     />
