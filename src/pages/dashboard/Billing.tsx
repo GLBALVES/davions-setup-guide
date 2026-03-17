@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -127,6 +128,7 @@ function formatDate(ts: number) {
 const Billing = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const connectInstanceRef = useRef<any>(null);
 
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
@@ -279,9 +281,9 @@ const Billing = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Account
+                  {t.finance.accountLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Billing</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.finance.billing}</h1>
               </div>
 
               {/* Onboarding pending banner */}
@@ -290,10 +292,8 @@ const Billing = () => {
                   <div className="flex items-start gap-3 flex-1">
                     <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-xs font-light tracking-wide text-foreground">Payment account created — setup pending</p>
-                      <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                        Your payment account exists but banking details haven't been submitted yet. Funds from client payments are held in custody until onboarding is complete.
-                      </p>
+                      <p className="text-xs font-light tracking-wide text-foreground">{t.finance.paymentAccountCreated}</p>
+                      <p className="text-[11px] text-muted-foreground font-light leading-relaxed">{t.finance.bankingDetailsNotSubmitted}</p>
                     </div>
                   </div>
                   <Button
@@ -303,7 +303,7 @@ const Billing = () => {
                     className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Complete Setup
+                    {t.finance.completeSetup}
                   </Button>
                 </div>
               )}

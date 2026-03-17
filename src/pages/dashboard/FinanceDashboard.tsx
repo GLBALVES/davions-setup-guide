@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DollarSign, TrendingUp, Clock, ArrowDownCircle, ArrowUpCircle,
   BarChart3, FileText, ArrowUpRight, ArrowDownRight,
@@ -75,17 +76,18 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-const QUICK_LINKS = [
-  { label: "Receivables", desc: "Payments still owed", to: "/dashboard/finance/receivables", icon: ArrowDownCircle, color: "text-yellow-600" },
-  { label: "Cash Flow",   desc: "Monthly income trend",  to: "/dashboard/finance/cashflow",    icon: TrendingUp,     color: "text-blue-500" },
-  { label: "Reports",     desc: "Export & summaries",    to: "/dashboard/finance/reports",     icon: FileText,       color: "text-muted-foreground" },
-  { label: "Revenue",     desc: "Full booking table",    to: "/dashboard/revenue",             icon: DollarSign,     color: "text-foreground" },
-];
-
 export default function FinanceDashboard() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const QUICK_LINKS = [
+    { label: t.finance.receivables, desc: t.finance.receivablesDesc, to: "/dashboard/finance/receivables", icon: ArrowDownCircle, color: "text-yellow-600" },
+    { label: t.finance.cashFlow,    desc: t.finance.cashFlowDesc,    to: "/dashboard/finance/cashflow",    icon: TrendingUp,     color: "text-blue-500" },
+    { label: t.finance.reports,     desc: t.finance.reportsDesc,     to: "/dashboard/finance/reports",     icon: FileText,       color: "text-muted-foreground" },
+    { label: t.finance.revenue,     desc: t.finance.revenueDesc,     to: "/dashboard/revenue",             icon: DollarSign,     color: "text-foreground" },
+  ];
 
   useEffect(() => {
     if (!user) return;
@@ -128,7 +130,6 @@ export default function FinanceDashboard() {
   const lastMonthRev   = lastMonth.reduce((s, r) => s + calcPaid(r), 0);
   const monthDelta     = lastMonthRev === 0 ? null : ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100;
 
-  // Deposit breakdown: Stripe-confirmed vs manually recorded
   const depositRows = rows.filter((r) => r.payment_status === "deposit_paid");
   const stripeDeposits = depositRows.filter((r) => !!r.stripe_checkout_session_id);
   const manualDeposits = depositRows.filter((r) => !r.stripe_checkout_session_id);
@@ -138,12 +139,10 @@ export default function FinanceDashboard() {
 
   const chartData = buildChart(rows);
 
-  // Top clients by total bookings value
   const clientMap: Record<string, number> = {};
   rows.forEach((r) => { clientMap[r.client_name] = (clientMap[r.client_name] ?? 0) + calcTotal(r); });
   const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  // Top sessions by revenue
   const sessionMap: Record<string, number> = {};
   rows.forEach((r) => { sessionMap[r.session_title] = (sessionMap[r.session_title] ?? 0) + calcPaid(r); });
   const topSessions = Object.entries(sessionMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -157,98 +156,86 @@ export default function FinanceDashboard() {
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
 
-              {/* Heading */}
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                  <span className="inline-block w-6 h-px bg-border" />Finance
+                  <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Financial Dashboard</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.finance.financialDashboard}</h1>
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">Loading…</p>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
               ) : (
                 <>
-                  {/* KPI cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <KpiCard icon={DollarSign} label="Total Collected" value={fmt(totalCollected)} highlight />
-                    <KpiCard icon={Clock} label="Balance Due" value={fmt(totalBalance)} sub={`${rows.filter((r) => calcBalance(r) > 0).length} bookings pending`} />
-                    <KpiCard icon={TrendingUp} label="Avg Ticket" value={fmt(avgTicket)} />
+                    <KpiCard icon={DollarSign} label={t.finance.totalCollected} value={fmt(totalCollected)} highlight />
+                    <KpiCard icon={Clock} label={t.finance.balanceDue} value={fmt(totalBalance)} sub={`${rows.filter((r) => calcBalance(r) > 0).length} bookings pending`} />
+                    <KpiCard icon={TrendingUp} label={t.finance.avgTicket} value={fmt(avgTicket)} />
                     <div className="border border-border p-5 flex flex-col gap-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">This Month</p>
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.thisMonth}</p>
                         <BarChart3 className="h-3.5 w-3.5 text-muted-foreground/30" />
                       </div>
                       <p className="text-xl font-light tabular-nums">{fmt(thisMonthRev)}</p>
                       {monthDelta !== null && (
                         <div className={`flex items-center gap-1 text-[10px] ${monthDelta >= 0 ? "text-green-600" : "text-destructive"}`}>
                           {monthDelta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                          {Math.abs(monthDelta).toFixed(1)}% vs last month
+                          {Math.abs(monthDelta).toFixed(1)}% {t.finance.vsLastMonth}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Deposit payment breakdown */}
                   {depositRows.length > 0 && (
                     <div className="border border-border p-5 flex flex-col gap-4">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Deposit Payment Breakdown</p>
-                        <span className="text-[10px] text-muted-foreground font-light">{depositRows.length} booking{depositRows.length !== 1 ? "s" : ""} with deposit</span>
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.depositBreakdown}</p>
+                        <span className="text-[10px] text-muted-foreground font-light">{depositRows.length} {depositRows.length !== 1 ? t.finance.bookingsWithDeposits : t.finance.bookingsWithDeposit}</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Stripe confirmed */}
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
                             <span className="inline-block w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Confirmed via Stripe</span>
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">{t.finance.confirmedViaStripe}</span>
                           </div>
                           <p className="text-xl font-light tabular-nums">{fmt(stripeDepositTotal)}</p>
-                          <p className="text-[10px] text-muted-foreground font-light">{stripeDeposits.length} booking{stripeDeposits.length !== 1 ? "s" : ""} — real Stripe payments</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{stripeDeposits.length} {stripeDeposits.length !== 1 ? t.finance.bookingsWithDeposits : t.finance.bookingsWithDeposit} — {t.finance.realStripePayments}</p>
                           {totalDepositAmount > 0 && (
                             <div className="h-1 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-green-500 rounded-full transition-all"
-                                style={{ width: `${(stripeDepositTotal / totalDepositAmount) * 100}%` }}
-                              />
+                              <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${(stripeDepositTotal / totalDepositAmount) * 100}%` }} />
                             </div>
                           )}
                         </div>
-                        {/* Manually recorded */}
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
                             <span className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">Manually Recorded</span>
+                            <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground">{t.finance.manuallyRecorded}</span>
                           </div>
                           <p className="text-xl font-light tabular-nums">{fmt(manualDepositTotal)}</p>
-                          <p className="text-[10px] text-muted-foreground font-light">{manualDeposits.length} booking{manualDeposits.length !== 1 ? "s" : ""} — no Stripe transaction</p>
+                          <p className="text-[10px] text-muted-foreground font-light">{manualDeposits.length} {manualDeposits.length !== 1 ? t.finance.bookingsWithDeposits : t.finance.bookingsWithDeposit} — {t.finance.noStripeTransaction}</p>
                           {totalDepositAmount > 0 && (
                             <div className="h-1 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-amber-400 rounded-full transition-all"
-                                style={{ width: `${(manualDepositTotal / totalDepositAmount) * 100}%` }}
-                              />
+                              <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${(manualDepositTotal / totalDepositAmount) * 100}%` }} />
                             </div>
                           )}
                         </div>
                       </div>
                       {manualDeposits.length > 0 && (
                         <p className="text-[10px] text-muted-foreground/60 font-light border-t border-border pt-3">
-                          ⚠ {manualDeposits.length} booking{manualDeposits.length !== 1 ? "s were" : " was"} manually marked as <span className="font-mono">deposit_paid</span> without a corresponding Stripe payment. These amounts are not reflected in your payment account balance.
+                          ⚠ {manualDeposits.length} {manualDeposits.length !== 1 ? "bookings were" : "booking was"} {t.finance.manualWarning}
                         </p>
                       )}
                     </div>
                   )}
 
-                  {/* Chart */}
                   <div className="border border-border p-5 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Revenue — Last 6 Months</p>
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.revenueLast6}</p>
                       </div>
                       <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />Collected</span>
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/30 inline-block" />Outstanding</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />{t.finance.collected}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/30 inline-block" />{t.finance.outstanding}</span>
                       </div>
                     </div>
                     <div className="h-52">
@@ -265,12 +252,11 @@ export default function FinanceDashboard() {
                     </div>
                   </div>
 
-                  {/* Top clients + Top sessions */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div className="border border-border p-5 flex flex-col gap-4">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Top 5 Clients by Value</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.top5Clients}</p>
                       {topClients.length === 0 ? (
-                        <p className="text-xs text-muted-foreground/50 font-light">No data yet</p>
+                        <p className="text-xs text-muted-foreground/50 font-light">{t.finance.noDataYet}</p>
                       ) : topClients.map(([name, val], i) => (
                         <div key={name} className="flex items-center gap-3">
                           <span className="text-[10px] text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
@@ -285,9 +271,9 @@ export default function FinanceDashboard() {
                       ))}
                     </div>
                     <div className="border border-border p-5 flex flex-col gap-4">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Top 5 Sessions by Revenue</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.top5Sessions}</p>
                       {topSessions.length === 0 ? (
-                        <p className="text-xs text-muted-foreground/50 font-light">No data yet</p>
+                        <p className="text-xs text-muted-foreground/50 font-light">{t.finance.noDataYet}</p>
                       ) : topSessions.map(([name, val], i) => (
                         <div key={name} className="flex items-center gap-3">
                           <span className="text-[10px] text-muted-foreground/40 w-4 shrink-0">{i + 1}</span>
@@ -303,7 +289,6 @@ export default function FinanceDashboard() {
                     </div>
                   </div>
 
-                  {/* Quick links */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {QUICK_LINKS.map((ql) => (
                       <Link key={ql.to} to={ql.to} className="border border-border p-4 flex flex-col gap-2 hover:bg-muted/30 transition-colors group">
