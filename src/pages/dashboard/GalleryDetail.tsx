@@ -1535,11 +1535,11 @@ const GalleryDetail = () => {
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                     <span className="inline-block w-6 h-px bg-border" />
-                    Client Access
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">
-                    Share this link with your client. Publish the gallery to make it accessible.
-                  </p>
+                     {gd.clientAccess}
+                   </p>
+                   <p className="text-xs text-muted-foreground/70 mt-1">
+                     {gd.clientAccessDesc}
+                   </p>
                 </div>
 
                 {/* Client access log */}
