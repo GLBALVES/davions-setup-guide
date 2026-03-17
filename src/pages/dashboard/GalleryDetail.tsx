@@ -1491,18 +1491,18 @@ const GalleryDetail = () => {
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                         <span className="inline-block w-6 h-px bg-border" />
-                        Client Favorites
-                      </p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">
-                        Photos marked as favorites by the client. Copy the list to filter them in Lightroom.
-                      </p>
-                    </div>
-                    {favoritedPhotos.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/40 border border-dashed border-border">
-                        <Heart className="h-5 w-5" />
-                        <p className="text-xs tracking-wide">No favorites yet</p>
-                      </div>
-                    ) : (
+                         {gd.clientFavorites}
+                       </p>
+                       <p className="text-xs text-muted-foreground/70 mt-1">
+                         {gd.clientFavoritesDesc}
+                       </p>
+                     </div>
+                     {favoritedPhotos.length === 0 ? (
+                       <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/40 border border-dashed border-border">
+                         <Heart className="h-5 w-5" />
+                         <p className="text-xs tracking-wide">{gd.noFavoritesYet}</p>
+                       </div>
+                     ) : (
                       <>
                         <p className="text-xs text-muted-foreground">
                           <span className="font-medium text-foreground">{favoritedPhotos.length}</span> photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited
