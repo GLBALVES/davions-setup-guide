@@ -175,6 +175,15 @@ const Dashboard = () => {
   const totalProjects = projectStages.reduce((sum, s) => sum + s.count, 0);
   const maxStageCount = Math.max(...projectStages.map((s) => s.count), 1);
 
+  const stageLabels: Record<string, string> = {
+    lead: t.dashboard.lead,
+    briefing: t.dashboard.briefing,
+    shooting: t.dashboard.shooting,
+    editing: t.dashboard.editing,
+    delivery: t.dashboard.delivery,
+    done: t.dashboard.doneStage,
+  };
+
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return t.dashboard.goodMorning;
@@ -205,7 +214,7 @@ const Dashboard = () => {
               <div className="flex flex-col gap-1">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Overview
+                  {t.dashboard.overview}
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">
                   {greeting()}{photographerName ? `, ${photographerName}` : ""}
@@ -215,7 +224,7 @@ const Dashboard = () => {
 
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+                  <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{t.dashboard.loading}</span>
                 </div>
               ) : (
                 <>
