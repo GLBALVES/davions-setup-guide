@@ -357,50 +357,23 @@ export default function AccessControl() {
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              Roles
+              {ac.rolesLabel}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={() => setNewRoleOpen(true)}
-            >
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setNewRoleOpen(true)}>
               <Plus className="h-3.5 w-3.5" />
-              New Role
+              {ac.newRole}
             </Button>
           </div>
-
           <div className="flex-1 overflow-y-auto py-2">
             {loadingRoles ? (
-              <div className="px-5 py-8 text-center text-xs text-muted-foreground animate-pulse">
-                Loading…
-              </div>
+              <div className="px-5 py-8 text-center text-xs text-muted-foreground animate-pulse">{ac.loading}</div>
             ) : roles.length === 0 ? (
-              <div className="px-5 py-8 text-center text-xs text-muted-foreground">
-                No roles yet. Create one to get started.
-              </div>
+              <div className="px-5 py-8 text-center text-xs text-muted-foreground">{ac.noRoles}</div>
             ) : (
               roles.map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => handleSelectRole(role)}
-                  className={`w-full flex items-center justify-between gap-2 px-5 py-3 text-left transition-colors group ${
-                    selectedRoleId === role.id
-                      ? "bg-foreground/5 text-foreground"
-                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                  }`}
-                >
-                  <span className="text-xs tracking-wider uppercase font-light truncate">
-                    {role.name}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteRole(role.id);
-                    }}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                    aria-label="Delete role"
-                  >
+                <button key={role.id} onClick={() => handleSelectRole(role)} className={`w-full flex items-center justify-between gap-2 px-5 py-3 text-left transition-colors group ${selectedRoleId === role.id ? "bg-foreground/5 text-foreground" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"}`}>
+                  <span className="text-xs tracking-wider uppercase font-light truncate">{role.name}</span>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.id); }} className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all" aria-label={ac.deleteRole}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </button>
@@ -414,35 +387,17 @@ export default function AccessControl() {
           {selectedRole ? (
             <>
               <div className="px-5 py-4 border-b border-border">
-                <Input
-                  value={editingRoleName}
-                  onChange={(e) => setEditingRoleName(e.target.value)}
-                  className="text-xs tracking-wider uppercase font-light h-8"
-                  placeholder="Role name"
-                />
+                <Input value={editingRoleName} onChange={(e) => setEditingRoleName(e.target.value)} className="text-xs tracking-wider uppercase font-light h-8" placeholder="Role name" />
               </div>
               <div className="flex-1 overflow-y-auto py-3 px-5 space-y-5">
                 {PERMISSION_GROUPS.map((group) => (
                   <div key={group.label}>
-                    <p className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/60 font-light mb-2">
-                      {group.label}
-                    </p>
+                    <p className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/60 font-light mb-2">{group.label}</p>
                     <div className="space-y-2">
                       {group.keys.map(({ key, label }) => (
                         <div key={key} className="flex items-center gap-2.5">
-                          <Checkbox
-                            id={`perm-${key}`}
-                            checked={!!editingPerms[key]}
-                            onCheckedChange={(checked) =>
-                              setEditingPerms((prev) => ({ ...prev, [key]: !!checked }))
-                            }
-                          />
-                          <label
-                            htmlFor={`perm-${key}`}
-                            className="text-xs tracking-wider font-light cursor-pointer select-none"
-                          >
-                            {label}
-                          </label>
+                          <Checkbox id={`perm-${key}`} checked={!!editingPerms[key]} onCheckedChange={(checked) => setEditingPerms((prev) => ({ ...prev, [key]: !!checked }))} />
+                          <label htmlFor={`perm-${key}`} className="text-xs tracking-wider font-light cursor-pointer select-none">{label}</label>
                         </div>
                       ))}
                     </div>
@@ -450,21 +405,14 @@ export default function AccessControl() {
                 ))}
               </div>
               <div className="px-5 py-4 border-t border-border">
-                <Button
-                  size="sm"
-                  className="w-full"
-                  onClick={handleSaveRole}
-                  disabled={savingRole}
-                >
-                  {savingRole ? "Saving…" : "Save Role"}
+                <Button size="sm" className="w-full" onClick={handleSaveRole} disabled={savingRole}>
+                  {savingRole ? ac.savingRole : ac.saveRole}
                 </Button>
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs text-muted-foreground text-center px-6">
-                Select a role on the left to edit its permissions
-              </p>
+              <p className="text-xs text-muted-foreground text-center px-6">{ac.selectRoleHint}</p>
             </div>
           )}
         </div>
@@ -472,9 +420,7 @@ export default function AccessControl() {
         {/* ── Right panel: Members ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-border">
-            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              Members
-            </span>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{ac.membersLabel}</span>
           </div>
           <div className="flex-1 overflow-auto">
             {loadingMembers ? (
