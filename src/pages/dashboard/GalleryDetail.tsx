@@ -1051,13 +1051,13 @@ const GalleryDetail = () => {
                       onClick={() => setFocalMode(true)}
                       className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
                     >
-                      <Crosshair className="h-3 w-3" /> Focus
+                      <Crosshair className="h-3 w-3" /> {gd.focus}
                     </button>
                     <button
                       onClick={() => setCoverPickerOpen(true)}
                       className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
                     >
-                      <ImagePlus className="h-3 w-3" /> Change
+                      <ImagePlus className="h-3 w-3" /> {gd.change}
                     </button>
                   </div>
                 </div>
