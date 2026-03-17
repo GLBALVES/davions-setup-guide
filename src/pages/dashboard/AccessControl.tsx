@@ -199,9 +199,9 @@ export default function AccessControl() {
       .eq("id", selectedRoleId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error saving role", variant: "destructive" });
+      toast({ title: ac.errorSavingRole, variant: "destructive" });
     } else {
-      toast({ title: "Role saved" });
+      toast({ title: ac.roleSaved });
       setRoles((prev) =>
         prev.map((r) =>
           r.id === selectedRoleId
