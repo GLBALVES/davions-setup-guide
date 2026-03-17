@@ -168,44 +168,19 @@ const Settings = () => {
       return "Enter a valid domain (e.g. booking.yourstudio.com).";
     return null;
   };
-
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toLowerCase().replace(/\s+/g, "-");
-    setSlugInput(val);
-    setSlugError(validateSlug(val));
-  };
-
-  const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
-    setCustomDomainInput(val);
-    setDomainError(validateDomain(val));
-  };
-
-  const handleSave = async () => {
-    const slugErr = validateSlug(slugInput);
-    const domErr = validateDomain(customDomainInput);
-    if (slugErr) { setSlugError(slugErr); return; }
-    if (domErr) { setDomainError(domErr); return; }
-
-    setSaving(true);
-    const { error } = await supabase.from("photographers").update({
-      full_name: fullName,
-      store_slug: slugInput,
-      custom_domain: customDomainInput.trim() || null,
-    } as any).eq("id", user!.id);
-
+...
     if (error) {
       if (error.code === "23505") {
-        if (error.message.includes("store_slug")) setSlugError("This URL is already taken. Please choose another.");
-        else if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
-        else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        if (error.message.includes("store_slug")) setSlugError(t.settings.urlAlreadyTaken);
+        else if (error.message.includes("custom_domain")) setDomainError(t.settings.domainAlreadyLinked);
+        else toast({ title: t.settings.failedToSave, description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        toast({ title: t.settings.failedToSave, description: error.message, variant: "destructive" });
       }
     } else {
       setStoreSlug(slugInput);
       setCustomDomain(customDomainInput.trim());
-      toast({ title: "Settings saved", description: "Your profile has been updated." });
+      toast({ title: t.settings.settingsSaved, description: t.settings.profileUpdated });
     }
     setSaving(false);
   };
