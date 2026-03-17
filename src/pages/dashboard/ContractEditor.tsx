@@ -94,9 +94,11 @@ const ContractEditor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const ce = t.contractEditor;
 
   const [contractId, setContractId] = useState<string | null>(isNew ? null : id ?? null);
-  const [contractName, setContractName] = useState("Untitled Contract");
+  const [contractName, setContractName] = useState(ce.untitledContract);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
   const [loading, setLoading] = useState(!isNew);

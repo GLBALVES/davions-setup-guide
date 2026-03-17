@@ -224,19 +224,17 @@ export default function AccessControl() {
       .select()
       .single();
     if (error) {
-      toast({ title: "Error creating role", variant: "destructive" });
+      toast({ title: ac.errorCreatingRole, variant: "destructive" });
     } else {
       const newRole = data as StudioRole;
       setRoles((prev) => [...prev, newRole]);
       handleSelectRole(newRole);
       setNewRoleOpen(false);
       setNewRoleName("");
-      toast({ title: "Role created" });
+      toast({ title: ac.roleCreated });
     }
     setCreatingRole(false);
   }
-
-  // ── Delete role ────────────────────────────────────────────────────────────
 
   async function handleDeleteRole(roleId: string) {
     const { error } = await supabase
@@ -245,7 +243,7 @@ export default function AccessControl() {
       .eq("id", roleId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error deleting role", variant: "destructive" });
+      toast({ title: ac.errorDeletingRole, variant: "destructive" });
     } else {
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
       if (selectedRoleId === roleId) {
@@ -253,16 +251,14 @@ export default function AccessControl() {
         setEditingPerms(DEFAULT_PERMISSIONS);
         setEditingRoleName("");
       }
-      toast({ title: "Role deleted" });
+      toast({ title: ac.roleDeleted });
     }
   }
-
-  // ── Create member (via admin edge function) ───────────────────────────────
 
   async function handleCreateUser() {
     if (!inviteEmail.trim() || !inviteName.trim() || !invitePassword.trim()) return;
     if (invitePassword.trim().length < 6) {
-      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      toast({ title: ac.passwordMinError, variant: "destructive" });
       return;
     }
     setInviting(true);
@@ -285,9 +281,9 @@ export default function AccessControl() {
     );
     const json = await res.json();
     if (!res.ok) {
-      toast({ title: json.error ?? "Error creating user", variant: "destructive" });
+      toast({ title: json.error ?? ac.errorCreatingRole, variant: "destructive" });
     } else {
-      toast({ title: "User created successfully" });
+      toast({ title: ac.userCreated });
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
@@ -298,8 +294,6 @@ export default function AccessControl() {
     setInviting(false);
   }
 
-  // ── Revoke / restore member ────────────────────────────────────────────────
-
   async function handleToggleMemberStatus(member: StudioMember) {
     const newStatus = member.status === "revoked" ? "pending" : "revoked";
     const { error } = await supabase
@@ -308,15 +302,13 @@ export default function AccessControl() {
       .eq("id", member.id)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error updating member", variant: "destructive" });
+      toast({ title: ac.errorUpdatingMember, variant: "destructive" });
     } else {
       setMembers((prev) =>
         prev.map((m) => (m.id === member.id ? { ...m, status: newStatus } : m))
       );
     }
   }
-
-  // ── Delete member ──────────────────────────────────────────────────────────
 
   async function handleDeleteMember(memberId: string) {
     const { error } = await supabase
@@ -325,10 +317,10 @@ export default function AccessControl() {
       .eq("id", memberId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error removing member", variant: "destructive" });
+      toast({ title: ac.errorRemovingMember, variant: "destructive" });
     } else {
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
-      toast({ title: "Member removed" });
+      toast({ title: ac.memberRemoved });
     }
   }
 
