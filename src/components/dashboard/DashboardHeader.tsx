@@ -13,6 +13,7 @@ export function DashboardHeader() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
