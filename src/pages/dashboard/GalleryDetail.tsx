@@ -1360,7 +1360,7 @@ const GalleryDetail = () => {
                             onClick={toggleSelectAll}
                             className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {selectedPhotos.size === photos.length ? "Deselect all" : "Select all"}
+                            {selectedPhotos.size === photos.length ? gd.deselectAll : gd.selectAll}
                           </button>
                           {selectedPhotos.size > 0 && (
                             <Button
