@@ -171,11 +171,11 @@ const WebsiteSettings = () => {
       store_slug: slugInput,
     } as any).eq("id", user!.id);
     if (error) {
-      if (error.code === "23505") setSlugError("This URL is already taken.");
-      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+      if (error.code === "23505") setSlugError(ws.urlTaken);
+      else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
       setStoreSlug(slugInput);
-      toast({ title: "Store URL saved" });
+      toast({ title: ws.storeUrlSaved });
     }
     setSavingSlug(false);
   };
@@ -188,11 +188,11 @@ const WebsiteSettings = () => {
       custom_domain: customDomainInput.trim() || null,
     } as any).eq("id", user!.id);
     if (error) {
-      if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
-      else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+      if (error.message.includes("custom_domain")) setDomainError(ws.domainLinked);
+      else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
       setCustomDomain(customDomainInput.trim());
-      toast({ title: "Custom domain saved" });
+      toast({ title: ws.domainSaved });
     }
     setSavingDomain(false);
   };
