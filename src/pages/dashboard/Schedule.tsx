@@ -207,13 +207,13 @@ const Schedule = () => {
             <div className="flex flex-col gap-4 mb-5 shrink-0">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                     <span className="inline-block w-6 h-px bg-border" />
-                    Schedule
+                    {sc.photographers}
                   </p>
                   <h1 className="text-2xl font-light tracking-wide flex items-center gap-2.5">
                     <CalendarDays className="h-5 w-5 text-muted-foreground" />
-                    Calendar
+                    {sc.title}
                   </h1>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 mt-1">
@@ -224,7 +224,7 @@ const Schedule = () => {
                     onClick={() => handleBlockDay(currentDate)}
                   >
                     <CalendarOff className="h-3.5 w-3.5" />
-                    Block Day
+                    {sc.blockTime}
                   </Button>
                   <Button
                     size="sm"
@@ -232,7 +232,7 @@ const Schedule = () => {
                     onClick={() => handleCreateBooking(currentDate)}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    New Booking
+                    {sc.newBooking}
                   </Button>
                 </div>
               </div>
