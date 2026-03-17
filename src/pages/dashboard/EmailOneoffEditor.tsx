@@ -23,6 +23,8 @@ export default function EmailOneoffEditor() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const em = t.emailMarketing;
 
   const [form, setForm] = useState({
     name: "", subject: "", html_content: "",
