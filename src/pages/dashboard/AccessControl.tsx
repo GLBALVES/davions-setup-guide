@@ -337,19 +337,17 @@ export default function AccessControl() {
           <DashboardHeader />
 
           {/* Page title bar */}
-          <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
+            <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-4 w-4 text-muted-foreground" />
               <div>
-                <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Manage studio roles and invite collaborators
-                </p>
+                <h1 className="text-sm tracking-widest uppercase font-light">{ac.pageTitle}</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">{ac.pageSubtitle}</p>
               </div>
             </div>
             <Button size="sm" onClick={() => setInviteOpen(true)}>
               <UserPlus className="h-4 w-4" />
-              Add User
+              {ac.addUser}
             </Button>
           </div>
 

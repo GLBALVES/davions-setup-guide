@@ -270,20 +270,16 @@ const ContractEditor = () => {
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase font-light"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back
+            {ce.back}
           </button>
 
           <Separator orientation="vertical" className="h-5" />
 
-          {/* Editable contract name */}
           <input
             value={contractName}
-            onChange={(e) => {
-              setContractName(e.target.value);
-              setSaveStatus("unsaved");
-            }}
+            onChange={(e) => { setContractName(e.target.value); setSaveStatus("unsaved"); }}
             className="flex-1 min-w-0 bg-transparent text-sm font-light tracking-wide focus:outline-none placeholder:text-muted-foreground/50"
-            placeholder="Contract name…"
+            placeholder={ce.contractNamePlaceholder}
           />
 
           <span className={cn(
@@ -292,18 +288,12 @@ const ContractEditor = () => {
             saveStatus === "unsaved" && "text-muted-foreground",
             saveStatus === "saving" && "text-muted-foreground animate-pulse"
           )}>
-            {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "All changes saved" : "Unsaved changes"}
+            {saveStatus === "saving" ? ce.saving : saveStatus === "saved" ? ce.allSaved : ce.unsaved}
           </span>
 
-          <Button
-            size="sm"
-            variant="outline"
-            className="shrink-0 text-xs tracking-wider uppercase font-light h-8 px-4"
-            disabled={saving}
-            onClick={() => handleSave("manual")}
-          >
+          <Button size="sm" variant="outline" className="shrink-0 text-xs tracking-wider uppercase font-light h-8 px-4" disabled={saving} onClick={() => handleSave("manual")}>
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            Done
+            {ce.done}
           </Button>
         </div>
 
@@ -311,78 +301,34 @@ const ContractEditor = () => {
         <div className="flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-t border-border/60">
           {editor && (
             <>
-              <TB onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-                <Bold className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-                <Italic className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-                <UnderlineIcon className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-                <Strikethrough className="h-3.5 w-3.5" />
-              </TB>
-
+              <TB onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold"><Bold className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic"><Italic className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline"><UnderlineIcon className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough"><Strikethrough className="h-3.5 w-3.5" /></TB>
               <Separator orientation="vertical" className="h-4 mx-1" />
-
-              <TB onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align left">
-                <AlignLeft className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} title="Center">
-                <AlignCenter className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align right">
-                <AlignRight className="h-3.5 w-3.5" />
-              </TB>
-
+              <TB onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align left"><AlignLeft className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} title="Center"><AlignCenter className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align right"><AlignRight className="h-3.5 w-3.5" /></TB>
               <Separator orientation="vertical" className="h-4 mx-1" />
-
-              <TB onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet list">
-                <List className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered list">
-                <ListOrdered className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
-                <Quote className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal rule">
-                <Minus className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={addLink} active={editor.isActive("link")} title="Link">
-                <LinkIcon className="h-3.5 w-3.5" />
-              </TB>
-
+              <TB onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet list"><List className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered list"><ListOrdered className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote"><Quote className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal rule"><Minus className="h-3.5 w-3.5" /></TB>
+              <TB onClick={addLink} active={editor.isActive("link")} title="Link"><LinkIcon className="h-3.5 w-3.5" /></TB>
               <Separator orientation="vertical" className="h-4 mx-1" />
-
-              <TB onClick={() => editor.chain().focus().undo().run()} title="Undo">
-                <Undo className="h-3.5 w-3.5" />
-              </TB>
-              <TB onClick={() => editor.chain().focus().redo().run()} title="Redo">
-                <Redo className="h-3.5 w-3.5" />
-              </TB>
-
+              <TB onClick={() => editor.chain().focus().undo().run()} title="Undo"><Undo className="h-3.5 w-3.5" /></TB>
+              <TB onClick={() => editor.chain().focus().redo().run()} title="Redo"><Redo className="h-3.5 w-3.5" /></TB>
               <Separator orientation="vertical" className="h-4 mx-1.5" />
-
-              {/* Insert Field dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide text-primary bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors"
-                  >
-                    Insert field
+                  <button type="button" className="flex items-center gap-1.5 h-7 px-3 rounded text-xs font-medium tracking-wide text-primary bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors">
+                    {ce.insertField}
                     <ChevronDown className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52">
                   {CONTRACT_VARIABLES.map((v) => (
-                    <DropdownMenuItem
-                      key={v.key}
-                      onClick={() => insertVariable(v.key, v.label)}
-                      className="text-xs gap-2 cursor-pointer"
-                    >
+                    <DropdownMenuItem key={v.key} onClick={() => insertVariable(v.key, v.label)} className="text-xs gap-2 cursor-pointer">
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
                         {"{{"}{v.label}{"}}"}
                       </span>
@@ -395,45 +341,23 @@ const ContractEditor = () => {
         </div>
       </header>
 
-      {/* ── Body: sidebar + document ── */}
       <div className="flex flex-1 overflow-hidden">
-
-        {/* Left sidebar */}
         <aside className="w-64 shrink-0 border-r border-border bg-background flex flex-col overflow-y-auto">
           <div className="p-4 flex flex-col gap-5">
-            {/* Document info */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <FileText className="h-3.5 w-3.5" />
-                <span className="text-[10px] tracking-widest uppercase font-light">Document</span>
+                <span className="text-[10px] tracking-widest uppercase font-light">{ce.documentLabel}</span>
               </div>
-              <Input
-                value={contractName}
-                onChange={(e) => {
-                  setContractName(e.target.value);
-                  setSaveStatus("unsaved");
-                }}
-                className="text-xs font-light h-8"
-                placeholder="Contract name…"
-              />
+              <Input value={contractName} onChange={(e) => { setContractName(e.target.value); setSaveStatus("unsaved"); }} className="text-xs font-light h-8" placeholder={ce.contractNamePlaceholder} />
             </div>
-
             <Separator />
-
-            {/* Variable reference */}
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">Smart Fields</p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Click "Insert field" to add dynamic content that gets replaced when a client books.
-              </p>
+              <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.smartFieldsLabel}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{ce.smartFieldsHint}</p>
               <div className="flex flex-col gap-1.5 mt-1">
                 {CONTRACT_VARIABLES.map((v) => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => insertVariable(v.key, v.label)}
-                    className="flex items-center gap-2 text-left hover:bg-muted/60 rounded px-1.5 py-1 transition-colors group"
-                  >
+                  <button key={v.key} type="button" onClick={() => insertVariable(v.key, v.label)} className="flex items-center gap-2 text-left hover:bg-muted/60 rounded px-1.5 py-1 transition-colors group">
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 whitespace-nowrap group-hover:bg-primary/15 transition-colors">
                       {"{{"}{v.label}{"}}"}
                     </span>
@@ -441,22 +365,17 @@ const ContractEditor = () => {
                 ))}
               </div>
             </div>
-
             <Separator />
-
-            {/* Tips */}
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">Tips</p>
+              <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.tipsLabel}</p>
               <ul className="text-[10px] text-muted-foreground space-y-1.5 leading-relaxed">
-                <li>• Fields are replaced automatically when a client books.</li>
-                <li>• If a field has no value it shows as [Field Name].</li>
-                <li>• Use bold for section headings inside the document.</li>
+                <li>• {ce.tip1}</li>
+                <li>• {ce.tip2}</li>
+                <li>• {ce.tip3}</li>
               </ul>
             </div>
           </div>
         </aside>
-
-        {/* Document canvas */}
         <main className="flex-1 overflow-y-auto bg-muted/40">
           <div className="max-w-3xl mx-auto my-10 px-4">
             <div className="bg-background shadow-md border border-border/50 min-h-[800px]">
