@@ -105,8 +105,8 @@ export default function EmailMarketing() {
             <div className="flex items-center gap-3 mb-6">
               <Mail className="h-7 w-7 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">Email Marketing</h1>
-                <p className="text-sm text-muted-foreground">Campaigns, automated emails, and one-off sends</p>
+            <h1 className="text-2xl font-bold">{em.title}</h1>
+                <p className="text-sm text-muted-foreground">{em.marketing}</p>
               </div>
             </div>
 
