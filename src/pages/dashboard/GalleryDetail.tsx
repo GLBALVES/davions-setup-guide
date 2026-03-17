@@ -1580,9 +1580,9 @@ const GalleryDetail = () => {
 
                 {/* Share link */}
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                    Share Link
-                  </Label>
+                   <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                     {gd.galleryLink}
+                   </Label>
                   <div className="flex gap-2">
                     <Input
                       value={publicUrl}
