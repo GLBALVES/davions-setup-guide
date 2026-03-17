@@ -127,6 +127,7 @@ function formatDate(ts: number) {
 const Billing = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const connectInstanceRef = useRef<any>(null);
 
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
