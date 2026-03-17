@@ -1374,10 +1374,10 @@ const GalleryDetail = () => {
                             </Button>
                           )}
                           <button
-                            onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
+                          onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
                             className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            Cancel
+                            {gd.cancel}
                           </button>
                         </>
                       ) : (
