@@ -272,7 +272,7 @@ const Galleries = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       <DropdownMenuLabel className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-light">
-                        Sort by
+                        {g.sortBy}
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
