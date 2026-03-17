@@ -59,6 +59,8 @@ import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
 import FinanceReports from "./pages/dashboard/FinanceReports";
 import Billing from "./pages/dashboard/Billing";
 import AdminBugReports from "./pages/admin/AdminBugReports";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -138,7 +140,9 @@ const App = () => (
                  <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  {/* Admin routes */}
-                 <Route path="/admin" element={<ProtectedRoute><AdminBugReports /></ProtectedRoute>} />
+                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                 <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+                 <Route path="/admin/bugs" element={<ProtectedRoute><AdminBugReports /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
