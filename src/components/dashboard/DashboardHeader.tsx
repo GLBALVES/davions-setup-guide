@@ -3,7 +3,9 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { Bug } from "lucide-react";
 import seloPreto from "@/assets/selo_preto.png";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function DashboardHeader() {
   const { user } = useAuth();
@@ -65,6 +67,17 @@ export function DashboardHeader() {
             />
           )}
         </AnimatePresence>
+      </div>
+
+      <div className="flex items-center">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200">
+              <Bug size={15} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Report a bug</TooltipContent>
+        </Tooltip>
       </div>
     </header>
   );
