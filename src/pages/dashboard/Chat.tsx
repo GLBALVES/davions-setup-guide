@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,8 @@ type Agent = {
 
 export default function Chat() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const ch = t.chat;
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -101,7 +104,6 @@ export default function Chat() {
 
   const photographerId = user?.id;
 
-  // Load tickets
   const loadTickets = useCallback(async () => {
     if (!photographerId) return;
     let q = supabase
@@ -114,7 +116,6 @@ export default function Chat() {
     setTickets((data as Ticket[]) || []);
   }, [photographerId, filterStatus]);
 
-  // Load agents — auto-create default support agent if none exist
   useEffect(() => {
     if (!photographerId) return;
     const loadAgents = async () => {
@@ -125,7 +126,6 @@ export default function Chat() {
 
       const allAgents = ((data as any[]) || []) as Agent[];
 
-      // If no agents exist at all, seed a default Customer Support agent
       if (allAgents.length === 0) {
         const { data: created, error } = await supabase.from("ai_agents" as any).insert({
           name: "Customer Support",
@@ -160,7 +160,7 @@ Guidelines:
           const agent = { ...c, knowledge_base: Array.isArray(c.knowledge_base) ? c.knowledge_base : [] } as unknown as Agent;
           setAgents([agent]);
           setSelectedAgentSlug(agent.slug);
-          toast.success("Default Customer Support agent created automatically!");
+          toast.success(ch.defaultAgentCreated);
           return;
         }
       }
@@ -176,7 +176,6 @@ Guidelines:
 
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
-  // Load messages for selected ticket
   const loadMessages = useCallback(async () => {
     if (!selectedTicket) return;
     const { data } = await supabase
@@ -189,7 +188,6 @@ Guidelines:
 
   useEffect(() => { loadMessages(); }, [loadMessages]);
 
-  // Realtime subscription for messages
   useEffect(() => {
     if (!selectedTicket) return;
     const channel = supabase
@@ -206,17 +204,14 @@ Guidelines:
     return () => { supabase.removeChannel(channel); };
   }, [selectedTicket]);
 
-  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Update internal notes when ticket changes
   useEffect(() => {
     setInternalNotes(selectedTicket?.internal_notes || "");
   }, [selectedTicket]);
 
-  // Send admin message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedTicket) return;
     setLoading(true);
@@ -225,7 +220,7 @@ Guidelines:
       role: "admin",
       content: newMessage.trim(),
     });
-    if (error) toast.error("Failed to send message");
+    if (error) toast.error(ch.failedSend);
     else {
       setNewMessage("");
       await supabase
@@ -236,7 +231,6 @@ Guidelines:
     setLoading(false);
   };
 
-  // Get current AI mode from active agent's state
   const getAgentAIMode = (): string => {
     const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
     if (!activeAgent || !activeAgent.auto_reply) return "manual";
@@ -244,7 +238,6 @@ Guidelines:
     return "active";
   };
 
-  // Trigger AI response
   const triggerAI = async () => {
     if (!selectedTicket) return;
     const currentMode = getAgentAIMode();
@@ -259,15 +252,14 @@ Guidelines:
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(currentMode === "supervised" ? "Draft generated" : "AI response sent");
+      toast.success(currentMode === "supervised" ? ch.generateDraft : ch.aiReply);
       loadMessages();
     } catch (e: any) {
-      toast.error(e.message || "AI error");
+      toast.error(e.message || ch.aiError);
     }
     setSendingAI(false);
   };
 
-  // Update agent toggle (Commander)
   const updateAgentToggle = async (field: "auto_reply" | "review_mode", value: boolean) => {
     const activeAgent = agents.find(a => a.slug === selectedAgentSlug);
     if (!activeAgent) return;
@@ -277,17 +269,14 @@ Guidelines:
     setAgents(prev => prev.map(a => a.id === activeAgent.id ? { ...a, ...updates } : a));
   };
 
-  // Draft count for Commander badge
   const draftCount = messages.filter(m => m.role === "assistant_draft").length;
 
-  // Approve draft
   const approveDraft = async (msg: Message) => {
     await supabase.from("support_messages").update({ role: "assistant" }).eq("id", msg.id);
     loadMessages();
-    toast.success("Draft approved");
+    toast.success(ch.draftApproved);
   };
 
-  // Edit draft
   const saveEditedDraft = async () => {
     if (!editingDraft) return;
     await supabase
@@ -296,20 +285,17 @@ Guidelines:
       .eq("id", editingDraft.id);
     setEditingDraft(null);
     loadMessages();
-    toast.success("Draft edited and approved");
+    toast.success(ch.draftEdited);
   };
 
-  // Discard draft
   const discardDraft = async (msgId: string) => {
     await supabase.from("support_messages").delete().eq("id", msgId);
     loadMessages();
-    toast.success("Draft discarded");
+    toast.success(ch.draftDiscarded);
   };
 
-  // Close ticket
   const closeTicket = async () => {
     if (!selectedTicket) return;
-    // Send closing message
     await supabase.from("support_messages").insert({
       ticket_id: selectedTicket.id,
       role: "admin",
@@ -321,10 +307,9 @@ Guidelines:
       .eq("id", selectedTicket.id);
     setSelectedTicket((prev) => prev ? { ...prev, status: "closed", closed_at: new Date().toISOString() } : null);
     loadTickets();
-    toast.success("Ticket closed");
+    toast.success(ch.ticketClosed);
   };
 
-  // Reopen ticket
   const reopenTicket = async () => {
     if (!selectedTicket) return;
     await supabase
@@ -333,20 +318,15 @@ Guidelines:
       .eq("id", selectedTicket.id);
     setSelectedTicket((prev) => prev ? { ...prev, status: "open", closed_at: null } : null);
     loadTickets();
-    toast.success("Ticket reopened");
+    toast.success(ch.ticketReopened);
   };
-
-
-
-
 
   const saveNotes = async () => {
     if (!selectedTicket) return;
     await supabase.from("support_tickets").update({ internal_notes: internalNotes }).eq("id", selectedTicket.id);
-    toast.success("Notes saved");
+    toast.success(ch.notesSaved);
   };
 
-  // Create new ticket
   const createTicket = async () => {
     if (!photographerId || !newTicketForm.subject.trim()) return;
     const { error } = await supabase.from("support_tickets").insert({
@@ -355,22 +335,21 @@ Guidelines:
       client_email: newTicketForm.client_email,
       subject: newTicketForm.subject,
     });
-    if (error) toast.error("Failed to create ticket");
+    if (error) toast.error(ch.failedCreate);
     else {
       setShowNewTicketDialog(false);
       setNewTicketForm({ client_name: "", client_email: "", subject: "" });
       loadTickets();
-      toast.success("Ticket created");
+      toast.success(ch.ticketCreated);
     }
   };
 
-  // File upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedTicket) return;
     const path = `${selectedTicket.id}/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
-    if (error) { toast.error("Upload failed"); return; }
+    if (error) { toast.error(ch.uploadFailed); return; }
     const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(path);
     await supabase.from("support_messages").insert({
       ticket_id: selectedTicket.id,
@@ -381,21 +360,21 @@ Guidelines:
     loadMessages();
   };
 
-  const filteredTickets = tickets.filter((t) => {
+  const filteredTickets = tickets.filter((ticket) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
-      t.subject.toLowerCase().includes(q) ||
-      t.client_name.toLowerCase().includes(q) ||
-      t.client_email.toLowerCase().includes(q)
+      ticket.subject.toLowerCase().includes(q) ||
+      ticket.client_name.toLowerCase().includes(q) ||
+      ticket.client_email.toLowerCase().includes(q)
     );
   });
 
   const aiModeLabel = (mode: string) => {
     switch (mode) {
-      case "active": return "AI Active";
-      case "supervised": return "Supervised";
-      default: return "Manual";
+      case "active": return ch.aiModeActive;
+      case "supervised": return ch.aiModeSupervised;
+      default: return ch.aiModeManual;
     }
   };
 
@@ -422,7 +401,7 @@ Guidelines:
               <div className="border-b border-border bg-muted/30 px-4 py-2 flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Bot className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-semibold tracking-wide uppercase">Commander</span>
+                  <span className="text-xs font-semibold tracking-wide uppercase">{ch.commander}</span>
                 </div>
 
                 <Separator orientation="vertical" className="h-5" />
@@ -430,7 +409,7 @@ Guidelines:
                 {agents.length > 0 && (
                   <Select value={selectedAgentSlug} onValueChange={setSelectedAgentSlug}>
                     <SelectTrigger className="h-7 w-40 text-[10px]">
-                      <SelectValue placeholder="Select agent" />
+                      <SelectValue placeholder={ch.selectAgent} />
                     </SelectTrigger>
                     <SelectContent>
                       {agents.map((a) => (
@@ -446,7 +425,7 @@ Guidelines:
                     onCheckedChange={(v) => updateAgentToggle("auto_reply", v)}
                     disabled={!activeAgent}
                   />
-                  <Label className="text-[10px] cursor-pointer">AI Active</Label>
+                  <Label className="text-[10px] cursor-pointer">{ch.aiActive}</Label>
                 </div>
 
                 {activeAgent?.auto_reply && (
@@ -455,7 +434,7 @@ Guidelines:
                       checked={activeAgent?.review_mode ?? false}
                       onCheckedChange={(v) => updateAgentToggle("review_mode", v)}
                     />
-                    <Label className="text-[10px] cursor-pointer">Supervision</Label>
+                    <Label className="text-[10px] cursor-pointer">{ch.supervision}</Label>
                   </div>
                 )}
 
@@ -466,7 +445,7 @@ Guidelines:
                 {draftCount > 0 && (
                   <Badge variant="secondary" className="text-[9px] gap-1">
                     <FileText className="h-2.5 w-2.5" />
-                    {draftCount} draft{draftCount > 1 ? "s" : ""}
+                    {draftCount} {draftCount > 1 ? ch.draftsLabelPlural : ch.draftsLabel}
                   </Badge>
                 )}
 
@@ -475,7 +454,7 @@ Guidelines:
                   variant="ghost"
                   className="h-7 w-7 p-0 ml-auto"
                   onClick={() => window.location.href = "/dashboard/agents"}
-                  title="Agent Settings"
+                  title={ch.agentSettings}
                 >
                   <Settings2 className="h-3.5 w-3.5" />
                 </Button>
@@ -488,7 +467,7 @@ Guidelines:
             <div className="w-80 border-r border-border flex flex-col bg-background">
               <div className="p-3 border-b border-border space-y-2">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-medium tracking-wide uppercase">Tickets</h2>
+                  <h2 className="text-sm font-medium tracking-wide uppercase">{ch.tickets}</h2>
                   <Button size="sm" variant="ghost" onClick={() => setShowNewTicketDialog(true)}>
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -496,7 +475,7 @@ Guidelines:
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Search tickets..."
+                    placeholder={ch.searchTickets}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-8 h-8 text-xs"
@@ -518,7 +497,7 @@ Guidelines:
               </div>
               <ScrollArea className="flex-1">
                 {filteredTickets.length === 0 ? (
-                  <p className="text-xs text-muted-foreground p-4 text-center">No tickets found</p>
+                  <p className="text-xs text-muted-foreground p-4 text-center">{ch.noTicketsFound}</p>
                 ) : (
                   filteredTickets.map((ticket) => (
                     <button
@@ -530,7 +509,7 @@ Guidelines:
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium truncate">{ticket.subject || "No subject"}</p>
+                          <p className="text-xs font-medium truncate">{ticket.subject || ch.noTicketsFound}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{ticket.client_name || ticket.client_email}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -567,11 +546,11 @@ Guidelines:
                   <div className="flex items-center gap-2 shrink-0">
                     {selectedTicket.status === "open" ? (
                       <Button size="sm" variant="destructive" className="h-7 text-[10px]" onClick={closeTicket}>
-                        <X className="h-3 w-3 mr-1" /> Close
+                        <X className="h-3 w-3 mr-1" /> {ch.closeTicket}
                       </Button>
                     ) : (
                       <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={reopenTicket}>
-                        <RotateCcw className="h-3 w-3 mr-1" /> Reopen
+                        <RotateCcw className="h-3 w-3 mr-1" /> {ch.reopenTicket}
                       </Button>
                     )}
                   </div>
@@ -608,7 +587,7 @@ Guidelines:
                               {isDraft && <Shield className="h-3 w-3 text-amber-600" />}
                               {isAdmin && <User className="h-3 w-3" />}
                               <span className="text-[9px] opacity-60">
-                                {isUser ? "Client" : isDraft ? "AI Draft" : isAI ? "AI" : "You"} ·{" "}
+                                {isUser ? ch.clientLabel : isDraft ? ch.aiDraftLabel : isAI ? ch.aiLabel : ch.youLabel} ·{" "}
                                 {format(new Date(msg.created_at), "HH:mm")}
                               </span>
                             </div>
@@ -620,7 +599,7 @@ Guidelines:
                                 rel="noreferrer"
                                 className="text-[10px] underline mt-1 block text-primary"
                               >
-                                View attachment
+                                {ch.viewAttachment}
                               </a>
                             )}
                             {isDraft && (
@@ -631,7 +610,7 @@ Guidelines:
                                   className="h-5 text-[9px] px-1.5 text-green-600"
                                   onClick={() => approveDraft(msg)}
                                 >
-                                  <Check className="h-2.5 w-2.5 mr-0.5" /> Approve
+                                  <Check className="h-2.5 w-2.5 mr-0.5" /> {ch.approve}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -639,7 +618,7 @@ Guidelines:
                                   className="h-5 text-[9px] px-1.5"
                                   onClick={() => setEditingDraft({ id: msg.id, content: msg.content })}
                                 >
-                                  <Edit3 className="h-2.5 w-2.5 mr-0.5" /> Edit
+                                  <Edit3 className="h-2.5 w-2.5 mr-0.5" /> {ch.edit}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -647,7 +626,7 @@ Guidelines:
                                   className="h-5 text-[9px] px-1.5 text-destructive"
                                   onClick={() => discardDraft(msg.id)}
                                 >
-                                  <Trash2 className="h-2.5 w-2.5 mr-0.5" /> Discard
+                                  <Trash2 className="h-2.5 w-2.5 mr-0.5" /> {ch.discard}
                                 </Button>
                               </div>
                             )}
@@ -667,7 +646,7 @@ Guidelines:
                         <Input
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="Type a message..."
+                          placeholder={ch.typeMessage}
                           className="pr-10 text-xs"
                           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
                         />
@@ -688,7 +667,7 @@ Guidelines:
                           className="h-10 text-[10px]"
                         >
                           <Bot className="h-4 w-4 mr-1" />
-                          {sendingAI ? "Thinking..." : getAgentAIMode() === "supervised" ? "Generate Draft" : "AI Reply"}
+                          {sendingAI ? ch.thinking : getAgentAIMode() === "supervised" ? ch.generateDraft : ch.aiReply}
                         </Button>
                       )}
                     </div>
@@ -716,7 +695,7 @@ Guidelines:
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center space-y-2">
                   <MessageCircle className="h-10 w-10 mx-auto opacity-30" />
-                  <p className="text-sm">Select a ticket to view the conversation</p>
+                  <p className="text-sm">{ch.selectTicket}</p>
                 </div>
               </div>
             )}
@@ -725,49 +704,48 @@ Guidelines:
             {selectedTicket && (
               <div className="w-72 border-l border-border flex flex-col bg-background">
                 <div className="p-3 border-b border-border">
-                  <h3 className="text-xs font-medium tracking-wide uppercase">Client Info</h3>
+                  <h3 className="text-xs font-medium tracking-wide uppercase">{ch.clientInfo}</h3>
                 </div>
                 <ScrollArea className="flex-1 p-3">
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Name</Label>
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.nameLabel}</Label>
                       <p className="text-xs mt-0.5">{selectedTicket.client_name || "—"}</p>
                     </div>
                     <div>
-                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Email</Label>
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.emailLabel}</Label>
                       <p className="text-xs mt-0.5">{selectedTicket.client_email || "—"}</p>
                     </div>
                     <div>
-                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Created</Label>
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.createdLabel}</Label>
                       <p className="text-xs mt-0.5">{format(new Date(selectedTicket.created_at), "MMM d, yyyy HH:mm")}</p>
                     </div>
                     {selectedTicket.closed_at && (
                       <div>
-                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Closed</Label>
+                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.closedLabel}</Label>
                         <p className="text-xs mt-0.5">{format(new Date(selectedTicket.closed_at), "MMM d, yyyy HH:mm")}</p>
                       </div>
                     )}
                     <Separator />
                     <div>
-                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Mode</Label>
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.aiModeLabel}</Label>
                       <Badge variant="outline" className={`mt-1 text-[9px] ${aiModeColor(getAgentAIMode())}`}>
                         {aiModeLabel(getAgentAIMode())}
                       </Badge>
                     </div>
                     <Separator />
                     <div>
-                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Internal Notes</Label>
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{ch.internalNotes}</Label>
                       <Textarea
                         value={internalNotes}
                         onChange={(e) => setInternalNotes(e.target.value)}
                         className="mt-1 text-xs min-h-[80px]"
-                        placeholder="Private notes about this ticket..."
+                        placeholder={ch.internalNotesPlaceholder}
                       />
                       <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] w-full" onClick={saveNotes}>
-                        Save Notes
+                        {ch.saveNotes}
                       </Button>
                     </div>
-
                   </div>
                 </ScrollArea>
               </div>
@@ -780,11 +758,11 @@ Guidelines:
       <Dialog open={showNewTicketDialog} onOpenChange={setShowNewTicketDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Ticket</DialogTitle>
+            <DialogTitle>{ch.newTicketTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">Client Name</Label>
+              <Label className="text-xs">{ch.clientNameLabel}</Label>
               <Input
                 value={newTicketForm.client_name}
                 onChange={(e) => setNewTicketForm((p) => ({ ...p, client_name: e.target.value }))}
@@ -792,7 +770,7 @@ Guidelines:
               />
             </div>
             <div>
-              <Label className="text-xs">Client Email</Label>
+              <Label className="text-xs">{ch.clientEmailLabel}</Label>
               <Input
                 value={newTicketForm.client_email}
                 onChange={(e) => setNewTicketForm((p) => ({ ...p, client_email: e.target.value }))}
@@ -800,7 +778,7 @@ Guidelines:
               />
             </div>
             <div>
-              <Label className="text-xs">Subject</Label>
+              <Label className="text-xs">{ch.subjectLabel}</Label>
               <Input
                 value={newTicketForm.subject}
                 onChange={(e) => setNewTicketForm((p) => ({ ...p, subject: e.target.value }))}
@@ -809,8 +787,8 @@ Guidelines:
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewTicketDialog(false)}>Cancel</Button>
-            <Button onClick={createTicket}>Create</Button>
+            <Button variant="outline" onClick={() => setShowNewTicketDialog(false)}>{ch.cancel}</Button>
+            <Button onClick={createTicket}>{ch.createBtn}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -819,7 +797,7 @@ Guidelines:
       <Dialog open={!!editingDraft} onOpenChange={() => setEditingDraft(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Draft</DialogTitle>
+            <DialogTitle>{ch.editDraftTitle}</DialogTitle>
           </DialogHeader>
           <Textarea
             value={editingDraft?.content || ""}
@@ -827,8 +805,8 @@ Guidelines:
             className="min-h-[150px] text-xs"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingDraft(null)}>Cancel</Button>
-            <Button onClick={saveEditedDraft}>Approve & Send</Button>
+            <Button variant="outline" onClick={() => setEditingDraft(null)}>{ch.cancel}</Button>
+            <Button onClick={saveEditedDraft}>{ch.approveAndSend}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
