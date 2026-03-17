@@ -935,7 +935,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                               strategy={verticalListSortingStrategy}
                             >
                               {favoriteItems.map((item) => (
-                                <SortableFavoriteItem
+                                 <SortableFavoriteItem
                                   key={itemKey(item.groupTitle, item.title)}
                                   id={itemKey(item.groupTitle, item.title)}
                                   item={item}
@@ -943,6 +943,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                                   collapsed={false}
                                   badgeCount={item.badgeKey ? badges[item.badgeKey] : 0}
                                   onUnpin={() => togglePin(item.groupTitle, item)}
+                                  unpinLabel={t.nav.unpinFromFavorites}
                                 />
                               ))}
                             </SortableContext>
