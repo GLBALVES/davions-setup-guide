@@ -394,9 +394,7 @@ const Bookings = () => {
                        {bookings.length === 0 ? bk.noBookingsYet : search ? `${bk.noResults} "${search}"` : bk.noMatch}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {bookings.length === 0
-                        ? "Bookings from clients will appear here"
-                        : "Try a different search or filter"}
+                       {bookings.length === 0 ? bk.clientsWillAppear : bk.differentSearchOrFilter}
                     </p>
                   </div>
                 </div>
