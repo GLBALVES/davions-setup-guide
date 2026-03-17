@@ -176,25 +176,24 @@ const ContractEditor = () => {
       if (!newId) {
         const { data } = await (supabase as any)
           .from("contracts")
-          .insert({ photographer_id: user.id, name: contractName.trim() || "Untitled Contract", body: serialized })
+          .insert({ photographer_id: user.id, name: contractName.trim() || ce.untitledContract, body: serialized })
           .select("id")
           .single();
         if (data?.id) {
           newId = data.id;
           setContractId(newId);
-          // Update URL without reloading
           window.history.replaceState({}, "", `/dashboard/contracts/${newId}/edit`);
         }
       } else {
         await (supabase as any)
           .from("contracts")
-          .update({ name: contractName.trim() || "Untitled Contract", body: serialized, updated_at: new Date().toISOString() })
+          .update({ name: contractName.trim() || ce.untitledContract, body: serialized, updated_at: new Date().toISOString() })
           .eq("id", newId);
       }
 
       setSaving(false);
       setSaveStatus("saved");
-      if (mode === "manual") toast({ title: "Contract saved" });
+      if (mode === "manual") toast({ title: ce.contractSaved });
     },
     [user, editor, contractId, contractName, toast]
   );
