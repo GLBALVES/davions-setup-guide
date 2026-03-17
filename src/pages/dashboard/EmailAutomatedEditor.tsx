@@ -92,7 +92,7 @@ export default function EmailAutomatedEditor() {
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/emails")}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-2xl font-bold">{isNew ? "New Automated Email" : "Edit Automated Email"}</h1>
+              <h1 className="text-2xl font-bold">{isNew ? em.newAutomated : em.edit}</h1>
             </div>
 
             <Card className="mb-6">
