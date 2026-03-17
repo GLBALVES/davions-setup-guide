@@ -890,7 +890,7 @@ const GalleryDetail = () => {
         <div className="min-h-screen flex w-full bg-background">
           <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Gallery not found.</p>
+            <p className="text-sm text-muted-foreground">{gd.notFound}</p>
           </div>
         </div>
       </SidebarProvider>
