@@ -1307,13 +1307,13 @@ const GalleryDetail = () => {
                   isDragging ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40"
                 }`}
               >
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <p className="text-sm font-light text-muted-foreground">
-                  Drag & drop photos or <span className="text-foreground underline underline-offset-2">browse</span>
-                </p>
-                <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
-                  JPG, PNG, WEBP — multiple supported
-                </p>
+                 <Upload className="h-6 w-6 text-muted-foreground" />
+                 <p className="text-sm font-light text-muted-foreground">
+                   {gd.dragDropPhotos} <span className="text-foreground underline underline-offset-2">{gd.browse}</span>
+                 </p>
+                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
+                   {gd.uploadFormats}
+                 </p>
                 <input
                   ref={fileInputRef}
                   type="file"
