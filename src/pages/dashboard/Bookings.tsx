@@ -402,7 +402,7 @@ const Bookings = () => {
                 <div className="border border-border rounded-sm overflow-hidden">
                   {/* Table header */}
                   <div className="hidden md:grid grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 px-5 py-3 bg-muted/30 border-b border-border">
-                    {["Client", "Session", "Date & Time", "Payment", "Status", "Actions"].map((h) => (
+                    {[bk.client, bk.session, bk.dateTime, bk.payment, bk.status, bk.actions].map((h) => (
                       <span key={h} className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-medium">
                         {h}
                       </span>

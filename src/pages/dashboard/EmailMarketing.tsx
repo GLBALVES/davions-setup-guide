@@ -120,12 +120,12 @@ export default function EmailMarketing() {
               {/* CAMPAIGNS */}
               <TabsContent value="campaigns" className="space-y-4">
                 <div className="flex justify-end">
-                  <Button onClick={() => navigate("/dashboard/emails/campaign/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New Campaign
+                   <Button onClick={() => navigate("/dashboard/emails/campaign/new")} className="gap-1">
+                    <Plus className="h-4 w-4" /> {em.newCampaign}
                   </Button>
                 </div>
-                {loadingC ? <p className="text-sm text-muted-foreground">Loading…</p> : campaigns.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No campaigns created yet.</CardContent></Card>
+                {loadingC ? <p className="text-sm text-muted-foreground">{em.loading}</p> : campaigns.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noCampaigns}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {campaigns.map((c: any) => (
