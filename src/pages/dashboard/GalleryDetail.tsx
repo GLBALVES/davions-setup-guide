@@ -1413,7 +1413,7 @@ const GalleryDetail = () => {
 
               {photos.length === 0 && activeUploads.length === 0 && (
                 <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground/60">No photos yet — upload above to get started</p>
+                  <p className="text-xs text-muted-foreground/60">{gd.noPhotosYet}</p>
                 </div>
               )}
 
