@@ -189,7 +189,7 @@ export default function Clients() {
                   <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground py-20">
                     <User className="h-8 w-8 opacity-20" />
                     <p className="text-xs font-light tracking-wider uppercase">
-                      {search ? "No clients match" : "No clients yet"}
+                      {search ? cl.noClientsMatch : cl.noClientsYet}
                     </p>
                   </div>
                 ) : (
