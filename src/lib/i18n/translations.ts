@@ -367,6 +367,8 @@ export const translations = {
       pinToFavorites: "Fixar nos Favoritos",
       editFavorites: "Editar Favoritos",
       done: "Concluído",
+      pinHint: "Clique com o botão direito em qualquer item para fixá-lo aqui",
+      signOut: "Sair",
     },
     dashboard: {
       overview: "Visão Geral",
