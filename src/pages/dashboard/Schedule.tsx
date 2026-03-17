@@ -243,8 +243,8 @@ const Schedule = () => {
                   <Button variant="outline" size="icon" onClick={() => navigate("prev")}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate("today")} className="text-xs">
-                    Today
+                   <Button variant="outline" size="sm" onClick={() => navigate("today")} className="text-xs">
+                    {sc.today}
                   </Button>
                   <Button variant="outline" size="icon" onClick={() => navigate("next")}>
                     <ChevronRight className="h-4 w-4" />
