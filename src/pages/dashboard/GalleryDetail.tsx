@@ -1518,10 +1518,10 @@ const GalleryDetail = () => {
                           className="w-full gap-2 text-xs tracking-wider uppercase font-light"
                           onClick={copyFavorites}
                         >
-                          {copiedFavorites ? (
-                            <><Check className="h-3.5 w-3.5" /> Copied!</>
+                         {copiedFavorites ? (
+                            <><Check className="h-3.5 w-3.5" /> {gd.copied}</>
                           ) : (
-                            <><Copy className="h-3.5 w-3.5" /> Copy for Lightroom</>
+                            <><Copy className="h-3.5 w-3.5" /> {gd.copyForLightroom}</>
                           )}
                         </Button>
                       </>
