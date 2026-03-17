@@ -1370,7 +1370,7 @@ const GalleryDetail = () => {
                               className="gap-1.5 text-xs tracking-wider uppercase font-light h-7"
                             >
                               <Trash2 className="h-3 w-3" />
-                              Delete {selectedPhotos.size}
+                              {gd.delete} {selectedPhotos.size}
                             </Button>
                           )}
                           <button
