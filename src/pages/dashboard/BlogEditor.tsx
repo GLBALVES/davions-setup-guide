@@ -34,6 +34,8 @@ export default function BlogEditor() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const b = t.blog;
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [form, setForm] = useState({
