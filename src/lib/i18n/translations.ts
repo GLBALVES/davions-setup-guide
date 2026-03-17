@@ -99,6 +99,7 @@ export const translations = {
       editing: "Editing",
       delivery: "Delivery",
       doneStage: "Done",
+      scheduled: "scheduled",
     },
     // ── Sessions page ──
     sessions: {

@@ -449,10 +449,11 @@ function SectionHeader({
 }
 
 function StatusDot({ status }: { status: string }) {
+  const { t } = useLanguage();
   const map: Record<string, { color: string; label: string }> = {
-    confirmed: { color: "bg-green-500", label: "Confirmed" },
-    pending: { color: "bg-amber-500", label: "Pending" },
-    cancelled: { color: "bg-muted-foreground/40", label: "Cancelled" },
+    confirmed: { color: "bg-green-500", label: t.bookings.confirmed },
+    pending: { color: "bg-amber-500", label: t.bookings.pending },
+    cancelled: { color: "bg-muted-foreground/40", label: t.bookings.cancelled },
   };
   const cfg = map[status] ?? { color: "bg-muted-foreground/40", label: status };
   return (
@@ -464,10 +465,11 @@ function StatusDot({ status }: { status: string }) {
 }
 
 function PaymentDot({ status }: { status: string }) {
+  const { t } = useLanguage();
   const map: Record<string, { color: string; label: string }> = {
-    paid: { color: "text-green-500", label: "Paid" },
-    partial: { color: "text-amber-500", label: "Partial" },
-    pending: { color: "text-muted-foreground/50", label: "Unpaid" },
+    paid: { color: "text-green-500", label: t.bookings.paid },
+    partial: { color: "text-amber-500", label: t.bookings.partial },
+    pending: { color: "text-muted-foreground/50", label: t.bookings.unpaid },
   };
   const cfg = map[status] ?? { color: "text-muted-foreground/50", label: status };
   return (
