@@ -200,8 +200,8 @@ export default function EmailMarketing() {
                     <Plus className="h-4 w-4" /> {em.newOneoff}
                   </Button>
                 </div>
-                {loadingO ? <p className="text-sm text-muted-foreground">Loading…</p> : oneoffs.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No one-off emails created yet.</CardContent></Card>
+                {loadingO ? <p className="text-sm text-muted-foreground">{em.loading}</p> : oneoffs.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noOneoff}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {oneoffs.map((p: any) => (
