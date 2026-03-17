@@ -702,16 +702,16 @@ const Settings = () => {
                       <div className="flex flex-col gap-1">
                         <p className="text-xs tracking-widest uppercase font-light text-foreground flex items-center gap-2">
                           <KeyRound className="h-3.5 w-3.5" />
-                          Change Password
+                          {t.settings.changePassword}
                         </p>
                         <p className="text-[11px] text-muted-foreground font-light">
-                          Enter a new password for your account. Minimum 8 characters.
+                          {t.settings.changePasswordDesc}
                         </p>
                       </div>
 
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Current Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.currentPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showCurrentPw ? "text" : "password"}
@@ -731,7 +731,7 @@ const Settings = () => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">New Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.newPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showNewPw ? "text" : "password"}
@@ -751,7 +751,7 @@ const Settings = () => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Confirm New Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.confirmNewPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showConfirmPw ? "text" : "password"}
@@ -779,7 +779,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light"
                         >
                           {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                          {savingPassword ? "Updating…" : "Update Password"}
+                          {savingPassword ? t.settings.updating : t.settings.updatePassword}
                         </Button>
                       </div>
                     </section>
@@ -792,18 +792,18 @@ const Settings = () => {
                       <div className="flex flex-col gap-1">
                         <p className="text-xs tracking-widest uppercase font-light text-destructive flex items-center gap-2">
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete Account
+                          {t.settings.deleteAccount}
                         </p>
                         <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                          Permanently delete your account and all associated data. This action is irreversible and cannot be undone.
+                          {t.settings.deleteAccountDesc}
                         </p>
                       </div>
 
                       <div className="border border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-3">
                         <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                          The following data will be permanently deleted:
+                          {t.settings.dataToDelete}
                         </p>
-                        {["Your profile and settings", "All galleries and photos", "All sessions and bookings", "All creative content and templates"].map((item) => (
+                        {t.settings.deleteDataItems.map((item) => (
                           <div key={item} className="flex items-center gap-2">
                             <span className="h-1 w-1 rounded-full bg-destructive/60 shrink-0" />
                             <p className="text-[11px] font-light text-foreground/80">{item}</p>
@@ -819,7 +819,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light border-destructive/40 text-destructive hover:bg-destructive/5"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete My Account
+                          {t.settings.deleteMyAccount}
                         </Button>
                       </div>
                     </section>
