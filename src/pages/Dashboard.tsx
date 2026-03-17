@@ -59,6 +59,7 @@ const STAGE_COLORS: Record<string, string> = {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
