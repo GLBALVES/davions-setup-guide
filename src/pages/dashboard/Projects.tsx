@@ -274,6 +274,8 @@ function ProjectModal({
   sessionTypes: SessionType[];
   onRefetchSessionTypes: () => void;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -282,13 +284,17 @@ function ProjectModal({
   const [stage, setStage] = useState<Stage>("lead");
   const [notes, setNotes] = useState("");
 
+  const stageLabels: Record<string, string> = {
+    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
+    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+  };
+
   useEffect(() => {
     if (open) {
       setTitle(initial?.title ?? "");
       setClientName(initial?.client_name ?? "");
       setClientEmail(initial?.client_email ?? "");
-      // Match existing string name to an id for pre-selection
-      const matched = sessionTypes.find((t) => t.name === initial?.session_type);
+      const matched = sessionTypes.find((s) => s.name === initial?.session_type);
       setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
       setStage(initial?.stage ?? defaultStage ?? "lead");
@@ -297,8 +303,8 @@ function ProjectModal({
   }, [open, initial, defaultStage, sessionTypes]);
 
   const handleSave = () => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    const resolvedName = sessionTypes.find((t) => t.id === sessionTypeId)?.name ?? null;
+    if (!title.trim()) { toast.error(p_t.titleRequired); return; }
+    const resolvedName = sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null;
     onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
   };
 
@@ -307,22 +313,22 @@ function ProjectModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-sm font-light tracking-widest uppercase">
-            {initial ? "Edit Project" : "New Project"}
+            {initial ? p_t.editProject : p_t.newProject}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 py-2">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Title *</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.title_field} *</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wedding João & Ana" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Client name</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.clientName}</label>
               <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Lima" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Email</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
               <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
             </div>
           </div>
@@ -338,38 +344,38 @@ function ProjectModal({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
               <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Stage</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.stage}</label>
             <Select value={stage} onValueChange={(v) => setStage(v as Stage)}>
               <SelectTrigger className="h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STAGES.map((s) => (
-                  <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                  <SelectItem key={s.key} value={s.key}>{stageLabels[s.key] ?? s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Notes</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.notes}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Additional notes..."
+              placeholder={p_t.additionalNotes}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSave}>{initial ? "Save" : "Create"}</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>{p_t.cancel}</Button>
+          <Button size="sm" onClick={handleSave}>{initial ? p_t.save : p_t.create}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
