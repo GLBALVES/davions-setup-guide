@@ -74,6 +74,8 @@ function formatRangeLabel(mode: ViewMode, date: Date): string {
 const Schedule = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const sc = t.schedule;
 
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState<Date>(startOfToday());

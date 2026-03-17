@@ -38,6 +38,8 @@ export default function EmailMarketing() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const em = t.emailMarketing;
   const photographerId = user?.id || "";
 
   const { data: campaigns = [], isLoading: loadingC } = useQuery({

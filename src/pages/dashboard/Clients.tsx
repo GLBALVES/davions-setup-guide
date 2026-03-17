@@ -55,6 +55,8 @@ function StatusPill({ status }: { status: string }) {
 
 export default function Clients() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const cl = t.clients;
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
 

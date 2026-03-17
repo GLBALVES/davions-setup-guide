@@ -180,7 +180,7 @@ const Galleries = () => {
     return list;
   }, [galleries, type, query, statusFilter, sortBy]);
 
-  const heading = type === "proof" ? "Proof Galleries" : type === "final" ? "Final Galleries" : "Galleries";
+  const heading = type === "proof" ? g.proofGalleries : type === "final" ? g.finalGalleries : g.title;
   const defaultCategory = type ?? "proof";
   const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || sortBy !== "newest";
 
