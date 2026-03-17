@@ -337,7 +337,7 @@ const Bookings = () => {
                     onClick={() => navigate("/dashboard/settings?tab=payments")}
                     className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
                   >
-                    Complete Setup
+                    {bk.completeSetup}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
