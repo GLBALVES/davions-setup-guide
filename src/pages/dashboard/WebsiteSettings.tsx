@@ -638,11 +638,11 @@ const WebsiteSettings = () => {
 
                   {/* ── 7. SEO ── */}
                   <section className="flex flex-col gap-5">
-                    <SectionHeading title="SEO" description="Optimize how your site appears in search results and social shares." />
-                    <FieldRow label="Page Title">
+                    <SectionHeading title={ws.seoTitle} description={ws.seoDesc} />
+                    <FieldRow label={ws.pageTitleLabel}>
                       <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Jane Doe Photography — New York" className="h-9 text-sm font-light" />
                     </FieldRow>
-                    <FieldRow label="Meta Description">
+                    <FieldRow label={ws.metaDescLabel}>
                       <Textarea
                         value={seoDescription}
                         onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
@@ -652,8 +652,8 @@ const WebsiteSettings = () => {
                       <p className="text-[10px] text-muted-foreground/60 -mt-1">{seoDescription.length}/160 characters</p>
                     </FieldRow>
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">Social Share Image (OG Image)</Label>
-                      <p className="text-[11px] text-muted-foreground -mt-1">Shown when your site is shared on social media. Recommended 1200×630px.</p>
+                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.ogImageLabel}</Label>
+                      <p className="text-[11px] text-muted-foreground -mt-1">{ws.ogImageHint}</p>
                       {ogImageUrl ? (
                         <div className="relative w-full h-24 border border-border overflow-hidden bg-muted/10">
                           <img src={ogImageUrl} alt="OG" className="w-full h-full object-cover" />
@@ -681,13 +681,13 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <BarChart2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Analytics & Tracking" description="Connect tracking tools to measure traffic and conversions." />
+                      <SectionHeading title={ws.analyticsTitle} description={ws.analyticsDesc} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label="Google Analytics ID">
+                      <FieldRow label={ws.gaIdLabel}>
                         <Input value={googleAnalyticsId} onChange={(e) => setGoogleAnalyticsId(e.target.value)} placeholder="G-XXXXXXXXXX" className="h-9 text-sm font-mono font-light" />
                       </FieldRow>
-                      <FieldRow label="Facebook Pixel ID">
+                      <FieldRow label={ws.fbPixelLabel}>
                         <Input value={facebookPixelId} onChange={(e) => setFacebookPixelId(e.target.value)} placeholder="123456789012345" className="h-9 text-sm font-mono font-light" />
                       </FieldRow>
                     </div>
@@ -697,9 +697,9 @@ const WebsiteSettings = () => {
 
                    {/* ── 9. Footer ── */}
                   <section className="flex flex-col gap-5">
-                    <SectionHeading title="Footer" description="Custom text shown at the bottom of every page." />
-                    <FieldRow label="Footer Text">
-                      <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder="© 2025 Jane Doe Photography · All rights reserved" className="h-9 text-sm font-light" />
+                    <SectionHeading title={ws.footerTitle} description={ws.footerDesc} />
+                    <FieldRow label={ws.footerTextLabel}>
+                      <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder={ws.footerTextPlaceholder} className="h-9 text-sm font-light" />
                     </FieldRow>
                   </section>
 
@@ -709,9 +709,9 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <Store className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Store URL" description="Your public booking store address. Share this link with clients." />
+                      <SectionHeading title={ws.storeUrlTitle} description={ws.storeUrlDesc} />
                     </div>
-                    <FieldRow label="Store Slug">
+                    <FieldRow label={ws.storeSlugLabel}>
                       <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
                         <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
                           {window.location.host}/store/
@@ -719,7 +719,7 @@ const WebsiteSettings = () => {
                         <input
                           value={slugInput}
                           onChange={(e) => { setSlugInput(e.target.value.toLowerCase().replace(/\s/g, "-")); setSlugError(null); }}
-                          placeholder="your-studio"
+                          placeholder={ws.storeSlugPlaceholder}
                           className="flex-1 h-9 px-1 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
                         />
                       </div>
@@ -741,7 +741,7 @@ const WebsiteSettings = () => {
                       </div>
                     )}
                     <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
-                      {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save store URL"}
+                      {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveStoreUrl}
                     </Button>
                   </section>
 
@@ -752,21 +752,21 @@ const WebsiteSettings = () => {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                        <SectionHeading title="Custom Domain" description="Point your own domain (e.g. booking.yourstudio.com) to your site." />
+                        <SectionHeading title={ws.customDomainTitle} description={ws.customDomainDesc} />
                       </div>
                       <a
                         href="/dashboard/custom-domain-docs"
                         className="shrink-0 flex items-center gap-1 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Setup guide
+                        {ws.setupGuide}
                       </a>
                     </div>
-                    <FieldRow label="Domain">
+                    <FieldRow label={ws.domainLabel}>
                       <Input
                         value={customDomainInput}
                         onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
-                        placeholder="booking.yourstudio.com"
+                        placeholder={ws.domainPlaceholder}
                         className="h-9 text-sm font-light font-mono"
                       />
                       {domainError && (
@@ -796,16 +796,16 @@ const WebsiteSettings = () => {
                       variant="outline"
                       className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
                     >
-                      {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save domain"}
+                      {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
                     </Button>
                   </section>
 
                   {/* ── Save ── */}
                   <div className="flex items-center gap-3 pt-2 border-t border-border">
                     <Button onClick={handleSave} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                      {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving…</> : "Save website settings"}
+                      {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveSettings}
                     </Button>
-                    <p className="text-[10px] text-muted-foreground/60">Saves branding, hero, about, social, navigation, template, SEO, analytics & footer.</p>
+                    <p className="text-[10px] text-muted-foreground/60">{ws.saveDesc}</p>
                   </div>
 
                 </div>
