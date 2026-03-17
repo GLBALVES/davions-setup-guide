@@ -845,7 +845,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {groups.map((group) => {
+            {translatedGroups.map((group) => {
+              const staticGroup = groups.find(g => g.items.some(i => group.items.some(ti => ti.to === i.to)));
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
