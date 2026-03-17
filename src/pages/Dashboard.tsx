@@ -43,10 +43,6 @@ interface DashboardStats {
 
 // ── Stage config ─────────────────────────────────────────────────────
 const STAGE_ORDER = ["lead", "briefing", "shooting", "editing", "delivery", "done"];
-const STAGE_LABELS: Record<string, string> = {
-  lead: "Lead", briefing: "Briefing", shooting: "Shooting",
-  editing: "Editing", delivery: "Delivery", done: "Done",
-};
 const STAGE_COLORS: Record<string, string> = {
   lead: "bg-muted-foreground/20",
   briefing: "bg-primary/20",
