@@ -1828,13 +1828,13 @@ const GalleryDetail = () => {
       <AlertDialog open={deleteSelectedOpen} onOpenChange={setDeleteSelectedOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.deleteSelectedTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove <strong>{selectedPhotos.size}</strong> selected photo{selectedPhotos.size !== 1 ? "s" : ""} from the gallery. This action cannot be undone.
+              {gd.deleteSelectedDesc} <strong>{selectedPhotos.size}</strong> {gd.deleteSelectedDesc2}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
@@ -1843,7 +1843,7 @@ const GalleryDetail = () => {
               }}
               disabled={deletingSelected}
             >
-              {deletingSelected ? "Deleting…" : `Delete ${selectedPhotos.size}`}
+              {deletingSelected ? "Deleting…" : `${gd.confirmDelete} ${selectedPhotos.size}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
