@@ -345,15 +345,15 @@ const WebsiteSettings = () => {
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="max-w-2xl flex flex-col gap-8">
               <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  Marketing
-                </p>
-                <h1 className="text-2xl font-light tracking-wide">Website</h1>
-              </div>
+                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+                   <span className="inline-block w-6 h-px bg-border" />
+                   {ws.pageLabel}
+                 </p>
+                 <h1 className="text-2xl font-light tracking-wide">{ws.pageTitle}</h1>
+               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                 <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{ws.loading}</p>
               ) : (
                 <div className="flex flex-col gap-10">
 
