@@ -267,7 +267,7 @@ const Galleries = () => {
                         )}
                       >
                         <ArrowUpDown className="h-3 w-3" />
-                        {SORT_OPTIONS.find((s) => s.value === sortBy)?.label ?? "Sort"}
+                        {SORT_OPTIONS.find((s) => s.value === sortBy)?.label ?? g.sortBy}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
