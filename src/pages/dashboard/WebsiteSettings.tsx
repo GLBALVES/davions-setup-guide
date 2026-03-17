@@ -70,6 +70,8 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 const WebsiteSettings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const ws = t.websiteSettings;
 
   // Branding
   const [logoUrl, setLogoUrl] = useState("");
