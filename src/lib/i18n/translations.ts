@@ -1309,7 +1309,6 @@ export const translations = {
     },
   },
 } as const;
-} as const;
 
 // Recursively widen all literal string types to `string`
 type DeepWriteable<T> = { [K in keyof T]: T[K] extends string ? string : DeepWriteable<T[K]> };
