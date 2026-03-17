@@ -357,15 +357,15 @@ const WebsiteSettings = () => {
               ) : (
                 <div className="flex flex-col gap-10">
 
-                  {/* ── 1. Branding ── */}
+                   {/* ── 1. Branding ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Branding" description="Visual identity for your public website." />
+                      <SectionHeading title={ws.brandingTitle} description={ws.brandingDesc} />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">Logo</Label>
+                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.logoLabel}</Label>
                       <div className="flex items-center gap-4">
                         {logoUrl ? (
                           <div className="relative h-14 w-32 border border-border bg-muted/20 flex items-center justify-center overflow-hidden">
@@ -388,9 +388,9 @@ const WebsiteSettings = () => {
                         )}
                         <div className="flex flex-col gap-1">
                           <button onClick={() => logoInputRef.current?.click()} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left">
-                            {logoUrl ? "Replace logo" : "Upload logo (PNG, SVG)"}
+                            {logoUrl ? ws.replaceLogo : ws.uploadLogo}
                           </button>
-                          <p className="text-[10px] text-muted-foreground/60">Recommended: transparent PNG or SVG, at least 400px wide.</p>
+                          <p className="text-[10px] text-muted-foreground/60">{ws.logoHint}</p>
                         </div>
                       </div>
                       <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
@@ -398,10 +398,10 @@ const WebsiteSettings = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label="Tagline">
-                        <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Capturing life's finest moments" className="h-9 text-sm font-light" />
+                      <FieldRow label={ws.taglineLabel}>
+                        <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder={ws.taglinePlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
-                      <FieldRow label="Brand Color">
+                      <FieldRow label={ws.brandColorLabel}>
                         <div className="flex items-center gap-2 h-9 border border-input px-3 bg-background">
                           <input
                             type="color"
@@ -421,11 +421,11 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <Image className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Hero Section" description="The full-screen banner shown at the top of your site." />
+                      <SectionHeading title={ws.heroTitle} description={ws.heroDesc} />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">Cover Image</Label>
+                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.coverImage}</Label>
                       {heroImageUrl ? (
                         <div className="relative w-full h-36 border border-border overflow-hidden bg-muted/10">
                           <img src={heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
@@ -434,31 +434,31 @@ const WebsiteSettings = () => {
                             <X className="h-3 w-3" />
                           </button>
                           <button onClick={() => heroInputRef.current?.click()} className="absolute bottom-2 right-2 flex items-center gap-1.5 text-[10px] tracking-widest uppercase bg-background/80 border border-border px-2.5 py-1.5 text-foreground hover:bg-background transition-colors">
-                            <Upload className="h-3 w-3" />Replace
+                            <Upload className="h-3 w-3" />{ws.replaceHero}
                           </button>
                         </div>
                       ) : (
                         <div onClick={() => heroInputRef.current?.click()} className="w-full h-24 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-foreground/30 transition-colors">
                           {uploadingHero ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground/40" />}
-                          <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">Upload hero image</span>
+                          <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">{ws.uploadHero}</span>
                         </div>
                       )}
                       <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "session-covers", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
                     </div>
 
-                    <FieldRow label="Headline">
-                      <Input value={siteHeadline} onChange={(e) => setSiteHeadline(e.target.value)} placeholder="Photography that tells your story" className="h-9 text-sm font-light" />
+                    <FieldRow label={ws.headlineLabel}>
+                      <Input value={siteHeadline} onChange={(e) => setSiteHeadline(e.target.value)} placeholder={ws.headlinePlaceholder} className="h-9 text-sm font-light" />
                     </FieldRow>
-                    <FieldRow label="Sub-headline">
-                      <Input value={siteSubheadline} onChange={(e) => setSiteSubheadline(e.target.value)} placeholder="Based in New York · Available worldwide" className="h-9 text-sm font-light" />
+                    <FieldRow label={ws.subheadlineLabel}>
+                      <Input value={siteSubheadline} onChange={(e) => setSiteSubheadline(e.target.value)} placeholder={ws.subheadlinePlaceholder} className="h-9 text-sm font-light" />
                     </FieldRow>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label="CTA Button Text">
-                        <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} placeholder="Book a Session" className="h-9 text-sm font-light" />
+                      <FieldRow label={ws.ctaTextLabel}>
+                        <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} placeholder={ws.ctaTextPlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
-                      <FieldRow label="CTA Link (optional)">
-                        <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} placeholder="/store/your-studio or external URL" className="h-9 text-sm font-light" />
+                      <FieldRow label={ws.ctaLinkLabel}>
+                        <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} placeholder={ws.ctaLinkPlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
                     </div>
                   </section>
@@ -469,24 +469,24 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="About Section" description="Introduce yourself to potential clients." />
+                      <SectionHeading title={ws.aboutTitle} description={ws.aboutDesc} />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label="Full Name">
-                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" className="h-9 text-sm font-light" />
+                      <FieldRow label={ws.fullNameLabel}>
+                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={ws.fullNamePlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
-                      <FieldRow label="Section Title">
+                      <FieldRow label={ws.sectionTitleLabel}>
                         <Input value={aboutTitle} onChange={(e) => setAboutTitle(e.target.value)} placeholder="About" className="h-9 text-sm font-light" />
                       </FieldRow>
                     </div>
 
-                    <FieldRow label="Bio / About text">
-                      <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell your story — background, style, what makes your work unique…" className="min-h-[100px] text-sm font-light resize-none" />
+                    <FieldRow label={ws.bioLabel}>
+                      <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={ws.bioPlaceholder} className="min-h-[100px] text-sm font-light resize-none" />
                     </FieldRow>
 
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">Profile / About Photo</Label>
+                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.profilePhotoLabel}</Label>
                       <div className="flex items-center gap-4">
                         {aboutImageUrl ? (
                           <div className="relative h-20 w-20 border border-border overflow-hidden rounded-sm bg-muted/10">
@@ -501,7 +501,7 @@ const WebsiteSettings = () => {
                           </div>
                         )}
                         <button onClick={() => aboutInputRef.current?.click()} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-                          {aboutImageUrl ? "Replace photo" : "Upload profile photo"}
+                          {aboutImageUrl ? ws.replacePhoto : ws.uploadPhoto}
                         </button>
                       </div>
                       <input ref={aboutInputRef} type="file" accept="image/*" className="hidden"
@@ -515,7 +515,7 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Social Media" description="Links displayed in your site header and footer." />
+                      <SectionHeading title={ws.socialTitle} description={ws.socialDesc} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FieldRow label="Instagram">
@@ -569,15 +569,15 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
                       <Layout className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title="Navigation" description="Choose which sections appear in your site menu." />
+                      <SectionHeading title={ws.navigationTitle} description={ws.navigationDesc} />
                     </div>
                     <div className="flex flex-col gap-3">
                       {[
-                        { label: "Store (Sessions)", desc: "List of bookable sessions.", value: showStore, set: setShowStore },
-                        { label: "Booking", desc: "Direct booking CTA and calendar.", value: showBooking, set: setShowBooking },
-                        { label: "About", desc: "Bio and profile section.", value: showAbout, set: setShowAbout },
-                        { label: "Blog", desc: "Articles and behind-the-scenes posts.", value: showBlog, set: setShowBlog },
-                        { label: "Contact", desc: "Contact form and social links.", value: showContact, set: setShowContact },
+                        { label: ws.navStore, desc: ws.navStoreDesc, value: showStore, set: setShowStore },
+                        { label: ws.navBooking, desc: ws.navBookingDesc, value: showBooking, set: setShowBooking },
+                        { label: ws.navAbout, desc: ws.navAboutDesc, value: showAbout, set: setShowAbout },
+                        { label: ws.navBlog, desc: ws.navBlogDesc, value: showBlog, set: setShowBlog },
+                        { label: ws.navContact, desc: ws.navContactDesc, value: showContact, set: setShowContact },
                       ].map((item) => (
                         <div key={item.label} className="flex items-center justify-between gap-4 border border-border px-4 py-3">
                           <div>
@@ -594,7 +594,7 @@ const WebsiteSettings = () => {
 
                   {/* ── 6. Template ── */}
                   <section className="flex flex-col gap-5">
-                    <SectionHeading title="Site Template" description="Choose the visual layout for your photographer website." />
+                    <SectionHeading title={ws.templateTitle} description={ws.templateDesc} />
                     <div className="grid grid-cols-2 gap-3">
                       {TEMPLATES.map((t) => (
                         <button
