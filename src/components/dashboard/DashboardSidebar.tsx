@@ -784,9 +784,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               onClick={() => togglePin(groupTitle, item)}
             >
               {pinned ? (
-                <><PinOff className="h-3.5 w-3.5" />Unpin from Favorites</>
+                <><PinOff className="h-3.5 w-3.5" />{t.nav.unpinFromFavorites}</>
               ) : (
-                <><Pin className="h-3.5 w-3.5" />Pin to Favorites</>
+                <><Pin className="h-3.5 w-3.5" />{t.nav.pinToFavorites}</>
               )}
             </ContextMenuItem>
           </ContextMenuContent>
