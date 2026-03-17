@@ -475,24 +475,26 @@ interface CollapsedFavoritesPopoverProps {
   onOpenChange: (open: boolean) => void;
   isItemActive: (item: MenuItem) => boolean;
   badges: Record<string, number>;
+  favoritesLabel: string;
+  noPinnedLabel: string;
 }
 
-function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItemActive, badges }: CollapsedFavoritesPopoverProps) {
+function CollapsedFavoritesPopover({ favoriteItems, isOpen, onOpenChange, isItemActive, badges, favoritesLabel, noPinnedLabel }: CollapsedFavoritesPopoverProps) {
   return (
     <SidebarMenuItem>
       <Popover open={isOpen} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>
-          <SidebarMenuButton tooltip="Favorites" className="gap-3 text-xs tracking-wider uppercase font-light">
+          <SidebarMenuButton tooltip={favoritesLabel} className="gap-3 text-xs tracking-wider uppercase font-light">
             <Star className="h-4 w-4 shrink-0" />
           </SidebarMenuButton>
         </PopoverTrigger>
         <PopoverContent side="right" align="start" sideOffset={8} className="w-52 p-1.5">
           <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light px-2 pt-1 pb-1.5">
-            Favorites
+            {favoritesLabel}
           </p>
           {favoriteItems.length === 0 ? (
             <p className="px-2 py-2 text-[10px] text-muted-foreground/50 font-light italic">
-              No pinned items
+              {noPinnedLabel}
             </p>
           ) : (
             <div className="flex flex-col gap-0.5">
