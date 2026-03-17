@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bug } from "lucide-react";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 
 export function DashboardHeader() {
   const { user } = useAuth();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -72,13 +74,18 @@ export function DashboardHeader() {
       <div className="flex items-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200">
+            <button
+              onClick={() => setBugDialogOpen(true)}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
               <Bug size={15} />
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">Report a bug</TooltipContent>
         </Tooltip>
       </div>
+
+      <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
     </header>
   );
 }
