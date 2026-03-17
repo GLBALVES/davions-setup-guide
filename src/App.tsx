@@ -58,6 +58,7 @@ import FinancePayables from "./pages/dashboard/FinancePayables";
 import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
 import FinanceReports from "./pages/dashboard/FinanceReports";
 import Billing from "./pages/dashboard/Billing";
+import AdminBugReports from "./pages/admin/AdminBugReports";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
