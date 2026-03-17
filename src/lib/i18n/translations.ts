@@ -345,4 +345,6 @@ export const translations = {
   },
 } as const;
 
-export type Translations = typeof translations.en;
+// Recursively widen all literal string types to `string`
+type DeepWriteable<T> = { [K in keyof T]: T[K] extends string ? string : DeepWriteable<T[K]> };
+export type Translations = DeepWriteable<typeof translations.en>;
