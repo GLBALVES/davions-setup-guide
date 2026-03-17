@@ -589,6 +589,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const badges = useSidebarBadges();
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
+  const { t } = useLanguage();
+  const translatedGroups = buildGroups(t);
 
   // Filter a group's items based on permissions
   const filterItems = (items: MenuItem[]): MenuItem[] => {
