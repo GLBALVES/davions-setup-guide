@@ -323,9 +323,9 @@ const Bookings = () => {
                   <div className="flex items-start gap-3 flex-1">
                     <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-xs font-light tracking-wide text-foreground">
-                        Funds held in custody — payment setup incomplete
-                      </p>
+                       <p className="text-xs font-light tracking-wide text-foreground">
+                          {bk.fundsInCustody}
+                        </p>
                       <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
                         You have {confirmedPaidCount} confirmed booking{confirmedPaidCount !== 1 ? "s" : ""} with payments received, but your banking details haven't been submitted yet. Complete your payment setup to release the funds to your account.
                       </p>
