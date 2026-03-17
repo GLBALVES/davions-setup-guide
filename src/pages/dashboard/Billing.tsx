@@ -281,9 +281,9 @@ const Billing = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Account
+                  {t.finance.accountLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Billing</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.finance.billing}</h1>
               </div>
 
               {/* Onboarding pending banner */}
