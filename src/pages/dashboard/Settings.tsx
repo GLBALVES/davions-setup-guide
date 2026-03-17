@@ -557,9 +557,9 @@ const Settings = () => {
                         <div className="flex items-start gap-3 flex-1">
                           <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-xs font-light tracking-wide text-foreground">Payment account created — setup pending</p>
+                            <p className="text-xs font-light tracking-wide text-foreground">{t.settings.paymentAccountPending}</p>
                             <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                              Your payment account exists but banking details haven't been filled in yet. Funds from client payments are held in custody until onboarding is complete.
+                              {t.settings.paymentPendingDesc}
                             </p>
                           </div>
                         </div>
@@ -571,7 +571,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
                         >
                           {connectingStripe ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                          Complete Setup
+                          {t.settings.completeSetup}
                         </Button>
                       </div>
                     )}
@@ -581,17 +581,17 @@ const Settings = () => {
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-foreground">
                           <Check className="h-3 w-3" />
-                          Activated
+                          {t.settings.activated}
                         </div>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Payment Account</p>
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.paymentAccount}</p>
                             <p className="text-sm font-mono font-light tracking-wide">{stripeAccountId}</p>
                           </div>
                           {stripeConnectedAt && (
                             <div className="flex flex-col gap-0.5">
-                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Connected on</p>
+                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.connectedOn}</p>
                               <p className="text-xs font-light text-muted-foreground">
                                 {new Date(stripeConnectedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                               </p>
@@ -600,7 +600,7 @@ const Settings = () => {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments from your clients go directly to this payment account. To switch accounts, deactivate and reconnect.
+                          {t.settings.paymentsGoDirectly}
                         </p>
 
                         <div className="flex gap-3">
@@ -611,10 +611,8 @@ const Settings = () => {
                             disabled={connectingStripe}
                             className="gap-2 text-xs tracking-wider uppercase font-light"
                           >
-                            {connectingStripe
-                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              : null}
-                            Update details
+                            {connectingStripe ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                            {t.settings.updateDetails}
                           </Button>
                           <Button
                             variant="outline"
@@ -626,7 +624,7 @@ const Settings = () => {
                             {disconnectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <Unlink className="h-3.5 w-3.5" />}
-                            Deactivate
+                            {t.settings.deactivate}
                           </Button>
                         </div>
                       </div>
@@ -636,9 +634,9 @@ const Settings = () => {
                         {/* Header bar */}
                         <div className="flex items-center justify-between pb-4 border-b border-border">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-xs font-light tracking-wide">Payment Setup</p>
+                            <p className="text-xs font-light tracking-wide">{t.settings.paymentSetup}</p>
                             <p className="text-[10px] text-muted-foreground tracking-wider">
-                              Fill in your details to start receiving payments
+                              {t.settings.fillDetailsToReceive}
                             </p>
                           </div>
                           <Button
@@ -647,7 +645,7 @@ const Settings = () => {
                             onClick={handleOnboardingExit}
                             className="text-[11px] tracking-widest uppercase font-light h-8 px-4"
                           >
-                            Close
+                            {t.settings.close}
                           </Button>
                         </div>
                         {/* Stripe embedded component */}
@@ -662,22 +660,16 @@ const Settings = () => {
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-muted-foreground">
                           <CreditCard className="h-3 w-3" />
-                          Not activated
+                          {t.settings.notActivated}
                         </div>
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Connect your payment account so your clients pay directly to you.
-                          Fill in your banking details right here — no redirects, no external pages.
+                          {t.settings.connectYourAccount}
                         </p>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
-                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
-                          {[
-                            "Click the button below",
-                            "Fill in your banking and identity details",
-                            "Submit — everything stays on this page",
-                            "You're ready to receive payments",
-                          ].map((step, i) => (
+                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.howItWorks}</p>
+                          {t.settings.paymentSteps.map((step, i) => (
                             <div key={i} className="flex items-start gap-3">
                               <span className="text-[10px] text-muted-foreground shrink-0 w-4">{i + 1}.</span>
                               <p className="text-[11px] font-light leading-relaxed">{step}</p>
@@ -695,7 +687,7 @@ const Settings = () => {
                             {connectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <CreditCard className="h-3.5 w-3.5" />}
-                            {connectingStripe ? "Setting up…" : "Activate payment"}
+                            {connectingStripe ? t.settings.settingUp : t.settings.activatePayment}
                           </Button>
                         </div>
                       </div>
