@@ -762,18 +762,18 @@ const Projects = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Photographers
+                  {p_t.photographers}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Projects</h1>
+                <h1 className="text-2xl font-light tracking-wide">{p_t.title}</h1>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")}>
                   <TabsList className="h-8">
                     <TabsTrigger value="kanban" className="text-xs gap-1.5 px-2.5">
-                      <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+                      <LayoutGrid className="h-3.5 w-3.5" /> {p_t.kanban}
                     </TabsTrigger>
                     <TabsTrigger value="list" className="text-xs gap-1.5 px-2.5">
-                      <List className="h-3.5 w-3.5" /> List
+                      <List className="h-3.5 w-3.5" /> {p_t.list}
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -783,7 +783,7 @@ const Projects = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  New Project
+                  {p_t.newProject}
                 </Button>
               </div>
             </div>
@@ -792,12 +792,13 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
+                const stageLabel = { lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting, editing: p_t.editing, delivery: p_t.delivery, done: p_t.done }[s.key] ?? s.label;
                 return (
                   <div
                     key={s.key}
                     className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[s.key]}`}
                   >
-                    <span>{s.label}</span>
+                    <span>{stageLabel}</span>
                     <span className="opacity-60">{count}</span>
                   </div>
                 );
