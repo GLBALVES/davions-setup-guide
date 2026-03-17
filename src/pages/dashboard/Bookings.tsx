@@ -391,11 +391,7 @@ const Bookings = () => {
                   <BookOpen className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {bookings.length === 0
-                        ? "No bookings yet"
-                        : search
-                        ? `No results for "${search}"`
-                        : "No bookings match this filter"}
+                       {bookings.length === 0 ? bk.noBookingsYet : search ? `${bk.noResults} "${search}"` : bk.noMatch}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
                       {bookings.length === 0
