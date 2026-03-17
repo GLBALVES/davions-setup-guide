@@ -1172,18 +1172,6 @@ const Personalize = () => {
 };
 
 export default Personalize;
-                    
-                      {user &&
-                    <SessionTypeManager
-                      photographerId={user.id}
-                      sessionTypes={sessionTypes}
-                      selectedTypeId={selectedTypeId}
-                      onSelect={setSelectedTypeId}
-                      onRefetch={fetchSessionTypes}
-                      mode="manage" />
-
-                    }
-                    </section>
 
                     <div className="border-t border-border" />
 
