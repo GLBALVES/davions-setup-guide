@@ -518,6 +518,8 @@ function ArchivedKanbanSection({
   onDelete: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+  const p_t = t.projects;
   return (
     <div className="mt-6 border border-border/50 rounded-sm overflow-hidden">
       <button
@@ -526,7 +528,7 @@ function ArchivedKanbanSection({
       >
         {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
         <Archive className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">Archived</span>
+        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">{p_t.archived}</span>
         <span className="text-[10px] text-muted-foreground/50 ml-1">{projects.length}</span>
       </button>
       {open && (
@@ -536,10 +538,10 @@ function ArchivedKanbanSection({
               <div className="flex items-start justify-between gap-1">
                 <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title={p_t.showArchived}>
                     <ArchiveRestore className="h-3 w-3" />
                   </button>
-                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
                     <X className="h-3 w-3" />
                   </button>
                 </div>
