@@ -373,7 +373,7 @@ const Bookings = () => {
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search client or session…"
+                    placeholder={bk.searchPlaceholder}
                     className="pl-9 h-8 text-xs"
                   />
                 </div>
