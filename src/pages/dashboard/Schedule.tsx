@@ -266,7 +266,7 @@ const Schedule = () => {
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                       }`}
                     >
-                      {VIEW_LABELS[mode]}
+                      {mode === "month" ? sc.month : mode === "week" ? sc.week : sc.day}
                     </button>
                   ))}
                 </div>
