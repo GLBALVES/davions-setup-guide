@@ -217,7 +217,7 @@ export default function Clients() {
                                   "text-[9px] tracking-widest uppercase px-1.5 py-0.5 font-light rounded-sm shrink-0",
                                   isActive ? "bg-background/20 text-background" : "bg-foreground/8 text-foreground/60"
                                 )}>
-                                  Returning
+                                  {cl.returning}
                                 </span>
                               )}
                             </div>
