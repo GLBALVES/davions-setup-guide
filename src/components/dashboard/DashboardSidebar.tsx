@@ -922,7 +922,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       <SidebarMenu className="pl-3">
                         {favoriteItems.length === 0 ? (
                           <p className="px-2 py-1.5 text-[10px] text-muted-foreground/50 font-light italic">
-                            Right-click any item to pin it here
+                            {t.nav.pinHint}
                           </p>
                         ) : (
                           <DndContext
