@@ -196,16 +196,16 @@ const Settings = () => {
 
     if (error) {
       if (error.code === "23505") {
-        if (error.message.includes("store_slug")) setSlugError("This URL is already taken. Please choose another.");
-        else if (error.message.includes("custom_domain")) setDomainError("This domain is already linked to another account.");
-        else toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        if (error.message.includes("store_slug")) setSlugError(t.settings.urlAlreadyTaken);
+        else if (error.message.includes("custom_domain")) setDomainError(t.settings.domainAlreadyLinked);
+        else toast({ title: t.settings.failedToSave, description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+        toast({ title: t.settings.failedToSave, description: error.message, variant: "destructive" });
       }
     } else {
       setStoreSlug(slugInput);
       setCustomDomain(customDomainInput.trim());
-      toast({ title: "Settings saved", description: "Your profile has been updated." });
+      toast({ title: t.settings.settingsSaved, description: t.settings.profileUpdated });
     }
     setSaving(false);
   };
@@ -273,37 +273,36 @@ const Settings = () => {
   // ── Security: Change Password ──
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({ title: "Fill in all fields", variant: "destructive" });
+      toast({ title: t.settings.fillAllFields, variant: "destructive" });
       return;
     }
     if (newPassword.length < 8) {
-      toast({ title: "Password too short", description: "Minimum 8 characters.", variant: "destructive" });
+      toast({ title: t.settings.passwordTooShort, description: t.settings.passwordTooShortDesc, variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      toast({ title: t.settings.passwordsDontMatch, variant: "destructive" });
       return;
     }
     if (newPassword === currentPassword) {
-      toast({ title: "Same password", description: "The new password must be different from the current one.", variant: "destructive" });
+      toast({ title: t.settings.samePassword, description: t.settings.samePasswordDesc, variant: "destructive" });
       return;
     }
     setSavingPassword(true);
-    // Re-authenticate with current password first
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user!.email!,
       password: currentPassword,
     });
     if (signInError) {
-      toast({ title: "Incorrect current password", description: "Please check your current password and try again.", variant: "destructive" });
+      toast({ title: t.settings.incorrectCurrentPassword, description: t.settings.incorrectCurrentPasswordDesc, variant: "destructive" });
       setSavingPassword(false);
       return;
     }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      toast({ title: "Failed to update password", description: error.message, variant: "destructive" });
+      toast({ title: t.settings.failedToUpdatePassword, description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Password updated", description: "Your password has been changed successfully." });
+      toast({ title: t.settings.passwordUpdated, description: t.settings.passwordUpdatedDesc });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -454,21 +453,21 @@ const Settings = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Account
+                  {t.settings.account}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Settings</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.settings.settingsTitle}</h1>
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p>
+                <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{t.common.loading}</p>
               ) : (
                 <Tabs defaultValue="profile" className="w-full">
                   {/* Tab triggers */}
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                      { value: "profile", label: "Profile" },
-                      { value: "payments", label: "Payments" },
-                      { value: "security", label: "Security" },
+                      { value: "profile", label: t.settings.profile },
+                      { value: "payments", label: t.settings.payments },
+                      { value: "security", label: t.settings.security },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
@@ -558,9 +557,9 @@ const Settings = () => {
                         <div className="flex items-start gap-3 flex-1">
                           <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-xs font-light tracking-wide text-foreground">Payment account created — setup pending</p>
+                            <p className="text-xs font-light tracking-wide text-foreground">{t.settings.paymentAccountPending}</p>
                             <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                              Your payment account exists but banking details haven't been filled in yet. Funds from client payments are held in custody until onboarding is complete.
+                              {t.settings.paymentPendingDesc}
                             </p>
                           </div>
                         </div>
@@ -572,7 +571,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
                         >
                           {connectingStripe ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                          Complete Setup
+                          {t.settings.completeSetup}
                         </Button>
                       </div>
                     )}
@@ -582,17 +581,17 @@ const Settings = () => {
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-foreground">
                           <Check className="h-3 w-3" />
-                          Activated
+                          {t.settings.activated}
                         </div>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Payment Account</p>
+                            <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.paymentAccount}</p>
                             <p className="text-sm font-mono font-light tracking-wide">{stripeAccountId}</p>
                           </div>
                           {stripeConnectedAt && (
                             <div className="flex flex-col gap-0.5">
-                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Connected on</p>
+                              <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.connectedOn}</p>
                               <p className="text-xs font-light text-muted-foreground">
                                 {new Date(stripeConnectedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                               </p>
@@ -601,7 +600,7 @@ const Settings = () => {
                         </div>
 
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Payments from your clients go directly to this payment account. To switch accounts, deactivate and reconnect.
+                          {t.settings.paymentsGoDirectly}
                         </p>
 
                         <div className="flex gap-3">
@@ -612,10 +611,8 @@ const Settings = () => {
                             disabled={connectingStripe}
                             className="gap-2 text-xs tracking-wider uppercase font-light"
                           >
-                            {connectingStripe
-                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              : null}
-                            Update details
+                            {connectingStripe ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                            {t.settings.updateDetails}
                           </Button>
                           <Button
                             variant="outline"
@@ -627,7 +624,7 @@ const Settings = () => {
                             {disconnectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <Unlink className="h-3.5 w-3.5" />}
-                            Deactivate
+                            {t.settings.deactivate}
                           </Button>
                         </div>
                       </div>
@@ -637,9 +634,9 @@ const Settings = () => {
                         {/* Header bar */}
                         <div className="flex items-center justify-between pb-4 border-b border-border">
                           <div className="flex flex-col gap-0.5">
-                            <p className="text-xs font-light tracking-wide">Payment Setup</p>
+                            <p className="text-xs font-light tracking-wide">{t.settings.paymentSetup}</p>
                             <p className="text-[10px] text-muted-foreground tracking-wider">
-                              Fill in your details to start receiving payments
+                              {t.settings.fillDetailsToReceive}
                             </p>
                           </div>
                           <Button
@@ -648,7 +645,7 @@ const Settings = () => {
                             onClick={handleOnboardingExit}
                             className="text-[11px] tracking-widest uppercase font-light h-8 px-4"
                           >
-                            Close
+                            {t.settings.close}
                           </Button>
                         </div>
                         {/* Stripe embedded component */}
@@ -663,22 +660,16 @@ const Settings = () => {
                       <div className="flex flex-col gap-5">
                         <div className="flex items-center gap-2 text-[11px] tracking-wider uppercase font-light px-3 py-1.5 border border-border w-fit text-muted-foreground">
                           <CreditCard className="h-3 w-3" />
-                          Not activated
+                          {t.settings.notActivated}
                         </div>
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Connect your payment account so your clients pay directly to you.
-                          Fill in your banking details right here — no redirects, no external pages.
+                          {t.settings.connectYourAccount}
                         </p>
 
                         <div className="border border-border p-5 flex flex-col gap-3">
-                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">How it works</p>
-                          {[
-                            "Click the button below",
-                            "Fill in your banking and identity details",
-                            "Submit — everything stays on this page",
-                            "You're ready to receive payments",
-                          ].map((step, i) => (
+                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.settings.howItWorks}</p>
+                          {t.settings.paymentSteps.map((step, i) => (
                             <div key={i} className="flex items-start gap-3">
                               <span className="text-[10px] text-muted-foreground shrink-0 w-4">{i + 1}.</span>
                               <p className="text-[11px] font-light leading-relaxed">{step}</p>
@@ -696,7 +687,7 @@ const Settings = () => {
                             {connectingStripe
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               : <CreditCard className="h-3.5 w-3.5" />}
-                            {connectingStripe ? "Setting up…" : "Activate payment"}
+                            {connectingStripe ? t.settings.settingUp : t.settings.activatePayment}
                           </Button>
                         </div>
                       </div>
@@ -711,16 +702,16 @@ const Settings = () => {
                       <div className="flex flex-col gap-1">
                         <p className="text-xs tracking-widest uppercase font-light text-foreground flex items-center gap-2">
                           <KeyRound className="h-3.5 w-3.5" />
-                          Change Password
+                          {t.settings.changePassword}
                         </p>
                         <p className="text-[11px] text-muted-foreground font-light">
-                          Enter a new password for your account. Minimum 8 characters.
+                          {t.settings.changePasswordDesc}
                         </p>
                       </div>
 
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Current Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.currentPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showCurrentPw ? "text" : "password"}
@@ -740,7 +731,7 @@ const Settings = () => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">New Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.newPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showNewPw ? "text" : "password"}
@@ -760,7 +751,7 @@ const Settings = () => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Confirm New Password</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.confirmNewPassword}</Label>
                           <div className="relative">
                             <Input
                               type={showConfirmPw ? "text" : "password"}
@@ -788,7 +779,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light"
                         >
                           {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                          {savingPassword ? "Updating…" : "Update Password"}
+                          {savingPassword ? t.settings.updating : t.settings.updatePassword}
                         </Button>
                       </div>
                     </section>
@@ -801,18 +792,18 @@ const Settings = () => {
                       <div className="flex flex-col gap-1">
                         <p className="text-xs tracking-widest uppercase font-light text-destructive flex items-center gap-2">
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete Account
+                          {t.settings.deleteAccount}
                         </p>
                         <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                          Permanently delete your account and all associated data. This action is irreversible and cannot be undone.
+                          {t.settings.deleteAccountDesc}
                         </p>
                       </div>
 
                       <div className="border border-destructive/30 bg-destructive/5 p-4 flex flex-col gap-3">
                         <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
-                          The following data will be permanently deleted:
+                          {t.settings.dataToDelete}
                         </p>
-                        {["Your profile and settings", "All galleries and photos", "All sessions and bookings", "All creative content and templates"].map((item) => (
+                        {t.settings.deleteDataItems.map((item) => (
                           <div key={item} className="flex items-center gap-2">
                             <span className="h-1 w-1 rounded-full bg-destructive/60 shrink-0" />
                             <p className="text-[11px] font-light text-foreground/80">{item}</p>
@@ -828,7 +819,7 @@ const Settings = () => {
                           className="gap-2 text-xs tracking-wider uppercase font-light border-destructive/40 text-destructive hover:bg-destructive/5"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete My Account
+                          {t.settings.deleteMyAccount}
                         </Button>
                       </div>
                     </section>
@@ -846,9 +837,9 @@ const Settings = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-light tracking-wide">Delete Account</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-light tracking-wide">{t.settings.deleteAccountTitle}</AlertDialogTitle>
             <AlertDialogDescription className="text-[11px] leading-relaxed">
-              This action is permanent and cannot be undone. All your data will be erased.
+              {t.settings.deleteAccountConfirmDesc}
               <br /><br />
               Type <strong className="text-foreground">DELETE</strong> below to confirm.
             </AlertDialogDescription>
@@ -857,13 +848,13 @@ const Settings = () => {
             <Input
               value={deleteConfirmInput}
               onChange={(e) => setDeleteConfirmInput(e.target.value)}
-              placeholder="Type DELETE to confirm"
+              placeholder={t.settings.typeDeleteToConfirm}
               className="h-9 text-sm font-light"
             />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs tracking-wider uppercase font-light h-9">
-              Cancel
+              {t.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
@@ -871,7 +862,7 @@ const Settings = () => {
               className="text-xs tracking-wider uppercase font-light h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive disabled:opacity-40"
             >
               {deletingAccount ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : null}
-              {deletingAccount ? "Deleting…" : "Delete Account"}
+              {deletingAccount ? t.settings.deletingAccount : t.settings.deleteAccount}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -891,7 +882,7 @@ const Settings = () => {
         >
           <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
             <DialogTitle className="text-sm font-light tracking-wide">
-              {editingWatermark ? "Edit Watermark" : "New Watermark"}
+              {editingWatermark ? t.settings.editWatermark : t.settings.newWatermark}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden" style={{ height: "calc(100% - 57px)" }}>

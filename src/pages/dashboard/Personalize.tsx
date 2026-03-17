@@ -557,20 +557,20 @@ const Personalize = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Photographers
+                  {t.personalize.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Personalize</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.personalize.title}</h1>
               </div>
 
               {loading ?
-              <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p> :
+              <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{t.personalize.loading}</p> :
 
               <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                  { value: "studio", label: "Studio" },
-                  { value: "business", label: "Business" },
-                  { value: "galleries", label: "Galleries" }].
+                  { value: "studio", label: t.personalize.studioTab },
+                  { value: "business", label: t.personalize.businessTab },
+                  { value: "galleries", label: t.personalize.galleriesTab }].
                   map((tab) =>
                   <TabsTrigger
                     key={tab.value}
@@ -595,8 +595,8 @@ const Personalize = () => {
                   <TabsContent value="studio" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-4">
                       <SectionHeading
-                      title="Session Types"
-                      description="Categorize your sessions by type (e.g. Newborn, Wedding, Portrait)." />
+                      title={t.personalize.sessionTypes}
+                      description={t.personalize.sessionTypesDesc} />
                     
                       {user &&
                     <SessionTypeManager
@@ -616,8 +616,8 @@ const Personalize = () => {
                     <section className="flex flex-col gap-4">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                        title="Contracts"
-                        description="Create reusable service agreements to attach to your booking sessions." />
+                        title={t.personalize.contracts}
+                        description={t.personalize.contractsDesc} />
                       
                         <Button
                         size="sm"
@@ -626,22 +626,22 @@ const Personalize = () => {
                         onClick={() => navigate("/dashboard/contracts/new")}>
                         
                           <Plus className="h-3.5 w-3.5" />
-                          New contract
+                          {t.personalize.newContract}
                         </Button>
                       </div>
 
                       {contracts.length === 0 ?
-                    <p className="text-xs text-muted-foreground italic">No contracts yet. Create one to attach to your sessions.</p> :
+                    <p className="text-xs text-muted-foreground italic">{t.personalize.noContracts}</p> :
 
                     <div className="flex flex-col gap-2">
                           {contracts.map((c) =>
                       <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
                               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                                <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || "Untitled"}</p>
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || t.personalize.untitled}</p>
                                 <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
                                   {c.body ?
                             c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "") :
-                            "No content yet"}
+                            t.personalize.noContent}
                                 </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
@@ -652,7 +652,7 @@ const Personalize = () => {
                             onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}>
                             
                                   <Pencil className="h-3 w-3 mr-1" />
-                                  Edit
+                                  {t.common.edit}
                                 </Button>
                                 <Button
                             size="icon"
@@ -685,8 +685,8 @@ const Personalize = () => {
                     <section className="flex flex-col gap-4">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                        title="Briefings"
-                        description="Build questionnaires to understand your clients before the session." />
+                        title={t.personalize.briefings}
+                        description={t.personalize.briefingsDesc} />
                       
                         <Button
                         size="sm"
@@ -698,22 +698,22 @@ const Personalize = () => {
                           setBriefingQuestions([]);
                           setBriefingDialogOpen(true);
                         }}>
-                        
+
                           <Plus className="h-3.5 w-3.5" />
-                          New briefing
+                          {t.personalize.newBriefing}
                         </Button>
                       </div>
 
                       {briefings.length === 0 ?
-                    <p className="text-xs text-muted-foreground italic">No briefings yet. Create one to collect info from clients after they book.</p> :
+                    <p className="text-xs text-muted-foreground italic">{t.personalize.noBriefings}</p> :
 
                     <div className="flex flex-col gap-2">
                           {briefings.map((b) =>
                       <div key={b.id} className="border border-border p-4 flex items-start justify-between gap-4">
                               <div className="flex flex-col gap-0.5 min-w-0">
-                                <p className="text-xs tracking-wider uppercase font-light truncate">{b.name || "Untitled"}</p>
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{b.name || t.personalize.untitled}</p>
                                 <p className="text-[11px] text-muted-foreground">
-                                  {b.questions.length} question{b.questions.length !== 1 ? "s" : ""}
+                                  {b.questions.length} {b.questions.length !== 1 ? t.personalize.questions : t.personalize.question}
                                 </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
@@ -763,13 +763,13 @@ const Personalize = () => {
                     <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
                       <DialogHeader>
                         <DialogTitle className="text-sm tracking-widest uppercase font-light">
-                          {editingBriefing ? "Edit Briefing" : "New Briefing"}
+                          {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
                         </DialogTitle>
                       </DialogHeader>
                       <div className="flex flex-col gap-5 pt-2">
                         {/* Briefing name */}
                         <div className="flex flex-col gap-1.5">
-                          <Label className="text-[11px] tracking-wider uppercase font-light">Briefing Name</Label>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
                           <Input
                           value={briefingName}
                           onChange={(e) => setBriefingName(e.target.value)}
@@ -781,7 +781,7 @@ const Personalize = () => {
                         {/* Questions */}
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">Questions</Label>
+                            <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
                             <Button
                             type="button"
                             size="sm"
@@ -799,13 +799,13 @@ const Personalize = () => {
                             }}>
                             
                               <Plus className="h-3 w-3" />
-                              Add question
+                              {t.personalize.addQuestion}
                             </Button>
                           </div>
 
                           {briefingQuestions.length === 0 &&
                         <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
-                              No questions yet — click "Add question" to start building.
+                              {t.personalize.noQuestionsYet}
                             </p>
                         }
 
@@ -813,7 +813,7 @@ const Personalize = () => {
                         <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">Question {idx + 1}</span>
+                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
                                 <div className="flex items-center gap-1">
                                   <Button
                                 type="button"
@@ -849,7 +849,7 @@ const Personalize = () => {
                                 checked={q.required}
                                 onCheckedChange={(v) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, required: v } : item))} />
                               
-                                  <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">Required</label>
+                                  <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">{t.personalize.required}</label>
                                 </div>
                               </div>
 
@@ -864,7 +864,7 @@ const Personalize = () => {
                               {/* Options (for multiple_choice / checkboxes) */}
                               {(q.type === "multiple_choice" || q.type === "checkboxes") &&
                           <div className="flex flex-col gap-2 pl-1">
-                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Options</p>
+                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.options}</p>
                                   {q.options.map((opt, optIdx) =>
                             <div key={optIdx} className="flex items-center gap-2">
                                       <Input
@@ -897,7 +897,7 @@ const Personalize = () => {
                               onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
                               
                                     <Plus className="h-3 w-3" />
-                                    Add option
+                                    {t.personalize.addOption}
                                   </button>
                                 </div>
                           }
@@ -914,7 +914,7 @@ const Personalize = () => {
                           className="text-xs tracking-wider uppercase font-light"
                           onClick={() => setBriefingDialogOpen(false)}>
                           
-                            Cancel
+                            {t.common.cancel}
                           </Button>
                           <Button
                           type="button"
@@ -937,11 +937,11 @@ const Personalize = () => {
                             await fetchBriefings();
                             setSavingBriefing(false);
                             setBriefingDialogOpen(false);
-                            toast({ title: editingBriefing ? "Briefing updated" : "Briefing created" });
+                            toast({ title: editingBriefing ? t.personalize.briefingUpdated : t.personalize.briefingCreated });
                           }}>
                           
                             {savingBriefing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                            Save briefing
+                            {t.personalize.saveBriefing}
                           </Button>
                         </div>
                       </div>
@@ -953,30 +953,30 @@ const Personalize = () => {
                   <TabsContent value="business" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
                       <SectionHeading
-                      title="Business Information"
-                      description="Details used on invoices, contracts, and client-facing documents." />
+                      title={t.personalize.businessInfo}
+                      description={t.personalize.businessInfoDesc} />
                     
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FieldRow label="Business Name">
+                        <FieldRow label={t.personalize.businessName}>
                           <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Acme Photography LLC" className="h-9 text-sm font-light" />
                         </FieldRow>
-                        <FieldRow label="Phone">
+                        <FieldRow label={t.personalize.phone}>
                           <Input value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="+1 (555) 000-0000" className="h-9 text-sm font-light" />
                         </FieldRow>
                       </div>
-                      <FieldRow label="Street Address">
+                      <FieldRow label={t.personalize.streetAddress}>
                         <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 Main St, Suite 4" className="h-9 text-sm font-light" />
                       </FieldRow>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FieldRow label="City">
+                        <FieldRow label={t.personalize.city}>
                           <Input value={businessCity} onChange={(e) => setBusinessCity(e.target.value)} placeholder="New York" className="h-9 text-sm font-light" />
                         </FieldRow>
-                        <FieldRow label="Country">
+                        <FieldRow label={t.personalize.country}>
                           <Input value={businessCountry} onChange={(e) => setBusinessCountry(e.target.value)} placeholder="United States" className="h-9 text-sm font-light" />
                         </FieldRow>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FieldRow label="Currency">
+                        <FieldRow label={t.personalize.currency}>
                           <select
                           value={businessCurrency}
                           onChange={(e) => setBusinessCurrency(e.target.value)}
@@ -995,13 +995,13 @@ const Personalize = () => {
                           )}
                           </select>
                         </FieldRow>
-                        <FieldRow label="Tax ID / VAT Number">
+                        <FieldRow label={t.personalize.taxIdVat}>
                           <Input value={businessTaxId} onChange={(e) => setBusinessTaxId(e.target.value)} placeholder="e.g. 12-3456789" className="h-9 text-sm font-light" />
                         </FieldRow>
                       </div>
                     </section>
                     <Button onClick={handleSaveBusiness} disabled={savingBusiness} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
-                      {savingBusiness ? "Saving…" : "Save changes"}
+                      {savingBusiness ? t.personalize.saving : t.personalize.saveChanges}
                     </Button>
                   </TabsContent>
 
@@ -1010,26 +1010,26 @@ const Personalize = () => {
                   {/* ── GALLERIES TAB ── */}
                   <TabsContent value="galleries" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
-                      <SectionHeading title="Default Expiration" description="Galleries without a specific expiry will automatically expire after this many days. Leave blank to disable." />
+                      <SectionHeading title={t.personalize.defaultExpiration} description={t.personalize.defaultExpirationDesc} />
                       <div className="flex items-center gap-3">
                         <div className="flex items-center border border-border bg-background overflow-hidden w-40">
                           <input type="number" min="1" max="3650" value={galleryExpiryDays} onChange={(e) => setGalleryExpiryDays(e.target.value)} placeholder="e.g. 90"
                         className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
-                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">days</span>
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
                         </div>
                         <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingExpiry ? "Saving…" : "Save"}
+                          {savingExpiry ? t.personalize.saving : t.common.save}
                         </Button>
                       </div>
                       {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 &&
-                    <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} days</strong> after creation.</p>
+                    <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} {t.personalize.days}</strong> after creation.</p>
                     }
                     </section>
 
                     <Divider />
 
                     <section className="flex flex-col gap-5">
-                      <SectionHeading title="Reactivation Fee" description="Amount charged to reactivate access to an expired gallery. Leave blank to allow free reactivation." />
+                      <SectionHeading title={t.personalize.reactivationFee} description={t.personalize.reactivationFeeDesc} />
                       <div className="flex items-center gap-3">
                         <div className="flex items-center border border-border bg-background overflow-hidden w-40">
                           <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
@@ -1037,7 +1037,7 @@ const Personalize = () => {
                         className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
                         </div>
                         <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingFee ? "Saving…" : "Save"}
+                          {savingFee ? t.personalize.saving : t.common.save}
                         </Button>
                       </div>
                       {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 &&
@@ -1050,17 +1050,17 @@ const Personalize = () => {
                     {/* Watermarks */}
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">Watermarks</p>
-                        <p className="text-[11px] text-muted-foreground">Create text or image watermarks to apply to Proof galleries.</p>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{t.personalize.watermarks}</p>
+                        <p className="text-[11px] text-muted-foreground">{t.personalize.watermarksDesc}</p>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => {setEditingWatermark(undefined);setWatermarkEditorOpen(true);}}
                     className="gap-1.5 text-[10px] tracking-widest uppercase font-light rounded-none shrink-0">
-                        <Plus className="h-3.5 w-3.5" />New watermark
+                        <Plus className="h-3.5 w-3.5" />{t.personalize.newWatermark}
                       </Button>
                     </div>
                     {watermarks.length === 0 ?
                   <p className="text-[11px] text-muted-foreground/60 border border-dashed border-border px-3 py-6 text-center">
-                        No watermarks yet — click "New watermark" to create one.
+                        {t.personalize.noWatermarks}
                       </p> :
 
                   <div className="flex flex-col gap-2">
@@ -1096,14 +1096,14 @@ const Personalize = () => {
                     <section className="flex flex-col gap-5">
                       <div className="flex items-start justify-between gap-4">
                         <SectionHeading
-                        title="Davions Connect - Lightroom Plugin"
-                        description="Publish photos directly from Lightroom Classic to your galleries using the Davions plugin." />
+                        title={t.personalize.lightroomPlugin}
+                        description={t.personalize.lightroomPluginDesc} />
                       
                         <a
                         href="/dashboard/lightroom-plugin-help"
                         className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-light text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5">
                         
-                          View help
+                          {t.personalize.viewHelp}
                           <ChevronRight className="h-3 w-3" />
                         </a>
                       </div>
@@ -1122,7 +1122,7 @@ const Personalize = () => {
                           className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[11px] font-light tracking-wide transition-colors">
                           
                             <Download className="h-3.5 w-3.5" />
-                            Download Plugin (.zip)
+                            {t.personalize.downloadPlugin}
                           </a>
                         </div>
                       </div>
@@ -1156,7 +1156,7 @@ const Personalize = () => {
       <Dialog open={watermarkEditorOpen} onOpenChange={(open) => {setWatermarkEditorOpen(open);if (!open) setEditingWatermark(undefined);}}>
         <DialogContent className="max-w-4xl w-full p-0 rounded-none border-border overflow-hidden" style={{ height: "90vh", maxHeight: "780px" }}>
           <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
-            <DialogTitle className="text-sm font-light tracking-wide">{editingWatermark ? "Edit Watermark" : "New Watermark"}</DialogTitle>
+            <DialogTitle className="text-sm font-light tracking-wide">{editingWatermark ? t.personalize.editWatermark : t.personalize.newWatermarkTitle}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden" style={{ height: "calc(100% - 57px)" }}>
             <WatermarkEditor
