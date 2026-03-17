@@ -1293,8 +1293,22 @@ export const translations = {
       bankingDetailsNotSubmitted: "Tu cuenta de pago existe pero los datos bancarios aún no han sido enviados. Los fondos de los pagos de clientes se mantienen en custodia hasta que se complete el registro.",
       completeSetup: "Completar Configuración",
       paymentAccountSettings: "Configuración de Cuenta de Pago",
+      // Payables
+      payables: "Cuentas por Pagar",
+      payablesComingSoon: "Cuentas por Pagar — Próximamente",
+      payablesDesc: "Lleva el control de tus gastos, facturas de proveedores y pagos salientes en un solo lugar. Disponible próximamente.",
+      plannedCategories: "Categorías Planificadas",
+      supplierInvoices: "Facturas de Proveedores",
+      supplierInvoicesDesc: "Pagos a proveedores de equipos y accesorios.",
+      equipmentRepairs: "Equipos & Reparaciones",
+      equipmentRepairsDesc: "Reparaciones de lentes, servicios de cámara, accesorios.",
+      contractors: "Contratistas",
+      contractorsDesc: "Asistentes, segundos fotógrafos, retocadores.",
+      studioRent: "Estudio & Alquiler",
+      studioRentDesc: "Alquiler de estudio, coworking, tarifas de locación.",
     },
   },
+} as const;
 } as const;
 
 // Recursively widen all literal string types to `string`
