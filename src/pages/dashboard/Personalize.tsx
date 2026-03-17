@@ -1172,12 +1172,6 @@ const Personalize = () => {
 };
 
 export default Personalize;
-                        description="Create reusable service agreements to attach to your booking sessions." />
-                      
-                        <Button
-                        size="sm"
-                        variant="outline"
-                        className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
                         onClick={() => navigate("/dashboard/contracts/new")}>
                         
                           <Plus className="h-3.5 w-3.5" />
