@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProjects, createProject, deleteProject, updateProject,
@@ -34,29 +35,10 @@ type FilterTab = "mine" | "assigned" | "completed" | "archived";
 type TaskFilterTab = "assigned" | "pending" | "completed" | "archived";
 type MainView = "projects" | "tasks";
 
-const filterTabs: { key: FilterTab; label: string; icon: typeof FolderOpen }[] = [
-  { key: "mine", label: "My Projects", icon: FolderOpen },
-  { key: "assigned", label: "Assigned", icon: UserCheck },
-  { key: "completed", label: "Completed", icon: CheckCircle2 },
-  { key: "archived", label: "Archived", icon: Archive },
-];
-
-const taskFilterTabs: { key: TaskFilterTab; label: string; icon: typeof Clock }[] = [
-  { key: "assigned", label: "Assigned", icon: UserCheck },
-  { key: "pending", label: "Pending", icon: Clock },
-  { key: "completed", label: "Completed", icon: CheckCircle2 },
-  { key: "archived", label: "Archived", icon: Archive },
-];
-
-const priorityConfig: Record<string, { label: string; color: string; icon: typeof Flag }> = {
-  urgent: { label: "Urgent", color: "text-red-500", icon: AlertCircle },
-  high: { label: "High", color: "text-orange-500", icon: Flag },
-  medium: { label: "Medium", color: "text-amber-500", icon: Flag },
-  low: { label: "Low", color: "text-blue-500", icon: Flag },
-};
-
 export default function Workflows() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const wf = t.workflows;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -68,6 +50,27 @@ export default function Workflows() {
   const [taskFilter, setTaskFilter] = useState<TaskFilterTab>("assigned");
   const [selectedTask, setSelectedTask] = useState<WorkflowTask | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  const filterTabs: { key: FilterTab; label: string; icon: typeof FolderOpen }[] = [
+    { key: "mine", label: wf.myProjects, icon: FolderOpen },
+    { key: "assigned", label: wf.assigned, icon: UserCheck },
+    { key: "completed", label: wf.completed, icon: CheckCircle2 },
+    { key: "archived", label: wf.archived, icon: Archive },
+  ];
+
+  const taskFilterTabs: { key: TaskFilterTab; label: string; icon: typeof Clock }[] = [
+    { key: "assigned", label: wf.assigned, icon: UserCheck },
+    { key: "pending", label: wf.pending, icon: Clock },
+    { key: "completed", label: wf.completed, icon: CheckCircle2 },
+    { key: "archived", label: wf.archived, icon: Archive },
+  ];
+
+  const priorityConfig: Record<string, { label: string; color: string; icon: typeof Flag }> = {
+    urgent: { label: wf.urgent, color: "text-red-500", icon: AlertCircle },
+    high: { label: wf.high, color: "text-orange-500", icon: Flag },
+    medium: { label: wf.medium, color: "text-amber-500", icon: Flag },
+    low: { label: wf.low, color: "text-blue-500", icon: Flag },
+  };
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["workflow-projects"],
@@ -151,16 +154,16 @@ export default function Workflows() {
       setShowCreate(false);
       setNewName("");
       setNewDesc("");
-      toast.success("Project created!");
+      toast.success(wf.projectCreated);
     },
-    onError: () => toast.error("Error creating project"),
+    onError: () => toast.error(wf.errorCreating),
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflow-projects"] });
-      toast.success("Project deleted");
+      toast.success(wf.projectDeleted);
     },
   });
 
@@ -168,16 +171,16 @@ export default function Workflows() {
     mutationFn: ({ id, status }: { id: string; status: string }) => updateProject(id, { status } as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflow-projects"] });
-      toast.success("Status updated");
+      toast.success(wf.statusUpdated);
     },
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge variant="secondary" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3" /> Completed</Badge>;
+        return <Badge variant="secondary" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3" /> {wf.completedBadge}</Badge>;
       case "archived":
-        return <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground"><Archive className="h-3 w-3" /> Archived</Badge>;
+        return <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground"><Archive className="h-3 w-3" /> {wf.archivedBadge}</Badge>;
       default:
         return null;
     }
@@ -185,10 +188,10 @@ export default function Workflows() {
 
   const getTaskStatusLabel = (status: string) => {
     switch (status) {
-      case "in_progress": return "In Progress";
-      case "done": return "Done";
-      case "archived": return "Archived";
-      default: return "Pending";
+      case "in_progress": return wf.inProgress;
+      case "done": return wf.done;
+      case "archived": return wf.archived;
+      default: return wf.pending;
     }
   };
 
@@ -210,8 +213,8 @@ export default function Workflows() {
           <main className="flex-1 p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight">Workflow</h2>
-                <p className="text-muted-foreground mt-1">Manage projects and tasks</p>
+                <h2 className="text-2xl font-bold tracking-tight">{wf.pageTitle}</h2>
+                <p className="text-muted-foreground mt-1">{wf.pageSubtitle}</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
@@ -221,7 +224,7 @@ export default function Workflows() {
                       mainView === "projects" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                     }`}
                   >
-                    <FolderKanban className="h-3.5 w-3.5" /> Projects
+                    <FolderKanban className="h-3.5 w-3.5" /> {wf.projectsView}
                   </button>
                   <button
                     onClick={() => setMainView("tasks")}
@@ -229,12 +232,12 @@ export default function Workflows() {
                       mainView === "tasks" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                     }`}
                   >
-                    <ClipboardList className="h-3.5 w-3.5" /> Tasks
+                    <ClipboardList className="h-3.5 w-3.5" /> {wf.tasksView}
                   </button>
                 </div>
                 {mainView === "projects" && (
                   <Button onClick={() => setShowCreate(true)}>
-                    <Plus className="h-4 w-4 mr-2" /> New Project
+                    <Plus className="h-4 w-4 mr-2" /> {wf.newProject}
                   </Button>
                 )}
               </div>
@@ -268,11 +271,11 @@ export default function Workflows() {
                 ) : filteredProjects.length === 0 ? (
                   <div className="text-center py-20 space-y-4">
                     <FolderKanban className="h-16 w-16 mx-auto text-muted-foreground/40" />
-                    <h3 className="text-lg font-semibold">No projects found</h3>
-                    <p className="text-muted-foreground text-sm">Create your first project to get started</p>
+                    <h3 className="text-lg font-semibold">{wf.noProjectsFound}</h3>
+                    <p className="text-muted-foreground text-sm">{wf.createFirstProject}</p>
                     {activeFilter === "mine" && (
                       <Button onClick={() => setShowCreate(true)}>
-                        <Plus className="h-4 w-4 mr-2" /> Create Project
+                        <Plus className="h-4 w-4 mr-2" /> {wf.createProject}
                       </Button>
                     )}
                   </div>
@@ -301,25 +304,25 @@ export default function Workflows() {
                               </div>
                               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                 {status === "active" && (
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Complete"
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" title={wf.completed}
                                     onClick={(e) => { e.stopPropagation(); archiveMut.mutate({ id: p.id, status: "completed" }); }}>
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                                   </Button>
                                 )}
                                 {status === "completed" && (
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Archive"
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" title={wf.archived}
                                     onClick={(e) => { e.stopPropagation(); archiveMut.mutate({ id: p.id, status: "archived" }); }}>
                                     <Archive className="h-3.5 w-3.5 text-muted-foreground" />
                                   </Button>
                                 )}
                                 {status === "archived" && (
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Reactivate"
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" title={wf.myProjects}
                                     onClick={(e) => { e.stopPropagation(); archiveMut.mutate({ id: p.id, status: "active" }); }}>
                                     <FolderOpen className="h-3.5 w-3.5 text-primary" />
                                   </Button>
                                 )}
                                 <Button variant="ghost" size="icon" className="h-7 w-7"
-                                  onClick={(e) => { e.stopPropagation(); if (confirm("Delete this project?")) deleteMut.mutate(p.id); }}>
+                                  onClick={(e) => { e.stopPropagation(); if (confirm(wf.deleteProjectConfirm)) deleteMut.mutate(p.id); }}>
                                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                 </Button>
                               </div>
@@ -328,7 +331,7 @@ export default function Workflows() {
                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <ListChecks className="h-3 w-3" />
-                                  {count} {count === 1 ? "task" : "tasks"}
+                                  {count} {count === 1 ? wf.task : wf.tasks}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
@@ -383,7 +386,7 @@ export default function Workflows() {
                 ) : filteredTasks.length === 0 ? (
                   <div className="text-center py-20 space-y-4">
                     <ClipboardList className="h-16 w-16 mx-auto text-muted-foreground/40" />
-                    <h3 className="text-lg font-semibold">No tasks found</h3>
+                    <h3 className="text-lg font-semibold">{wf.noTasksFound}</h3>
                   </div>
                 ) : (
                   <Card>
@@ -391,11 +394,11 @@ export default function Workflows() {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b text-xs text-muted-foreground">
-                            <th className="text-left p-3 font-medium">Task</th>
-                            <th className="text-left p-3 font-medium">Project</th>
-                            <th className="text-left p-3 font-medium">Status</th>
-                            <th className="text-left p-3 font-medium">Priority</th>
-                            <th className="text-left p-3 font-medium">Due Date</th>
+                            <th className="text-left p-3 font-medium">{wf.columnTask}</th>
+                            <th className="text-left p-3 font-medium">{wf.columnProject}</th>
+                            <th className="text-left p-3 font-medium">{wf.columnStatus}</th>
+                            <th className="text-left p-3 font-medium">{wf.columnPriority}</th>
+                            <th className="text-left p-3 font-medium">{wf.columnDueDate}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -455,19 +458,19 @@ export default function Workflows() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New Project</DialogTitle>
+            <DialogTitle>{wf.newProjectTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Project name</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="E.g.: App Launch v2" />
+              <Label>{wf.projectName}</Label>
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={wf.projectNamePlaceholder} />
             </div>
             <div className="space-y-2">
-              <Label>Description (optional)</Label>
-              <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Brief project description..." rows={2} />
+              <Label>{wf.descriptionLabel}</Label>
+              <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder={wf.descriptionPlaceholder} rows={2} />
             </div>
             <div className="space-y-2">
-              <Label>Color</Label>
+              <Label>{wf.colorLabel}</Label>
               <div className="flex gap-2 flex-wrap">
                 {projectColors.map((c) => (
                   <button
@@ -481,10 +484,10 @@ export default function Workflows() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{wf.cancel}</Button>
             <Button onClick={() => createMut.mutate()} disabled={!newName.trim() || createMut.isPending}>
               {createMut.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create Project
+              {wf.createBtn}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -511,7 +514,7 @@ export default function Workflows() {
             setSheetOpen(false);
             setSelectedTask(null);
             queryClient.invalidateQueries({ queryKey: ["workflow-user-tasks"] });
-            toast.success("Task deleted");
+            toast.success(wf.taskDeleted);
           }}
         />
       )}

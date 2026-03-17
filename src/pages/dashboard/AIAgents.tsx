@@ -4,6 +4,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,16 +40,10 @@ const MODELS = [
   { value: "openai/gpt-5-nano", label: "GPT-5 Nano (economic)" },
 ];
 
-const CATEGORIES = [
-  { value: "support", label: "Support" },
-  { value: "sales", label: "Sales" },
-  { value: "onboarding", label: "Onboarding" },
-  { value: "internal", label: "Internal" },
-  { value: "other", label: "Other" },
-];
-
 export default function AIAgents() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const aa = t.aiAgents;
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -63,12 +58,20 @@ export default function AIAgents() {
   const [newDesc, setNewDesc] = useState("");
   const [newCategory, setNewCategory] = useState("support");
 
+  const CATEGORIES = [
+    { value: "support", label: aa.catSupport },
+    { value: "sales", label: aa.catSales },
+    { value: "onboarding", label: aa.catOnboarding },
+    { value: "internal", label: aa.catInternal },
+    { value: "other", label: aa.catOther },
+  ];
+
   const fetchAgents = async () => {
     const { data, error } = await supabase
       .from("ai_agents" as any)
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) { toast.error("Error loading agents"); return; }
+    if (error) { toast.error(aa.errorLoading); return; }
     setAgents(
       ((data as any[]) || []).map((a) => ({
         ...a,
@@ -83,7 +86,7 @@ export default function AIAgents() {
   useEffect(() => { fetchAgents(); }, []);
 
   const handleCreate = async () => {
-    if (!newName || !newSlug) { toast.error("Name and slug are required"); return; }
+    if (!newName || !newSlug) { toast.error(aa.nameRequired); return; }
     const { error } = await supabase.from("ai_agents" as any).insert({
       name: newName,
       slug: newSlug.toLowerCase().replace(/\s+/g, "-"),
@@ -92,8 +95,8 @@ export default function AIAgents() {
       user_id: user?.id,
       photographer_id: user?.id,
     } as any);
-    if (error) { toast.error(error.message.includes("duplicate") ? "Slug already exists" : error.message); return; }
-    toast.success("Agent created!");
+    if (error) { toast.error(error.message.includes("duplicate") ? aa.slugExists : error.message); return; }
+    toast.success(aa.agentCreated);
     setCreateOpen(false);
     setNewName(""); setNewSlug(""); setNewDesc(""); setNewCategory("support");
     fetchAgents();
@@ -111,15 +114,15 @@ export default function AIAgents() {
         review_mode: editAgent.review_mode, category: editAgent.category,
       } as any)
       .eq("id", editAgent.id);
-    if (error) { toast.error("Error saving: " + error.message); return; }
-    toast.success("Agent saved!");
+    if (error) { toast.error(aa.errorSaving + error.message); return; }
+    toast.success(aa.agentSaved);
     fetchAgents();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this agent?")) return;
+    if (!confirm(aa.deleteConfirm)) return;
     await supabase.from("ai_agents" as any).delete().eq("id", id);
-    toast.success("Agent deleted");
+    toast.success(aa.agentDeleted);
     fetchAgents();
     if (editAgent?.id === id) setEditAgent(null);
   };
@@ -160,7 +163,7 @@ export default function AIAgents() {
       const reply = data?.reply || data?.content || "No response";
       setTestMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (e: any) {
-      toast.error("Test error: " + (e.message || "unknown"));
+      toast.error(aa.testError + (e.message || "unknown"));
     } finally {
       setTestLoading(false);
     }
@@ -177,12 +180,12 @@ export default function AIAgents() {
               <div className="flex items-center gap-3">
                 <Brain className="h-7 w-7 text-primary" />
                 <div>
-                  <h1 className="text-2xl font-bold">AI Agent Hub</h1>
-                  <p className="text-sm text-muted-foreground">Create and manage intelligent agents for different functions</p>
+                  <h1 className="text-2xl font-bold">{aa.pageTitle}</h1>
+                  <p className="text-sm text-muted-foreground">{aa.pageSubtitle}</p>
                 </div>
               </div>
               <Button onClick={() => setCreateOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" /> New Agent
+                <Plus className="h-4 w-4" /> {aa.newAgent}
               </Button>
             </div>
 
@@ -192,9 +195,9 @@ export default function AIAgents() {
               <Card className="border-dashed">
                 <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
                   <Bot className="h-12 w-12 text-muted-foreground" />
-                  <p className="text-muted-foreground">No agents created yet</p>
+                  <p className="text-muted-foreground">{aa.noAgents}</p>
                   <Button variant="outline" onClick={() => setCreateOpen(true)} className="gap-2">
-                    <Plus className="h-4 w-4" /> Create first agent
+                    <Plus className="h-4 w-4" /> {aa.createFirst}
                   </Button>
                 </CardContent>
               </Card>
@@ -212,10 +215,10 @@ export default function AIAgents() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground line-clamp-2">{agent.description || "No description"}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{agent.description || aa.noDescription}</p>
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">{CATEGORIES.find((c) => c.value === agent.category)?.label || agent.category}</Badge>
-                        <Badge variant="outline" className="text-xs">{agent.knowledge_base.length} instruction(s)</Badge>
+                        <Badge variant="outline" className="text-xs">{agent.knowledge_base.length} {aa.instructions}</Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -229,22 +232,22 @@ export default function AIAgents() {
       {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>New AI Agent</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{aa.createTitle}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input placeholder="E.g.: Support Tickets" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <Label>{aa.namLabel}</Label>
+              <Input placeholder={aa.namePlaceholder} value={newName} onChange={(e) => setNewName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Slug (unique identifier)</Label>
-              <Input placeholder="E.g.: support-tickets" value={newSlug} onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))} />
+              <Label>{aa.slugLabel}</Label>
+              <Input placeholder={aa.slugPlaceholder} value={newSlug} onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))} />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Input placeholder="Brief agent description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+              <Label>{aa.descLabel}</Label>
+              <Input placeholder={aa.descPlaceholder} value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{aa.categoryLabel}</Label>
               <Select value={newCategory} onValueChange={setNewCategory}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -254,8 +257,8 @@ export default function AIAgents() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate}>Create Agent</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>{aa.cancel}</Button>
+            <Button onClick={handleCreate}>{aa.createBtn}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -273,11 +276,11 @@ export default function AIAgents() {
               <div className="space-y-6 pb-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Name</Label>
+                    <Label>{aa.namLabel}</Label>
                     <Input value={editAgent.name} onChange={(e) => setEditAgent({ ...editAgent, name: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label>{aa.categoryLabel}</Label>
                     <Select value={editAgent.category} onValueChange={(v) => setEditAgent({ ...editAgent, category: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -287,28 +290,28 @@ export default function AIAgents() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>{aa.descLabel}</Label>
                   <Input value={editAgent.description} onChange={(e) => setEditAgent({ ...editAgent, description: e.target.value })} />
                 </div>
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> System Prompt</Label>
-                  <p className="text-xs text-muted-foreground">Base instructions for the agent. Define personality, rules, and behavior.</p>
-                  <Textarea className="min-h-[200px] font-mono text-sm" placeholder="You are an assistant for..." value={editAgent.system_prompt} onChange={(e) => setEditAgent({ ...editAgent, system_prompt: e.target.value })} />
+                  <Label className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> {aa.systemPromptLabel}</Label>
+                  <p className="text-xs text-muted-foreground">{aa.systemPromptDesc}</p>
+                  <Textarea className="min-h-[200px] font-mono text-sm" placeholder={aa.systemPromptPlaceholder} value={editAgent.system_prompt} onChange={(e) => setEditAgent({ ...editAgent, system_prompt: e.target.value })} />
                 </div>
 
                 <Separator />
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /> Knowledge Base</Label>
-                    <Button variant="outline" size="sm" onClick={addKnowledge} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+                    <Label className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /> {aa.knowledgeBase}</Label>
+                    <Button variant="outline" size="sm" onClick={addKnowledge} className="gap-1"><Plus className="h-3 w-3" /> {aa.addKnowledge}</Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Add topics and specific instructions. They are injected as context for the agent.</p>
+                  <p className="text-xs text-muted-foreground">{aa.knowledgeBaseDesc}</p>
                   {editAgent.knowledge_base.length === 0 && (
-                    <div className="border border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground">No instructions added</div>
+                    <div className="border border-dashed rounded-lg p-6 text-center text-sm text-muted-foreground">{aa.noInstructions}</div>
                   )}
                   {editAgent.knowledge_base.map((entry, idx) => (
                     <Card key={idx} className="relative">
@@ -316,8 +319,8 @@ export default function AIAgents() {
                         <X className="h-4 w-4" />
                       </button>
                       <CardContent className="pt-4 space-y-3">
-                        <Input placeholder="Topic (e.g.: Refunds)" value={entry.topic} onChange={(e) => updateKnowledge(idx, "topic", e.target.value)} />
-                        <Textarea placeholder="Detailed instruction about this topic..." className="min-h-[80px] text-sm" value={entry.content} onChange={(e) => updateKnowledge(idx, "content", e.target.value)} />
+                        <Input placeholder={aa.topicPlaceholder} value={entry.topic} onChange={(e) => updateKnowledge(idx, "topic", e.target.value)} />
+                        <Textarea placeholder={aa.contentPlaceholder} className="min-h-[80px] text-sm" value={entry.content} onChange={(e) => updateKnowledge(idx, "content", e.target.value)} />
                       </CardContent>
                     </Card>
                   ))}
@@ -327,7 +330,7 @@ export default function AIAgents() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Model</Label>
+                    <Label>{aa.modelLabel}</Label>
                     <Select value={editAgent.model} onValueChange={(v) => setEditAgent({ ...editAgent, model: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -336,30 +339,30 @@ export default function AIAgents() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Temperature: {editAgent.temperature}</Label>
+                    <Label>{aa.temperatureLabel}: {editAgent.temperature}</Label>
                     <Slider min={0} max={1} step={0.1} value={[editAgent.temperature]} onValueChange={([v]) => setEditAgent({ ...editAgent, temperature: v })} />
-                    <p className="text-xs text-muted-foreground">Low = precise, High = creative</p>
+                    <p className="text-xs text-muted-foreground">{aa.temperatureHint}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Switch checked={editAgent.enabled} onCheckedChange={(v) => setEditAgent({ ...editAgent, enabled: v })} />
-                    <Label>Agent active</Label>
+                    <Label>{aa.agentActive}</Label>
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch checked={editAgent.auto_reply} onCheckedChange={(v) => setEditAgent({ ...editAgent, auto_reply: v, review_mode: v ? editAgent.review_mode : false })} />
                     <div>
-                      <Label>Auto reply</Label>
-                      <p className="text-xs text-muted-foreground">When off, AI does not generate responses (manual mode)</p>
+                      <Label>{aa.autoReply}</Label>
+                      <p className="text-xs text-muted-foreground">{aa.autoReplyDesc}</p>
                     </div>
                   </div>
                   {editAgent.auto_reply && (
                     <div className="flex items-center gap-3 ml-6">
                       <Switch checked={editAgent.review_mode} onCheckedChange={(v) => setEditAgent({ ...editAgent, review_mode: v })} />
                       <div>
-                        <Label>Review mode</Label>
-                        <p className="text-xs text-muted-foreground">AI generates the response but waits for approval</p>
+                        <Label>{aa.reviewMode}</Label>
+                        <p className="text-xs text-muted-foreground">{aa.reviewModeDesc}</p>
                       </div>
                     </div>
                   )}
@@ -369,13 +372,13 @@ export default function AIAgents() {
           </ScrollArea>
           <div className="border-t p-4 flex items-center gap-2 justify-between">
             <Button variant="destructive" size="sm" onClick={() => editAgent && handleDelete(editAgent.id)} className="gap-1">
-              <Trash2 className="h-3.5 w-3.5" /> Delete
+              <Trash2 className="h-3.5 w-3.5" /> {aa.deleteBtn}
             </Button>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => { setTestMessages([]); setTestOpen(true); }} className="gap-1">
-                <Send className="h-3.5 w-3.5" /> Test
+                <Send className="h-3.5 w-3.5" /> {aa.testBtn}
               </Button>
-              <Button size="sm" onClick={handleSave} className="gap-1">Save</Button>
+              <Button size="sm" onClick={handleSave} className="gap-1">{aa.saveBtn}</Button>
             </div>
           </div>
         </SheetContent>
@@ -385,11 +388,11 @@ export default function AIAgents() {
       <Dialog open={testOpen} onOpenChange={setTestOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Test: {editAgent?.name}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> {aa.testTitle}{editAgent?.name}</DialogTitle>
           </DialogHeader>
           <div className="border rounded-lg h-[300px] flex flex-col">
             <ScrollArea className="flex-1 p-3">
-              {testMessages.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Send a message to test the agent</p>}
+              {testMessages.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">{aa.testPlaceholder}</p>}
               {testMessages.map((msg, i) => (
                 <div key={i} className={`mb-2 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`rounded-lg px-3 py-2 text-sm max-w-[80%] ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
@@ -404,7 +407,7 @@ export default function AIAgents() {
               )}
             </ScrollArea>
             <div className="border-t p-2 flex gap-2">
-              <Input placeholder="Type a message..." value={testInput} onChange={(e) => setTestInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleTest()} disabled={testLoading} />
+              <Input placeholder={aa.typeMessage} value={testInput} onChange={(e) => setTestInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleTest()} disabled={testLoading} />
               <Button size="icon" onClick={handleTest} disabled={testLoading || !testInput.trim()}><Send className="h-4 w-4" /></Button>
             </div>
           </div>
