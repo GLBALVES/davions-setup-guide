@@ -205,6 +205,7 @@ function KanbanColumn({
   onAddCard: (stage: Stage) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-col min-w-[220px] w-[220px] shrink-0">
@@ -221,7 +222,7 @@ function KanbanColumn({
         <button
           className="text-muted-foreground/40 hover:text-foreground transition-colors"
           onClick={() => onAddCard(stage.key)}
-          aria-label={`Add to ${stage.label}`}
+          aria-label={stage.label}
         >
           <Plus className="h-3.5 w-3.5" />
         </button>
@@ -245,7 +246,7 @@ function KanbanColumn({
             onClick={() => onAddCard(stage.key)}
             className="border border-dashed border-border rounded-sm p-3 text-[10px] text-muted-foreground/40 hover:text-muted-foreground hover:border-muted-foreground/40 transition-colors text-center"
           >
-            + Add card
+            {t.projects.addCard}
           </button>
         )}
       </div>
