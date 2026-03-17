@@ -732,13 +732,13 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = { Favorites: true };
     groups.forEach((g) => {
-      initial[g.title] = g.defaultOpen || groupHasActive(g);
+      initial[g.stableKey] = g.defaultOpen || groupHasActive(g);
     });
     return initial;
   });
 
-  const toggleGroup = (title: string) => {
-    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  const toggleGroup = (stableKey: string) => {
+    setOpenGroups((prev) => ({ ...prev, [stableKey]: !prev[stableKey] }));
   };
 
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
