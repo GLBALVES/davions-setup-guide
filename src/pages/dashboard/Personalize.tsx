@@ -595,8 +595,583 @@ const Personalize = () => {
                   <TabsContent value="studio" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-4">
                       <SectionHeading
-                      title="Session Types"
-                      description="Categorize your sessions by type (e.g. Newborn, Wedding, Portrait)." />
+                      title={t.personalize.sessionTypes}
+                      description={t.personalize.sessionTypesDesc} />
+                    
+                      {user &&
+                    <SessionTypeManager
+                      photographerId={user.id}
+                      sessionTypes={sessionTypes}
+                      selectedTypeId={selectedTypeId}
+                      onSelect={setSelectedTypeId}
+                      onRefetch={fetchSessionTypes}
+                      mode="manage" />
+
+                    }
+                    </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Contracts */}
+                    <section className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                        title={t.personalize.contracts}
+                        description={t.personalize.contractsDesc} />
+                      
+                        <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                        onClick={() => navigate("/dashboard/contracts/new")}>
+                        
+                          <Plus className="h-3.5 w-3.5" />
+                          {t.personalize.newContract}
+                        </Button>
+                      </div>
+
+                      {contracts.length === 0 ?
+                    <p className="text-xs text-muted-foreground italic">{t.personalize.noContracts}</p> :
+
+                    <div className="flex flex-col gap-2">
+                          {contracts.map((c) =>
+                      <div key={c.id} className="border border-border p-4 flex items-start justify-between gap-4 group">
+                              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{c.name || t.personalize.untitled}</p>
+                                <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
+                                  {c.body ?
+                            c.body.replace(/<[^>]+>/g, " ").replace(/\[\[(\w+)\]\]/g, "{{$1}}").replace(/\s+/g, " ").trim().slice(0, 80) + (c.body.length > 80 ? "…" : "") :
+                            t.personalize.noContent}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-3 text-[10px] tracking-wider uppercase font-light"
+                            onClick={() => navigate(`/dashboard/contracts/${c.id}/edit`)}>
+                            
+                                  <Pencil className="h-3 w-3 mr-1" />
+                                  {t.common.edit}
+                                </Button>
+                                <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            disabled={deletingContractId === c.id}
+                            onClick={async () => {
+                              setDeletingContractId(c.id);
+                              await (supabase as any).from("contracts").delete().eq("id", c.id);
+                              await fetchContracts();
+                              setDeletingContractId(null);
+                            }}>
+                            
+                                  {deletingContractId === c.id ?
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+
+                            <Trash2 className="h-3.5 w-3.5" />
+                            }
+                                </Button>
+                              </div>
+                            </div>
+                      )}
+                        </div>
+                    }
+                    </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Briefings */}
+                    <section className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                        title={t.personalize.briefings}
+                        description={t.personalize.briefingsDesc} />
+                      
+                        <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 gap-1.5 text-xs tracking-wider uppercase font-light"
+                        onClick={() => {
+                          setEditingBriefing(null);
+                          setBriefingName("");
+                          setBriefingQuestions([]);
+                          setBriefingDialogOpen(true);
+                        }}>
+
+                          <Plus className="h-3.5 w-3.5" />
+                          {t.personalize.newBriefing}
+                        </Button>
+                      </div>
+
+                      {briefings.length === 0 ?
+                    <p className="text-xs text-muted-foreground italic">{t.personalize.noBriefings}</p> :
+
+                    <div className="flex flex-col gap-2">
+                          {briefings.map((b) =>
+                      <div key={b.id} className="border border-border p-4 flex items-start justify-between gap-4">
+                              <div className="flex flex-col gap-0.5 min-w-0">
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{b.name || t.personalize.untitled}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {b.questions.length} {b.questions.length !== 1 ? t.personalize.questions : t.personalize.question}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => {
+                              setEditingBriefing(b);
+                              setBriefingName(b.name);
+                              setBriefingQuestions(b.questions);
+                              setBriefingDialogOpen(true);
+                            }}>
+                            
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            disabled={deletingBriefingId === b.id}
+                            onClick={async () => {
+                              setDeletingBriefingId(b.id);
+                              await (supabase as any).from("briefings").delete().eq("id", b.id);
+                              await fetchBriefings();
+                              setDeletingBriefingId(null);
+                            }}>
+                            
+                                  {deletingBriefingId === b.id ?
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+
+                            <Trash2 className="h-3.5 w-3.5" />
+                            }
+                                </Button>
+                              </div>
+                            </div>
+                      )}
+                        </div>
+                    }
+                    </section>
+                  </TabsContent>
+
+                  {/* Briefing dialog */}
+                  <Dialog open={briefingDialogOpen} onOpenChange={(open) => {
+                  setBriefingDialogOpen(open);
+                }}>
+                    <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+                      <DialogHeader>
+                        <DialogTitle className="text-sm tracking-widest uppercase font-light">
+                          {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-col gap-5 pt-2">
+                        {/* Briefing name */}
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
+                          <Input
+                          value={briefingName}
+                          onChange={(e) => setBriefingName(e.target.value)}
+                          placeholder="e.g. Newborn Briefing"
+                          className="text-sm font-light" />
+                        
+                        </div>
+
+                        {/* Questions */}
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
+                            <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
+                            onClick={() => {
+                              const newQ: BriefingQuestion = {
+                                id: crypto.randomUUID(),
+                                type: "short_text",
+                                label: "",
+                                required: false,
+                                options: []
+                              };
+                              setBriefingQuestions((prev) => [...prev, newQ]);
+                            }}>
+                            
+                              <Plus className="h-3 w-3" />
+                              {t.personalize.addQuestion}
+                            </Button>
+                          </div>
+
+                          {briefingQuestions.length === 0 &&
+                        <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
+                              {t.personalize.noQuestionsYet}
+                            </p>
+                        }
+
+                          {briefingQuestions.map((q, idx) =>
+                        <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
+                              {/* Question header */}
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                onClick={() => setBriefingQuestions((prev) => prev.filter((_, i) => i !== idx))}>
+                                
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Type + Required row */}
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <select
+                              value={q.type}
+                              onChange={(e) => {
+                                const newType = e.target.value as QuestionType;
+                                setBriefingQuestions((prev) => prev.map((item, i) =>
+                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
+                                ));
+                              }}
+                              className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                              
+                                  {(Object.entries(QUESTION_TYPE_LABELS) as [QuestionType, string][]).map(([val, label]) =>
+                              <option key={val} value={val}>{label}</option>
+                              )}
+                                </select>
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                id={`req-${q.id}`}
+                                checked={q.required}
+                                onCheckedChange={(v) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, required: v } : item))} />
+                              
+                                  <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">{t.personalize.required}</label>
+                                </div>
+                              </div>
+
+                              {/* Question label */}
+                              <Input
+                            value={q.label}
+                            onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
+                            placeholder="Type your question here…"
+                            className="text-sm font-light h-8" />
+                          
+
+                              {/* Options (for multiple_choice / checkboxes) */}
+                              {(q.type === "multiple_choice" || q.type === "checkboxes") &&
+                          <div className="flex flex-col gap-2 pl-1">
+                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.options}</p>
+                                  {q.options.map((opt, optIdx) =>
+                            <div key={optIdx} className="flex items-center gap-2">
+                                      <Input
+                                value={opt}
+                                onChange={(e) => {
+                                  const updated = [...q.options];
+                                  updated[optIdx] = e.target.value;
+                                  setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                }}
+                                placeholder={`Option ${optIdx + 1}`}
+                                className="h-7 text-xs font-light flex-1" />
+                              
+                                      <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => {
+                                  const updated = q.options.filter((_, oi) => oi !== optIdx);
+                                  setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                }}>
+                                
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                            )}
+                                  <button
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
+                              
+                                    <Plus className="h-3 w-3" />
+                                    {t.personalize.addOption}
+                                  </button>
+                                </div>
+                          }
+                            </div>
+                        )}
+                        </div>
+
+                        {/* Footer actions */}
+                        <div className="flex justify-end gap-2 pt-1 border-t border-border">
+                          <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs tracking-wider uppercase font-light"
+                          onClick={() => setBriefingDialogOpen(false)}>
+                          
+                            {t.common.cancel}
+                          </Button>
+                          <Button
+                          type="button"
+                          size="sm"
+                          disabled={savingBriefing || !briefingName.trim()}
+                          className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                          onClick={async () => {
+                            if (!user || !briefingName.trim()) return;
+                            setSavingBriefing(true);
+                            const payload = {
+                              name: briefingName.trim(),
+                              questions: briefingQuestions,
+                              updated_at: new Date().toISOString()
+                            };
+                            if (editingBriefing) {
+                              await (supabase as any).from("briefings").update(payload).eq("id", editingBriefing.id);
+                            } else {
+                              await (supabase as any).from("briefings").insert({ ...payload, photographer_id: user.id });
+                            }
+                            await fetchBriefings();
+                            setSavingBriefing(false);
+                            setBriefingDialogOpen(false);
+                            toast({ title: editingBriefing ? t.personalize.briefingUpdated : t.personalize.briefingCreated });
+                          }}>
+                          
+                            {savingBriefing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            {t.personalize.saveBriefing}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+
+                  {/* ── BUSINESS TAB ── */}
+                  <TabsContent value="business" className="mt-0 flex flex-col gap-8">
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading
+                      title={t.personalize.businessInfo}
+                      description={t.personalize.businessInfoDesc} />
+                    
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.businessName}>
+                          <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Acme Photography LLC" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                        <FieldRow label={t.personalize.phone}>
+                          <Input value={businessPhone} onChange={(e) => setBusinessPhone(e.target.value)} placeholder="+1 (555) 000-0000" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                      </div>
+                      <FieldRow label={t.personalize.streetAddress}>
+                        <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 Main St, Suite 4" className="h-9 text-sm font-light" />
+                      </FieldRow>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.city}>
+                          <Input value={businessCity} onChange={(e) => setBusinessCity(e.target.value)} placeholder="New York" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                        <FieldRow label={t.personalize.country}>
+                          <Input value={businessCountry} onChange={(e) => setBusinessCountry(e.target.value)} placeholder="United States" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.currency}>
+                          <select
+                          value={businessCurrency}
+                          onChange={(e) => setBusinessCurrency(e.target.value)}
+                          className="h-9 px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                          
+                            {[
+                          { code: "USD", label: "USD — US Dollar" },
+                          { code: "EUR", label: "EUR — Euro" },
+                          { code: "GBP", label: "GBP — British Pound" },
+                          { code: "CAD", label: "CAD — Canadian Dollar" },
+                          { code: "AUD", label: "AUD — Australian Dollar" },
+                          { code: "BRL", label: "BRL — Brazilian Real" },
+                          { code: "MXN", label: "MXN — Mexican Peso" }].
+                          map((c) =>
+                          <option key={c.code} value={c.code}>{c.label}</option>
+                          )}
+                          </select>
+                        </FieldRow>
+                        <FieldRow label={t.personalize.taxIdVat}>
+                          <Input value={businessTaxId} onChange={(e) => setBusinessTaxId(e.target.value)} placeholder="e.g. 12-3456789" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                      </div>
+                    </section>
+                    <Button onClick={handleSaveBusiness} disabled={savingBusiness} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                      {savingBusiness ? t.personalize.saving : t.personalize.saveChanges}
+                    </Button>
+                  </TabsContent>
+
+
+
+                  {/* ── GALLERIES TAB ── */}
+                  <TabsContent value="galleries" className="mt-0 flex flex-col gap-8">
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading title={t.personalize.defaultExpiration} description={t.personalize.defaultExpirationDesc} />
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                          <input type="number" min="1" max="3650" value={galleryExpiryDays} onChange={(e) => setGalleryExpiryDays(e.target.value)} placeholder="e.g. 90"
+                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
+                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
+                        </div>
+                        <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingExpiry ? t.personalize.saving : t.common.save}
+                        </Button>
+                      </div>
+                      {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 &&
+                    <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} {t.personalize.days}</strong> after creation.</p>
+                    }
+                    </section>
+
+                    <Divider />
+
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading title={t.personalize.reactivationFee} description={t.personalize.reactivationFeeDesc} />
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                          <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
+                          <input type="number" min="0" step="0.01" value={galleryReactivationFee} onChange={(e) => setGalleryReactivationFee(e.target.value)} placeholder="0.00"
+                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
+                        </div>
+                        <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+                          {savingFee ? t.personalize.saving : t.common.save}
+                        </Button>
+                      </div>
+                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 &&
+                    <p className="text-[11px] text-muted-foreground/70 -mt-2">Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.</p>
+                    }
+                    </section>
+
+                    <Divider />
+
+                    {/* Watermarks */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{t.personalize.watermarks}</p>
+                        <p className="text-[11px] text-muted-foreground">{t.personalize.watermarksDesc}</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => {setEditingWatermark(undefined);setWatermarkEditorOpen(true);}}
+                    className="gap-1.5 text-[10px] tracking-widest uppercase font-light rounded-none shrink-0">
+                        <Plus className="h-3.5 w-3.5" />{t.personalize.newWatermark}
+                      </Button>
+                    </div>
+                    {watermarks.length === 0 ?
+                  <p className="text-[11px] text-muted-foreground/60 border border-dashed border-border px-3 py-6 text-center">
+                        {t.personalize.noWatermarks}
+                      </p> :
+
+                  <div className="flex flex-col gap-2">
+                        {watermarks.map((wm) =>
+                    <div key={wm.id} className="border border-border flex items-center px-4 py-3 gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-light truncate">{wm.name}</p>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                {wm.text_enabled && wm.text_content &&
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Type className="h-2.5 w-2.5" />{wm.text_content}</span>
+                          }
+                                {wm.image_enabled && wm.image_url &&
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Image className="h-2.5 w-2.5" />Image</span>
+                          }
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button type="button" onClick={() => {setEditingWatermark(wm);setWatermarkEditorOpen(true);}} className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" disabled={deletingId === wm.id} onClick={() => wm.id && handleWatermarkDelete(wm.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                                {deletingId === wm.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                    )}
+                      </div>
+                  }
+
+                    <Divider />
+
+                    {/* Lightroom Plugin */}
+                    <section className="flex flex-col gap-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <SectionHeading
+                        title={t.personalize.lightroomPlugin}
+                        description={t.personalize.lightroomPluginDesc} />
+                      
+                        <a
+                        href="/dashboard/lightroom-plugin-help"
+                        className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-light text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5">
+                        
+                          {t.personalize.viewHelp}
+                          <ChevronRight className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <div className="flex items-start gap-4 p-5 border border-border bg-card">
+                        <Download className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <div className="flex-1 space-y-2">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-light">Davions Connect 1.0</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              Compatible with Lightroom Classic 9 (2019) and later. macOS and Windows.
+                            </p>
+                          </div>
+                          <a
+                          href="/downloads/DavionsConnect-1.0.lrplugin.zip"
+                          download="DavionsConnect-1.0.lrplugin.zip"
+                          className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-background hover:bg-accent text-[11px] font-light tracking-wide transition-colors">
+                          
+                            <Download className="h-3.5 w-3.5" />
+                            {t.personalize.downloadPlugin}
+                          </a>
+                        </div>
+                      </div>
+                      <div className="space-y-px">
+                        {[
+                      { n: "01", title: "Download and unzip the plugin", desc: "Click the download button above to get the latest DavionsConnect package. Unzip it to a permanent folder — do not move it after installation." },
+                      { n: "02", title: "Open the Plug-in Manager in Lightroom Classic", desc: 'Go to File → Plug-in Manager (or press Ctrl/⌘ + Alt + Shift + ,). Click "Add" and navigate to the unzipped .lrplugin folder.' },
+                      { n: "03", title: "Sign in with your Davions account", desc: "In the plugin settings panel, enter the same email and password you use to log in to Davions. This authenticates the plugin with your account." },
+                      { n: "04", title: "Create a Publish Service collection", desc: 'In the Library module, go to Publish Services and click "Set Up" next to Davions. Create a collection for each gallery you want to sync.' }].
+                      map((step) =>
+                      <div key={step.n} className="flex gap-4 p-4 border border-border bg-card">
+                            <span className="text-xl font-light text-muted-foreground/30 shrink-0 w-7 text-right leading-none mt-0.5">{step.n}</span>
+                            <div className="space-y-0.5">
+                              <p className="text-[12px] font-light">{step.title}</p>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
+                            </div>
+                          </div>
+                      )}
+                      </div>
+                    </section>
+                  </TabsContent>
+
+                </Tabs>
+              }
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Watermark Editor Dialog */}
+      <Dialog open={watermarkEditorOpen} onOpenChange={(open) => {setWatermarkEditorOpen(open);if (!open) setEditingWatermark(undefined);}}>
+        <DialogContent className="max-w-4xl w-full p-0 rounded-none border-border overflow-hidden" style={{ height: "90vh", maxHeight: "780px" }}>
+          <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
+            <DialogTitle className="text-sm font-light tracking-wide">{editingWatermark ? t.personalize.editWatermark : t.personalize.newWatermarkTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden" style={{ height: "calc(100% - 57px)" }}>
+            <WatermarkEditor
+              initial={editingWatermark}
+              onSaved={handleWatermarkSaved}
+              onCancel={() => {setWatermarkEditorOpen(false);setEditingWatermark(undefined);}} />
+            
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SidebarProvider>);
+
+};
+
+export default Personalize;
                     
                       {user &&
                     <SessionTypeManager

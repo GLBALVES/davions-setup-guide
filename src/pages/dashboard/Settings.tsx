@@ -837,9 +837,9 @@ const Settings = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-light tracking-wide">Delete Account</AlertDialogTitle>
+            <AlertDialogTitle className="text-base font-light tracking-wide">{t.settings.deleteAccountTitle}</AlertDialogTitle>
             <AlertDialogDescription className="text-[11px] leading-relaxed">
-              This action is permanent and cannot be undone. All your data will be erased.
+              {t.settings.deleteAccountConfirmDesc}
               <br /><br />
               Type <strong className="text-foreground">DELETE</strong> below to confirm.
             </AlertDialogDescription>
@@ -848,13 +848,13 @@ const Settings = () => {
             <Input
               value={deleteConfirmInput}
               onChange={(e) => setDeleteConfirmInput(e.target.value)}
-              placeholder="Type DELETE to confirm"
+              placeholder={t.settings.typeDeleteToConfirm}
               className="h-9 text-sm font-light"
             />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs tracking-wider uppercase font-light h-9">
-              Cancel
+              {t.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
@@ -862,7 +862,7 @@ const Settings = () => {
               className="text-xs tracking-wider uppercase font-light h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90 border-destructive disabled:opacity-40"
             >
               {deletingAccount ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : null}
-              {deletingAccount ? "Deleting…" : "Delete Account"}
+              {deletingAccount ? t.settings.deletingAccount : t.settings.deleteAccount}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -882,7 +882,7 @@ const Settings = () => {
         >
           <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
             <DialogTitle className="text-sm font-light tracking-wide">
-              {editingWatermark ? "Edit Watermark" : "New Watermark"}
+              {editingWatermark ? t.settings.editWatermark : t.settings.newWatermark}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden" style={{ height: "calc(100% - 57px)" }}>
