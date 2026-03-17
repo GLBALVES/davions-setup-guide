@@ -1602,12 +1602,12 @@ const GalleryDetail = () => {
 
                 {/* Access code */}
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                    Access Code <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
-                  </Label>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    If set, clients must enter this code to view the gallery.
-                  </p>
+                   <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                     {gd.accessCode} <span className="text-muted-foreground/50 normal-case tracking-normal">({t.common.cancel.toLowerCase() === "cancel" ? "optional" : ""})</span>
+                   </Label>
+                   <p className="text-[10px] text-muted-foreground/60">
+                     {gd.accessCodeDesc}
+                   </p>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Input
