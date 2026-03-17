@@ -73,7 +73,19 @@ export function DashboardHeader() {
         </AnimatePresence>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => navigate("/dashboard/help")}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
+              <HelpCircle size={15} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Help Center</TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
