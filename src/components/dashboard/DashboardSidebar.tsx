@@ -110,18 +110,23 @@ type MenuItem = {
 };
 
 type MenuGroup = {
+  /** Stable English key — used for state management & DB keys */
+  stableKey: string;
+  /** Translated display label */
   title: string;
   icon: React.ElementType;
   items: MenuItem[];
   defaultOpen?: boolean;
 };
 
+/** Stable English items list — used only for key generation & matching */
 const ALL_ITEMS: (MenuItem & { groupTitle: string })[] = [];
 
 function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
   return [
     {
-      title: "Photographers",
+      stableKey: "Photographers",
+      title: t.nav.photographers,
       icon: Camera,
       defaultOpen: true,
       items: [
@@ -136,7 +141,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Marketing",
+      stableKey: "Marketing",
+      title: t.nav.marketing,
       icon: Megaphone,
       items: [
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
@@ -150,7 +156,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "AI",
+      stableKey: "AI",
+      title: t.nav.ai,
       icon: BrainCircuit,
       items: [
         { title: t.nav.aiAgents, icon: Bot, to: "/dashboard/agents", permKey: "agents" },
@@ -160,7 +167,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Finance",
+      stableKey: "Finance",
+      title: t.nav.finance,
       icon: DollarSign,
       items: [
         { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
@@ -168,11 +176,12 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.receivables,       icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
         { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
         { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
-        { title: t.nav.reports,           icon: BarChart3,        to: "/dashboard/finance/reports" },
+        { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
       ],
     },
     {
-      title: "CRM",
+      stableKey: "CRM",
+      title: t.nav.crm,
       icon: Users2,
       items: [
         { title: t.nav.clients, icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
@@ -180,7 +189,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Workflows",
+      stableKey: "Workflows",
+      title: t.nav.workflows,
       icon: GitBranch,
       items: [
         { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
@@ -188,7 +198,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Settings",
+      stableKey: "Settings",
+      title: t.nav.settings,
       icon: Settings,
       items: [
         { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
@@ -198,7 +209,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "My Features",
+      stableKey: "My Features",
+      title: t.nav.myFeatures,
       icon: Puzzle,
       items: [
         { title: t.nav.createFeature, icon: PlusSquare },
