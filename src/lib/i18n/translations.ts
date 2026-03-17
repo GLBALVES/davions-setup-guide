@@ -838,6 +838,7 @@ export const translations = {
       editing: "Edição",
       delivery: "Entrega",
       doneStage: "Concluído",
+      scheduled: "agendadas",
     },
     sessions: {
       title: "Sessões",
