@@ -951,7 +951,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </Collapsible>
 
             {/* Regular groups */}
-            {groups.map((group) => {
+            {translatedGroups.map((group) => {
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
