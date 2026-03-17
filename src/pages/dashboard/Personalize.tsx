@@ -557,20 +557,20 @@ const Personalize = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Photographers
+                  {t.personalize.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Personalize</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.personalize.title}</h1>
               </div>
 
               {loading ?
-              <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">Loading…</p> :
+              <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{t.personalize.loading}</p> :
 
               <Tabs defaultValue={defaultTab} className="w-full">
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
-                  { value: "studio", label: "Studio" },
-                  { value: "business", label: "Business" },
-                  { value: "galleries", label: "Galleries" }].
+                  { value: "studio", label: t.personalize.studioTab },
+                  { value: "business", label: t.personalize.businessTab },
+                  { value: "galleries", label: t.personalize.galleriesTab }].
                   map((tab) =>
                   <TabsTrigger
                     key={tab.value}
