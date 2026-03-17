@@ -232,32 +232,32 @@ const Dashboard = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <KpiCard
                       icon={CalendarDays}
-                      label="Bookings this month"
+                      label={t.dashboard.bookingsThisMonth}
                       value={stats.totalBookings}
-                      sub={stats.pendingBookings > 0 ? `${stats.pendingBookings} pending` : "All confirmed"}
+                      sub={stats.pendingBookings > 0 ? `${stats.pendingBookings} ${t.dashboard.pending}` : t.dashboard.allConfirmed}
                       subWarning={stats.pendingBookings > 0}
                       onClick={() => navigate("/dashboard/bookings")}
                     />
                     <KpiCard
                       icon={FolderKanban}
-                      label="Active projects"
+                      label={t.dashboard.activeProjects}
                       value={stats.activeProjects}
-                      sub={stats.deliveryProjects > 0 ? `${stats.deliveryProjects} ready for delivery` : "All up to date"}
+                      sub={stats.deliveryProjects > 0 ? `${stats.deliveryProjects} ${t.dashboard.readyForDelivery}` : t.dashboard.allUpToDate}
                       subWarning={stats.deliveryProjects > 0}
                       onClick={() => navigate("/dashboard/projects")}
                     />
                     <KpiCard
                       icon={Image}
-                      label="Published galleries"
+                      label={t.dashboard.publishedGalleries}
                       value={stats.publishedGalleries}
-                      sub={`${stats.totalGalleries} total`}
+                      sub={`${stats.totalGalleries} ${t.dashboard.total}`}
                       onClick={() => navigate("/dashboard/galleries")}
                     />
                     <KpiCard
                       icon={CircleDollarSign}
-                      label="Today's sessions"
+                      label={t.dashboard.todaysSessions}
                       value={todayBookings.length}
-                      sub={todayBookings.length === 0 ? "No sessions today" : `${todayBookings.length} scheduled`}
+                      sub={todayBookings.length === 0 ? t.dashboard.noSessionsToday : `${todayBookings.length} ${t.dashboard.scheduled}`}
                       onClick={() => navigate("/dashboard/schedule")}
                     />
                   </div>
@@ -269,16 +269,16 @@ const Dashboard = () => {
                     <div className="lg:col-span-3 flex flex-col gap-4">
                       <SectionHeader
                         icon={Clock}
-                        label="Today's Schedule"
-                        action={{ label: "Full Schedule", onClick: () => navigate("/dashboard/schedule") }}
+                        label={t.dashboard.todaysSchedule}
+                        action={{ label: t.dashboard.fullSchedule, onClick: () => navigate("/dashboard/schedule") }}
                       />
 
                       {todayBookings.length === 0 ? (
                         <div className="border border-border p-8 flex flex-col items-center gap-3 text-center">
                           <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
-                          <p className="text-sm font-light text-muted-foreground">No sessions scheduled for today</p>
+                          <p className="text-sm font-light text-muted-foreground">{t.dashboard.noSessionsScheduled}</p>
                           <p className="text-[10px] text-muted-foreground/60 tracking-wide">
-                            Your next bookings will appear here
+                            {t.dashboard.nextBookingsHere}
                           </p>
                         </div>
                       ) : (
@@ -307,8 +307,8 @@ const Dashboard = () => {
 
                               {/* Status */}
                               <div className="shrink-0 flex flex-col items-end gap-1">
-                                <StatusDot status={b.status} />
-                                <PaymentDot status={b.payment_status} />
+                                <StatusDot status={b.status} tDash={t.dashboard} />
+                                <PaymentDot status={b.payment_status} tBook={t.bookings} />
                               </div>
 
                               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-foreground transition-colors" />
@@ -322,20 +322,20 @@ const Dashboard = () => {
                     <div className="lg:col-span-2 flex flex-col gap-4">
                       <SectionHeader
                         icon={Layers}
-                        label="Project Pipeline"
-                        action={{ label: "View all", onClick: () => navigate("/dashboard/projects") }}
+                        label={t.dashboard.projectPipeline}
+                        action={{ label: t.dashboard.viewAll, onClick: () => navigate("/dashboard/projects") }}
                       />
 
                       <div className="border border-border p-5 flex flex-col gap-4">
                         {totalProjects === 0 ? (
-                          <p className="text-xs text-muted-foreground font-light text-center py-4">No projects yet</p>
+                          <p className="text-xs text-muted-foreground font-light text-center py-4">{t.dashboard.noProjectsYet}</p>
                         ) : (
                           <>
                             {projectStages.map(({ stage, count }) => (
                               <div key={stage} className="flex flex-col gap-1.5">
                                 <div className="flex items-center justify-between">
                                   <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">
-                                    {STAGE_LABELS[stage]}
+                                    {stageLabels[stage]}
                                   </span>
                                   <span className="text-[10px] font-light text-foreground tabular-nums">{count}</span>
                                 </div>
@@ -349,7 +349,7 @@ const Dashboard = () => {
                             ))}
 
                             <div className="pt-2 border-t border-border flex items-center justify-between">
-                              <span className="text-[10px] tracking-wider uppercase text-muted-foreground">Total</span>
+                              <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.dashboard.totalLabel}</span>
                               <span className="text-sm font-light">{totalProjects}</span>
                             </div>
                           </>
@@ -360,16 +360,16 @@ const Dashboard = () => {
 
                   {/* ── Quick Actions ── */}
                   <div className="flex flex-col gap-4">
-                    <SectionHeader icon={TrendingUp} label="Quick Access" />
+                    <SectionHeader icon={TrendingUp} label={t.dashboard.quickAccess} />
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
-                        { icon: Camera, label: "Galleries", sub: "Manage & share", path: "/dashboard/galleries" },
-                        { icon: BookOpen, label: "Sessions", sub: "Booking pages", path: "/dashboard/sessions" },
-                        { icon: Users, label: "Clients", sub: "CRM & projects", path: "/dashboard/projects" },
-                        { icon: CheckCircle2, label: "Workflows", sub: "Tasks & automation", path: "/dashboard/workflows" },
+                        { icon: Camera, label: t.dashboard.galleries, sub: t.dashboard.manageShare, path: "/dashboard/galleries" },
+                        { icon: BookOpen, label: t.dashboard.sessionsLabel, sub: t.dashboard.bookingPages, path: "/dashboard/sessions" },
+                        { icon: Users, label: t.dashboard.clientsLabel, sub: t.dashboard.crmProjects, path: "/dashboard/projects" },
+                        { icon: CheckCircle2, label: t.dashboard.workflowsLabel, sub: t.dashboard.tasksAutomation, path: "/dashboard/workflows" },
                       ].map(({ icon: Icon, label, sub, path }) => (
                         <button
-                          key={label}
+                          key={path}
                           onClick={() => navigate(path)}
                           className="border border-border p-4 flex flex-col gap-3 text-left hover:bg-muted/30 transition-colors group"
                         >
