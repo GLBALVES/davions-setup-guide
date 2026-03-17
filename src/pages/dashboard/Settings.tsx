@@ -35,6 +35,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { lang, setLang, t } = useLanguage();
 
   // Payments tab — Stripe Connect
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
