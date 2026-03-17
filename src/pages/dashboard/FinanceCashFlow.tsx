@@ -6,9 +6,10 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { TrendingUp } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BookingRow {
   created_at: string;
@@ -46,7 +47,7 @@ function buildMonths(rows: BookingRow[], n: number) {
     const monthRows = rows.filter((r) => (r.booked_date || r.created_at).startsWith(ms));
     const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0);
     const outstanding = monthRows.reduce((s, r) => s + calcBalance(r), 0);
-    const net = collected; // net cash in
+    const net = collected;
     return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding, net };
   });
 }
@@ -68,6 +69,7 @@ function ChartTooltip({ active, payload, label }: any) {
 
 export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<6 | 12>(12);
@@ -113,9 +115,9 @@ export default function FinanceCashFlow() {
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                    <span className="inline-block w-6 h-px bg-border" />Finance
+                    <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                   </p>
-                  <h1 className="text-2xl font-light tracking-wide">Cash Flow</h1>
+                  <h1 className="text-2xl font-light tracking-wide">{t.finance.cashFlow}</h1>
                 </div>
                 <div className="flex items-center gap-1 border border-border">
                   {([6, 12] as const).map((r) => (
@@ -130,41 +132,39 @@ export default function FinanceCashFlow() {
                 </div>
               </div>
 
-              {/* Summary cards */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="border border-foreground p-5 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Collected</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.collected}</p>
                     <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
                   <p className="text-xl font-light tabular-nums">{fmt(totalCollected)}</p>
-                  <p className="text-[10px] text-muted-foreground/60">Last {range} months</p>
+                  <p className="text-[10px] text-muted-foreground/60">{t.finance.last} {range} {t.finance.months}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Outstanding</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.outstanding}</p>
                   <p className="text-xl font-light tabular-nums">{fmt(totalOutstanding)}</p>
-                  <p className="text-[10px] text-muted-foreground/60">Balance not yet paid</p>
+                  <p className="text-[10px] text-muted-foreground/60">{t.finance.balanceNotYetPaid}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Collection Rate</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.collectionRate}</p>
                   <p className="text-xl font-light tabular-nums">
                     {totalCollected + totalOutstanding === 0 ? "—" : `${((totalCollected / (totalCollected + totalOutstanding)) * 100).toFixed(0)}%`}
                   </p>
-                  <p className="text-[10px] text-muted-foreground/60">Paid ÷ Total booked</p>
+                  <p className="text-[10px] text-muted-foreground/60">{t.finance.paidDivTotal}</p>
                 </div>
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">Loading…</p>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
               ) : (
                 <>
-                  {/* Stacked bar chart */}
                   <div className="border border-border p-5 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Monthly Cash Flow</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.monthlyCashFlow}</p>
                       <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />Collected</span>
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/30 inline-block" />Outstanding</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />{t.finance.collected}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/30 inline-block" />{t.finance.outstanding}</span>
                       </div>
                     </div>
                     <div className="h-64">
@@ -174,19 +174,18 @@ export default function FinanceCashFlow() {
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 100).toFixed(0)}`} width={52} />
                           <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
-                          <Bar dataKey="collected" name="Collected" stackId="a" fill="hsl(var(--foreground))" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="outstanding" name="Outstanding" stackId="a" fill="hsl(var(--muted-foreground)/0.25)" radius={[2, 2, 0, 0]} />
+                          <Bar dataKey="collected" name={t.finance.collected} stackId="a" fill="hsl(var(--foreground))" radius={[0, 0, 0, 0]} />
+                          <Bar dataKey="outstanding" name={t.finance.outstanding} stackId="a" fill="hsl(var(--muted-foreground)/0.25)" radius={[2, 2, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  {/* Monthly table */}
                   <div className="border border-border overflow-x-auto">
                     <table className="w-full text-xs font-light">
                       <thead>
                         <tr className="border-b border-border bg-muted/20">
-                          {["Month", "Collected", "Outstanding", "Net"].map((h) => (
+                          {[t.finance.month, t.finance.collected, t.finance.outstanding, t.finance.net].map((h) => (
                             <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{h}</th>
                           ))}
                         </tr>

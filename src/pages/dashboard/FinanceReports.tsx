@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { format, startOfMonth, startOfYear, subMonths } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BookingRow {
   id: string;
@@ -58,13 +59,6 @@ function filterByPeriod(rows: BookingRow[], period: Period) {
   });
 }
 
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "this_month",  label: "This Month" },
-  { key: "last_month",  label: "Last Month" },
-  { key: "this_year",   label: "This Year" },
-  { key: "all_time",    label: "All Time" },
-];
-
 function exportCSV(rows: BookingRow[]) {
   const header = ["Date", "Client", "Email", "Session", "Total", "Paid", "Balance", "Payment Status", "Booking Status"];
   const csvRows = rows.map((r) => [
@@ -90,9 +84,17 @@ function exportCSV(rows: BookingRow[]) {
 
 export default function FinanceReports() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("this_month");
+
+  const PERIODS: { key: Period; label: string }[] = [
+    { key: "this_month", label: t.finance.thisMonthPeriod },
+    { key: "last_month", label: t.finance.lastMonthPeriod },
+    { key: "this_year",  label: t.finance.thisYear },
+    { key: "all_time",   label: t.finance.allTime },
+  ];
 
   useEffect(() => {
     if (!user) return;
@@ -143,9 +145,9 @@ export default function FinanceReports() {
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                    <span className="inline-block w-6 h-px bg-border" />Finance
+                    <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                   </p>
-                  <h1 className="text-2xl font-light tracking-wide">Reports</h1>
+                  <h1 className="text-2xl font-light tracking-wide">{t.finance.reports}</h1>
                 </div>
                 <Button
                   variant="outline"
@@ -155,11 +157,10 @@ export default function FinanceReports() {
                   disabled={filtered.length === 0}
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Export CSV
+                  {t.finance.exportCsv}
                 </Button>
               </div>
 
-              {/* Period selector */}
               <div className="flex items-center border border-border w-fit">
                 {PERIODS.map((p) => (
                   <button
@@ -172,13 +173,12 @@ export default function FinanceReports() {
                 ))}
               </div>
 
-              {/* KPI summary */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Collected",    value: fmt(totalCollected) },
-                  { label: "Outstanding",  value: fmt(totalPending) },
-                  { label: "Bookings",     value: String(totalBookings) },
-                  { label: "Avg Ticket",   value: fmt(avgTicket) },
+                  { label: t.finance.collected,   value: fmt(totalCollected) },
+                  { label: t.finance.outstanding,  value: fmt(totalPending) },
+                  { label: "Bookings",             value: String(totalBookings) },
+                  { label: t.finance.avgTicket,    value: fmt(avgTicket) },
                 ].map((item) => (
                   <div key={item.label} className="border border-border p-5 flex flex-col gap-2">
                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{item.label}</p>
@@ -188,18 +188,18 @@ export default function FinanceReports() {
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">Loading…</p>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center border border-border">
                   <FileText className="h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-sm font-light text-muted-foreground">No bookings in this period</p>
+                  <p className="text-sm font-light text-muted-foreground">{t.finance.noBookingsInPeriod}</p>
                 </div>
               ) : (
                 <div className="border border-border overflow-x-auto">
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {["Date", "Client", "Session", "Total", "Collected", "Balance", "Status"].map((h) => (
+                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.collected, t.finance.balance, t.finance.status].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap">{h}</th>
                         ))}
                       </tr>

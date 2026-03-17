@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowDownCircle, Search, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BookingRow {
   id: string;
@@ -41,16 +42,17 @@ function fmt(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Not Paid",
-  deposit_paid: "Deposit Only",
-};
-
 export default function FinanceReceivables() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
+  const STATUS_LABEL: Record<string, string> = {
+    pending: t.finance.notPaid,
+    deposit_paid: t.finance.depositOnly,
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -104,50 +106,48 @@ export default function FinanceReceivables() {
 
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                  <span className="inline-block w-6 h-px bg-border" />Finance
+                  <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Receivables</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.finance.receivables}</h1>
               </div>
 
-              {/* Summary */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="border border-foreground p-5 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Total Balance Due</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.totalBalanceDue}</p>
                     <ArrowDownCircle className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
                   <p className="text-xl font-light tabular-nums">{fmt(totalDue)}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Unpaid Bookings</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.unpaidBookings}</p>
                   <p className="text-xl font-light">{filtered.filter((r) => r.payment_status === "pending").length}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Deposit Only</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.depositOnly}</p>
                   <p className="text-xl font-light">{filtered.filter((r) => r.payment_status === "deposit_paid").length}</p>
                 </div>
               </div>
 
-              {/* Search */}
               <div className="relative max-w-xs">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                <Input placeholder="Search client or session…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-xs font-light" />
+                <Input placeholder={t.finance.searchClientOrSession} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-xs font-light" />
               </div>
 
               {loading ? (
-                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">Loading…</p>
+                <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center border border-border">
                   <ArrowDownCircle className="h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-sm font-light text-muted-foreground">No outstanding receivables</p>
-                  <p className="text-[10px] text-muted-foreground/50">All bookings are fully paid</p>
+                  <p className="text-sm font-light text-muted-foreground">{t.finance.noOutstandingReceivables}</p>
+                  <p className="text-[10px] text-muted-foreground/50">{t.finance.allBookingsFullyPaid}</p>
                 </div>
               ) : (
                 <div className="border border-border overflow-x-auto">
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {["Date", "Client", "Session", "Total", "Paid", "Balance Due", "Status"].map((h) => (
+                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.paid, t.finance.balance, t.finance.status].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
