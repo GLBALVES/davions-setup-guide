@@ -74,13 +74,18 @@ export function DashboardHeader() {
       <div className="flex items-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200">
+            <button
+              onClick={() => setBugDialogOpen(true)}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
               <Bug size={15} />
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">Report a bug</TooltipContent>
         </Tooltip>
       </div>
+
+      <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
     </header>
   );
 }
