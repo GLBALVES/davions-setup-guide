@@ -937,8 +937,8 @@ const GalleryDetail = () => {
                         <div className="flex items-center gap-2">
                           <Crosshair className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-[11px] tracking-[0.2em] uppercase font-light text-foreground">
-                            Set focal point
-                          </span>
+                             {gd.setFocalPoint}
+                           </span>
                         </div>
                         <button
                           onClick={() => { setFocalMode(false); setFocalPreview(null); }}
