@@ -1424,35 +1424,35 @@ const GalleryDetail = () => {
                   <div>
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                       <span className="inline-block w-6 h-px bg-border" />
-                      Watermark
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      Select a watermark preset to apply to proof photos.
-                    </p>
-                  </div>
+                       {gd.watermarkSection}
+                     </p>
+                     <p className="text-xs text-muted-foreground/70 mt-1">
+                       {gd.watermarkDesc}
+                     </p>
+                   </div>
 
-                  {watermarks.length === 0 ? (
-                    <p className="text-xs text-muted-foreground/50">
-                      No watermark presets found. Create one in{" "}
-                      <button
-                        onClick={() => navigate("/dashboard/settings")}
-                        className="underline underline-offset-2 hover:text-foreground transition-colors"
-                      >
-                        Settings
-                      </button>.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setWatermark(null)}
-                        className={cn(
-                          "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors",
-                          !gallery.watermark_id
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border hover:border-foreground/50 text-muted-foreground"
-                        )}
-                      >
-                        None
+                   {watermarks.length === 0 ? (
+                     <p className="text-xs text-muted-foreground/50">
+                       {gd.noWatermarkPresets}{" "}
+                       <button
+                         onClick={() => navigate("/dashboard/settings")}
+                         className="underline underline-offset-2 hover:text-foreground transition-colors"
+                       >
+                         {gd.settings}
+                       </button>.
+                     </p>
+                   ) : (
+                     <div className="flex flex-wrap gap-2">
+                       <button
+                         onClick={() => setWatermark(null)}
+                         className={cn(
+                           "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors",
+                           !gallery.watermark_id
+                             ? "border-foreground bg-foreground text-background"
+                             : "border-border hover:border-foreground/50 text-muted-foreground"
+                         )}
+                       >
+                         {gd.none}
                       </button>
                       {watermarks.map((wm) => (
                         <button
