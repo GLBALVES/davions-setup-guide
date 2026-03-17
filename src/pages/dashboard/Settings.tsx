@@ -248,37 +248,36 @@ const Settings = () => {
   // ── Security: Change Password ──
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({ title: "Fill in all fields", variant: "destructive" });
+      toast({ title: t.settings.fillAllFields, variant: "destructive" });
       return;
     }
     if (newPassword.length < 8) {
-      toast({ title: "Password too short", description: "Minimum 8 characters.", variant: "destructive" });
+      toast({ title: t.settings.passwordTooShort, description: t.settings.passwordTooShortDesc, variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
+      toast({ title: t.settings.passwordsDontMatch, variant: "destructive" });
       return;
     }
     if (newPassword === currentPassword) {
-      toast({ title: "Same password", description: "The new password must be different from the current one.", variant: "destructive" });
+      toast({ title: t.settings.samePassword, description: t.settings.samePasswordDesc, variant: "destructive" });
       return;
     }
     setSavingPassword(true);
-    // Re-authenticate with current password first
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user!.email!,
       password: currentPassword,
     });
     if (signInError) {
-      toast({ title: "Incorrect current password", description: "Please check your current password and try again.", variant: "destructive" });
+      toast({ title: t.settings.incorrectCurrentPassword, description: t.settings.incorrectCurrentPasswordDesc, variant: "destructive" });
       setSavingPassword(false);
       return;
     }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      toast({ title: "Failed to update password", description: error.message, variant: "destructive" });
+      toast({ title: t.settings.failedToUpdatePassword, description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Password updated", description: "Your password has been changed successfully." });
+      toast({ title: t.settings.passwordUpdated, description: t.settings.passwordUpdatedDesc });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
