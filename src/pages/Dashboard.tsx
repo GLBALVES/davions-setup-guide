@@ -307,8 +307,8 @@ const Dashboard = () => {
 
                               {/* Status */}
                               <div className="shrink-0 flex flex-col items-end gap-1">
-                                <StatusDot status={b.status} tDash={t.dashboard} />
-                                <PaymentDot status={b.payment_status} tBook={t.bookings} />
+                                <StatusDot status={b.status} />
+                                <PaymentDot status={b.payment_status} />
                               </div>
 
                               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-foreground transition-colors" />

@@ -1543,6 +1543,7 @@ export const translations = {
       editing: "Edición",
       delivery: "Entrega",
       doneStage: "Hecho",
+      scheduled: "programadas",
     },
     sessions: {
       title: "Sesiones",
