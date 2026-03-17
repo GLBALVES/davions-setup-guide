@@ -219,10 +219,10 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
   ];
 }
 
-// Static groups for ALL_ITEMS reference (keys only, titles don't matter for routing)
+// Static groups for ALL_ITEMS reference — English only, stable keys for DB storage
 const groups: MenuGroup[] = [
   {
-    title: "Photographers", icon: Camera, defaultOpen: true,
+    stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
@@ -234,7 +234,7 @@ const groups: MenuGroup[] = [
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
-  { title: "Marketing", icon: Megaphone, items: [
+  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, items: [
     { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
     { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
@@ -244,13 +244,13 @@ const groups: MenuGroup[] = [
     { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
     { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
   ]},
-  { title: "AI", icon: BrainCircuit, items: [
+  { stableKey: "AI", title: "AI", icon: BrainCircuit, items: [
     { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
     { title: "AI Automations", icon: Zap },
     { title: "Smart Suggestions", icon: Lightbulb },
     { title: "Creative Assistant", icon: Wand2 },
   ]},
-  { title: "Finance", icon: DollarSign, items: [
+  { stableKey: "Finance", title: "Finance", icon: DollarSign, items: [
     { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
     { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
     { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
@@ -258,28 +258,28 @@ const groups: MenuGroup[] = [
     { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
     { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
   ]},
-  { title: "CRM", icon: Users2, items: [
+  { stableKey: "CRM", title: "CRM", icon: Users2, items: [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
     { title: "Leads", icon: UserPlus },
   ]},
-  { title: "Workflows", icon: GitBranch, items: [
+  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, items: [
     { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
-  { title: "Settings", icon: Settings, items: [
+  { stableKey: "Settings", title: "Settings", icon: Settings, items: [
     { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
     { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
     { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
   ]},
-  { title: "My Features", icon: Puzzle, items: [
+  { stableKey: "My Features", title: "My Features", icon: Puzzle, items: [
     { title: "Create Feature", icon: PlusSquare },
   ]},
 ];
 
 groups.forEach((g) => {
   g.items.forEach((item) => {
-    ALL_ITEMS.push({ ...item, groupTitle: g.title });
+    ALL_ITEMS.push({ ...item, groupTitle: g.stableKey });
   });
 });
 
