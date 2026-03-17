@@ -236,7 +236,7 @@ const Galleries = () => {
                     <Input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search by title, client, session…"
+                      placeholder={g.searchPlaceholder}
                       className="h-8 pl-8 pr-8 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
                     />
                     <AnimatePresence>
