@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bug } from "lucide-react";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 
 export function DashboardHeader() {
   const { user } = useAuth();
