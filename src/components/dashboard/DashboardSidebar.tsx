@@ -1024,7 +1024,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                     transition={{ duration: 0.18, ease: "easeInOut" }}
                     className="overflow-hidden whitespace-nowrap"
                   >
-                    Sign Out
+                    {t.nav.signOut}
                   </motion.span>
                 )}
               </AnimatePresence>
