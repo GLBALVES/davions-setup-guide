@@ -10,10 +10,10 @@ export default function FinancePayables() {
   const { t } = useLanguage();
 
   const UPCOMING_CATEGORIES = [
-    { icon: ShoppingCart, label: "Supplier Invoices",   desc: "Track payments to equipment & prop suppliers." },
-    { icon: Wrench,       label: "Equipment & Repairs", desc: "Lens repairs, camera services, accessories." },
-    { icon: Users2,       label: "Contractors",         desc: "Assistants, second shooters, retouchers." },
-    { icon: Building2,    label: "Studio & Rent",       desc: "Studio rental, coworking, location fees." },
+    { icon: ShoppingCart, label: t.finance.supplierInvoices,   desc: t.finance.supplierInvoicesDesc },
+    { icon: Wrench,       label: t.finance.equipmentRepairs,   desc: t.finance.equipmentRepairsDesc },
+    { icon: Users2,       label: t.finance.contractors,        desc: t.finance.contractorsDesc },
+    { icon: Building2,    label: t.finance.studioRent,         desc: t.finance.studioRentDesc },
   ];
 
   return (
@@ -29,7 +29,7 @@ export default function FinancePayables() {
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Payables</h1>
+                <h1 className="text-2xl font-light tracking-wide">{t.finance.payables}</h1>
               </div>
 
               <div className="border border-dashed border-border flex flex-col items-center justify-center py-20 gap-5 text-center">
@@ -37,16 +37,15 @@ export default function FinancePayables() {
                   <ArrowUpCircle className="h-5 w-5 text-muted-foreground/50" />
                 </div>
                 <div>
-                  <p className="text-sm font-light text-foreground mb-1">Payables — Coming Soon</p>
+                  <p className="text-sm font-light text-foreground mb-1">{t.finance.payablesComingSoon}</p>
                   <p className="text-xs text-muted-foreground/60 max-w-sm font-light leading-relaxed">
-                    Track your business expenses, vendor invoices, and outgoing payments in one place.
-                    Coming in a future update.
+                    {t.finance.payablesDesc}
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">Planned Categories</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-4">{t.finance.plannedCategories}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {UPCOMING_CATEGORIES.map((cat) => (
                     <div key={cat.label} className="border border-border p-5 flex flex-col gap-3 opacity-50">
