@@ -3,6 +3,7 @@ import { Plus, ShieldCheck, Trash2, UserPlus, Check, X, RotateCcw, Eye, EyeOff }
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -122,6 +123,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function AccessControl() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const ac = t.accessControl;
 
   const [roles, setRoles] = useState<StudioRole[]>([]);
   const [members, setMembers] = useState<StudioMember[]>([]);
@@ -196,9 +199,9 @@ export default function AccessControl() {
       .eq("id", selectedRoleId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error saving role", variant: "destructive" });
+      toast({ title: ac.errorSavingRole, variant: "destructive" });
     } else {
-      toast({ title: "Role saved" });
+      toast({ title: ac.roleSaved });
       setRoles((prev) =>
         prev.map((r) =>
           r.id === selectedRoleId
@@ -221,19 +224,17 @@ export default function AccessControl() {
       .select()
       .single();
     if (error) {
-      toast({ title: "Error creating role", variant: "destructive" });
+      toast({ title: ac.errorCreatingRole, variant: "destructive" });
     } else {
       const newRole = data as StudioRole;
       setRoles((prev) => [...prev, newRole]);
       handleSelectRole(newRole);
       setNewRoleOpen(false);
       setNewRoleName("");
-      toast({ title: "Role created" });
+      toast({ title: ac.roleCreated });
     }
     setCreatingRole(false);
   }
-
-  // ── Delete role ────────────────────────────────────────────────────────────
 
   async function handleDeleteRole(roleId: string) {
     const { error } = await supabase
@@ -242,7 +243,7 @@ export default function AccessControl() {
       .eq("id", roleId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error deleting role", variant: "destructive" });
+      toast({ title: ac.errorDeletingRole, variant: "destructive" });
     } else {
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
       if (selectedRoleId === roleId) {
@@ -250,16 +251,14 @@ export default function AccessControl() {
         setEditingPerms(DEFAULT_PERMISSIONS);
         setEditingRoleName("");
       }
-      toast({ title: "Role deleted" });
+      toast({ title: ac.roleDeleted });
     }
   }
-
-  // ── Create member (via admin edge function) ───────────────────────────────
 
   async function handleCreateUser() {
     if (!inviteEmail.trim() || !inviteName.trim() || !invitePassword.trim()) return;
     if (invitePassword.trim().length < 6) {
-      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      toast({ title: ac.passwordMinError, variant: "destructive" });
       return;
     }
     setInviting(true);
@@ -282,9 +281,9 @@ export default function AccessControl() {
     );
     const json = await res.json();
     if (!res.ok) {
-      toast({ title: json.error ?? "Error creating user", variant: "destructive" });
+      toast({ title: json.error ?? ac.errorCreatingRole, variant: "destructive" });
     } else {
-      toast({ title: "User created successfully" });
+      toast({ title: ac.userCreated });
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
@@ -295,8 +294,6 @@ export default function AccessControl() {
     setInviting(false);
   }
 
-  // ── Revoke / restore member ────────────────────────────────────────────────
-
   async function handleToggleMemberStatus(member: StudioMember) {
     const newStatus = member.status === "revoked" ? "pending" : "revoked";
     const { error } = await supabase
@@ -305,15 +302,13 @@ export default function AccessControl() {
       .eq("id", member.id)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error updating member", variant: "destructive" });
+      toast({ title: ac.errorUpdatingMember, variant: "destructive" });
     } else {
       setMembers((prev) =>
         prev.map((m) => (m.id === member.id ? { ...m, status: newStatus } : m))
       );
     }
   }
-
-  // ── Delete member ──────────────────────────────────────────────────────────
 
   async function handleDeleteMember(memberId: string) {
     const { error } = await supabase
@@ -322,10 +317,10 @@ export default function AccessControl() {
       .eq("id", memberId)
       .eq("photographer_id", user!.id);
     if (error) {
-      toast({ title: "Error removing member", variant: "destructive" });
+      toast({ title: ac.errorRemovingMember, variant: "destructive" });
     } else {
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
-      toast({ title: "Member removed" });
+      toast({ title: ac.memberRemoved });
     }
   }
 
@@ -342,19 +337,17 @@ export default function AccessControl() {
           <DashboardHeader />
 
           {/* Page title bar */}
-          <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
+            <div className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-4 w-4 text-muted-foreground" />
               <div>
-                <h1 className="text-sm tracking-widest uppercase font-light">Access Control</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Manage studio roles and invite collaborators
-                </p>
+                <h1 className="text-sm tracking-widest uppercase font-light">{ac.pageTitle}</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">{ac.pageSubtitle}</p>
               </div>
             </div>
             <Button size="sm" onClick={() => setInviteOpen(true)}>
               <UserPlus className="h-4 w-4" />
-              Add User
+              {ac.addUser}
             </Button>
           </div>
 
@@ -364,50 +357,23 @@ export default function AccessControl() {
         <div className="w-72 border-r border-border flex flex-col shrink-0">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              Roles
+              {ac.rolesLabel}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={() => setNewRoleOpen(true)}
-            >
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setNewRoleOpen(true)}>
               <Plus className="h-3.5 w-3.5" />
-              New Role
+              {ac.newRole}
             </Button>
           </div>
-
           <div className="flex-1 overflow-y-auto py-2">
             {loadingRoles ? (
-              <div className="px-5 py-8 text-center text-xs text-muted-foreground animate-pulse">
-                Loading…
-              </div>
+              <div className="px-5 py-8 text-center text-xs text-muted-foreground animate-pulse">{ac.loading}</div>
             ) : roles.length === 0 ? (
-              <div className="px-5 py-8 text-center text-xs text-muted-foreground">
-                No roles yet. Create one to get started.
-              </div>
+              <div className="px-5 py-8 text-center text-xs text-muted-foreground">{ac.noRoles}</div>
             ) : (
               roles.map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => handleSelectRole(role)}
-                  className={`w-full flex items-center justify-between gap-2 px-5 py-3 text-left transition-colors group ${
-                    selectedRoleId === role.id
-                      ? "bg-foreground/5 text-foreground"
-                      : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                  }`}
-                >
-                  <span className="text-xs tracking-wider uppercase font-light truncate">
-                    {role.name}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteRole(role.id);
-                    }}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-                    aria-label="Delete role"
-                  >
+                <button key={role.id} onClick={() => handleSelectRole(role)} className={`w-full flex items-center justify-between gap-2 px-5 py-3 text-left transition-colors group ${selectedRoleId === role.id ? "bg-foreground/5 text-foreground" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"}`}>
+                  <span className="text-xs tracking-wider uppercase font-light truncate">{role.name}</span>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.id); }} className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all" aria-label={ac.deleteRole}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </button>
@@ -421,35 +387,17 @@ export default function AccessControl() {
           {selectedRole ? (
             <>
               <div className="px-5 py-4 border-b border-border">
-                <Input
-                  value={editingRoleName}
-                  onChange={(e) => setEditingRoleName(e.target.value)}
-                  className="text-xs tracking-wider uppercase font-light h-8"
-                  placeholder="Role name"
-                />
+                <Input value={editingRoleName} onChange={(e) => setEditingRoleName(e.target.value)} className="text-xs tracking-wider uppercase font-light h-8" placeholder="Role name" />
               </div>
               <div className="flex-1 overflow-y-auto py-3 px-5 space-y-5">
                 {PERMISSION_GROUPS.map((group) => (
                   <div key={group.label}>
-                    <p className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/60 font-light mb-2">
-                      {group.label}
-                    </p>
+                    <p className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/60 font-light mb-2">{group.label}</p>
                     <div className="space-y-2">
                       {group.keys.map(({ key, label }) => (
                         <div key={key} className="flex items-center gap-2.5">
-                          <Checkbox
-                            id={`perm-${key}`}
-                            checked={!!editingPerms[key]}
-                            onCheckedChange={(checked) =>
-                              setEditingPerms((prev) => ({ ...prev, [key]: !!checked }))
-                            }
-                          />
-                          <label
-                            htmlFor={`perm-${key}`}
-                            className="text-xs tracking-wider font-light cursor-pointer select-none"
-                          >
-                            {label}
-                          </label>
+                          <Checkbox id={`perm-${key}`} checked={!!editingPerms[key]} onCheckedChange={(checked) => setEditingPerms((prev) => ({ ...prev, [key]: !!checked }))} />
+                          <label htmlFor={`perm-${key}`} className="text-xs tracking-wider font-light cursor-pointer select-none">{label}</label>
                         </div>
                       ))}
                     </div>
@@ -457,21 +405,14 @@ export default function AccessControl() {
                 ))}
               </div>
               <div className="px-5 py-4 border-t border-border">
-                <Button
-                  size="sm"
-                  className="w-full"
-                  onClick={handleSaveRole}
-                  disabled={savingRole}
-                >
-                  {savingRole ? "Saving…" : "Save Role"}
+                <Button size="sm" className="w-full" onClick={handleSaveRole} disabled={savingRole}>
+                  {savingRole ? ac.savingRole : ac.saveRole}
                 </Button>
               </div>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs text-muted-foreground text-center px-6">
-                Select a role on the left to edit its permissions
-              </p>
+              <p className="text-xs text-muted-foreground text-center px-6">{ac.selectRoleHint}</p>
             </div>
           )}
         </div>
@@ -479,9 +420,7 @@ export default function AccessControl() {
         {/* ── Right panel: Members ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b border-border">
-            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-              Members
-            </span>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{ac.membersLabel}</span>
           </div>
           <div className="flex-1 overflow-auto">
             {loadingMembers ? (
