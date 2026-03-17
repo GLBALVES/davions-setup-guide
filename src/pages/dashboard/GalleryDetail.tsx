@@ -1674,12 +1674,12 @@ const GalleryDetail = () => {
                   {/* Expiration date */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light flex items-center gap-1.5">
-                      <CalendarClock className="h-3 w-3" />
-                      Expiration Date <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground/60">
-                      After this date, the gallery will no longer be accessible.
-                    </p>
+                       <CalendarClock className="h-3 w-3" />
+                       {gd.expirationDate} <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
+                     </Label>
+                     <p className="text-[10px] text-muted-foreground/60">
+                       {gd.expirationDesc}
+                     </p>
                     <div className="flex items-center gap-2">
                       <Popover>
                         <PopoverTrigger asChild>
