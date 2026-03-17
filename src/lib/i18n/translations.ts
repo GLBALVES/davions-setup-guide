@@ -99,6 +99,7 @@ export const translations = {
       editing: "Editing",
       delivery: "Delivery",
       doneStage: "Done",
+      scheduled: "scheduled",
     },
     // ── Sessions page ──
     sessions: {
@@ -837,6 +838,7 @@ export const translations = {
       editing: "Edição",
       delivery: "Entrega",
       doneStage: "Concluído",
+      scheduled: "agendadas",
     },
     sessions: {
       title: "Sessões",
@@ -1541,6 +1543,7 @@ export const translations = {
       editing: "Edición",
       delivery: "Entrega",
       doneStage: "Hecho",
+      scheduled: "programadas",
     },
     sessions: {
       title: "Sesiones",
