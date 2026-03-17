@@ -668,6 +668,8 @@ export const translations = {
       pinToFavorites: "Fijar en Favoritos",
       editFavorites: "Editar Favoritos",
       done: "Listo",
+      pinHint: "Haga clic derecho en cualquier elemento para fijarlo aquí",
+      signOut: "Cerrar Sesión",
     },
     dashboard: {
       overview: "Resumen",
