@@ -312,9 +312,9 @@ const Bookings = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Schedule
+                   Schedule
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Bookings</h1>
+                <h1 className="text-2xl font-light tracking-wide">{bk.title}</h1>
               </div>
 
               {/* Funds-in-custody banner */}
