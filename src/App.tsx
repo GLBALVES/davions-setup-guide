@@ -154,6 +154,7 @@ const App = () => (
               </>
             )}
           </Routes>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
