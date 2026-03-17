@@ -62,6 +62,7 @@ import AdminBugReports from "./pages/admin/AdminBugReports";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import HelpCenter from "./pages/dashboard/HelpCenter";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -72,6 +73,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <LanguageProvider>
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
