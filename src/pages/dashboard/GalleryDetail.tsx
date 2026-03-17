@@ -1735,11 +1735,11 @@ const GalleryDetail = () => {
                     onClick={sendGalleryLink}
                     disabled={sendingEmail}
                   >
-                    {sendingEmail ? (
-                      <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
-                    ) : (
-                      <><Send className="h-3.5 w-3.5" /> Send to Client</>
-                    )}
+                     {sendingEmail ? (
+                       <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
+                     ) : (
+                       <><Send className="h-3.5 w-3.5" /> {gd.sendToClient}</>
+                     )}
                   </Button>
                   <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
                     Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
