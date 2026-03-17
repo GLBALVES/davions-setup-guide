@@ -1872,18 +1872,18 @@ const GalleryDetail = () => {
       <AlertDialog open={deleteGalleryOpen} onOpenChange={setDeleteGalleryOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.deleteGalleryTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <span className="font-medium text-foreground">"{gallery?.title}"</span> and all its photos. This action cannot be undone.
+              {gd.deleteGalleryDesc.replace("gallery", `"${gallery?.title}"`)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={deleteGallery}
             >
-              Delete gallery
+              {gd.deleteGallery}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
