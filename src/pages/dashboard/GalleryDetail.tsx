@@ -1852,18 +1852,18 @@ const GalleryDetail = () => {
       <AlertDialog open={unpublishOpen} onOpenChange={setUnpublishOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unpublish gallery?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.unpublish} gallery?</AlertDialogTitle>
             <AlertDialogDescription>
               The gallery link will stop working and your client will lose access immediately.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { setUnpublishOpen(false); doPublish(); }}
             >
-              Unpublish
+              {gd.unpublish}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
