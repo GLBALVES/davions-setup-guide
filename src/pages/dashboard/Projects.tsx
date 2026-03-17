@@ -101,6 +101,8 @@ function KanbanCard({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
   });
@@ -122,7 +124,7 @@ function KanbanCard({
             {...attributes}
             {...listeners}
             className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing mt-0.5"
-            aria-label="Drag"
+            aria-label={p_t.dragHandle}
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
@@ -132,21 +134,21 @@ function KanbanCard({
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onEdit(project); }}
-              title="Edit"
+              title={p_t.editProject}
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-amber-500"
               onClick={(e) => { e.stopPropagation(); onArchive(project.id); }}
-              title="Archive"
+              title={p_t.archived}
             >
               <Archive className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
               onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
-              title="Delete"
+              title={p_t.projectRemoved}
             >
               <X className="h-3 w-3" />
             </button>
