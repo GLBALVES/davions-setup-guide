@@ -252,6 +252,7 @@ const GalleryDetail = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const gd = t.galleryDetail;
 
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -876,7 +877,7 @@ const GalleryDetail = () => {
         <div className="min-h-screen flex w-full bg-background">
           <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+            <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{gd.loading}</span>
           </div>
         </div>
       </SidebarProvider>
@@ -889,7 +890,7 @@ const GalleryDetail = () => {
         <div className="min-h-screen flex w-full bg-background">
           <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">Gallery not found.</p>
+            <p className="text-sm text-muted-foreground">{gd.notFound}</p>
           </div>
         </div>
       </SidebarProvider>
@@ -914,10 +915,10 @@ const GalleryDetail = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
               </span>
-              Sincronizando com Lightroom
+              {gd.syncingLightroom}
               {syncCount > 0 && (
                 <span className="ml-auto text-primary/60">
-                  {syncCount} foto{syncCount !== 1 ? "s" : ""} recebida{syncCount !== 1 ? "s" : ""}
+                  {syncCount} {syncCount !== 1 ? gd.photosReceived : gd.photoReceived}
                 </span>
               )}
             </div>
@@ -936,8 +937,8 @@ const GalleryDetail = () => {
                         <div className="flex items-center gap-2">
                           <Crosshair className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-[11px] tracking-[0.2em] uppercase font-light text-foreground">
-                            Set focal point
-                          </span>
+                             {gd.setFocalPoint}
+                           </span>
                         </div>
                         <button
                           onClick={() => { setFocalMode(false); setFocalPreview(null); }}
@@ -1036,7 +1037,7 @@ const GalleryDetail = () => {
                         variant={gallery.category === "proof" ? "outline" : "default"}
                         className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
                       >
-                        {gallery.category === "proof" ? "Proof" : "Final"}
+                        {gallery.category === "proof" ? gd.proof : gd.final}
                       </Badge>
                       <div className="flex items-center gap-1.5">
                         <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
@@ -1050,13 +1051,13 @@ const GalleryDetail = () => {
                       onClick={() => setFocalMode(true)}
                       className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
                     >
-                      <Crosshair className="h-3 w-3" /> Focus
+                      <Crosshair className="h-3 w-3" /> {gd.focus}
                     </button>
                     <button
                       onClick={() => setCoverPickerOpen(true)}
                       className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
                     >
-                      <ImagePlus className="h-3 w-3" /> Change
+                      <ImagePlus className="h-3 w-3" /> {gd.change}
                     </button>
                   </div>
                 </div>
@@ -1069,7 +1070,7 @@ const GalleryDetail = () => {
                   className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground/60 hover:text-muted-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <ImagePlus className="h-3.5 w-3.5" />
-                  {photos.length === 0 ? "Upload photos to set a cover" : "Set cover image"}
+                  {photos.length === 0 ? gd.uploadPhotosToSetCover : gd.setCoverImage}
                 </button>
               </div>
             )}
@@ -1171,7 +1172,7 @@ const GalleryDetail = () => {
                       title={favoritedPhotos.length === 0 ? "No favorites yet" : `Export ${favoritedPhotos.length} favorited filename(s) for Lightroom`}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" />
-                      {`Export to Lightroom${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
+                      {`${gd.exportToLightroom}${favoritedPhotos.length > 0 ? ` (${favoritedPhotos.length})` : ""}`}
                     </Button>
                   );
                 })()}
@@ -1199,11 +1200,11 @@ const GalleryDetail = () => {
                       <DialogContent className="w-[90vw] max-w-sm">
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2 text-sm tracking-wider uppercase font-light">
-                            <SlidersHorizontal className="h-4 w-4" />
-                            Export to Lightroom
+                           <SlidersHorizontal className="h-4 w-4" />
+                            {gd.exportToLightroom}
                           </DialogTitle>
                           <DialogDescription className="text-xs">
-                            {favoritedPhotos.length} photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited by your client
+                            {favoritedPhotos.length} {favoritedPhotos.length !== 1 ? gd.photosFavoritedByClient : gd.photoFavoritedByClient}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="flex flex-col gap-3">
@@ -1222,7 +1223,7 @@ const GalleryDetail = () => {
                               onClick={copyText}
                             >
                               {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                              {copiedFavorites ? "Copied!" : "Copy"}
+                              {copiedFavorites ? gd.copied : gd.copy}
                             </Button>
                             <Button
                               size="sm"
@@ -1231,7 +1232,7 @@ const GalleryDetail = () => {
                               onClick={downloadTxt}
                             >
                               <Download className="h-3.5 w-3.5" />
-                              Download .txt
+                              {gd.downloadTxt}
                             </Button>
                           </div>
                         </div>
@@ -1247,8 +1248,8 @@ const GalleryDetail = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground"
                   title="Preview public gallery"
                 >
-                  <a href={publicUrl} target="_blank" rel="noopener noreferrer">
-                    <Eye className="h-3.5 w-3.5" /> Preview
+                   <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                    <Eye className="h-3.5 w-3.5" /> {gd.preview}
                   </a>
                 </Button>
 
@@ -1259,9 +1260,9 @@ const GalleryDetail = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   {gallery.status === "published" ? (
-                    <><EyeOff className="h-3.5 w-3.5" /> Unpublish</>
+                    <><EyeOff className="h-3.5 w-3.5" /> {gd.unpublish}</>
                   ) : (
-                    <><Globe className="h-3.5 w-3.5" /> Publish</>
+                    <><Globe className="h-3.5 w-3.5" /> {gd.publish}</>
                   )}
                 </Button>
 
@@ -1273,14 +1274,14 @@ const GalleryDetail = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="rounded-none w-48">
                     <DropdownMenuItem onClick={startRename} className="gap-2 text-xs">
-                      <Pencil className="h-3.5 w-3.5" /> Rename
+                      <Pencil className="h-3.5 w-3.5" /> {gd.rename}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setCoverPickerOpen(true)} className="gap-2 text-xs" disabled={photos.length === 0}>
-                      <ImagePlus className="h-3.5 w-3.5" /> Change cover
+                      <ImagePlus className="h-3.5 w-3.5" /> {gd.changeCover}
                     </DropdownMenuItem>
                     {gallery.cover_image_url && (
                       <DropdownMenuItem onClick={removeCover} className="gap-2 text-xs">
-                        <X className="h-3.5 w-3.5" /> Remove cover
+                        <X className="h-3.5 w-3.5" /> {gd.removeCover}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
@@ -1288,7 +1289,7 @@ const GalleryDetail = () => {
                       onClick={() => setDeleteGalleryOpen(true)}
                       className="gap-2 text-xs text-destructive focus:text-destructive"
                     >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete gallery
+                      <Trash2 className="h-3.5 w-3.5" /> {gd.deleteGallery}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1306,13 +1307,13 @@ const GalleryDetail = () => {
                   isDragging ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40"
                 }`}
               >
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <p className="text-sm font-light text-muted-foreground">
-                  Drag & drop photos or <span className="text-foreground underline underline-offset-2">browse</span>
-                </p>
-                <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
-                  JPG, PNG, WEBP — multiple supported
-                </p>
+                 <Upload className="h-6 w-6 text-muted-foreground" />
+                 <p className="text-sm font-light text-muted-foreground">
+                   {gd.dragDropPhotos} <span className="text-foreground underline underline-offset-2">{gd.browse}</span>
+                 </p>
+                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60">
+                   {gd.uploadFormats}
+                 </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1346,10 +1347,10 @@ const GalleryDetail = () => {
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                       <span className="inline-block w-6 h-px bg-border" />
                       {isSelecting
-                        ? `${selectedPhotos.size} selected`
+                        ? `${selectedPhotos.size} ${gd.selected}`
                         : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
                       {!isSelecting && (
-                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— drag to reorder</span>
+                        <span className="text-muted-foreground/50 normal-case tracking-normal text-[10px] ml-1">— {gd.dragToReorder}</span>
                       )}
                     </p>
                     <div className="flex items-center gap-2">
@@ -1359,7 +1360,7 @@ const GalleryDetail = () => {
                             onClick={toggleSelectAll}
                             className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            {selectedPhotos.size === photos.length ? "Deselect all" : "Select all"}
+                            {selectedPhotos.size === photos.length ? gd.deselectAll : gd.selectAll}
                           </button>
                           {selectedPhotos.size > 0 && (
                             <Button
@@ -1369,14 +1370,14 @@ const GalleryDetail = () => {
                               className="gap-1.5 text-xs tracking-wider uppercase font-light h-7"
                             >
                               <Trash2 className="h-3 w-3" />
-                              Delete {selectedPhotos.size}
+                              {gd.delete} {selectedPhotos.size}
                             </Button>
                           )}
                           <button
-                            onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
+                          onClick={() => { setIsSelecting(false); setSelectedPhotos(new Set()); }}
                             className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
                           >
-                            Cancel
+                            {gd.cancel}
                           </button>
                         </>
                       ) : (
@@ -1385,7 +1386,7 @@ const GalleryDetail = () => {
                           className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
                         >
                           <CheckSquare className="h-3.5 w-3.5" />
-                          Select
+                          {gd.select}
                         </button>
                       )}
                     </div>
@@ -1412,7 +1413,7 @@ const GalleryDetail = () => {
 
               {photos.length === 0 && activeUploads.length === 0 && (
                 <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground/60">No photos yet — upload above to get started</p>
+                  <p className="text-xs text-muted-foreground/60">{gd.noPhotosYet}</p>
                 </div>
               )}
 
@@ -1423,35 +1424,35 @@ const GalleryDetail = () => {
                   <div>
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                       <span className="inline-block w-6 h-px bg-border" />
-                      Watermark
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      Select a watermark preset to apply to proof photos.
-                    </p>
-                  </div>
+                       {gd.watermarkSection}
+                     </p>
+                     <p className="text-xs text-muted-foreground/70 mt-1">
+                       {gd.watermarkDesc}
+                     </p>
+                   </div>
 
-                  {watermarks.length === 0 ? (
-                    <p className="text-xs text-muted-foreground/50">
-                      No watermark presets found. Create one in{" "}
-                      <button
-                        onClick={() => navigate("/dashboard/settings")}
-                        className="underline underline-offset-2 hover:text-foreground transition-colors"
-                      >
-                        Settings
-                      </button>.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setWatermark(null)}
-                        className={cn(
-                          "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors",
-                          !gallery.watermark_id
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border hover:border-foreground/50 text-muted-foreground"
-                        )}
-                      >
-                        None
+                   {watermarks.length === 0 ? (
+                     <p className="text-xs text-muted-foreground/50">
+                       {gd.noWatermarkPresets}{" "}
+                       <button
+                         onClick={() => navigate("/dashboard/settings")}
+                         className="underline underline-offset-2 hover:text-foreground transition-colors"
+                       >
+                         {gd.settings}
+                       </button>.
+                     </p>
+                   ) : (
+                     <div className="flex flex-wrap gap-2">
+                       <button
+                         onClick={() => setWatermark(null)}
+                         className={cn(
+                           "px-3 py-1.5 border text-xs tracking-wider uppercase font-light transition-colors",
+                           !gallery.watermark_id
+                             ? "border-foreground bg-foreground text-background"
+                             : "border-border hover:border-foreground/50 text-muted-foreground"
+                         )}
+                       >
+                         {gd.none}
                       </button>
                       {watermarks.map((wm) => (
                         <button
@@ -1490,22 +1491,22 @@ const GalleryDetail = () => {
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                         <span className="inline-block w-6 h-px bg-border" />
-                        Client Favorites
-                      </p>
-                      <p className="text-xs text-muted-foreground/70 mt-1">
-                        Photos marked as favorites by the client. Copy the list to filter them in Lightroom.
-                      </p>
-                    </div>
-                    {favoritedPhotos.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/40 border border-dashed border-border">
-                        <Heart className="h-5 w-5" />
-                        <p className="text-xs tracking-wide">No favorites yet</p>
-                      </div>
-                    ) : (
+                         {gd.clientFavorites}
+                       </p>
+                       <p className="text-xs text-muted-foreground/70 mt-1">
+                         {gd.clientFavoritesDesc}
+                       </p>
+                     </div>
+                     {favoritedPhotos.length === 0 ? (
+                       <div className="flex flex-col items-center justify-center py-6 gap-2 text-muted-foreground/40 border border-dashed border-border">
+                         <Heart className="h-5 w-5" />
+                         <p className="text-xs tracking-wide">{gd.noFavoritesYet}</p>
+                       </div>
+                     ) : (
                       <>
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">{favoritedPhotos.length}</span> photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited
-                        </p>
+                       <p className="text-xs text-muted-foreground">
+                         <span className="font-medium text-foreground">{favoritedPhotos.length}</span> {favoritedPhotos.length !== 1 ? gd.photosFavorited : gd.photoFavorited}
+                       </p>
                         <textarea
                           readOnly
                           value={listText}
@@ -1517,10 +1518,10 @@ const GalleryDetail = () => {
                           className="w-full gap-2 text-xs tracking-wider uppercase font-light"
                           onClick={copyFavorites}
                         >
-                          {copiedFavorites ? (
-                            <><Check className="h-3.5 w-3.5" /> Copied!</>
+                         {copiedFavorites ? (
+                            <><Check className="h-3.5 w-3.5" /> {gd.copied}</>
                           ) : (
-                            <><Copy className="h-3.5 w-3.5" /> Copy for Lightroom</>
+                            <><Copy className="h-3.5 w-3.5" /> {gd.copyForLightroom}</>
                           )}
                         </Button>
                       </>
@@ -1534,31 +1535,31 @@ const GalleryDetail = () => {
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-1">
                     <span className="inline-block w-6 h-px bg-border" />
-                    Client Access
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">
-                    Share this link with your client. Publish the gallery to make it accessible.
-                  </p>
+                     {gd.clientAccess}
+                   </p>
+                   <p className="text-xs text-muted-foreground/70 mt-1">
+                     {gd.clientAccessDesc}
+                   </p>
                 </div>
 
                 {/* Client access log */}
                 <div className="flex items-center gap-6 py-3 px-4 bg-muted/40 border border-border">
                   <div className="flex flex-col gap-0.5 flex-1">
-                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">First Access</span>
-                    <span className="text-xs font-light text-foreground">
-                      {accessLog.first
-                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.first))
-                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
-                    </span>
-                  </div>
-                  <div className="w-px h-8 bg-border shrink-0" />
-                  <div className="flex flex-col gap-0.5 flex-1">
-                    <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">Last Access</span>
-                    <span className="text-xs font-light text-foreground">
-                      {accessLog.last
-                        ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.last))
-                        : <span className="text-muted-foreground/50 italic">Not accessed yet</span>}
-                    </span>
+                     <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">{gd.firstAccess}</span>
+                     <span className="text-xs font-light text-foreground">
+                       {accessLog.first
+                         ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.first))
+                         : <span className="text-muted-foreground/50 italic">{gd.notAccessedYet}</span>}
+                     </span>
+                   </div>
+                   <div className="w-px h-8 bg-border shrink-0" />
+                   <div className="flex flex-col gap-0.5 flex-1">
+                     <span className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground/70 font-light">{gd.lastAccess}</span>
+                     <span className="text-xs font-light text-foreground">
+                       {accessLog.last
+                         ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(accessLog.last))
+                         : <span className="text-muted-foreground/50 italic">{gd.notAccessedYet}</span>}
+                     </span>
                   </div>
                 </div>
 
@@ -1579,9 +1580,9 @@ const GalleryDetail = () => {
 
                 {/* Share link */}
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                    Share Link
-                  </Label>
+                   <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                     {gd.galleryLink}
+                   </Label>
                   <div className="flex gap-2">
                     <Input
                       value={publicUrl}
@@ -1601,12 +1602,12 @@ const GalleryDetail = () => {
 
                 {/* Access code */}
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                    Access Code <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
-                  </Label>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    If set, clients must enter this code to view the gallery.
-                  </p>
+                   <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light">
+                     {gd.accessCode} <span className="text-muted-foreground/50 normal-case tracking-normal">({t.common.cancel.toLowerCase() === "cancel" ? "optional" : ""})</span>
+                   </Label>
+                   <p className="text-[10px] text-muted-foreground/60">
+                     {gd.accessCodeDesc}
+                   </p>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Input
@@ -1673,12 +1674,12 @@ const GalleryDetail = () => {
                   {/* Expiration date */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs tracking-widest uppercase text-muted-foreground font-light flex items-center gap-1.5">
-                      <CalendarClock className="h-3 w-3" />
-                      Expiration Date <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground/60">
-                      After this date, the gallery will no longer be accessible.
-                    </p>
+                       <CalendarClock className="h-3 w-3" />
+                       {gd.expirationDate} <span className="text-muted-foreground/50 normal-case tracking-normal">(optional)</span>
+                     </Label>
+                     <p className="text-[10px] text-muted-foreground/60">
+                       {gd.expirationDesc}
+                     </p>
                     <div className="flex items-center gap-2">
                       <Popover>
                         <PopoverTrigger asChild>
@@ -1734,11 +1735,11 @@ const GalleryDetail = () => {
                     onClick={sendGalleryLink}
                     disabled={sendingEmail}
                   >
-                    {sendingEmail ? (
-                      <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
-                    ) : (
-                      <><Send className="h-3.5 w-3.5" /> Send to Client</>
-                    )}
+                     {sendingEmail ? (
+                       <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
+                     ) : (
+                       <><Send className="h-3.5 w-3.5" /> {gd.sendToClient}</>
+                     )}
                   </Button>
                   <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
                     Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
@@ -1802,13 +1803,13 @@ const GalleryDetail = () => {
       <AlertDialog open={!!photoToDelete} onOpenChange={(open) => { if (!open) setPhotoToDelete(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete photo?</AlertDialogTitle>
+           <AlertDialogTitle>{gd.deletePhotoTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The photo will be permanently removed from the gallery.
+              {gd.deletePhotoDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
@@ -1818,7 +1819,7 @@ const GalleryDetail = () => {
                 }
               }}
             >
-              Delete
+              {gd.confirmDelete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1827,13 +1828,13 @@ const GalleryDetail = () => {
       <AlertDialog open={deleteSelectedOpen} onOpenChange={setDeleteSelectedOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedPhotos.size} photo{selectedPhotos.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.deleteSelectedTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove <strong>{selectedPhotos.size}</strong> selected photo{selectedPhotos.size !== 1 ? "s" : ""} from the gallery. This action cannot be undone.
+              {gd.deleteSelectedDesc} <strong>{selectedPhotos.size}</strong> {gd.deleteSelectedDesc2}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
@@ -1842,7 +1843,7 @@ const GalleryDetail = () => {
               }}
               disabled={deletingSelected}
             >
-              {deletingSelected ? "Deleting…" : `Delete ${selectedPhotos.size}`}
+              {deletingSelected ? "Deleting…" : `${gd.confirmDelete} ${selectedPhotos.size}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1851,18 +1852,18 @@ const GalleryDetail = () => {
       <AlertDialog open={unpublishOpen} onOpenChange={setUnpublishOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unpublish gallery?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.unpublish} gallery?</AlertDialogTitle>
             <AlertDialogDescription>
               The gallery link will stop working and your client will lose access immediately.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { setUnpublishOpen(false); doPublish(); }}
             >
-              Unpublish
+              {gd.unpublish}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1871,18 +1872,18 @@ const GalleryDetail = () => {
       <AlertDialog open={deleteGalleryOpen} onOpenChange={setDeleteGalleryOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete gallery?</AlertDialogTitle>
+            <AlertDialogTitle>{gd.deleteGalleryTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <span className="font-medium text-foreground">"{gallery?.title}"</span> and all its photos. This action cannot be undone.
+              {gd.deleteGalleryDesc.replace("gallery", `"${gallery?.title}"`)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{gd.cancel}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={deleteGallery}
             >
-              Delete gallery
+              {gd.deleteGallery}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
