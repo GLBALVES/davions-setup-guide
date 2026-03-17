@@ -148,17 +148,17 @@ export default function Clients() {
                   <div className="flex gap-5">
                     <div>
                       <p className="text-2xl font-light">{clients.length}</p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Clients</p>
+                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.clientsLabel}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-light">{bookings.length}</p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Bookings</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.bookingsLabel}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-light">
                         {clients.filter(c => c.bookingCount > 1).length}
                       </p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Returning</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.returning}</p>
                     </div>
                   </div>
                 )}
