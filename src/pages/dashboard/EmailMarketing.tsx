@@ -158,12 +158,12 @@ export default function EmailMarketing() {
               {/* AUTOMATED */}
               <TabsContent value="automated" className="space-y-4">
                 <div className="flex justify-end">
-                  <Button onClick={() => navigate("/dashboard/emails/automated/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New Automated
+                   <Button onClick={() => navigate("/dashboard/emails/automated/new")} className="gap-1">
+                    <Plus className="h-4 w-4" /> {em.newAutomated}
                   </Button>
                 </div>
-                {loadingA ? <p className="text-sm text-muted-foreground">Loading…</p> : automated.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No automated emails created yet.</CardContent></Card>
+                {loadingA ? <p className="text-sm text-muted-foreground">{em.loading}</p> : automated.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noAutomated}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {automated.map((g: any) => (
@@ -176,7 +176,7 @@ export default function EmailMarketing() {
                               onCheckedChange={(v) => toggleAutomated.mutate({ id: g.id, enabled: v })}
                             />
                           </div>
-                          <p className="text-xs text-muted-foreground">Trigger: {g.trigger_type}</p>
+                          <p className="text-xs text-muted-foreground">{em.trigger}: {g.trigger_type}</p>
                         </CardHeader>
                         <CardContent className="flex items-center justify-between">
                           <p className="text-xs text-muted-foreground truncate max-w-[60%]">{g.subject}</p>
@@ -197,7 +197,7 @@ export default function EmailMarketing() {
               <TabsContent value="oneoff" className="space-y-4">
                 <div className="flex justify-end">
                   <Button onClick={() => navigate("/dashboard/emails/oneoff/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New One-off
+                    <Plus className="h-4 w-4" /> {em.newOneoff}
                   </Button>
                 </div>
                 {loadingO ? <p className="text-sm text-muted-foreground">Loading…</p> : oneoffs.length === 0 ? (
