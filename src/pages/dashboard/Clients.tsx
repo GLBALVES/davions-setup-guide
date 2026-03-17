@@ -289,7 +289,7 @@ export default function Clients() {
 
                 {/* Booking history */}
                 <div className="px-8 py-6 flex flex-col gap-4">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Booking history</p>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{cl.bookingHistory}</p>
                   <div className="flex flex-col gap-2">
                     {selected.bookings.map((b) => {
                       const startTime = b.session_availability?.start_time

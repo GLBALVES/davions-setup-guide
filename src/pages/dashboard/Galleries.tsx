@@ -414,10 +414,12 @@ function GalleryGrid({
   onAssigned: () => void;
   viewMode: ViewMode;
 }) {
+  const { t } = useLanguage();
+  const g = t.galleries;
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{g.loading}</span>
       </div>
     );
   }
@@ -430,8 +432,8 @@ function GalleryGrid({
         className="flex flex-col items-center justify-center py-16 gap-3 text-center"
       >
         <FolderOpen className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm font-light text-muted-foreground">No galleries found</p>
-        <p className="text-[10px] text-muted-foreground/60">Try adjusting your search or filters</p>
+        <p className="text-sm font-light text-muted-foreground">{g.noGalleriesFound}</p>
+        <p className="text-[10px] text-muted-foreground/60">{g.adjustFilters}</p>
       </motion.div>
     );
   }

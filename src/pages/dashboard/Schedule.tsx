@@ -278,7 +278,7 @@ const Schedule = () => {
               {loading ? (
                 <div className="flex items-center justify-center flex-1">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-                    Loading…
+                    {sc.loading}
                   </span>
                 </div>
               ) : viewMode === "month" ? (
