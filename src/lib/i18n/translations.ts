@@ -55,6 +55,8 @@ export const translations = {
       pinToFavorites: "Pin to Favorites",
       editFavorites: "Edit Favorites",
       done: "Done",
+      pinHint: "Right-click any item to pin it here",
+      signOut: "Sign Out",
     },
     // ── Dashboard page ──
     dashboard: {
