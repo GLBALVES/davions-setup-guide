@@ -1172,14 +1172,6 @@ const Personalize = () => {
 };
 
 export default Personalize;
-
-                    <div className="border-t border-border" />
-
-                    {/* Contracts */}
-                    <section className="flex flex-col gap-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <SectionHeading
-                        title="Contracts"
                         description="Create reusable service agreements to attach to your booking sessions." />
                       
                         <Button
