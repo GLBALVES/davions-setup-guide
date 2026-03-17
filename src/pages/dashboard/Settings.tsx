@@ -493,21 +493,47 @@ const Settings = () => {
                   <TabsContent value="profile" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Full Name</Label>
+                        <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.fullName}</Label>
                         <Input
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          placeholder="Your name"
+                          placeholder={t.settings.yourName}
                           className="h-9 text-sm font-light"
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label className="text-[11px] tracking-wider uppercase font-light">Email</Label>
+                        <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.email}</Label>
                         <Input
                           value={user?.email ?? ""}
                           disabled
                           className="h-9 text-sm font-light opacity-60"
                         />
+                      </div>
+
+                      {/* Language selector */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.languageLabel}</Label>
+                        <p className="text-[11px] text-muted-foreground">{t.settings.languageDesc}</p>
+                        <div className="flex gap-2 mt-1">
+                          {([
+                            { value: "en", flag: "🇺🇸", label: "English" },
+                            { value: "pt", flag: "🇧🇷", label: "Português" },
+                            { value: "es", flag: "🇪🇸", label: "Español" },
+                          ] as { value: Lang; flag: string; label: string }[]).map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => setLang(opt.value)}
+                              className={`flex items-center gap-2 px-3 py-2 text-[12px] border transition-colors rounded-none ${
+                                lang === opt.value
+                                  ? "border-foreground bg-foreground text-background"
+                                  : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground"
+                              }`}
+                            >
+                              <span>{opt.flag}</span>
+                              <span className="font-light">{opt.label}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </section>
 
@@ -518,7 +544,7 @@ const Settings = () => {
                         size="sm"
                         className="gap-2 text-xs tracking-wider uppercase font-light"
                       >
-                        {saving ? "Saving…" : "Save changes"}
+                        {saving ? t.settings.saving : t.settings.saveChanges}
                       </Button>
                     </div>
                   </TabsContent>
