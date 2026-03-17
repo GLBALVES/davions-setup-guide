@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
@@ -110,18 +110,23 @@ type MenuItem = {
 };
 
 type MenuGroup = {
+  /** Stable English key — used for state management & DB keys */
+  stableKey: string;
+  /** Translated display label */
   title: string;
   icon: React.ElementType;
   items: MenuItem[];
   defaultOpen?: boolean;
 };
 
+/** Stable English items list — used only for key generation & matching */
 const ALL_ITEMS: (MenuItem & { groupTitle: string })[] = [];
 
 function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
   return [
     {
-      title: "Photographers",
+      stableKey: "Photographers",
+      title: t.nav.photographers,
       icon: Camera,
       defaultOpen: true,
       items: [
@@ -136,7 +141,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Marketing",
+      stableKey: "Marketing",
+      title: t.nav.marketing,
       icon: Megaphone,
       items: [
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
@@ -150,7 +156,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "AI",
+      stableKey: "AI",
+      title: t.nav.ai,
       icon: BrainCircuit,
       items: [
         { title: t.nav.aiAgents, icon: Bot, to: "/dashboard/agents", permKey: "agents" },
@@ -160,7 +167,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Finance",
+      stableKey: "Finance",
+      title: t.nav.finance,
       icon: DollarSign,
       items: [
         { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
@@ -168,11 +176,12 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.receivables,       icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
         { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
         { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
-        { title: t.nav.reports,           icon: BarChart3,        to: "/dashboard/finance/reports" },
+        { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
       ],
     },
     {
-      title: "CRM",
+      stableKey: "CRM",
+      title: t.nav.crm,
       icon: Users2,
       items: [
         { title: t.nav.clients, icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
@@ -180,7 +189,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Workflows",
+      stableKey: "Workflows",
+      title: t.nav.workflows,
       icon: GitBranch,
       items: [
         { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
@@ -188,7 +198,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "Settings",
+      stableKey: "Settings",
+      title: t.nav.settings,
       icon: Settings,
       items: [
         { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
@@ -198,7 +209,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-      title: "My Features",
+      stableKey: "My Features",
+      title: t.nav.myFeatures,
       icon: Puzzle,
       items: [
         { title: t.nav.createFeature, icon: PlusSquare },
@@ -207,10 +219,10 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
   ];
 }
 
-// Static groups for ALL_ITEMS reference (keys only, titles don't matter for routing)
+// Static groups for ALL_ITEMS reference — English only, stable keys for DB storage
 const groups: MenuGroup[] = [
   {
-    title: "Photographers", icon: Camera, defaultOpen: true,
+    stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
@@ -222,7 +234,7 @@ const groups: MenuGroup[] = [
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
-  { title: "Marketing", icon: Megaphone, items: [
+  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, items: [
     { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
     { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
@@ -232,13 +244,13 @@ const groups: MenuGroup[] = [
     { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
     { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
   ]},
-  { title: "AI", icon: BrainCircuit, items: [
+  { stableKey: "AI", title: "AI", icon: BrainCircuit, items: [
     { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
     { title: "AI Automations", icon: Zap },
     { title: "Smart Suggestions", icon: Lightbulb },
     { title: "Creative Assistant", icon: Wand2 },
   ]},
-  { title: "Finance", icon: DollarSign, items: [
+  { stableKey: "Finance", title: "Finance", icon: DollarSign, items: [
     { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
     { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
     { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
@@ -246,28 +258,28 @@ const groups: MenuGroup[] = [
     { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
     { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
   ]},
-  { title: "CRM", icon: Users2, items: [
+  { stableKey: "CRM", title: "CRM", icon: Users2, items: [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
     { title: "Leads", icon: UserPlus },
   ]},
-  { title: "Workflows", icon: GitBranch, items: [
+  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, items: [
     { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
-  { title: "Settings", icon: Settings, items: [
+  { stableKey: "Settings", title: "Settings", icon: Settings, items: [
     { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
     { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
     { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
   ]},
-  { title: "My Features", icon: Puzzle, items: [
+  { stableKey: "My Features", title: "My Features", icon: Puzzle, items: [
     { title: "Create Feature", icon: PlusSquare },
   ]},
 ];
 
 groups.forEach((g) => {
   g.items.forEach((item) => {
-    ALL_ITEMS.push({ ...item, groupTitle: g.title });
+    ALL_ITEMS.push({ ...item, groupTitle: g.stableKey });
   });
 });
 
@@ -668,8 +680,23 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const isPinned = (groupTitle: string, itemTitle: string) =>
     pinnedKeys.includes(itemKey(groupTitle, itemTitle));
 
+  // Build a map from stable English key → translated item (matched by URL)
+  const keyToTranslated = useMemo<Map<string, MenuItem & { groupTitle: string }>>(() => {
+    const map = new Map<string, MenuItem & { groupTitle: string }>();
+    translatedGroups.forEach((tg, gi) => {
+      const sg = groups[gi];
+      tg.items.forEach((tItem, ii) => {
+        const sItem = sg?.items[ii];
+        if (sItem) {
+          map.set(itemKey(sg.stableKey, sItem.title), { ...tItem, groupTitle: sg.stableKey });
+        }
+      });
+    });
+    return map;
+  }, [translatedGroups]);
+
   const favoriteItems: (MenuItem & { groupTitle: string })[] = pinnedKeys
-    .map((key) => ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
+    .map((key) => keyToTranslated.get(key) ?? ALL_ITEMS.find((i) => itemKey(i.groupTitle, i.title) === key))
     .filter((i): i is MenuItem & { groupTitle: string } => !!i);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -705,13 +732,13 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = { Favorites: true };
     groups.forEach((g) => {
-      initial[g.title] = g.defaultOpen || groupHasActive(g);
+      initial[g.stableKey] = g.defaultOpen || groupHasActive(g);
     });
     return initial;
   });
 
-  const toggleGroup = (title: string) => {
-    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  const toggleGroup = (stableKey: string) => {
+    setOpenGroups((prev) => ({ ...prev, [stableKey]: !prev[stableKey] }));
   };
 
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
@@ -851,17 +878,16 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Group popovers */}
             {translatedGroups.map((group) => {
-              const staticGroup = groups.find(g => g.items.some(i => group.items.some(ti => ti.to === i.to)));
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
-              <SidebarGroup key={group.title}>
+              <SidebarGroup key={group.stableKey}>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <CollapsedGroupPopover
                       group={{ ...group, items: visibleItems }}
-                      isOpen={collapsedOpenGroup === group.title}
-                      onOpenChange={(open) => setCollapsedOpenGroup(open ? group.title : null)}
+                      isOpen={collapsedOpenGroup === group.stableKey}
+                      onOpenChange={(open) => setCollapsedOpenGroup(open ? group.stableKey : null)}
                       isItemActive={isItemActive}
                       badges={badgesAsRecord}
                     />
@@ -962,9 +988,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
               if (visibleItems.length === 0) return null;
               return (
               <Collapsible
-                key={group.title}
-                open={openGroups[group.title]}
-                onOpenChange={() => toggleGroup(group.title)}
+                key={group.stableKey}
+                open={openGroups[group.stableKey]}
+                onOpenChange={() => toggleGroup(group.stableKey)}
               >
                 <SidebarGroup>
                   <SidebarGroupLabel asChild>
@@ -973,7 +999,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                       <span className="flex-1 text-left">{group.title}</span>
                       <ChevronRight
                         className="h-3 w-3 shrink-0 transition-transform duration-200"
-                        style={{ transform: openGroups[group.title] ? "rotate(90deg)" : "rotate(0deg)" }}
+                        style={{ transform: openGroups[group.stableKey] ? "rotate(90deg)" : "rotate(0deg)" }}
                       />
                     </CollapsibleTrigger>
                   </SidebarGroupLabel>
@@ -981,7 +1007,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {visibleItems.map((item) => renderRegularItem(item, group.title))}
+                        {visibleItems.map((item) => renderRegularItem(item, group.stableKey))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
