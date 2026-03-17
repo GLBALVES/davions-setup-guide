@@ -563,6 +563,8 @@ function ArchivedKanbanSection({
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
