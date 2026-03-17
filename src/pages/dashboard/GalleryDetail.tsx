@@ -1037,7 +1037,7 @@ const GalleryDetail = () => {
                         variant={gallery.category === "proof" ? "outline" : "default"}
                         className="text-[9px] tracking-[0.2em] uppercase font-light rounded-none border-white/40 text-white"
                       >
-                        {gallery.category === "proof" ? "Proof" : "Final"}
+                        {gallery.category === "proof" ? gd.proof : gd.final}
                       </Badge>
                       <div className="flex items-center gap-1.5">
                         <span className={`h-1.5 w-1.5 rounded-full ${gallery.status === "published" ? "bg-green-400" : "bg-white/30"}`} />
