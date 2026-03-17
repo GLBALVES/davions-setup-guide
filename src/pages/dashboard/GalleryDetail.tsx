@@ -1504,9 +1504,9 @@ const GalleryDetail = () => {
                        </div>
                      ) : (
                       <>
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">{favoritedPhotos.length}</span> photo{favoritedPhotos.length !== 1 ? "s" : ""} favorited
-                        </p>
+                       <p className="text-xs text-muted-foreground">
+                         <span className="font-medium text-foreground">{favoritedPhotos.length}</span> {favoritedPhotos.length !== 1 ? gd.photosFavorited : gd.photoFavorited}
+                       </p>
                         <textarea
                           readOnly
                           value={listText}
