@@ -73,6 +73,22 @@ const Galleries = () => {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
+  const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementType }[] = [
+    { value: "all", label: g.all, icon: SlidersHorizontal },
+    { value: "draft", label: g.draft, icon: Clock4 },
+    { value: "published", label: g.published, icon: CheckCheck },
+    { value: "expired", label: g.expired, icon: CalendarX2 },
+    { value: "unassigned", label: g.noClient, icon: UserX },
+  ];
+
+  const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "newest", label: g.newestFirst },
+    { value: "oldest", label: g.oldestFirst },
+    { value: "title_asc", label: g.titleAZ },
+    { value: "title_desc", label: g.titleZA },
+    { value: "photos_desc", label: g.mostPhotos },
+  ];
+
   const fetchGalleries = async () => {
     setLoading(true);
     const { data: galleriesData } = await supabase
