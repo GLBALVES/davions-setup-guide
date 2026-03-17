@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -100,6 +101,8 @@ function KanbanCard({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: project.id,
   });
@@ -121,7 +124,7 @@ function KanbanCard({
             {...attributes}
             {...listeners}
             className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing mt-0.5"
-            aria-label="Drag"
+            aria-label={p_t.dragHandle}
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
@@ -131,21 +134,21 @@ function KanbanCard({
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onEdit(project); }}
-              title="Edit"
+              title={p_t.editProject}
             >
               <Pencil className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-amber-500"
               onClick={(e) => { e.stopPropagation(); onArchive(project.id); }}
-              title="Archive"
+              title={p_t.archived}
             >
               <Archive className="h-3 w-3" />
             </button>
             <button
               className="p-0.5 text-muted-foreground hover:text-destructive"
               onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
-              title="Delete"
+              title={p_t.projectRemoved}
             >
               <X className="h-3 w-3" />
             </button>
@@ -202,6 +205,7 @@ function KanbanColumn({
   onAddCard: (stage: Stage) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-col min-w-[220px] w-[220px] shrink-0">
@@ -218,7 +222,7 @@ function KanbanColumn({
         <button
           className="text-muted-foreground/40 hover:text-foreground transition-colors"
           onClick={() => onAddCard(stage.key)}
-          aria-label={`Add to ${stage.label}`}
+          aria-label={stage.label}
         >
           <Plus className="h-3.5 w-3.5" />
         </button>
@@ -242,7 +246,7 @@ function KanbanColumn({
             onClick={() => onAddCard(stage.key)}
             className="border border-dashed border-border rounded-sm p-3 text-[10px] text-muted-foreground/40 hover:text-muted-foreground hover:border-muted-foreground/40 transition-colors text-center"
           >
-            + Add card
+            {t.projects.addCard}
           </button>
         )}
       </div>
@@ -270,6 +274,8 @@ function ProjectModal({
   sessionTypes: SessionType[];
   onRefetchSessionTypes: () => void;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -278,13 +284,17 @@ function ProjectModal({
   const [stage, setStage] = useState<Stage>("lead");
   const [notes, setNotes] = useState("");
 
+  const stageLabels: Record<string, string> = {
+    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
+    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+  };
+
   useEffect(() => {
     if (open) {
       setTitle(initial?.title ?? "");
       setClientName(initial?.client_name ?? "");
       setClientEmail(initial?.client_email ?? "");
-      // Match existing string name to an id for pre-selection
-      const matched = sessionTypes.find((t) => t.name === initial?.session_type);
+      const matched = sessionTypes.find((s) => s.name === initial?.session_type);
       setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
       setStage(initial?.stage ?? defaultStage ?? "lead");
@@ -293,8 +303,8 @@ function ProjectModal({
   }, [open, initial, defaultStage, sessionTypes]);
 
   const handleSave = () => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    const resolvedName = sessionTypes.find((t) => t.id === sessionTypeId)?.name ?? null;
+    if (!title.trim()) { toast.error(p_t.titleRequired); return; }
+    const resolvedName = sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null;
     onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
   };
 
@@ -303,22 +313,22 @@ function ProjectModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-sm font-light tracking-widest uppercase">
-            {initial ? "Edit Project" : "New Project"}
+            {initial ? p_t.editProject : p_t.newProject}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 py-2">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Title *</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.title_field} *</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wedding João & Ana" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Client name</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.clientName}</label>
               <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Lima" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Email</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
               <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
             </div>
           </div>
@@ -334,38 +344,38 @@ function ProjectModal({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date</label>
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
               <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Stage</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.stage}</label>
             <Select value={stage} onValueChange={(v) => setStage(v as Stage)}>
               <SelectTrigger className="h-10 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STAGES.map((s) => (
-                  <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                  <SelectItem key={s.key} value={s.key}>{stageLabels[s.key] ?? s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">Notes</label>
+            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.notes}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Additional notes..."
+              placeholder={p_t.additionalNotes}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleSave}>{initial ? "Save" : "Create"}</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>{p_t.cancel}</Button>
+          <Button size="sm" onClick={handleSave}>{initial ? p_t.save : p_t.create}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -388,6 +398,12 @@ function ListView({
   onUnarchive: (id: string) => void;
   showArchived: boolean;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
+  const stageLabels: Record<string, string> = {
+    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
+    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+  };
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
@@ -413,11 +429,11 @@ function ListView({
         <div className="px-4 py-3">
           {isArchived ? (
             <span className="inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase bg-muted/40 text-muted-foreground/60 border-border/50">
-              <Archive className="h-2.5 w-2.5" /> Archived
+              <Archive className="h-2.5 w-2.5" /> {p_t.archived}
             </span>
           ) : (
             <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
-              {STAGES.find((s) => s.key === p.stage)?.label}
+              {stageLabels[p.stage] ?? STAGES.find((s) => s.key === p.stage)?.label}
             </span>
           )}
         </div>
@@ -431,20 +447,20 @@ function ListView({
         </div>
         <div className="px-4 py-3 w-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
           {isArchived ? (
-            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title={p_t.showArchived}>
               <ArchiveRestore className="h-3.5 w-3.5" />
             </button>
           ) : (
             <>
-              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title="Edit">
+              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title={p_t.editProject}>
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title="Archive">
+              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title={p_t.archived}>
                 <Archive className="h-3.5 w-3.5" />
               </button>
             </>
           )}
-          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -457,7 +473,7 @@ function ListView({
       <div className="border border-border rounded-sm overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
-          {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
+          {[p_t.title_field, p_t.client, p_t.sessionType, p_t.stage, p_t.shootDate, ""].map((h, i) => (
             <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-20" : ""}`}>
               {h}
             </div>
@@ -465,7 +481,7 @@ function ListView({
         </div>
         {active.length === 0 ? (
           <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
-            No active projects
+            {p_t.noActiveProjects}
           </div>
         ) : (
           active.map((p) => renderRow(p, false))
@@ -477,11 +493,11 @@ function ListView({
         <div className="border border-border/50 rounded-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/40">
             <Archive className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p_t.archived}</span>
             <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
           </div>
           {archived.length === 0 ? (
-            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">No archived projects</div>
+            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">{p_t.noArchivedProjects}</div>
           ) : (
             archived.map((p) => renderRow(p, true))
           )}
@@ -502,6 +518,8 @@ function ArchivedKanbanSection({
   onDelete: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+  const p_t = t.projects;
   return (
     <div className="mt-6 border border-border/50 rounded-sm overflow-hidden">
       <button
@@ -510,7 +528,7 @@ function ArchivedKanbanSection({
       >
         {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
         <Archive className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">Archived</span>
+        <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">{p_t.archived}</span>
         <span className="text-[10px] text-muted-foreground/50 ml-1">{projects.length}</span>
       </button>
       {open && (
@@ -520,10 +538,10 @@ function ArchivedKanbanSection({
               <div className="flex items-start justify-between gap-1">
                 <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title={p_t.showArchived}>
                     <ArchiveRestore className="h-3 w-3" />
                   </button>
-                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -545,6 +563,8 @@ function ArchivedKanbanSection({
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -681,7 +701,7 @@ const Projects = () => {
       .from("client_projects" as any)
       .update(data as any)
       .eq("id", id);
-    if (error) { toast.error("Failed to update"); return; }
+    if (error) { toast.error(p_t.failedToUpdate); return; }
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...data } : p));
     setSheetProject((prev) => prev ? { ...prev, ...data } : prev);
   };
@@ -692,8 +712,8 @@ const Projects = () => {
         .from("client_projects" as any)
         .update(data as any)
         .eq("id", editing.id);
-      if (error) { toast.error("Failed to update"); return; }
-      toast.success("Project updated");
+      if (error) { toast.error(p_t.failedToUpdate); return; }
+      toast.success(p_t.projectUpdated);
     } else {
       const stageProjects = projects.filter((p) => p.stage === data.stage);
       const { error } = await supabase
@@ -703,8 +723,8 @@ const Projects = () => {
           photographer_id: user?.id,
           position: stageProjects.length,
         } as any);
-      if (error) { toast.error("Failed to create"); return; }
-      toast.success("Project created");
+      if (error) { toast.error(p_t.failedToCreate); return; }
+      toast.success(p_t.projectCreated);
     }
     setModalOpen(false);
     fetchProjects();
@@ -713,21 +733,21 @@ const Projects = () => {
   const handleDelete = async (id: string) => {
     await supabase.from("client_projects" as any).delete().eq("id", id);
     setProjects((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Project removed");
+    toast.success(p_t.projectRemoved);
   };
 
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
     setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "archived" as Stage } : prev);
-    toast.success("Project archived");
+    toast.success(p_t.projectArchived);
   };
 
   const handleUnarchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
     setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
-    toast.success("Project restored to Lead");
+    toast.success(p_t.restoredToLead);
   };
 
   return (
@@ -742,18 +762,18 @@ const Projects = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Photographers
+                  {p_t.photographers}
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Projects</h1>
+                <h1 className="text-2xl font-light tracking-wide">{p_t.title}</h1>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")}>
                   <TabsList className="h-8">
                     <TabsTrigger value="kanban" className="text-xs gap-1.5 px-2.5">
-                      <LayoutGrid className="h-3.5 w-3.5" /> Kanban
+                      <LayoutGrid className="h-3.5 w-3.5" /> {p_t.kanban}
                     </TabsTrigger>
                     <TabsTrigger value="list" className="text-xs gap-1.5 px-2.5">
-                      <List className="h-3.5 w-3.5" /> List
+                      <List className="h-3.5 w-3.5" /> {p_t.list}
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -763,7 +783,7 @@ const Projects = () => {
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  New Project
+                  {p_t.newProject}
                 </Button>
               </div>
             </div>
@@ -772,12 +792,13 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
+                const stageLabel = { lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting, editing: p_t.editing, delivery: p_t.delivery, done: p_t.done }[s.key] ?? s.label;
                 return (
                   <div
                     key={s.key}
                     className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[s.key]}`}
                   >
-                    <span>{s.label}</span>
+                    <span>{stageLabel}</span>
                     <span className="opacity-60">{count}</span>
                   </div>
                 );
@@ -792,7 +813,7 @@ const Projects = () => {
                   }`}
                 >
                   <Archive className="h-3 w-3" />
-                  <span>Archived</span>
+                  <span>{p_t.archived}</span>
                   <span className="opacity-60">{projectsByStage("archived").length}</span>
                 </button>
               </div>
@@ -801,7 +822,7 @@ const Projects = () => {
             {/* Content */}
             {loading ? (
               <div className="flex-1 flex items-center justify-center">
-                <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+                <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{p_t.loading}</span>
               </div>
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
