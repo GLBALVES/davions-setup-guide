@@ -701,7 +701,7 @@ const Projects = () => {
       .from("client_projects" as any)
       .update(data as any)
       .eq("id", id);
-    if (error) { toast.error("Failed to update"); return; }
+    if (error) { toast.error(p_t.failedToUpdate); return; }
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...data } : p));
     setSheetProject((prev) => prev ? { ...prev, ...data } : prev);
   };
@@ -712,8 +712,8 @@ const Projects = () => {
         .from("client_projects" as any)
         .update(data as any)
         .eq("id", editing.id);
-      if (error) { toast.error("Failed to update"); return; }
-      toast.success("Project updated");
+      if (error) { toast.error(p_t.failedToUpdate); return; }
+      toast.success(p_t.projectUpdated);
     } else {
       const stageProjects = projects.filter((p) => p.stage === data.stage);
       const { error } = await supabase
@@ -723,8 +723,8 @@ const Projects = () => {
           photographer_id: user?.id,
           position: stageProjects.length,
         } as any);
-      if (error) { toast.error("Failed to create"); return; }
-      toast.success("Project created");
+      if (error) { toast.error(p_t.failedToCreate); return; }
+      toast.success(p_t.projectCreated);
     }
     setModalOpen(false);
     fetchProjects();
@@ -733,21 +733,21 @@ const Projects = () => {
   const handleDelete = async (id: string) => {
     await supabase.from("client_projects" as any).delete().eq("id", id);
     setProjects((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Project removed");
+    toast.success(p_t.projectRemoved);
   };
 
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
     setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "archived" as Stage } : prev);
-    toast.success("Project archived");
+    toast.success(p_t.projectArchived);
   };
 
   const handleUnarchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
     setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
-    toast.success("Project restored to Lead");
+    toast.success(p_t.restoredToLead);
   };
 
   return (
