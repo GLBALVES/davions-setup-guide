@@ -252,7 +252,7 @@ export default function Clients() {
                 {/* Panel header */}
                 <div className="px-8 py-6 border-b border-border flex items-start justify-between gap-4 sticky top-0 bg-background z-10">
                   <div className="flex flex-col gap-1.5">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Client profile</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{cl.clientProfile}</p>
                     <h2 className="text-xl font-light tracking-wide">{selected.name}</h2>
                     <a href={`mailto:${selected.email}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                       <Mail className="h-3 w-3" />
