@@ -398,6 +398,12 @@ function ListView({
   onUnarchive: (id: string) => void;
   showArchived: boolean;
 }) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
+  const stageLabels: Record<string, string> = {
+    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
+    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+  };
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
@@ -423,11 +429,11 @@ function ListView({
         <div className="px-4 py-3">
           {isArchived ? (
             <span className="inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase bg-muted/40 text-muted-foreground/60 border-border/50">
-              <Archive className="h-2.5 w-2.5" /> Archived
+              <Archive className="h-2.5 w-2.5" /> {p_t.archived}
             </span>
           ) : (
             <span className={`inline-flex items-center gap-1 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[p.stage]}`}>
-              {STAGES.find((s) => s.key === p.stage)?.label}
+              {stageLabels[p.stage] ?? STAGES.find((s) => s.key === p.stage)?.label}
             </span>
           )}
         </div>
@@ -441,20 +447,20 @@ function ListView({
         </div>
         <div className="px-4 py-3 w-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
           {isArchived ? (
-            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title="Unarchive">
+            <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title={p_t.showArchived}>
               <ArchiveRestore className="h-3.5 w-3.5" />
             </button>
           ) : (
             <>
-              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title="Edit">
+              <button className="p-1 text-muted-foreground hover:text-foreground" onClick={() => onEdit(p)} title={p_t.editProject}>
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title="Archive">
+              <button className="p-1 text-muted-foreground hover:text-amber-500" onClick={() => onArchive(p.id)} title={p_t.archived}>
                 <Archive className="h-3.5 w-3.5" />
               </button>
             </>
           )}
-          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title="Delete">
+          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -467,7 +473,7 @@ function ListView({
       <div className="border border-border rounded-sm overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
-          {["Title", "Client", "Session type", "Stage", "Shoot date", ""].map((h, i) => (
+          {[p_t.title_field, p_t.client, p_t.sessionType, p_t.stage, p_t.shootDate, ""].map((h, i) => (
             <div key={i} className={`px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium ${i === 5 ? "w-20" : ""}`}>
               {h}
             </div>
@@ -475,7 +481,7 @@ function ListView({
         </div>
         {active.length === 0 ? (
           <div className="py-12 text-center text-xs text-muted-foreground tracking-widest uppercase">
-            No active projects
+            {p_t.noActiveProjects}
           </div>
         ) : (
           active.map((p) => renderRow(p, false))
@@ -487,11 +493,11 @@ function ListView({
         <div className="border border-border/50 rounded-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/40">
             <Archive className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">Archived</span>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">{p_t.archived}</span>
             <span className="text-[10px] text-muted-foreground/50 ml-1">{archived.length}</span>
           </div>
           {archived.length === 0 ? (
-            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">No archived projects</div>
+            <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">{p_t.noArchivedProjects}</div>
           ) : (
             archived.map((p) => renderRow(p, true))
           )}
