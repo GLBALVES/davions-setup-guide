@@ -1223,7 +1223,7 @@ const GalleryDetail = () => {
                               onClick={copyText}
                             >
                               {copiedFavorites ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                              {copiedFavorites ? "Copied!" : "Copy"}
+                              {copiedFavorites ? gd.copied : gd.copy}
                             </Button>
                             <Button
                               size="sm"
@@ -1232,7 +1232,7 @@ const GalleryDetail = () => {
                               onClick={downloadTxt}
                             >
                               <Download className="h-3.5 w-3.5" />
-                              Download .txt
+                              {gd.downloadTxt}
                             </Button>
                           </div>
                         </div>
