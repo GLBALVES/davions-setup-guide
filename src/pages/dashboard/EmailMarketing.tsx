@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -37,6 +38,8 @@ export default function EmailMarketing() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const em = t.emailMarketing;
   const photographerId = user?.id || "";
 
   const { data: campaigns = [], isLoading: loadingC } = useQuery({
@@ -79,12 +82,12 @@ export default function EmailMarketing() {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete?</AlertDialogTitle>
-          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          <AlertDialogTitle>{em.deleteConfirm}</AlertDialogTitle>
+          <AlertDialogDescription>{em.deleteDescription}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogCancel>{em.cancel}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{em.delete}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -102,27 +105,27 @@ export default function EmailMarketing() {
             <div className="flex items-center gap-3 mb-6">
               <Mail className="h-7 w-7 text-primary" />
               <div>
-                <h1 className="text-2xl font-bold">Email Marketing</h1>
-                <p className="text-sm text-muted-foreground">Campaigns, automated emails, and one-off sends</p>
+            <h1 className="text-2xl font-bold">{em.title}</h1>
+                <p className="text-sm text-muted-foreground">{em.marketing}</p>
               </div>
             </div>
 
             <Tabs defaultValue="campaigns">
               <TabsList>
-                <TabsTrigger value="campaigns" className="gap-1"><Send className="h-4 w-4" /> Campaigns</TabsTrigger>
-                <TabsTrigger value="automated" className="gap-1"><Zap className="h-4 w-4" /> Automated</TabsTrigger>
-                <TabsTrigger value="oneoff" className="gap-1"><CalendarClock className="h-4 w-4" /> One-off</TabsTrigger>
+               <TabsTrigger value="campaigns" className="gap-1"><Send className="h-4 w-4" /> {em.campaigns}</TabsTrigger>
+                <TabsTrigger value="automated" className="gap-1"><Zap className="h-4 w-4" /> {em.automated}</TabsTrigger>
+                <TabsTrigger value="oneoff" className="gap-1"><CalendarClock className="h-4 w-4" /> {em.oneoff}</TabsTrigger>
               </TabsList>
 
               {/* CAMPAIGNS */}
               <TabsContent value="campaigns" className="space-y-4">
                 <div className="flex justify-end">
-                  <Button onClick={() => navigate("/dashboard/emails/campaign/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New Campaign
+                   <Button onClick={() => navigate("/dashboard/emails/campaign/new")} className="gap-1">
+                    <Plus className="h-4 w-4" /> {em.newCampaign}
                   </Button>
                 </div>
-                {loadingC ? <p className="text-sm text-muted-foreground">Loading…</p> : campaigns.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No campaigns created yet.</CardContent></Card>
+                {loadingC ? <p className="text-sm text-muted-foreground">{em.loading}</p> : campaigns.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noCampaigns}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {campaigns.map((c: any) => (
@@ -155,12 +158,12 @@ export default function EmailMarketing() {
               {/* AUTOMATED */}
               <TabsContent value="automated" className="space-y-4">
                 <div className="flex justify-end">
-                  <Button onClick={() => navigate("/dashboard/emails/automated/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New Automated
+                   <Button onClick={() => navigate("/dashboard/emails/automated/new")} className="gap-1">
+                    <Plus className="h-4 w-4" /> {em.newAutomated}
                   </Button>
                 </div>
-                {loadingA ? <p className="text-sm text-muted-foreground">Loading…</p> : automated.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No automated emails created yet.</CardContent></Card>
+                {loadingA ? <p className="text-sm text-muted-foreground">{em.loading}</p> : automated.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noAutomated}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {automated.map((g: any) => (
@@ -173,7 +176,7 @@ export default function EmailMarketing() {
                               onCheckedChange={(v) => toggleAutomated.mutate({ id: g.id, enabled: v })}
                             />
                           </div>
-                          <p className="text-xs text-muted-foreground">Trigger: {g.trigger_type}</p>
+                          <p className="text-xs text-muted-foreground">{em.trigger}: {g.trigger_type}</p>
                         </CardHeader>
                         <CardContent className="flex items-center justify-between">
                           <p className="text-xs text-muted-foreground truncate max-w-[60%]">{g.subject}</p>
@@ -194,11 +197,11 @@ export default function EmailMarketing() {
               <TabsContent value="oneoff" className="space-y-4">
                 <div className="flex justify-end">
                   <Button onClick={() => navigate("/dashboard/emails/oneoff/new")} className="gap-1">
-                    <Plus className="h-4 w-4" /> New One-off
+                    <Plus className="h-4 w-4" /> {em.newOneoff}
                   </Button>
                 </div>
-                {loadingO ? <p className="text-sm text-muted-foreground">Loading…</p> : oneoffs.length === 0 ? (
-                  <Card><CardContent className="py-12 text-center text-muted-foreground">No one-off emails created yet.</CardContent></Card>
+                {loadingO ? <p className="text-sm text-muted-foreground">{em.loading}</p> : oneoffs.length === 0 ? (
+                  <Card><CardContent className="py-12 text-center text-muted-foreground">{em.noOneoff}</CardContent></Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {oneoffs.map((p: any) => (

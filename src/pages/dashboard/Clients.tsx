@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,6 +55,8 @@ function StatusPill({ status }: { status: string }) {
 
 export default function Clients() {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const cl = t.clients;
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
 
@@ -137,25 +140,25 @@ export default function Clients() {
               {/* Header */}
               <div className="px-6 py-5 border-b border-border flex flex-col gap-3">
                 <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">CRM</p>
-                  <h1 className="text-lg font-light tracking-wide">Clients</h1>
+                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
+                  <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
                   <div className="flex gap-5">
                     <div>
                       <p className="text-2xl font-light">{clients.length}</p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Clients</p>
+                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.clientsLabel}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-light">{bookings.length}</p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Bookings</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.bookingsLabel}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-light">
                         {clients.filter(c => c.bookingCount > 1).length}
                       </p>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Returning</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{cl.returning}</p>
                     </div>
                   </div>
                 )}
@@ -163,7 +166,7 @@ export default function Clients() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
                   <Input
-                    placeholder="Search by name or email…"
+                    placeholder={cl.searchPlaceholder}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-9 h-8 text-xs rounded-none"
@@ -186,7 +189,7 @@ export default function Clients() {
                   <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground py-20">
                     <User className="h-8 w-8 opacity-20" />
                     <p className="text-xs font-light tracking-wider uppercase">
-                      {search ? "No clients match" : "No clients yet"}
+                      {search ? cl.noClientsMatch : cl.noClientsYet}
                     </p>
                   </div>
                 ) : (
@@ -214,7 +217,7 @@ export default function Clients() {
                                   "text-[9px] tracking-widest uppercase px-1.5 py-0.5 font-light rounded-sm shrink-0",
                                   isActive ? "bg-background/20 text-background" : "bg-foreground/8 text-foreground/60"
                                 )}>
-                                  Returning
+                                  {cl.returning}
                                 </span>
                               )}
                             </div>
@@ -224,7 +227,7 @@ export default function Clients() {
                             <div className={cn("flex items-center gap-3 mt-1.5 text-[10px] tracking-wide", isActive ? "text-background/50" : "text-muted-foreground/60")}>
                               <span className="flex items-center gap-1">
                                 <Hash className="h-2.5 w-2.5" />
-                                {client.bookingCount} {client.bookingCount === 1 ? "booking" : "bookings"}
+                                {client.bookingCount} {client.bookingCount === 1 ? cl.booking : cl.bookings_plural}
                               </span>
                               {client.lastBookingDate && (
                                 <span className="flex items-center gap-1">
@@ -249,7 +252,7 @@ export default function Clients() {
                 {/* Panel header */}
                 <div className="px-8 py-6 border-b border-border flex items-start justify-between gap-4 sticky top-0 bg-background z-10">
                   <div className="flex flex-col gap-1.5">
-                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Client profile</p>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{cl.clientProfile}</p>
                     <h2 className="text-xl font-light tracking-wide">{selected.name}</h2>
                     <a href={`mailto:${selected.email}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                       <Mail className="h-3 w-3" />
@@ -268,25 +271,25 @@ export default function Clients() {
                 <div className="px-8 py-5 border-b border-border grid grid-cols-3 gap-6">
                   <div>
                     <p className="text-3xl font-light">{selected.bookingCount}</p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Total bookings</p>
+                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.totalBookings}</p>
                   </div>
                   <div>
                     <p className="text-3xl font-light">
                       ${(selected.totalSpent / 100).toFixed(0)}
                     </p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Total paid</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.totalPaid}</p>
                   </div>
                   <div>
                     <p className="text-3xl font-light">
                       {selected.lastBookingDate ? format(parseISO(selected.lastBookingDate), "MMM d") : "—"}
                     </p>
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">Last session</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-0.5">{cl.lastSession}</p>
                   </div>
                 </div>
 
                 {/* Booking history */}
                 <div className="px-8 py-6 flex flex-col gap-4">
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Booking history</p>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{cl.bookingHistory}</p>
                   <div className="flex flex-col gap-2">
                     {selected.bookings.map((b) => {
                       const startTime = b.session_availability?.start_time

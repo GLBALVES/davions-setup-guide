@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -157,6 +158,8 @@ const Bookings = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+  const bk = t.bookings;
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -272,10 +275,10 @@ const Bookings = () => {
   };
 
   const FILTERS: { key: FilterStatus; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "pending", label: "Pending" },
-    { key: "confirmed", label: "Confirmed" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "all", label: bk.all },
+    { key: "pending", label: bk.pending },
+    { key: "confirmed", label: bk.confirmed },
+    { key: "cancelled", label: bk.cancelled },
   ];
 
   const formatDate = (dateStr: string | null) => {
@@ -309,9 +312,9 @@ const Bookings = () => {
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                   <span className="inline-block w-6 h-px bg-border" />
-                  Schedule
+                   Schedule
                 </p>
-                <h1 className="text-2xl font-light tracking-wide">Bookings</h1>
+                <h1 className="text-2xl font-light tracking-wide">{bk.title}</h1>
               </div>
 
               {/* Funds-in-custody banner */}
@@ -320,9 +323,9 @@ const Bookings = () => {
                   <div className="flex items-start gap-3 flex-1">
                     <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div className="flex flex-col gap-0.5">
-                      <p className="text-xs font-light tracking-wide text-foreground">
-                        Funds held in custody — payment setup incomplete
-                      </p>
+                       <p className="text-xs font-light tracking-wide text-foreground">
+                          {bk.fundsInCustody}
+                        </p>
                       <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
                         You have {confirmedPaidCount} confirmed booking{confirmedPaidCount !== 1 ? "s" : ""} with payments received, but your banking details haven't been submitted yet. Complete your payment setup to release the funds to your account.
                       </p>
@@ -334,7 +337,7 @@ const Bookings = () => {
                     onClick={() => navigate("/dashboard/settings?tab=payments")}
                     className="gap-2 text-xs tracking-wider uppercase font-light shrink-0"
                   >
-                    Complete Setup
+                    {bk.completeSetup}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -370,7 +373,7 @@ const Bookings = () => {
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search client or session…"
+                    placeholder={bk.searchPlaceholder}
                     className="pl-9 h-8 text-xs"
                   />
                 </div>
@@ -388,16 +391,10 @@ const Bookings = () => {
                   <BookOpen className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {bookings.length === 0
-                        ? "No bookings yet"
-                        : search
-                        ? `No results for "${search}"`
-                        : "No bookings match this filter"}
+                       {bookings.length === 0 ? bk.noBookingsYet : search ? `${bk.noResults} "${search}"` : bk.noMatch}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {bookings.length === 0
-                        ? "Bookings from clients will appear here"
-                        : "Try a different search or filter"}
+                       {bookings.length === 0 ? bk.clientsWillAppear : bk.differentSearchOrFilter}
                     </p>
                   </div>
                 </div>
@@ -405,7 +402,7 @@ const Bookings = () => {
                 <div className="border border-border rounded-sm overflow-hidden">
                   {/* Table header */}
                   <div className="hidden md:grid grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 px-5 py-3 bg-muted/30 border-b border-border">
-                    {["Client", "Session", "Date & Time", "Payment", "Status", "Actions"].map((h) => (
+                    {[bk.client, bk.session, bk.dateTime, bk.payment, bk.status, bk.actions].map((h) => (
                       <span key={h} className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-medium">
                         {h}
                       </span>

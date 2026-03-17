@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -73,6 +74,8 @@ function formatRangeLabel(mode: ViewMode, date: Date): string {
 const Schedule = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const sc = t.schedule;
 
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState<Date>(startOfToday());
@@ -204,13 +207,13 @@ const Schedule = () => {
             <div className="flex flex-col gap-4 mb-5 shrink-0">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
                     <span className="inline-block w-6 h-px bg-border" />
-                    Schedule
+                    {sc.photographers}
                   </p>
                   <h1 className="text-2xl font-light tracking-wide flex items-center gap-2.5">
                     <CalendarDays className="h-5 w-5 text-muted-foreground" />
-                    Calendar
+                    {sc.title}
                   </h1>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 mt-1">
@@ -221,7 +224,7 @@ const Schedule = () => {
                     onClick={() => handleBlockDay(currentDate)}
                   >
                     <CalendarOff className="h-3.5 w-3.5" />
-                    Block Day
+                    {sc.blockTime}
                   </Button>
                   <Button
                     size="sm"
@@ -229,7 +232,7 @@ const Schedule = () => {
                     onClick={() => handleCreateBooking(currentDate)}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    New Booking
+                    {sc.newBooking}
                   </Button>
                 </div>
               </div>
@@ -240,8 +243,8 @@ const Schedule = () => {
                   <Button variant="outline" size="icon" onClick={() => navigate("prev")}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate("today")} className="text-xs">
-                    Today
+                   <Button variant="outline" size="sm" onClick={() => navigate("today")} className="text-xs">
+                    {sc.today}
                   </Button>
                   <Button variant="outline" size="icon" onClick={() => navigate("next")}>
                     <ChevronRight className="h-4 w-4" />
@@ -263,7 +266,7 @@ const Schedule = () => {
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                       }`}
                     >
-                      {VIEW_LABELS[mode]}
+                      {mode === "month" ? sc.month : mode === "week" ? sc.week : sc.day}
                     </button>
                   ))}
                 </div>
@@ -275,7 +278,7 @@ const Schedule = () => {
               {loading ? (
                 <div className="flex items-center justify-center flex-1">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-                    Loading…
+                    {sc.loading}
                   </span>
                 </div>
               ) : viewMode === "month" ? (

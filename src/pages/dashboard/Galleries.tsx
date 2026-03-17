@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -55,24 +56,10 @@ type StatusFilter = "all" | "draft" | "published" | "expired" | "unassigned";
 type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc";
 type ViewMode = "grid" | "list";
 
-const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementType }[] = [
-  { value: "all", label: "All", icon: SlidersHorizontal },
-  { value: "draft", label: "Draft", icon: Clock4 },
-  { value: "published", label: "Published", icon: CheckCheck },
-  { value: "expired", label: "Expired", icon: CalendarX2 },
-  { value: "unassigned", label: "No client", icon: UserX },
-];
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "newest", label: "Newest first" },
-  { value: "oldest", label: "Oldest first" },
-  { value: "title_asc", label: "Title A → Z" },
-  { value: "title_desc", label: "Title Z → A" },
-  { value: "photos_desc", label: "Most photos" },
-];
-
 const Galleries = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
+  const g = t.galleries;
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -85,6 +72,22 @@ const Galleries = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementType }[] = [
+    { value: "all", label: g.all, icon: SlidersHorizontal },
+    { value: "draft", label: g.draft, icon: Clock4 },
+    { value: "published", label: g.published, icon: CheckCheck },
+    { value: "expired", label: g.expired, icon: CalendarX2 },
+    { value: "unassigned", label: g.noClient, icon: UserX },
+  ];
+
+  const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "newest", label: g.newestFirst },
+    { value: "oldest", label: g.oldestFirst },
+    { value: "title_asc", label: g.titleAZ },
+    { value: "title_desc", label: g.titleZA },
+    { value: "photos_desc", label: g.mostPhotos },
+  ];
 
   const fetchGalleries = async () => {
     setLoading(true);
@@ -177,7 +180,7 @@ const Galleries = () => {
     return list;
   }, [galleries, type, query, statusFilter, sortBy]);
 
-  const heading = type === "proof" ? "Proof Galleries" : type === "final" ? "Final Galleries" : "Galleries";
+  const heading = type === "proof" ? g.proofGalleries : type === "final" ? g.finalGalleries : g.title;
   const defaultCategory = type ?? "proof";
   const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || sortBy !== "newest";
 
@@ -218,8 +221,8 @@ const Galleries = () => {
                   onClick={() => setCreateOpen(true)}
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  New Gallery
+                   <Plus className="h-3.5 w-3.5" />
+                  {g.newGallery}
                 </Button>
               </div>
 
@@ -233,7 +236,7 @@ const Galleries = () => {
                     <Input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search by title, client, session…"
+                      placeholder={g.searchPlaceholder}
                       className="h-8 pl-8 pr-8 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
                     />
                     <AnimatePresence>
@@ -264,12 +267,12 @@ const Galleries = () => {
                         )}
                       >
                         <ArrowUpDown className="h-3 w-3" />
-                        {SORT_OPTIONS.find((s) => s.value === sortBy)?.label ?? "Sort"}
+                        {SORT_OPTIONS.find((s) => s.value === sortBy)?.label ?? g.sortBy}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       <DropdownMenuLabel className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-light">
-                        Sort by
+                        {g.sortBy}
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
@@ -351,7 +354,7 @@ const Galleries = () => {
 
                   {/* Count + clear */}
                   <span className="ml-1 text-[10px] text-muted-foreground/60 tracking-wider">
-                    {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+                    {filtered.length} {filtered.length !== 1 ? g.results : g.result}
                   </span>
 
                   <AnimatePresence>
@@ -365,7 +368,7 @@ const Galleries = () => {
                         className="flex items-center gap-1 text-[10px] tracking-wider uppercase font-light text-muted-foreground hover:text-destructive transition-colors ml-1"
                       >
                         <X className="h-2.5 w-2.5" />
-                        Clear filters
+                        {g.clearFilters}
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -411,10 +414,12 @@ function GalleryGrid({
   onAssigned: () => void;
   viewMode: ViewMode;
 }) {
+  const { t } = useLanguage();
+  const g = t.galleries;
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{g.loading}</span>
       </div>
     );
   }
@@ -427,8 +432,8 @@ function GalleryGrid({
         className="flex flex-col items-center justify-center py-16 gap-3 text-center"
       >
         <FolderOpen className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm font-light text-muted-foreground">No galleries found</p>
-        <p className="text-[10px] text-muted-foreground/60">Try adjusting your search or filters</p>
+        <p className="text-sm font-light text-muted-foreground">{g.noGalleriesFound}</p>
+        <p className="text-[10px] text-muted-foreground/60">{g.adjustFilters}</p>
       </motion.div>
     );
   }
