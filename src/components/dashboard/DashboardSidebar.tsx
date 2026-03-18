@@ -605,6 +605,17 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
   const { t } = useLanguage();
+  const [profile, setProfile] = useState<{ full_name: string | null; hero_image_url: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("photographers")
+      .select("full_name, hero_image_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => { if (data) setProfile(data as any); });
+  }, [user]);
   const translatedGroups = buildGroups(t);
 
   // Filter a group's items based on permissions
