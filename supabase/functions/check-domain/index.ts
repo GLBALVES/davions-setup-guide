@@ -22,7 +22,7 @@ function getRootDomain(domain: string): string {
 }
 
 function getExpectedTxtValue(domain: string): string {
-  return `davions_verify=${domain.replace(/\./g, "_")}`;
+  return `lovable_verify=${domain.replace(/\./g, "_")}`;
 }
 
 async function resolveA(hostname: string): Promise<string[]> {
@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     const isSubdomain = parts.length > rootPartsCount;
 
     const expectedTxt = getExpectedTxtValue(cleanDomain);
-    const txtHost = `_davions.${rootDomain}`;
+    const txtHost = `_lovable.${rootDomain}`;
 
     // Run DNS lookups in parallel — also check CNAME for Cloudflare users
     const [aRecords, txtRecords, cnameRecords] = await Promise.all([
