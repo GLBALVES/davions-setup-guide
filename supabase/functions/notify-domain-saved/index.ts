@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Davions <noreply@davions.com>",
         to: ["team@davions.com"],
-        subject: `New custom domain — ${domain}`,
+        subject: isRemoval ? `Custom domain removed — ${domain}` : `New custom domain — ${domain}`,
         html: emailHtml,
       }),
     });
