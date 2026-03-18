@@ -605,6 +605,17 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
   const { t } = useLanguage();
+  const [profile, setProfile] = useState<{ full_name: string | null; hero_image_url: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("photographers")
+      .select("full_name, hero_image_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => { if (data) setProfile(data as any); });
+  }, [user]);
   const translatedGroups = buildGroups(t);
 
   // Filter a group's items based on permissions
@@ -1021,18 +1032,54 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <AnimatePresence initial={false}>
-          {!collapsed && userEmail && (
-            <motion.p
-              className="text-[10px] text-muted-foreground truncate mb-2 px-2"
+          {!collapsed && (
+            <motion.div
+              className="flex items-center gap-2.5 px-2 mb-2"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18, ease: "easeInOut" }}
             >
-              {userEmail}
-            </motion.p>
+              {/* Avatar */}
+              <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 border border-sidebar-border bg-muted flex items-center justify-center">
+                {profile?.hero_image_url ? (
+                  <img src={profile.hero_image_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase select-none">
+                    {(profile?.full_name || userEmail || "?").charAt(0)}
+                  </span>
+                )}
+              </div>
+              {/* Name + email */}
+              <div className="flex flex-col min-w-0">
+                {profile?.full_name && (
+                  <span className="text-[11px] font-light text-foreground truncate leading-tight">
+                    {profile.full_name}
+                  </span>
+                )}
+                {userEmail && (
+                  <span className="text-[9px] text-muted-foreground truncate leading-tight tracking-wide">
+                    {userEmail}
+                  </span>
+                )}
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
+        {/* Collapsed: show avatar only */}
+        {collapsed && (
+          <div className="flex justify-center mb-2">
+            <div className="h-7 w-7 rounded-full overflow-hidden border border-sidebar-border bg-muted flex items-center justify-center">
+              {profile?.hero_image_url ? (
+                <img src={profile.hero_image_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-medium text-muted-foreground uppercase select-none">
+                  {(profile?.full_name || userEmail || "?").charAt(0)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
