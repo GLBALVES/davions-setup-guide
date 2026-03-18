@@ -80,8 +80,36 @@ const CustomDomainStore = () => {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Store not found.</p>
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6">
+        {/* Logo */}
+        <img
+          src={logoPreto}
+          alt="Davions"
+          className="h-6 object-contain invert opacity-70 mb-16"
+        />
+
+        {/* Decorative camera icon */}
+        <div className="relative mb-10">
+          <div className="absolute -inset-6 rounded-full border border-white/5" />
+          <div className="absolute -inset-12 rounded-full border border-white/[0.03]" />
+          <Camera className="h-10 w-10 text-white/10" />
+        </div>
+
+        {/* Message */}
+        <h1 className="text-sm font-light tracking-[0.2em] uppercase text-white/60 mb-3 text-center">
+          Domain not configured
+        </h1>
+        <p className="text-[11px] text-white/30 font-light text-center max-w-xs leading-relaxed">
+          This domain has not been linked to any photographer's store yet. If you're the owner, complete your setup in the dashboard.
+        </p>
+
+        {/* Divider + footer */}
+        <div className="mt-16 flex flex-col items-center gap-4">
+          <div className="w-8 h-px bg-white/10" />
+          <p className="text-[9px] tracking-widest uppercase text-white/20">
+            Powered by Davions
+          </p>
+        </div>
       </div>
     );
   }
