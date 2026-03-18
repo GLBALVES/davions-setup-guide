@@ -293,22 +293,54 @@ const WebsiteSettings = () => {
     setRemovingDomain(false);
   };
 
-  const checkDomainConnectivity = async (domainOverride?: string) => {
+  const VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
+
+  const checkDomainConnectivity = useCallback(async (domainOverride?: string) => {
     const target = domainOverride ?? customDomain;
     if (!target) return;
-    setDomainStatus("checking");
+    setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "checking" as const, detail: undefined })));
     try {
-      const { data, error } = await supabase.functions.invoke("check-domain", {
-        body: { domain: target },
-      });
-      if (error) throw error;
-      setDomainStatus(data?.status === "active" ? "active" : "pending");
-      setDomainCheckedAt(new Date());
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-domain`,
+        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ domain: target }) }
+      );
+      if (!response.ok) throw new Error("check-domain failed");
+      const result = await response.json();
+      const aOk = result.dns?.a?.ok;
+      const foundIPs: string[] = result.dns?.a?.found ?? [];
+      setCheck("dns", aOk ? "ok" : "error",
+        aOk ? `A record → ${VPS_IP}` : foundIPs.length > 0 ? `Found: ${foundIPs.join(", ")} — expected ${VPS_IP}` : `No A record found — expected ${VPS_IP}`);
+      // SSL probe
+      try {
+        await fetch(`https://${target}`, { method: "HEAD", signal: AbortSignal.timeout(6000), mode: "no-cors" });
+        setCheck("ssl", "ok", "HTTPS connection established successfully");
+      } catch (sslErr: unknown) {
+        const msg = sslErr instanceof Error ? sslErr.message : "";
+        if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+          setCheck("ssl", aOk ? "warning" : "error",
+            aOk ? "SSL may still be provisioning — wait a few minutes" : "Cannot verify SSL until DNS points to the VPS");
+        } else {
+          setCheck("ssl", "warning", "SSL check inconclusive — browser CORS policy may block the probe");
+        }
+      }
+      // Routing probe
+      try {
+        const valRes = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-domain?domain=${encodeURIComponent(target)}`,
+          { signal: AbortSignal.timeout(6000) }
+        );
+        setCheck("routing", valRes.ok ? "ok" : "error",
+          valRes.ok ? "Domain is registered and Caddy will route it" : `Not registered in the system (HTTP ${valRes.status})`);
+      } catch {
+        setCheck("routing", "error", "Could not reach the routing validation endpoint");
+      }
+      setDomainLastChecked(new Date());
     } catch {
-      setDomainStatus("pending");
-      setDomainCheckedAt(new Date());
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "error" as const, detail: "Check failed — please try again" })));
     }
-  };
+  }, [customDomain, setCheck]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
