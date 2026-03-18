@@ -95,7 +95,7 @@ function RecordBadge({ status }: { status: RecordStatus }) {
 }
 
 function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
-  if (!dns || (dns.a === "idle" && dns.txt === "idle")) {
+  if (!dns || dns.a === "idle") {
     return <span className="text-[10px] text-muted-foreground/40">—</span>;
   }
   return (
@@ -103,10 +103,6 @@ function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.a} />
         <span>A</span>
-      </span>
-      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-        <RecordBadge status={dns.txt} />
-        <span>TXT</span>
       </span>
     </div>
   );
