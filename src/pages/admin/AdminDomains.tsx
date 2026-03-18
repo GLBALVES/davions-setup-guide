@@ -175,12 +175,29 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
   const parts = domain.split(".");
   const subName = isSubdomain ? parts[0] : null;
   const cnameTarget = CNAME_RECORD;
+  const detectedCname = dns?.cname ?? [];
+  const isUsingCname = detectedCname.length > 0;
 
   return (
     <div className="px-6 py-4 bg-muted/30 border-b border-border space-y-4">
-      <p className="text-xs text-muted-foreground font-light">
-        DNS records required for <span className="font-mono text-foreground">{domain}</span>
-      </p>
+      <div className="flex items-center gap-3">
+        <p className="text-xs text-muted-foreground font-light">
+          DNS records required for <span className="font-mono text-foreground">{domain}</span>
+        </p>
+        {isUsingCname && (
+          <span
+            className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border"
+            style={{
+              color: "hsl(38 80% 40%)",
+              borderColor: "hsl(38 92% 50% / 0.35)",
+              backgroundColor: "hsl(38 92% 50% / 0.1)",
+            }}
+          >
+            <AlertTriangle size={9} />
+            Using Cloudflare CNAME → {detectedCname[0]}
+          </span>
+        )}
+      </div>
 
       {/* Standard (non-Cloudflare) records */}
       <div>
@@ -222,7 +239,12 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
                     <td className="py-1.5">
                       <div className="flex items-center gap-1.5">
                         <RecordBadge status={recordStatus} />
-                        {recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
+                        {isARecord && recordStatus === "ok" && isUsingCname && (
+                          <span className="text-[10px]" style={{ color: "hsl(38 80% 40%)" }}>
+                            via CNAME
+                          </span>
+                        )}
+                        {(!isARecord || !isUsingCname) && recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
                         {recordStatus === "fail" && <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>}
                         {recordStatus === "checking" && <span className="text-[10px] text-muted-foreground">Checking…</span>}
                         {recordStatus === "idle" && <span className="text-[10px] text-muted-foreground/40">—</span>}
