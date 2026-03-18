@@ -462,10 +462,10 @@ function ArticleRow({ article, highlight }: { article: Article; highlight?: stri
 
 const HelpCenter = () => {
   const { signOut, user } = useAuth();
+  const { lang, setLang } = useLanguage();
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [bugReportOpen, setBugReportOpen] = useState(false);
-  const [lang, setLang] = useState<Lang>("en");
 
   const t = ui[lang];
   const rawCategories = categoriesData[lang];
