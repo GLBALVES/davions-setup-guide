@@ -1,99 +1,56 @@
 
-## Contexto
+## O Problema
 
-O código já está preparado para usar um VPS como proxy — a variável `VITE_VPS_IP` já existe, e a instrução "SSL is provisioned automatically" já está no wizard. O que falta é:
+O valor da `SUPABASE_SERVICE_ROLE_KEY` fica **sempre oculto** no painel Lovable Cloud — é impossível visualizar pelo UI por segurança. Não existe nenhum caminho no painel para ver o valor real.
 
-1. Configurar o VPS Hostinger com Caddy
-2. Definir o `VITE_VPS_IP` e `VPS_IP` no projeto
-
----
-
-## Pré-requisitos
-
-Você precisa de um **Hostinger VPS KVM** (não compartilhado). Planos compatíveis: KVM 1, KVM 2, etc. O plano precisa de Ubuntu 22.04 e acesso SSH root.
+Mas há uma solução muito melhor do que tentar expor essa chave no VPS.
 
 ---
 
-## Passo a Passo Completo
+## A Solução Correta: Edge Function de Validação
 
-### Passo 1 — Acessar o VPS via SSH
-
-No painel Hostinger, copie o IP do VPS e a senha root. No terminal:
+Em vez de colocar a chave `service_role` no VPS (o que seria um risco de segurança), crio uma **Edge Function dedicada** chamada `validate-domain` que o Caddy chama para verificar se um domínio existe.
 
 ```text
-ssh root@SEU_IP_DO_VPS
+Caddy recebe requisição para "foto.studio.com"
+        ↓
+Caddy pergunta: GET https://[projeto].supabase.co/functions/v1/validate-domain?domain=foto.studio.com
+        ↓
+Edge Function consulta o banco internamente (sem expor nenhuma chave)
+        ↓
+Retorna 200 (domínio existe) ou 403 (domínio não existe)
+        ↓
+Caddy emite ou rejeita SSL
 ```
+
+**Vantagens:**
+- Zero segredos no VPS — a URL pública da Edge Function já é suficiente
+- Mais seguro: a chave service_role fica apenas no ambiente do backend
+- Mais simples: no VPS só precisará da URL da Edge Function
 
 ---
 
-### Passo 2 — Instalar Caddy
+## O que será feito
 
-```text
-sudo apt update && sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
-curl -1sLf 'https://dl.cloudflare.com/cloudflare-dns.com/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudflare.com/caddy/stable/deb/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update && sudo apt install caddy
-```
+**Criar** `supabase/functions/validate-domain/index.ts` — Edge Function que:
+- Recebe `?domain=` como query param
+- Consulta `photographers.custom_domain` no banco
+- Retorna `200 OK` se existir, `403 Forbidden` se não
 
-_(A forma mais simples e confiável no Ubuntu 22.04 é via repositório oficial do Caddy)_
-
----
-
-### Passo 3 — Criar o script de validação de domínio
-
-Este é o "porteiro": o Caddy pergunta "posso emitir SSL para este domínio?" antes de aceitar qualquer requisição. O script consulta o banco e responde 200 (sim) ou 403 (não).
-
-Criar o arquivo `/opt/domain-checker/server.js`:
-
-```js
-import http from "http";
-
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-const server = http.createServer(async (req, res) => {
-  const domain = new URL(req.url, "http://localhost").searchParams.get("domain");
-  if (!domain) { res.writeHead(400); res.end(); return; }
-
-  const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/photographers?custom_domain=eq.${encodeURIComponent(domain)}&select=id&limit=1`,
-    { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-  );
-  const data = await r.json();
-  if (Array.isArray(data) && data.length > 0) {
-    res.writeHead(200); res.end("ok");
-  } else {
-    res.writeHead(403); res.end("not found");
-  }
-});
-
-server.listen(9000, "127.0.0.1", () => console.log("Domain checker on :9000"));
-```
-
-Rodar com `node --experimental-vm-modules` ou via **PM2** (instalado com `npm install -g pm2`).
-
----
-
-### Passo 4 — Configurar o Caddyfile
-
-Substituir o conteúdo de `/etc/caddy/Caddyfile`:
-
+**Caddyfile no VPS** ficará assim:
 ```text
 {
     on_demand_tls {
-        ask http://localhost:9000/check?domain={host}
+        ask https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain={host}
         interval 2m
         burst 5
     }
 }
 
 :443 {
-    tls {
-        on_demand
-    }
+    tls { on_demand }
     reverse_proxy https://davions-page-builder.lovable.app {
         header_up Host {host}
-        header_up X-Real-IP {remote_host}
     }
 }
 
@@ -102,63 +59,33 @@ Substituir o conteúdo de `/etc/caddy/Caddyfile`:
 }
 ```
 
-Reiniciar: `sudo systemctl reload caddy`
+**Nenhuma variável de ambiente necessária no VPS** além das opcionais de sistema.
 
 ---
 
-### Passo 5 — Liberar as portas no firewall
+## Comandos Completos para o VPS (Ubuntu 22.04)
 
-```text
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 22
-sudo ufw enable
+Após a criação da Edge Function, os comandos para configurar o Hostinger VPS serão:
+
+```bash
+# 1. Instalar Caddy
+sudo apt update
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudflare.com/cloudflare-dns.com/stable/gpg.key' \
+  | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudflare.com/caddy/stable/deb/debian.deb.txt' \
+  | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update && sudo apt install caddy
+
+# 2. Configurar Caddyfile
+sudo nano /etc/caddy/Caddyfile
+# (colar o Caddyfile acima)
+
+# 3. Liberar portas
+sudo ufw allow 22 && sudo ufw allow 80 && sudo ufw allow 443 && sudo ufw enable
+
+# 4. Reiniciar Caddy
+sudo systemctl reload caddy
 ```
 
----
-
-### Passo 6 — Configurar as variáveis no app
-
-Após ter o IP do VPS (visível no painel Hostinger), **farei as seguintes mudanças no código**:
-
-**`VITE_VPS_IP`** — variável de ambiente com o IP do VPS. As instruções DNS no WebsiteSettings já lêem esta variável e mostrarão o IP correto automaticamente.
-
-**`VPS_IP` (secret no backend)** — a Edge Function `check-domain` já lê `Deno.env.get("VPS_IP")` para validar o registro A.
-
-Também atualizarei:
-- `src/pages/dashboard/CustomDomainDocs.tsx` — substituir as ocorrências hardcoded de `185.158.133.1` pelo IP do VPS
-- `src/pages/admin/AdminDomains.tsx` — mesma correção
-- `supabase/functions/notify-domain-saved/index.ts` — atualizar o IP nos e-mails e remover "Action needed: add domain to Lovable manually" (agora é automático)
-- `supabase/functions/help-assistant/index.ts` — atualizar referência ao IP
-
----
-
-## Fluxo Final
-
-```text
-Fotógrafo salva domínio
-        ↓
-App mostra: "Adicione registro A → SEU_IP_VPS"
-        ↓
-Fotógrafo aponta DNS no registrador (Hostinger, Registro.br, etc.)
-        ↓
-Caddy recebe requisição → pergunta ao script: "existe este domínio?"
-        ↓
-Script consulta banco → retorna 200 se sim
-        ↓
-Caddy emite SSL via Let's Encrypt automaticamente
-        ↓
-Caddy faz proxy para davions-page-builder.lovable.app
-        ↓
-App detecta o hostname e carrega a loja correta ✓
-```
-
-**Zero ação manual. Funciona para todos os fotógrafos.**
-
----
-
-## O que você precisa me fornecer
-
-**Apenas o IP do VPS** após a criação no Hostinger (parece com `185.XXX.XXX.XXX`). Com isso, faço todas as mudanças de código necessárias de uma vez.
-
-Você já tem um VPS criado na Hostinger ou precisa criar um?
+**Só isso.** Sem Node.js, sem PM2, sem variáveis de ambiente com chaves secretas.
