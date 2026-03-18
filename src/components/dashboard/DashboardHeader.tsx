@@ -8,6 +8,14 @@ import { useNavigate } from "react-router-dom";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Lang } from "@/lib/i18n/translations";
+
+const LANG_OPTIONS: { value: Lang; flag: string; label: string }[] = [
+  { value: "en", flag: "🇺🇸", label: "EN" },
+  { value: "pt", flag: "🇧🇷", label: "PT" },
+  { value: "es", flag: "🇪🇸", label: "ES" },
+];
 
 export function DashboardHeader() {
   const { user } = useAuth();
