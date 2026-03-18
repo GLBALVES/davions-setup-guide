@@ -759,7 +759,7 @@ const WebsiteSettings = () => {
                         className="shrink-0 flex items-center gap-1 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        {ws.setupGuide}
+                        Setup Wizard
                       </a>
                     </div>
                     <FieldRow label={ws.domainLabel}>

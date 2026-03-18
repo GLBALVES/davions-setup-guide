@@ -1,70 +1,398 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { Globe, Server, Shield, Clock, CheckCircle2, AlertTriangle, ExternalLink, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Globe, Copy, Check, ExternalLink, AlertTriangle, Shield,
+  Clock, ArrowLeft, ArrowRight, CheckCircle2, AlertCircle,
+} from "lucide-react";
 
-const steps = [
-  {
-    number: "01",
-    title: "Go to Project Settings → Domains",
-    description:
-      "In your dashboard, open Settings and navigate to the Domains section. Click Connect Domain and type your domain name (e.g. booking.mystudio.com).",
-  },
-  {
-    number: "02",
-    title: "Add DNS records at your registrar",
-    description:
-      "Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.) and add the following records exactly as shown.",
-  },
-  {
-    number: "03",
-    title: "Wait for DNS propagation",
-    description:
-      "DNS changes can take up to 48 hours to propagate worldwide. Once verified, SSL is provisioned automatically and your domain goes live.",
-  },
+// ── DNS records ──────────────────────────────────────────────────────────────
+const DNS_RECORDS = [
+  { type: "A",   name: "@",       value: "185.158.133.1",         purpose: "Root domain" },
+  { type: "A",   name: "www",     value: "185.158.133.1",         purpose: "WWW subdomain" },
+  { type: "TXT", name: "_davions", value: "davions_verify=<provided>", purpose: "Domain security verification" },
 ];
 
-const records = [
-  { type: "A", name: "@", value: "185.158.133.1", purpose: "Root domain (yourdomain.com)" },
-  { type: "A", name: "www", value: "185.158.133.1", purpose: "WWW subdomain" },
-  { type: "TXT", name: "_lovable", value: "lovable_verify=<provided>", purpose: "Domain ownership verification" },
-];
+// ── Step progress indicator ───────────────────────────────────────────────────
+function StepDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div
+            className={`h-2 w-2 rounded-full transition-colors ${
+              i < current
+                ? "bg-foreground"
+                : i === current
+                ? "bg-foreground ring-2 ring-offset-2 ring-offset-background ring-foreground"
+                : "bg-border"
+            }`}
+          />
+          {i < total - 1 && (
+            <div className={`h-px w-6 transition-colors ${i < current ? "bg-foreground" : "bg-border"}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
-const statuses = [
-  { label: "Action required", color: "text-orange-500", icon: AlertTriangle, desc: "Setup was started but not completed. Return to Domains and click Complete Setup." },
-  { label: "Verifying", color: "text-yellow-500", icon: Clock, desc: "Waiting for DNS propagation. No action needed — this can take up to 48 h." },
-  { label: "Setting up", color: "text-blue-500", icon: Server, desc: "Verification succeeded and SSL is being provisioned. Transitions automatically." },
-  { label: "Active", color: "text-green-500", icon: CheckCircle2, desc: "Your domain is live and serving your store." },
-  { label: "Offline", color: "text-red-500", icon: AlertTriangle, desc: "DNS changed and no longer matches. Fix the A records at your registrar." },
-  { label: "Failed", color: "text-red-500", icon: AlertTriangle, desc: "SSL could not be provisioned. Click Retry after verifying DNS records." },
-];
+// ── Copy button ───────────────────────────────────────────────────────────────
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={copy}
+      className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+      title="Copy"
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
 
-const faqs = [
-  {
-    q: "Do I need to add both root and www?",
-    a: "Yes. Add both yourdomain.com and www.yourdomain.com as separate entries so visitors using either form are directed to your store.",
-  },
-  {
-    q: "Can I use a subdomain (e.g. book.mystudio.com)?",
-    a: "Absolutely. Type the full subdomain in the domain input. Add an A record with name book pointing to 185.158.133.1 at your registrar.",
-  },
-  {
-    q: "Will HTTPS / SSL work automatically?",
-    a: "Yes. SSL certificates are provisioned automatically once ownership is verified. No manual certificate installation is required.",
-  },
-  {
-    q: "My domain isn't verifying after 48 hours. What do I do?",
-    a: "Double-check that there are no conflicting A or CNAME records for the same name. Use a tool like DNSChecker.org to inspect current DNS values, then remove any conflicting records.",
-  },
-  {
-    q: "Can I move a domain from one store to another?",
-    a: "Yes. Prove ownership again in the Domains settings of the destination project and the domain will transfer over.",
-  },
-];
+// ── Step 1: Enter domain ──────────────────────────────────────────────────────
+function Step1({
+  domain,
+  setDomain,
+  onNext,
+  saving,
+}: {
+  domain: string;
+  setDomain: (v: string) => void;
+  onNext: () => void;
+  saving: boolean;
+}) {
+  const [error, setError] = useState<string | null>(null);
 
+  const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+
+  const validate = () => {
+    const v = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
+    if (!v) return "Please enter your domain name.";
+    if (!DOMAIN_REGEX.test(v)) return "Enter a valid domain (e.g. booking.yourstudio.com).";
+    return null;
+  };
+
+  const handleNext = () => {
+    const err = validate();
+    if (err) { setError(err); return; }
+    setError(null);
+    onNext();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <p className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Step 1 of 4</p>
+        <h2 className="text-lg font-light tracking-wide">Enter your domain</h2>
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          Type the domain or subdomain you want to point at your store. For example:{" "}
+          <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">booking.yourstudio.com</span>
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+          <span className="pl-3 pr-2 h-10 flex items-center text-xs text-muted-foreground select-none">
+            <Globe className="h-3.5 w-3.5" />
+          </span>
+          <input
+            value={domain}
+            onChange={(e) => {
+              setDomain(e.target.value.toLowerCase().replace(/\s/g, "").replace(/^https?:\/\//, ""));
+              setError(null);
+            }}
+            placeholder="booking.yourstudio.com"
+            className="flex-1 h-10 pr-3 text-sm font-mono font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+            onKeyDown={(e) => e.key === "Enter" && handleNext()}
+          />
+        </div>
+        {error && (
+          <p className="flex items-center gap-1 text-[11px] text-destructive">
+            <AlertCircle className="h-3 w-3" />{error}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-start gap-2.5 p-4 border border-border bg-muted/20">
+        <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          If you want both <span className="font-mono text-[11px]">yourdomain.com</span> and <span className="font-mono text-[11px]">www.yourdomain.com</span> to work, you'll need to add both as separate entries. Complete this wizard for each one.
+        </p>
+      </div>
+
+      <div className="flex justify-end pt-2">
+        <Button onClick={handleNext} disabled={saving} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          Next <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 2: Add DNS records ───────────────────────────────────────────────────
+function Step2({
+  domain,
+  onBack,
+  onNext,
+}: {
+  domain: string;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <p className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Step 2 of 4</p>
+        <h2 className="text-lg font-light tracking-wide">Add DNS records</h2>
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.) and add the following records exactly as shown for{" "}
+          <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">{domain}</span>.
+        </p>
+      </div>
+
+      <div className="border border-border overflow-hidden">
+        <table className="w-full text-[12px]">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Type</th>
+              <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Name</th>
+              <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Value</th>
+              <th className="px-2 py-3 w-8" />
+            </tr>
+          </thead>
+          <tbody>
+            {DNS_RECORDS.map((r, i) => (
+              <tr key={i} className="border-b border-border last:border-0">
+                <td className="px-4 py-3">
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px] text-foreground">{r.type}</span>
+                </td>
+                <td className="px-4 py-3 font-mono text-foreground">{r.name}</td>
+                <td className="px-4 py-3 font-mono text-foreground break-all">
+                  {r.type === "TXT" && domain
+                    ? `davions_verify=${domain.replace(/\./g, "_")}`
+                    : r.value}
+                </td>
+                <td className="px-2 py-3">
+                  <CopyButton
+                    value={
+                      r.type === "TXT" && domain
+                        ? `davions_verify=${domain.replace(/\./g, "_")}`
+                        : r.value
+                    }
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-start gap-2.5 p-4 border border-border bg-muted/20">
+        <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          Remove any conflicting A records or CNAME records for the same name before adding these. Conflicting records are the most common cause of verification failure.
+        </p>
+      </div>
+
+      <div className="flex items-start gap-3 p-4 border border-border bg-card">
+        <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="text-[12px] font-light">Automatic SSL provisioning</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Once domain ownership is verified, an SSL certificate is issued automatically. No manual installation is needed.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-2">
+        <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back
+        </Button>
+        <Button onClick={onNext} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          Next <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 3: Wait for propagation ──────────────────────────────────────────────
+function Step3({ domain, onBack, onNext }: { domain: string; onBack: () => void; onNext: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <p className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Step 3 of 4</p>
+        <h2 className="text-lg font-light tracking-wide">Wait for propagation</h2>
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          DNS changes take time to propagate across the internet. Here's what to expect.
+        </p>
+      </div>
+
+      <div className="space-y-px">
+        {[
+          {
+            icon: Clock,
+            color: "text-muted-foreground",
+            title: "DNS propagation",
+            desc: "After you add the DNS records, changes can take between a few minutes and 48 hours to propagate worldwide. No action is needed during this time.",
+          },
+          {
+            icon: Shield,
+            color: "text-muted-foreground",
+            title: "Automatic SSL",
+            desc: "Once ownership is verified, an SSL certificate is provisioned automatically. Your domain will serve over HTTPS without any manual steps.",
+          },
+          {
+            icon: CheckCircle2,
+            color: "text-muted-foreground",
+            title: "Going live",
+            desc: "When everything is ready, your store will be accessible at your custom domain. You'll see the status update in Website Settings → Custom Domain.",
+          },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.title} className="flex items-start gap-3 p-4 border border-border bg-card">
+              <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${item.color}`} />
+              <div className="space-y-0.5">
+                <p className="text-[12px] font-light">{item.title}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-4 border border-border bg-card space-y-3 text-[12px] text-muted-foreground leading-relaxed">
+        <p className="font-light text-foreground text-[12px]">Verify your DNS with a free tool</p>
+        <p>Use DNSChecker.org to see the current values propagated worldwide before contacting support.</p>
+        <a
+          href="https://dnschecker.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          <ExternalLink className="h-3 w-3" />
+          Open DNSChecker.org
+        </a>
+      </div>
+
+      <div className="flex items-center justify-between pt-2">
+        <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back
+        </Button>
+        <Button onClick={onNext} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          Next <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 4: Done ──────────────────────────────────────────────────────────────
+function Step4({ domain, onBack, onFinish }: { domain: string; onBack: () => void; onFinish: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const fullUrl = `https://${domain}`;
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(fullUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <p className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Step 4 of 4</p>
+        <h2 className="text-lg font-light tracking-wide">All set</h2>
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          Your domain has been saved. Once DNS propagates and SSL is provisioned, your store will be live at the address below.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 p-4 border border-border bg-card">
+        <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-sm font-mono font-light flex-1 truncate">{fullUrl}</span>
+        <button onClick={copy} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Copy">
+          {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+        <a href={fullUrl} target="_blank" rel="noopener noreferrer" className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </div>
+
+      <div className="space-y-px">
+        <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground pb-2">Troubleshooting</p>
+        {[
+          "Confirm both A records (@ and www) point to 185.158.133.1.",
+          "Check for conflicting A records or CNAME records with the same name and remove them.",
+          "Use DNSChecker.org to inspect current DNS values worldwide.",
+          "If you have CAA records, add letsencrypt.org as an allowed certificate authority.",
+          "DNS changes can take up to 72 hours in rare cases — wait and retry.",
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-3 px-4 py-3 border border-border bg-card">
+            <span className="font-mono text-[11px] text-muted-foreground/50 shrink-0 mt-0.5">{i + 1}.</span>
+            <p className="text-[12px] text-muted-foreground leading-relaxed">{item}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-2">
+        <Button onClick={onBack} variant="ghost" size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back
+        </Button>
+        <Button onClick={onFinish} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Done
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 const CustomDomainDocs = () => {
   const { signOut, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState(0);
+  const [domain, setDomain] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const saveDomain = async () => {
+    if (!user || !domain) return;
+    setSaving(true);
+    const { error } = await supabase.from("photographers").update({
+      custom_domain: domain.trim() || null,
+    } as any).eq("id", user.id);
+    if (error) {
+      toast({ title: "Failed to save domain", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Domain saved" });
+    }
+    setSaving(false);
+  };
+
+  const handleStep1Next = async () => {
+    await saveDomain();
+    setStep(1);
+  };
+
+  const TOTAL = 4;
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -72,156 +400,57 @@ const CustomDomainDocs = () => {
         <div className="flex-1 flex flex-col min-h-0">
           <DashboardHeader />
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-6 py-12 space-y-14">
+            <div className="max-w-2xl mx-auto px-6 py-12">
 
-              {/* Hero */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[10px] tracking-[0.35em] uppercase text-muted-foreground">
-                  <Globe className="h-3.5 w-3.5" />
-                  <span>Settings</span>
-                  <ChevronRight className="h-3 w-3" />
-                  <span>Custom Domain</span>
+              {/* Header */}
+              <div className="space-y-4 mb-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] tracking-[0.35em] uppercase text-muted-foreground">
+                    <Globe className="h-3.5 w-3.5" />
+                    <span>Settings</span>
+                    <span className="text-border">/</span>
+                    <span>Custom Domain</span>
+                  </div>
+                  <span className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                    Step {step + 1} of {TOTAL}
+                  </span>
                 </div>
                 <h1 className="text-2xl font-light tracking-wide">Custom Domain Setup</h1>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                  Point your own domain (e.g.{" "}
-                  <span className="font-mono text-[12px] bg-muted px-1.5 py-0.5 rounded">booking.mystudio.com</span>)
-                  at your store so clients see your brand, not a generic URL.
-                </p>
+                <StepDots current={step} total={TOTAL} />
               </div>
 
               {/* Steps */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">How it works</h2>
-                <div className="space-y-px">
-                  {steps.map((step) => (
-                    <div key={step.number} className="flex gap-5 p-5 border border-border bg-card">
-                      <span className="text-2xl font-light text-muted-foreground/30 shrink-0 w-8 text-right leading-none mt-0.5">
-                        {step.number}
-                      </span>
-                      <div className="space-y-1">
-                        <p className="text-sm font-light">{step.title}</p>
-                        <p className="text-[12px] text-muted-foreground leading-relaxed">{step.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* DNS Records */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">DNS Records</h2>
-                <p className="text-[12px] text-muted-foreground leading-relaxed">
-                  Add these records in your domain registrar's DNS management panel. The exact values are also shown inside the Domains settings flow.
-                </p>
-                <div className="border border-border overflow-hidden">
-                  <table className="w-full text-[12px]">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/40">
-                        <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Type</th>
-                        <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Name</th>
-                        <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide">Value</th>
-                        <th className="text-left px-4 py-3 font-light text-muted-foreground tracking-wide hidden sm:table-cell">Purpose</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {records.map((r, i) => (
-                        <tr key={i} className="border-b border-border last:border-0">
-                          <td className="px-4 py-3">
-                            <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px] text-foreground">{r.type}</span>
-                          </td>
-                          <td className="px-4 py-3 font-mono text-foreground">{r.name}</td>
-                          <td className="px-4 py-3 font-mono text-foreground break-all">{r.value}</td>
-                          <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{r.purpose}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex items-start gap-2.5 p-4 border border-border bg-muted/20">
-                  <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-muted-foreground leading-relaxed">
-                    Remove any conflicting A records or CNAME records for the same name before adding these. Conflicting records are the most common cause of verification failure.
-                  </p>
-                </div>
-              </section>
-
-              {/* Domain Statuses */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Domain Statuses</h2>
-                <div className="space-y-px">
-                  {statuses.map((s) => {
-                    const Icon = s.icon;
-                    return (
-                      <div key={s.label} className="flex items-start gap-3 p-4 border border-border bg-card">
-                        <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${s.color}`} />
-                        <div className="space-y-0.5">
-                          <span className="text-[12px] font-light">{s.label}</span>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* SSL */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">SSL / HTTPS</h2>
-                <div className="flex items-start gap-3 p-5 border border-border bg-card">
-                  <Shield className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-light">Automatic SSL provisioning</p>
-                    <p className="text-[12px] text-muted-foreground leading-relaxed">
-                      Once domain ownership is verified, an SSL certificate is issued automatically via Let's Encrypt. No manual installation is needed. If your registrar uses CAA records, ensure they permit Let's Encrypt as a certificate authority.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              {/* FAQ */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Frequently Asked Questions</h2>
-                <div className="space-y-px">
-                  {faqs.map((faq, i) => (
-                    <div key={i} className="p-5 border border-border bg-card space-y-2">
-                      <p className="text-[13px] font-light">{faq.q}</p>
-                      <p className="text-[12px] text-muted-foreground leading-relaxed">{faq.a}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Troubleshooting */}
-              <section className="space-y-4">
-                <h2 className="text-[11px] tracking-[0.4em] uppercase text-muted-foreground">Troubleshooting</h2>
-                <div className="p-5 border border-border bg-card space-y-3 text-[12px] text-muted-foreground leading-relaxed">
-                  <p>If your domain isn't verifying after 48 hours, try the following:</p>
-                  <ul className="space-y-2 list-none">
-                    {[
-                      "Confirm the A record for both the root domain and www point to 185.158.133.1.",
-                      "Check for conflicting A records or CNAME records with the same name and remove them.",
-                      "Use DNSChecker.org to see the current DNS values propagated worldwide.",
-                      "If you have CAA records, add letsencrypt.org as an allowed authority.",
-                      "DNS changes can take up to 72 hours in rare cases — wait and retry.",
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="shrink-0 text-muted-foreground/40 font-mono">{i + 1}.</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <a
-                  href="https://dnschecker.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Open DNSChecker.org
-                </a>
-              </section>
+              <div className="border border-border bg-card p-6 sm:p-8">
+                {step === 0 && (
+                  <Step1
+                    domain={domain}
+                    setDomain={setDomain}
+                    onNext={handleStep1Next}
+                    saving={saving}
+                  />
+                )}
+                {step === 1 && (
+                  <Step2
+                    domain={domain}
+                    onBack={() => setStep(0)}
+                    onNext={() => setStep(2)}
+                  />
+                )}
+                {step === 2 && (
+                  <Step3
+                    domain={domain}
+                    onBack={() => setStep(1)}
+                    onNext={() => setStep(3)}
+                  />
+                )}
+                {step === 3 && (
+                  <Step4
+                    domain={domain}
+                    onBack={() => setStep(2)}
+                    onFinish={() => navigate("/dashboard/website")}
+                  />
+                )}
+              </div>
 
             </div>
           </main>
