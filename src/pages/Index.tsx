@@ -150,16 +150,16 @@ const Index = () => {
   const plans = [
     {
       plan: l.plan1Name,
-      price: l.plan1Price,
-      period: l.plan1Period,
+      price: starterPrice.display,
+      period: periodLabel,
       description: l.plan1Desc,
       features: [l.plan1F1, l.plan1F2, l.plan1F3, l.plan1F4],
       cta: l.plan1Cta,
     },
     {
       plan: l.plan2Name,
-      price: l.plan2Price,
-      period: l.plan2Period,
+      price: proPrice.display,
+      period: periodLabel,
       description: l.plan2Desc,
       features: [l.plan2F1, l.plan2F2, l.plan2F3, l.plan2F4, l.plan2F5, l.plan2F6],
       cta: l.plan2Cta,
@@ -167,8 +167,8 @@ const Index = () => {
     },
     {
       plan: l.plan3Name,
-      price: l.plan3Price,
-      period: l.plan3Period,
+      price: studioPrice.display,
+      period: periodLabel,
       description: l.plan3Desc,
       features: [l.plan3F1, l.plan3F2, l.plan3F3, l.plan3F4, l.plan3F5, l.plan3F6],
       cta: l.plan3Cta,
