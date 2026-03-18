@@ -14,7 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, Image,
+  Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff,
 } from "lucide-react";
 
 // ── Site templates ────────────────────────────────────────────────────────────
@@ -164,6 +164,8 @@ const WebsiteSettings = () => {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
+  const [domainStatus, setDomainStatus] = useState<"idle" | "checking" | "active" | "pending">("idle");
+  const [domainCheckedAt, setDomainCheckedAt] = useState<Date | null>(null);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
@@ -215,6 +217,8 @@ const WebsiteSettings = () => {
       else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
       setCustomDomain(customDomainInput.trim());
+      setDomainStatus("idle");
+      setDomainCheckedAt(null);
       toast({ title: ws.domainSaved });
       // Fire-and-forget: notify team about new domain
       const { data: profile } = await supabase
@@ -231,6 +235,22 @@ const WebsiteSettings = () => {
       });
     }
     setSavingDomain(false);
+  };
+
+  const checkDomainConnectivity = async () => {
+    if (!customDomain) return;
+    setDomainStatus("checking");
+    try {
+      const { data, error } = await supabase.functions.invoke("check-domain", {
+        body: { domain: customDomain },
+      });
+      if (error) throw error;
+      setDomainStatus(data?.status === "active" ? "active" : "pending");
+      setDomainCheckedAt(new Date());
+    } catch {
+      setDomainStatus("pending");
+      setDomainCheckedAt(new Date());
+    }
   };
 
   const [loading, setLoading] = useState(true);
@@ -869,12 +889,12 @@ const WebsiteSettings = () => {
                                  Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
                                </p>
                              </div>
-                             <div className="flex items-start gap-2 p-3 border border-yellow-500/30 bg-yellow-500/5">
-                               <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                 <span className="font-medium text-foreground">Using Cloudflare?</span> Make sure the A record's Proxy Status is set to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">Proxied</span> (orange cloud). Leaving the proxy enabled causes Cloudflare Error 1000 and prevents your domain from working.
-                               </p>
-                             </div>
+                              <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
+                                <AlertTriangle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                  <span className="font-medium text-foreground">Using Cloudflare?</span> Make sure the A record's Proxy Status is set to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">Proxied</span> (orange cloud). Leaving the proxy enabled causes Cloudflare Error 1000 and prevents your domain from working.
+                                </p>
+                              </div>
                              <div className="flex items-center gap-2">
                                <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
@@ -899,16 +919,66 @@ const WebsiteSettings = () => {
                          );
                        })()}
 
-                     <Button
-                       onClick={handleSaveDomain}
-                       disabled={savingDomain}
-                       size="sm"
-                       variant="outline"
-                       className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                     >
-                       {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
-                     </Button>
-                   </section>
+                      {/* Domain Status + Test Connectivity */}
+                      {customDomain && (
+                        <div className="flex items-center gap-3 py-2.5 px-3 border border-border bg-muted/10">
+                          {domainStatus === "idle" && (
+                            <>
+                              <WifiOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">Not checked yet</p>
+                            </>
+                          )}
+                          {domainStatus === "checking" && (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">Checking connectivity…</p>
+                            </>
+                          )}
+                          {domainStatus === "active" && (
+                            <>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <p className="text-[11px] text-foreground flex-1">
+                                Active — domain is responding
+                                {domainCheckedAt && (
+                                  <span className="text-muted-foreground ml-1.5">· checked just now</span>
+                                )}
+                              </p>
+                            </>
+                          )}
+                          {domainStatus === "pending" && (
+                            <>
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">
+                                Awaiting setup — not responding yet
+                                {domainCheckedAt && (
+                                  <span className="ml-1.5">· checked just now</span>
+                                )}
+                              </p>
+                            </>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={domainStatus === "checking"}
+                            onClick={checkDomainConnectivity}
+                            className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0"
+                          >
+                            {domainStatus === "checking" ? "Checking…" : "Test"}
+                          </Button>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleSaveDomain}
+                        disabled={savingDomain}
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                      >
+                        {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
+                      </Button>
+                    </section>
 
                   {/* ── Save ── */}
                   <div className="flex items-center gap-3 pt-2 border-t border-border">

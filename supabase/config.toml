@@ -36,3 +36,6 @@ verify_jwt = false
 [functions.notify-domain-saved]
 verify_jwt = false
 
+[functions.check-domain]
+verify_jwt = false
+
