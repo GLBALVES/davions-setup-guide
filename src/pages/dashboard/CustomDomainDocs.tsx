@@ -405,19 +405,6 @@ const CustomDomainDocs = () => {
       toast({ title: "Failed to save domain", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Domain saved" });
-      // Fire-and-forget: notify team about new domain
-      const { data: profile } = await supabase
-        .from("photographers")
-        .select("full_name, business_name, email")
-        .eq("id", user.id)
-        .single();
-      supabase.functions.invoke("notify-domain-saved", {
-        body: {
-          domain: domain.trim(),
-          photographerName: (profile as any)?.business_name || (profile as any)?.full_name || "",
-          photographerEmail: (profile as any)?.email || user.email || "",
-        },
-      });
     }
     setSaving(false);
   };
