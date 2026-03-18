@@ -47,7 +47,6 @@ type DnsDetail = {
   txt: RecordStatus;
   aFound?: string[];
   txtFound?: string[];
-  cname?: string[];
 };
 
 type RowStatus = "idle" | "checking" | "active" | "pending";
