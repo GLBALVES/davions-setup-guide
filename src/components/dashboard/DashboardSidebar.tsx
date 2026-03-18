@@ -898,6 +898,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Group popovers */}
             {translatedGroups.map((group) => {
+              if (group.disabled) return null;
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
