@@ -64,6 +64,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
@@ -90,6 +92,8 @@ const App = () => (
                 <Route path="/" element={<PublicOnlyRoute><Index /></PublicOnlyRoute>} />
                 <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
                 <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
+                <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/store/:slug" element={<StorePage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
