@@ -161,11 +161,13 @@ function Step2({
   const subName = isSubdomain ? parts[0] : null;
   const dnsRecords = isSubdomain
     ? [
-        { type: "A", name: subName!, value: "185.158.133.1", purpose: "Subdomain" },
+        { type: "A",   name: subName!,   value: "185.158.133.1",          purpose: "Subdomain" },
+        { type: "TXT", name: "_lovable", value: `lovable_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
       ]
     : [
-        { type: "A", name: "@",   value: "185.158.133.1", purpose: "Root domain" },
-        { type: "A", name: "www", value: "185.158.133.1", purpose: "WWW subdomain" },
+        { type: "A",   name: "@",        value: "185.158.133.1",          purpose: "Root domain" },
+        { type: "A",   name: "www",      value: "185.158.133.1",          purpose: "WWW subdomain" },
+        { type: "TXT", name: "_lovable", value: `lovable_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
       ];
   return (
     <div className="space-y-6">
@@ -212,13 +214,6 @@ function Step2({
         <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-[12px] text-muted-foreground leading-relaxed">
           Remove any conflicting A records or CNAME records for the same name before adding these. Conflicting records are the most common cause of verification failure.
-        </p>
-      </div>
-
-      <div className="flex items-start gap-2.5 p-4 border border-border bg-muted/20">
-        <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-        <p className="text-[12px] text-muted-foreground leading-relaxed">
-          <span className="font-medium text-foreground">TXT verification record:</span> After submitting your domain, our team will provide a <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">TXT _lovable</span> record with a unique token. Add it to your DNS to complete ownership verification.
         </p>
       </div>
 

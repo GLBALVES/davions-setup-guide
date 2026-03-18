@@ -48,12 +48,10 @@ Deno.serve(async (req) => {
     const isRemoval = action === "removed";
 
     // Calculate domain type and DNS records (only needed for new domains)
-    const compoundTlds = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
     const parts = domain.split(".");
-    const lastTwo = parts.slice(-2).join(".");
-    const rootPartsCount = compoundTlds.includes(lastTwo) ? 3 : 2;
-    const isSubdomain = parts.length > rootPartsCount;
+    const isSubdomain = parts.slice(1).length >= 2;
     const subName = isSubdomain ? parts[0] : null;
+  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
   const aRecords = isSubdomain
     ? [`A     ${subName}    →  185.158.133.1`]
@@ -61,7 +59,7 @@ Deno.serve(async (req) => {
         `A     @           →  185.158.133.1`,
         `A     www         →  185.158.133.1`,
       ];
-  const dnsBlock = [...aRecords, `TXT   _lovable    →  [get unique token from Lovable Project Settings → Domains]`].join("\n");
+  const dnsBlock = [...aRecords, `TXT   _lovable    →  ${verifyValue}`].join("\n");
 
     const domainType = isSubdomain ? "Subdomain" : "Root Domain";
     const now = new Date().toLocaleString("en-US", {
