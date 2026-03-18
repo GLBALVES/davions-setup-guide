@@ -174,8 +174,17 @@ const WebsiteSettings = () => {
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [removingDomain, setRemovingDomain] = useState(false);
-  const [domainStatus, setDomainStatus] = useState<"idle" | "checking" | "active" | "pending">("idle");
-  const [domainCheckedAt, setDomainCheckedAt] = useState<Date | null>(null);
+  const [domainLastChecked, setDomainLastChecked] = useState<Date | null>(null);
+  type DomainCheckStatus = "idle" | "checking" | "ok" | "error" | "warning";
+  interface DomainCheck { id: string; label: string; description: string; status: DomainCheckStatus; detail?: string; }
+  const [domainChecks, setDomainChecks] = useState<DomainCheck[]>([
+    { id: "dns",     label: "DNS Propagation",  description: "A record points to the correct VPS IP",             status: "idle" },
+    { id: "ssl",     label: "SSL Certificate",  description: "HTTPS certificate is valid and active",             status: "idle" },
+    { id: "routing", label: "Domain Routing",   description: "Domain resolves and Caddy routes it correctly",     status: "idle" },
+  ]);
+  const setCheck = useCallback((id: string, status: DomainCheckStatus, detail?: string) => {
+    setDomainChecks((prev) => prev.map((c) => c.id === id ? { ...c, status, detail } : c));
+  }, []);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
