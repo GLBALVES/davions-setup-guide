@@ -223,10 +223,13 @@ const WebsiteSettings = () => {
       if (error.message.includes("custom_domain")) setDomainError(ws.domainLinked);
       else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
-      setCustomDomain(customDomainInput.trim());
+      const savedDomain = customDomainInput.trim();
+      setCustomDomain(savedDomain);
       setDomainStatus("idle");
       setDomainCheckedAt(null);
       toast({ title: ws.domainSaved });
+      // Auto-check domain right after saving
+      checkDomainConnectivity(savedDomain);
       // Fire-and-forget: notify team about new domain
       const { data: profile } = await supabase
         .from("photographers")
