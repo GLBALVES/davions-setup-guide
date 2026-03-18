@@ -219,9 +219,36 @@ function Step2({
 
       <div className="flex items-start gap-2.5 p-4 border border-yellow-500/30 bg-yellow-500/5">
         <AlertTriangle className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-        <p className="text-[12px] text-muted-foreground leading-relaxed">
-          <span className="font-medium text-foreground">Using Cloudflare?</span> Set the A record's Proxy Status to <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">Proxied</span> (orange cloud). Enabling the Cloudflare proxy causes <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">Error 1000</span> and will prevent your domain from resolving correctly.
-        </p>
+        <div className="space-y-3 flex-1">
+          <div>
+            <p className="text-[12px] font-medium text-foreground">Using Cloudflare? Use a CNAME instead.</p>
+            <p className="text-[12px] text-muted-foreground leading-relaxed mt-1">
+              Cloudflare blocks A records pointing to <span className="font-mono text-[11px]">185.158.133.1</span> (Error 1000) — even with "DNS only" mode. Use a CNAME record instead and set Proxy Status to <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">DNS only</span> (grey cloud):
+            </p>
+          </div>
+          <div className="border border-yellow-500/20 overflow-hidden">
+            <table className="w-full text-[11px] bg-background/50">
+              <thead>
+                <tr className="border-b border-yellow-500/20 bg-muted/30">
+                  <th className="text-left px-3 py-2 font-light text-muted-foreground">Type</th>
+                  <th className="text-left px-3 py-2 font-light text-muted-foreground">Name</th>
+                  <th className="text-left px-3 py-2 font-light text-muted-foreground">Value</th>
+                  <th className="px-2 py-2 w-8" />
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-yellow-500/10 last:border-0">
+                  <td className="px-3 py-2">
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px]">CNAME</span>
+                  </td>
+                  <td className="px-3 py-2 font-mono text-foreground">{isSubdomain ? subName : "@"}</td>
+                  <td className="px-3 py-2 font-mono text-foreground">davions.com</td>
+                  <td className="px-2 py-2"><CopyButton value="davions.com" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-start gap-3 p-4 border border-border bg-card">
