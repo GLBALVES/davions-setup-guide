@@ -323,7 +323,7 @@ export default function DomainStatus() {
         <Tooltip>
           <TooltipTrigger asChild>
             <button onClick={handleCopy} className="text-muted-foreground hover:text-foreground transition-colors p-1">
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </TooltipTrigger>
           <TooltipContent>Copy URL</TooltipContent>
