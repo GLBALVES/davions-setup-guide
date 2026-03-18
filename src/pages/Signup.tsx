@@ -8,34 +8,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
-
-const signupSchema = z.object({
-  fullName: z
-    .string()
-    .trim()
-    .min(2, { message: "Name must be at least 2 characters." })
-    .max(100, { message: "Name must be under 100 characters." }),
-  email: z
-    .string()
-    .trim()
-    .email({ message: "Enter a valid email address." })
-    .max(255),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters." })
-    .max(128),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: "Passwords don't match.",
-  path: ["confirmPassword"],
-});
-
-type SignupFormValues = z.infer<typeof signupSchema>;
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Signup = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
+  const a = t.auth;
+
+  const signupSchema = z.object({
+    fullName: z
+      .string()
+      .trim()
+      .min(2, { message: a.nameTooShort })
+      .max(100, { message: a.nameTooLong }),
+    email: z
+      .string()
+      .trim()
+      .email({ message: a.validEmail })
+      .max(255),
+    password: z
+      .string()
+      .min(8, { message: a.passwordTooShort })
+      .max(128),
+    confirmPassword: z.string(),
+  }).refine((d) => d.password === d.confirmPassword, {
+    message: a.passwordsDontMatch,
+    path: ["confirmPassword"],
+  });
+
+  type SignupFormValues = z.infer<typeof signupSchema>;
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -55,7 +58,7 @@ const Signup = () => {
       });
       if (error) {
         if (error.message.includes("already registered")) {
-          setServerError("This email is already in use. Try signing in instead.");
+          setServerError(a.emailAlreadyInUse);
         } else {
           setServerError(error.message);
         }
@@ -63,7 +66,7 @@ const Signup = () => {
         navigate("/dashboard");
       }
     } catch {
-      setServerError("Something went wrong. Please try again.");
+      setServerError(a.genericError);
     } finally {
       setLoading(false);
     }
@@ -86,18 +89,15 @@ const Signup = () => {
           <div className="flex flex-col gap-2">
             <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
               <span className="inline-block w-6 h-px bg-border" />
-              Create Account
+              {a.createAccount}
             </p>
             <h1 className="text-2xl font-light tracking-wide text-foreground">
-              Start for free
+              {a.startFree}
             </h1>
             <p className="text-sm font-light text-muted-foreground">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-foreground underline-offset-4 hover:underline"
-              >
-                Sign in
+              {a.alreadyHaveAccount}{" "}
+              <Link to="/login" className="text-foreground underline-offset-4 hover:underline">
+                {a.signInLink}
               </Link>
             </p>
           </div>
@@ -112,12 +112,12 @@ const Signup = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Full Name
+                      {a.fullNameLabel}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="text"
-                        placeholder="Jane Doe"
+                        placeholder={a.fullNamePlaceholder}
                         autoComplete="name"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
                         {...field}
@@ -134,12 +134,12 @@ const Signup = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Email
+                      {a.emailLabel}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={a.emailPlaceholder}
                         autoComplete="email"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
                         {...field}
@@ -156,12 +156,12 @@ const Signup = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Password
+                      {a.passwordLabel}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Min. 8 characters"
+                        placeholder={a.passwordMinHint}
                         autoComplete="new-password"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
                         {...field}
@@ -178,12 +178,12 @@ const Signup = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs tracking-widest uppercase text-muted-foreground font-light">
-                      Confirm Password
+                      {a.confirmPasswordLabel}
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Repeat your password"
+                        placeholder={a.confirmPasswordPlaceholder}
                         autoComplete="new-password"
                         className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
                         {...field}
@@ -194,30 +194,24 @@ const Signup = () => {
                 )}
               />
 
-              {/* Server error */}
               {serverError && (
                 <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-3 py-2">
                   {serverError}
                 </p>
               )}
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-2"
-                size="lg"
-              >
-                {loading ? "Creating account…" : "Create Account"}
+              <Button type="submit" disabled={loading} className="w-full mt-2" size="lg">
+                {loading ? a.creatingAccount : a.createAccount}
               </Button>
 
               <p className="text-[10px] text-muted-foreground text-center leading-relaxed font-light">
-                By creating an account you agree to our{" "}
+                {a.termsNotice}{" "}
                 <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
-                  Terms of Service
+                  {a.termsLink}
                 </Link>{" "}
-                and{" "}
+                {a.andWord}{" "}
                 <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
-                  Privacy Policy
+                  {a.privacyLink}
                 </Link>
                 .
               </p>
@@ -227,7 +221,7 @@ const Signup = () => {
           {/* Footer */}
           <div className="border-t border-border pt-6">
             <p className="text-[10px] tracking-widest uppercase text-muted-foreground text-center">
-              Secure · End-to-end encrypted · Davions © {new Date().getFullYear()}
+              {a.secureFooter} {new Date().getFullYear()}
             </p>
           </div>
         </div>
