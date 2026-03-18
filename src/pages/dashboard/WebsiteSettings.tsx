@@ -271,8 +271,8 @@ const WebsiteSettings = () => {
     } else {
       setCustomDomain("");
       setCustomDomainInput("");
-      setDomainStatus("idle");
-      setDomainCheckedAt(null);
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
+      setDomainLastChecked(null);
       setDomainError(null);
       toast({ title: "Domain removed", description: `${domainSnapshot} has been unlinked from your studio.` });
       // Notify team that domain was removed
