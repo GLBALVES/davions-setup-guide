@@ -919,16 +919,66 @@ const WebsiteSettings = () => {
                          );
                        })()}
 
-                     <Button
-                       onClick={handleSaveDomain}
-                       disabled={savingDomain}
-                       size="sm"
-                       variant="outline"
-                       className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                     >
-                       {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
-                     </Button>
-                   </section>
+                      {/* Domain Status + Test Connectivity */}
+                      {customDomain && (
+                        <div className="flex items-center gap-3 py-2.5 px-3 border border-border bg-muted/10">
+                          {domainStatus === "idle" && (
+                            <>
+                              <WifiOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">Not checked yet</p>
+                            </>
+                          )}
+                          {domainStatus === "checking" && (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">Checking connectivity…</p>
+                            </>
+                          )}
+                          {domainStatus === "active" && (
+                            <>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <p className="text-[11px] text-foreground flex-1">
+                                Active — domain is responding
+                                {domainCheckedAt && (
+                                  <span className="text-muted-foreground ml-1.5">· checked just now</span>
+                                )}
+                              </p>
+                            </>
+                          )}
+                          {domainStatus === "pending" && (
+                            <>
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground flex-1">
+                                Awaiting setup — not responding yet
+                                {domainCheckedAt && (
+                                  <span className="ml-1.5">· checked just now</span>
+                                )}
+                              </p>
+                            </>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={domainStatus === "checking"}
+                            onClick={checkDomainConnectivity}
+                            className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0"
+                          >
+                            {domainStatus === "checking" ? "Checking…" : "Test"}
+                          </Button>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleSaveDomain}
+                        disabled={savingDomain}
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                      >
+                        {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
+                      </Button>
+                    </section>
 
                   {/* ── Save ── */}
                   <div className="flex items-center gap-3 pt-2 border-t border-border">
