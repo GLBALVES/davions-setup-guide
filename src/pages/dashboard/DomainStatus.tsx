@@ -58,9 +58,9 @@ function StatusBadge({ status }: { status: CheckStatus }) {
   const map: Record<CheckStatus, { label: string; className: string }> = {
     idle: { label: "Waiting", className: "bg-muted text-muted-foreground" },
     checking: { label: "Checking…", className: "bg-muted text-muted-foreground animate-pulse" },
-    ok: { label: "OK", className: "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" },
+    ok: { label: "OK", className: "bg-primary/10 text-primary border border-primary/20" },
     error: { label: "Failed", className: "bg-destructive/10 text-destructive border border-destructive/20" },
-    warning: { label: "Warning", className: "bg-amber-500/10 text-amber-600 border border-amber-500/20" },
+    warning: { label: "Warning", className: "bg-secondary/40 text-secondary-foreground border border-secondary/40" },
   };
   const { label, className } = map[status];
   return (
