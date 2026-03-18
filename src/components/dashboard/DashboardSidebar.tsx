@@ -278,7 +278,6 @@ const groups: MenuGroup[] = [
     { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
     { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
     { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
-    { title: "Domain Status", icon: Globe, to: "/dashboard/domain-status" },
     { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
   ]},
   { stableKey: "My Features", title: "My Features", icon: Puzzle, disabled: true, items: [
