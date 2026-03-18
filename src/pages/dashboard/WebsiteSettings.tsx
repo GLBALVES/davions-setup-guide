@@ -217,6 +217,8 @@ const WebsiteSettings = () => {
       else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
       setCustomDomain(customDomainInput.trim());
+      setDomainStatus("idle");
+      setDomainCheckedAt(null);
       toast({ title: ws.domainSaved });
       // Fire-and-forget: notify team about new domain
       const { data: profile } = await supabase
@@ -233,6 +235,22 @@ const WebsiteSettings = () => {
       });
     }
     setSavingDomain(false);
+  };
+
+  const checkDomainConnectivity = async () => {
+    if (!customDomain) return;
+    setDomainStatus("checking");
+    try {
+      const { data, error } = await supabase.functions.invoke("check-domain", {
+        body: { domain: customDomain },
+      });
+      if (error) throw error;
+      setDomainStatus(data?.status === "active" ? "active" : "pending");
+      setDomainCheckedAt(new Date());
+    } catch {
+      setDomainStatus("pending");
+      setDomainCheckedAt(new Date());
+    }
   };
 
   const [loading, setLoading] = useState(true);
