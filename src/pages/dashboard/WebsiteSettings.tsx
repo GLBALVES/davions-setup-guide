@@ -278,12 +278,13 @@ const WebsiteSettings = () => {
     setRemovingDomain(false);
   };
 
-  const checkDomainConnectivity = async () => {
-    if (!customDomain) return;
+  const checkDomainConnectivity = async (domainOverride?: string) => {
+    const target = domainOverride ?? customDomain;
+    if (!target) return;
     setDomainStatus("checking");
     try {
       const { data, error } = await supabase.functions.invoke("check-domain", {
-        body: { domain: customDomain },
+        body: { domain: target },
       });
       if (error) throw error;
       setDomainStatus(data?.status === "active" ? "active" : "pending");
