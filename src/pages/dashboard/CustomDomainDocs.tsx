@@ -174,6 +174,9 @@ function Step2({
         <p className="text-[12px] text-muted-foreground leading-relaxed">
           Log in to your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.) and add the following records exactly as shown for{" "}
           <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">{domain}</span>.
+          {isSubdomain
+            ? " Since this is a subdomain, only one A record pointing to the subdomain name is needed."
+            : " Since this is a root domain, you need both @ and www A records."}
         </p>
       </div>
 
@@ -188,25 +191,15 @@ function Step2({
             </tr>
           </thead>
           <tbody>
-            {DNS_RECORDS.map((r, i) => (
+            {dnsRecords.map((r, i) => (
               <tr key={i} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">
                   <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px] text-foreground">{r.type}</span>
                 </td>
                 <td className="px-4 py-3 font-mono text-foreground">{r.name}</td>
-                <td className="px-4 py-3 font-mono text-foreground break-all">
-                  {r.type === "TXT" && domain
-                    ? `davions_verify=${domain.replace(/\./g, "_")}`
-                    : r.value}
-                </td>
+                <td className="px-4 py-3 font-mono text-foreground break-all">{r.value}</td>
                 <td className="px-2 py-3">
-                  <CopyButton
-                    value={
-                      r.type === "TXT" && domain
-                        ? `davions_verify=${domain.replace(/\./g, "_")}`
-                        : r.value
-                    }
-                  />
+                  <CopyButton value={r.value} />
                 </td>
               </tr>
             ))}
