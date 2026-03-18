@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,7 +16,9 @@ import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
+  ShieldCheck, Wifi, RefreshCw, XCircle, Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
