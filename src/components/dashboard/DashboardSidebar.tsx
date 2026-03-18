@@ -117,6 +117,8 @@ type MenuGroup = {
   icon: React.ElementType;
   items: MenuItem[];
   defaultOpen?: boolean;
+  /** Set to true to temporarily hide this group from the sidebar */
+  disabled?: boolean;
 };
 
 /** Stable English items list — used only for key generation & matching */
@@ -144,6 +146,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Marketing",
       title: t.nav.marketing,
       icon: Megaphone,
+      disabled: true,
       items: [
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
         { title: t.nav.blog, icon: BookText, to: "/dashboard/blog", permKey: "blog" },
@@ -159,6 +162,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "AI",
       title: t.nav.ai,
       icon: BrainCircuit,
+      disabled: true,
       items: [
         { title: t.nav.aiAgents, icon: Bot, to: "/dashboard/agents", permKey: "agents" },
         { title: t.nav.aiAutomations, icon: Zap },
@@ -170,6 +174,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Finance",
       title: t.nav.finance,
       icon: DollarSign,
+      disabled: true,
       items: [
         { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
         { title: t.nav.financeDashboard,  icon: LayoutDashboard, to: "/dashboard/finance", end: true },
@@ -183,6 +188,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "CRM",
       title: t.nav.crm,
       icon: Users2,
+      disabled: true,
       items: [
         { title: t.nav.clients, icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
         { title: t.nav.leads, icon: UserPlus },
@@ -192,6 +198,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Workflows",
       title: t.nav.workflows,
       icon: GitBranch,
+      disabled: true,
       items: [
         { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
         { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
@@ -212,6 +219,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "My Features",
       title: t.nav.myFeatures,
       icon: Puzzle,
+      disabled: true,
       items: [
         { title: t.nav.createFeature, icon: PlusSquare },
       ],
@@ -234,7 +242,7 @@ const groups: MenuGroup[] = [
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
-  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, items: [
+  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, disabled: true, items: [
     { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
     { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
@@ -244,13 +252,13 @@ const groups: MenuGroup[] = [
     { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
     { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
   ]},
-  { stableKey: "AI", title: "AI", icon: BrainCircuit, items: [
+  { stableKey: "AI", title: "AI", icon: BrainCircuit, disabled: true, items: [
     { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
     { title: "AI Automations", icon: Zap },
     { title: "Smart Suggestions", icon: Lightbulb },
     { title: "Creative Assistant", icon: Wand2 },
   ]},
-  { stableKey: "Finance", title: "Finance", icon: DollarSign, items: [
+  { stableKey: "Finance", title: "Finance", icon: DollarSign, disabled: true, items: [
     { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
     { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
     { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
@@ -258,11 +266,11 @@ const groups: MenuGroup[] = [
     { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
     { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
   ]},
-  { stableKey: "CRM", title: "CRM", icon: Users2, items: [
+  { stableKey: "CRM", title: "CRM", icon: Users2, disabled: true, items: [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
     { title: "Leads", icon: UserPlus },
   ]},
-  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, items: [
+  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [
     { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
@@ -272,7 +280,7 @@ const groups: MenuGroup[] = [
     { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
   ]},
-  { stableKey: "My Features", title: "My Features", icon: Puzzle, items: [
+  { stableKey: "My Features", title: "My Features", icon: Puzzle, disabled: true, items: [
     { title: "Create Feature", icon: PlusSquare },
   ]},
 ];
@@ -890,6 +898,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Group popovers */}
             {translatedGroups.map((group) => {
+              if (group.disabled) return null;
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
@@ -996,6 +1005,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Regular groups */}
             {translatedGroups.map((group) => {
+              if (group.disabled) return null;
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
