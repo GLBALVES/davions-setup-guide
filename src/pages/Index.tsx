@@ -111,6 +111,17 @@ const PricingCard = ({ plan, price, period, description, features, cta, featured
 const Index = () => {
   const { t } = useLanguage();
   const l = t.landing;
+  const region = useRegion();
+
+  const starterPrice = REGIONAL_PLANS.starter[region.currency] ?? REGIONAL_PLANS.starter.USD;
+  const proPrice = REGIONAL_PLANS.pro[region.currency] ?? REGIONAL_PLANS.pro.USD;
+  const studioPrice = REGIONAL_PLANS.studio[region.currency] ?? REGIONAL_PLANS.studio.USD;
+
+  const currencyBadge = !region.loading && region.currency !== "USD"
+    ? `${region.symbol} · ${region.country}`
+    : null;
+
+  const periodLabel = l.plan1Period ?? "/month";
 
   const features = [
     {
