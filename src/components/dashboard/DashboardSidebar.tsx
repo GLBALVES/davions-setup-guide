@@ -1070,8 +1070,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         </AnimatePresence>
         {/* Collapsed: show avatar only */}
         {collapsed && (
-          <div className="flex justify-center mb-2">
-            <div className="h-7 w-7 rounded-full overflow-hidden border border-sidebar-border bg-muted flex items-center justify-center">
+          <div className="flex justify-center mb-2 cursor-pointer" onClick={() => navigate("/dashboard/settings")}>
+            <div className="h-7 w-7 rounded-full overflow-hidden border border-sidebar-border bg-muted flex items-center justify-center hover:opacity-80 transition-opacity">
               {profile?.hero_image_url ? (
                 <img src={profile.hero_image_url} alt="" className="h-full w-full object-cover" />
               ) : (
