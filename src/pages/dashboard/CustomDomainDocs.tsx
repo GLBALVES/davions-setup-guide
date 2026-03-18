@@ -219,13 +219,16 @@ function Step2({
 
       <div className="flex items-start gap-2.5 p-4 border border-yellow-500/30 bg-yellow-500/5">
         <AlertTriangle className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-        <div className="space-y-1 flex-1">
-          <p className="text-[12px] font-medium text-foreground">Using Cloudflare?</p>
+        <div className="space-y-1.5 flex-1">
+          <p className="text-[12px] font-medium text-foreground">Using Cloudflare? You must move your nameservers.</p>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
-            Use the standard A record above, but set its Proxy Status to{" "}
-            <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">DNS only</span>{" "}
-            (grey cloud). Do <strong>not</strong> enable the orange cloud (proxy) — proxying a record that points to our IP causes Error 1000. Also avoid CNAME to{" "}
-            <span className="font-mono text-[11px]">davions.com</span>: it resolves to the same IP and triggers the same error.
+            Our server IP (<span className="font-mono text-[11px]">185.158.133.1</span>) belongs to Cloudflare's own infrastructure. Cloudflare blocks all zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. There is no DNS record change that will fix this while your domain uses Cloudflare nameservers.
+          </p>
+          <p className="text-[12px] text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">The only fix:</strong> move your nameservers away from Cloudflare to your registrar's DNS. For{" "}
+            <span className="font-mono text-[11px]">.com.br</span> domains, use{" "}
+            <a href="https://registro.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Registro.br</a>{" "}
+            (free). For other domains, use your registrar's default nameservers or Namecheap FreeDNS. Once off Cloudflare's nameservers, the A record will resolve correctly.
           </p>
         </div>
       </div>
