@@ -61,6 +61,7 @@ import Billing from "./pages/dashboard/Billing";
 import AdminBugReports from "./pages/admin/AdminBugReports";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
