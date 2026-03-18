@@ -87,9 +87,9 @@ const App = () => (
             ) : (
               <>
                 {/* Public routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/" element={<PublicOnlyRoute><Index /></PublicOnlyRoute>} />
+                <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+                <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
                 <Route path="/store/:slug" element={<StorePage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
