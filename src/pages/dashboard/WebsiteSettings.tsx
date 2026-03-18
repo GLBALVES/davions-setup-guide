@@ -223,10 +223,13 @@ const WebsiteSettings = () => {
       if (error.message.includes("custom_domain")) setDomainError(ws.domainLinked);
       else toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
     } else {
-      setCustomDomain(customDomainInput.trim());
+      const savedDomain = customDomainInput.trim();
+      setCustomDomain(savedDomain);
       setDomainStatus("idle");
       setDomainCheckedAt(null);
       toast({ title: ws.domainSaved });
+      // Auto-check domain right after saving
+      checkDomainConnectivity(savedDomain);
       // Fire-and-forget: notify team about new domain
       const { data: profile } = await supabase
         .from("photographers")
@@ -278,12 +281,13 @@ const WebsiteSettings = () => {
     setRemovingDomain(false);
   };
 
-  const checkDomainConnectivity = async () => {
-    if (!customDomain) return;
+  const checkDomainConnectivity = async (domainOverride?: string) => {
+    const target = domainOverride ?? customDomain;
+    if (!target) return;
     setDomainStatus("checking");
     try {
       const { data, error } = await supabase.functions.invoke("check-domain", {
-        body: { domain: customDomain },
+        body: { domain: target },
       });
       if (error) throw error;
       setDomainStatus(data?.status === "active" ? "active" : "pending");
@@ -1034,7 +1038,7 @@ const WebsiteSettings = () => {
                             size="sm"
                             variant="ghost"
                             disabled={domainStatus === "checking"}
-                            onClick={checkDomainConnectivity}
+                            onClick={() => checkDomainConnectivity()}
                             className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0"
                           >
                             {domainStatus === "checking" ? "Checking…" : "Test"}
