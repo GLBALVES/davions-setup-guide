@@ -39,3 +39,6 @@ verify_jwt = false
 [functions.check-domain]
 verify_jwt = false
 
+[functions.validate-domain]
+verify_jwt = false
+
