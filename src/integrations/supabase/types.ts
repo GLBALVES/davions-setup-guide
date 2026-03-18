@@ -851,6 +851,62 @@ export type Database = {
         }
         Relationships: []
       }
+      help_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          photographer_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photographer_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photographer_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      help_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "help_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mkt_email_automated: {
         Row: {
           created_at: string
