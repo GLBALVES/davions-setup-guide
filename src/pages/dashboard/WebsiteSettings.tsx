@@ -54,6 +54,29 @@ function SectionHeading({ title, description }: { title: string; description?: s
   );
 }
 
+function DnsRow({ type, name, value }: { type: string; name: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <tr className="border-b border-border last:border-0">
+      <td className="px-3 py-2.5">
+        <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] text-foreground">{type}</span>
+      </td>
+      <td className="px-3 py-2.5 font-mono text-foreground">{name}</td>
+      <td className="px-3 py-2.5 font-mono text-foreground break-all">{value}</td>
+      <td className="px-2 py-2.5">
+        <button onClick={copy} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors" title="Copy">
+          {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 function Divider() {
   return <div className="border-t border-border" />;
 }
