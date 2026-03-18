@@ -164,6 +164,8 @@ const WebsiteSettings = () => {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
+  const [domainStatus, setDomainStatus] = useState<"idle" | "checking" | "active" | "pending">("idle");
+  const [domainCheckedAt, setDomainCheckedAt] = useState<Date | null>(null);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
