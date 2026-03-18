@@ -212,7 +212,6 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
         { title: t.nav.billing, icon: CreditCard, to: "/dashboard/billing" },
         { title: t.nav.accessControl, icon: ShieldCheck, to: "/dashboard/access-control" },
-        { title: t.nav.domainStatus, icon: Globe, to: "/dashboard/domain-status" },
         { title: t.nav.helpCenter, icon: HelpCircle, to: "/dashboard/help" },
       ],
     },
