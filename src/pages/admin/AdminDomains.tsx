@@ -105,7 +105,7 @@ function DnsExpansion({ domain }: { domain: string }) {
       </div>
       {!isSubdomain && (
         <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-amber-500" />
+          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-destructive" />
           If using Cloudflare, set DNS proxy to <strong className="font-medium">DNS only</strong> (grey cloud) for the A records.
         </p>
       )}

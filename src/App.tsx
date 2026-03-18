@@ -156,6 +156,7 @@ const App = () => (
                  <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
                  <Route path="/admin/bugs" element={<ProtectedRoute><AdminBugReports /></ProtectedRoute>} />
                  <Route path="/admin/help-assistant" element={<ProtectedRoute><AdminHelpAssistant /></ProtectedRoute>} />
+                 <Route path="/admin/domains" element={<ProtectedRoute><AdminDomains /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
