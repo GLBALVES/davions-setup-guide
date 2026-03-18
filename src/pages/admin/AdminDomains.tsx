@@ -426,6 +426,12 @@ export default function AdminDomains() {
           <Badge variant="secondary" className="ml-auto text-xs">
             {photographers.length} {photographers.length === 1 ? "domain" : "domains"}
           </Badge>
+          {pendingCountdown > 0 && (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Clock size={11} className="shrink-0" />
+              <span>Rechecking pending in {pendingCountdown}s</span>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="sm"
