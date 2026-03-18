@@ -601,6 +601,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const badges = useSidebarBadges();
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
