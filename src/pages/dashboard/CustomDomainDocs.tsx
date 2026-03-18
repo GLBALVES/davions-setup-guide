@@ -208,6 +208,13 @@ function Step2({
         </p>
       </div>
 
+      <div className="flex items-start gap-2.5 p-4 border border-yellow-500/30 bg-yellow-500/5">
+        <AlertTriangle className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
+          <span className="font-medium text-foreground">Using Cloudflare?</span> Set the A record's Proxy Status to <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">Proxied</span> (orange cloud). Enabling the Cloudflare proxy causes <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded">Error 1000</span> and will prevent your domain from resolving correctly.
+        </p>
+      </div>
+
       <div className="flex items-start gap-3 p-4 border border-border bg-card">
         <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
         <div className="space-y-0.5">
