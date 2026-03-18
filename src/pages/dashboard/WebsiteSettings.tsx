@@ -301,6 +301,7 @@ const WebsiteSettings = () => {
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
   const ogInputRef = useRef<HTMLInputElement>(null);
+  const hasAutoChecked = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -360,6 +361,15 @@ const WebsiteSettings = () => {
     };
     fetchAll();
   }, [user]);
+
+  // Auto-check connectivity once after the saved domain is loaded
+  useEffect(() => {
+    if (customDomain && !hasAutoChecked.current) {
+      hasAutoChecked.current = true;
+      checkDomainConnectivity();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customDomain]);
 
   const uploadImage = async (
     file: File,
