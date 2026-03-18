@@ -330,7 +330,9 @@ const Billing = () => {
                           </span>
                         </div>
                         <h2 className="text-2xl font-light tracking-wide">{activePlan.name}</h2>
-                        <p className="text-sm text-muted-foreground font-light">${activePlan.price}/month · {activePlan.split}% fee on sales</p>
+                        <p className="text-sm text-muted-foreground font-light">
+                          {REGIONAL_PLANS[activePlan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}/month · {activePlan.split}% fee on sales
+                        </p>
                         <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                           {activePlan.features.map((f) => (
                             <li key={f} className="flex items-center gap-1.5 text-[11px] font-light text-muted-foreground">
