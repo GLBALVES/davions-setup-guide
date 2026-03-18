@@ -53,11 +53,12 @@ Deno.serve(async (req) => {
     const subName = isSubdomain ? parts[0] : null;
   const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
+  const vpsIp = Deno.env.get("VPS_IP") || "147.93.112.182";
   const aRecords = isSubdomain
-    ? [`A     ${subName}    →  185.158.133.1`]
+    ? [`A     ${subName}    →  ${vpsIp}`]
     : [
-        `A     @           →  185.158.133.1`,
-        `A     www         →  185.158.133.1`,
+        `A     @           →  ${vpsIp}`,
+        `A     www         →  ${vpsIp}`,
       ];
   const dnsBlock = [...aRecords, `TXT   _lovable    →  ${verifyValue}`].join("\n");
 
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
 <head><meta charset="utf-8" /></head>
 <body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px;">
   <h2 style="font-size:18px;font-weight:600;margin-bottom:4px;">New custom domain saved</h2>
-  <p style="color:#666;font-size:13px;margin-top:0;">A photographer just configured a custom domain and manual setup may be needed in Lovable.</p>
+  <p style="color:#666;font-size:13px;margin-top:0;">A photographer just configured a custom domain. SSL will be provisioned automatically via Caddy once DNS propagates.</p>
 
   <table style="width:100%;border-collapse:collapse;margin:24px 0;font-size:14px;">
     <tr style="border-bottom:1px solid #eee;">
@@ -138,8 +139,8 @@ Deno.serve(async (req) => {
   <h3 style="font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#888;margin-bottom:8px;">DNS records to configure</h3>
   <pre style="background:#f5f5f5;border:1px solid #e0e0e0;padding:16px;font-size:13px;line-height:1.8;border-radius:4px;overflow-x:auto;">${dnsBlock}</pre>
 
-  <p style="font-size:13px;color:#444;margin-top:24px;">
-    <strong>Action needed:</strong> Add this domain in the Lovable project settings so it resolves correctly.
+  <p style="font-size:13px;color:#666;margin-top:24px;">
+    No manual action required — Caddy will automatically issue an SSL certificate once DNS points to the VPS.
   </p>
 </body>
 </html>`;
