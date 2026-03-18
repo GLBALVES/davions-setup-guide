@@ -945,20 +945,22 @@ const WebsiteSettings = () => {
                                  Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
                                </p>
                              </div>
-                               <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
-                                 <div className="flex items-start gap-2">
-                                   <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                                   <div className="space-y-1">
-                                     <p className="text-[11px] font-medium text-foreground">Using Cloudflare?</p>
-                                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                       Keep the A record as shown above, but set its Proxy Status to{" "}
-                                       <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span>{" "}
-                                       (grey cloud icon). Do <strong>not</strong> use the orange cloud (proxied) — proxying a record pointing to our IP triggers Error 1000. Do not use a CNAME to{" "}
-                                       <span className="font-mono text-[10px]">davions.com</span> — it also causes Error 1000.
-                                     </p>
-                                   </div>
-                                 </div>
-                               </div>
+                                <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
+                                  <div className="flex items-start gap-2">
+                                    <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                      <p className="text-[11px] font-medium text-foreground">Using Cloudflare? You must move your nameservers.</p>
+                                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        Our server IP (<span className="font-mono text-[10px]">185.158.133.1</span>) belongs to Cloudflare's own infrastructure. Cloudflare blocks all zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. The only fix is to move your domain's nameservers away from Cloudflare to your registrar's DNS or a third-party provider.
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        For <span className="font-mono text-[10px]">.com.br</span> domains, use{" "}
+                                        <a href="https://registro.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Registro.br</a>{" "}
+                                        (free). For other domains, use your registrar's default nameservers or Namecheap FreeDNS. Once off Cloudflare's nameservers, the A record will work correctly.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
                              <div className="flex items-center gap-2">
                                <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
