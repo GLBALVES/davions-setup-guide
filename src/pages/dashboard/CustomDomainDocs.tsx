@@ -16,9 +16,8 @@ import {
 // ── DNS records ──────────────────────────────────────────────────────────────
 const VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
 const DNS_RECORDS = [
-  { type: "A",   name: "@",       value: VPS_IP,                  purpose: "Root domain" },
-  { type: "A",   name: "www",     value: VPS_IP,                  purpose: "WWW subdomain" },
-  { type: "TXT", name: "_lovable", value: "lovable_verify=<provided>", purpose: "Domain security verification" },
+  { type: "A", name: "@",   value: VPS_IP, purpose: "Root domain" },
+  { type: "A", name: "www", value: VPS_IP, purpose: "WWW subdomain" },
 ];
 
 // ── Step progress indicator ───────────────────────────────────────────────────
