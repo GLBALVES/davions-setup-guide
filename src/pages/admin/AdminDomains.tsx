@@ -222,7 +222,7 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
           <div className="space-y-1">
             <p className="text-xs font-medium text-foreground">Using Cloudflare? Nameserver migration required.</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Our server IP (<span className="font-mono text-[10px]">185.158.133.1</span>) is part of Cloudflare's own infrastructure. Cloudflare blocks zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. No DNS record change fixes this while the domain uses Cloudflare nameservers.
+              Our server IP (<span className="font-mono text-[10px]">{import.meta.env.VITE_VPS_IP || "147.93.112.182"}</span>) is part of Cloudflare's own infrastructure. Cloudflare blocks zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. No DNS record change fixes this while the domain uses Cloudflare nameservers.
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               User must move nameservers away from Cloudflare: use registrar's default DNS, <a href="https://registro.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Registro.br</a> (for .com.br), or Namecheap FreeDNS.

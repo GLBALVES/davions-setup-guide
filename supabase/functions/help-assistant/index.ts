@@ -24,7 +24,7 @@ Davions is a complete business platform for photographers, including:
 - **Blog**: Write and publish SEO-optimized blog posts with AI assistance.
 - **SEO**: Configure meta titles, descriptions, Open Graph images, and sitemap settings per page.
 - **Website Settings**: Customize your public store — logo, colors, templates, hero image, about section, and custom domain.
-- **Custom Domain**: Point your own domain (e.g. booking.yourstudio.com) to your store by adding A records (185.158.133.1) and the _lovable TXT verification record.
+- **Custom Domain**: Point your own domain (e.g. booking.yourstudio.com) to your store by adding an A record pointing to 147.93.112.182 and the _lovable TXT verification record. SSL is provisioned automatically.
 - **Lightroom Plugin**: Download and install the Davions Connect plugin to send photos directly from Lightroom to your galleries.
 - **AI Agents**: Create AI agents to answer client messages automatically. Supports knowledge bases, multiple models, auto-reply, and supervised modes.
 - **Chat (Support)**: Ticket-based client messaging with AI agent integration.

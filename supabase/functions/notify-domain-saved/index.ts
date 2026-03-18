@@ -139,8 +139,8 @@ Deno.serve(async (req) => {
   <h3 style="font-size:13px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:#888;margin-bottom:8px;">DNS records to configure</h3>
   <pre style="background:#f5f5f5;border:1px solid #e0e0e0;padding:16px;font-size:13px;line-height:1.8;border-radius:4px;overflow-x:auto;">${dnsBlock}</pre>
 
-  <p style="font-size:13px;color:#444;margin-top:24px;">
-    <strong>Action needed:</strong> Add this domain in the Lovable project settings so it resolves correctly.
+  <p style="font-size:13px;color:#666;margin-top:24px;">
+    No manual action required — Caddy will automatically issue an SSL certificate once DNS points to the VPS.
   </p>
 </body>
 </html>`;
