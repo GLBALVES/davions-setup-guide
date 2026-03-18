@@ -19,6 +19,7 @@ import GalleryDetail from "./pages/dashboard/GalleryDetail";
 import GalleryView from "./pages/gallery/GalleryView";
 import CustomDomainStore from "./pages/store/CustomDomainStore";
 import CustomDomainSessionGateway from "./pages/store/CustomDomainSessionGateway";
+import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway";
 import { isCustomDomain } from "./lib/custom-domain";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
