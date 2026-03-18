@@ -776,19 +776,35 @@ const WebsiteSettings = () => {
                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
                        <SectionHeading title={ws.customDomainTitle} description={ws.customDomainDesc} />
                      </div>
-                     <FieldRow label={ws.domainLabel}>
-                       <Input
-                         value={customDomainInput}
-                         onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
-                         placeholder={ws.domainPlaceholder}
-                         className="h-9 text-sm font-light font-mono"
-                       />
-                       {domainError && (
-                         <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
-                           <AlertCircle className="h-3 w-3" />{domainError}
-                         </p>
-                       )}
-                     </FieldRow>
+                      <FieldRow label={ws.domainLabel}>
+                        <Input
+                          value={customDomainInput}
+                          onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
+                          placeholder={ws.domainPlaceholder}
+                          className="h-9 text-sm font-light font-mono"
+                        />
+                        <div className="flex items-center gap-4 mt-1.5">
+                          <p className="text-[10px] text-muted-foreground/60">
+                            e.g.{" "}
+                            <button type="button" onClick={() => { setCustomDomainInput("yourstudio.com"); setDomainError(null); }} className="font-mono hover:text-foreground transition-colors">
+                              yourstudio.com
+                            </button>
+                            {" "}— root domain
+                          </p>
+                          <span className="text-muted-foreground/30 text-[10px]">or</span>
+                          <p className="text-[10px] text-muted-foreground/60">
+                            <button type="button" onClick={() => { setCustomDomainInput("booking.yourstudio.com"); setDomainError(null); }} className="font-mono hover:text-foreground transition-colors">
+                              booking.yourstudio.com
+                            </button>
+                            {" "}— subdomain
+                          </p>
+                        </div>
+                        {domainError && (
+                          <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                            <AlertCircle className="h-3 w-3" />{domainError}
+                          </p>
+                        )}
+                      </FieldRow>
 
                        {/* DNS records — shown as soon as a domain is saved */}
                        {customDomain && (() => {
