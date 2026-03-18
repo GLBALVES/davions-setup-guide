@@ -104,7 +104,7 @@ const App = () => (
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
 
                 {/* Protected routes */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><Navigate to="/dashboard/projects" replace /></ProtectedRoute>} />
                 <Route path="/dashboard/sessions" element={<ProtectedRoute><PermissionGate permKey="sessions"><Sessions /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/sessions/new" element={<ProtectedRoute><PermissionGate permKey="sessions"><SessionForm /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/sessions/:id" element={<ProtectedRoute><PermissionGate permKey="sessions"><SessionForm /></PermissionGate></ProtectedRoute>} />

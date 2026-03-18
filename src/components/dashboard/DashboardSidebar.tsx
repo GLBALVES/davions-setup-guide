@@ -132,8 +132,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: Camera,
       defaultOpen: true,
       items: [
-        { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.projects, icon: Columns, to: "/dashboard/projects" },
+        { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
         { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
         { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
@@ -232,8 +232,8 @@ const groups: MenuGroup[] = [
   {
     stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
-      { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
+      { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
       { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
