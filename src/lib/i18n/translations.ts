@@ -2995,6 +2995,7 @@ export const translations = {
       myProfile: "Mi Perfil",
       billing: "Facturación",
       accessControl: "Control de Acceso",
+      domainStatus: "Estado del Dominio",
       helpCenter: "Centro de Ayuda",
       createFeature: "Crear Función",
       favorites: "Favoritos",
