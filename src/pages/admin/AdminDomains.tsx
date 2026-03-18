@@ -52,20 +52,18 @@ function getDomainInfo(domain: string) {
   const isSubdomain = parts.length > rootPartsCount;
   const subName = isSubdomain ? parts[0] : null;
 
-  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
-
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,   value: "185.158.133.1",  purpose: "Routes traffic" },
-        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
+        { type: "A",   name: subName!,   value: "185.158.133.1",               purpose: "Routes traffic" },
+        { type: "TXT", name: "_lovable", value: "← get from Lovable Project Settings → Domains", purpose: "Ownership verification" },
       ]
     : [
-        { type: "A",   name: "@",        value: "185.158.133.1",  purpose: "Routes root domain" },
-        { type: "A",   name: "www",      value: "185.158.133.1",  purpose: "Routes www" },
-        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
+        { type: "A",   name: "@",        value: "185.158.133.1",               purpose: "Routes root domain" },
+        { type: "A",   name: "www",      value: "185.158.133.1",               purpose: "Routes www" },
+        { type: "TXT", name: "_lovable", value: "← get from Lovable Project Settings → Domains", purpose: "Ownership verification" },
       ];
 
-  return { isSubdomain, dnsRecords, verifyValue };
+  return { isSubdomain, dnsRecords };
 }
 
 function CopyButton({ value }: { value: string }) {
