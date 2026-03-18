@@ -14,7 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff,
+  Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
 } from "lucide-react";
 
 // ── Site templates ────────────────────────────────────────────────────────────
@@ -170,6 +170,7 @@ const WebsiteSettings = () => {
   const [domainError, setDomainError] = useState<string | null>(null);
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
+  const [removingDomain, setRemovingDomain] = useState(false);
   const [domainStatus, setDomainStatus] = useState<"idle" | "checking" | "active" | "pending">("idle");
   const [domainCheckedAt, setDomainCheckedAt] = useState<Date | null>(null);
 
@@ -241,6 +242,40 @@ const WebsiteSettings = () => {
       });
     }
     setSavingDomain(false);
+  };
+
+  const handleRemoveDomain = async () => {
+    if (!customDomain) return;
+    setRemovingDomain(true);
+    const domainSnapshot = customDomain;
+    const { error } = await supabase.from("photographers").update({
+      custom_domain: null,
+    } as any).eq("id", user!.id);
+    if (error) {
+      toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
+    } else {
+      setCustomDomain("");
+      setCustomDomainInput("");
+      setDomainStatus("idle");
+      setDomainCheckedAt(null);
+      setDomainError(null);
+      toast({ title: "Domain removed", description: `${domainSnapshot} has been unlinked from your studio.` });
+      // Notify team that domain was removed
+      const { data: profile } = await supabase
+        .from("photographers")
+        .select("full_name, business_name, email")
+        .eq("id", user!.id)
+        .single();
+      supabase.functions.invoke("notify-domain-saved", {
+        body: {
+          domain: domainSnapshot,
+          photographerName: (profile as any)?.business_name || (profile as any)?.full_name || "",
+          photographerEmail: (profile as any)?.email || user!.email || "",
+          action: "removed",
+        },
+      });
+    }
+    setRemovingDomain(false);
   };
 
   const checkDomainConnectivity = async () => {
@@ -975,15 +1010,30 @@ const WebsiteSettings = () => {
                         </div>
                       )}
 
-                      <Button
-                        onClick={handleSaveDomain}
-                        disabled={savingDomain}
-                        size="sm"
-                        variant="outline"
-                        className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                      >
-                        {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
-                      </Button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          onClick={handleSaveDomain}
+                          disabled={savingDomain || removingDomain}
+                          size="sm"
+                          variant="outline"
+                          className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                        >
+                          {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
+                        </Button>
+                        {customDomain && (
+                          <Button
+                            onClick={handleRemoveDomain}
+                            disabled={removingDomain || savingDomain}
+                            size="sm"
+                            variant="ghost"
+                            className="gap-2 text-xs tracking-wider uppercase font-light w-fit text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            {removingDomain
+                              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Removing…</>
+                              : <><Trash2 className="h-3.5 w-3.5" />Remove Domain</>}
+                          </Button>
+                        )}
+                      </div>
                     </section>
 
                   {/* ── Save ── */}
