@@ -50,7 +50,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Sidebar,
@@ -601,6 +601,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const badges = useSidebarBadges();
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
@@ -1034,11 +1035,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         <AnimatePresence initial={false}>
           {!collapsed && (
             <motion.div
-              className="flex items-center gap-2.5 px-2 mb-2"
+              className="flex items-center gap-2.5 px-2 mb-2 cursor-pointer rounded-md hover:bg-sidebar-accent transition-colors"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18, ease: "easeInOut" }}
+              onClick={() => navigate("/dashboard/settings")}
             >
               {/* Avatar */}
               <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 border border-sidebar-border bg-muted flex items-center justify-center">
@@ -1068,8 +1070,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         </AnimatePresence>
         {/* Collapsed: show avatar only */}
         {collapsed && (
-          <div className="flex justify-center mb-2">
-            <div className="h-7 w-7 rounded-full overflow-hidden border border-sidebar-border bg-muted flex items-center justify-center">
+          <div className="flex justify-center mb-2 cursor-pointer" onClick={() => navigate("/dashboard/settings")}>
+            <div className="h-7 w-7 rounded-full overflow-hidden border border-sidebar-border bg-muted flex items-center justify-center hover:opacity-80 transition-opacity">
               {profile?.hero_image_url ? (
                 <img src={profile.hero_image_url} alt="" className="h-full w-full object-cover" />
               ) : (
