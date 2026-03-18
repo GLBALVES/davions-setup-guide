@@ -8,6 +8,14 @@ import { useNavigate } from "react-router-dom";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Lang } from "@/lib/i18n/translations";
+
+const LANG_OPTIONS: { value: Lang; flag: string; label: string }[] = [
+  { value: "en", flag: "🇺🇸", label: "EN" },
+  { value: "pt", flag: "🇧🇷", label: "PT" },
+  { value: "es", flag: "🇪🇸", label: "ES" },
+];
 
 export function DashboardHeader() {
   const { user } = useAuth();
@@ -16,6 +24,7 @@ export function DashboardHeader() {
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const { lang, setLang } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
@@ -74,6 +83,24 @@ export function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-1">
+        {/* Language selector */}
+        <div className="flex items-center gap-0.5 mr-2">
+          {LANG_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setLang(opt.value)}
+              className={`h-7 px-2 text-[10px] tracking-wider uppercase font-light rounded-sm transition-colors duration-200 ${
+                lang === opt.value
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <span className="mr-1">{opt.flag}</span>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
