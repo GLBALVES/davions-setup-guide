@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const navLinks = [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Integrations", href: "#integrations" },
+    { label: t.navbar.features, href: "#features" },
+    { label: t.navbar.pricing, href: "#pricing" },
+    { label: t.navbar.integrations, href: "#integrations" },
   ];
 
   return (
@@ -47,16 +49,16 @@ const Navbar = () => {
             <Button size="sm" asChild>
               <Link to="/dashboard">
                 <LayoutDashboard size={14} className="mr-1.5" />
-                Dashboard
+                {t.navbar.dashboardBtn}
               </Link>
             </Button>
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
+                <Link to="/login">{t.navbar.signIn}</Link>
               </Button>
               <Button size="sm" asChild>
-                <Link to="/signup">Get Started</Link>
+                <Link to="/signup">{t.navbar.getStarted}</Link>
               </Button>
             </>
           )}
@@ -94,19 +96,19 @@ const Navbar = () => {
             <Button asChild>
               <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
                 <LayoutDashboard size={14} className="mr-1.5" />
-                Dashboard
+                {t.navbar.dashboardBtn}
               </Link>
             </Button>
           ) : (
             <>
               <Button variant="outline" asChild>
                 <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  Sign In
+                  {t.navbar.signIn}
                 </Link>
               </Button>
               <Button asChild>
                 <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                  Get Started
+                  {t.navbar.getStarted}
                 </Link>
               </Button>
             </>
@@ -118,4 +120,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
