@@ -153,6 +153,19 @@ function Step2({
   onBack: () => void;
   onNext: () => void;
 }) {
+  const parts = domain.split(".");
+  const isSubdomain = parts.length > 2;
+  const subName = isSubdomain ? parts.slice(0, parts.length - 2).join(".") : null;
+  const dnsRecords = isSubdomain
+    ? [
+        { type: "A",   name: subName!,   value: "185.158.133.1",          purpose: "Subdomain" },
+        { type: "TXT", name: "_davions", value: `davions_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
+      ]
+    : [
+        { type: "A",   name: "@",        value: "185.158.133.1",          purpose: "Root domain" },
+        { type: "A",   name: "www",      value: "185.158.133.1",          purpose: "WWW subdomain" },
+        { type: "TXT", name: "_davions", value: `davions_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
+      ];
   return (
     <div className="space-y-6">
       <div className="space-y-1">
