@@ -61,7 +61,7 @@ function CopyButton({ value }: { value: string }) {
       className="ml-1.5 text-muted-foreground hover:text-foreground transition-colors"
       title="Copy"
     >
-      {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+      {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
     </button>
   );
 }
