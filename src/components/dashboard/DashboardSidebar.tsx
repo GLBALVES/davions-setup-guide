@@ -117,6 +117,8 @@ type MenuGroup = {
   icon: React.ElementType;
   items: MenuItem[];
   defaultOpen?: boolean;
+  /** Set to true to temporarily hide this group from the sidebar */
+  disabled?: boolean;
 };
 
 /** Stable English items list — used only for key generation & matching */
