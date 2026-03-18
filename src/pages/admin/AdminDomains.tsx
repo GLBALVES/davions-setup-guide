@@ -239,16 +239,12 @@ export default function AdminDomains() {
 
   const checkDomain = useCallback(async (domain: string, id: string) => {
     setStatuses((prev) => ({ ...prev, [id]: "checking" }));
-    setDnsDetails((prev) => ({
-      ...prev,
-      [id]: { a: "checking", txt: "checking" },
-    }));
+    setDnsDetails((prev) => ({ ...prev, [id]: { a: "checking" } }));
     try {
       const { data } = await supabase.functions.invoke("check-domain", {
         body: { domain },
       });
       const aOk: boolean = data?.dns?.a?.ok ?? false;
-      const txtOk: boolean = data?.dns?.txt?.ok ?? false;
       setStatuses((prev) => ({
         ...prev,
         [id]: data?.status === "active" ? "active" : "pending",
@@ -257,17 +253,12 @@ export default function AdminDomains() {
         ...prev,
         [id]: {
           a: aOk ? "ok" : "fail",
-          txt: txtOk ? "ok" : "fail",
           aFound: data?.dns?.a?.found ?? [],
-          txtFound: data?.dns?.txt?.found ?? [],
         },
       }));
     } catch {
       setStatuses((prev) => ({ ...prev, [id]: "pending" }));
-      setDnsDetails((prev) => ({
-        ...prev,
-        [id]: { a: "fail", txt: "fail" },
-      }));
+      setDnsDetails((prev) => ({ ...prev, [id]: { a: "fail" } }));
     }
   }, []);
 
