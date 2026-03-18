@@ -264,7 +264,6 @@ export default function AdminDomains() {
       });
       const aOk: boolean = data?.dns?.a?.ok ?? false;
       const txtOk: boolean = data?.dns?.txt?.ok ?? false;
-      const cnameFound: string[] = data?.dns?.a?.cname ?? [];
       setStatuses((prev) => ({
         ...prev,
         [id]: data?.status === "active" ? "active" : "pending",
@@ -276,7 +275,6 @@ export default function AdminDomains() {
           txt: txtOk ? "ok" : "fail",
           aFound: data?.dns?.a?.found ?? [],
           txtFound: data?.dns?.txt?.found ?? [],
-          cname: cnameFound,
         },
       }));
     } catch {
