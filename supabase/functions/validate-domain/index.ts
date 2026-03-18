@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -43,18 +43,18 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("validate-domain DB error:", error);
-      return new Response(null, { status: 500 });
+      return new Response(JSON.stringify({ registered: false }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (data) {
       // Domain exists → allow Caddy to issue TLS
-      return new Response(null, { status: 200 });
+      return new Response(JSON.stringify({ registered: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else {
       // Domain not registered → reject TLS
-      return new Response(null, { status: 403 });
+      return new Response(JSON.stringify({ registered: false }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (err) {
     console.error("validate-domain error:", err);
-    return new Response(null, { status: 500 });
+    return new Response(JSON.stringify({ registered: false }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
