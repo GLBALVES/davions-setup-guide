@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     const isSubdomain = parts.length > rootPartsCount;
 
     const expectedTxt = getExpectedTxtValue(cleanDomain);
-    const txtHost = `_davions.${rootDomain}`;
+    const txtHost = `_lovable.${rootDomain}`;
 
     // Run DNS lookups in parallel — also check CNAME for Cloudflare users
     const [aRecords, txtRecords, cnameRecords] = await Promise.all([
