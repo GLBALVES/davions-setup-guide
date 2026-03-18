@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 
 // ── DNS records ──────────────────────────────────────────────────────────────
+const VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
 const DNS_RECORDS = [
-  { type: "A",   name: "@",       value: "185.158.133.1",         purpose: "Root domain" },
-  { type: "A",   name: "www",     value: "185.158.133.1",         purpose: "WWW subdomain" },
+  { type: "A",   name: "@",       value: VPS_IP,                  purpose: "Root domain" },
+  { type: "A",   name: "www",     value: VPS_IP,                  purpose: "WWW subdomain" },
   { type: "TXT", name: "_lovable", value: "lovable_verify=<provided>", purpose: "Domain security verification" },
 ];
 
@@ -362,7 +363,7 @@ function Step4({ domain, onBack, onFinish }: { domain: string; onBack: () => voi
       <div className="space-y-px">
         <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground pb-2">Troubleshooting</p>
         {[
-          "Confirm both A records (@ and www) point to 185.158.133.1.",
+          `Confirm both A records (@ and www) point to ${VPS_IP}.`,
           "Check for conflicting A records or CNAME records with the same name and remove them.",
           "Use DNSChecker.org to inspect current DNS values worldwide.",
           "If you have CAA records, add letsencrypt.org as an allowed certificate authority.",
