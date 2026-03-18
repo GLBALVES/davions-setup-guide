@@ -331,6 +331,14 @@ const Index = () => {
             <p className="text-sm text-muted-foreground font-light mt-3 max-w-sm leading-relaxed">
               {l.pricingSubheading}
             </p>
+            {currencyBadge && (
+              <div className="mt-4 flex items-center gap-2 border border-border px-3 py-1.5">
+                <Globe size={11} className="text-muted-foreground" />
+                <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  Prices in {currencyBadge}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border max-w-4xl mx-auto">
@@ -342,6 +350,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+
 
       {/* ── CTA BANNER ───────────────────────────────────────────────── */}
       <section className="py-24 px-6 border-t border-border">
