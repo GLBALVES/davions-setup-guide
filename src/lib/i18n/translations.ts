@@ -46,6 +46,7 @@ export const translations = {
       myProfile: "My Profile",
       billing: "Billing",
       accessControl: "Access Control",
+      domainStatus: "Domain Status",
       helpCenter: "Help Center",
       createFeature: "Create Feature",
       // Favorites
@@ -1542,6 +1543,7 @@ export const translations = {
       myProfile: "Meu Perfil",
       billing: "Faturamento",
       accessControl: "Controle de Acesso",
+      domainStatus: "Status do Domínio",
       helpCenter: "Central de Ajuda",
       createFeature: "Criar Recurso",
       favorites: "Favoritos",
@@ -2993,6 +2995,7 @@ export const translations = {
       myProfile: "Mi Perfil",
       billing: "Facturación",
       accessControl: "Control de Acceso",
+      domainStatus: "Estado del Dominio",
       helpCenter: "Centro de Ayuda",
       createFeature: "Crear Función",
       favorites: "Favoritos",
