@@ -44,9 +44,7 @@ type RecordStatus = "idle" | "checking" | "ok" | "fail";
 
 type DnsDetail = {
   a: RecordStatus;
-  txt: RecordStatus;
   aFound?: string[];
-  txtFound?: string[];
 };
 
 type RowStatus = "idle" | "checking" | "active" | "pending";

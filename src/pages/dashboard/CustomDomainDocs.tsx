@@ -162,13 +162,11 @@ function Step2({
   const subName = isSubdomain ? parts[0] : null;
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,   value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Subdomain" },
-        { type: "TXT", name: "_lovable", value: `lovable_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
+        { type: "A", name: subName!, value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic to your store" },
       ]
     : [
-        { type: "A",   name: "@",        value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Root domain" },
-        { type: "A",   name: "www",      value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "WWW subdomain" },
-        { type: "TXT", name: "_lovable", value: `lovable_verify=${domain.replace(/\./g, "_")}`, purpose: "Domain security verification" },
+        { type: "A", name: "@",   value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
+        { type: "A", name: "www", value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www subdomain" },
       ];
   return (
     <div className="space-y-6">
