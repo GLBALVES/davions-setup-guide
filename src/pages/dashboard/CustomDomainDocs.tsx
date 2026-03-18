@@ -154,8 +154,9 @@ function Step2({
   onNext: () => void;
 }) {
   const parts = domain.split(".");
-  const isSubdomain = parts.length > 2;
-  const subName = isSubdomain ? parts.slice(0, parts.length - 2).join(".") : null;
+  const remainingAfterFirst = parts.slice(1);
+  const isSubdomain = remainingAfterFirst.length >= 2;
+  const subName = isSubdomain ? parts[0] : null;
   const dnsRecords = isSubdomain
     ? [
         { type: "A",   name: subName!,   value: "185.158.133.1",          purpose: "Subdomain" },
