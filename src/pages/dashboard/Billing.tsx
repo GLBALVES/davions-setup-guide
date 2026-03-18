@@ -307,10 +307,20 @@ const Billing = () => {
 
               {/* Plans */}
               <section className="flex flex-col gap-4">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                    <span className="inline-block w-6 h-px bg-border" />
+                    {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
+                  </p>
+                  {!region.loading && region.currency !== "USD" && (
+                    <div className="flex items-center gap-1.5 border border-border px-2 py-1">
+                      <Globe className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                        Prices in {region.symbol} · {region.country}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {!loadingSub && sub?.subscribed && activePlan ? (
                   <div className="border border-foreground p-8 flex flex-col sm:flex-row sm:items-center gap-6 justify-between relative overflow-hidden">
