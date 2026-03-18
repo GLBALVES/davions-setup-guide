@@ -46,6 +46,7 @@ export const translations = {
       myProfile: "My Profile",
       billing: "Billing",
       accessControl: "Access Control",
+      domainStatus: "Domain Status",
       helpCenter: "Help Center",
       createFeature: "Create Feature",
       // Favorites
