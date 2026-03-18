@@ -222,7 +222,7 @@ function Step2({
         <div className="space-y-1.5 flex-1">
           <p className="text-[12px] font-medium text-foreground">Using Cloudflare? You must move your nameservers.</p>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
-            Our server IP (<span className="font-mono text-[11px]">185.158.133.1</span>) belongs to Cloudflare's own infrastructure. Cloudflare blocks all zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. There is no DNS record change that will fix this while your domain uses Cloudflare nameservers.
+            Our server IP (<span className="font-mono text-[11px]">{import.meta.env.VITE_VPS_IP || "147.93.112.182"}</span>) belongs to Cloudflare's own infrastructure. Cloudflare blocks all zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. There is no DNS record change that will fix this while your domain uses Cloudflare nameservers.
           </p>
           <p className="text-[12px] text-muted-foreground leading-relaxed">
             <strong className="text-foreground">The only fix:</strong> move your nameservers away from Cloudflare to your registrar's DNS. For{" "}
