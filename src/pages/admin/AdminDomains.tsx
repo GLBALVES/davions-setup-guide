@@ -168,40 +168,17 @@ function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => vo
   );
 }
 
-const CNAME_RECORD = "davions.com";
-
 function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefined }) {
   const { dnsRecords, isSubdomain } = getDomainInfo(domain);
-  const parts = domain.split(".");
-  const subName = isSubdomain ? parts[0] : null;
-  const cnameTarget = CNAME_RECORD;
-  const detectedCname = dns?.cname ?? [];
-  const isUsingCname = detectedCname.length > 0;
 
   return (
     <div className="px-6 py-4 bg-muted/30 border-b border-border space-y-4">
-      <div className="flex items-center gap-3">
-        <p className="text-xs text-muted-foreground font-light">
-          DNS records required for <span className="font-mono text-foreground">{domain}</span>
-        </p>
-        {isUsingCname && (
-          <span
-            className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border"
-            style={{
-              color: "hsl(38 80% 40%)",
-              borderColor: "hsl(38 92% 50% / 0.35)",
-              backgroundColor: "hsl(38 92% 50% / 0.1)",
-            }}
-          >
-            <AlertTriangle size={9} />
-            Using Cloudflare CNAME → {detectedCname[0]}
-          </span>
-        )}
-      </div>
+      <p className="text-xs text-muted-foreground font-light">
+        DNS records required for <span className="font-mono text-foreground">{domain}</span>
+      </p>
 
-      {/* Standard (non-Cloudflare) records */}
+      {/* DNS records table */}
       <div>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Standard (GoDaddy, Namecheap, etc.)</p>
         <div className="overflow-x-auto border border-border">
           <table className="w-full text-xs">
             <thead>
@@ -239,12 +216,7 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
                     <td className="py-1.5">
                       <div className="flex items-center gap-1.5">
                         <RecordBadge status={recordStatus} />
-                        {isARecord && recordStatus === "ok" && isUsingCname && (
-                          <span className="text-[10px]" style={{ color: "hsl(38 80% 40%)" }}>
-                            via CNAME
-                          </span>
-                        )}
-                        {(!isARecord || !isUsingCname) && recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
+                        {recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
                         {recordStatus === "fail" && <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>}
                         {recordStatus === "checking" && <span className="text-[10px] text-muted-foreground">Checking…</span>}
                         {recordStatus === "idle" && <span className="text-[10px] text-muted-foreground/40">—</span>}
@@ -258,45 +230,18 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
         </div>
       </div>
 
-      {/* Cloudflare alternative */}
-      <div className="border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
+      {/* Cloudflare note */}
+      <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
         <div className="flex items-start gap-2">
           <AlertTriangle size={12} className="mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
           <div className="space-y-1">
-            <p className="text-xs font-medium text-foreground">Using Cloudflare? Use a CNAME instead.</p>
+            <p className="text-xs font-medium text-foreground">Using Cloudflare?</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Cloudflare blocks A records pointing to <span className="font-mono">185.158.133.1</span> (Error 1000).
-              Add this CNAME record and set Proxy Status to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud):
+              Use the A record above, but set Proxy Status to{" "}
+              <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span>{" "}
+              (grey cloud). Do <strong>not</strong> use the orange cloud (proxied) — it causes Error 1000. Also avoid CNAME to <span className="font-mono text-[10px]">davions.com</span>: it resolves to the same IP and triggers the same error.
             </p>
           </div>
-        </div>
-        <div className="overflow-x-auto border border-yellow-500/20">
-          <table className="w-full text-xs bg-background/50">
-            <thead>
-              <tr className="border-b border-yellow-500/20">
-                <th className="text-left font-medium text-muted-foreground py-1.5 pl-3 pr-4 w-16">Type</th>
-                <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Name</th>
-                <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Value</th>
-                <th className="text-left font-medium text-muted-foreground py-1.5">Proxy</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="py-1.5 pl-3 pr-4">
-                  <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">CNAME</Badge>
-                </td>
-                <td className="py-1.5 pr-4 font-mono text-foreground">
-                  {isSubdomain ? subName : "@"}
-                  <CopyButton value={isSubdomain ? subName! : "@"} />
-                </td>
-                <td className="py-1.5 pr-4 font-mono text-foreground">
-                  {cnameTarget}
-                  <CopyButton value={cnameTarget} />
-                </td>
-                <td className="py-1.5 text-[11px] text-muted-foreground">DNS only (grey cloud)</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

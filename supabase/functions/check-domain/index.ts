@@ -125,30 +125,24 @@ Deno.serve(async (req) => {
     const expectedTxt = getExpectedTxtValue(cleanDomain);
     const txtHost = `_lovable.${rootDomain}`;
 
-    // Run DNS lookups in parallel — also check CNAME for Cloudflare users
-    const [aRecords, txtRecords, cnameRecords] = await Promise.all([
+    // Run DNS lookups in parallel
+    const [aRecords, txtRecords] = await Promise.all([
       resolveA(cleanDomain),
       resolveTXT(txtHost),
-      resolveCNAME(cleanDomain),
     ]);
 
     const aOk = aRecords.includes(EXPECTED_IP);
-    // CNAME is valid if it points to davions.com or any subdomain of it
-    const cnameOk = cnameRecords.some(
-      (c) => c === CNAME_TARGET || c.endsWith(`.${CNAME_TARGET}`)
-    );
     const txtOk = txtRecords.some((t) => t.includes(expectedTxt));
 
-    // A record passes if direct IP match OR CNAME points to platform (Cloudflare path)
-    const aResolved = aOk || cnameOk;
-
-    // Overall status
-    const status = aResolved ? "active" : "pending";
+    // Domain is active only if the A record resolves directly to the expected IP.
+    // CNAME to davions.com is NOT a valid path: davions.com resolves to 185.158.133.1
+    // which is a Cloudflare-owned IP, causing Error 1000 for any third-party CF account.
+    const status = aOk ? "active" : "pending";
 
     return new Response(JSON.stringify({
       status,
       dns: {
-        a: { ok: aResolved, found: aRecords, expected: EXPECTED_IP, cname: cnameRecords },
+        a: { ok: aOk, found: aRecords, expected: EXPECTED_IP },
         txt: { ok: txtOk, found: txtRecords, expected: expectedTxt, host: txtHost },
       },
     }), {
