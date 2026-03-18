@@ -1290,7 +1290,7 @@ export const translations = {
       logoHint: "Recommended: transparent PNG or SVG, at least 400px wide.",
       taglineLabel: "Tagline", taglinePlaceholder: "Capturing life's finest moments",
       brandColorLabel: "Brand Color", heroTitle: "Hero Section",
-      heroDesc: "The full-screen banner shown at the top of your site.",
+      heroDesc: "The full-screen banner shown at the top of your site. Recommended: 1920×1080px or wider, JPG/PNG, landscape orientation.",
       coverImage: "Cover Image", uploadHero: "Upload hero image", replaceHero: "Replace",
       headlineLabel: "Headline", headlinePlaceholder: "Photography that tells your story",
       subheadlineLabel: "Sub-headline", subheadlinePlaceholder: "Based in New York · Available worldwide",
