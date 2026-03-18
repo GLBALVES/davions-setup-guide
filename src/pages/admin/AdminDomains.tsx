@@ -68,12 +68,12 @@ function getDomainInfo(domain: string) {
 
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,  value: "185.158.133.1", purpose: "Routes traffic" },
+        { type: "A",   name: subName!,  value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic" },
         { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
       ]
     : [
-        { type: "A",   name: "@",       value: "185.158.133.1", purpose: "Routes root domain" },
-        { type: "A",   name: "www",     value: "185.158.133.1", purpose: "Routes www" },
+        { type: "A",   name: "@",       value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
+        { type: "A",   name: "www",     value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www" },
         { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
       ];
 
