@@ -25,6 +25,7 @@ export function DashboardHeader() {
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const { lang, setLang } = useLanguage();
 
   useEffect(() => {
@@ -105,6 +106,18 @@ export function DashboardHeader() {
         <Tooltip>
           <TooltipTrigger asChild>
             <button
+              onClick={() => setAssistantOpen(true)}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
+              <Sparkles size={15} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Davions Assistant</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
               onClick={() => navigate("/dashboard/help")}
               className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
             >
@@ -128,6 +141,7 @@ export function DashboardHeader() {
       </div>
 
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
+      <HelpAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </header>
   );
 }
