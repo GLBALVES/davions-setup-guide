@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { domain, photographerName, photographerEmail } = await req.json();
+    const { domain, photographerName, photographerEmail, action } = await req.json();
 
     if (!domain) {
       return new Response(JSON.stringify({ error: "Missing domain" }), {
@@ -45,7 +45,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Calculate domain type and DNS records
+    const isRemoval = action === "removed";
+
+    // Calculate domain type and DNS records (only needed for new domains)
     const parts = domain.split(".");
     const isSubdomain = parts.slice(1).length >= 2;
     const subName = isSubdomain ? parts[0] : null;
@@ -57,9 +59,7 @@ Deno.serve(async (req) => {
           `A     @           →  185.158.133.1`,
           `A     www         →  185.158.133.1`,
         ];
-    const dnsBlock = [...aRecords, `TXT   _davions    →  ${verifyValue}`].join(
-      "\n"
-    );
+    const dnsBlock = [...aRecords, `TXT   _davions    →  ${verifyValue}`].join("\n");
 
     const domainType = isSubdomain ? "Subdomain" : "Root Domain";
     const now = new Date().toLocaleString("en-US", {
@@ -73,7 +73,38 @@ Deno.serve(async (req) => {
 
     const studioLabel = photographerName || photographerEmail || "Unknown";
 
-    const emailHtml = `
+    const emailHtml = isRemoval ? `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px;">
+  <h2 style="font-size:18px;font-weight:600;margin-bottom:4px;">Custom domain removed</h2>
+  <p style="color:#666;font-size:13px;margin-top:0;">A photographer has removed their custom domain. You may want to remove it from the Lovable project settings as well.</p>
+
+  <table style="width:100%;border-collapse:collapse;margin:24px 0;font-size:14px;">
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 0;color:#888;width:140px;">Studio</td>
+      <td style="padding:10px 0;font-weight:500;">${studioLabel}</td>
+    </tr>
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 0;color:#888;">Email</td>
+      <td style="padding:10px 0;">${photographerEmail || "—"}</td>
+    </tr>
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 0;color:#888;">Domain removed</td>
+      <td style="padding:10px 0;font-family:monospace;">${domain}</td>
+    </tr>
+    <tr>
+      <td style="padding:10px 0;color:#888;">Date (UTC)</td>
+      <td style="padding:10px 0;">${now}</td>
+    </tr>
+  </table>
+
+  <p style="font-size:13px;color:#444;margin-top:24px;">
+    <strong>Action needed:</strong> Remove this domain from the Lovable project settings if it was previously added.
+  </p>
+</body>
+</html>` : `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /></head>
