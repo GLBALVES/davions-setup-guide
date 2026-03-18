@@ -19,6 +19,7 @@ import GalleryDetail from "./pages/dashboard/GalleryDetail";
 import GalleryView from "./pages/gallery/GalleryView";
 import CustomDomainStore from "./pages/store/CustomDomainStore";
 import CustomDomainSessionGateway from "./pages/store/CustomDomainSessionGateway";
+import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway";
 import { isCustomDomain } from "./lib/custom-domain";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
@@ -85,6 +86,7 @@ const App = () => (
               <>
                 <Route path="/" element={<CustomDomainStore />} />
                 <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
+                <Route path="/gallery/:slug" element={<CustomDomainGalleryGateway />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
