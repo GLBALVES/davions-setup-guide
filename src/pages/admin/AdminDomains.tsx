@@ -44,9 +44,7 @@ type RecordStatus = "idle" | "checking" | "ok" | "fail";
 
 type DnsDetail = {
   a: RecordStatus;
-  txt: RecordStatus;
   aFound?: string[];
-  txtFound?: string[];
 };
 
 type RowStatus = "idle" | "checking" | "active" | "pending";
@@ -64,20 +62,16 @@ function getDomainInfo(domain: string) {
   const subName = isSubdomain ? parts[0] : null;
   const rootDomain = parts.slice(-rootPartsCount).join(".");
 
-  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
-
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,  value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic" },
-        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A", name: subName!, value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic to your store" },
       ]
     : [
-        { type: "A",   name: "@",       value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
-        { type: "A",   name: "www",     value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www" },
-        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A", name: "@",   value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
+        { type: "A", name: "www", value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www subdomain" },
       ];
 
-  return { isSubdomain, dnsRecords, verifyValue, rootDomain };
+  return { isSubdomain, dnsRecords, rootDomain };
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -101,7 +95,7 @@ function RecordBadge({ status }: { status: RecordStatus }) {
 }
 
 function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
-  if (!dns || (dns.a === "idle" && dns.txt === "idle")) {
+  if (!dns || dns.a === "idle") {
     return <span className="text-[10px] text-muted-foreground/40">—</span>;
   }
   return (
@@ -109,10 +103,6 @@ function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.a} />
         <span>A</span>
-      </span>
-      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-        <RecordBadge status={dns.txt} />
-        <span>TXT</span>
       </span>
     </div>
   );
@@ -177,13 +167,7 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
             </thead>
             <tbody>
               {dnsRecords.map((r, i) => {
-                const isARecord = r.type === "A";
-                const isTxtRecord = r.type === "TXT";
-                let recordStatus: RecordStatus = "idle";
-                if (dns) {
-                  if (isARecord) recordStatus = dns.a;
-                  if (isTxtRecord) recordStatus = dns.txt;
-                }
+                const recordStatus: RecordStatus = dns ? dns.a : "idle";
                 return (
                   <tr key={i} className="border-b border-border/50 last:border-0">
                     <td className="py-1.5 pr-6 pl-3">
@@ -255,16 +239,12 @@ export default function AdminDomains() {
 
   const checkDomain = useCallback(async (domain: string, id: string) => {
     setStatuses((prev) => ({ ...prev, [id]: "checking" }));
-    setDnsDetails((prev) => ({
-      ...prev,
-      [id]: { a: "checking", txt: "checking" },
-    }));
+    setDnsDetails((prev) => ({ ...prev, [id]: { a: "checking" } }));
     try {
       const { data } = await supabase.functions.invoke("check-domain", {
         body: { domain },
       });
       const aOk: boolean = data?.dns?.a?.ok ?? false;
-      const txtOk: boolean = data?.dns?.txt?.ok ?? false;
       setStatuses((prev) => ({
         ...prev,
         [id]: data?.status === "active" ? "active" : "pending",
@@ -273,17 +253,12 @@ export default function AdminDomains() {
         ...prev,
         [id]: {
           a: aOk ? "ok" : "fail",
-          txt: txtOk ? "ok" : "fail",
           aFound: data?.dns?.a?.found ?? [],
-          txtFound: data?.dns?.txt?.found ?? [],
         },
       }));
     } catch {
       setStatuses((prev) => ({ ...prev, [id]: "pending" }));
-      setDnsDetails((prev) => ({
-        ...prev,
-        [id]: { a: "fail", txt: "fail" },
-      }));
+      setDnsDetails((prev) => ({ ...prev, [id]: { a: "fail" } }));
     }
   }, []);
 
