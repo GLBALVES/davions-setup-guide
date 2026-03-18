@@ -33,3 +33,6 @@ verify_jwt = false
 [functions.detect-region]
 verify_jwt = false
 
+[functions.notify-domain-saved]
+verify_jwt = false
+
