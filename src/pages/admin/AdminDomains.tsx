@@ -40,18 +40,24 @@ type Photographer = {
 
 type DomainStatus = "idle" | "checking" | "active" | "pending";
 
+const COMPOUND_TLDS = [
+  "com.br","net.br","org.br","edu.br","gov.br",
+  "co.uk","com.au","co.nz","com.ar","com.mx","com.co",
+];
+
 function getDomainInfo(domain: string) {
   const parts = domain.split(".");
-  const remainingAfterFirst = parts.slice(1);
-  const isSubdomain = remainingAfterFirst.length >= 2;
+  const lastTwo = parts.slice(-2).join(".");
+  const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
+  const isSubdomain = parts.length > rootPartsCount;
   const subName = isSubdomain ? parts[0] : null;
 
-  const verifyValue = `lovable_verify=${domain.replace(/\./g, "-")}`;
+  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
   const dnsRecords = isSubdomain
     ? [
         { type: "A",   name: subName!,   value: "185.158.133.1",  purpose: "Routes traffic" },
-        { type: "TXT", name: `_lovable.${subName!}`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
       ]
     : [
         { type: "A",   name: "@",        value: "185.158.133.1",  purpose: "Routes root domain" },

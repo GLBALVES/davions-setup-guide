@@ -893,19 +893,20 @@ const WebsiteSettings = () => {
                        {/* DNS records — shown as soon as a domain is saved */}
                        {customDomain && (() => {
                          const parts = customDomain.split(".");
-                         // Detect subdomain: if first label removed still leaves a valid domain (2+ parts)
-                         const remainingAfterFirst = parts.slice(1);
-                         const isSubdomain = remainingAfterFirst.length >= 2;
+                         const lastTwo = parts.slice(-2).join(".");
+                         const compoundTlds = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
+                         const rootPartsCount = compoundTlds.includes(lastTwo) ? 3 : 2;
+                         const isSubdomain = parts.length > rootPartsCount;
                          const subName = isSubdomain ? parts[0] : null;
                          const dnsRecords = isSubdomain
                            ? [
                                { type: "A",   name: subName!,    value: "185.158.133.1" },
-                                { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
-                              ]
-                            : [
-                                { type: "A",   name: "@",         value: "185.158.133.1" },
-                                { type: "A",   name: "www",       value: "185.158.133.1" },
-                                { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
+                               { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
+                             ]
+                           : [
+                               { type: "A",   name: "@",         value: "185.158.133.1" },
+                               { type: "A",   name: "www",       value: "185.158.133.1" },
+                               { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
                              ];
                          return (
                            <div className="flex flex-col gap-3">
