@@ -7,23 +7,6 @@ const corsHeaders = {
 };
 
 const EXPECTED_IP = "185.158.133.1";
-const CNAME_TARGET = "davions.com";
-
-const COMPOUND_TLDS = [
-  "com.br","net.br","org.br","edu.br","gov.br",
-  "co.uk","com.au","co.nz","com.ar","com.mx","com.co",
-];
-
-function getRootDomain(domain: string): string {
-  const parts = domain.split(".");
-  const lastTwo = parts.slice(-2).join(".");
-  const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
-  return parts.slice(-rootPartsCount).join(".");
-}
-
-function getExpectedTxtValue(domain: string): string {
-  return `lovable_verify=${domain.replace(/\./g, "_")}`;
-}
 
 async function resolveA(hostname: string): Promise<string[]> {
   try {
