@@ -237,8 +237,8 @@ const WebsiteSettings = () => {
     } else {
       const savedDomain = customDomainInput.trim();
       setCustomDomain(savedDomain);
-      setDomainStatus("idle");
-      setDomainCheckedAt(null);
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
+      setDomainLastChecked(null);
       toast({ title: ws.domainSaved });
       // Auto-check domain right after saving
       checkDomainConnectivity(savedDomain);
