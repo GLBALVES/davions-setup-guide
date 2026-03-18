@@ -234,13 +234,39 @@ export function HelpAssistantPanel({
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] text-[12px] leading-relaxed px-3 py-2 font-light whitespace-pre-wrap ${
+                    className={`max-w-[80%] text-[12px] leading-relaxed px-3 py-2 font-light ${
                       msg.role === "user"
-                        ? "bg-foreground text-background"
+                        ? "bg-foreground text-background whitespace-pre-wrap"
                         : "bg-muted/50 border border-border text-foreground"
                     }`}
                   >
-                    {msg.content}
+                    {msg.role === "user" ? (
+                      msg.content
+                    ) : (
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 my-1.5">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal list-inside space-y-0.5 my-1.5">{children}</ol>,
+                          li: ({ children }) => <li className="text-[12px]">{children}</li>,
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:opacity-80 transition-opacity">
+                              {children}
+                            </a>
+                          ),
+                          code: ({ children }) => (
+                            <code className="bg-foreground/10 px-1 py-0.5 rounded text-[11px] font-mono">{children}</code>
+                          ),
+                          h1: ({ children }) => <p className="font-semibold mb-1">{children}</p>,
+                          h2: ({ children }) => <p className="font-semibold mb-1">{children}</p>,
+                          h3: ({ children }) => <p className="font-medium mb-1">{children}</p>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    )}
                     {msg.role === "assistant" && loading && i === messages.length - 1 && (
                       <span className="inline-block w-1.5 h-3.5 bg-muted-foreground/50 animate-pulse ml-0.5 align-middle" />
                     )}
