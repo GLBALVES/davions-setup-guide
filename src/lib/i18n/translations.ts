@@ -4201,7 +4201,7 @@ export const translations = {
       taglinePlaceholder: "Capturando los mejores momentos de la vida",
       brandColorLabel: "Color de Marca",
       heroTitle: "Sección Hero",
-      heroDesc: "El banner a pantalla completa en la parte superior de tu sitio.",
+      heroDesc: "El banner a pantalla completa en la parte superior de tu sitio. Recomendado: 1920×1080px o más, JPG/PNG, orientación horizontal.",
       coverImage: "Imagen de Portada",
       uploadHero: "Subir imagen hero",
       replaceHero: "Reemplazar",
