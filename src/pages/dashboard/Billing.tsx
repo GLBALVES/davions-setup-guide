@@ -124,7 +124,9 @@ const Billing = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const region = useRegion();
   const connectInstanceRef = useRef<any>(null);
+
 
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [balance, setBalance] = useState<StripeBalance | null>(null);
