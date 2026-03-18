@@ -1010,15 +1010,30 @@ const WebsiteSettings = () => {
                         </div>
                       )}
 
-                      <Button
-                        onClick={handleSaveDomain}
-                        disabled={savingDomain}
-                        size="sm"
-                        variant="outline"
-                        className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                      >
-                        {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
-                      </Button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          onClick={handleSaveDomain}
+                          disabled={savingDomain || removingDomain}
+                          size="sm"
+                          variant="outline"
+                          className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                        >
+                          {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
+                        </Button>
+                        {customDomain && (
+                          <Button
+                            onClick={handleRemoveDomain}
+                            disabled={removingDomain || savingDomain}
+                            size="sm"
+                            variant="ghost"
+                            className="gap-2 text-xs tracking-wider uppercase font-light w-fit text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            {removingDomain
+                              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Removing…</>
+                              : <><Trash2 className="h-3.5 w-3.5" />Remove Domain</>}
+                          </Button>
+                        )}
+                      </div>
                     </section>
 
                   {/* ── Save ── */}
