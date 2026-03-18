@@ -8,6 +8,22 @@ const corsHeaders = {
 
 const EXPECTED_IP = "185.158.133.1";
 
+const COMPOUND_TLDS = [
+  "com.br","net.br","org.br","edu.br","gov.br",
+  "co.uk","com.au","co.nz","com.ar","com.mx","com.co",
+];
+
+function getRootDomain(domain: string): string {
+  const parts = domain.split(".");
+  const lastTwo = parts.slice(-2).join(".");
+  const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
+  return parts.slice(-rootPartsCount).join(".");
+}
+
+function getExpectedTxtValue(domain: string): string {
+  return `lovable_verify=${domain.replace(/\./g, "_")}`;
+}
+
 async function resolveA(hostname: string): Promise<string[]> {
   try {
     const res = await fetch(
@@ -19,22 +35,6 @@ async function resolveA(hostname: string): Promise<string[]> {
     return (json.Answer as { type: number; data: string }[])
       .filter((r) => r.type === 1) // A record
       .map((r) => r.data.trim());
-  } catch {
-    return [];
-  }
-}
-
-async function resolveCNAME(hostname: string): Promise<string[]> {
-  try {
-    const res = await fetch(
-      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=CNAME`,
-      { headers: { Accept: "application/dns-json" }, signal: AbortSignal.timeout(8000) }
-    );
-    const json = await res.json();
-    if (!json.Answer) return [];
-    return (json.Answer as { type: number; data: string }[])
-      .filter((r) => r.type === 5) // CNAME record
-      .map((r) => r.data.replace(/\.$/, "").trim().toLowerCase());
   } catch {
     return [];
   }
@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
     const txtOk = txtRecords.some((t) => t.includes(expectedTxt));
 
     // Domain is active only if the A record resolves directly to the expected IP.
-    // CNAME to davions.com is NOT a valid path: davions.com resolves to 185.158.133.1
-    // which is a Cloudflare-owned IP, causing Error 1000 for any third-party CF account.
+    // CNAME to davions.com is NOT valid: davions.com resolves to 185.158.133.1
+    // (a Cloudflare-owned IP), causing Error 1000 for any third-party CF account.
     const status = aOk ? "active" : "pending";
 
     return new Response(JSON.stringify({
