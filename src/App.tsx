@@ -63,6 +63,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 const queryClient = new QueryClient();
 const onCustomDomain = isCustomDomain();
 
