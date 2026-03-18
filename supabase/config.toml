@@ -1,5 +1,8 @@
 project_id = "pjcegphrngpedujeatrl"
 
+[functions.help-assistant]
+verify_jwt = false
+
 [functions.get-gallery-id]
 verify_jwt = false
 

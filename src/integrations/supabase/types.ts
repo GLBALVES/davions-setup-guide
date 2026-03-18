@@ -827,6 +827,30 @@ export type Database = {
         }
         Relationships: []
       }
+      help_assistant_config: {
+        Row: {
+          id: string
+          model: string
+          system_prompt: string | null
+          temperature: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          model?: string
+          system_prompt?: string | null
+          temperature?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          model?: string
+          system_prompt?: string | null
+          temperature?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mkt_email_automated: {
         Row: {
           created_at: string
