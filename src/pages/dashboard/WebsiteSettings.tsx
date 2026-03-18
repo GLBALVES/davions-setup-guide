@@ -244,6 +244,40 @@ const WebsiteSettings = () => {
     setSavingDomain(false);
   };
 
+  const handleRemoveDomain = async () => {
+    if (!customDomain) return;
+    setRemovingDomain(true);
+    const domainSnapshot = customDomain;
+    const { error } = await supabase.from("photographers").update({
+      custom_domain: null,
+    } as any).eq("id", user!.id);
+    if (error) {
+      toast({ title: ws.failedToSave, description: error.message, variant: "destructive" });
+    } else {
+      setCustomDomain("");
+      setCustomDomainInput("");
+      setDomainStatus("idle");
+      setDomainCheckedAt(null);
+      setDomainError(null);
+      toast({ title: "Domain removed", description: `${domainSnapshot} has been unlinked from your studio.` });
+      // Notify team that domain was removed
+      const { data: profile } = await supabase
+        .from("photographers")
+        .select("full_name, business_name, email")
+        .eq("id", user!.id)
+        .single();
+      supabase.functions.invoke("notify-domain-saved", {
+        body: {
+          domain: domainSnapshot,
+          photographerName: (profile as any)?.business_name || (profile as any)?.full_name || "",
+          photographerEmail: (profile as any)?.email || user!.email || "",
+          action: "removed",
+        },
+      });
+    }
+    setRemovingDomain(false);
+  };
+
   const checkDomainConnectivity = async () => {
     if (!customDomain) return;
     setDomainStatus("checking");
