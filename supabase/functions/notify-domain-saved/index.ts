@@ -53,11 +53,12 @@ Deno.serve(async (req) => {
     const subName = isSubdomain ? parts[0] : null;
   const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
+  const vpsIp = Deno.env.get("VPS_IP") || "147.93.112.182";
   const aRecords = isSubdomain
-    ? [`A     ${subName}    →  185.158.133.1`]
+    ? [`A     ${subName}    →  ${vpsIp}`]
     : [
-        `A     @           →  185.158.133.1`,
-        `A     www         →  185.158.133.1`,
+        `A     @           →  ${vpsIp}`,
+        `A     www         →  ${vpsIp}`,
       ];
   const dnsBlock = [...aRecords, `TXT   _lovable    →  ${verifyValue}`].join("\n");
 
