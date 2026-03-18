@@ -150,7 +150,6 @@ const App = () => (
                  <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  <Route path="/dashboard/help" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-                 <Route path="/dashboard/domain-status" element={<ProtectedRoute><DomainStatus /></ProtectedRoute>} />
 
                  {/* Admin routes */}
                  <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
