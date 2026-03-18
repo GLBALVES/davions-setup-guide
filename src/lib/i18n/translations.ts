@@ -2742,7 +2742,7 @@ export const translations = {
       logoHint: "Recomendado: PNG transparente ou SVG, pelo menos 400px de largura.",
       taglineLabel: "Tagline", taglinePlaceholder: "Capturando os melhores momentos",
       brandColorLabel: "Cor da Marca", heroTitle: "Seção Hero",
-      heroDesc: "O banner de tela cheia exibido no topo do seu site.",
+      heroDesc: "O banner de tela cheia exibido no topo do seu site. Recomendado: 1920×1080px ou maior, JPG/PNG, orientação paisagem.",
       coverImage: "Imagem de Capa", uploadHero: "Enviar imagem hero", replaceHero: "Substituir",
       headlineLabel: "Título Principal", headlinePlaceholder: "Fotografia que conta sua história",
       subheadlineLabel: "Subtítulo", subheadlinePlaceholder: "Baseado em São Paulo · Disponível em todo Brasil",
