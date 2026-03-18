@@ -14,7 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff,
+  Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
 } from "lucide-react";
 
 // ── Site templates ────────────────────────────────────────────────────────────
