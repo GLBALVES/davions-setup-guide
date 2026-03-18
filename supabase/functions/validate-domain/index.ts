@@ -43,18 +43,18 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("validate-domain DB error:", error);
-      return new Response(null, { status: 500 });
+      return new Response(JSON.stringify({ registered: false }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (data) {
       // Domain exists → allow Caddy to issue TLS
-      return new Response(null, { status: 200 });
+      return new Response(JSON.stringify({ registered: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else {
       // Domain not registered → reject TLS
-      return new Response(null, { status: 403 });
+      return new Response(JSON.stringify({ registered: false }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (err) {
     console.error("validate-domain error:", err);
-    return new Response(null, { status: 500 });
+    return new Response(JSON.stringify({ registered: false }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
