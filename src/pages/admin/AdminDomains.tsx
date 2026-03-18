@@ -167,13 +167,7 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
             </thead>
             <tbody>
               {dnsRecords.map((r, i) => {
-                const isARecord = r.type === "A";
-                const isTxtRecord = r.type === "TXT";
-                let recordStatus: RecordStatus = "idle";
-                if (dns) {
-                  if (isARecord) recordStatus = dns.a;
-                  if (isTxtRecord) recordStatus = dns.txt;
-                }
+                const recordStatus: RecordStatus = dns ? dns.a : "idle";
                 return (
                   <tr key={i} className="border-b border-border/50 last:border-0">
                     <td className="py-1.5 pr-6 pl-3">
