@@ -962,16 +962,9 @@ const WebsiteSettings = () => {
                                         <th className="px-2 py-2 w-8" />
                                       </tr>
                                     </thead>
-                                    <tbody>
-                                      <tr>
-                                        <td className="px-3 py-2 font-mono">CNAME</td>
-                                        <td className="px-3 py-2 font-mono text-foreground">{isSubdomain ? parts[0] : "@"}</td>
-                                        <td className="px-3 py-2 font-mono text-foreground">davions.com</td>
-                                        <td className="px-2 py-2">
-                                          <DnsRow type="CNAME" name={isSubdomain ? parts[0] : "@"} value="davions.com" copyOnly />
-                                        </td>
-                                      </tr>
-                                    </tbody>
+                                     <tbody>
+                                       <DnsRow type="CNAME" name={isSubdomain ? parts[0] : "@"} value="davions.com" />
+                                     </tbody>
                                   </table>
                                 </div>
                               </div>
