@@ -154,8 +154,10 @@ function Step2({
   onNext: () => void;
 }) {
   const parts = domain.split(".");
-  const remainingAfterFirst = parts.slice(1);
-  const isSubdomain = remainingAfterFirst.length >= 2;
+  const lastTwo = parts.slice(-2).join(".");
+  const compoundTlds = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
+  const rootPartsCount = compoundTlds.includes(lastTwo) ? 3 : 2;
+  const isSubdomain = parts.length > rootPartsCount;
   const subName = isSubdomain ? parts[0] : null;
   const dnsRecords = isSubdomain
     ? [
