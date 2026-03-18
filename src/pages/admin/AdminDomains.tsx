@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -370,6 +370,44 @@ export default function AdminDomains() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photographers.length]);
 
+  // Auto-refresh pending domains every 30s, stop when all become active
+  const [pendingCountdown, setPendingCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const pendingPhotographers = photographers.filter(
+      (p) => statuses[p.id] === "pending"
+    );
+    if (pendingPhotographers.length === 0) {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+      setPendingCountdown(0);
+      return;
+    }
+
+    // Kick off a 30s countdown that re-checks pending domains on expiry
+    let seconds = 30;
+    setPendingCountdown(seconds);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+
+    countdownRef.current = setInterval(() => {
+      seconds -= 1;
+      setPendingCountdown(seconds);
+      if (seconds <= 0) {
+        clearInterval(countdownRef.current!);
+        countdownRef.current = null;
+        pendingPhotographers.forEach((p) => checkDomain(p.custom_domain, p.id));
+      }
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(Object.entries(statuses).filter(([, v]) => v === "pending").map(([k]) => k))]);
+
   const toggleExpand = (id: string) =>
     setExpanded((prev) => (prev === id ? null : id));
 
@@ -388,6 +426,12 @@ export default function AdminDomains() {
           <Badge variant="secondary" className="ml-auto text-xs">
             {photographers.length} {photographers.length === 1 ? "domain" : "domains"}
           </Badge>
+          {pendingCountdown > 0 && (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Clock size={11} className="shrink-0" />
+              <span>Rechecking pending in {pendingCountdown}s</span>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="sm"
