@@ -1034,11 +1034,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         <AnimatePresence initial={false}>
           {!collapsed && (
             <motion.div
-              className="flex items-center gap-2.5 px-2 mb-2"
+              className="flex items-center gap-2.5 px-2 mb-2 cursor-pointer rounded-md hover:bg-sidebar-accent transition-colors"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18, ease: "easeInOut" }}
+              onClick={() => navigate("/dashboard/settings")}
             >
               {/* Avatar */}
               <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 border border-sidebar-border bg-muted flex items-center justify-center">
