@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight } from "lucide-react";
+import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRegion, REGIONAL_PLANS } from "@/contexts/RegionContext";
 
 // ─── Section Label ─────────────────────────────────────────────────────────
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
