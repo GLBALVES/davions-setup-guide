@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -45,50 +45,56 @@ const TEMPLATES = [
   },
 ];
 
-function SectionHeading({ title, description }: { title: string; description?: string }) {
-  return (
-    <div>
+const SectionHeading = forwardRef<HTMLDivElement, { title: string; description?: string }>(
+  ({ title, description }, ref) => (
+    <div ref={ref}>
       <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{title}</p>
       {description && <p className="text-[11px] text-muted-foreground">{description}</p>}
     </div>
-  );
-}
+  )
+);
+SectionHeading.displayName = "SectionHeading";
 
-function DnsRow({ type, name, value }: { type: string; name: string; value: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <tr className="border-b border-border last:border-0">
-      <td className="px-3 py-2.5">
-        <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] text-foreground">{type}</span>
-      </td>
-      <td className="px-3 py-2.5 font-mono text-foreground">{name}</td>
-      <td className="px-3 py-2.5 font-mono text-foreground break-all">{value}</td>
-      <td className="px-2 py-2.5">
-        <button onClick={copy} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors" title="Copy">
-          {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
-        </button>
-      </td>
-    </tr>
-  );
-}
+const DnsRow = forwardRef<HTMLTableRowElement, { type: string; name: string; value: string }>(
+  ({ type, name, value }, ref) => {
+    const [copied, setCopied] = useState(false);
+    const copy = async () => {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+    return (
+      <tr ref={ref} className="border-b border-border last:border-0">
+        <td className="px-3 py-2.5">
+          <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] text-foreground">{type}</span>
+        </td>
+        <td className="px-3 py-2.5 font-mono text-foreground">{name}</td>
+        <td className="px-3 py-2.5 font-mono text-foreground break-all">{value}</td>
+        <td className="px-2 py-2.5">
+          <button onClick={copy} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors" title="Copy">
+            {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+          </button>
+        </td>
+      </tr>
+    );
+  }
+);
+DnsRow.displayName = "DnsRow";
 
-function Divider() {
-  return <div className="border-t border-border" />;
-}
+const Divider = forwardRef<HTMLDivElement>((_, ref) => (
+  <div ref={ref} className="border-t border-border" />
+));
+Divider.displayName = "Divider";
 
-function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
+const FieldRow = forwardRef<HTMLDivElement, { label: string; children: React.ReactNode }>(
+  ({ label, children }, ref) => (
+    <div ref={ref} className="flex flex-col gap-1.5">
       <Label className="text-[11px] tracking-wider uppercase font-light">{label}</Label>
       {children}
     </div>
-  );
-}
+  )
+);
+FieldRow.displayName = "FieldRow";
 
 const WebsiteSettings = () => {
   const { user, signOut } = useAuth();
