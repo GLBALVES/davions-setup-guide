@@ -153,76 +153,115 @@ function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => vo
   );
 }
 
+const CNAME_RECORD = "davions.com";
+
 function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefined }) {
   const { dnsRecords, isSubdomain } = getDomainInfo(domain);
+  const parts = domain.split(".");
+  const subName = isSubdomain ? parts[0] : null;
+  const cnameTarget = CNAME_RECORD;
+
   return (
-    <div className="px-6 py-4 bg-muted/30 border-b border-border">
-      <p className="text-xs text-muted-foreground mb-3 font-light">
+    <div className="px-6 py-4 bg-muted/30 border-b border-border space-y-4">
+      <p className="text-xs text-muted-foreground font-light">
         DNS records required for <span className="font-mono text-foreground">{domain}</span>
       </p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6 w-14">Type</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Name</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Value</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Purpose</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dnsRecords.map((r, i) => {
-              const isARecord = r.type === "A";
-              const isTxtRecord = r.type === "TXT";
-              let recordStatus: RecordStatus = "idle";
-              if (dns) {
-                if (isARecord) recordStatus = dns.a;
-                if (isTxtRecord) recordStatus = dns.txt;
-              }
-              return (
-                <tr key={i} className="border-b border-border/50 last:border-0">
-                  <td className="py-1.5 pr-6">
-                    <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">{r.type}</Badge>
-                  </td>
-                  <td className="py-1.5 pr-6">
-                    <span className="font-mono text-foreground">{r.name}</span>
-                    <CopyButton value={r.name} />
-                  </td>
-                  <td className="py-1.5 pr-6">
-                    <span className="font-mono text-foreground">{r.value}</span>
-                    <CopyButton value={r.value} />
-                  </td>
-                  <td className="py-1.5 pr-4 text-muted-foreground">{r.purpose}</td>
-                  <td className="py-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <RecordBadge status={recordStatus} />
-                      {recordStatus === "ok" && (
-                        <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>
-                      )}
-                      {recordStatus === "fail" && (
-                        <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>
-                      )}
-                      {recordStatus === "checking" && (
-                        <span className="text-[10px] text-muted-foreground">Checking…</span>
-                      )}
-                      {recordStatus === "idle" && (
-                        <span className="text-[10px] text-muted-foreground/40">—</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+
+      {/* Standard (non-Cloudflare) records */}
+      <div>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Standard (GoDaddy, Namecheap, etc.)</p>
+        <div className="overflow-x-auto border border-border">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-6 pl-3 w-14">Type</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Name</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Value</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Purpose</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dnsRecords.map((r, i) => {
+                const isARecord = r.type === "A";
+                const isTxtRecord = r.type === "TXT";
+                let recordStatus: RecordStatus = "idle";
+                if (dns) {
+                  if (isARecord) recordStatus = dns.a;
+                  if (isTxtRecord) recordStatus = dns.txt;
+                }
+                return (
+                  <tr key={i} className="border-b border-border/50 last:border-0">
+                    <td className="py-1.5 pr-6 pl-3">
+                      <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">{r.type}</Badge>
+                    </td>
+                    <td className="py-1.5 pr-6">
+                      <span className="font-mono text-foreground">{r.name}</span>
+                      <CopyButton value={r.name} />
+                    </td>
+                    <td className="py-1.5 pr-6">
+                      <span className="font-mono text-foreground">{r.value}</span>
+                      <CopyButton value={r.value} />
+                    </td>
+                    <td className="py-1.5 pr-4 text-muted-foreground">{r.purpose}</td>
+                    <td className="py-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <RecordBadge status={recordStatus} />
+                        {recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
+                        {recordStatus === "fail" && <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>}
+                        {recordStatus === "checking" && <span className="text-[10px] text-muted-foreground">Checking…</span>}
+                        {recordStatus === "idle" && <span className="text-[10px] text-muted-foreground/40">—</span>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {!isSubdomain && (
-        <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-destructive" />
-          If using Cloudflare, set DNS proxy to <strong className="font-medium">DNS only</strong> (grey cloud) for the A records.
-        </p>
-      )}
+
+      {/* Cloudflare alternative */}
+      <div className="border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
+        <div className="flex items-start gap-2">
+          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-foreground">Using Cloudflare? Use a CNAME instead.</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Cloudflare blocks A records pointing to <span className="font-mono">185.158.133.1</span> (Error 1000).
+              Add this CNAME record and set Proxy Status to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud):
+            </p>
+          </div>
+        </div>
+        <div className="overflow-x-auto border border-yellow-500/20">
+          <table className="w-full text-xs bg-background/50">
+            <thead>
+              <tr className="border-b border-yellow-500/20">
+                <th className="text-left font-medium text-muted-foreground py-1.5 pl-3 pr-4 w-16">Type</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Name</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Value</th>
+                <th className="text-left font-medium text-muted-foreground py-1.5">Proxy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-1.5 pl-3 pr-4">
+                  <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">CNAME</Badge>
+                </td>
+                <td className="py-1.5 pr-4 font-mono text-foreground">
+                  {isSubdomain ? subName : "@"}
+                  <CopyButton value={isSubdomain ? subName! : "@"} />
+                </td>
+                <td className="py-1.5 pr-4 font-mono text-foreground">
+                  {cnameTarget}
+                  <CopyButton value={cnameTarget} />
+                </td>
+                <td className="py-1.5 text-[11px] text-muted-foreground">DNS only (grey cloud)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
