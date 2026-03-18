@@ -363,8 +363,8 @@ export default function DomainStatus() {
               {check.detail && (
                 <p className={`text-[11px] mt-1 font-mono ${
                   check.status === "error" ? "text-destructive" :
-                  check.status === "warning" ? "text-amber-600 dark:text-amber-400" :
-                  check.status === "ok" ? "text-emerald-600 dark:text-emerald-400" :
+                  check.status === "warning" ? "text-muted-foreground" :
+                  check.status === "ok" ? "text-primary" :
                   "text-muted-foreground"
                 }`}>
                   {check.detail}
