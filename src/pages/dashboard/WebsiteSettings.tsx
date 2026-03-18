@@ -809,8 +809,10 @@ const WebsiteSettings = () => {
                        {/* DNS records — shown as soon as a domain is saved */}
                        {customDomain && (() => {
                          const parts = customDomain.split(".");
-                         const isSubdomain = parts.length > 2;
-                         const subName = isSubdomain ? parts.slice(0, parts.length - 2).join(".") : null;
+                         // Detect subdomain: if first label removed still leaves a valid domain (2+ parts)
+                         const remainingAfterFirst = parts.slice(1);
+                         const isSubdomain = remainingAfterFirst.length >= 2;
+                         const subName = isSubdomain ? parts[0] : null;
                          const dnsRecords = isSubdomain
                            ? [
                                { type: "A",   name: subName!,    value: "185.158.133.1" },
