@@ -6,6 +6,56 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EXPECTED_IP = "185.158.133.1";
+
+const COMPOUND_TLDS = [
+  "com.br","net.br","org.br","edu.br","gov.br",
+  "co.uk","com.au","co.nz","com.ar","com.mx","com.co",
+];
+
+function getRootDomain(domain: string): string {
+  const parts = domain.split(".");
+  const lastTwo = parts.slice(-2).join(".");
+  const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
+  return parts.slice(-rootPartsCount).join(".");
+}
+
+function getExpectedTxtValue(domain: string): string {
+  return `davions_verify=${domain.replace(/\./g, "_")}`;
+}
+
+async function resolveA(hostname: string): Promise<string[]> {
+  try {
+    const res = await fetch(
+      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=A`,
+      { headers: { Accept: "application/dns-json" }, signal: AbortSignal.timeout(8000) }
+    );
+    const json = await res.json();
+    if (!json.Answer) return [];
+    return (json.Answer as { type: number; data: string }[])
+      .filter((r) => r.type === 1) // A record
+      .map((r) => r.data.trim());
+  } catch {
+    return [];
+  }
+}
+
+async function resolveTXT(hostname: string): Promise<string[]> {
+  try {
+    const res = await fetch(
+      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(hostname)}&type=TXT`,
+      { headers: { Accept: "application/dns-json" }, signal: AbortSignal.timeout(8000) }
+    );
+    const json = await res.json();
+    if (!json.Answer) return [];
+    return (json.Answer as { type: number; data: string }[])
+      .filter((r) => r.type === 16) // TXT record
+      .map((r) => r.data.replace(/^"|"$/g, "").trim());
+  } catch {
+    return [];
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -44,31 +94,39 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sanitise — strip protocol/path, lowercase
     const cleanDomain = domain.toLowerCase()
       .replace(/^https?:\/\//, "")
       .replace(/\/.*$/, "")
       .trim();
 
-    let status: "active" | "pending" = "pending";
-    let httpStatus: number | undefined;
+    const rootDomain = getRootDomain(cleanDomain);
+    const parts = cleanDomain.split(".");
+    const lastTwo = parts.slice(-2).join(".");
+    const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
+    const isSubdomain = parts.length > rootPartsCount;
 
-    try {
-      const response = await fetch(`https://${cleanDomain}`, {
-        method: "HEAD",
-        redirect: "follow",
-        // @ts-ignore – Deno supports AbortSignal.timeout
-        signal: AbortSignal.timeout(8000),
-      });
-      httpStatus = response.status;
-      // Any HTTP response (including 4xx) means the server is reachable
-      status = "active";
-    } catch {
-      // Timeout, DNS failure, connection refused → pending
-      status = "pending";
-    }
+    const expectedTxt = getExpectedTxtValue(cleanDomain);
+    const txtHost = `_davions.${rootDomain}`;
 
-    return new Response(JSON.stringify({ status, httpStatus }), {
+    // Run DNS lookups in parallel
+    const [aRecords, txtRecords] = await Promise.all([
+      resolveA(cleanDomain),
+      resolveTXT(txtHost),
+    ]);
+
+    const aOk = aRecords.includes(EXPECTED_IP);
+    const txtOk = txtRecords.some((t) => t.includes(expectedTxt));
+
+    // Overall status
+    const status = aOk ? "active" : "pending";
+
+    return new Response(JSON.stringify({
+      status,
+      dns: {
+        a: { ok: aOk, found: aRecords, expected: EXPECTED_IP },
+        txt: { ok: txtOk, found: txtRecords, expected: expectedTxt, host: txtHost },
+      },
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

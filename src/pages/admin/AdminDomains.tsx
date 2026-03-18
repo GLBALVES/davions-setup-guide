@@ -22,8 +22,10 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
+  XCircle,
   Clock,
   Loader2,
+  Minus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -38,7 +40,16 @@ type Photographer = {
   created_at: string;
 };
 
-type DomainStatus = "idle" | "checking" | "active" | "pending";
+type RecordStatus = "idle" | "checking" | "ok" | "fail";
+
+type DnsDetail = {
+  a: RecordStatus;
+  txt: RecordStatus;
+  aFound?: string[];
+  txtFound?: string[];
+};
+
+type RowStatus = "idle" | "checking" | "active" | "pending";
 
 const COMPOUND_TLDS = [
   "com.br","net.br","org.br","edu.br","gov.br",
@@ -51,33 +62,29 @@ function getDomainInfo(domain: string) {
   const rootPartsCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
   const isSubdomain = parts.length > rootPartsCount;
   const subName = isSubdomain ? parts[0] : null;
+  const rootDomain = parts.slice(-rootPartsCount).join(".");
 
-  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
+  const verifyValue = `davions_verify=${domain.replace(/\./g, "_")}`;
 
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,   value: "185.158.133.1",  purpose: "Routes traffic" },
-        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
+        { type: "A",   name: subName!,     value: "185.158.133.1", purpose: "Routes traffic" },
+        { type: "TXT", name: `_davions.${rootDomain}`, value: verifyValue, purpose: "Ownership verification" },
       ]
     : [
-        { type: "A",   name: "@",        value: "185.158.133.1",  purpose: "Routes root domain" },
-        { type: "A",   name: "www",      value: "185.158.133.1",  purpose: "Routes www" },
-        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
+        { type: "A",   name: "@",          value: "185.158.133.1", purpose: "Routes root domain" },
+        { type: "A",   name: "www",        value: "185.158.133.1", purpose: "Routes www" },
+        { type: "TXT", name: `_davions.${rootDomain}`, value: verifyValue, purpose: "Ownership verification" },
       ];
 
-  return { isSubdomain, dnsRecords, verifyValue };
+  return { isSubdomain, dnsRecords, verifyValue, rootDomain };
 }
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
   return (
     <button
-      onClick={handleCopy}
+      onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       className="ml-1.5 text-muted-foreground hover:text-foreground transition-colors"
       title="Copy"
     >
@@ -86,54 +93,32 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-function DnsExpansion({ domain }: { domain: string }) {
-  const { dnsRecords, isSubdomain } = getDomainInfo(domain);
+function RecordBadge({ status }: { status: RecordStatus }) {
+  if (status === "idle") return <Minus size={11} className="text-muted-foreground/40" />;
+  if (status === "checking") return <Loader2 size={11} className="animate-spin text-muted-foreground" />;
+  if (status === "ok") return <CheckCircle2 size={11} style={{ color: "hsl(142 71% 45%)" }} />;
+  return <XCircle size={11} style={{ color: "hsl(0 72% 51%)" }} />;
+}
+
+function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
+  if (!dns || (dns.a === "idle" && dns.txt === "idle")) {
+    return <span className="text-[10px] text-muted-foreground/40">—</span>;
+  }
   return (
-    <div className="px-6 py-4 bg-muted/30 border-b border-border">
-      <p className="text-xs text-muted-foreground mb-3 font-light">
-        DNS records required for <span className="font-mono text-foreground">{domain}</span>
-      </p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6 w-14">Type</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Name</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Value</th>
-              <th className="text-left font-medium text-muted-foreground py-1.5">Purpose</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dnsRecords.map((r, i) => (
-              <tr key={i} className="border-b border-border/50 last:border-0">
-                <td className="py-1.5 pr-6">
-                  <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">{r.type}</Badge>
-                </td>
-                <td className="py-1.5 pr-6">
-                  <span className="font-mono text-foreground">{r.name}</span>
-                  <CopyButton value={r.name} />
-                </td>
-                <td className="py-1.5 pr-6">
-                  <span className="font-mono text-foreground">{r.value}</span>
-                  <CopyButton value={r.value} />
-                </td>
-                <td className="py-1.5 text-muted-foreground">{r.purpose}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!isSubdomain && (
-        <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-destructive" />
-          If using Cloudflare, set DNS proxy to <strong className="font-medium">DNS only</strong> (grey cloud) for the A records.
-        </p>
-      )}
+    <div className="flex items-center gap-2">
+      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <RecordBadge status={dns.a} />
+        <span>A</span>
+      </span>
+      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <RecordBadge status={dns.txt} />
+        <span>TXT</span>
+      </span>
     </div>
   );
 }
 
-function StatusBadge({ status, onCheck }: { status: DomainStatus; onCheck: () => void }) {
+function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => void }) {
   if (status === "checking") {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -154,11 +139,10 @@ function StatusBadge({ status, onCheck }: { status: DomainStatus; onCheck: () =>
     return (
       <div className="flex items-center gap-1.5">
         <Clock size={11} className="shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
-        <span className="text-xs font-light" style={{ color: "hsl(38 80% 40%)" }}>Awaiting Setup</span>
+        <span className="text-xs font-light" style={{ color: "hsl(38 80% 40%)" }}>Pending</span>
       </div>
     );
   }
-  // idle
   return (
     <button
       onClick={onCheck}
@@ -169,9 +153,84 @@ function StatusBadge({ status, onCheck }: { status: DomainStatus; onCheck: () =>
   );
 }
 
+function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefined }) {
+  const { dnsRecords, isSubdomain } = getDomainInfo(domain);
+  return (
+    <div className="px-6 py-4 bg-muted/30 border-b border-border">
+      <p className="text-xs text-muted-foreground mb-3 font-light">
+        DNS records required for <span className="font-mono text-foreground">{domain}</span>
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6 w-14">Type</th>
+              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Name</th>
+              <th className="text-left font-medium text-muted-foreground py-1.5 pr-6">Value</th>
+              <th className="text-left font-medium text-muted-foreground py-1.5 pr-4">Purpose</th>
+              <th className="text-left font-medium text-muted-foreground py-1.5">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dnsRecords.map((r, i) => {
+              const isARecord = r.type === "A";
+              const isTxtRecord = r.type === "TXT";
+              let recordStatus: RecordStatus = "idle";
+              if (dns) {
+                if (isARecord) recordStatus = dns.a;
+                if (isTxtRecord) recordStatus = dns.txt;
+              }
+              return (
+                <tr key={i} className="border-b border-border/50 last:border-0">
+                  <td className="py-1.5 pr-6">
+                    <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">{r.type}</Badge>
+                  </td>
+                  <td className="py-1.5 pr-6">
+                    <span className="font-mono text-foreground">{r.name}</span>
+                    <CopyButton value={r.name} />
+                  </td>
+                  <td className="py-1.5 pr-6">
+                    <span className="font-mono text-foreground">{r.value}</span>
+                    <CopyButton value={r.value} />
+                  </td>
+                  <td className="py-1.5 pr-4 text-muted-foreground">{r.purpose}</td>
+                  <td className="py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <RecordBadge status={recordStatus} />
+                      {recordStatus === "ok" && (
+                        <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>
+                      )}
+                      {recordStatus === "fail" && (
+                        <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>
+                      )}
+                      {recordStatus === "checking" && (
+                        <span className="text-[10px] text-muted-foreground">Checking…</span>
+                      )}
+                      {recordStatus === "idle" && (
+                        <span className="text-[10px] text-muted-foreground/40">—</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {!isSubdomain && (
+        <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
+          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-destructive" />
+          If using Cloudflare, set DNS proxy to <strong className="font-medium">DNS only</strong> (grey cloud) for the A records.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDomains() {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [statuses, setStatuses] = useState<Record<string, DomainStatus>>({});
+  const [statuses, setStatuses] = useState<Record<string, RowStatus>>({});
+  const [dnsDetails, setDnsDetails] = useState<Record<string, DnsDetail>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: photographers = [], isLoading } = useQuery({
@@ -189,16 +248,35 @@ export default function AdminDomains() {
 
   const checkDomain = useCallback(async (domain: string, id: string) => {
     setStatuses((prev) => ({ ...prev, [id]: "checking" }));
+    setDnsDetails((prev) => ({
+      ...prev,
+      [id]: { a: "checking", txt: "checking" },
+    }));
     try {
       const { data } = await supabase.functions.invoke("check-domain", {
         body: { domain },
       });
+      const aOk: boolean = data?.dns?.a?.ok ?? false;
+      const txtOk: boolean = data?.dns?.txt?.ok ?? false;
       setStatuses((prev) => ({
         ...prev,
         [id]: data?.status === "active" ? "active" : "pending",
       }));
+      setDnsDetails((prev) => ({
+        ...prev,
+        [id]: {
+          a: aOk ? "ok" : "fail",
+          txt: txtOk ? "ok" : "fail",
+          aFound: data?.dns?.a?.found ?? [],
+          txtFound: data?.dns?.txt?.found ?? [],
+        },
+      }));
     } catch {
       setStatuses((prev) => ({ ...prev, [id]: "pending" }));
+      setDnsDetails((prev) => ({
+        ...prev,
+        [id]: { a: "fail", txt: "fail" },
+      }));
     }
   }, []);
 
@@ -209,11 +287,8 @@ export default function AdminDomains() {
     setIsRefreshing(false);
   }, [photographers, checkDomain]);
 
-  // Auto-check all domains when list loads
   useEffect(() => {
-    if (photographers.length > 0) {
-      checkAll();
-    }
+    if (photographers.length > 0) checkAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photographers.length]);
 
@@ -264,6 +339,7 @@ export default function AdminDomains() {
                   <TableHead>Studio</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>DNS Records</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Store Slug</TableHead>
                   <TableHead>Added</TableHead>
@@ -275,7 +351,8 @@ export default function AdminDomains() {
                   const { isSubdomain } = getDomainInfo(p.custom_domain);
                   const studioName = p.business_name || p.full_name || "—";
                   const isOpen = expanded === p.id;
-                  const domainStatus: DomainStatus = statuses[p.id] ?? "idle";
+                  const domainStatus: RowStatus = statuses[p.id] ?? "idle";
+                  const dns = dnsDetails[p.id];
 
                   return (
                     <>
@@ -301,6 +378,9 @@ export default function AdminDomains() {
                             status={domainStatus}
                             onCheck={() => checkDomain(p.custom_domain, p.id)}
                           />
+                        </TableCell>
+                        <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                          <DnsPropagationCell dns={dns} />
                         </TableCell>
                         <TableCell className="py-3">
                           <Badge variant="outline" className="text-[10px] font-light">
@@ -340,8 +420,8 @@ export default function AdminDomains() {
                       </TableRow>
                       {isOpen && (
                         <tr key={`${p.id}-dns`}>
-                          <td colSpan={8} className="p-0">
-                            <DnsExpansion domain={p.custom_domain} />
+                          <td colSpan={9} className="p-0">
+                            <DnsExpansion domain={p.custom_domain} dns={dns} />
                           </td>
                         </tr>
                       )}
@@ -356,4 +436,3 @@ export default function AdminDomains() {
     </AdminLayout>
   );
 }
-
