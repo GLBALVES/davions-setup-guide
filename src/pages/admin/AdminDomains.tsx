@@ -64,17 +64,17 @@ function getDomainInfo(domain: string) {
   const subName = isSubdomain ? parts[0] : null;
   const rootDomain = parts.slice(-rootPartsCount).join(".");
 
-  const verifyValue = `davions_verify=${domain.replace(/\./g, "_")}`;
+  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,     value: "185.158.133.1", purpose: "Routes traffic" },
-        { type: "TXT", name: `_davions.${rootDomain}`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A",   name: subName!,  value: "185.158.133.1", purpose: "Routes traffic" },
+        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
       ]
     : [
-        { type: "A",   name: "@",          value: "185.158.133.1", purpose: "Routes root domain" },
-        { type: "A",   name: "www",        value: "185.158.133.1", purpose: "Routes www" },
-        { type: "TXT", name: `_davions.${rootDomain}`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A",   name: "@",       value: "185.158.133.1", purpose: "Routes root domain" },
+        { type: "A",   name: "www",     value: "185.158.133.1", purpose: "Routes www" },
+        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
       ];
 
   return { isSubdomain, dnsRecords, verifyValue, rootDomain };
