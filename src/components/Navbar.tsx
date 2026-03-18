@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   const navLinks = [
     { label: "Features", href: "#features" },
@@ -41,12 +43,23 @@ const Navbar = () => {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">Log In</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {user ? (
+            <Button size="sm" asChild>
+              <Link to="/dashboard">
+                <LayoutDashboard size={14} className="mr-1.5" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -77,16 +90,27 @@ const Navbar = () => {
           </a>
         ))}
         <div className="flex flex-col items-center gap-3 mt-4">
-          <Button variant="outline" asChild>
-            <Link to="/login" onClick={() => setMobileOpen(false)}>
-              Log In
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link to="/signup" onClick={() => setMobileOpen(false)}>
-              Get Started
-            </Link>
-          </Button>
+          {user ? (
+            <Button asChild>
+              <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                <LayoutDashboard size={14} className="mr-1.5" />
+                Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" asChild>
+                <Link to="/login" onClick={() => setMobileOpen(false)}>
+                  Sign In
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                  Get Started
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
@@ -94,3 +118,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
