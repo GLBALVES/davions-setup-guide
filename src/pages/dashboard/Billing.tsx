@@ -378,7 +378,9 @@ const Billing = () => {
                             </div>
                           </div>
                           <div>
-                            <span className="text-3xl font-light">${plan.price}</span>
+                            <span className="text-3xl font-light">
+                              {REGIONAL_PLANS[plan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}
+                            </span>
                             <span className="text-xs text-muted-foreground font-light">/month</span>
                           </div>
                           <ul className="flex flex-col gap-2 flex-1">
@@ -388,7 +390,7 @@ const Billing = () => {
                               </li>
                             ))}
                           </ul>
-                          <Button variant={plan.highlight ? "default" : "outline"} size="sm" disabled={checkingOut === plan.key} onClick={() => handleSubscribe(plan.price_id, plan.key)} className="w-full">
+                          <Button variant={plan.highlight ? "default" : "outline"} size="sm" disabled={checkingOut === plan.key} onClick={() => handleSubscribe(REGIONAL_PLANS[plan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.price_id ?? "", plan.key)} className="w-full">
                             {checkingOut === plan.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Get Started"}
                           </Button>
                         </div>
