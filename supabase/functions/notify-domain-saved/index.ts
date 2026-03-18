@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
 <head><meta charset="utf-8" /></head>
 <body style="font-family:sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px 24px;">
   <h2 style="font-size:18px;font-weight:600;margin-bottom:4px;">New custom domain saved</h2>
-  <p style="color:#666;font-size:13px;margin-top:0;">A photographer just configured a custom domain and manual setup may be needed in Lovable.</p>
+  <p style="color:#666;font-size:13px;margin-top:0;">A photographer just configured a custom domain. SSL will be provisioned automatically via Caddy once DNS propagates.</p>
 
   <table style="width:100%;border-collapse:collapse;margin:24px 0;font-size:14px;">
     <tr style="border-bottom:1px solid #eee;">
