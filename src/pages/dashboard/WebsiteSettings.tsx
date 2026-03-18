@@ -819,12 +819,18 @@ const WebsiteSettings = () => {
                              </tbody>
                            </table>
                          </div>
-                         <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
-                           <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-                           <p className="text-[11px] text-muted-foreground leading-relaxed">
-                             Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
-                           </p>
-                         </div>
+                          <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
+                            <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
+                            </p>
+                          </div>
+                          <div className="flex items-start gap-2 p-3 border border-yellow-500/30 bg-yellow-500/5">
+                            <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              <span className="font-medium text-foreground">Using Cloudflare?</span> Make sure the A record's Proxy Status is set to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">Proxied</span> (orange cloud). Leaving the proxy enabled causes Cloudflare Error 1000 and prevents your domain from working.
+                            </p>
+                          </div>
                          <div className="flex items-center gap-2">
                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                            <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
