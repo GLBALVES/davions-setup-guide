@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight } from "lucide-react";
+import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRegion, REGIONAL_PLANS } from "@/contexts/RegionContext";
 
 // ─── Section Label ─────────────────────────────────────────────────────────
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -110,6 +111,17 @@ const PricingCard = ({ plan, price, period, description, features, cta, featured
 const Index = () => {
   const { t } = useLanguage();
   const l = t.landing;
+  const region = useRegion();
+
+  const starterPrice = REGIONAL_PLANS.starter[region.currency] ?? REGIONAL_PLANS.starter.USD;
+  const proPrice = REGIONAL_PLANS.pro[region.currency] ?? REGIONAL_PLANS.pro.USD;
+  const studioPrice = REGIONAL_PLANS.studio[region.currency] ?? REGIONAL_PLANS.studio.USD;
+
+  const currencyBadge = !region.loading && region.currency !== "USD"
+    ? `${region.symbol} · ${region.country}`
+    : null;
+
+  const periodLabel = l.plan1Period ?? "/month";
 
   const features = [
     {
@@ -138,16 +150,16 @@ const Index = () => {
   const plans = [
     {
       plan: l.plan1Name,
-      price: l.plan1Price,
-      period: l.plan1Period,
+      price: starterPrice.display,
+      period: periodLabel,
       description: l.plan1Desc,
       features: [l.plan1F1, l.plan1F2, l.plan1F3, l.plan1F4],
       cta: l.plan1Cta,
     },
     {
       plan: l.plan2Name,
-      price: l.plan2Price,
-      period: l.plan2Period,
+      price: proPrice.display,
+      period: periodLabel,
       description: l.plan2Desc,
       features: [l.plan2F1, l.plan2F2, l.plan2F3, l.plan2F4, l.plan2F5, l.plan2F6],
       cta: l.plan2Cta,
@@ -155,8 +167,8 @@ const Index = () => {
     },
     {
       plan: l.plan3Name,
-      price: l.plan3Price,
-      period: l.plan3Period,
+      price: studioPrice.display,
+      period: periodLabel,
       description: l.plan3Desc,
       features: [l.plan3F1, l.plan3F2, l.plan3F3, l.plan3F4, l.plan3F5, l.plan3F6],
       cta: l.plan3Cta,
@@ -319,6 +331,14 @@ const Index = () => {
             <p className="text-sm text-muted-foreground font-light mt-3 max-w-sm leading-relaxed">
               {l.pricingSubheading}
             </p>
+            {currencyBadge && (
+              <div className="mt-4 flex items-center gap-2 border border-border px-3 py-1.5">
+                <Globe size={11} className="text-muted-foreground" />
+                <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  Prices in {currencyBadge}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border max-w-4xl mx-auto">
@@ -330,6 +350,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+
 
       {/* ── CTA BANNER ───────────────────────────────────────────────── */}
       <section className="py-24 px-6 border-t border-border">

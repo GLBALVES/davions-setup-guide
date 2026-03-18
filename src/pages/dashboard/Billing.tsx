@@ -10,18 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, Crown, Zap, Building2, ExternalLink, RefreshCw,
-  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle
+  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle, Globe
 } from "lucide-react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
 import { ConnectComponentsProvider, ConnectAccountManagement, ConnectNotificationBanner } from "@stripe/react-connect-js";
+import { useRegion, REGIONAL_PLANS, type SupportedCurrency } from "@/contexts/RegionContext";
 
 // ── Plan config ──────────────────────────────────────────────────────────────
 const PLANS = [
   {
-    key: "starter",
+    key: "starter" as const,
     name: "Starter",
-    price: 29,
-    price_id: "price_1TA8dwHHNUkUYwCFqxyHaXwX",
     product_id: "prod_U8PSBb6bJj3mQV",
     split: 5,
     icon: Zap,
@@ -34,10 +33,8 @@ const PLANS = [
     ],
   },
   {
-    key: "pro",
+    key: "pro" as const,
     name: "Pro",
-    price: 69,
-    price_id: "price_1TA8iRHHNUkUYwCFWoTJx7FD",
     product_id: "prod_U8PXjCdBxWHHvT",
     split: 3,
     icon: Crown,
@@ -52,10 +49,8 @@ const PLANS = [
     ],
   },
   {
-    key: "studio",
+    key: "studio" as const,
     name: "Studio",
-    price: 129,
-    price_id: "price_1TA8j8HHNUkUYwCFxFY4uY1U",
     product_id: "prod_U8PYo2ocBqxIFO",
     split: 1,
     icon: Building2,
@@ -129,7 +124,9 @@ const Billing = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const region = useRegion();
   const connectInstanceRef = useRef<any>(null);
+
 
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [balance, setBalance] = useState<StripeBalance | null>(null);
@@ -310,10 +307,20 @@ const Billing = () => {
 
               {/* Plans */}
               <section className="flex flex-col gap-4">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
+                    <span className="inline-block w-6 h-px bg-border" />
+                    {sub?.subscribed ? "Current Plan" : "Choose a Plan"}
+                  </p>
+                  {!region.loading && region.currency !== "USD" && (
+                    <div className="flex items-center gap-1.5 border border-border px-2 py-1">
+                      <Globe className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                        Prices in {region.symbol} · {region.country}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {!loadingSub && sub?.subscribed && activePlan ? (
                   <div className="border border-foreground p-8 flex flex-col sm:flex-row sm:items-center gap-6 justify-between relative overflow-hidden">
@@ -333,7 +340,9 @@ const Billing = () => {
                           </span>
                         </div>
                         <h2 className="text-2xl font-light tracking-wide">{activePlan.name}</h2>
-                        <p className="text-sm text-muted-foreground font-light">${activePlan.price}/month · {activePlan.split}% fee on sales</p>
+                        <p className="text-sm text-muted-foreground font-light">
+                          {REGIONAL_PLANS[activePlan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}/month · {activePlan.split}% fee on sales
+                        </p>
                         <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                           {activePlan.features.map((f) => (
                             <li key={f} className="flex items-center gap-1.5 text-[11px] font-light text-muted-foreground">
@@ -379,7 +388,9 @@ const Billing = () => {
                             </div>
                           </div>
                           <div>
-                            <span className="text-3xl font-light">${plan.price}</span>
+                            <span className="text-3xl font-light">
+                              {REGIONAL_PLANS[plan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}
+                            </span>
                             <span className="text-xs text-muted-foreground font-light">/month</span>
                           </div>
                           <ul className="flex flex-col gap-2 flex-1">
@@ -389,7 +400,7 @@ const Billing = () => {
                               </li>
                             ))}
                           </ul>
-                          <Button variant={plan.highlight ? "default" : "outline"} size="sm" disabled={checkingOut === plan.key} onClick={() => handleSubscribe(plan.price_id, plan.key)} className="w-full">
+                          <Button variant={plan.highlight ? "default" : "outline"} size="sm" disabled={checkingOut === plan.key} onClick={() => handleSubscribe(REGIONAL_PLANS[plan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.price_id ?? "", plan.key)} className="w-full">
                             {checkingOut === plan.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Get Started"}
                           </Button>
                         </div>
