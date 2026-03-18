@@ -46,17 +46,17 @@ function getDomainInfo(domain: string) {
   const isSubdomain = remainingAfterFirst.length >= 2;
   const subName = isSubdomain ? parts[0] : null;
 
-  const verifyValue = `davions_verify=${domain.replace(/\./g, "-")}`;
+  const verifyValue = `lovable_verify=${domain.replace(/\./g, "-")}`;
 
   const dnsRecords = isSubdomain
     ? [
         { type: "A",   name: subName!,   value: "185.158.133.1",  purpose: "Routes traffic" },
-        { type: "TXT", name: `_davions.${subName!}`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "TXT", name: `_lovable.${subName!}`, value: verifyValue, purpose: "Ownership verification" },
       ]
     : [
         { type: "A",   name: "@",        value: "185.158.133.1",  purpose: "Routes root domain" },
         { type: "A",   name: "www",      value: "185.158.133.1",  purpose: "Routes www" },
-        { type: "TXT", name: "_davions", value: verifyValue,       purpose: "Ownership verification" },
+        { type: "TXT", name: "_lovable", value: verifyValue,       purpose: "Ownership verification" },
       ];
 
   return { isSubdomain, dnsRecords, verifyValue };

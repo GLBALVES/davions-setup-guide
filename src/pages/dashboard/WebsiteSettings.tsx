@@ -900,12 +900,12 @@ const WebsiteSettings = () => {
                          const dnsRecords = isSubdomain
                            ? [
                                { type: "A",   name: subName!,    value: "185.158.133.1" },
-                               { type: "TXT", name: "_davions",  value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
-                             ]
-                           : [
-                               { type: "A",   name: "@",         value: "185.158.133.1" },
-                               { type: "A",   name: "www",       value: "185.158.133.1" },
-                               { type: "TXT", name: "_davions",  value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
+                                { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
+                              ]
+                            : [
+                                { type: "A",   name: "@",         value: "185.158.133.1" },
+                                { type: "A",   name: "www",       value: "185.158.133.1" },
+                                { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
                              ];
                          return (
                            <div className="flex flex-col gap-3">

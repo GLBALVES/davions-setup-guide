@@ -51,15 +51,15 @@ Deno.serve(async (req) => {
     const parts = domain.split(".");
     const isSubdomain = parts.slice(1).length >= 2;
     const subName = isSubdomain ? parts[0] : null;
-    const verifyValue = `davions_verify=${domain.replace(/\./g, "_")}`;
+  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
 
-    const aRecords = isSubdomain
-      ? [`A     ${subName}    →  185.158.133.1`]
-      : [
-          `A     @           →  185.158.133.1`,
-          `A     www         →  185.158.133.1`,
-        ];
-    const dnsBlock = [...aRecords, `TXT   _davions    →  ${verifyValue}`].join("\n");
+  const aRecords = isSubdomain
+    ? [`A     ${subName}    →  185.158.133.1`]
+    : [
+        `A     @           →  185.158.133.1`,
+        `A     www         →  185.158.133.1`,
+      ];
+  const dnsBlock = [...aRecords, `TXT   _lovable    →  ${verifyValue}`].join("\n");
 
     const domainType = isSubdomain ? "Subdomain" : "Root Domain";
     const now = new Date().toLocaleString("en-US", {
