@@ -125,22 +125,30 @@ Deno.serve(async (req) => {
     const expectedTxt = getExpectedTxtValue(cleanDomain);
     const txtHost = `_davions.${rootDomain}`;
 
-    // Run DNS lookups in parallel
-    const [aRecords, txtRecords] = await Promise.all([
+    // Run DNS lookups in parallel — also check CNAME for Cloudflare users
+    const [aRecords, txtRecords, cnameRecords] = await Promise.all([
       resolveA(cleanDomain),
       resolveTXT(txtHost),
+      resolveCNAME(cleanDomain),
     ]);
 
     const aOk = aRecords.includes(EXPECTED_IP);
+    // CNAME is valid if it points to davions.com or any subdomain of it
+    const cnameOk = cnameRecords.some(
+      (c) => c === CNAME_TARGET || c.endsWith(`.${CNAME_TARGET}`)
+    );
     const txtOk = txtRecords.some((t) => t.includes(expectedTxt));
 
+    // A record passes if direct IP match OR CNAME points to platform (Cloudflare path)
+    const aResolved = aOk || cnameOk;
+
     // Overall status
-    const status = aOk ? "active" : "pending";
+    const status = aResolved ? "active" : "pending";
 
     return new Response(JSON.stringify({
       status,
       dns: {
-        a: { ok: aOk, found: aRecords, expected: EXPECTED_IP },
+        a: { ok: aResolved, found: aRecords, expected: EXPECTED_IP, cname: cnameRecords },
         txt: { ok: txtOk, found: txtRecords, expected: expectedTxt, host: txtHost },
       },
     }), {

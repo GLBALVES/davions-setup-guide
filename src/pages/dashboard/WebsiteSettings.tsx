@@ -941,11 +941,39 @@ const WebsiteSettings = () => {
                                  Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
                                </p>
                              </div>
-                              <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
-                                <AlertTriangle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-                                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                  <span className="font-medium text-foreground">Using Cloudflare?</span> Make sure the A record's Proxy Status is set to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud), not <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">Proxied</span> (orange cloud). Leaving the proxy enabled causes Cloudflare Error 1000 and prevents your domain from working.
-                                </p>
+                              <div className="border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
+                                <div className="flex items-start gap-2">
+                                  <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                                  <div className="space-y-1">
+                                    <p className="text-[11px] font-medium text-foreground">Using Cloudflare? Use a CNAME instead.</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                      Cloudflare blocks A records pointing to <span className="font-mono text-[10px]">185.158.133.1</span> with Error 1000.
+                                      Add this CNAME record instead and set Proxy Status to <span className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">DNS only</span> (grey cloud):
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="border border-yellow-500/20 overflow-hidden">
+                                  <table className="w-full text-[11px] bg-background/50">
+                                    <thead>
+                                      <tr className="border-b border-yellow-500/20 bg-muted/30">
+                                        <th className="text-left px-3 py-2 font-light text-muted-foreground">Type</th>
+                                        <th className="text-left px-3 py-2 font-light text-muted-foreground">Name</th>
+                                        <th className="text-left px-3 py-2 font-light text-muted-foreground">Value</th>
+                                        <th className="px-2 py-2 w-8" />
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr>
+                                        <td className="px-3 py-2 font-mono">CNAME</td>
+                                        <td className="px-3 py-2 font-mono text-foreground">{isSubdomain ? parts[0] : "@"}</td>
+                                        <td className="px-3 py-2 font-mono text-foreground">davions.com</td>
+                                        <td className="px-2 py-2">
+                                          <DnsRow type="CNAME" name={isSubdomain ? parts[0] : "@"} value="davions.com" copyOnly />
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
                              <div className="flex items-center gap-2">
                                <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
