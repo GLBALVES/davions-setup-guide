@@ -10,18 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, Crown, Zap, Building2, ExternalLink, RefreshCw,
-  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle
+  ArrowDownToLine, Wallet, Receipt, Loader2, Star, Settings2, AlertCircle, Globe
 } from "lucide-react";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
 import { ConnectComponentsProvider, ConnectAccountManagement, ConnectNotificationBanner } from "@stripe/react-connect-js";
+import { useRegion, REGIONAL_PLANS, type SupportedCurrency } from "@/contexts/RegionContext";
 
 // ── Plan config ──────────────────────────────────────────────────────────────
 const PLANS = [
   {
-    key: "starter",
+    key: "starter" as const,
     name: "Starter",
-    price: 29,
-    price_id: "price_1TA8dwHHNUkUYwCFqxyHaXwX",
     product_id: "prod_U8PSBb6bJj3mQV",
     split: 5,
     icon: Zap,
@@ -34,10 +33,8 @@ const PLANS = [
     ],
   },
   {
-    key: "pro",
+    key: "pro" as const,
     name: "Pro",
-    price: 69,
-    price_id: "price_1TA8iRHHNUkUYwCFWoTJx7FD",
     product_id: "prod_U8PXjCdBxWHHvT",
     split: 3,
     icon: Crown,
@@ -52,10 +49,8 @@ const PLANS = [
     ],
   },
   {
-    key: "studio",
+    key: "studio" as const,
     name: "Studio",
-    price: 129,
-    price_id: "price_1TA8j8HHNUkUYwCFxFY4uY1U",
     product_id: "prod_U8PYo2ocBqxIFO",
     split: 1,
     icon: Building2,
