@@ -47,6 +47,7 @@ type DnsDetail = {
   txt: RecordStatus;
   aFound?: string[];
   txtFound?: string[];
+  cname?: string[];
 };
 
 type RowStatus = "idle" | "checking" | "active" | "pending";
@@ -104,16 +105,30 @@ function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
   if (!dns || (dns.a === "idle" && dns.txt === "idle")) {
     return <span className="text-[10px] text-muted-foreground/40">—</span>;
   }
+  const hasCname = (dns.cname?.length ?? 0) > 0;
   return (
     <div className="flex items-center gap-2">
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.a} />
-        <span>A</span>
+        <span>{hasCname ? "CNAME" : "A"}</span>
       </span>
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.txt} />
         <span>TXT</span>
       </span>
+      {hasCname && (
+        <span
+          className="text-[9px] font-medium px-1 py-0.5 rounded border"
+          style={{
+            color: "hsl(38 92% 45%)",
+            borderColor: "hsl(38 92% 50% / 0.3)",
+            backgroundColor: "hsl(38 92% 50% / 0.08)",
+          }}
+          title={`Via CNAME → ${dns.cname![0]}`}
+        >
+          CF
+        </span>
+      )}
     </div>
   );
 }
@@ -160,12 +175,29 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
   const parts = domain.split(".");
   const subName = isSubdomain ? parts[0] : null;
   const cnameTarget = CNAME_RECORD;
+  const detectedCname = dns?.cname ?? [];
+  const isUsingCname = detectedCname.length > 0;
 
   return (
     <div className="px-6 py-4 bg-muted/30 border-b border-border space-y-4">
-      <p className="text-xs text-muted-foreground font-light">
-        DNS records required for <span className="font-mono text-foreground">{domain}</span>
-      </p>
+      <div className="flex items-center gap-3">
+        <p className="text-xs text-muted-foreground font-light">
+          DNS records required for <span className="font-mono text-foreground">{domain}</span>
+        </p>
+        {isUsingCname && (
+          <span
+            className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border"
+            style={{
+              color: "hsl(38 80% 40%)",
+              borderColor: "hsl(38 92% 50% / 0.35)",
+              backgroundColor: "hsl(38 92% 50% / 0.1)",
+            }}
+          >
+            <AlertTriangle size={9} />
+            Using Cloudflare CNAME → {detectedCname[0]}
+          </span>
+        )}
+      </div>
 
       {/* Standard (non-Cloudflare) records */}
       <div>
@@ -207,7 +239,12 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
                     <td className="py-1.5">
                       <div className="flex items-center gap-1.5">
                         <RecordBadge status={recordStatus} />
-                        {recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
+                        {isARecord && recordStatus === "ok" && isUsingCname && (
+                          <span className="text-[10px]" style={{ color: "hsl(38 80% 40%)" }}>
+                            via CNAME
+                          </span>
+                        )}
+                        {(!isARecord || !isUsingCname) && recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
                         {recordStatus === "fail" && <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>}
                         {recordStatus === "checking" && <span className="text-[10px] text-muted-foreground">Checking…</span>}
                         {recordStatus === "idle" && <span className="text-[10px] text-muted-foreground/40">—</span>}
@@ -297,6 +334,7 @@ export default function AdminDomains() {
       });
       const aOk: boolean = data?.dns?.a?.ok ?? false;
       const txtOk: boolean = data?.dns?.txt?.ok ?? false;
+      const cnameFound: string[] = data?.dns?.a?.cname ?? [];
       setStatuses((prev) => ({
         ...prev,
         [id]: data?.status === "active" ? "active" : "pending",
@@ -308,6 +346,7 @@ export default function AdminDomains() {
           txt: txtOk ? "ok" : "fail",
           aFound: data?.dns?.a?.found ?? [],
           txtFound: data?.dns?.txt?.found ?? [],
+          cname: cnameFound,
         },
       }));
     } catch {
@@ -378,7 +417,7 @@ export default function AdminDomains() {
                   <TableHead>Studio</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>DNS Records</TableHead>
+                  <TableHead>DNS / CNAME</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Store Slug</TableHead>
                   <TableHead>Added</TableHead>
