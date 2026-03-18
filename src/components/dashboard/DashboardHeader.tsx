@@ -3,11 +3,12 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bug, HelpCircle } from "lucide-react";
+import { Bug, HelpCircle, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
+import { HelpAssistantPanel } from "@/components/dashboard/HelpAssistantPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Lang } from "@/lib/i18n/translations";
 

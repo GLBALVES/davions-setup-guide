@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Bug, ArrowLeft, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Bug, ArrowLeft, Shield, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
@@ -7,6 +7,7 @@ const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/users", label: "Studios", icon: Users },
   { to: "/admin/bugs", label: "Bug Reports", icon: Bug },
+  { to: "/admin/help-assistant", label: "Help Assistant", icon: Sparkles },
 ];
 
 export function AdminSidebar() {
