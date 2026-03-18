@@ -242,7 +242,7 @@ const groups: MenuGroup[] = [
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
     ],
   },
-  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, items: [
+  { stableKey: "Marketing", title: "Marketing", icon: Megaphone, disabled: true, items: [
     { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
     { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
@@ -252,13 +252,13 @@ const groups: MenuGroup[] = [
     { title: "Push", icon: Bell, to: "/dashboard/push", permKey: "push" },
     { title: "Chat", icon: MessageCircle, to: "/dashboard/chat", permKey: "chat" },
   ]},
-  { stableKey: "AI", title: "AI", icon: BrainCircuit, items: [
+  { stableKey: "AI", title: "AI", icon: BrainCircuit, disabled: true, items: [
     { title: "AI Agents", icon: Bot, to: "/dashboard/agents", permKey: "agents" },
     { title: "AI Automations", icon: Zap },
     { title: "Smart Suggestions", icon: Lightbulb },
     { title: "Creative Assistant", icon: Wand2 },
   ]},
-  { stableKey: "Finance", title: "Finance", icon: DollarSign, items: [
+  { stableKey: "Finance", title: "Finance", icon: DollarSign, disabled: true, items: [
     { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
     { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
     { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
@@ -266,11 +266,11 @@ const groups: MenuGroup[] = [
     { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
     { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
   ]},
-  { stableKey: "CRM", title: "CRM", icon: Users2, items: [
+  { stableKey: "CRM", title: "CRM", icon: Users2, disabled: true, items: [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
     { title: "Leads", icon: UserPlus },
   ]},
-  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, items: [
+  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [
     { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
@@ -280,7 +280,7 @@ const groups: MenuGroup[] = [
     { title: "Access Control", icon: ShieldCheck, to: "/dashboard/access-control" },
     { title: "Help Center", icon: HelpCircle, to: "/dashboard/help" },
   ]},
-  { stableKey: "My Features", title: "My Features", icon: Puzzle, items: [
+  { stableKey: "My Features", title: "My Features", icon: Puzzle, disabled: true, items: [
     { title: "Create Feature", icon: PlusSquare },
   ]},
 ];
