@@ -14,6 +14,8 @@ const APP_HOSTNAMES = [
   "lovableproject.com",
   "nevoxholding.com",
   "www.nevoxholding.com",
+  "davions.com",
+  "www.davions.com",
 ];
 
 /** Returns true when the visitor is on a photographer's custom domain. */
