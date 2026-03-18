@@ -1035,7 +1035,7 @@ const WebsiteSettings = () => {
                             size="sm"
                             variant="ghost"
                             disabled={domainStatus === "checking"}
-                            onClick={checkDomainConnectivity}
+                            onClick={() => checkDomainConnectivity()}
                             className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0"
                           >
                             {domainStatus === "checking" ? "Checking…" : "Test"}
