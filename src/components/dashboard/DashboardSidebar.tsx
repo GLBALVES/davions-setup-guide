@@ -146,6 +146,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Marketing",
       title: t.nav.marketing,
       icon: Megaphone,
+      disabled: true,
       items: [
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
         { title: t.nav.blog, icon: BookText, to: "/dashboard/blog", permKey: "blog" },
@@ -161,6 +162,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "AI",
       title: t.nav.ai,
       icon: BrainCircuit,
+      disabled: true,
       items: [
         { title: t.nav.aiAgents, icon: Bot, to: "/dashboard/agents", permKey: "agents" },
         { title: t.nav.aiAutomations, icon: Zap },
@@ -172,6 +174,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Finance",
       title: t.nav.finance,
       icon: DollarSign,
+      disabled: true,
       items: [
         { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
         { title: t.nav.financeDashboard,  icon: LayoutDashboard, to: "/dashboard/finance", end: true },
@@ -185,6 +188,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "CRM",
       title: t.nav.crm,
       icon: Users2,
+      disabled: true,
       items: [
         { title: t.nav.clients, icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
         { title: t.nav.leads, icon: UserPlus },
@@ -194,6 +198,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Workflows",
       title: t.nav.workflows,
       icon: GitBranch,
+      disabled: true,
       items: [
         { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
         { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
@@ -214,6 +219,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "My Features",
       title: t.nav.myFeatures,
       icon: Puzzle,
+      disabled: true,
       items: [
         { title: t.nav.createFeature, icon: PlusSquare },
       ],
