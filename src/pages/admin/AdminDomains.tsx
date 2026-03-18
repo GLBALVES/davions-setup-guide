@@ -105,16 +105,30 @@ function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
   if (!dns || (dns.a === "idle" && dns.txt === "idle")) {
     return <span className="text-[10px] text-muted-foreground/40">—</span>;
   }
+  const hasCname = (dns.cname?.length ?? 0) > 0;
   return (
     <div className="flex items-center gap-2">
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.a} />
-        <span>A</span>
+        <span>{hasCname ? "CNAME" : "A"}</span>
       </span>
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <RecordBadge status={dns.txt} />
         <span>TXT</span>
       </span>
+      {hasCname && (
+        <span
+          className="text-[9px] font-medium px-1 py-0.5 rounded border"
+          style={{
+            color: "hsl(38 92% 45%)",
+            borderColor: "hsl(38 92% 50% / 0.3)",
+            backgroundColor: "hsl(38 92% 50% / 0.08)",
+          }}
+          title={`Via CNAME → ${dns.cname![0]}`}
+        >
+          CF
+        </span>
+      )}
     </div>
   );
 }
