@@ -896,6 +896,7 @@ const WebsiteSettings = () => {
 
                        {/* DNS records — shown as soon as a domain is saved */}
                        {customDomain && (() => {
+                         const DAVIONS_VPS_IP = import.meta.env.VITE_VPS_IP || "YOUR_VPS_IP";
                          const parts = customDomain.split(".");
                          const lastTwo = parts.slice(-2).join(".");
                          const compoundTlds = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
@@ -904,20 +905,18 @@ const WebsiteSettings = () => {
                          const subName = isSubdomain ? parts[0] : null;
                          const dnsRecords = isSubdomain
                            ? [
-                               { type: "A",   name: subName!,    value: "185.158.133.1" },
-                               { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
+                               { type: "A",   name: subName!,    value: DAVIONS_VPS_IP },
                              ]
                            : [
-                               { type: "A",   name: "@",         value: "185.158.133.1" },
-                               { type: "A",   name: "www",       value: "185.158.133.1" },
-                               { type: "TXT", name: "_lovable",  value: `lovable_verify=${customDomain.replace(/\./g, "_")}` },
+                               { type: "A",   name: "@",         value: DAVIONS_VPS_IP },
+                               { type: "A",   name: "www",       value: DAVIONS_VPS_IP },
                              ];
                          return (
                            <div className="flex flex-col gap-3">
                              <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
                              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                               Add these records at your domain registrar to point{" "}
-                               <span className="font-mono">{customDomain}</span> to your store.
+                               Add this record at your domain registrar to point{" "}
+                               <span className="font-mono">{customDomain}</span> to your store. SSL is provisioned automatically — no extra steps needed.
                                {isSubdomain
                                  ? " Since this is a subdomain, you only need one A record for the subdomain itself."
                                  : " Since this is a root domain, add both @ and www A records."}
@@ -942,25 +941,9 @@ const WebsiteSettings = () => {
                              <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
                                <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                 Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
+                                 Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate. Once the A record is pointing correctly, SSL will be provisioned automatically within minutes.
                                </p>
                              </div>
-                                <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
-                                  <div className="flex items-start gap-2">
-                                    <AlertTriangle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                                    <div className="space-y-1">
-                                      <p className="text-[11px] font-medium text-foreground">Using Cloudflare? You must move your nameservers.</p>
-                                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                        Our server IP (<span className="font-mono text-[10px]">185.158.133.1</span>) belongs to Cloudflare's own infrastructure. Cloudflare blocks all zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. The only fix is to move your domain's nameservers away from Cloudflare to your registrar's DNS or a third-party provider.
-                                      </p>
-                                      <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                        For <span className="font-mono text-[10px]">.com.br</span> domains, use{" "}
-                                        <a href="https://registro.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Registro.br</a>{" "}
-                                        (free). For other domains, use your registrar's default nameservers or Namecheap FreeDNS. Once off Cloudflare's nameservers, the A record will work correctly.
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
                              <div className="flex items-center gap-2">
                                <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
