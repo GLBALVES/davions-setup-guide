@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -12,7 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Globe, Copy, ExternalLink, ChevronDown, ChevronRight, Check, AlertTriangle } from "lucide-react";
+import {
+  Globe,
+  Copy,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  AlertTriangle,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  Loader2,
+} from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +37,8 @@ type Photographer = {
   store_slug: string | null;
   created_at: string;
 };
+
+type DomainStatus = "idle" | "checking" | "active" | "pending";
 
 function getDomainInfo(domain: string) {
   const parts = domain.split(".");
@@ -113,8 +127,46 @@ function DnsExpansion({ domain }: { domain: string }) {
   );
 }
 
+function StatusBadge({ status, onCheck }: { status: DomainStatus; onCheck: () => void }) {
+  if (status === "checking") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Loader2 size={11} className="animate-spin" />
+        <span>Checking…</span>
+      </div>
+    );
+  }
+  if (status === "active") {
+    return (
+      <div className="flex items-center gap-1.5">
+        <CheckCircle2 size={11} className="text-green-600 dark:text-green-400 shrink-0" />
+        <span className="text-xs text-green-700 dark:text-green-400 font-light">Active</span>
+      </div>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Clock size={11} className="text-amber-600 dark:text-amber-400 shrink-0" />
+        <span className="text-xs text-amber-700 dark:text-amber-400 font-light">Awaiting Setup</span>
+      </div>
+    );
+  }
+  // idle
+  return (
+    <button
+      onClick={onCheck}
+      className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+    >
+      Check
+    </button>
+  );
+}
+
 export default function AdminDomains() {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [statuses, setStatuses] = useState<Record<string, DomainStatus>>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: photographers = [], isLoading } = useQuery({
     queryKey: ["admin-custom-domains"],
@@ -128,6 +180,36 @@ export default function AdminDomains() {
       return (data ?? []) as Photographer[];
     },
   });
+
+  const checkDomain = useCallback(async (domain: string, id: string) => {
+    setStatuses((prev) => ({ ...prev, [id]: "checking" }));
+    try {
+      const { data } = await supabase.functions.invoke("check-domain", {
+        body: { domain },
+      });
+      setStatuses((prev) => ({
+        ...prev,
+        [id]: data?.status === "active" ? "active" : "pending",
+      }));
+    } catch {
+      setStatuses((prev) => ({ ...prev, [id]: "pending" }));
+    }
+  }, []);
+
+  const checkAll = useCallback(async () => {
+    if (!photographers.length) return;
+    setIsRefreshing(true);
+    await Promise.all(photographers.map((p) => checkDomain(p.custom_domain, p.id)));
+    setIsRefreshing(false);
+  }, [photographers, checkDomain]);
+
+  // Auto-check all domains when list loads
+  useEffect(() => {
+    if (photographers.length > 0) {
+      checkAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photographers.length]);
 
   const toggleExpand = (id: string) =>
     setExpanded((prev) => (prev === id ? null : id));
@@ -147,6 +229,16 @@ export default function AdminDomains() {
           <Badge variant="secondary" className="ml-auto text-xs">
             {photographers.length} {photographers.length === 1 ? "domain" : "domains"}
           </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-xs text-muted-foreground"
+            onClick={checkAll}
+            disabled={isRefreshing || isLoading || photographers.length === 0}
+          >
+            <RefreshCw size={11} className={cn(isRefreshing && "animate-spin")} />
+            Refresh Status
+          </Button>
         </div>
 
         {/* Table */}
@@ -165,6 +257,7 @@ export default function AdminDomains() {
                   <TableHead className="w-8" />
                   <TableHead>Studio</TableHead>
                   <TableHead>Domain</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Store Slug</TableHead>
                   <TableHead>Added</TableHead>
@@ -176,6 +269,7 @@ export default function AdminDomains() {
                   const { isSubdomain } = getDomainInfo(p.custom_domain);
                   const studioName = p.business_name || p.full_name || "—";
                   const isOpen = expanded === p.id;
+                  const domainStatus: DomainStatus = statuses[p.id] ?? "idle";
 
                   return (
                     <>
@@ -195,6 +289,12 @@ export default function AdminDomains() {
                         </TableCell>
                         <TableCell className="py-3">
                           <span className="font-mono text-xs">{p.custom_domain}</span>
+                        </TableCell>
+                        <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                          <StatusBadge
+                            status={domainStatus}
+                            onCheck={() => checkDomain(p.custom_domain, p.id)}
+                          />
                         </TableCell>
                         <TableCell className="py-3">
                           <Badge variant="outline" className="text-[10px] font-light">
@@ -234,7 +334,7 @@ export default function AdminDomains() {
                       </TableRow>
                       {isOpen && (
                         <tr key={`${p.id}-dns`}>
-                          <td colSpan={7} className="p-0">
+                          <td colSpan={8} className="p-0">
                             <DnsExpansion domain={p.custom_domain} />
                           </td>
                         </tr>
@@ -250,3 +350,4 @@ export default function AdminDomains() {
     </AdminLayout>
   );
 }
+
