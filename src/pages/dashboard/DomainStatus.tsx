@@ -87,9 +87,9 @@ function OverallStatusBar({ checks }: { checks: StatusCheck[] }) {
   }
   if (allOk) {
     return (
-      <div className="flex items-center gap-2.5 px-4 py-3 border border-emerald-500/20 bg-emerald-500/5">
-        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-        <span className="text-[11px] text-emerald-700 dark:text-emerald-400">
+      <div className="flex items-center gap-2.5 px-4 py-3 border border-primary/20 bg-primary/5">
+        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+        <span className="text-[11px] text-primary">
           Domain is fully active — DNS propagated, SSL valid, and routing correctly.
         </span>
       </div>
@@ -106,9 +106,9 @@ function OverallStatusBar({ checks }: { checks: StatusCheck[] }) {
     );
   }
   return (
-    <div className="flex items-center gap-2.5 px-4 py-3 border border-amber-500/20 bg-amber-500/5">
-      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-      <span className="text-[11px] text-amber-700 dark:text-amber-400">
+    <div className="flex items-center gap-2.5 px-4 py-3 border border-muted bg-muted/20">
+      <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0" />
+      <span className="text-[11px] text-muted-foreground">
         Some checks returned warnings. DNS may still be propagating.
       </span>
     </div>
