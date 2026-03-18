@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import { Camera, Clock, MapPin, Image as ImageIcon, Loader2 } from "lucide-react";
+import logoPreto from "@/assets/logo_principal_preto.png";
 
 interface Photographer {
   id: string;
