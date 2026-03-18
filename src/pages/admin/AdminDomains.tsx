@@ -417,7 +417,7 @@ export default function AdminDomains() {
                   <TableHead>Studio</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>DNS Records</TableHead>
+                  <TableHead>DNS / CNAME</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Store Slug</TableHead>
                   <TableHead>Added</TableHead>
