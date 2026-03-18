@@ -242,19 +242,6 @@ const WebsiteSettings = () => {
       toast({ title: ws.domainSaved });
       // Auto-check domain right after saving
       checkDomainConnectivity(savedDomain);
-      // Fire-and-forget: notify team about new domain
-      const { data: profile } = await supabase
-        .from("photographers")
-        .select("full_name, business_name, email")
-        .eq("id", user!.id)
-        .single();
-      supabase.functions.invoke("notify-domain-saved", {
-        body: {
-          domain: customDomainInput.trim(),
-          photographerName: (profile as any)?.business_name || (profile as any)?.full_name || "",
-          photographerEmail: (profile as any)?.email || user!.email || "",
-        },
-      });
     }
     setSavingDomain(false);
   };
