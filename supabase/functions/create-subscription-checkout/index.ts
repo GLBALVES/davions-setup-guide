@@ -8,9 +8,18 @@ const corsHeaders = {
 };
 
 const VALID_PRICE_IDS = [
-  "price_1TA8dwHHNUkUYwCFqxyHaXwX", // Starter
-  "price_1TA8iRHHNUkUYwCFWoTJx7FD", // Pro
-  "price_1TA8j8HHNUkUYwCFxFY4uY1U", // Studio
+  // USD
+  "price_1TA8dwHHNUkUYwCFqxyHaXwX", // Starter USD
+  "price_1TA8iRHHNUkUYwCFWoTJx7FD", // Pro USD
+  "price_1TA8j8HHNUkUYwCFxFY4uY1U", // Studio USD
+  // BRL
+  "price_1TCIusHHNUkUYwCFhGtLRSMG", // Starter BRL
+  "price_1TCIvJHHNUkUYwCFaxbbfmYw", // Pro BRL
+  "price_1TCIvhHHNUkUYwCFIe4qEyU6", // Studio BRL
+  // MXN
+  "price_1TCIwDHHNUkUYwCFJ0k9SNVO", // Starter MXN
+  "price_1TCIwdHHNUkUYwCFDe0bc1LR", // Pro MXN
+  "price_1TCIx7HHNUkUYwCFkTcWOYnb", // Studio MXN
 ];
 
 serve(async (req) => {
