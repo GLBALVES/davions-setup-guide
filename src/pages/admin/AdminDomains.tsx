@@ -62,20 +62,16 @@ function getDomainInfo(domain: string) {
   const subName = isSubdomain ? parts[0] : null;
   const rootDomain = parts.slice(-rootPartsCount).join(".");
 
-  const verifyValue = `lovable_verify=${domain.replace(/\./g, "_")}`;
-
   const dnsRecords = isSubdomain
     ? [
-        { type: "A",   name: subName!,  value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic" },
-        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A", name: subName!, value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic to your store" },
       ]
     : [
-        { type: "A",   name: "@",       value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
-        { type: "A",   name: "www",     value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www" },
-        { type: "TXT", name: `_lovable`, value: verifyValue, purpose: "Ownership verification" },
+        { type: "A", name: "@",   value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
+        { type: "A", name: "www", value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www subdomain" },
       ];
 
-  return { isSubdomain, dnsRecords, verifyValue, rootDomain };
+  return { isSubdomain, dnsRecords, rootDomain };
 }
 
 function CopyButton({ value }: { value: string }) {
