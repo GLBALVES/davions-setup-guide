@@ -748,57 +748,93 @@ const WebsiteSettings = () => {
                   <Divider />
 
                   {/* ── 11. Custom Domain ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                        <SectionHeading title={ws.customDomainTitle} description={ws.customDomainDesc} />
-                      </div>
-                      <a
-                        href="/dashboard/custom-domain-docs"
-                        className="shrink-0 flex items-center gap-1 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Setup Wizard
-                      </a>
-                    </div>
-                    <FieldRow label={ws.domainLabel}>
-                      <Input
-                        value={customDomainInput}
-                        onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
-                        placeholder={ws.domainPlaceholder}
-                        className="h-9 text-sm font-light font-mono"
-                      />
-                      {domainError && (
-                        <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
-                          <AlertCircle className="h-3 w-3" />{domainError}
-                        </p>
-                      )}
-                    </FieldRow>
-                    {customDomain && (
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
-                        <button
-                          type="button"
-                          onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
-                          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                          title="Copy domain URL"
-                        >
-                          {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                        </button>
-                      </div>
-                    )}
-                    <Button
-                      onClick={handleSaveDomain}
-                      disabled={savingDomain}
-                      size="sm"
-                      variant="outline"
-                      className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
-                    >
-                      {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
-                    </Button>
-                  </section>
+                   <section className="flex flex-col gap-5">
+                     <div className="flex items-center gap-2">
+                       <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                       <SectionHeading title={ws.customDomainTitle} description={ws.customDomainDesc} />
+                     </div>
+                     <FieldRow label={ws.domainLabel}>
+                       <Input
+                         value={customDomainInput}
+                         onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
+                         placeholder={ws.domainPlaceholder}
+                         className="h-9 text-sm font-light font-mono"
+                       />
+                       {domainError && (
+                         <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                           <AlertCircle className="h-3 w-3" />{domainError}
+                         </p>
+                       )}
+                     </FieldRow>
+
+                     {/* DNS records — shown as soon as a domain is saved */}
+                     {customDomain && (
+                       <div className="flex flex-col gap-3">
+                         <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
+                         <p className="text-[11px] text-muted-foreground leading-relaxed">
+                           Add these records at your domain registrar to point{" "}
+                           <span className="font-mono">{customDomain}</span> to your store.
+                         </p>
+                         <div className="border border-border overflow-hidden">
+                           <table className="w-full text-[11px]">
+                             <thead>
+                               <tr className="border-b border-border bg-muted/40">
+                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Type</th>
+                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Name</th>
+                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Value</th>
+                                 <th className="px-2 py-2.5 w-8" />
+                               </tr>
+                             </thead>
+                             <tbody>
+                               {[
+                                 { type: "A",   name: "@",        value: "185.158.133.1" },
+                                 { type: "A",   name: "www",      value: "185.158.133.1" },
+                                 { type: "TXT", name: "_davions", value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
+                               ].map((r, i) => (
+                                 <DnsRow key={i} type={r.type} name={r.name} value={r.value} />
+                               ))}
+                             </tbody>
+                           </table>
+                         </div>
+                         <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
+                           <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                           <p className="text-[11px] text-muted-foreground leading-relaxed">
+                             Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate.
+                           </p>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                           <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">{customDomain}</p>
+                           <button
+                             type="button"
+                             onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)}
+                             className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                             title="Copy domain URL"
+                           >
+                             {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                           </button>
+                           <a
+                             href={`https://${customDomain}`}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                           >
+                             <ExternalLink className="h-3.5 w-3.5" />
+                           </a>
+                         </div>
+                       </div>
+                     )}
+
+                     <Button
+                       onClick={handleSaveDomain}
+                       disabled={savingDomain}
+                       size="sm"
+                       variant="outline"
+                       className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                     >
+                       {savingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveDomain}
+                     </Button>
+                   </section>
 
                   {/* ── Save ── */}
                   <div className="flex items-center gap-3 pt-2 border-t border-border">
