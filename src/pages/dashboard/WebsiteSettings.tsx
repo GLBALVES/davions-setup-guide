@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,7 +16,9 @@ import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
+  ShieldCheck, Wifi, RefreshCw, XCircle, Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
@@ -171,8 +174,17 @@ const WebsiteSettings = () => {
   const [domainCopied, setDomainCopied] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [removingDomain, setRemovingDomain] = useState(false);
-  const [domainStatus, setDomainStatus] = useState<"idle" | "checking" | "active" | "pending">("idle");
-  const [domainCheckedAt, setDomainCheckedAt] = useState<Date | null>(null);
+  const [domainLastChecked, setDomainLastChecked] = useState<Date | null>(null);
+  type DomainCheckStatus = "idle" | "checking" | "ok" | "error" | "warning";
+  interface DomainCheck { id: string; label: string; description: string; status: DomainCheckStatus; detail?: string; }
+  const [domainChecks, setDomainChecks] = useState<DomainCheck[]>([
+    { id: "dns",     label: "DNS Propagation",  description: "A record points to the correct VPS IP",             status: "idle" },
+    { id: "ssl",     label: "SSL Certificate",  description: "HTTPS certificate is valid and active",             status: "idle" },
+    { id: "routing", label: "Domain Routing",   description: "Domain resolves and Caddy routes it correctly",     status: "idle" },
+  ]);
+  const setCheck = useCallback((id: string, status: DomainCheckStatus, detail?: string) => {
+    setDomainChecks((prev) => prev.map((c) => c.id === id ? { ...c, status, detail } : c));
+  }, []);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
@@ -225,8 +237,8 @@ const WebsiteSettings = () => {
     } else {
       const savedDomain = customDomainInput.trim();
       setCustomDomain(savedDomain);
-      setDomainStatus("idle");
-      setDomainCheckedAt(null);
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
+      setDomainLastChecked(null);
       toast({ title: ws.domainSaved });
       // Auto-check domain right after saving
       checkDomainConnectivity(savedDomain);
@@ -259,8 +271,8 @@ const WebsiteSettings = () => {
     } else {
       setCustomDomain("");
       setCustomDomainInput("");
-      setDomainStatus("idle");
-      setDomainCheckedAt(null);
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
+      setDomainLastChecked(null);
       setDomainError(null);
       toast({ title: "Domain removed", description: `${domainSnapshot} has been unlinked from your studio.` });
       // Notify team that domain was removed
@@ -281,22 +293,54 @@ const WebsiteSettings = () => {
     setRemovingDomain(false);
   };
 
-  const checkDomainConnectivity = async (domainOverride?: string) => {
+  const VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
+
+  const checkDomainConnectivity = useCallback(async (domainOverride?: string) => {
     const target = domainOverride ?? customDomain;
     if (!target) return;
-    setDomainStatus("checking");
+    setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "checking" as const, detail: undefined })));
     try {
-      const { data, error } = await supabase.functions.invoke("check-domain", {
-        body: { domain: target },
-      });
-      if (error) throw error;
-      setDomainStatus(data?.status === "active" ? "active" : "pending");
-      setDomainCheckedAt(new Date());
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-domain`,
+        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ domain: target }) }
+      );
+      if (!response.ok) throw new Error("check-domain failed");
+      const result = await response.json();
+      const aOk = result.dns?.a?.ok;
+      const foundIPs: string[] = result.dns?.a?.found ?? [];
+      setCheck("dns", aOk ? "ok" : "error",
+        aOk ? `A record → ${VPS_IP}` : foundIPs.length > 0 ? `Found: ${foundIPs.join(", ")} — expected ${VPS_IP}` : `No A record found — expected ${VPS_IP}`);
+      // SSL probe
+      try {
+        await fetch(`https://${target}`, { method: "HEAD", signal: AbortSignal.timeout(6000), mode: "no-cors" });
+        setCheck("ssl", "ok", "HTTPS connection established successfully");
+      } catch (sslErr: unknown) {
+        const msg = sslErr instanceof Error ? sslErr.message : "";
+        if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+          setCheck("ssl", aOk ? "warning" : "error",
+            aOk ? "SSL may still be provisioning — wait a few minutes" : "Cannot verify SSL until DNS points to the VPS");
+        } else {
+          setCheck("ssl", "warning", "SSL check inconclusive — browser CORS policy may block the probe");
+        }
+      }
+      // Routing probe
+      try {
+        const valRes = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-domain?domain=${encodeURIComponent(target)}`,
+          { signal: AbortSignal.timeout(6000) }
+        );
+        setCheck("routing", valRes.ok ? "ok" : "error",
+          valRes.ok ? "Domain is registered and Caddy will route it" : `Not registered in the system (HTTP ${valRes.status})`);
+      } catch {
+        setCheck("routing", "error", "Could not reach the routing validation endpoint");
+      }
+      setDomainLastChecked(new Date());
     } catch {
-      setDomainStatus("pending");
-      setDomainCheckedAt(new Date());
+      setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "error" as const, detail: "Check failed — please try again" })));
     }
-  };
+  }, [customDomain, setCheck]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -968,53 +1012,106 @@ const WebsiteSettings = () => {
                          );
                        })()}
 
-                      {/* Domain Status + Test Connectivity */}
+                      {/* Domain Status Panel */}
                       {customDomain && (
-                        <div className="flex items-center gap-3 py-2.5 px-3 border border-border bg-muted/10">
-                          {domainStatus === "idle" && (
-                            <>
-                              <WifiOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <p className="text-[11px] text-muted-foreground flex-1">Not checked yet</p>
-                            </>
-                          )}
-                          {domainStatus === "checking" && (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
-                              <p className="text-[11px] text-muted-foreground flex-1">Checking connectivity…</p>
-                            </>
-                          )}
-                          {domainStatus === "active" && (
-                            <>
-                              <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                              <p className="text-[11px] text-foreground flex-1">
-                                Active — domain is responding
-                                {domainCheckedAt && (
-                                  <span className="text-muted-foreground ml-1.5">· checked just now</span>
-                                )}
-                              </p>
-                            </>
-                          )}
-                          {domainStatus === "pending" && (
-                            <>
-                              <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <p className="text-[11px] text-muted-foreground flex-1">
-                                Awaiting setup — not responding yet
-                                {domainCheckedAt && (
-                                  <span className="ml-1.5">· checked just now</span>
-                                )}
-                              </p>
-                            </>
-                          )}
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            disabled={domainStatus === "checking"}
-                            onClick={() => checkDomainConnectivity()}
-                            className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0"
-                          >
-                            {domainStatus === "checking" ? "Checking…" : "Test"}
-                          </Button>
+                        <div className="flex flex-col gap-2">
+                          {/* Overall bar */}
+                          {(() => {
+                            const allOk = domainChecks.every((c) => c.status === "ok");
+                            const anyError = domainChecks.some((c) => c.status === "error");
+                            const anyChecking = domainChecks.some((c) => c.status === "checking");
+                            const allIdle = domainChecks.every((c) => c.status === "idle");
+                            if (allIdle) return null;
+                            if (anyChecking) return (
+                              <div className="flex items-center gap-2 px-3 py-2.5 border border-border bg-muted/20">
+                                <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                                <span className="text-[11px] text-muted-foreground">Running checks…</span>
+                              </div>
+                            );
+                            if (allOk) return (
+                              <div className="flex items-center gap-2 px-3 py-2.5 border border-primary/20 bg-primary/5">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                                <span className="text-[11px] text-primary">Domain fully active — DNS propagated, SSL valid, routing correctly.</span>
+                              </div>
+                            );
+                            if (anyError) return (
+                              <div className="flex items-center gap-2 px-3 py-2.5 border border-destructive/20 bg-destructive/5">
+                                <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                <span className="text-[11px] text-destructive">One or more checks failed — review DNS records.</span>
+                              </div>
+                            );
+                            return (
+                              <div className="flex items-center gap-2 px-3 py-2.5 border border-border bg-muted/20">
+                                <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-[11px] text-muted-foreground">Some checks returned warnings. DNS may still be propagating.</span>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Individual checks */}
+                          <div className="flex flex-col border border-border divide-y divide-border">
+                            {domainChecks.map((check, i) => {
+                              const icons: Record<string, React.ElementType> = { dns: Wifi, ssl: ShieldCheck, routing: Globe };
+                              const Icon = icons[check.id] ?? Globe;
+                              return (
+                                <motion.div
+                                  key={check.id}
+                                  initial={{ opacity: 0, y: 4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.05, duration: 0.2 }}
+                                  className="flex items-start gap-3 px-3 py-3"
+                                >
+                                  <div className="mt-0.5 shrink-0">
+                                    {check.status === "checking" && <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                                    {check.status === "ok"       && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                                    {check.status === "error"    && <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                                    {check.status === "warning"  && <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />}
+                                    {check.status === "idle"     && <Clock className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] font-medium tracking-wide">{check.label}</span>
+                                      <span className={`text-[9px] tracking-wider uppercase font-medium px-1.5 py-0.5 rounded-sm ${
+                                        check.status === "ok"       ? "bg-primary/10 text-primary border border-primary/20" :
+                                        check.status === "error"    ? "bg-destructive/10 text-destructive border border-destructive/20" :
+                                        check.status === "checking" ? "bg-muted text-muted-foreground animate-pulse" :
+                                        check.status === "warning"  ? "bg-secondary/40 text-secondary-foreground border border-secondary/30" :
+                                                                      "bg-muted text-muted-foreground"
+                                      }`}>
+                                        {check.status === "ok" ? "OK" : check.status === "error" ? "Failed" : check.status === "warning" ? "Warning" : check.status === "checking" ? "Checking…" : "Waiting"}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{check.description}</p>
+                                    {check.detail && (
+                                      <p className={`text-[10px] mt-0.5 font-mono ${check.status === "error" ? "text-destructive" : check.status === "ok" ? "text-primary" : "text-muted-foreground"}`}>
+                                        {check.detail}
+                                      </p>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Refresh + timestamp */}
+                          <div className="flex items-center gap-3">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              disabled={domainChecks.some((c) => c.status === "checking")}
+                              onClick={() => checkDomainConnectivity()}
+                              className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0 gap-1.5"
+                            >
+                              <RefreshCw className={`h-3 w-3 ${domainChecks.some((c) => c.status === "checking") ? "animate-spin" : ""}`} />
+                              {domainChecks.some((c) => c.status === "checking") ? "Checking…" : "Refresh Status"}
+                            </Button>
+                            {domainLastChecked && (
+                              <span className="text-[10px] text-muted-foreground/50">
+                                Last checked: {domainLastChecked.toLocaleTimeString()}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )}
 
