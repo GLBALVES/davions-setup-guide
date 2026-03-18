@@ -64,6 +64,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
 import HelpCenter from "./pages/dashboard/HelpCenter";
+import DomainStatus from "./pages/dashboard/DomainStatus";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 import ForgotPassword from "./pages/ForgotPassword";

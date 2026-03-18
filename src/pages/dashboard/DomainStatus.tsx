@@ -48,9 +48,9 @@ function StatusIcon({ status }: { status: CheckStatus }) {
   if (status === "checking") {
     return <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />;
   }
-  if (status === "ok") return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  if (status === "ok") return <CheckCircle2 className="h-4 w-4 text-primary" />;
   if (status === "error") return <XCircle className="h-4 w-4 text-destructive" />;
-  if (status === "warning") return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+  if (status === "warning") return <AlertTriangle className="h-4 w-4 text-muted-foreground" />;
   return <Clock className="h-4 w-4 text-muted-foreground/40" />;
 }
 
