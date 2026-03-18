@@ -139,16 +139,16 @@ function StatusBadge({ status, onCheck }: { status: DomainStatus; onCheck: () =>
   if (status === "active") {
     return (
       <div className="flex items-center gap-1.5">
-        <CheckCircle2 size={11} className="text-green-600 dark:text-green-400 shrink-0" />
-        <span className="text-xs text-green-700 dark:text-green-400 font-light">Active</span>
+        <CheckCircle2 size={11} className="shrink-0" style={{ color: "hsl(142 71% 45%)" }} />
+        <span className="text-xs font-light" style={{ color: "hsl(142 71% 40%)" }}>Active</span>
       </div>
     );
   }
   if (status === "pending") {
     return (
       <div className="flex items-center gap-1.5">
-        <Clock size={11} className="text-amber-600 dark:text-amber-400 shrink-0" />
-        <span className="text-xs text-amber-700 dark:text-amber-400 font-light">Awaiting Setup</span>
+        <Clock size={11} className="shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
+        <span className="text-xs font-light" style={{ color: "hsl(38 80% 40%)" }}>Awaiting Setup</span>
       </div>
     );
   }
