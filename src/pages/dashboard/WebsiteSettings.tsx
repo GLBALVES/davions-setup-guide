@@ -790,35 +790,48 @@ const WebsiteSettings = () => {
                        )}
                      </FieldRow>
 
-                     {/* DNS records — shown as soon as a domain is saved */}
-                     {customDomain && (
-                       <div className="flex flex-col gap-3">
-                         <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
-                         <p className="text-[11px] text-muted-foreground leading-relaxed">
-                           Add these records at your domain registrar to point{" "}
-                           <span className="font-mono">{customDomain}</span> to your store.
-                         </p>
-                         <div className="border border-border overflow-hidden">
-                           <table className="w-full text-[11px]">
-                             <thead>
-                               <tr className="border-b border-border bg-muted/40">
-                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Type</th>
-                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Name</th>
-                                 <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Value</th>
-                                 <th className="px-2 py-2.5 w-8" />
-                               </tr>
-                             </thead>
-                             <tbody>
-                               {[
-                                 { type: "A",   name: "@",        value: "185.158.133.1" },
-                                 { type: "A",   name: "www",      value: "185.158.133.1" },
-                                 { type: "TXT", name: "_davions", value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
-                               ].map((r, i) => (
-                                 <DnsRow key={i} type={r.type} name={r.name} value={r.value} />
-                               ))}
-                             </tbody>
-                           </table>
-                         </div>
+                      {/* DNS records — shown as soon as a domain is saved */}
+                      {customDomain && (() => {
+                        const parts = customDomain.split(".");
+                        const isSubdomain = parts.length > 2;
+                        const subName = isSubdomain ? parts.slice(0, parts.length - 2).join(".") : null;
+                        const dnsRecords = isSubdomain
+                          ? [
+                              { type: "A",   name: subName!,    value: "185.158.133.1" },
+                              { type: "TXT", name: "_davions",  value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
+                            ]
+                          : [
+                              { type: "A",   name: "@",         value: "185.158.133.1" },
+                              { type: "A",   name: "www",       value: "185.158.133.1" },
+                              { type: "TXT", name: "_davions",  value: `davions_verify=${customDomain.replace(/\./g, "_")}` },
+                            ];
+                        return (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            Add these records at your domain registrar to point{" "}
+                            <span className="font-mono">{customDomain}</span> to your store.
+                            {isSubdomain
+                              ? " Since this is a subdomain, you only need one A record for the subdomain itself."
+                              : " Since this is a root domain, add both @ and www A records."}
+                          </p>
+                          <div className="border border-border overflow-hidden">
+                            <table className="w-full text-[11px]">
+                              <thead>
+                                <tr className="border-b border-border bg-muted/40">
+                                  <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Type</th>
+                                  <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Name</th>
+                                  <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Value</th>
+                                  <th className="px-2 py-2.5 w-8" />
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dnsRecords.map((r, i) => (
+                                  <DnsRow key={i} type={r.type} name={r.name} value={r.value} />
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                           <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
                             <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
