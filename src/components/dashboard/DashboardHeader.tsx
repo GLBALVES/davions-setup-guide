@@ -141,6 +141,7 @@ export function DashboardHeader() {
       </div>
 
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
+      <HelpAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </header>
   );
 }
