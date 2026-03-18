@@ -24,6 +24,7 @@ export function DashboardHeader() {
   const collapsed = state === "collapsed";
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const { lang, setLang } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
