@@ -168,11 +168,6 @@ const CADDYFILE_EASYPANEL = `{
     }
 }`;
 
-const TROUBLESHOOT = [
-  {
-    issue: "404 on custom domain even though DNS is pointing to the VPS",
-    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises. Do NOT use `davions.com` as the Host header unless `davions.com` is already an Active custom domain in Lovable project settings → Domains.',
-  },
 const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
 docker network ls | grep -i traefik
 
