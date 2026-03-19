@@ -690,7 +690,7 @@ export default function AdminVpsSetup() {
         </Section>
 
         {/* Easypanel / Traefik */}
-        <Section step={8} title="Easypanel / Traefik — Running Caddy as a Docker Service">
+        <Section step={8} title="Easypanel / Traefik — Running Caddy as a Docker Service" highlight={detectedEnv === "docker"}>
           <div className="space-y-1 text-xs font-light text-muted-foreground leading-relaxed">
             <p>
               If the VPS already runs <strong className="text-foreground font-normal">Easypanel</strong>, Traefik already owns ports 80 and 443.
