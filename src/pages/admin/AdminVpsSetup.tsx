@@ -215,7 +215,7 @@ const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App 
 const TROUBLESHOOT = [
   {
     issue: "404 on custom domain even though DNS is pointing to the VPS",
-    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must use `header_up Host davions.com` inside the reverse_proxy block — davions.com is the primary published domain. Do NOT use davions-page-builder.lovable.app (Lovable issues a 302 redirect from .lovable.app subdomains which breaks the proxy). Also confirm that davions.com is active in Lovable project settings → Domains.',
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises. Do NOT use `davions.com` as the Host header unless `davions.com` is already an Active custom domain in Lovable project settings → Domains.',
   },
   {
     issue: "Photographer data not loading — blank store page",
