@@ -71,9 +71,10 @@ import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 const queryClient = new QueryClient();
-const onCustomDomain = isCustomDomain();
 
-const App = () => (
+const App = () => {
+  const onCustomDomain = isCustomDomain();
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
