@@ -1,63 +1,60 @@
 
-## Diagnóstico do 404 em davions.giombelli.com.br
+## Diagnóstico
 
-### O que os logs mostram
+O servidor já tem **Easypanel** instalado, que usa **Traefik** como proxy reverso principal. Traefik ocupa as portas 80 e 443 — por isso o Caddy não consegue iniciar. Parar o Traefik derrubaria o próprio Easypanel.
 
-**validate-domain** → retorna `200` com `{ registered: true }` ✅
-Isso significa que:
-1. O DNS está apontando corretamente para o VPS (Caddy recebeu a requisição)
-2. O Caddy consultou o `validate-domain` e recebeu aprovação para emitir TLS
-3. O certificado SSL foi ou está sendo emitido
-
-**O 404 não vem do app React** — o app nunca chegou a ser carregado. O 404 está sendo retornado pelo Caddy/proxy antes mesmo do React ser servido.
-
-### Causa raiz
-
-O Caddyfile está configurado para fazer proxy reverso para o CDN da Lovable (`davions-page-builder.lovable.app`). O CDN da Lovable, ao receber a requisição, tenta localizar o projeto pelo header `Host`. Se o `Host` header chegando for `davions.giombelli.com.br` e o CDN não reconhecer esse host, ele retorna **404**.
-
-Isso acontece porque o CDN da Lovable só serve conteúdo para os domínios publicados associados ao projeto. O domínio personalizado `davions.giombelli.com.br` **não está registrado como domínio publicado na Lovable** — ele é apenas um domínio que o usuário cadastrou internamente no sistema.
-
-### Fluxo atual (com falha)
+**Solução correta**: não usar Caddy standalone. Em vez disso, rodar Caddy como um serviço Docker dentro do Easypanel, em porta interna (ex: 8080), com Traefik roteando o tráfego de domínios customizados para ele.
 
 ```text
-Visitante → davions.giombelli.com.br
-  → Caddy VPS (TLS ok, validate-domain 200 ✅)
-  → proxy_pass para davions-page-builder.lovable.app
-  → CDN Lovable recebe Host: davions.giombelli.com.br
-  → CDN não reconhece esse domínio → 404 ❌
+Visitante → domínio.com.br:443
+  → Traefik (gerenciado pelo Easypanel, porta 443)
+  → Caddy container (porta interna 8080, On-Demand TLS desativado)
+  → davions-page-builder.lovable.app (Host reescrito)
 ```
 
-### Solução correta
+Nesse modelo, o Traefik cuida do TLS para o wildcard e repassa para o Caddy interno, que faz o proxy reverso para a Lovable com o `Host` correto. O `on_demand_tls` do Caddy não é necessário nessa arquitetura — o Traefik/Easypanel gerencia os certificados.
 
-O Caddyfile precisa reescrever o header `Host` para o host do projeto Lovable **e** passar o hostname original em um header separado (ex: `X-Forwarded-Host`) para que o app React possa identificar o domínio customizado.
+---
 
-```
-davions.giombelli.com.br {
+## O que mudar no código
+
+Apenas `AdminVpsSetup.tsx` — adicionar uma seção nova "Easypanel / Traefik Conflict" após o step 7 (Troubleshooting), com:
+
+1. Explicação do conflito de portas com Traefik
+2. Caddyfile adaptado sem TLS (Traefik cuida dos certs)
+3. Comando `docker run` para subir o Caddy na porta 8080
+4. Como configurar no Easypanel: criar um serviço com `Source: Docker Image = caddy`, porta 8080, e adicionar os domínios wildcard no painel
+5. Adicionar entrada no `TROUBLESHOOT`: `"Caddy fails: port 80/443 already in use by docker-proxy"` com a solução Easypanel
+
+---
+
+## Caddyfile adaptado para uso atrás do Traefik
+
+```caddy
+{
+  # No on_demand_tls — Traefik handles TLS termination
+  auto_https off
+}
+
+:8080 {
   reverse_proxy https://davions-page-builder.lovable.app {
     header_up Host davions-page-builder.lovable.app
-    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-Host {http.request.host}
+    header_up X-Real-IP {remote_host}
+    transport http {
+      tls_server_name davions-page-builder.lovable.app
+    }
   }
 }
 ```
 
-Desta forma:
-- O CDN Lovable reconhece o host e serve o app ✅
-- O app React recebe `X-Forwarded-Host: davions.giombelli.com.br` e `isCustomDomain()` funciona ✅
+---
 
-**Porém**: `window.location.hostname` no browser será `davions.giombelli.com.br` (o navegador vê o domínio real), então `isCustomDomain()` no frontend já funciona corretamente. O problema real é só o proxy não conseguir fazer o CDN servir o conteúdo.
+## Plano de implementação
 
-### O que precisa ser corrigido
+1. Adicionar constante `CADDYFILE_EASYPANEL` e `EASYPANEL_DOCKER_RUN` em `AdminVpsSetup.tsx`
+2. Adicionar `Section step={8}` com título "Easypanel / Traefik — Running Caddy as a Docker Service"
+3. Explicar o conflito, mostrar o Caddyfile adaptado e o docker run
+4. Adicionar entrada ao array `TROUBLESHOOT` para o conflito de porta com `docker-proxy`
 
-**No Caddyfile do VPS** (não é uma mudança no código do app):
-
-O bloco do Caddy para domínios customizados precisa usar `header_up Host davions-page-builder.lovable.app` para que o CDN da Lovable sirva o app.
-
-**Atualizar a página `/admin/vps-setup`** com o Caddyfile correto que inclui essa instrução, e também atualizar a documentação do wizard de domínio personalizado para que todos os fotógrafos que configurarem domínios no futuro tenham o Caddyfile correto.
-
-### Plano de implementação
-
-1. **Atualizar `AdminVpsSetup.tsx`** — Caddyfile mostrado na documentação deve incluir `header_up Host davions-page-builder.lovable.app` no bloco de domínios customizados.
-
-2. **Atualizar `WebsiteSettings.tsx` / `CustomDomainDocs.tsx`** — Instruções do wizard exibidas ao fotógrafo devem mostrar o Caddyfile correto.
-
-Nenhuma migração de banco de dados necessária. Nenhuma mudança no código React do frontend. É puramente uma correção da configuração do proxy reverso Caddy.
+Nenhuma migração de banco necessária. Apenas documentação.
