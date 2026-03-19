@@ -315,6 +315,19 @@ export default function AdminDomains() {
   const toggleExpand = (id: string) =>
     setExpanded((prev) => (prev === id ? null : id));
 
+  const staleThreshold = Date.now() - 24 * 60 * 60 * 1000; // 24 h ago
+
+  const stalePendingDomains = useMemo(
+    () =>
+      photographers.filter(
+        (p) =>
+          statuses[p.id] === "pending" &&
+          new Date(p.created_at).getTime() < staleThreshold
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [photographers, statuses]
+  );
+
   return (
     <AdminLayout>
       <div className="p-8 max-w-6xl mx-auto">
