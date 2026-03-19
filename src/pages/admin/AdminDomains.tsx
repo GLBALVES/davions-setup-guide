@@ -127,7 +127,7 @@ function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => vo
   if (status === "pending") {
     return (
       <div className="flex items-center gap-1.5">
-        <Clock size={11} className="shrink-0 text-muted-foreground" />
+        <Minus size={11} className="shrink-0 text-muted-foreground" />
         <span className="text-xs font-light text-muted-foreground">Pending</span>
       </div>
     );
