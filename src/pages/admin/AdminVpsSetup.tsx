@@ -151,17 +151,15 @@ const CADDYFILE_EASYPANEL = `{
     header_up -X-Forwarded-For
     header_up -X-Real-IP
 
-    # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
-    # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
-    # which breaks the proxy. Using the primary domain directly returns 200 OK.
-    reverse_proxy https://davions.com {
-        # Host MUST be the primary Lovable domain so Cloudflare serves the app correctly.
-        header_up Host davions.com
-        # Preserve original custom domain for React custom domain detection.
+    # Upstream: davions-page-builder.lovable.app is the permanent project identifier.
+    # Send Host: davions-page-builder.lovable.app so the CDN recognises the project.
+    # Preserve the original custom domain in X-Forwarded-Host for React domain detection.
+    reverse_proxy https://davions-page-builder.lovable.app {
+        header_up Host davions-page-builder.lovable.app
         header_up X-Forwarded-Host {host}
         transport http {
             tls
-            tls_server_name davions.com
+            tls_server_name davions-page-builder.lovable.app
         }
     }
 
@@ -170,6 +168,11 @@ const CADDYFILE_EASYPANEL = `{
     }
 }`;
 
+const TROUBLESHOOT = [
+  {
+    issue: "404 on custom domain even though DNS is pointing to the VPS",
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises. Do NOT use `davions.com` as the Host header unless `davions.com` is already an Active custom domain in Lovable project settings → Domains.',
+  },
 const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
 docker network ls | grep -i traefik
 
