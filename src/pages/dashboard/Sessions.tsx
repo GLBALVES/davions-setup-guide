@@ -41,10 +41,11 @@ const Sessions = () => {
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
 
   const fetchSessions = async () => {
+    if (!photographerId) return;
     setLoading(true);
     const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
-      supabase.from("sessions").select("*").order("created_at", { ascending: false }),
-      supabase.from("photographers").select("store_slug").eq("id", photographerId ?? user!.id).single(),
+      supabase.from("sessions").select("*").eq("photographer_id", photographerId).order("created_at", { ascending: false }),
+      supabase.from("photographers").select("store_slug").eq("id", photographerId).single(),
     ]);
     setSessions(sessionsData ?? []);
     setStoreSlug(photoData?.store_slug ?? null);

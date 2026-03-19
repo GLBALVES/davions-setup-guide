@@ -90,6 +90,7 @@ const Galleries = () => {
   ];
 
   const fetchGalleries = async () => {
+    if (!photographerId) return;
     setLoading(true);
     const { data: galleriesData } = await supabase
       .from("galleries")
@@ -97,12 +98,14 @@ const Galleries = () => {
         id, title, slug, category, status, created_at, cover_image_url, expires_at, booking_id,
         bookings ( client_name, client_email, sessions ( title ) )
       `)
+      .eq("photographer_id", photographerId)
       .order("created_at", { ascending: false });
 
     if (galleriesData) {
       const { data: photoCounts } = await supabase
         .from("photos")
-        .select("gallery_id");
+        .select("gallery_id")
+        .eq("photographer_id", photographerId);
 
       const countMap: Record<string, number> = {};
       photoCounts?.forEach((p: { gallery_id: string }) => {
