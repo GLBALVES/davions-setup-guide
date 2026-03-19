@@ -1,50 +1,48 @@
 
 ## Diagnóstico
 
-O Caddyfile que o usuário copiou foi o `CADDYFILE_EASYPANEL` da página `/admin/vps-setup`. O erro é:
+O output do usuário mostra:
 
 ```
-/etc/caddy/Caddyfile:8: unrecognized directive: header_up
+Valid configuration
+caddy.service is not active, cannot reload.
 ```
 
-Linha 8 no template atual é:
-```caddy
-    header_up -X-Forwarded-For   ← ERRADO: está solto dentro do bloco :80, fora do reverse_proxy
-```
+**Dois problemas distintos:**
 
-`header_up` é uma sub-diretiva do `reverse_proxy` — não pode ser usada diretamente no site block (`:80 {}`). Precisa estar **dentro** do bloco `reverse_proxy {}`.
+1. **WARN `header_up X-Forwarded-Host` desnecessário** — o Caddy já passa headers ao upstream por padrão. Não é erro, só warning — pode ser removido ou mantido (não impede funcionamento).
+
+2. **`caddy.service is not active, cannot reload`** — O Caddy **NÃO está rodando como serviço systemd**. Está rodando como container Docker (`docker restart caddy-proxy` que o próprio usuário rodou antes). O `systemctl reload caddy` não tem efeito nesse cenário.
+
+O template `CADDY_RELOAD` na página `/admin/vps-setup` ainda mostra `sudo systemctl reload caddy`, que é o comando **errado** para o ambiente Easypanel/Docker.
 
 ## Fix
 
-Mover as diretivas `header_up -X-Forwarded-For` e `header_up -X-Real-IP` para dentro do bloco `reverse_proxy {}` no `CADDYFILE_EASYPANEL`.
+Atualizar a constante `CADDY_RELOAD` no `AdminVpsSetup.tsx` para incluir **os dois cenários** — Standalone (systemctl) e Docker (docker restart):
 
-### Caddyfile corrigido (Easypanel / Docker):
+### Novo conteúdo do bloco "Reload & verify":
 
-```caddy
-{
-    auto_https off
-}
+```bash
+# ── Standalone Caddy (systemd) ──────────────────────────
+# Validate syntax
+sudo caddy validate --config /etc/caddy/Caddyfile
 
-:80 {
-    header Access-Control-Allow-Origin "*"
+# Reload without downtime
+sudo systemctl reload caddy
 
-    reverse_proxy https://davions-page-builder.lovable.app {
-        header_up Host davions-page-builder.lovable.app
-        header_up X-Forwarded-Host {host}
-        header_up -X-Forwarded-For
-        header_up -X-Real-IP
-        transport http {
-            tls
-            tls_server_name davions-page-builder.lovable.app
-        }
-    }
+# Check status
+sudo systemctl status caddy
 
-    handle_errors {
-        rewrite * /index.html
-    }
-}
+# ── Easypanel / Docker ────────────────────────────────────
+# After editing /etc/caddy/Caddyfile, restart the container:
+docker restart caddy-proxy
+
+# Tail logs to confirm it started cleanly
+docker logs caddy-proxy --tail 30
 ```
+
+Também adicionar uma nota explicativa acima do bloco de código, informando que `systemctl reload caddy` só funciona em instalações standalone (não Docker).
 
 ## Arquivo a alterar
 
-- `src/pages/admin/AdminVpsSetup.tsx` — corrigir a constante `CADDYFILE_EASYPANEL` movendo `header_up -X-Forwarded-For` e `header_up -X-Real-IP` para dentro do bloco `reverse_proxy {}`.
+- `src/pages/admin/AdminVpsSetup.tsx` — constante `CADDY_RELOAD` (linha 121–128) e o parágrafo explicativo na Section step 3.
