@@ -9,7 +9,7 @@ interface Photographer {
   email: string;
   store_slug: string | null;
   bio: string | null;
-  hero_image_url: string | null;
+  hero_image_url: string | null; // website hero from photographer_site
 }
 
 interface Session {
@@ -36,7 +36,7 @@ const StorePage = () => {
     const load = async () => {
       const { data: photoData } = await supabase
         .from("photographers")
-        .select("id, full_name, email, store_slug, bio, hero_image_url")
+        .select("id, full_name, email, store_slug, bio")
         .eq("store_slug", slug!)
         .single();
 
@@ -46,7 +46,17 @@ const StorePage = () => {
         return;
       }
 
-      setPhotographer(photoData as Photographer);
+      // Fetch website hero image from photographer_site (separate from profile avatar)
+      const { data: siteData } = await supabase
+        .from("photographer_site")
+        .select("site_hero_image_url")
+        .eq("photographer_id", photoData.id)
+        .maybeSingle();
+
+      setPhotographer({
+        ...photoData,
+        hero_image_url: siteData?.site_hero_image_url ?? null,
+      } as Photographer);
 
       const { data: sessionData } = await supabase
         .from("sessions")
