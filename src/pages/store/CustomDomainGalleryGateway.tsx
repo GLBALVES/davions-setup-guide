@@ -60,7 +60,7 @@ const CustomDomainGalleryGateway = () => {
 
   // Stage 1 (no data yet) or Stage 2 (photographer resolved, validating gallery)
   if (valid === null) {
-    return <BrandedLoader photographer={photographer} />;
+    return <CustomDomainLoader photographer={photographer} />;
   }
 
   if (!valid) {

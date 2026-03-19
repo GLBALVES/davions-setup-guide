@@ -73,7 +73,7 @@ const CustomDomainStore = () => {
   }, []);
 
   if (loading) {
-    return <BrandedLoader photographer={photographer} />;
+    return <CustomDomainLoader photographer={photographer} />;
   }
 
   if (notFound) {
