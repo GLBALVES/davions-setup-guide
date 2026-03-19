@@ -44,20 +44,30 @@ function Section({
   step,
   title,
   children,
+  highlight,
 }: {
   step: number;
   title: string;
   children: React.ReactNode;
+  highlight?: boolean;
 }) {
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4 rounded-lg transition-colors duration-300", highlight && "bg-foreground/[0.03] border border-foreground/20 p-4 -mx-4")}>
       <div className="flex items-center gap-3">
-        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-foreground text-background text-[10px] font-light shrink-0">
+        <span className={cn(
+          "flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-light shrink-0 transition-colors",
+          highlight ? "bg-foreground text-background ring-2 ring-foreground/20" : "bg-foreground text-background"
+        )}>
           {step}
         </span>
         <h2 className="text-[10px] tracking-[0.3em] uppercase font-light text-foreground">
           {title}
         </h2>
+        {highlight && (
+          <span className="ml-auto text-[9px] tracking-[0.2em] uppercase font-light text-foreground bg-foreground/10 border border-foreground/20 rounded px-2 py-0.5">
+            Recommended
+          </span>
+        )}
       </div>
       <div className="pl-9 space-y-4">{children}</div>
     </div>
