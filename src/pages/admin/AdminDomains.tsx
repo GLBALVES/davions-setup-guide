@@ -25,9 +25,15 @@ import {
   XCircle,
   Loader2,
   Minus,
+  Stethoscope,
+  Wifi,
+  ShieldCheck,
+  Link2,
+  Code2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { isCustomDomain } from "@/lib/custom-domain";
 
 type Photographer = {
   id: string;
@@ -48,6 +54,22 @@ type DnsDetail = {
 
 type RowStatus = "idle" | "checking" | "active" | "pending";
 
+// ── Chain diagnostic types ──────────────────────────────────────────────────
+type StepStatus = "idle" | "running" | "pass" | "fail" | "warn";
+
+type DiagStep = {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  status: StepStatus;
+  detail: string | null;
+  fix: string | null;
+};
+
+// ── Constants ───────────────────────────────────────────────────────────────
+const VPS_IP = "147.93.112.182";
+
 const COMPOUND_TLDS = [
   "com.br","net.br","org.br","edu.br","gov.br",
   "co.uk","com.au","co.nz","com.ar","com.mx","com.co",
@@ -63,16 +85,17 @@ function getDomainInfo(domain: string) {
 
   const dnsRecords = isSubdomain
     ? [
-        { type: "A", name: subName!, value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes traffic to your store" },
+        { type: "A", name: subName!, value: VPS_IP, purpose: "Routes traffic to your store" },
       ]
     : [
-        { type: "A", name: "@",   value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes root domain" },
-        { type: "A", name: "www", value: import.meta.env.VITE_VPS_IP || "147.93.112.182", purpose: "Routes www subdomain" },
+        { type: "A", name: "@",   value: VPS_IP, purpose: "Routes root domain" },
+        { type: "A", name: "www", value: VPS_IP, purpose: "Routes www subdomain" },
       ];
 
   return { isSubdomain, dnsRecords, rootDomain };
 }
 
+// ── Small helpers ────────────────────────────────────────────────────────────
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -151,7 +174,6 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
         DNS records required for <span className="font-mono text-foreground">{domain}</span>
       </p>
 
-      {/* DNS records table */}
       <div>
         <div className="overflow-x-auto border border-border">
           <table className="w-full text-xs">
@@ -198,14 +220,13 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
         </div>
       </div>
 
-      {/* Cloudflare note */}
       <div className="border border-border bg-muted/40 p-3">
         <div className="flex items-start gap-2">
           <AlertTriangle size={12} className="mt-0.5 shrink-0 text-muted-foreground" />
           <div className="space-y-1">
             <p className="text-xs font-medium text-foreground">Using Cloudflare? Nameserver migration required.</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Our server IP (<span className="font-mono text-[10px]">{import.meta.env.VITE_VPS_IP || "147.93.112.182"}</span>) is part of Cloudflare's own infrastructure. Cloudflare blocks zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. No DNS record change fixes this while the domain uses Cloudflare nameservers.
+              Our server IP (<span className="font-mono text-[10px]">{VPS_IP}</span>) is part of Cloudflare's own infrastructure. Cloudflare blocks zones they manage from routing to this IP — <strong>even in DNS-only mode</strong> — triggering Error 1000. No DNS record change fixes this while the domain uses Cloudflare nameservers.
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               User must move nameservers away from Cloudflare: use registrar's default DNS, <a href="https://registro.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Registro.br</a> (for .com.br), or Namecheap FreeDNS.
@@ -217,8 +238,255 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
   );
 }
 
+// ── Chain Diagnostic ─────────────────────────────────────────────────────────
+function StepIcon({ status, icon }: { status: StepStatus; icon: React.ReactNode }) {
+  if (status === "running") return <Loader2 size={13} className="animate-spin text-muted-foreground shrink-0" />;
+  if (status === "pass") return <CheckCircle2 size={13} className="shrink-0" style={{ color: "hsl(142 71% 45%)" }} />;
+  if (status === "warn") return <AlertTriangle size={13} className="shrink-0 text-yellow-500" />;
+  if (status === "fail") return <XCircle size={13} className="shrink-0" style={{ color: "hsl(0 72% 51%)" }} />;
+  return <span className="shrink-0 text-muted-foreground/40">{icon}</span>;
+}
+
+function ChainDiagnostic({ domain, photographerId }: { domain: string; photographerId: string }) {
+  const makeSteps = (): DiagStep[] => [
+    {
+      id: "dns",
+      label: "DNS Lookup",
+      description: `A record for ${domain} resolves to VPS IP ${VPS_IP}`,
+      icon: <Wifi size={13} />,
+      status: "idle",
+      detail: null,
+      fix: null,
+    },
+    {
+      id: "validate",
+      label: "Domain Registration",
+      description: "validate-domain edge function returns registered: true",
+      icon: <ShieldCheck size={13} />,
+      status: "idle",
+      detail: null,
+      fix: null,
+    },
+    {
+      id: "proxy",
+      label: "Proxy Connectivity",
+      description: `HTTPS request to ${domain} returns a non-404 response`,
+      icon: <Link2 size={13} />,
+      status: "idle",
+      detail: null,
+      fix: null,
+    },
+    {
+      id: "react",
+      label: "React Domain Detection",
+      description: `isCustomDomain("${domain}") returns true in the app`,
+      icon: <Code2 size={13} />,
+      status: "idle",
+      detail: null,
+      fix: null,
+    },
+  ];
+
+  const [steps, setSteps] = useState<DiagStep[]>(makeSteps());
+  const [running, setRunning] = useState(false);
+
+  const setStep = (id: string, patch: Partial<DiagStep>) =>
+    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+
+  const run = async () => {
+    setSteps(makeSteps());
+    setRunning(true);
+
+    // ── Step 1: DNS ──────────────────────────────────────────────────────────
+    setStep("dns", { status: "running" });
+    try {
+      const { data } = await supabase.functions.invoke("check-domain", { body: { domain } });
+      const aOk: boolean = data?.dns?.a?.ok ?? false;
+      const found: string[] = data?.dns?.a?.found ?? [];
+      if (aOk) {
+        setStep("dns", { status: "pass", detail: `A record → ${found.join(", ")} ✓` });
+      } else {
+        setStep("dns", {
+          status: "fail",
+          detail: found.length ? `Found: ${found.join(", ")} — expected ${VPS_IP}` : "No A record found",
+          fix: `Add an A record for ${domain} pointing to ${VPS_IP} at your DNS provider. Allow up to 24 h for propagation.`,
+        });
+      }
+    } catch (e) {
+      setStep("dns", { status: "fail", detail: "check-domain function error", fix: "Ensure the check-domain edge function is deployed." });
+    }
+
+    // ── Step 2: validate-domain ──────────────────────────────────────────────
+    setStep("validate", { status: "running" });
+    try {
+      const res = await fetch(
+        `https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain=${encodeURIComponent(domain)}`
+      );
+      const json = await res.json();
+      if (json?.registered === true) {
+        setStep("validate", { status: "pass", detail: "registered: true — domain is in the database ✓" });
+      } else {
+        setStep("validate", {
+          status: "fail",
+          detail: `registered: false (HTTP ${res.status})`,
+          fix: `Ensure the custom_domain field in the photographers table matches exactly "${domain}" (no protocol, no trailing slash).`,
+        });
+      }
+    } catch {
+      setStep("validate", { status: "fail", detail: "Network error calling validate-domain", fix: "Check edge function deployment." });
+    }
+
+    // ── Step 3: Proxy connectivity ───────────────────────────────────────────
+    setStep("proxy", { status: "running" });
+    try {
+      // Use no-cors so browser doesn't block cross-origin; we just need to know if it resolved
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(`https://${domain}`, { signal: controller.signal, redirect: "follow" });
+      clearTimeout(timer);
+      const status = res.status;
+      if (status === 200) {
+        setStep("proxy", { status: "pass", detail: `HTTP ${status} — site is reachable ✓` });
+      } else if (status === 404) {
+        setStep("proxy", {
+          status: "fail",
+          detail: `HTTP 404 — Lovable CDN returned Not Found`,
+          fix: `The Caddy Caddyfile must use "header_up Host davions.com" and davions.com must be an active domain in Lovable project settings → Domains. Currently the CDN does not recognise the forwarded Host header.`,
+        });
+      } else {
+        setStep("proxy", { status: "warn", detail: `HTTP ${status}`, fix: "Unexpected status. Check Caddy logs: sudo journalctl -u caddy -n 50" });
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("abort") || msg.includes("timeout")) {
+        setStep("proxy", {
+          status: "fail",
+          detail: "Request timed out after 12 s",
+          fix: "The VPS may be down, Caddy may not be running, or the TLS certificate is still being issued. Run: sudo systemctl status caddy",
+        });
+      } else if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        // Could be CORS block on 200, treat as warn
+        setStep("proxy", {
+          status: "warn",
+          detail: "CORS blocked — browser prevented reading response (this may mean the site IS reachable)",
+          fix: "Open https://" + domain + " directly in a new tab to confirm. A CORS block here often means Caddy is proxying correctly.",
+        });
+      } else {
+        setStep("proxy", { status: "fail", detail: msg, fix: "Check Caddy status on the VPS." });
+      }
+    }
+
+    // ── Step 4: React domain detection ──────────────────────────────────────
+    setStep("react", { status: "running" });
+    await new Promise((r) => setTimeout(r, 200)); // brief tick for UX
+    const detected = isCustomDomain(domain);
+    if (detected) {
+      setStep("react", { status: "pass", detail: `isCustomDomain("${domain}") → true ✓ — app will render the photographer store` });
+    } else {
+      setStep("react", {
+        status: "fail",
+        detail: `isCustomDomain("${domain}") → false — app would render the main platform instead of the store`,
+        fix: `Add "${domain}" or its root domain to EXACT_APP_HOSTNAMES in src/lib/custom-domain.ts if it should be a platform domain. If it should be a custom domain, ensure it is NOT listed there.`,
+      });
+    }
+
+    setRunning(false);
+  };
+
+  const allDone = steps.every((s) => s.status !== "idle" && s.status !== "running");
+  const failCount = steps.filter((s) => s.status === "fail").length;
+  const passCount = steps.filter((s) => s.status === "pass").length;
+  const warnCount = steps.filter((s) => s.status === "warn").length;
+
+  return (
+    <div className="px-6 py-5 bg-muted/20 border-b border-border space-y-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Stethoscope size={12} className="text-muted-foreground" />
+          <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+            Full-Chain Diagnostic — <span className="font-mono normal-case">{domain}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {allDone && (
+            <span className="text-[10px] font-light text-muted-foreground">
+              {passCount + warnCount === 4
+                ? "All checks passed"
+                : `${failCount} issue${failCount !== 1 ? "s" : ""} found`}
+            </span>
+          )}
+          <button
+            onClick={run}
+            disabled={running}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground text-background text-[10px] tracking-[0.15em] uppercase font-light disabled:opacity-50 transition-opacity"
+          >
+            {running ? <Loader2 size={10} className="animate-spin" /> : <Stethoscope size={10} />}
+            {running ? "Running…" : "Run Diagnostic"}
+          </button>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="space-y-2">
+        {steps.map((step, i) => (
+          <div key={step.id} className="relative">
+            {/* connector line */}
+            {i < steps.length - 1 && (
+              <div className="absolute left-[6px] top-[22px] w-px h-[calc(100%+8px)] bg-border" />
+            )}
+            <div className={cn(
+              "rounded-md border transition-colors",
+              step.status === "pass" && "border-border bg-background",
+              step.status === "fail" && "border-destructive/30 bg-destructive/5",
+              step.status === "warn" && "border-yellow-500/30 bg-yellow-500/5",
+              step.status === "running" && "border-border bg-muted/40",
+              step.status === "idle" && "border-border/50 bg-transparent",
+            )}>
+              <div className="flex items-start gap-3 px-4 py-3">
+                <div className="mt-0.5 relative z-10">
+                  <StepIcon status={step.status} icon={step.icon} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-light text-foreground">{step.label}</span>
+                    {step.status === "pass" && (
+                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm" style={{ background: "hsl(142 71% 45% / 0.15)", color: "hsl(142 71% 38%)" }}>Pass</span>
+                    )}
+                    {step.status === "fail" && (
+                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm" style={{ background: "hsl(0 72% 51% / 0.12)", color: "hsl(0 72% 51%)" }}>Fail</span>
+                    )}
+                    {step.status === "warn" && (
+                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm bg-yellow-500/10 text-yellow-600">Warn</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] font-light text-muted-foreground mt-0.5">{step.description}</p>
+                  {step.detail && (
+                    <p className={cn(
+                      "text-[11px] font-mono mt-1.5 leading-relaxed",
+                      step.status === "pass" ? "text-muted-foreground" : "text-foreground",
+                    )}>{step.detail}</p>
+                  )}
+                  {step.fix && (
+                    <div className="mt-2 flex items-start gap-1.5 bg-muted/60 rounded px-3 py-2">
+                      <AlertTriangle size={10} className="mt-0.5 shrink-0 text-muted-foreground" />
+                      <p className="text-[11px] font-light text-muted-foreground leading-relaxed">{step.fix}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function AdminDomains() {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [diagOpen, setDiagOpen] = useState<string | null>(null);
   const [statuses, setStatuses] = useState<Record<string, RowStatus>>({});
   const [dnsDetails, setDnsDetails] = useState<Record<string, DnsDetail>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -273,10 +541,17 @@ export default function AdminDomains() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photographers.length]);
 
-  const toggleExpand = (id: string) =>
+  const toggleExpand = (id: string) => {
     setExpanded((prev) => (prev === id ? null : id));
+    setDiagOpen(null);
+  };
 
-  const staleThreshold = Date.now() - 24 * 60 * 60 * 1000; // 24 h ago
+  const toggleDiag = (id: string) => {
+    setDiagOpen((prev) => (prev === id ? null : id));
+    setExpanded(null);
+  };
+
+  const staleThreshold = Date.now() - 24 * 60 * 60 * 1000;
 
   const stalePendingDomains = useMemo(
     () =>
@@ -376,6 +651,7 @@ export default function AdminDomains() {
                   const { isSubdomain } = getDomainInfo(p.custom_domain);
                   const studioName = p.business_name || p.full_name || "—";
                   const isOpen = expanded === p.id;
+                  const isDiagOpen = diagOpen === p.id;
                   const domainStatus: RowStatus = statuses[p.id] ?? "idle";
                   const dns = dnsDetails[p.id];
 
@@ -383,7 +659,7 @@ export default function AdminDomains() {
                     <>
                       <TableRow
                         key={p.id}
-                        className={cn("cursor-pointer", isOpen && "bg-muted/30")}
+                        className={cn("cursor-pointer", (isOpen || isDiagOpen) && "bg-muted/30")}
                         onClick={() => toggleExpand(p.id)}
                       >
                         <TableCell className="py-3 pl-4 pr-0">
@@ -424,6 +700,16 @@ export default function AdminDomains() {
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
+                              size="sm"
+                              className={cn("h-7 gap-1.5 text-[10px] px-2", isDiagOpen && "bg-muted")}
+                              title="Run full-chain diagnostic"
+                              onClick={() => toggleDiag(p.id)}
+                            >
+                              <Stethoscope size={11} />
+                              Diagnose
+                            </Button>
+                            <Button
+                              variant="ghost"
                               size="icon"
                               className="h-7 w-7"
                               title="Copy domain"
@@ -443,10 +729,21 @@ export default function AdminDomains() {
                           </div>
                         </TableCell>
                       </TableRow>
+
+                      {/* DNS expansion */}
                       {isOpen && (
                         <tr key={`${p.id}-dns`}>
                           <td colSpan={9} className="p-0">
                             <DnsExpansion domain={p.custom_domain} dns={dns} />
+                          </td>
+                        </tr>
+                      )}
+
+                      {/* Chain diagnostic */}
+                      {isDiagOpen && (
+                        <tr key={`${p.id}-diag`}>
+                          <td colSpan={9} className="p-0">
+                            <ChainDiagnostic domain={p.custom_domain} photographerId={p.id} />
                           </td>
                         </tr>
                       )}
@@ -461,3 +758,4 @@ export default function AdminDomains() {
     </AdminLayout>
   );
 }
+
