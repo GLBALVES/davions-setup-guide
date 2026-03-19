@@ -100,33 +100,33 @@ const Settings = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const fetchSessionTypes = useCallback(async () => {
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await supabase
       .from("session_types")
       .select("id, name")
-      .eq("photographer_id", user.id)
+      .eq("photographer_id", photographerId)
       .order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
-  }, [user]);
+  }, [photographerId]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     const fetchAll = async () => {
       const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
           .select("full_name, store_slug, custom_domain, hero_image_url, stripe_account_id, stripe_connected_at")
-          .eq("id", user.id)
+          .eq("id", photographerId)
           .single(),
         (supabase as any)
           .from("watermarks")
           .select("*")
-          .eq("photographer_id", user.id)
+          .eq("photographer_id", photographerId)
           .order("created_at", { ascending: true }),
         (supabase as any)
           .from("gallery_settings")
           .select("key, value")
-          .eq("photographer_id", user.id),
+          .eq("photographer_id", photographerId),
         fetchSessionTypes(),
       ]);
 
