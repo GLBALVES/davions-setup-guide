@@ -26,25 +26,33 @@ const BrandedLoader = ({ photographer }: { photographer: PhotographerMeta | null
 
   return (
     <div className="relative min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden">
-      {photographer?.hero_image_url && (
-        <div className="absolute inset-0 transition-opacity duration-700">
-          <img
-            src={photographer.hero_image_url}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/65" />
-        </div>
-      )}
+      <div
+        className="absolute inset-0 transition-opacity duration-700"
+        style={{ opacity: photographer?.hero_image_url ? 1 : 0 }}
+      >
+        {photographer?.hero_image_url && (
+          <>
+            <img
+              src={photographer.hero_image_url}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/65" />
+          </>
+        )}
+      </div>
 
       <div className="relative z-10 flex flex-col items-center">
-        {!photographer && (
+        <div
+          className="transition-opacity duration-500"
+          style={{ opacity: photographer ? 0 : 1, height: photographer ? 0 : "auto", overflow: "hidden" }}
+        >
           <img
             src={logoPreto}
             alt="Davions"
             className="h-5 object-contain invert opacity-40 mb-14"
           />
-        )}
+        </div>
 
         {photographer ? (
           <>
