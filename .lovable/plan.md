@@ -1,80 +1,46 @@
 
-## Diagnóstico do curl
+## Situação atual
 
-O resultado mostra que o proxy está funcionando — mas está recebendo um **302 redirect** do Cloudflare/Lovable CDN:
+O container Caddy está rodando e respondendo **200 OK** internamente na porta 8080. O próximo passo é fazer o **Traefik (Easypanel)** rotear o tráfego externo das portas 80/443 para esse container.
 
-```
-HTTP/1.1 302 Found
-Location: https://davions.com/
-Server: cloudflare
-Via: 2.0 Caddy
-```
+## Problema que precisa ser resolvido
 
-**O que está acontecendo:**
+O container atual foi iniciado via `docker run` direto (fora do Easypanel), então ele **não tem as labels do Traefik** — o que significa que o Traefik não sabe que deve rotear domínios customizados para ele.
 
-O Caddyfile atual aponta para `davions-page-builder.lovable.app` como upstream. Porém, como o projeto tem `davions.com` configurado como domínio primário no Lovable, o Cloudflare redireciona automaticamente para `davions.com` qualquer requisição que chegue em `davions-page-builder.lovable.app`. Isso é um redirect canônico da plataforma Lovable.
+Há dois caminhos:
 
-**A fix:** mudar o upstream do reverse_proxy para `davions.com` (o domínio primário real). Assim o Cloudflare serve o app diretamente sem redirect, e o `X-Forwarded-Host` ainda chega ao React app com o domínio do fotógrafo.
+**Opção A — Adicionar labels ao container existente (mais rápido)**  
+Recriar o container com as labels do Traefik direto no `docker run`.
 
-```text
-Antes: Caddy → davions-page-builder.lovable.app → 302 → davions.com  (loop/falha)
-Depois: Caddy → davions.com → 200 HTML (app carregado, X-Forwarded-Host preservado)
-```
+**Opção B — Criar um App no Easypanel (mais correto, gerenciado)**  
+Criar um serviço no painel do Easypanel com a imagem `caddy:latest`, volume e labels.
 
----
+## O que vou implementar
 
-## Mudanças no código
-
-Apenas `AdminVpsSetup.tsx` — atualizar a constante `CADDYFILE_EASYPANEL`:
-
-**De:**
-```caddy
-reverse_proxy https://davions-page-builder.lovable.app {
-  header_up Host davions-page-builder.lovable.app
-  transport http {
-    tls_server_name davions-page-builder.lovable.app
-  }
-}
-```
-
-**Para:**
-```caddy
-reverse_proxy https://davions.com {
-  header_up Host davions.com
-  header_up X-Forwarded-Host {http.request.host}
-  header_up X-Real-IP {remote_host}
-  transport http {
-    tls_server_name davions.com
-  }
-}
-```
-
-Também atualizar a constante `CADDYFILE` (VPS standalone) com o mesmo fix, e adicionar uma nota explicando o motivo — "Lovable redireciona `.lovable.app` para o domínio primário; usar o domínio primário diretamente evita o 302".
-
-Também adicionar um **comando de teste corrigido** para o usuário executar agora:
+Atualizar a constante `EASYPANEL_DOCKER_RUN` em `AdminVpsSetup.tsx` para incluir **as labels do Traefik direto no comando `docker run`**, com a regra `HostRegexp` que captura qualquer domínio customizado e o encaminha para a porta 8080:
 
 ```bash
-# Recriar o container com a config corrigida
 docker stop caddy-proxy && docker rm caddy-proxy
 
-# Atualizar o /etc/caddy/Caddyfile com o upstream davions.com
-# Depois:
 docker run -d --name caddy-proxy \
   --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+  --network easypanel \
+  --label "traefik.enable=true" \
+  --label "traefik.http.routers.caddy-proxy.rule=HostRegexp(\`{host:.+}\`)" \
+  --label "traefik.http.routers.caddy-proxy.entrypoints=websecure" \
+  --label "traefik.http.routers.caddy-proxy.tls=true" \
+  --label "traefik.http.routers.caddy-proxy.tls.certresolver=letsencrypt" \
+  --label "traefik.http.routers.caddy-proxy.priority=1" \
+  --label "traefik.http.services.caddy-proxy.loadbalancer.server.port=8080" \
   caddy:latest
-
-# Testar novamente
-curl -v -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
-# Esperado: HTTP/1.1 200 OK (não mais 302)
 ```
 
----
+**Ponto crítico**: o container precisa estar na **mesma rede Docker do Traefik** (`--network easypanel`), caso contrário o Traefik não consegue alcançá-lo mesmo com as labels.
 
 ## Plano de implementação
 
-1. Atualizar `CADDYFILE_EASYPANEL` — mudar upstream para `davions.com`, `header_up Host davions.com`, `tls_server_name davions.com`
-2. Atualizar `CADDYFILE` (standalone) com o mesmo fix
-3. Adicionar nota explicativa sobre o 302 do Cloudflare no Step 8
-4. Adicionar bloco com os comandos para recriar o container e testar
+1. Atualizar `EASYPANEL_DOCKER_RUN` — incluir `--network easypanel` e todas as labels do Traefik no `docker run`
+2. Adicionar comando de verificação pós-deploy — `docker inspect caddy-proxy | grep -A5 Labels` para confirmar labels, e `curl -vI https://davions.giombelli.com.br` para testar o fluxo completo externo
+3. Adicionar nota de aviso: se o nome da rede Traefik no Easypanel for diferente de `easypanel`, usar `docker network ls` para confirmar o nome correto antes de rodar o comando
