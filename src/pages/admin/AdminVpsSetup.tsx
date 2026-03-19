@@ -566,6 +566,10 @@ export default function AdminVpsSetup() {
             </div>
           )}
         </div>
+
+        {/* Environment Auto-Detection */}
+        <EnvDetector detected={detectedEnv} onSelect={setDetectedEnv} />
+
         <Section step={1} title="Prerequisites">
           <ul className="space-y-2 text-xs font-light text-muted-foreground">
             {[
