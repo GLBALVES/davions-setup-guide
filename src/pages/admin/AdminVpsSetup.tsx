@@ -72,13 +72,17 @@ const CADDYFILE = `{
   }
 }
 
-:80, :443 {
-  tls internal
+# Block direct IP / plain HTTP access
+:80 {
   respond "Not Found" 404
 }
 
+# Handle ALL custom domains via On-Demand TLS
+# NOTE: do NOT add a :443 fallback block — it would conflict with on_demand on port 443
 https:// {
-  tls { on_demand }
+  tls {
+    on_demand
+  }
   reverse_proxy https://davions-page-builder.lovable.app {
     header_up Host {upstream_hostport}
     header_up X-Forwarded-Host {host}
@@ -101,20 +105,33 @@ sudo ufw enable
 sudo ufw status`;
 
 const TEST_EDGE = `# Test the validate-domain Edge Function
-curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain=example.com"
-# Expected: {"registered":true} or {"registered":false}`;
+curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain=davions.nevoxholding.com"
+# Expected: {"registered":true}`;
 
 const TEST_SSL = `# After pointing the domain's A record to the VPS IP, test TLS
 curl -vI https://yourdomain.com 2>&1 | grep -E "SSL|subject|issuer|HTTP"`;
 
-const CADDY_RELOAD = `# Write the Caddyfile to /etc/caddy/Caddyfile, then:
+const CADDY_RELOAD = `# Validate syntax before reloading
+sudo caddy validate --config /etc/caddy/Caddyfile
+
+# Write the Caddyfile to /etc/caddy/Caddyfile, then:
 sudo systemctl reload caddy
 
 # Check Caddy status
-sudo systemctl status caddy
+sudo systemctl status caddy`;
 
-# Tail logs
-sudo journalctl -u caddy -f`;
+const CADDY_DIAGNOSE = `# Last 50 log lines — look for TLS errors or "ask" rejections
+sudo journalctl -u caddy -n 50 --no-pager
+
+# Follow logs in real time while hitting the domain in the browser
+sudo journalctl -u caddy -f
+
+# Check if the certificate was already issued for the domain
+sudo ls /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/
+
+# Test that Caddy can reach validate-domain (run from the VPS)
+curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain=davions.nevoxholding.com"
+# Must return: {"registered":true}  — status 200, otherwise on_demand_tls will be denied`;
 
 const TROUBLESHOOT = [
   {
@@ -222,8 +239,33 @@ export default function AdminVpsSetup() {
           />
         </Section>
 
+        {/* Diagnose */}
+        <Section step={6} title="Diagnose a 404 / TLS Issue">
+          <p className="text-xs font-light text-muted-foreground">
+            Run these commands <strong>on the VPS</strong> to see what Caddy is
+            doing. The most common cause of 404 after DNS has propagated is that
+            the On-Demand TLS certificate is still being issued — or that the
+            old{" "}
+            <code className="font-mono bg-muted px-1 rounded text-[11px]">
+              :80, :443
+            </code>{" "}
+            fallback block is conflicting with port 443.
+          </p>
+          <CodeBlock code={CADDY_DIAGNOSE} label="VPS — diagnose Caddy" />
+          <div className="border border-border rounded-md px-4 py-3 space-y-1">
+            <p className="text-xs font-light text-foreground">
+              Key fix: remove any <code className="font-mono bg-muted px-1 rounded text-[11px]">:80, :443</code> block from the Caddyfile
+            </p>
+            <p className="text-[11px] font-light text-muted-foreground leading-relaxed">
+              A combined <code className="font-mono bg-muted px-0.5 rounded text-[10px]">:80, :443 &#123; tls internal &#125;</code> block
+              competes with the <code className="font-mono bg-muted px-0.5 rounded text-[10px]">https://</code> block for port 443 and
+              prevents On-Demand TLS from issuing certificates. Use only <code className="font-mono bg-muted px-0.5 rounded text-[10px]">:80 &#123; respond "Not Found" 404 &#125;</code> as shown above.
+            </p>
+          </div>
+        </Section>
+
         {/* Troubleshooting */}
-        <Section step={6} title="Troubleshooting">
+        <Section step={7} title="Troubleshooting">
           <div className="space-y-3">
             {TROUBLESHOOT.map(({ issue, fix }) => (
               <div
