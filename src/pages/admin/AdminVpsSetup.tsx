@@ -147,16 +147,15 @@ const CADDYFILE_EASYPANEL = `{
 :80 {
     header Access-Control-Allow-Origin "*"
 
-    # Remove headers that may confuse the CDN
-    header_up -X-Forwarded-For
-    header_up -X-Real-IP
-
     # Upstream: davions-page-builder.lovable.app is the permanent project identifier.
     # Send Host: davions-page-builder.lovable.app so the CDN recognises the project.
     # Preserve the original custom domain in X-Forwarded-Host for React domain detection.
+    # Remove headers that may confuse the CDN (must be inside reverse_proxy block).
     reverse_proxy https://davions-page-builder.lovable.app {
         header_up Host davions-page-builder.lovable.app
         header_up X-Forwarded-Host {host}
+        header_up -X-Forwarded-For
+        header_up -X-Real-IP
         transport http {
             tls
             tls_server_name davions-page-builder.lovable.app
