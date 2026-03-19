@@ -67,10 +67,11 @@ export interface WorkflowMember {
 }
 
 // Projects
-export async function fetchProjects() {
+export async function fetchProjects(photographerId: string) {
   const { data, error } = await supabase
     .from("workflow_projects" as any)
     .select("*")
+    .eq("photographer_id", photographerId)
     .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data || []) as unknown as WorkflowProject[];
