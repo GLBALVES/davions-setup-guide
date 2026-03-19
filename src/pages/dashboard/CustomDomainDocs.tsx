@@ -405,6 +405,14 @@ const CustomDomainDocs = () => {
       toast({ title: "Failed to save domain", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Domain saved" });
+      // Notify team (fire and forget)
+      supabase.functions.invoke("notify-domain-saved", {
+        body: {
+          domain: domain.trim(),
+          photographerEmail: user.email,
+          action: "saved",
+        },
+      }).catch((err) => console.warn("notify-domain-saved:", err));
     }
     setSaving(false);
   };
