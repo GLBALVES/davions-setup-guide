@@ -118,14 +118,23 @@ curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?d
 const TEST_SSL = `# After pointing the domain's A record to the VPS IP, test TLS
 curl -vI https://yourdomain.com 2>&1 | grep -E "SSL|subject|issuer|HTTP"`;
 
-const CADDY_RELOAD = `# Validate syntax before reloading
+const CADDY_RELOAD = `# ── Standalone Caddy (systemd) ──────────────────────────────────
+# Validate syntax
 sudo caddy validate --config /etc/caddy/Caddyfile
 
-# Write the Caddyfile to /etc/caddy/Caddyfile, then:
+# Reload without downtime
 sudo systemctl reload caddy
 
-# Check Caddy status
-sudo systemctl status caddy`;
+# Check status
+sudo systemctl status caddy
+
+# ── Easypanel / Docker ────────────────────────────────────────────
+# systemctl reload caddy will NOT work here — Caddy runs inside a container.
+# After editing /etc/caddy/Caddyfile inside the container, restart it:
+docker restart caddy-proxy
+
+# Tail logs to confirm it started cleanly
+docker logs caddy-proxy --tail 30`;
 
 const CADDY_DIAGNOSE = `# Last 50 log lines — look for TLS errors or "ask" rejections
 sudo journalctl -u caddy -n 50 --no-pager
