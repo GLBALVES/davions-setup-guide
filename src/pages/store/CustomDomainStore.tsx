@@ -263,7 +263,7 @@ const CustomDomainStore = () => {
                 return (
                   <button
                     key={session.id}
-                    onClick={() => navigate(`/book/${session.id}`)}
+                    onClick={() => navigate(`/book/${session.slug ?? session.id}`)}
                     className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card"
                   >
                     <div className="aspect-[4/3] bg-muted relative overflow-hidden">
