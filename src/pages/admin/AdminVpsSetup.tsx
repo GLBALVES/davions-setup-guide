@@ -211,6 +211,10 @@ const TROUBLESHOOT = [
     fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must use `header_up Host davions.com` inside the reverse_proxy block — davions.com is the primary published domain. Do NOT use davions-page-builder.lovable.app (Lovable issues a 302 redirect from .lovable.app subdomains which breaks the proxy). Also confirm that davions.com is active in Lovable project settings → Domains.',
   },
   {
+    issue: "Photographer data not loading — blank store page",
+    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. However, if Caddy strips response headers from the Lovable CDN, asset fetches may fail. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of both the `https://` block (standalone) and the `:8080` block (Easypanel) in your Caddyfile — the templates above already include it.',
+  },
+  {
     issue: "TLS certificate not issued",
     fix: 'Check that the validate-domain Edge Function returns {"registered":true} for the domain. Run the curl test above.',
   },
