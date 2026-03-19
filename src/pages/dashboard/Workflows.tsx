@@ -36,7 +36,7 @@ type TaskFilterTab = "assigned" | "pending" | "completed" | "archived";
 type MainView = "projects" | "tasks";
 
 export default function Workflows() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const wf = t.workflows;
   const navigate = useNavigate();
@@ -73,8 +73,9 @@ export default function Workflows() {
   };
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ["workflow-projects"],
-    queryFn: fetchProjects,
+    queryKey: ["workflow-projects", photographerId],
+    queryFn: () => fetchProjects(photographerId!),
+    enabled: !!photographerId,
   });
 
   const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);

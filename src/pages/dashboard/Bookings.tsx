@@ -215,8 +215,8 @@ const Bookings = () => {
   };
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (photographerId) fetchBookings();
+  }, [photographerId]);
 
   const filteredBookings = useMemo(() => {
     let list = bookings.filter((b) => {

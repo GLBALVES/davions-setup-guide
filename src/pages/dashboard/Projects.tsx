@@ -562,7 +562,7 @@ function ArchivedKanbanSection({
 
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
@@ -592,9 +592,11 @@ const Projects = () => {
   };
 
   const fetchProjects = async () => {
+    if (!photographerId) return;
     const { data, error } = await supabase
       .from("client_projects" as any)
       .select("*, bookings(sessions(title))")
+      .eq("photographer_id", photographerId)
       .order("position", { ascending: true });
     if (!error && data) {
       const mapped = (data as any[]).map((p) => ({
@@ -606,7 +608,7 @@ const Projects = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchProjects(); fetchSessionTypes(); }, [user?.id]);
+  useEffect(() => { if (photographerId) { fetchProjects(); fetchSessionTypes(); } }, [photographerId]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);

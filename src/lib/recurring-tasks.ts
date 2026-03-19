@@ -39,10 +39,11 @@ export type TaskOccurrence = {
 
 // ---- CRUD ----
 
-export async function fetchRecurringTasks() {
+export async function fetchRecurringTasks(photographerId: string) {
   const { data, error } = await supabase
     .from("recurring_tasks" as any)
     .select("*")
+    .eq("photographer_id", photographerId)
     .order("display_order", { ascending: true })
     .order("created_at", { ascending: false });
   if (error) throw error;
