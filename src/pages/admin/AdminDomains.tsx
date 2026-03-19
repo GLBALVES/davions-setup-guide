@@ -200,9 +200,9 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
       </div>
 
       {/* Cloudflare note */}
-      <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
+      <div className="border border-border bg-muted/40 p-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
+          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-muted-foreground" />
           <div className="space-y-1">
             <p className="text-xs font-medium text-foreground">Using Cloudflare? Nameserver migration required.</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
