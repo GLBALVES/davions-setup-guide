@@ -85,6 +85,8 @@ https:// {
   tls {
     on_demand
   }
+  # Ensure browser requests for assets served through this proxy are not blocked by CORS.
+  header Access-Control-Allow-Origin "*"
   # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
   # Lovable/Cloudflare redirects .lovable.app subdomains to the primary domain with a 302,
   # which would cause a redirect loop. Using the primary domain directly returns 200.
@@ -146,6 +148,8 @@ const CADDYFILE_EASYPANEL = `{
 }
 
 :8080 {
+  # Ensure browser requests for assets served through this proxy are not blocked by CORS.
+  header Access-Control-Allow-Origin "*"
   # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
   # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
   # which breaks the proxy. Using the primary domain directly returns 200 OK.
@@ -209,6 +213,10 @@ const TROUBLESHOOT = [
   {
     issue: "404 on custom domain even though DNS is pointing to the VPS",
     fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must use `header_up Host davions.com` inside the reverse_proxy block — davions.com is the primary published domain. Do NOT use davions-page-builder.lovable.app (Lovable issues a 302 redirect from .lovable.app subdomains which breaks the proxy). Also confirm that davions.com is active in Lovable project settings → Domains.',
+  },
+  {
+    issue: "Photographer data not loading — blank store page",
+    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. However, if Caddy strips response headers from the Lovable CDN, asset fetches may fail. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of both the `https://` block (standalone) and the `:8080` block (Easypanel) in your Caddyfile — the templates above already include it.',
   },
   {
     issue: "TLS certificate not issued",
