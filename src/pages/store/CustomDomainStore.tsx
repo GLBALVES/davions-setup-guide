@@ -23,6 +23,7 @@ interface Photographer {
 
 interface Session {
   id: string;
+  slug: string | null;
   title: string;
   description: string | null;
   price: number;
