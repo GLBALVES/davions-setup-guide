@@ -1,52 +1,58 @@
 
-## Contexto
+## Diagnóstico
 
-O usuário quer o passo a passo exato para executar na VPS agora. O container caddy-proxy já existe e responde 200 OK na porta 8080. O objetivo é recriar o container com as labels do Traefik para que o tráfego externo (porta 443) seja roteado para o Caddy.
+O loading infinito tem uma causa específica e identificada no código:
 
-Não há mudanças de código necessárias — tudo já está documentado em `AdminVpsSetup.tsx`. A resposta é apenas informativa: apresentar os comandos de forma clara e sequencial.
+**`PublicOnlyRoute`** espera que `loading` do `AuthContext` seja `false` antes de renderizar qualquer coisa. Enquanto `loading === true`, exibe apenas `"Loading…"`.
 
-## Passo a passo para executar na VPS
+O problema não é no AuthContext em si — ele resolve normalmente via `getSession()`. O problema está no **`RegionContext`**:
 
-### Passo 1 — Confirmar nome da rede do Traefik
-```bash
-docker network ls | grep -i traefik
+### Causa raiz
+
+`RegionContext` chama a edge function `detect-region` ao iniciar. Se essa edge function estiver lenta ou com timeout (ip-api.com é um serviço externo com timeout de 3s), a página da landing (`Index.tsx`) **parece travar** visualmente porque:
+
+1. `region.loading` começa como `true`
+2. O `Index.tsx` usa `region.loading` para exibir `currencyBadge`
+3. Mas mais grave: se a edge function `detect-region` **não estiver deployada ou retornar erro de rede**, o `RegionProvider` pode ficar em estado `loading: true` indefinidamente — o `.catch()` resolve, mas se a função não existir no projeto ainda, pode haver um erro silencioso.
+
+Porém há um problema **mais direto** vendo o `AuthContext`:
+
 ```
-Provavelmente retorna `easypanel`. Se o nome for diferente, substituir nos comandos abaixo.
-
-### Passo 2 — Recriar container com labels do Traefik
-```bash
-docker stop caddy-proxy && docker rm caddy-proxy
-
-docker run -d --name caddy-proxy \
-  --restart unless-stopped \
-  -p 127.0.0.1:8080:8080 \
-  -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
-  --network easypanel \
-  --label "traefik.enable=true" \
-  --label "traefik.http.routers.caddy-proxy.rule=HostRegexp(`{host:.+}`)" \
-  --label "traefik.http.routers.caddy-proxy.entrypoints=websecure" \
-  --label "traefik.http.routers.caddy-proxy.tls=true" \
-  --label "traefik.http.routers.caddy-proxy.tls.certresolver=letsencrypt" \
-  --label "traefik.http.routers.caddy-proxy.priority=1" \
-  --label "traefik.http.services.caddy-proxy.loadbalancer.server.port=8080" \
-  caddy:latest
+setLoading(false)
 ```
 
-### Passo 3 — Verificar labels aplicadas
-```bash
-docker inspect caddy-proxy | grep -A 20 '"Labels"'
-```
-Deve mostrar `traefik.enable=true` e as demais labels.
+É chamado tanto no `onAuthStateChange` **quanto** no `getSession()`. Se o banco estiver demorando ou o `supabase.auth.getSession()` nunca resolver (problema de conectividade), `loading` fica `true` e o `PublicOnlyRoute` fica preso em `"Loading…"`.
 
-### Passo 4 — Testar roteamento interno (deve retornar 200)
-```bash
-curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+### Para `davions.com`
+
+`davions.com` está em `EXACT_APP_HOSTNAMES`, então `isCustomDomain()` retorna `false` — o app deve mostrar a landing page normalmente. O loading que o usuário vê é o `PublicOnlyRoute` esperando o `AuthContext` resolver.
+
+## Solução
+
+Adicionar um **timeout de segurança** no `AuthContext`: se `getSession()` não resolver em 5 segundos, forçar `loading: false` para não bloquear a UI.
+
+Também garantir que `RegionProvider` tenha timeout explícito (já tem `AbortSignal.timeout(3000)` na edge function, mas o `.catch()` pode não estar sendo acionado se o erro for diferente).
+
+### O que implementar
+
+1. **`AuthContext.tsx`** — adicionar `setTimeout` de 5s que força `setLoading(false)` caso o `getSession` nunca responda
+2. **`RegionContext.tsx`** — adicionar timeout de 4s no `.then()` via `Promise.race()` para garantir que `loading` sempre resolva
+
+### Mudanças técnicas
+
+**`AuthContext.tsx`** — adicionar após o `useEffect`:
+```typescript
+// Safety timeout: se supabase não responder em 5s, libera a UI
+const safetyTimer = setTimeout(() => setLoading(false), 5000);
+// cancelar no cleanup e no success
 ```
 
-### Passo 5 — Testar fluxo externo completo via HTTPS
-```bash
-curl -vI https://davions.giombelli.com.br 2>&1 | grep -E "< HTTP|SSL|subject|issuer"
+**`RegionContext.tsx`** — envolver o `invoke` com `Promise.race`:
+```typescript
+const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 4000));
+Promise.race([supabase.functions.invoke("detect-region"), timeout])
+  .then(...)
+  .catch(() => setRegion({ ...DEFAULT_REGION, loading: false }));
 ```
-Esperado: `HTTP/2 200`
 
-Isso é puramente informativo — não há mudanças de código a fazer.
+Isso garante que mesmo em falha total de rede, o app carrega em no máximo 5 segundos.
