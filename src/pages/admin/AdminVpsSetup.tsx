@@ -146,24 +146,33 @@ const CADDYFILE_EASYPANEL = `{
 }
 
 :8080 {
-  reverse_proxy https://davions-page-builder.lovable.app {
-    # Rewrite Host so the Lovable CDN recognises the project
-    header_up Host davions-page-builder.lovable.app
-    # Pass the original domain so the React app detects the custom domain
+  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
+  # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
+  # which breaks the proxy. Using the primary domain directly returns 200 OK.
+  reverse_proxy https://davions.com {
+    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
+    header_up Host davions.com
+    # Pass the original custom domain so the React app detects it as a custom domain.
     header_up X-Forwarded-Host {http.request.host}
     header_up X-Real-IP {remote_host}
     transport http {
-      tls_server_name davions-page-builder.lovable.app
+      tls_server_name davions.com
     }
   }
 }`;
 
-const EASYPANEL_DOCKER_RUN = `# Option A — run directly on the host (internal network only)
+const EASYPANEL_DOCKER_RUN = `# Stop and remove the old container (if already running with wrong config)
+docker stop caddy-proxy && docker rm caddy-proxy
+
+# Start with the corrected Caddyfile (upstream = davions.com)
 docker run -d --name caddy-proxy \\
   --restart unless-stopped \\
   -p 127.0.0.1:8080:8080 \\
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \\
-  caddy:latest`;
+  caddy:latest
+
+# Verify — expected: HTTP/1.1 200 OK (no more 302)
+curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080`;
 
 const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
 # Set image: caddy:latest, internal port 8080.
