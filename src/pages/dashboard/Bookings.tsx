@@ -155,7 +155,7 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
 // ── Main component ────────────────────────────────────────────────────────────
 
 const Bookings = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();

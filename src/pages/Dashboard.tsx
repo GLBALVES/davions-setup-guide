@@ -53,7 +53,7 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
 

@@ -92,7 +92,7 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 }
 
 export default function Revenue() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
