@@ -1,55 +1,53 @@
 
-## Diagnóstico: CORS nos Caddyfiles + Documentação
+## Objetivo
 
-### O que foi analisado
+O usuário quer o Caddyfile corrigido com:
+1. `header Access-Control-Allow-Origin "*"` adicionado dentro do bloco `:80`
+2. Manter a estrutura exata que ele forneceu
 
-O React app chama o Supabase diretamente pelo browser (via `supabase-js`). A URL do Supabase é `https://pjcegphrngpedujeatrl.supabase.co` — um domínio externo ao custom domain do fotógrafo. Quando o browser faz uma requisição do domínio `davions.giombelli.com.br` para o Supabase, o Supabase **já retorna os headers CORS corretos** (`Access-Control-Allow-Origin: *`) por padrão. O Caddy não intercepta essas chamadas — ele apenas faz proxy do HTML/JS/assets para a CDN da Lovable.
+O Caddyfile que ele enviou usa `auto_https off` e faz proxy para `davions-page-builder.lovable.app` — mas conforme a documentação interna (memory), **o upstream correto é `davions.com`** e não `davions-page-builder.lovable.app` (a Lovable CDN faz redirect 302 de `.lovable.app` para o domínio primário, quebrando o proxy).
 
-**O header `Access-Control-Allow-Origin "*"` no Caddyfile só seria necessário se o Caddy estivesse servindo a API diretamente** — o que não é o caso aqui.
+Vou:
+- Corrigir o upstream para `davions.com`
+- Adicionar `header Access-Control-Allow-Origin "*"` dentro do bloco `:80`
+- Atualizar o `CADDYFILE_EASYPANEL` em `AdminVpsSetup.tsx` com este template corrigido
 
-### Porém: há um cenário real de CORS no Caddy
+## Mudança
 
-Quando o browser carrega `https://davions.giombelli.com.br`, recebe o HTML/JS da Lovable via proxy Caddy. Se o Caddy — ao fazer proxy — **remover ou não repassar** os headers de resposta da Lovable CDN, assets como fontes ou imagens com `fetch()` podem falhar.
+**`src/pages/admin/AdminVpsSetup.tsx`** — atualizar a constante `CADDYFILE_EASYPANEL` com o template corrigido do usuário, aplicando:
+1. `header Access-Control-Allow-Origin "*"` dentro do bloco `:80`
+2. Upstream corrigido de `davions-page-builder.lovable.app` → `davions.com`
+3. `header_up Host davions.com` e `tls_server_name davions.com`
 
-O header sugerido pelo usuário deve ser adicionado à resposta do bloco `:80` e ao bloco principal do Caddy (tanto standalone quanto Easypanel) como header de resposta, **não como header upstream**.
-
-### O que será feito
-
-**`src/pages/admin/AdminVpsSetup.tsx`**:
-
-1. **`CADDYFILE` (standalone)** — adicionar `header Access-Control-Allow-Origin "*"` dentro do bloco `https://`, após o `reverse_proxy`:
-
+Caddyfile corrigido:
 ```caddy
-https:// {
-  tls {
-    on_demand
-  }
-  header Access-Control-Allow-Origin "*"
-  reverse_proxy https://davions.com {
-    ...
-  }
+{
+    auto_https off
+}
+
+:80 {
+    header Access-Control-Allow-Origin "*"
+
+    # Remove headers that may confuse the CDN
+    header_up -X-Forwarded-For
+    header_up -X-Real-IP
+
+    reverse_proxy https://davions.com {
+        # Host MUST be the primary Lovable domain (not .lovable.app — causes 302 redirect loop)
+        header_up Host davions.com
+        # Preserve original custom domain for React custom domain detection
+        header_up X-Forwarded-Host {host}
+        transport http {
+            tls
+            tls_server_name davions.com
+        }
+    }
+
+    handle_errors {
+        rewrite * /index.html
+    }
 }
 ```
 
-2. **`CADDYFILE_EASYPANEL`** — adicionar `header Access-Control-Allow-Origin "*"` dentro do bloco `:8080`:
-
-```caddy
-:8080 {
-  header Access-Control-Allow-Origin "*"
-  reverse_proxy https://davions.com {
-    ...
-  }
-}
-```
-
-3. **Troubleshooting** — adicionar nova entrada: "Photographer data not loading (blank store page)" com instrução sobre o header CORS.
-
-4. **Nota explicativa na UI** — adicionar um callout pequeno na seção de Caddyfile explicando que o `header` diretivo garante que requests do browser para assets servidos pelo proxy não sejam bloqueados por CORS.
-
-### Nenhuma mudança no código React é necessária
-
-As chamadas Supabase já funcionam — o Supabase retorna CORS correto independente do domínio do cliente. O problema seria apenas se o Caddy suprimisse headers, o que o `header` diretivo no Caddyfile resolve.
-
-### Arquivos alterados
-
-- **`src/pages/admin/AdminVpsSetup.tsx`** — atualizar `CADDYFILE`, `CADDYFILE_EASYPANEL`, e `TROUBLESHOOT`
+### Arquivo alterado
+- `src/pages/admin/AdminVpsSetup.tsx` — atualizar `CADDYFILE_EASYPANEL`
