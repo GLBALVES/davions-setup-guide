@@ -153,7 +153,9 @@ const CADDYFILE_EASYPANEL = `{
     auto_https off
 }
 
-:80 {
+# Caddy listens on :8080 — Traefik terminates TLS and forwards here.
+# The {host} placeholder carries the original photographer domain.
+:8080 {
     header Access-Control-Allow-Origin "*"
 
     # Upstream: davions-page-builder.lovable.app is the permanent project identifier.
