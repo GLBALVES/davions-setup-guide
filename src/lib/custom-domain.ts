@@ -2,14 +2,16 @@
  * Custom domain utilities.
  *
  * When a photographer points their domain (e.g. booking.theirstudio.com) at
- * this app via a CNAME / A record, the browser's hostname will not match any
- * of the known app hostnames below.  The store pages use this to look up the
- * correct photographer without relying on a `/store/:slug` URL segment.
+ * this app via a CNAME / A record, the Caddy reverse proxy forwards the
+ * original Host header to the Lovable CDN.  The browser's
+ * window.location.hostname will therefore be the photographer's domain.
+ * The store pages use this to look up the photographer without relying on a
+ * /store/:slug URL segment.
  *
  * Two categories:
- * - PLATFORM_DOMAINS: every subdomain is also a platform instance (lovable.app, etc.)
- * - EXACT_APP_HOSTNAMES: only the exact root/www belong to the platform;
- *   arbitrary subdomains (e.g. davions.nevoxholding.com) are photographer custom domains.
+ * - PLATFORM_DOMAINS: every subdomain is also a platform instance.
+ * - EXACT_APP_HOSTNAMES: only these exact hostnames belong to the platform;
+ *   any other subdomain/domain is treated as a photographer custom domain.
  */
 
 /** Platform domains where ALL subdomains are app instances. */
@@ -20,12 +22,19 @@ const PLATFORM_DOMAINS = [
   "lovableproject.com",
 ];
 
-/** Owned domains — only the exact hostname (and www.) belongs to the platform. */
+/**
+ * Owned/published hostnames — only these exact values belong to the platform.
+ * Subdomains of nevoxholding.com (e.g. davions.nevoxholding.com) are
+ * photographer custom domains, not platform instances.
+ */
 const EXACT_APP_HOSTNAMES = [
+  // Root domains
   "nevoxholding.com",
   "www.nevoxholding.com",
   "davions.com",
   "www.davions.com",
+  // Published Lovable app URLs
+  "davions-page-builder.lovable.app",
 ];
 
 /** Returns true when the visitor is on a photographer's custom domain. */
