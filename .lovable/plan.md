@@ -1,27 +1,26 @@
 
-## Situação atual
+## Situação atual no VPS
 
-O container Caddy está rodando e respondendo **200 OK** internamente na porta 8080. O próximo passo é fazer o **Traefik (Easypanel)** rotear o tráfego externo das portas 80/443 para esse container.
+O container Caddy já está respondendo **200 OK** na porta 8080. Falta apenas uma coisa: **recriar o container com as labels do Traefik e na rede correta**, para que o Traefik passe a rotear tráfego externo (porta 443) para o Caddy.
 
-## Problema que precisa ser resolvido
+---
 
-O container atual foi iniciado via `docker run` direto (fora do Easypanel), então ele **não tem as labels do Traefik** — o que significa que o Traefik não sabe que deve rotear domínios customizados para ele.
+## O que você precisa fazer na VPS agora
 
-Há dois caminhos:
-
-**Opção A — Adicionar labels ao container existente (mais rápido)**  
-Recriar o container com as labels do Traefik direto no `docker run`.
-
-**Opção B — Criar um App no Easypanel (mais correto, gerenciado)**  
-Criar um serviço no painel do Easypanel com a imagem `caddy:latest`, volume e labels.
-
-## O que vou implementar
-
-Atualizar a constante `EASYPANEL_DOCKER_RUN` em `AdminVpsSetup.tsx` para incluir **as labels do Traefik direto no comando `docker run`**, com a regra `HostRegexp` que captura qualquer domínio customizado e o encaminha para a porta 8080:
-
+### Passo 1 — Confirmar o nome da rede do Traefik
 ```bash
+docker network ls | grep -i traefik
+```
+O nome provavelmente é `easypanel`. Se for diferente, substitua nos comandos abaixo.
+
+---
+
+### Passo 2 — Recriar o container com as labels do Traefik
+```bash
+# Para e remove o container atual (sem as labels)
 docker stop caddy-proxy && docker rm caddy-proxy
 
+# Recria com labels Traefik + rede correta
 docker run -d --name caddy-proxy \
   --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
@@ -37,10 +36,37 @@ docker run -d --name caddy-proxy \
   caddy:latest
 ```
 
-**Ponto crítico**: o container precisa estar na **mesma rede Docker do Traefik** (`--network easypanel`), caso contrário o Traefik não consegue alcançá-lo mesmo com as labels.
+---
 
-## Plano de implementação
+### Passo 3 — Verificar que as labels foram aplicadas
+```bash
+docker inspect caddy-proxy | grep -A 20 '"Labels"'
+```
+Deve mostrar `traefik.enable=true` e as demais labels.
 
-1. Atualizar `EASYPANEL_DOCKER_RUN` — incluir `--network easypanel` e todas as labels do Traefik no `docker run`
-2. Adicionar comando de verificação pós-deploy — `docker inspect caddy-proxy | grep -A5 Labels` para confirmar labels, e `curl -vI https://davions.giombelli.com.br` para testar o fluxo completo externo
-3. Adicionar nota de aviso: se o nome da rede Traefik no Easypanel for diferente de `easypanel`, usar `docker network ls` para confirmar o nome correto antes de rodar o comando
+---
+
+### Passo 4 — Testar o fluxo externo completo
+```bash
+# DNS já deve estar propagado para o IP da VPS
+curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+# Esperado: 200
+
+# Teste externo via HTTPS (após DNS propagar)
+curl -vI https://davions.giombelli.com.br 2>&1 | grep -E "< HTTP|SSL|subject"
+# Esperado: HTTP/2 200
+```
+
+---
+
+## Resumo
+
+| O que estava faltando | O que esse passo resolve |
+|---|---|
+| Container sem labels do Traefik | Traefik passa a reconhecer o container |
+| Container fora da rede `easypanel` | Traefik consegue alcançar o Caddy internamente |
+| TLS externo sem certificado | Traefik emite Let's Encrypt automaticamente |
+
+Depois desses passos, qualquer domínio de fotógrafo com o A record apontando para o IP da VPS será automaticamente servido com HTTPS — sem nenhuma configuração manual extra.
+
+Não há mudanças de código necessárias — tudo já está implementado no app e na Edge Function `validate-domain`.
