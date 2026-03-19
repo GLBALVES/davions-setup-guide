@@ -36,7 +36,7 @@ type TaskFilterTab = "assigned" | "pending" | "completed" | "archived";
 type MainView = "projects" | "tasks";
 
 export default function Workflows() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const wf = t.workflows;
   const navigate = useNavigate();
