@@ -448,6 +448,60 @@ export default function AdminVpsSetup() {
             ))}
           </div>
         </Section>
+
+        {/* Easypanel / Traefik */}
+        <Section step={8} title="Easypanel / Traefik — Running Caddy as a Docker Service">
+          <div className="space-y-1 text-xs font-light text-muted-foreground leading-relaxed">
+            <p>
+              If the VPS already runs <strong className="text-foreground font-normal">Easypanel</strong>, Traefik already owns ports 80 and 443.
+              Starting Caddy standalone will fail with <code className="font-mono bg-muted px-1 rounded text-[11px]">bind: address already in use</code>.
+            </p>
+            <p className="pt-1">
+              <strong className="text-foreground font-normal">Do NOT stop Traefik</strong> — it manages Easypanel itself.
+              Instead, run Caddy on an internal port (8080) and let Traefik forward custom-domain traffic to it:
+            </p>
+          </div>
+
+          <div className="border border-border rounded-md px-4 py-3 text-xs font-mono font-light text-muted-foreground space-y-1 leading-relaxed">
+            <p className="font-sans text-[10px] tracking-[0.2em] uppercase text-foreground font-light">Traffic flow</p>
+            <p>Visitor → custom-domain.com:443</p>
+            <p className="pl-4">→ Traefik (port 443, handles TLS)</p>
+            <p className="pl-8">→ Caddy container (port 8080, no TLS)</p>
+            <p className="pl-12">→ davions-page-builder.lovable.app (Host rewritten)</p>
+          </div>
+
+          <CodeBlock
+            code={CADDYFILE_EASYPANEL}
+            label="/etc/caddy/Caddyfile — Traefik-compatible (no on_demand_tls)"
+          />
+          <CodeBlock
+            code={EASYPANEL_DOCKER_RUN}
+            label="Start Caddy container"
+          />
+          <CodeBlock
+            code={EASYPANEL_TRAEFIK_LABELS}
+            label="Traefik labels for Easypanel App service"
+          />
+
+          <div className="border border-border rounded-md px-4 py-3 space-y-2">
+            <p className="text-xs font-light text-foreground">Easypanel App setup checklist</p>
+            <ul className="space-y-1.5 text-[11px] font-light text-muted-foreground">
+              {[
+                "Create a new App in Easypanel → Source: Docker Image → caddy:latest",
+                "Mount /etc/caddy/Caddyfile (use the Traefik-compatible version above)",
+                "Set internal port to 8080",
+                "Add the Traefik labels above in the Advanced → Labels section",
+                "In your DNS provider, add A records for each photographer custom domain pointing to this VPS IP",
+                "Traefik will issue Let's Encrypt certs automatically; Caddy only handles the reverse proxy to Lovable",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <CheckCircle size={11} className="text-foreground mt-0.5 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Section>
       </div>
     </AdminLayout>
   );
