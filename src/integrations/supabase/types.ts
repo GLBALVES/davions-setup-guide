@@ -504,6 +504,44 @@ export type Database = {
         }
         Relationships: []
       }
+      bug_report_messages: {
+        Row: {
+          bug_report_id: string
+          content: string
+          created_at: string
+          id: string
+          is_admin: boolean
+          sender_email: string
+          sender_id: string
+        }
+        Insert: {
+          bug_report_id: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_email?: string
+          sender_id: string
+        }
+        Update: {
+          bug_report_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_email?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_messages_bug_report_id_fkey"
+            columns: ["bug_report_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bug_reports: {
         Row: {
           admin_notes: string | null

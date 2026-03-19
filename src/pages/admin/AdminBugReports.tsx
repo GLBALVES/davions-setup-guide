@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Bug, ChevronDown, ExternalLink, Loader2, CheckCircle2, Clock, AlertCircle, XCircle } from "lucide-react";
+import { BugReportThread } from "@/components/admin/BugReportThread";
+import {
+  Bug, ChevronDown, ExternalLink, Loader2,
+  CheckCircle2, Clock, AlertCircle, XCircle, Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +32,10 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cl
 };
 
 const STATUSES = ["open", "in_progress", "fixed", "wont_fix"];
+
+function isVideo(url: string) {
+  return /\.(mp4|webm|mov|ogg|avi|mkv)(\?|$)/i.test(url);
+}
 
 export default function AdminBugReports() {
   const [reports, setReports] = useState<BugReport[]>([]);
@@ -137,30 +145,55 @@ export default function AdminBugReports() {
                   </button>
 
                   {isOpen && (
-                    <div className="border-t border-border px-4 py-4 flex flex-col gap-4 bg-muted/10">
+                    <div className="border-t border-border px-4 py-4 flex flex-col gap-5 bg-muted/10">
+                      {/* Description */}
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-1.5">Description</p>
                         <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{report.description}</p>
                       </div>
 
+                      {/* Attachments (images + videos) */}
                       {report.screenshot_urls?.length > 0 && (
                         <div>
                           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">
-                            Screenshots ({report.screenshot_urls.length})
+                            Attachments ({report.screenshot_urls.length})
                           </p>
                           <div className="flex gap-2 flex-wrap">
-                            {report.screenshot_urls.map((url, i) => (
-                              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative">
-                                <img src={url} alt={`screenshot ${i + 1}`} className="w-32 h-20 object-cover rounded border border-border group-hover:border-foreground/30 transition-colors" />
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/60 rounded">
-                                  <ExternalLink size={14} />
+                            {report.screenshot_urls.map((url, i) =>
+                              isVideo(url) ? (
+                                <div key={i} className="relative group w-48 rounded border border-border overflow-hidden bg-muted">
+                                  <video
+                                    src={url}
+                                    controls
+                                    className="w-full max-h-32 object-contain bg-black"
+                                  />
+                                  <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="absolute top-1 right-1 bg-background/80 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <ExternalLink size={11} />
+                                  </a>
+                                  <div className="flex items-center gap-1 px-2 py-1">
+                                    <Video size={10} className="text-muted-foreground shrink-0" />
+                                    <span className="text-[9px] text-muted-foreground truncate">Video {i + 1}</span>
+                                  </div>
                                 </div>
-                              </a>
-                            ))}
+                              ) : (
+                                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative">
+                                  <img src={url} alt={`attachment ${i + 1}`} className="w-32 h-20 object-cover rounded border border-border group-hover:border-foreground/30 transition-colors" />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/60 rounded">
+                                    <ExternalLink size={14} />
+                                  </div>
+                                </a>
+                              )
+                            )}
                           </div>
                         </div>
                       )}
 
+                      {/* Change Status */}
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">Change Status</p>
                         <div className="flex gap-2 flex-wrap">
@@ -182,6 +215,7 @@ export default function AdminBugReports() {
                         </div>
                       </div>
 
+                      {/* Admin Notes */}
                       <div>
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2">Admin Notes</p>
                         <Textarea
@@ -195,6 +229,11 @@ export default function AdminBugReports() {
                             {savingNotes === report.id ? <Loader2 size={12} className="animate-spin" /> : "Save Notes"}
                           </Button>
                         </div>
+                      </div>
+
+                      {/* Conversation Thread */}
+                      <div className="border-t border-border pt-4">
+                        <BugReportThread bugReportId={report.id} />
                       </div>
                     </div>
                   )}
