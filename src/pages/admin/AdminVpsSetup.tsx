@@ -85,7 +85,11 @@ https:// {
     on_demand
   }
   reverse_proxy https://davions-page-builder.lovable.app {
-    header_up Host {upstream_hostport}
+    # CRITICAL: rewrite Host to the Lovable CDN hostname so it serves the app.
+    # Without this, the CDN returns 404 because it does not recognise the
+    # photographer's custom domain as a registered host.
+    header_up Host davions-page-builder.lovable.app
+    # Preserve the original domain so the React app can detect it as a custom domain.
     header_up X-Forwarded-Host {host}
     header_up X-Real-IP {remote_host}
     transport http {
