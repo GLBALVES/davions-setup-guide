@@ -185,6 +185,34 @@ const Settings = () => {
     setDomainError(validateDomain(val));
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("site-assets")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      const { error: updateError } = await supabase
+        .from("photographers")
+        .update({ hero_image_url: publicUrl } as any)
+        .eq("id", user.id);
+      if (updateError) throw updateError;
+      setAvatarUrl(publicUrl);
+      toast({ title: "Profile photo updated" });
+    } catch (err: any) {
+      toast({ title: "Failed to upload photo", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
+  };
+
   const handleSave = async () => {
     const slugErr = validateSlug(slugInput);
     const domErr = validateDomain(customDomainInput);
