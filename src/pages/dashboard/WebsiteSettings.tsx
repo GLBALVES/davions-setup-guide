@@ -422,7 +422,6 @@ const WebsiteSettings = () => {
     await supabase.from("photographers").update({
       full_name: fullName.trim() || null,
       bio: bio.trim() || null,
-      hero_image_url: heroImageUrl.trim() || null,
     } as any).eq("id", user.id);
 
     const { error } = await (supabase as any).from("photographer_site").upsert({
