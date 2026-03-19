@@ -56,8 +56,9 @@ export default function RecurringWorkflows() {
   const [occDept, setOccDept] = useState("");
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ["recurring-tasks"],
-    queryFn: fetchRecurringTasks,
+    queryKey: ["recurring-tasks", photographerId],
+    queryFn: () => fetchRecurringTasks(photographerId!),
+    enabled: !!photographerId,
   });
 
   const { data: allOccurrences = [] } = useQuery({

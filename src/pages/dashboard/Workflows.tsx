@@ -73,8 +73,9 @@ export default function Workflows() {
   };
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ["workflow-projects"],
-    queryFn: fetchProjects,
+    queryKey: ["workflow-projects", photographerId],
+    queryFn: () => fetchProjects(photographerId!),
+    enabled: !!photographerId,
   });
 
   const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
