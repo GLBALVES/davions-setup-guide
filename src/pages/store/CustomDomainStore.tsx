@@ -56,7 +56,7 @@ const CustomDomainStore = () => {
 
       const { data: photoData } = await supabase
         .from("photographers")
-        .select("id, full_name, email, store_slug, bio, hero_image_url, business_name")
+        .select("id, full_name, email, store_slug, bio, business_name")
         .eq("custom_domain", hostname)
         .single();
 
@@ -66,10 +66,13 @@ const CustomDomainStore = () => {
         return;
       }
 
-      setPhotographer(photoData as Photographer);
-
-      // Fetch sessions and galleries in parallel
-      const [{ data: sessionData }, { data: galleryData }] = await Promise.all([
+      // Fetch site hero image, sessions and galleries in parallel
+      const [{ data: siteData }, { data: sessionData }, { data: galleryData }] = await Promise.all([
+        supabase
+          .from("photographer_site")
+          .select("site_hero_image_url")
+          .eq("photographer_id", photoData.id)
+          .maybeSingle(),
         supabase
           .from("sessions")
           .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
@@ -84,6 +87,10 @@ const CustomDomainStore = () => {
           .order("created_at", { ascending: false }),
       ]);
 
+      setPhotographer({
+        ...photoData,
+        hero_image_url: siteData?.site_hero_image_url ?? null,
+      } as Photographer);
       setSessions(sessionData ?? []);
       setGalleries(galleryData ?? []);
       setLoading(false);
