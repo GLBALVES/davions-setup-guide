@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search } from "lucide-react";
+import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search, Terminal, Package, Cpu, ChevronRight } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,20 +44,30 @@ function Section({
   step,
   title,
   children,
+  highlight,
 }: {
   step: number;
   title: string;
   children: React.ReactNode;
+  highlight?: boolean;
 }) {
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4 rounded-lg transition-colors duration-300", highlight && "bg-foreground/[0.03] border border-foreground/20 p-4 -mx-4")}>
       <div className="flex items-center gap-3">
-        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-foreground text-background text-[10px] font-light shrink-0">
+        <span className={cn(
+          "flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-light shrink-0 transition-colors",
+          highlight ? "bg-foreground text-background ring-2 ring-foreground/20" : "bg-foreground text-background"
+        )}>
           {step}
         </span>
         <h2 className="text-[10px] tracking-[0.3em] uppercase font-light text-foreground">
           {title}
         </h2>
+        {highlight && (
+          <span className="ml-auto text-[9px] tracking-[0.2em] uppercase font-light text-foreground bg-foreground/10 border border-foreground/20 rounded px-2 py-0.5">
+            Recommended
+          </span>
+        )}
       </div>
       <div className="pl-9 space-y-4">{children}</div>
     </div>
@@ -293,6 +303,147 @@ const TROUBLESHOOT = [
   },
 ];
 
+type EnvType = "standalone" | "docker" | null;
+
+const DETECT_COMMANDS = [
+  {
+    id: "systemd",
+    label: "Is Caddy running as a systemd service?",
+    cmd: "systemctl is-active caddy",
+    standalone: "active",
+    docker: "inactive or not-found",
+  },
+  {
+    id: "docker",
+    label: "Is there a caddy-proxy Docker container?",
+    cmd: "docker ps --filter name=caddy-proxy --format '{{.Names}}'",
+    standalone: "(empty output)",
+    docker: "caddy-proxy",
+  },
+  {
+    id: "traefik",
+    label: "Is Traefik/Easypanel owning ports 80/443?",
+    cmd: "ss -tlnp | grep -E ':80|:443'",
+    standalone: "caddy in LISTEN column",
+    docker: "docker-proxy / traefik in LISTEN column",
+  },
+  {
+    id: "network",
+    label: "Is the 'easypanel' Docker network present?",
+    cmd: "docker network ls | grep easypanel",
+    standalone: "(empty — no Easypanel)",
+    docker: "easypanel network listed",
+  },
+];
+
+function EnvDetector({ detected, onSelect }: { detected: EnvType; onSelect: (v: EnvType) => void }) {
+  return (
+    <div className="border border-border rounded-lg p-5 space-y-5">
+      <div className="flex items-center gap-2">
+        <Terminal size={13} className="text-muted-foreground" />
+        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-light">
+          Environment Auto-Detection
+        </p>
+      </div>
+
+      <p className="text-xs font-light text-muted-foreground leading-relaxed">
+        Run these commands <strong className="text-foreground font-normal">on the VPS via SSH</strong> to determine
+        whether Caddy should run as a standalone systemd service or as a Docker container behind Traefik/Easypanel.
+        Then select the detected environment below — the guide will highlight the correct Caddyfile variant.
+      </p>
+
+      {/* Detection commands table */}
+      <div className="space-y-2">
+        {DETECT_COMMANDS.map(({ id, label, cmd, standalone, docker }) => (
+          <div key={id} className="rounded-md border border-border overflow-hidden">
+            <div className="px-4 py-2.5 bg-muted/50">
+              <p className="text-[11px] font-light text-foreground">{label}</p>
+            </div>
+            <div className="px-4 py-2.5 space-y-2">
+              <div className="relative">
+                <pre className="bg-muted rounded px-3 py-2 pr-10 text-xs font-mono text-foreground leading-relaxed overflow-x-auto">
+                  {cmd}
+                </pre>
+                <CopyButton text={cmd} />
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-light">
+                <div className="flex items-start gap-1.5">
+                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-foreground shrink-0" />
+                  <span className="text-muted-foreground">
+                    <span className="text-foreground">Standalone:</span> {standalone}
+                  </span>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <Package size={11} className="mt-0.5 text-muted-foreground shrink-0" />
+                  <span className="text-muted-foreground">
+                    <span className="text-foreground">Docker:</span> {docker}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Environment selector */}
+      <div className="space-y-2">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
+          Select your environment
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {(
+            [
+              {
+                value: "standalone" as EnvType,
+                icon: Cpu,
+                title: "Standalone Caddy",
+                desc: "Caddy installed via apt, running as a systemd service. Owns ports 80 & 443 directly.",
+              },
+              {
+                value: "docker" as EnvType,
+                icon: Package,
+                title: "Docker / Easypanel",
+                desc: "Easypanel + Traefik already own ports 80/443. Caddy runs as a container on port 8080.",
+              },
+            ] as { value: EnvType; icon: React.ElementType; title: string; desc: string }[]
+          ).map(({ value, icon: Icon, title, desc }) => (
+            <button
+              key={value as string}
+              onClick={() => onSelect(detected === value ? null : value)}
+              className={cn(
+                "text-left rounded-md border p-3.5 space-y-1.5 transition-colors duration-150",
+                detected === value
+                  ? "border-foreground bg-foreground/5"
+                  : "border-border hover:border-foreground/40"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Icon size={12} className={detected === value ? "text-foreground" : "text-muted-foreground"} />
+                  <span className={cn("text-xs font-light", detected === value ? "text-foreground" : "text-muted-foreground")}>
+                    {title}
+                  </span>
+                </div>
+                {detected === value && <Check size={11} className="text-foreground" />}
+              </div>
+              <p className="text-[11px] font-light text-muted-foreground leading-relaxed">{desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {detected && (
+        <div className="flex items-center gap-2 text-[11px] font-light text-foreground bg-foreground/5 border border-foreground/20 rounded-md px-3 py-2">
+          <ChevronRight size={11} className="shrink-0" />
+          {detected === "standalone"
+            ? "Scroll to Step 3 — use the standard Caddyfile with on_demand_tls and Step 5 for reload commands."
+            : "Scroll to Step 8 — use the Easypanel/Traefik Caddyfile variant and Docker run command."}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminVpsSetup() {
   const [domain, setDomain] = useState("davions.nevoxholding.com");
   const [loading, setLoading] = useState(false);
@@ -301,6 +452,7 @@ export default function AdminVpsSetup() {
     dns: { a: { ok: boolean; found: string[]; expected: string } };
   } | null>(null);
   const [checkError, setCheckError] = useState<string | null>(null);
+  const [detectedEnv, setDetectedEnv] = useState<EnvType>(null);
 
   const checkDomain = async () => {
     if (!domain.trim()) return;
@@ -424,6 +576,10 @@ export default function AdminVpsSetup() {
             </div>
           )}
         </div>
+
+        {/* Environment Auto-Detection */}
+        <EnvDetector detected={detectedEnv} onSelect={setDetectedEnv} />
+
         <Section step={1} title="Prerequisites">
           <ul className="space-y-2 text-xs font-light text-muted-foreground">
             {[
@@ -450,7 +606,7 @@ export default function AdminVpsSetup() {
         </Section>
 
         {/* Caddyfile */}
-        <Section step={3} title="Configure Caddyfile">
+        <Section step={3} title="Configure Caddyfile" highlight={detectedEnv === "standalone"}>
           <p className="text-xs font-light text-muted-foreground">
             Replace the default{" "}
             <code className="font-mono bg-muted px-1 rounded text-[11px]">
@@ -534,7 +690,7 @@ export default function AdminVpsSetup() {
         </Section>
 
         {/* Easypanel / Traefik */}
-        <Section step={8} title="Easypanel / Traefik — Running Caddy as a Docker Service">
+        <Section step={8} title="Easypanel / Traefik — Running Caddy as a Docker Service" highlight={detectedEnv === "docker"}>
           <div className="space-y-1 text-xs font-light text-muted-foreground leading-relaxed">
             <p>
               If the VPS already runs <strong className="text-foreground font-normal">Easypanel</strong>, Traefik already owns ports 80 and 443.
