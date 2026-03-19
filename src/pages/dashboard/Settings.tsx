@@ -273,7 +273,7 @@ const Settings = () => {
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null,
-    }).eq("id", user!.id);
+    }).eq("id", photographerId ?? user!.id);
 
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
