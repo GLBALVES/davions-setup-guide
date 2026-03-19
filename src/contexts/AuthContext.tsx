@@ -45,9 +45,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [photographerId, setPhotographerId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Safety timeout: if Supabase never responds, unblock the UI after 5s
+    const safetyTimer = setTimeout(() => setLoading(false), 5000);
+
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        clearTimeout(safetyTimer);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -62,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Then get current session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(safetyTimer);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -71,9 +76,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setPhotographerId(null);
       }
       setLoading(false);
+    }).catch(() => {
+      clearTimeout(safetyTimer);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
