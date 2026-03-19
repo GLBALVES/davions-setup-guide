@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Check, AlertCircle, Loader2, CreditCard, ExternalLink, Unlink, KeyRound, Trash2, Eye, EyeOff,
+  Check, AlertCircle, Loader2, CreditCard, ExternalLink, Unlink, KeyRound, Trash2, Eye, EyeOff, Camera, UserCircle2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -51,6 +51,9 @@ const Settings = () => {
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
   const [customDomainInput, setCustomDomainInput] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
@@ -134,6 +137,7 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain(d.custom_domain ?? "");
         setCustomDomainInput(d.custom_domain ?? "");
+        setAvatarUrl(d.hero_image_url ?? null);
         setStripeAccountId((d as any).stripe_account_id ?? null);
         setStripeConnectedAt((d as any).stripe_connected_at ?? null);
       }
@@ -179,6 +183,34 @@ const Settings = () => {
     const val = e.target.value.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
     setCustomDomainInput(val);
     setDomainError(validateDomain(val));
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("site-assets")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      const { error: updateError } = await supabase
+        .from("photographers")
+        .update({ hero_image_url: publicUrl } as any)
+        .eq("id", user.id);
+      if (updateError) throw updateError;
+      setAvatarUrl(publicUrl);
+      toast({ title: "Profile photo updated" });
+    } catch (err: any) {
+      toast({ title: "Failed to upload photo", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
   };
 
   const handleSave = async () => {
@@ -491,6 +523,50 @@ const Settings = () => {
                   {/* ── PROFILE TAB ── */}
                   <TabsContent value="profile" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
+                      {/* Avatar */}
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Profile Photo</Label>
+                        <div className="flex items-center gap-4">
+                          <div className="relative group w-16 h-16 rounded-full overflow-hidden border border-border bg-muted shrink-0">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <UserCircle2 size={28} className="text-muted-foreground/40" />
+                              </div>
+                            )}
+                            <button
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploadingAvatar}
+                              className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                            >
+                              {uploadingAvatar ? (
+                                <Loader2 size={14} className="animate-spin text-foreground" />
+                              ) : (
+                                <Camera size={14} className="text-foreground" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploadingAvatar}
+                              className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+                            >
+                              {uploadingAvatar ? "Uploading…" : "Change photo"}
+                            </button>
+                            <p className="text-[10px] text-muted-foreground/50">JPG, PNG or WEBP · used in the sidebar</p>
+                          </div>
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleAvatarChange}
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.fullName}</Label>
                         <Input
