@@ -87,17 +87,15 @@ https:// {
   }
   # Ensure browser requests for assets served through this proxy are not blocked by CORS.
   header Access-Control-Allow-Origin "*"
-  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
-  # Lovable/Cloudflare redirects .lovable.app subdomains to the primary domain with a 302,
-  # which would cause a redirect loop. Using the primary domain directly returns 200.
-  reverse_proxy https://davions.com {
-    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
-    header_up Host davions.com
-    # Preserve the original custom domain so the React app can detect it.
+  # Upstream: davions-page-builder.lovable.app is the permanent project identifier.
+  # Send Host: davions-page-builder.lovable.app so the CDN recognises the project.
+  # Preserve the original custom domain in X-Forwarded-Host for React domain detection.
+  reverse_proxy https://davions-page-builder.lovable.app {
+    header_up Host davions-page-builder.lovable.app
     header_up X-Forwarded-Host {host}
     header_up X-Real-IP {remote_host}
     transport http {
-      tls_server_name davions.com
+      tls_server_name davions-page-builder.lovable.app
     }
   }
 }`;
