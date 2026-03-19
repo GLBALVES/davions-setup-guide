@@ -44,7 +44,7 @@ const Sessions = () => {
     setLoading(true);
     const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
       supabase.from("sessions").select("*").order("created_at", { ascending: false }),
-      supabase.from("photographers").select("store_slug").eq("id", user!.id).single(),
+      supabase.from("photographers").select("store_slug").eq("id", photographerId ?? user!.id).single(),
     ]);
     setSessions(sessionsData ?? []);
     setStoreSlug(photoData?.store_slug ?? null);
@@ -53,7 +53,7 @@ const Sessions = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [photographerId]);
 
   const filteredSessions = useMemo(() => {
     let list = sessions.filter((sess) => {
