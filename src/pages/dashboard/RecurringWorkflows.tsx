@@ -41,7 +41,7 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
 const DAYS_LABELS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function RecurringWorkflows() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState("tasks");
   const [editTask, setEditTask] = useState<Partial<RecurringTask> | null>(null);
