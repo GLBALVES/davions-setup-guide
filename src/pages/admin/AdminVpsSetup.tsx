@@ -161,18 +161,35 @@ const CADDYFILE_EASYPANEL = `{
   }
 }`;
 
-const EASYPANEL_DOCKER_RUN = `# Stop and remove the old container (if already running with wrong config)
+const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
+docker network ls | grep -i traefik
+
+# 1. Stop and remove the old container
 docker stop caddy-proxy && docker rm caddy-proxy
 
-# Start with the corrected Caddyfile (upstream = davions.com)
+# 2. Recreate with Traefik labels + correct network
 docker run -d --name caddy-proxy \\
   --restart unless-stopped \\
   -p 127.0.0.1:8080:8080 \\
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \\
+  --network easypanel \\
+  --label "traefik.enable=true" \\
+  --label "traefik.http.routers.caddy-proxy.rule=HostRegexp(\`{host:.+}\`)" \\
+  --label "traefik.http.routers.caddy-proxy.entrypoints=websecure" \\
+  --label "traefik.http.routers.caddy-proxy.tls=true" \\
+  --label "traefik.http.routers.caddy-proxy.tls.certresolver=letsencrypt" \\
+  --label "traefik.http.routers.caddy-proxy.priority=1" \\
+  --label "traefik.http.services.caddy-proxy.loadbalancer.server.port=8080" \\
   caddy:latest
 
-# Verify — expected: HTTP/1.1 200 OK (no more 302)
-curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080`;
+# 3. Verify internal routing (expected: 200)
+curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+
+# 4. Confirm Traefik labels were applied
+docker inspect caddy-proxy | grep -A 20 '"Labels"'
+
+# 5. Test full external flow (after DNS propagates — expected: HTTP/2 200)
+curl -vI https://davions.giombelli.com.br 2>&1 | grep -E "< HTTP|SSL|subject|issuer"`;
 
 const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
 # Set image: caddy:latest, internal port 8080.
