@@ -572,8 +572,8 @@ const WebsiteSettings = () => {
                           <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">{ws.uploadHero}</span>
                         </div>
                       )}
-                      <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "session-covers", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
+                       <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
+                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "site-assets", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
                     </div>
 
                     <FieldRow label={ws.headlineLabel}>
