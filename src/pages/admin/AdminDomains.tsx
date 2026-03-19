@@ -241,9 +241,9 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
 // ── Chain Diagnostic ─────────────────────────────────────────────────────────
 function StepIcon({ status, icon }: { status: StepStatus; icon: React.ReactNode }) {
   if (status === "running") return <Loader2 size={13} className="animate-spin text-muted-foreground shrink-0" />;
-  if (status === "pass") return <CheckCircle2 size={13} className="shrink-0" style={{ color: "hsl(142 71% 45%)" }} />;
+  if (status === "pass") return <CheckCircle2 size={13} className="shrink-0 text-emerald-500" />;
   if (status === "warn") return <AlertTriangle size={13} className="shrink-0 text-yellow-500" />;
-  if (status === "fail") return <XCircle size={13} className="shrink-0" style={{ color: "hsl(0 72% 51%)" }} />;
+  if (status === "fail") return <XCircle size={13} className="shrink-0 text-destructive" />;
   return <span className="shrink-0 text-muted-foreground/40">{icon}</span>;
 }
 
