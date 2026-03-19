@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bug, X, Upload, ImageIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { Bug, X, Upload, ImageIcon, Loader2, CheckCircle2, Video } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ interface BugReportDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type MediaFile = { file: File; preview: string; type: "image" | "video" };
+
 export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
   const { user } = useAuth();
   const location = useLocation();
@@ -23,33 +25,40 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [screenshots, setScreenshots] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    const limited = [...screenshots, ...files].slice(0, 3);
-    setScreenshots(limited);
-    const newPreviews = limited.map((f) => URL.createObjectURL(f));
-    setPreviews(newPreviews);
+
+    const newItems: MediaFile[] = files.map((f) => ({
+      file: f,
+      preview: URL.createObjectURL(f),
+      type: f.type.startsWith("video/") ? "video" : "image",
+    }));
+
+    setMediaFiles((prev) => [...prev, ...newItems].slice(0, 5));
+    // reset input so same file can be re-selected
+    e.target.value = "";
   };
 
-  const removeScreenshot = (index: number) => {
-    setScreenshots((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  const removeMedia = (index: number) => {
+    setMediaFiles((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
-  const uploadScreenshots = async (): Promise<string[]> => {
+  const uploadMedia = async (): Promise<string[]> => {
     const urls: string[] = [];
-    for (const file of screenshots) {
-      const ext = file.name.split(".").pop();
+    for (const item of mediaFiles) {
+      const ext = item.file.name.split(".").pop();
       const path = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage
         .from("bug-screenshots")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, item.file, { contentType: item.file.type });
       if (!error) {
         const { data } = supabase.storage.from("bug-screenshots").getPublicUrl(path);
         urls.push(data.publicUrl);
@@ -67,14 +76,14 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
 
     setSubmitting(true);
     try {
-      const screenshotUrls = await uploadScreenshots();
+      const mediaUrls = await uploadMedia();
 
       const { error } = await (supabase as any).from("bug_reports").insert({
         reporter_id: user.id,
         reporter_email: user.email ?? "",
         title: title.trim(),
         description: description.trim(),
-        screenshot_urls: screenshotUrls,
+        screenshot_urls: mediaUrls,
         route: location.pathname,
         status: "open",
       });
@@ -86,8 +95,7 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
         setSuccess(false);
         setTitle("");
         setDescription("");
-        setScreenshots([]);
-        setPreviews([]);
+        setMediaFiles([]);
         onOpenChange(false);
       }, 2000);
     } catch {
@@ -141,19 +149,27 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
               />
             </div>
 
-            {/* Screenshots */}
+            {/* Media attachments */}
             <div className="flex flex-col gap-2">
               <Label className="text-xs uppercase tracking-widest font-light">
-                Screenshots <span className="text-muted-foreground/50 normal-case tracking-normal">(up to 3)</span>
+                Attachments{" "}
+                <span className="text-muted-foreground/50 normal-case tracking-normal">(images &amp; videos, up to 5)</span>
               </Label>
 
-              {previews.length > 0 && (
+              {mediaFiles.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
-                  {previews.map((src, i) => (
-                    <div key={i} className="relative group w-24 h-16 rounded border border-border overflow-hidden">
-                      <img src={src} alt={`screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                  {mediaFiles.map((item, i) => (
+                    <div key={i} className="relative group w-24 h-16 rounded border border-border overflow-hidden bg-muted">
+                      {item.type === "image" ? (
+                        <img src={item.preview} alt={`attachment ${i + 1}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                          <Video size={16} className="text-muted-foreground" />
+                          <span className="text-[9px] text-muted-foreground truncate max-w-[80px] px-1">{item.file.name}</span>
+                        </div>
+                      )}
                       <button
-                        onClick={() => removeScreenshot(i)}
+                        onClick={() => removeMedia(i)}
                         className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X size={10} />
@@ -163,12 +179,12 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                 </div>
               )}
 
-              {screenshots.length < 3 && (
+              {mediaFiles.length < 5 && (
                 <>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     className="hidden"
                     onChange={handleFileChange}
@@ -181,8 +197,11 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                     )}
                   >
                     <Upload size={13} />
-                    <span>Upload screenshots</span>
-                    <ImageIcon size={12} className="ml-auto opacity-40" />
+                    <span>Upload screenshots or screen recordings</span>
+                    <div className="ml-auto flex items-center gap-1 opacity-40">
+                      <ImageIcon size={12} />
+                      <Video size={12} />
+                    </div>
                   </button>
                 </>
               )}
