@@ -1,48 +1,64 @@
 
 ## Diagnóstico
 
-O output do usuário mostra:
+### Causa raiz: `resolvePhotographerId` sem filtro de usuário
 
-```
-Valid configuration
-caddy.service is not active, cannot reload.
-```
+No `AuthContext.tsx`, a função `resolvePhotographerId` está com uma query incorreta:
 
-**Dois problemas distintos:**
-
-1. **WARN `header_up X-Forwarded-Host` desnecessário** — o Caddy já passa headers ao upstream por padrão. Não é erro, só warning — pode ser removido ou mantido (não impede funcionamento).
-
-2. **`caddy.service is not active, cannot reload`** — O Caddy **NÃO está rodando como serviço systemd**. Está rodando como container Docker (`docker restart caddy-proxy` que o próprio usuário rodou antes). O `systemctl reload caddy` não tem efeito nesse cenário.
-
-O template `CADDY_RELOAD` na página `/admin/vps-setup` ainda mostra `sudo systemctl reload caddy`, que é o comando **errado** para o ambiente Easypanel/Docker.
-
-## Fix
-
-Atualizar a constante `CADDY_RELOAD` no `AdminVpsSetup.tsx` para incluir **os dois cenários** — Standalone (systemctl) e Docker (docker restart):
-
-### Novo conteúdo do bloco "Reload & verify":
-
-```bash
-# ── Standalone Caddy (systemd) ──────────────────────────
-# Validate syntax
-sudo caddy validate --config /etc/caddy/Caddyfile
-
-# Reload without downtime
-sudo systemctl reload caddy
-
-# Check status
-sudo systemctl status caddy
-
-# ── Easypanel / Docker ────────────────────────────────────
-# After editing /etc/caddy/Caddyfile, restart the container:
-docker restart caddy-proxy
-
-# Tail logs to confirm it started cleanly
-docker logs caddy-proxy --tail 30
+```ts
+const { data: memberRow } = await supabase
+  .from("studio_members")
+  .select("photographer_id")
+  .eq("status", "active")   // ← sem .eq("user_id", userId) ou filtro por email
+  .limit(1)
+  .maybeSingle();
 ```
 
-Também adicionar uma nota explicativa acima do bloco de código, informando que `systemctl reload caddy` só funciona em instalações standalone (não Docker).
+Ela **não filtra pelo usuário logado** — busca qualquer linha ativa da tabela. Isso significa:
+- Para usuários normais (não membros de studio), pode retornar o `photographer_id` de outro usuário aleatório
+- A RLS deveria bloquear isso, mas pode gerar um comportamento lento/incorreto que impede o carregamento
 
-## Arquivo a alterar
+Olhando a migration `20260319111136`, a função SQL `get_my_photographer_id()` usa `email` para matching. O código JS deveria fazer o mesmo — filtrar por `email`.
 
-- `src/pages/admin/AdminVpsSetup.tsx` — constante `CADDY_RELOAD` (linha 121–128) e o parágrafo explicativo na Section step 3.
+### Problema secundário: dupla inicialização
+
+`resolvePhotographerId` é chamada tanto no `getSession()` quanto no `onAuthStateChange` simultaneamente no bootstrap, causando duas queries simultâneas desnecessárias.
+
+### Warning no console (não crítico)
+
+`PublicOnlyRoute` aparece no warning de `ref` — não causa o loading infinito mas pode ser corrigido com `React.forwardRef`.
+
+---
+
+## Plano de Fix
+
+### 1. Corrigir `resolvePhotographerId` em `src/contexts/AuthContext.tsx`
+
+Adicionar o filtro de email para que a query seja idêntica à lógica da função SQL:
+
+```ts
+async function resolvePhotographerId(userId: string, userEmail: string): Promise<string> {
+  const { data: memberRow } = await supabase
+    .from("studio_members")
+    .select("photographer_id")
+    .eq("email", userEmail)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+
+  if (memberRow?.photographer_id) {
+    return memberRow.photographer_id;
+  }
+  return userId;
+}
+```
+
+Também passar `session.user.email` nos dois pontos de chamada.
+
+### 2. Evitar dupla execução no bootstrap
+
+Usar uma flag `initialized` para garantir que a resolução só aconteça uma vez no bootstrap, evitando race conditions entre `getSession` e `onAuthStateChange`.
+
+### 3. Arquivo a alterar
+
+- `src/contexts/AuthContext.tsx` — corrigir a query e a lógica de bootstrap
