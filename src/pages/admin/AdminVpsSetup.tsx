@@ -153,7 +153,9 @@ const CADDYFILE_EASYPANEL = `{
     auto_https off
 }
 
-:80 {
+# Caddy listens on :8080 — Traefik terminates TLS and forwards here.
+# The {host} placeholder carries the original photographer domain.
+:8080 {
     header Access-Control-Allow-Origin "*"
 
     # Upstream: davions-page-builder.lovable.app is the permanent project identifier.
@@ -179,10 +181,37 @@ const CADDYFILE_EASYPANEL = `{
 const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
 docker network ls | grep -i traefik
 
-# 1. Stop and remove the old container
-docker stop caddy-proxy && docker rm caddy-proxy
+# 1. Create the Caddyfile on the host
+sudo mkdir -p /etc/caddy
+sudo tee /etc/caddy/Caddyfile <<'EOF'
+{
+    auto_https off
+}
 
-# 2. Recreate with Traefik labels + correct network
+:8080 {
+    header Access-Control-Allow-Origin "*"
+
+    reverse_proxy https://davions-page-builder.lovable.app {
+        header_up Host davions-page-builder.lovable.app
+        header_up X-Forwarded-Host {host}
+        header_up -X-Forwarded-For
+        header_up -X-Real-IP
+        transport http {
+            tls
+            tls_server_name davions-page-builder.lovable.app
+        }
+    }
+
+    handle_errors {
+        rewrite * /index.html
+    }
+}
+EOF
+
+# 2. Stop and remove the old container (ignore errors if not yet created)
+docker stop caddy-proxy 2>/dev/null; docker rm caddy-proxy 2>/dev/null
+
+# 3. Recreate with Traefik labels + correct network
 docker run -d --name caddy-proxy \\
   --restart unless-stopped \\
   -p 127.0.0.1:8080:8080 \\
@@ -197,13 +226,14 @@ docker run -d --name caddy-proxy \\
   --label "traefik.http.services.caddy-proxy.loadbalancer.server.port=8080" \\
   caddy:latest
 
-# 3. Verify internal routing (expected: 200)
-curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+# 4. Verify Caddy is listening internally (expected: 200)
+curl -s -o /dev/null -w "%{http_code}\\n" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
 
-# 4. Confirm Traefik labels were applied
+# 5. Check Traefik sees the container
 docker inspect caddy-proxy | grep -A 20 '"Labels"'
+docker logs caddy-proxy --tail 20
 
-# 5. Test full external flow (after DNS propagates — expected: HTTP/2 200)
+# 6. Test full external flow (expected: HTTP/2 200)
 curl -vI https://davions.giombelli.com.br 2>&1 | grep -E "< HTTP|SSL|subject|issuer"`;
 
 const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
@@ -222,12 +252,20 @@ const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App 
 
 const TROUBLESHOOT = [
   {
-    issue: "404 on custom domain even though DNS is pointing to the VPS",
-    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises. Do NOT use `davions.com` as the Host header unless `davions.com` is already an Active custom domain in Lovable project settings → Domains.',
+    issue: "404 on custom domain even though DNS is pointing to the VPS (Easypanel)",
+    fix: "The Traefik reverse proxy in Easypanel is returning 404 because the caddy-proxy container is NOT registered with the correct Traefik labels or is not connected to the Traefik network. Run: docker inspect caddy-proxy | grep -A5 Labels — you should see the HostRegexp rule. If the container is missing the labels, recreate it using the full docker run command in Step 8. Also verify: docker network inspect easypanel | grep caddy-proxy",
+  },
+  {
+    issue: "404 on custom domain — CDN returning not found",
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises.',
+  },
+  {
+    issue: "Internal curl returns 200 but external domain still returns 404",
+    fix: "The Caddy container is working (curl http://127.0.0.1:8080 with Host header returns 200), but Traefik is not routing to it. Check that: 1) the container is on the 'easypanel' network, 2) traefik.enable=true label is set, 3) the entrypoint is 'websecure' (port 443). Run: docker logs caddy-proxy --tail 20 and check Traefik logs.",
   },
   {
     issue: "Photographer data not loading — blank store page",
-    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. However, if Caddy strips response headers from the Lovable CDN, asset fetches may fail. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of both the `https://` block (standalone) and the `:8080` block (Easypanel) in your Caddyfile — the templates above already include it.',
+    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of the `:8080` block in the Caddyfile — the template above already includes it.',
   },
   {
     issue: "TLS certificate not issued",
