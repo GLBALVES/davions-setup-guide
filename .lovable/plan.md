@@ -1,49 +1,59 @@
 
-## Diagnóstico: Loading infinito no /admin
+## Problema
 
-### Causa raiz identificada
+O `AdminLayout` foi corrigido com um timeout de 5s que redireciona para `/dashboard` se a query de `user_roles` demorar. Mas o próprio timeout é o que está causando o redirecionamento — a query pode estar demorando mais de 5s na primeira carga, ou o estado `loading` do `AuthContext` ainda não terminou quando o timer dispara.
 
-`AdminLayout.tsx` tem dois bugs que causam loading eterno:
+Além disso, o `checking` começa como `true` mas o effect tem `if (loading) return` — quando `loading` é `true` no mount, o effect não inicia a query. Quando `loading` muda para `false` e o effect re-executa, o timer de 5s começa. Se a resolução do `AuthContext` + query `user_roles` ultrapassar 5s total, o timer redireciona.
 
-1. **Sem tratamento de erro na query `user_roles`** — se a query falhar (rede, RLS, timeout), o `.then()` ainda é chamado mas o `.catch()` não existe. Na verdade, com a API do Supabase, erros retornam como `{ data: null, error: ... }` dentro do `.then()`, não como rejeição de Promise. Porém o código só chama `setChecking(false)` quando `data` existe (admin confirmado) ou navega para `/dashboard` quando `data` é null. Se a query retornar `{ data: null }` por erro de RLS ou timeout, ele navega para `/dashboard` — isso pode ser OK mas não é o problema atual.
+## Causa confirmada
 
-2. **`checking` começa como `true` e nunca é resetado entre re-renders** — quando `loading` ainda é `true` no mount, o effect retorna cedo (`if (loading) return`). Quando `loading` muda para `false`, o effect dispara novamente — mas se o user NÃO for admin, ele navega. Se a Promise da query for lenta ou falhar silenciosamente, `checking` permanece `true`.
+Verificado no banco: o usuário `gilberto@giombelli.com.br` **tem** o role `admin` na tabela `user_roles`. A policy RLS `Users can read own roles (user_id = auth.uid())` permite o SELECT. A query **deveria** retornar `data` corretamente.
 
-3. **A query usa `(supabase as any)`** — isso mascara erros TypeScript e sugere que a tipagem da tabela `user_roles` pode estar causando problema.
+O timeout de 5s é agressivo demais — está abortando antes da query completar.
 
-### Fix
+## Fix
 
-**`src/components/admin/AdminLayout.tsx`**:
-- Adicionar `.catch(() => navigate("/dashboard"))` após o `.then()` para garantir que qualquer erro de rede/Promise desbloqueie o loading
-- Adicionar um timeout de segurança de 5s para o `checking` — se a query de `user_roles` não resolver em 5s, redirecionar para `/dashboard`
-- O resultado: loading nunca fica infinito
+**`src/components/admin/AdminLayout.tsx`** — remover o timeout por completo. A lógica correta é:
+
+1. Aguardar `loading` do AuthContext terminar
+2. Se sem usuário → redirecionar para `/login`
+3. Executar a query `user_roles` sem timeout
+4. Se a query retornar `data` → `setChecking(false)` e renderizar
+5. Se retornar `null` ou erro → redirecionar para `/dashboard`
+
+O spinner continua visível enquanto verifica — sem limite de tempo artificial.
 
 ```typescript
-// Antes (sem .catch):
-(supabase as any)
-  .from("user_roles")
-  ...
-  .then(({ data }) => {
-    if (!data) { navigate("/dashboard"); return; }
-    setChecking(false);
-  });
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
 
-// Depois (com .catch + timeout):
-const checkTimer = setTimeout(() => navigate("/dashboard"), 5000);
+  useEffect(() => {
+    if (loading) return;
+    if (!user) { navigate("/login"); return; }
 
-(supabase as any)
-  .from("user_roles")
-  ...
-  .then(({ data }: { data: { role: string } | null }) => {
-    clearTimeout(checkTimer);
-    if (!data) { navigate("/dashboard"); return; }
-    setChecking(false);
-  })
-  .catch(() => {
-    clearTimeout(checkTimer);
-    navigate("/dashboard");
-  });
+    const run = async () => {
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (!data) { navigate("/dashboard"); return; }
+        setChecking(false);
+      } catch {
+        navigate("/dashboard");
+      }
+    };
+
+    run();
+  }, [user, loading, navigate]);
+
+  // ...
+}
 ```
 
-### Arquivo alterado
-- `src/components/admin/AdminLayout.tsx` — adicionar `.catch()` e timeout de segurança de 5s na verificação de admin role
+## Arquivo alterado
+- `src/components/admin/AdminLayout.tsx` — remover o `setTimeout` / `checkTimer` completamente
