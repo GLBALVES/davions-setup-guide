@@ -8,12 +8,89 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
-import { Loader2, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
 import GalleryView from "@/pages/gallery/GalleryView";
 import logoPreto from "@/assets/logo_principal_preto.png";
 
+interface PhotographerMeta {
+  id: string;
+  full_name: string | null;
+  business_name: string | null;
+  hero_image_url: string | null;
+}
+
+/* ── Branded loading / error shell ── */
+const BrandedLoader = ({ photographer }: { photographer: PhotographerMeta | null }) => {
+  const displayName =
+    photographer?.business_name || photographer?.full_name || "";
+
+  return (
+    <div className="relative min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden">
+      {photographer?.hero_image_url && (
+        <div className="absolute inset-0 transition-opacity duration-700">
+          <img
+            src={photographer.hero_image_url}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/65" />
+        </div>
+      )}
+
+      <div className="relative z-10 flex flex-col items-center">
+        {!photographer && (
+          <img
+            src={logoPreto}
+            alt="Davions"
+            className="h-5 object-contain invert opacity-40 mb-14"
+          />
+        )}
+
+        {photographer ? (
+          <>
+            <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">
+              Photography by
+            </p>
+            <h1 className="text-3xl md:text-4xl font-light tracking-[0.15em] uppercase text-white mb-6 text-center">
+              {displayName}
+            </h1>
+            <div className="w-8 h-px bg-white/30 mb-6" />
+            <div className="flex items-center gap-2">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="w-1 h-1 rounded-full bg-white/40 animate-pulse"
+                  style={{ animationDelay: `${i * 200}ms` }}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-1 h-1 rounded-full bg-white/30 animate-pulse"
+                style={{ animationDelay: `${i * 200}ms` }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="absolute bottom-8 flex flex-col items-center gap-3">
+        <div className="w-6 h-px bg-white/10" />
+        <p className="text-[9px] tracking-widest uppercase text-white/20">
+          Powered by Davions
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const CustomDomainGalleryGateway = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [photographer, setPhotographer] = useState<PhotographerMeta | null>(null);
   const [valid, setValid] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -21,23 +98,25 @@ const CustomDomainGalleryGateway = () => {
       const hostname = getCurrentHostname();
 
       // 1. Resolve photographer by custom domain
-      const { data: photographer } = await supabase
+      const { data: photoData } = await supabase
         .from("photographers")
-        .select("id")
+        .select("id, full_name, business_name, hero_image_url")
         .eq("custom_domain", hostname)
         .single();
 
-      if (!photographer?.id) {
+      if (!photoData?.id) {
         setValid(false);
         return;
       }
+
+      setPhotographer(photoData as PhotographerMeta);
 
       // 2. Verify the gallery slug belongs to this photographer and is published
       const { data: gallery } = await supabase
         .from("galleries")
         .select("id")
         .eq("slug", slug ?? "")
-        .eq("photographer_id", photographer.id)
+        .eq("photographer_id", photoData.id)
         .eq("status", "published")
         .single();
 
@@ -47,12 +126,9 @@ const CustomDomainGalleryGateway = () => {
     validate();
   }, [slug]);
 
+  // Stage 1 (no data yet) or Stage 2 (photographer resolved, validating gallery)
   if (valid === null) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <Loader2 className="h-4 w-4 animate-spin text-white/30" />
-      </div>
-    );
+    return <BrandedLoader photographer={photographer} />;
   }
 
   if (!valid) {
