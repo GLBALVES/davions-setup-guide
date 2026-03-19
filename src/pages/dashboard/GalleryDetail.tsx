@@ -1057,7 +1057,7 @@ const GalleryDetail = () => {
                       onClick={() => setCoverPickerOpen(true)}
                       className="bg-background/80 hover:bg-background text-foreground px-3 py-1.5 text-[10px] tracking-widest uppercase flex items-center gap-1.5 transition-colors"
                     >
-                      <ImagePlus className="h-3 w-3" /> {gd.change}
+                      <ImagePlus className="h-3 w-3" /> Change Cover
                     </button>
                   </div>
                 </div>
