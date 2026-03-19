@@ -480,11 +480,11 @@ export default function AdminVpsSetup() {
             <p className="pl-12">→ davions.com (Host rewritten — primary domain)</p>
           </div>
 
-          <div className="border border-amber-500/20 bg-amber-500/5 rounded-md px-4 py-3 space-y-1">
+          <div className="border border-border rounded-md px-4 py-3 space-y-1">
             <p className="text-xs font-light text-foreground flex items-center gap-2">
-              <span className="text-amber-500">⚠</span> Why <code className="font-mono bg-muted px-1 rounded text-[11px]">davions.com</code> and not <code className="font-mono bg-muted px-1 rounded text-[11px]">davions-page-builder.lovable.app</code>?
+              <AlertTriangle size={12} className="text-muted-foreground shrink-0" /> Why <code className="font-mono bg-muted px-1 rounded text-[11px]">davions.com</code> and not <code className="font-mono bg-muted px-1 rounded text-[11px]">davions-page-builder.lovable.app</code>?
             </p>
-            <p className="text-[11px] font-light text-muted-foreground leading-relaxed pl-4">
+            <p className="text-[11px] font-light text-muted-foreground leading-relaxed pl-[18px]">
               Lovable/Cloudflare issues a <strong className="text-foreground font-normal">302 redirect</strong> from <code className="font-mono bg-muted px-0.5 rounded text-[10px]">.lovable.app</code> subdomains
               to the project's primary domain. Pointing the upstream directly at <code className="font-mono bg-muted px-0.5 rounded text-[10px]">davions.com</code> skips
               the redirect and returns <strong className="text-foreground font-normal">200 OK</strong> immediately.
