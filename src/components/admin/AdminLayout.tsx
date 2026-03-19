@@ -17,16 +17,29 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/login"); return; }
-    (supabase as any)
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }: { data: { role: string } | null }) => {
+
+    const checkTimer = setTimeout(() => navigate("/dashboard"), 5000);
+
+    const run = async () => {
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        clearTimeout(checkTimer);
         if (!data) { navigate("/dashboard"); return; }
         setChecking(false);
-      });
+      } catch {
+        clearTimeout(checkTimer);
+        navigate("/dashboard");
+      }
+    };
+
+    run();
+
+    return () => clearTimeout(checkTimer);
   }, [user, loading, navigate]);
 
   if (loading || checking) {
