@@ -523,6 +523,50 @@ const Settings = () => {
                   {/* ── PROFILE TAB ── */}
                   <TabsContent value="profile" className="mt-0 flex flex-col gap-8">
                     <section className="flex flex-col gap-5">
+                      {/* Avatar */}
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[11px] tracking-wider uppercase font-light">Profile Photo</Label>
+                        <div className="flex items-center gap-4">
+                          <div className="relative group w-16 h-16 rounded-full overflow-hidden border border-border bg-muted shrink-0">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <UserCircle2 size={28} className="text-muted-foreground/40" />
+                              </div>
+                            )}
+                            <button
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploadingAvatar}
+                              className="absolute inset-0 flex items-center justify-center bg-background/70 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+                            >
+                              {uploadingAvatar ? (
+                                <Loader2 size={14} className="animate-spin text-foreground" />
+                              ) : (
+                                <Camera size={14} className="text-foreground" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploadingAvatar}
+                              className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+                            >
+                              {uploadingAvatar ? "Uploading…" : "Change photo"}
+                            </button>
+                            <p className="text-[10px] text-muted-foreground/50">JPG, PNG or WEBP · used in the sidebar</p>
+                          </div>
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleAvatarChange}
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-[11px] tracking-wider uppercase font-light">{t.settings.fullName}</Label>
                         <Input
