@@ -429,6 +429,7 @@ const WebsiteSettings = () => {
       logo_url: logoUrl.trim() || null,
       tagline: tagline.trim() || null,
       accent_color: accentColor,
+      site_hero_image_url: heroImageUrl.trim() || null,
       site_headline: siteHeadline.trim() || null,
       site_subheadline: siteSubheadline.trim() || null,
       cta_text: ctaText.trim() || "Book a Session",
