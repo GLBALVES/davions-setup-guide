@@ -181,10 +181,37 @@ const CADDYFILE_EASYPANEL = `{
 const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
 docker network ls | grep -i traefik
 
-# 1. Stop and remove the old container
-docker stop caddy-proxy && docker rm caddy-proxy
+# 1. Create the Caddyfile on the host
+sudo mkdir -p /etc/caddy
+sudo tee /etc/caddy/Caddyfile <<'EOF'
+{
+    auto_https off
+}
 
-# 2. Recreate with Traefik labels + correct network
+:8080 {
+    header Access-Control-Allow-Origin "*"
+
+    reverse_proxy https://davions-page-builder.lovable.app {
+        header_up Host davions-page-builder.lovable.app
+        header_up X-Forwarded-Host {host}
+        header_up -X-Forwarded-For
+        header_up -X-Real-IP
+        transport http {
+            tls
+            tls_server_name davions-page-builder.lovable.app
+        }
+    }
+
+    handle_errors {
+        rewrite * /index.html
+    }
+}
+EOF
+
+# 2. Stop and remove the old container (ignore errors if not yet created)
+docker stop caddy-proxy 2>/dev/null; docker rm caddy-proxy 2>/dev/null
+
+# 3. Recreate with Traefik labels + correct network
 docker run -d --name caddy-proxy \\
   --restart unless-stopped \\
   -p 127.0.0.1:8080:8080 \\
@@ -199,13 +226,14 @@ docker run -d --name caddy-proxy \\
   --label "traefik.http.services.caddy-proxy.loadbalancer.server.port=8080" \\
   caddy:latest
 
-# 3. Verify internal routing (expected: 200)
-curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+# 4. Verify Caddy is listening internally (expected: 200)
+curl -s -o /dev/null -w "%{http_code}\\n" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
 
-# 4. Confirm Traefik labels were applied
+# 5. Check Traefik sees the container
 docker inspect caddy-proxy | grep -A 20 '"Labels"'
+docker logs caddy-proxy --tail 20
 
-# 5. Test full external flow (after DNS propagates — expected: HTTP/2 200)
+# 6. Test full external flow (expected: HTTP/2 200)
 curl -vI https://davions.giombelli.com.br 2>&1 | grep -E "< HTTP|SSL|subject|issuer"`;
 
 const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
