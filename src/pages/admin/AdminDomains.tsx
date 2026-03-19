@@ -451,10 +451,10 @@ function ChainDiagnostic({ domain, photographerId }: { domain: string; photograp
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-light text-foreground">{step.label}</span>
                     {step.status === "pass" && (
-                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm" style={{ background: "hsl(142 71% 45% / 0.15)", color: "hsl(142 71% 38%)" }}>Pass</span>
+                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-600">Pass</span>
                     )}
                     {step.status === "fail" && (
-                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm" style={{ background: "hsl(0 72% 51% / 0.12)", color: "hsl(0 72% 51%)" }}>Fail</span>
+                      <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm bg-destructive/10 text-destructive">Fail</span>
                     )}
                     {step.status === "warn" && (
                       <span className="text-[9px] tracking-widest uppercase font-light px-1.5 py-0.5 rounded-sm bg-yellow-500/10 text-yellow-600">Warn</span>
