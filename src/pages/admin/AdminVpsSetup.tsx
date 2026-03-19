@@ -140,6 +140,10 @@ curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?d
 
 const TROUBLESHOOT = [
   {
+    issue: "404 on custom domain even though validate-domain returns 200",
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. Ensure the Caddyfile has `header_up Host davions-page-builder.lovable.app` inside the reverse_proxy block. Without this, Caddy forwards the photographer\'s domain as the Host and the CDN cannot match it to the project.',
+  },
+  {
     issue: "TLS certificate not issued",
     fix: 'Check that the validate-domain Edge Function returns {"registered":true} for the domain. Run the curl test above.',
   },
