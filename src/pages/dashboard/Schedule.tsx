@@ -119,14 +119,14 @@ const Schedule = () => {
           sessions ( title, duration_minutes, briefing_id ),
           session_availability ( start_time, end_time, date )
         `)
-        .eq("photographer_id", user.id)
+        .eq("photographer_id", pid)
         .neq("status", "cancelled")
         .order("created_at", { ascending: true }),
 
       (supabase as any)
         .from("session_availability")
         .select("id, date, start_time, end_time, session_id")
-        .eq("photographer_id", user.id)
+        .eq("photographer_id", pid)
         .eq("is_booked", true)
         .not("date", "is", null)
         .gte("date", fromStr)
@@ -135,7 +135,7 @@ const Schedule = () => {
       (supabase as any)
         .from("blocked_times")
         .select("id, date, start_time, end_time, all_day, reason")
-        .eq("photographer_id", user.id)
+        .eq("photographer_id", pid)
         .gte("date", fromStr)
         .lte("date", toStr),
     ]);
