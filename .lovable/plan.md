@@ -1,60 +1,80 @@
 
-## Diagnóstico
+## Diagnóstico do curl
 
-O servidor já tem **Easypanel** instalado, que usa **Traefik** como proxy reverso principal. Traefik ocupa as portas 80 e 443 — por isso o Caddy não consegue iniciar. Parar o Traefik derrubaria o próprio Easypanel.
+O resultado mostra que o proxy está funcionando — mas está recebendo um **302 redirect** do Cloudflare/Lovable CDN:
 
-**Solução correta**: não usar Caddy standalone. Em vez disso, rodar Caddy como um serviço Docker dentro do Easypanel, em porta interna (ex: 8080), com Traefik roteando o tráfego de domínios customizados para ele.
-
-```text
-Visitante → domínio.com.br:443
-  → Traefik (gerenciado pelo Easypanel, porta 443)
-  → Caddy container (porta interna 8080, On-Demand TLS desativado)
-  → davions-page-builder.lovable.app (Host reescrito)
+```
+HTTP/1.1 302 Found
+Location: https://davions.com/
+Server: cloudflare
+Via: 2.0 Caddy
 ```
 
-Nesse modelo, o Traefik cuida do TLS para o wildcard e repassa para o Caddy interno, que faz o proxy reverso para a Lovable com o `Host` correto. O `on_demand_tls` do Caddy não é necessário nessa arquitetura — o Traefik/Easypanel gerencia os certificados.
+**O que está acontecendo:**
+
+O Caddyfile atual aponta para `davions-page-builder.lovable.app` como upstream. Porém, como o projeto tem `davions.com` configurado como domínio primário no Lovable, o Cloudflare redireciona automaticamente para `davions.com` qualquer requisição que chegue em `davions-page-builder.lovable.app`. Isso é um redirect canônico da plataforma Lovable.
+
+**A fix:** mudar o upstream do reverse_proxy para `davions.com` (o domínio primário real). Assim o Cloudflare serve o app diretamente sem redirect, e o `X-Forwarded-Host` ainda chega ao React app com o domínio do fotógrafo.
+
+```text
+Antes: Caddy → davions-page-builder.lovable.app → 302 → davions.com  (loop/falha)
+Depois: Caddy → davions.com → 200 HTML (app carregado, X-Forwarded-Host preservado)
+```
 
 ---
 
-## O que mudar no código
+## Mudanças no código
 
-Apenas `AdminVpsSetup.tsx` — adicionar uma seção nova "Easypanel / Traefik Conflict" após o step 7 (Troubleshooting), com:
+Apenas `AdminVpsSetup.tsx` — atualizar a constante `CADDYFILE_EASYPANEL`:
 
-1. Explicação do conflito de portas com Traefik
-2. Caddyfile adaptado sem TLS (Traefik cuida dos certs)
-3. Comando `docker run` para subir o Caddy na porta 8080
-4. Como configurar no Easypanel: criar um serviço com `Source: Docker Image = caddy`, porta 8080, e adicionar os domínios wildcard no painel
-5. Adicionar entrada no `TROUBLESHOOT`: `"Caddy fails: port 80/443 already in use by docker-proxy"` com a solução Easypanel
-
----
-
-## Caddyfile adaptado para uso atrás do Traefik
-
+**De:**
 ```caddy
-{
-  # No on_demand_tls — Traefik handles TLS termination
-  auto_https off
-}
-
-:8080 {
-  reverse_proxy https://davions-page-builder.lovable.app {
-    header_up Host davions-page-builder.lovable.app
-    header_up X-Forwarded-Host {http.request.host}
-    header_up X-Real-IP {remote_host}
-    transport http {
-      tls_server_name davions-page-builder.lovable.app
-    }
+reverse_proxy https://davions-page-builder.lovable.app {
+  header_up Host davions-page-builder.lovable.app
+  transport http {
+    tls_server_name davions-page-builder.lovable.app
   }
 }
+```
+
+**Para:**
+```caddy
+reverse_proxy https://davions.com {
+  header_up Host davions.com
+  header_up X-Forwarded-Host {http.request.host}
+  header_up X-Real-IP {remote_host}
+  transport http {
+    tls_server_name davions.com
+  }
+}
+```
+
+Também atualizar a constante `CADDYFILE` (VPS standalone) com o mesmo fix, e adicionar uma nota explicando o motivo — "Lovable redireciona `.lovable.app` para o domínio primário; usar o domínio primário diretamente evita o 302".
+
+Também adicionar um **comando de teste corrigido** para o usuário executar agora:
+
+```bash
+# Recriar o container com a config corrigida
+docker stop caddy-proxy && docker rm caddy-proxy
+
+# Atualizar o /etc/caddy/Caddyfile com o upstream davions.com
+# Depois:
+docker run -d --name caddy-proxy \
+  --restart unless-stopped \
+  -p 127.0.0.1:8080:8080 \
+  -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+  caddy:latest
+
+# Testar novamente
+curl -v -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080
+# Esperado: HTTP/1.1 200 OK (não mais 302)
 ```
 
 ---
 
 ## Plano de implementação
 
-1. Adicionar constante `CADDYFILE_EASYPANEL` e `EASYPANEL_DOCKER_RUN` em `AdminVpsSetup.tsx`
-2. Adicionar `Section step={8}` com título "Easypanel / Traefik — Running Caddy as a Docker Service"
-3. Explicar o conflito, mostrar o Caddyfile adaptado e o docker run
-4. Adicionar entrada ao array `TROUBLESHOOT` para o conflito de porta com `docker-proxy`
-
-Nenhuma migração de banco necessária. Apenas documentação.
+1. Atualizar `CADDYFILE_EASYPANEL` — mudar upstream para `davions.com`, `header_up Host davions.com`, `tls_server_name davions.com`
+2. Atualizar `CADDYFILE` (standalone) com o mesmo fix
+3. Adicionar nota explicativa sobre o 302 do Cloudflare no Step 8
+4. Adicionar bloco com os comandos para recriar o container e testar
