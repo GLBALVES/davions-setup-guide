@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,6 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Login = () => {
-  const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
@@ -39,12 +38,12 @@ const Login = () => {
       });
       if (error) {
         setServerError(a.invalidCredentials);
-      } else {
-        navigate("/dashboard");
+        setLoading(false);
       }
+      // On success: PublicOnlyRoute redirects automatically when AuthContext
+      // updates via onAuthStateChange — no manual navigate() needed here.
     } catch {
       setServerError(a.genericError);
-    } finally {
       setLoading(false);
     }
   };
