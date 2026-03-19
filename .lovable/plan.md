@@ -1,65 +1,49 @@
 
-## Diagnóstico: 404 de `davions.giombelli.com.br` com SSL funcionando
+## Diagnóstico: Loading infinito no /admin
 
-### O que está acontecendo
+### Causa raiz identificada
 
-O print mostra o erro 404 com o logo hexagonal verde-azulado — esse é **o 404 da CDN da Lovable** (não é o 404 do React app). Significa que:
+`AdminLayout.tsx` tem dois bugs que causam loading eterno:
 
-1. O DNS aponta corretamente para o VPS ✓
-2. O TLS/SSL foi emitido com sucesso ✓
-3. O Caddy está recebendo a requisição e fazendo proxy para `davions.com` ✓
-4. **A CDN da Lovable recebe o `Host: davions.com` e retorna 404** ✗
+1. **Sem tratamento de erro na query `user_roles`** — se a query falhar (rede, RLS, timeout), o `.then()` ainda é chamado mas o `.catch()` não existe. Na verdade, com a API do Supabase, erros retornam como `{ data: null, error: ... }` dentro do `.then()`, não como rejeição de Promise. Porém o código só chama `setChecking(false)` quando `data` existe (admin confirmado) ou navega para `/dashboard` quando `data` é null. Se a query retornar `{ data: null }` por erro de RLS ou timeout, ele navega para `/dashboard` — isso pode ser OK mas não é o problema atual.
 
-### Causa raiz
+2. **`checking` começa como `true` e nunca é resetado entre re-renders** — quando `loading` ainda é `true` no mount, o effect retorna cedo (`if (loading) return`). Quando `loading` muda para `false`, o effect dispara novamente — mas se o user NÃO for admin, ele navega. Se a Promise da query for lenta ou falhar silenciosamente, `checking` permanece `true`.
 
-O `Host: davions.com` está sendo enviado para a CDN, mas a CDN retorna 404. Isso acontece porque **`davions.com` precisa estar configurado como domínio primário ativo no projeto Lovable** — ou seja, o projeto precisa estar **publicado** e `davions.com` precisa estar no status **Active** em Project Settings → Domains.
+3. **A query usa `(supabase as any)`** — isso mascara erros TypeScript e sugere que a tipagem da tabela `user_roles` pode estar causando problema.
 
-Se `davions.com` não está conectado/ativo no Lovable, a CDN não sabe que `Host: davions.com` mapeia para esse projeto, e retorna 404.
+### Fix
 
-### Solução: usar `davions-page-builder.lovable.app` como upstream
+**`src/components/admin/AdminLayout.tsx`**:
+- Adicionar `.catch(() => navigate("/dashboard"))` após o `.then()` para garantir que qualquer erro de rede/Promise desbloqueie o loading
+- Adicionar um timeout de segurança de 5s para o `checking` — se a query de `user_roles` não resolver em 5s, redirecionar para `/dashboard`
+- O resultado: loading nunca fica infinito
 
-O upstream seguro e garantido é sempre `davions-page-builder.lovable.app` — este é o identificador permanente do projeto. O problema de 302 redirect que motivou a mudança para `davions.com` só ocorre quando o `Host` header enviado para a CDN é o subdomínio `.lovable.app`. A correção é:
+```typescript
+// Antes (sem .catch):
+(supabase as any)
+  .from("user_roles")
+  ...
+  .then(({ data }) => {
+    if (!data) { navigate("/dashboard"); return; }
+    setChecking(false);
+  });
 
-- Fazer proxy para `davions-page-builder.lovable.app`
-- Enviar `Host: davions-page-builder.lovable.app` (para a CDN identificar o projeto)
-- Preservar o custom domain original em `X-Forwarded-Host: {host}` (para o React detectar o domínio)
+// Depois (com .catch + timeout):
+const checkTimer = setTimeout(() => navigate("/dashboard"), 5000);
 
-```caddy
-{
-    auto_https off
-}
-
-:80 {
-    header Access-Control-Allow-Origin "*"
-
-    header_up -X-Forwarded-For
-    header_up -X-Real-IP
-
-    reverse_proxy https://davions-page-builder.lovable.app {
-        header_up Host davions-page-builder.lovable.app
-        header_up X-Forwarded-Host {host}
-        transport http {
-            tls
-            tls_server_name davions-page-builder.lovable.app
-        }
-    }
-
-    handle_errors {
-        rewrite * /index.html
-    }
-}
+(supabase as any)
+  .from("user_roles")
+  ...
+  .then(({ data }: { data: { role: string } | null }) => {
+    clearTimeout(checkTimer);
+    if (!data) { navigate("/dashboard"); return; }
+    setChecking(false);
+  })
+  .catch(() => {
+    clearTimeout(checkTimer);
+    navigate("/dashboard");
+  });
 ```
 
-O `CADDYFILE` standalone (com On-Demand TLS) também deve usar o mesmo upstream.
-
-### O que será alterado
-
-**`src/pages/admin/AdminVpsSetup.tsx`**:
-
-1. `CADDYFILE_EASYPANEL` — trocar upstream de `davions.com` para `davions-page-builder.lovable.app` com `Host: davions-page-builder.lovable.app`
-2. `CADDYFILE` (standalone) — idem: upstream `davions-page-builder.lovable.app`, `Host: davions-page-builder.lovable.app`, `tls_server_name davions-page-builder.lovable.app`
-3. `TROUBLESHOOT[0]` — corrigir a entrada de 404 para explicar que o upstream deve ser o `.lovable.app` com o Host correto
-
-### Nenhuma mudança no React é necessária
-
-O `X-Forwarded-Host` já preserva o hostname original do custom domain. O `isCustomDomain()` em `custom-domain.ts` lê `window.location.hostname` no browser — que é o custom domain real — não o header HTTP. A detecção já funciona corretamente.
+### Arquivo alterado
+- `src/components/admin/AdminLayout.tsx` — adicionar `.catch()` e timeout de segurança de 5s na verificação de admin role
