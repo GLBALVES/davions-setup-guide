@@ -85,6 +85,8 @@ https:// {
   tls {
     on_demand
   }
+  # Ensure browser requests for assets served through this proxy are not blocked by CORS.
+  header Access-Control-Allow-Origin "*"
   # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
   # Lovable/Cloudflare redirects .lovable.app subdomains to the primary domain with a 302,
   # which would cause a redirect loop. Using the primary domain directly returns 200.
@@ -146,6 +148,8 @@ const CADDYFILE_EASYPANEL = `{
 }
 
 :8080 {
+  # Ensure browser requests for assets served through this proxy are not blocked by CORS.
+  header Access-Control-Allow-Origin "*"
   # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
   # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
   # which breaks the proxy. Using the primary domain directly returns 200 OK.
