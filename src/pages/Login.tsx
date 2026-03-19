@@ -39,12 +39,12 @@ const Login = () => {
       });
       if (error) {
         setServerError(a.invalidCredentials);
-      } else {
-        navigate("/dashboard");
+        setLoading(false);
       }
+      // On success: PublicOnlyRoute redirects automatically when AuthContext
+      // updates via onAuthStateChange — no manual navigate() needed here.
     } catch {
       setServerError(a.genericError);
-    } finally {
       setLoading(false);
     }
   };
