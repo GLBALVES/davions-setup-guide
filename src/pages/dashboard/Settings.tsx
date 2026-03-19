@@ -51,6 +51,9 @@ const Settings = () => {
   const [slugInput, setSlugInput] = useState("");
   const [customDomain, setCustomDomain] = useState("");
   const [customDomainInput, setCustomDomainInput] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
