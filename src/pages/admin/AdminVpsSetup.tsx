@@ -158,6 +158,32 @@ const TROUBLESHOOT = [
 ];
 
 export default function AdminVpsSetup() {
+  const [domain, setDomain] = useState("davions.nevoxholding.com");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{
+    status: "active" | "pending";
+    dns: { a: { ok: boolean; found: string[]; expected: string } };
+  } | null>(null);
+  const [checkError, setCheckError] = useState<string | null>(null);
+
+  const checkDomain = async () => {
+    if (!domain.trim()) return;
+    setLoading(true);
+    setResult(null);
+    setCheckError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-domain", {
+        body: { domain: domain.trim() },
+      });
+      if (error) throw error;
+      setResult(data);
+    } catch (e: unknown) {
+      setCheckError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-3xl mx-auto px-8 py-10 space-y-10">
@@ -178,7 +204,90 @@ export default function AdminVpsSetup() {
           </p>
         </div>
 
-        {/* Prerequisites */}
+        {/* Live DNS Diagnostic */}
+        <div className="border border-border rounded-lg p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Wifi size={13} className="text-muted-foreground" />
+            <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-light">
+              Live DNS Diagnostic
+            </p>
+          </div>
+          <p className="text-xs font-light text-muted-foreground">
+            Check whether a domain's A record has propagated to the VPS IP in real time.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && checkDomain()}
+              placeholder="e.g. studio.example.com"
+              className="flex-1 bg-muted border border-border rounded-md px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground/20"
+            />
+            <button
+              onClick={checkDomain}
+              disabled={loading || !domain.trim()}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-foreground text-background text-xs font-light disabled:opacity-50 transition-opacity"
+            >
+              {loading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Search size={12} />
+              )}
+              Check
+            </button>
+          </div>
+
+          {checkError && (
+            <div className="flex items-start gap-2 text-xs text-destructive font-light">
+              <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+              {checkError}
+            </div>
+          )}
+
+          {result && (
+            <div className="space-y-3">
+              {/* Status badge */}
+              <div className="flex items-center gap-2">
+                {result.status === "active" ? (
+                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle size={11} />
+                    Active — DNS propagated
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-amber-600 dark:text-amber-400">
+                    <WifiOff size={11} />
+                    Pending — DNS not yet propagated
+                  </span>
+                )}
+              </div>
+
+              {/* A record details */}
+              <div className="bg-muted rounded-md px-4 py-3 space-y-2 text-xs font-mono">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-muted-foreground font-sans font-light">Expected IP</span>
+                  <span className={cn("text-foreground")}>{result.dns.a.expected}</span>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-muted-foreground font-sans font-light">Found A record(s)</span>
+                  <span className={cn(result.dns.a.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+                    {result.dns.a.found.length > 0 ? result.dns.a.found.join(", ") : "—"}
+                    {" "}
+                    {result.dns.a.ok ? "✓" : "✗"}
+                  </span>
+                </div>
+              </div>
+
+              {!result.dns.a.ok && (
+                <p className="text-[11px] font-light text-muted-foreground leading-relaxed">
+                  The A record does not point to the VPS. Update it at your DNS provider to{" "}
+                  <code className="font-mono bg-muted px-1 rounded text-[11px]">{result.dns.a.expected}</code>{" "}
+                  and wait for propagation (usually 5–30 minutes, up to 24 h).
+                </p>
+              )}
+            </div>
+          )}
+        </div>
         <Section step={1} title="Prerequisites">
           <ul className="space-y-2 text-xs font-light text-muted-foreground">
             {[
