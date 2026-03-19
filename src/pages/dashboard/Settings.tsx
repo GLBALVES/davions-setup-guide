@@ -224,7 +224,7 @@ const Settings = () => {
       full_name: fullName,
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
-    } as any).eq("id", user!.id);
+    } as any).eq("id", photographerId ?? user!.id);
 
     if (error) {
       if (error.code === "23505") {
