@@ -86,31 +86,31 @@ const Dashboard = () => {
       galleriesRes,
       paymentsRes,
     ] = await Promise.all([
-      supabase.from("photographers").select("full_name, business_name").eq("id", user!.id).single(),
+      supabase.from("photographers").select("full_name, business_name").eq("id", photographerId!).single(),
       // Today's bookings with session info
       supabase.from("bookings")
         .select(`id, client_name, client_email, booked_date, status, payment_status,
           sessions!inner(title),
           session_availability!inner(start_time, end_time)`)
-        .eq("photographer_id", user!.id)
+        .eq("photographer_id", photographerId!)
         .eq("booked_date", today)
         .order("session_availability(start_time)", { ascending: true }),
       // All bookings for stats
       supabase.from("bookings")
         .select("id, status, payment_status, created_at")
-        .eq("photographer_id", user!.id),
+        .eq("photographer_id", photographerId!),
       // Projects by stage
       supabase.from("client_projects")
         .select("stage")
-        .eq("photographer_id", user!.id),
+        .eq("photographer_id", photographerId!),
       // Galleries
       supabase.from("galleries")
         .select("id, status")
-        .eq("photographer_id", user!.id),
+        .eq("photographer_id", photographerId!),
       // Revenue this month (from bookings with payment_status = paid)
       supabase.from("bookings")
         .select("extras_total, sessions!inner(price, deposit_amount, deposit_enabled, deposit_type)")
-        .eq("photographer_id", user!.id)
+        .eq("photographer_id", photographerId!)
         .gte("created_at", monthStart),
     ]);
 
