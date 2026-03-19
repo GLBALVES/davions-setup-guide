@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,16 +22,16 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-async function resolvePhotographerId(userId: string): Promise<string> {
-  // Check if the user is a studio member with an active status
+async function resolvePhotographerId(userId: string, userEmail: string): Promise<string> {
+  // Mirror the SQL get_my_photographer_id() function — filter by email
   const { data: memberRow } = await supabase
     .from("studio_members")
     .select("photographer_id")
+    .eq("email", userEmail)
     .eq("status", "active")
     .limit(1)
     .maybeSingle();
 
-  // If member, return employer's id; otherwise return own id
   if (memberRow?.photographer_id) {
     return memberRow.photographer_id;
   }
@@ -43,43 +43,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [photographerId, setPhotographerId] = useState<string | null>(null);
+  // Flag to prevent double-initialization from getSession + onAuthStateChange
+  const initialized = useRef(false);
 
   useEffect(() => {
     // Safety timeout: if Supabase never responds, unblock the UI after 5s
     const safetyTimer = setTimeout(() => setLoading(false), 5000);
 
-    // Set up auth state listener BEFORE getting session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        clearTimeout(safetyTimer);
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const pid = await resolvePhotographerId(session.user.id);
-          setPhotographerId(pid);
-        } else {
-          setPhotographerId(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    // Then get current session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const applySession = async (session: Session | null) => {
       clearTimeout(safetyTimer);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        const pid = await resolvePhotographerId(session.user.id);
+        const pid = await resolvePhotographerId(
+          session.user.id,
+          session.user.email ?? ""
+        );
         setPhotographerId(pid);
       } else {
         setPhotographerId(null);
       }
       setLoading(false);
-    }).catch(() => {
-      clearTimeout(safetyTimer);
-      setLoading(false);
-    });
+    };
+
+    // Set up auth state listener BEFORE getting session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        // Skip if getSession() already handled initial load
+        if (!initialized.current) return;
+        await applySession(session);
+      }
+    );
+
+    // Bootstrap: get current session once
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        initialized.current = true;
+        await applySession(session);
+      })
+      .catch(() => {
+        initialized.current = true;
+        clearTimeout(safetyTimer);
+        setLoading(false);
+      });
 
     return () => {
       clearTimeout(safetyTimer);
@@ -89,6 +95,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    // After sign-out the listener fires, but reset immediately for responsiveness
+    initialized.current = true;
   };
 
   return (
