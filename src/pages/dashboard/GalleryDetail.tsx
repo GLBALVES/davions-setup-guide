@@ -141,6 +141,9 @@ interface SortablePhotoProps {
   isSelected: boolean;
   isSelecting: boolean;
   onToggleSelect: (id: string) => void;
+  onSetCover: (photo: Photo) => void;
+  isCover: boolean;
+  settingCover: string | null;
 }
 
 const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }: SortablePhotoProps) => {
