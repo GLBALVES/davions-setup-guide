@@ -154,7 +154,7 @@ const Settings = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes]);
+  }, [user, photographerId, fetchSessionTypes]);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";

@@ -341,7 +341,7 @@ const Personalize = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes, fetchContracts]);
+  }, [user, photographerId, fetchSessionTypes, fetchContracts]);
 
   // ── Validators ──────────────────────────────────────────────────────────────
   const validateSlug = (value: string) => {
