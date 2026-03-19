@@ -35,6 +35,11 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const callerIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      req.headers.get("cf-connecting-ip") ??
+      "unknown";
+
     const { data, error } = await supabase
       .from("photographers")
       .select("id")
@@ -42,11 +47,14 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (error) {
-      console.error("validate-domain DB error:", error);
+      console.error(`[validate-domain] DB error for domain="${cleanDomain}" ip=${callerIp}:`, error);
       return new Response(JSON.stringify({ registered: false }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (data) {
+    const registered = !!data;
+    console.log(`[validate-domain] ip=${callerIp} domain="${cleanDomain}" → ${registered ? "REGISTERED (200)" : "NOT FOUND (403)"}`);
+
+    if (registered) {
       // Domain exists → allow Caddy to issue TLS
       return new Response(JSON.stringify({ registered: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else {
