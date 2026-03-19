@@ -206,8 +206,8 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
                     <td className="py-1.5">
                       <div className="flex items-center gap-1.5">
                         <RecordBadge status={recordStatus} />
-                        {recordStatus === "ok" && <span className="text-[10px]" style={{ color: "hsl(142 71% 40%)" }}>Propagated</span>}
-                        {recordStatus === "fail" && <span className="text-[10px]" style={{ color: "hsl(0 72% 51%)" }}>Not found</span>}
+                         {recordStatus === "ok" && <span className="text-[10px] text-emerald-600">Propagated</span>}
+                        {recordStatus === "fail" && <span className="text-[10px] text-destructive">Not found</span>}
                         {recordStatus === "checking" && <span className="text-[10px] text-muted-foreground">Checking…</span>}
                         {recordStatus === "idle" && <span className="text-[10px] text-muted-foreground/40">—</span>}
                       </div>
