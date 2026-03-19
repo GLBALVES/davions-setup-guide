@@ -250,12 +250,12 @@ export default function AdminVpsSetup() {
               {/* Status badge */}
               <div className="flex items-center gap-2">
                 {result.status === "active" ? (
-                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-emerald-600 dark:text-emerald-400">
+                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-foreground">
                     <CheckCircle size={11} />
                     Active — DNS propagated
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-amber-600 dark:text-amber-400">
+                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light text-muted-foreground">
                     <WifiOff size={11} />
                     Pending — DNS not yet propagated
                   </span>
@@ -266,11 +266,11 @@ export default function AdminVpsSetup() {
               <div className="bg-muted rounded-md px-4 py-3 space-y-2 text-xs font-mono">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground font-sans font-light">Expected IP</span>
-                  <span className={cn("text-foreground")}>{result.dns.a.expected}</span>
+                  <span className="text-foreground">{result.dns.a.expected}</span>
                 </div>
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-muted-foreground font-sans font-light">Found A record(s)</span>
-                  <span className={cn(result.dns.a.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+                  <span className={cn(result.dns.a.ok ? "text-foreground" : "text-destructive")}>
                     {result.dns.a.found.length > 0 ? result.dns.a.found.join(", ") : "—"}
                     {" "}
                     {result.dns.a.ok ? "✓" : "✗"}
