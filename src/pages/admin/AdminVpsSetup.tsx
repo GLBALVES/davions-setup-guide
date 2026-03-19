@@ -85,16 +85,17 @@ https:// {
   tls {
     on_demand
   }
-  reverse_proxy https://davions-page-builder.lovable.app {
-    # CRITICAL: rewrite Host to the Lovable CDN hostname so it serves the app.
-    # Without this, the CDN returns 404 because it does not recognise the
-    # photographer's custom domain as a registered host.
-    header_up Host davions-page-builder.lovable.app
-    # Preserve the original domain so the React app can detect it as a custom domain.
+  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
+  # Lovable/Cloudflare redirects .lovable.app subdomains to the primary domain with a 302,
+  # which would cause a redirect loop. Using the primary domain directly returns 200.
+  reverse_proxy https://davions.com {
+    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
+    header_up Host davions.com
+    # Preserve the original custom domain so the React app can detect it.
     header_up X-Forwarded-Host {host}
     header_up X-Real-IP {remote_host}
     transport http {
-      tls_server_name davions-page-builder.lovable.app
+      tls_server_name davions.com
     }
   }
 }`;
