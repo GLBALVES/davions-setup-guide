@@ -11,7 +11,6 @@ import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Login = () => {
-  const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
