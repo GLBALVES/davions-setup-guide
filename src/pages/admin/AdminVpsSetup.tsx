@@ -139,6 +139,45 @@ sudo ls /var/lib/caddy/.local/share/caddy/certificates/acme-v02.api.letsencrypt.
 curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain=davions.nevoxholding.com"
 # Must return: {"registered":true}  — status 200, otherwise on_demand_tls will be denied`;
 
+const CADDYFILE_EASYPANEL = `{
+  # Traefik handles TLS termination — disable Caddy's auto HTTPS
+  auto_https off
+}
+
+:8080 {
+  reverse_proxy https://davions-page-builder.lovable.app {
+    # Rewrite Host so the Lovable CDN recognises the project
+    header_up Host davions-page-builder.lovable.app
+    # Pass the original domain so the React app detects the custom domain
+    header_up X-Forwarded-Host {http.request.host}
+    header_up X-Real-IP {remote_host}
+    transport http {
+      tls_server_name davions-page-builder.lovable.app
+    }
+  }
+}`;
+
+const EASYPANEL_DOCKER_RUN = `# Option A — run directly on the host (internal network only)
+docker run -d --name caddy-proxy \\
+  --restart unless-stopped \\
+  -p 127.0.0.1:8080:8080 \\
+  -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \\
+  caddy:latest`;
+
+const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
+# Set image: caddy:latest, internal port 8080.
+# Add these labels so Traefik routes wildcard custom domains to the container:
+#
+# traefik.enable=true
+# traefik.http.routers.caddy-proxy.rule=HostRegexp(\`{host:.+}\`)
+# traefik.http.routers.caddy-proxy.entrypoints=websecure
+# traefik.http.routers.caddy-proxy.tls=true
+# traefik.http.routers.caddy-proxy.tls.certresolver=letsencrypt
+# traefik.http.routers.caddy-proxy.priority=1
+# traefik.http.services.caddy-proxy.loadbalancer.server.port=8080
+#
+# IMPORTANT: set a LOW priority (1) so specific Easypanel app routes still win.`;
+
 const TROUBLESHOOT = [
   {
     issue: "404 on custom domain even though validate-domain returns 200",
@@ -151,6 +190,10 @@ const TROUBLESHOOT = [
   {
     issue: "502 Bad Gateway",
     fix: "The origin (davions-page-builder.lovable.app) may be temporarily unreachable. Check with: curl -I https://davions-page-builder.lovable.app",
+  },
+  {
+    issue: "Caddy fails to start — port 80/443 already in use by docker-proxy",
+    fix: "The VPS already runs Easypanel + Traefik which owns ports 80 and 443. Do NOT stop Traefik. Instead, run Caddy as a Docker container on an internal port (8080) and route traffic through Traefik. See the Easypanel / Traefik section below.",
   },
   {
     issue: "Caddy fails to start",
