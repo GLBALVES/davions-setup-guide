@@ -9,6 +9,10 @@ export interface StudioPermissionsState {
   loading: boolean;
   /** true if the signed-in user IS the studio owner (photographer) */
   isOwner: boolean;
+  /** The resolved photographer_id for data queries.
+   *  - Owners: own user.id
+   *  - Members: employer's photographer_id */
+  photographerId: string | null;
   /** resolved permissions map; owners have all permissions */
   permissions: Permissions;
   /** true iff user has the given permission key (always true for owners) */
@@ -18,10 +22,11 @@ export interface StudioPermissionsState {
 const ALL_TRUE: Permissions = {};
 
 export function useStudioPermissions(): StudioPermissionsState {
-  const { user } = useAuth();
+  const { user, photographerId: ctxPhotographerId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [permissions, setPermissions] = useState<Permissions>({});
+  const [photographerId, setPhotographerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -46,6 +51,7 @@ export function useStudioPermissions(): StudioPermissionsState {
       if (photographer) {
         setIsOwner(true);
         setPermissions(ALL_TRUE);
+        setPhotographerId(user!.id);
         setLoading(false);
         return;
       }
@@ -53,7 +59,7 @@ export function useStudioPermissions(): StudioPermissionsState {
       // Otherwise, look for a studio_member record matching this user's email
       const { data: memberRows } = await supabase
         .from("studio_members")
-        .select("role_id, status")
+        .select("role_id, status, photographer_id")
         .eq("email", user!.email ?? "")
         .eq("status", "active")
         .limit(1);
@@ -66,9 +72,13 @@ export function useStudioPermissions(): StudioPermissionsState {
         // Invited but no role yet — no permissions
         setIsOwner(false);
         setPermissions({});
+        setPhotographerId(member?.photographer_id ?? null);
         setLoading(false);
         return;
       }
+
+      // Set the employer's photographer_id
+      setPhotographerId(member.photographer_id ?? null);
 
       // Fetch the role's permissions
       const { data: roleRow } = await supabase
@@ -94,5 +104,8 @@ export function useStudioPermissions(): StudioPermissionsState {
     return !!permissions[key];
   };
 
-  return { loading, isOwner, permissions, can };
+  // Prefer the context-resolved value (already available from AuthContext)
+  const resolvedPhotographerId = ctxPhotographerId ?? photographerId;
+
+  return { loading, isOwner, photographerId: resolvedPhotographerId, permissions, can };
 }
