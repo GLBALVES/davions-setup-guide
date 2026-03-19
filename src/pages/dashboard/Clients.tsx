@@ -54,14 +54,14 @@ function StatusPill({ status }: { status: string }) {
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function Clients() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const cl = t.clients;
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
 
   const { data: bookings = [], isLoading } = useQuery<RawBooking[]>({
-    queryKey: ["clients-bookings", user?.id],
+    queryKey: ["clients-bookings", photographerId],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("bookings")
@@ -70,12 +70,12 @@ export default function Clients() {
           sessions(title, price),
           session_availability(start_time, end_time)
         `)
-        .eq("photographer_id", user!.id)
+        .eq("photographer_id", photographerId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!photographerId,
   });
 
   // Aggregate into unique clients keyed by email
