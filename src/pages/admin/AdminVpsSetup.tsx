@@ -85,7 +85,11 @@ https:// {
     on_demand
   }
   reverse_proxy https://davions-page-builder.lovable.app {
-    header_up Host {upstream_hostport}
+    # CRITICAL: rewrite Host to the Lovable CDN hostname so it serves the app.
+    # Without this, the CDN returns 404 because it does not recognise the
+    # photographer's custom domain as a registered host.
+    header_up Host davions-page-builder.lovable.app
+    # Preserve the original domain so the React app can detect it as a custom domain.
     header_up X-Forwarded-Host {host}
     header_up X-Real-IP {remote_host}
     transport http {
@@ -135,6 +139,10 @@ curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?d
 # Must return: {"registered":true}  — status 200, otherwise on_demand_tls will be denied`;
 
 const TROUBLESHOOT = [
+  {
+    issue: "404 on custom domain even though validate-domain returns 200",
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. Ensure the Caddyfile has `header_up Host davions-page-builder.lovable.app` inside the reverse_proxy block. Without this, Caddy forwards the photographer\'s domain as the Host and the CDN cannot match it to the project.',
+  },
   {
     issue: "TLS certificate not issued",
     fix: 'Check that the validate-domain Edge Function returns {"registered":true} for the domain. Run the curl test above.',
