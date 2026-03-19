@@ -130,6 +130,7 @@ const Galleries = () => {
   };
 
   useEffect(() => {
+    if (!photographerId) return;
     fetchGalleries();
 
     const channel = supabase
@@ -140,7 +141,7 @@ const Galleries = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [photographerId]);
 
   // Derived — apply category tab, search, status filter, sort
   const filtered = useMemo(() => {
