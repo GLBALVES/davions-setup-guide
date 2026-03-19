@@ -153,7 +153,7 @@ export default function Revenue() {
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user, photographerId]);
 
   const filtered = rows.filter((r) => {
     const matchSearch =
