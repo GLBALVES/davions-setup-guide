@@ -137,6 +137,7 @@ const Settings = () => {
         setSlugInput(d.store_slug ?? "");
         setCustomDomain(d.custom_domain ?? "");
         setCustomDomainInput(d.custom_domain ?? "");
+        setAvatarUrl(d.hero_image_url ?? null);
         setStripeAccountId((d as any).stripe_account_id ?? null);
         setStripeConnectedAt((d as any).stripe_connected_at ?? null);
       }
