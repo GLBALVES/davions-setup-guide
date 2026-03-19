@@ -252,12 +252,20 @@ const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App 
 
 const TROUBLESHOOT = [
   {
-    issue: "404 on custom domain even though DNS is pointing to the VPS",
-    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises. Do NOT use `davions.com` as the Host header unless `davions.com` is already an Active custom domain in Lovable project settings → Domains.',
+    issue: "404 on custom domain even though DNS is pointing to the VPS (Easypanel)",
+    fix: "The Traefik reverse proxy in Easypanel is returning 404 because the caddy-proxy container is NOT registered with the correct Traefik labels or is not connected to the Traefik network. Run: docker inspect caddy-proxy | grep -A5 Labels — you should see the HostRegexp rule. If the container is missing the labels, recreate it using the full docker run command in Step 8. Also verify: docker network inspect easypanel | grep caddy-proxy",
+  },
+  {
+    issue: "404 on custom domain — CDN returning not found",
+    fix: 'The Lovable CDN returns 404 when it receives an unknown Host header. The Caddyfile must proxy to `davions-page-builder.lovable.app` and send `header_up Host davions-page-builder.lovable.app` — this is the permanent project identifier the CDN recognises.',
+  },
+  {
+    issue: "Internal curl returns 200 but external domain still returns 404",
+    fix: "The Caddy container is working (curl http://127.0.0.1:8080 with Host header returns 200), but Traefik is not routing to it. Check that: 1) the container is on the 'easypanel' network, 2) traefik.enable=true label is set, 3) the entrypoint is 'websecure' (port 443). Run: docker logs caddy-proxy --tail 20 and check Traefik logs.",
   },
   {
     issue: "Photographer data not loading — blank store page",
-    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. However, if Caddy strips response headers from the Lovable CDN, asset fetches may fail. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of both the `https://` block (standalone) and the `:8080` block (Easypanel) in your Caddyfile — the templates above already include it.',
+    fix: 'The React app calls Supabase directly from the browser, so Supabase CORS headers are already correct. Ensure `header Access-Control-Allow-Origin "*"` is present at the top of the `:8080` block in the Caddyfile — the template above already includes it.',
   },
   {
     issue: "TLS certificate not issued",
