@@ -67,10 +67,11 @@ export function TaskDetailSheet({ task, sections, profileMap, members, open, onO
 
   useEffect(() => {
     if (!onMoveToProject) return;
-    fetchProjects().then((p) => {
+    if (!task.photographer_id) return;
+    fetchProjects(task.photographer_id).then((p) => {
       setAllProjects(p.filter((proj) => proj.id !== task.project_id));
     }).catch(() => {});
-  }, [task.project_id, onMoveToProject]);
+  }, [task.project_id, task.photographer_id, onMoveToProject]);
 
   useEffect(() => {
     if (!selectedTargetProject) { setTargetProjectSections([]); return; }
