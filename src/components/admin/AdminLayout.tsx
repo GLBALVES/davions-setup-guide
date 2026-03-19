@@ -18,8 +18,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (loading) return;
     if (!user) { navigate("/login"); return; }
 
-    const checkTimer = setTimeout(() => navigate("/dashboard"), 5000);
-
     const run = async () => {
       try {
         const { data } = await supabase
@@ -28,18 +26,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           .eq("user_id", user.id)
           .eq("role", "admin")
           .maybeSingle();
-        clearTimeout(checkTimer);
         if (!data) { navigate("/dashboard"); return; }
         setChecking(false);
       } catch {
-        clearTimeout(checkTimer);
         navigate("/dashboard");
       }
     };
 
     run();
-
-    return () => clearTimeout(checkTimer);
   }, [user, loading, navigate]);
 
   if (loading || checking) {
