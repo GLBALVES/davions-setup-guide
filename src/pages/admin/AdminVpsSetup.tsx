@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Copy, Check, Server, CheckCircle, AlertTriangle } from "lucide-react";
+import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
