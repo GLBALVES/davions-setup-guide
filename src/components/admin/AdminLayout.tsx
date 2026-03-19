@@ -20,21 +20,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
     const checkTimer = setTimeout(() => navigate("/dashboard"), 5000);
 
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle()
-      .then(({ data }) => {
+    const run = async () => {
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
         clearTimeout(checkTimer);
         if (!data) { navigate("/dashboard"); return; }
         setChecking(false);
-      })
-      .catch(() => {
+      } catch {
         clearTimeout(checkTimer);
         navigate("/dashboard");
-      });
+      }
+    };
+
+    run();
 
     return () => clearTimeout(checkTimer);
   }, [user, loading, navigate]);
