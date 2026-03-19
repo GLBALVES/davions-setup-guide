@@ -57,7 +57,7 @@ type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_des
 type ViewMode = "grid" | "list";
 
 const Galleries = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const g = t.galleries;
   const [galleries, setGalleries] = useState<Gallery[]>([]);

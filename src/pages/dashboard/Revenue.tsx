@@ -92,7 +92,7 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 }
 
 export default function Revenue() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +118,7 @@ export default function Revenue() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     const fetchData = async () => {
       setLoading(true);
       const { data, error } = await supabase
@@ -128,7 +128,7 @@ export default function Revenue() {
           payment_status, status, extras_total,
           sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
         `)
-        .eq("photographer_id", user.id)
+        .eq("photographer_id", photographerId)
         .order("created_at", { ascending: false });
 
       if (!error && data) {
@@ -153,7 +153,7 @@ export default function Revenue() {
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user, photographerId]);
 
   const filtered = rows.filter((r) => {
     const matchSearch =

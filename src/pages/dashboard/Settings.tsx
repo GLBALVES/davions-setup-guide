@@ -32,7 +32,7 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
 const Settings = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();
@@ -100,33 +100,33 @@ const Settings = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const fetchSessionTypes = useCallback(async () => {
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await supabase
       .from("session_types")
       .select("id, name")
-      .eq("photographer_id", user.id)
+      .eq("photographer_id", photographerId)
       .order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
-  }, [user]);
+  }, [photographerId]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     const fetchAll = async () => {
       const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
           .select("full_name, store_slug, custom_domain, hero_image_url, stripe_account_id, stripe_connected_at")
-          .eq("id", user.id)
+          .eq("id", photographerId)
           .single(),
         (supabase as any)
           .from("watermarks")
           .select("*")
-          .eq("photographer_id", user.id)
+          .eq("photographer_id", photographerId)
           .order("created_at", { ascending: true }),
         (supabase as any)
           .from("gallery_settings")
           .select("key, value")
-          .eq("photographer_id", user.id),
+          .eq("photographer_id", photographerId),
         fetchSessionTypes(),
       ]);
 
@@ -154,7 +154,7 @@ const Settings = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes]);
+  }, [user, photographerId, fetchSessionTypes]);
 
   const validateSlug = (value: string) => {
     if (!value.trim()) return "Store URL is required.";
@@ -224,7 +224,7 @@ const Settings = () => {
       full_name: fullName,
       store_slug: slugInput,
       custom_domain: customDomainInput.trim() || null,
-    } as any).eq("id", user!.id);
+    } as any).eq("id", photographerId ?? user!.id);
 
     if (error) {
       if (error.code === "23505") {
@@ -273,7 +273,7 @@ const Settings = () => {
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null,
-    }).eq("id", user!.id);
+    }).eq("id", photographerId ?? user!.id);
 
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
@@ -284,14 +284,14 @@ const Settings = () => {
   };
 
   const handleSaveGallerySettings = async () => {
-    if (!user) return;
+    if (!photographerId) return;
     setSavingGallerySettings(true);
     const days = parseInt(galleryExpiryDays, 10);
     const valueToSave = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
     const { error } = await (supabase as any)
       .from("gallery_settings")
       .upsert(
-        { photographer_id: user.id, key: "default_expiry_days", value: valueToSave },
+        { photographer_id: photographerId, key: "default_expiry_days", value: valueToSave },
         { onConflict: "photographer_id,key" }
       );
     if (error) {
@@ -428,11 +428,11 @@ const Settings = () => {
 
   const handleOnboardingExit = async () => {
     // Refresh the account status from DB
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await supabase
       .from("photographers")
       .select("stripe_account_id, stripe_connected_at")
-      .eq("id", user.id)
+      .eq("id", photographerId)
       .single();
     if (data) {
       setStripeAccountId((data as any).stripe_account_id ?? null);

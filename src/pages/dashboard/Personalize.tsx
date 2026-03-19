@@ -98,7 +98,7 @@ function FieldRow({ label, children }: {label: string;children: React.ReactNode;
 }
 
 const Personalize = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -225,51 +225,51 @@ const Personalize = () => {
   const ogInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSessionTypes = useCallback(async () => {
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await supabase.
     from("session_types").
     select("id, name").
-    eq("photographer_id", user.id).
+    eq("photographer_id", photographerId).
     order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
-  }, [user]);
+  }, [photographerId]);
 
   const fetchContracts = useCallback(async () => {
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await (supabase as any).
     from("contracts").
     select("id, name, body").
-    eq("photographer_id", user.id).
+    eq("photographer_id", photographerId).
     order("created_at", { ascending: true });
     if (data) setContracts(data);
-  }, [user]);
+  }, [photographerId]);
 
   const fetchBriefings = useCallback(async () => {
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await (supabase as any).
     from("briefings").
     select("id, name, questions").
-    eq("photographer_id", user.id).
+    eq("photographer_id", photographerId).
     order("created_at", { ascending: true });
     if (data) setBriefings(data as Briefing[]);
-  }, [user]);
+  }, [photographerId]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     const fetchAll = async () => {
       const [profileRes, siteRes, watermarksRes, gallerySettingsRes, businessRes] = await Promise.all([
       supabase.from("photographers").
       select("full_name, store_slug, custom_domain, bio, hero_image_url").
-      eq("id", user.id).single(),
+      eq("id", photographerId).single(),
       (supabase as any).from("photographer_site").
-      select("*").eq("photographer_id", user.id).maybeSingle(),
+      select("*").eq("photographer_id", photographerId).maybeSingle(),
       (supabase as any).from("watermarks").
-      select("*").eq("photographer_id", user.id).order("created_at", { ascending: true }),
+      select("*").eq("photographer_id", photographerId).order("created_at", { ascending: true }),
       (supabase as any).from("gallery_settings").
-      select("key, value").eq("photographer_id", user.id),
+      select("key, value").eq("photographer_id", photographerId),
       (supabase as any).from("photographers").
       select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id").
-      eq("id", user.id).single(),
+      eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
       fetchBriefings()]
@@ -341,7 +341,7 @@ const Personalize = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user, fetchSessionTypes, fetchContracts]);
+  }, [user, photographerId, fetchSessionTypes, fetchContracts]);
 
   // ── Validators ──────────────────────────────────────────────────────────────
   const validateSlug = (value: string) => {

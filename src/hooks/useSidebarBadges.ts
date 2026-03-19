@@ -8,23 +8,23 @@ export interface SidebarBadges {
 }
 
 export function useSidebarBadges(): SidebarBadges {
-  const { user } = useAuth();
+  const { user, photographerId } = useAuth();
   const [badges, setBadges] = useState<SidebarBadges>({ pendingBookings: 0, draftSessions: 0 });
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
 
     async function fetchCounts() {
       const [bookingsRes, sessionsRes] = await Promise.all([
         supabase
           .from("bookings")
           .select("id", { count: "exact", head: true })
-          .eq("photographer_id", user!.id)
+          .eq("photographer_id", photographerId!)
           .eq("status", "pending"),
         supabase
           .from("sessions")
           .select("id", { count: "exact", head: true })
-          .eq("photographer_id", user!.id)
+          .eq("photographer_id", photographerId!)
           .eq("status", "draft"),
       ]);
 
@@ -36,17 +36,16 @@ export function useSidebarBadges(): SidebarBadges {
 
     fetchCounts();
 
-    // Realtime subscription for bookings changes
     const channel = supabase
       .channel("sidebar-badges")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "bookings", filter: `photographer_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "bookings", filter: `photographer_id=eq.${photographerId}` },
         () => fetchCounts()
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "sessions", filter: `photographer_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "sessions", filter: `photographer_id=eq.${photographerId}` },
         () => fetchCounts()
       )
       .subscribe();
@@ -54,7 +53,7 @@ export function useSidebarBadges(): SidebarBadges {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, photographerId]);
 
   return badges;
 }
