@@ -606,7 +606,7 @@ export default function AdminVpsSetup() {
         </Section>
 
         {/* Caddyfile */}
-        <Section step={3} title="Configure Caddyfile">
+        <Section step={3} title="Configure Caddyfile" highlight={detectedEnv === "standalone"}>
           <p className="text-xs font-light text-muted-foreground">
             Replace the default{" "}
             <code className="font-mono bg-muted px-1 rounded text-[11px]">
