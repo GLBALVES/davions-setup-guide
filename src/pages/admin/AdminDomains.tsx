@@ -112,8 +112,8 @@ function CopyButton({ value }: { value: string }) {
 function RecordBadge({ status }: { status: RecordStatus }) {
   if (status === "idle") return <Minus size={11} className="text-muted-foreground/40" />;
   if (status === "checking") return <Loader2 size={11} className="animate-spin text-muted-foreground" />;
-  if (status === "ok") return <CheckCircle2 size={11} style={{ color: "hsl(142 71% 45%)" }} />;
-  return <XCircle size={11} style={{ color: "hsl(0 72% 51%)" }} />;
+  if (status === "ok") return <CheckCircle2 size={11} className="text-emerald-500" />;
+  return <XCircle size={11} className="text-destructive" />;
 }
 
 function DnsPropagationCell({ dns }: { dns: DnsDetail | undefined }) {
