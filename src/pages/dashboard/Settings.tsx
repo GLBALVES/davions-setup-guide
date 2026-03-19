@@ -428,11 +428,11 @@ const Settings = () => {
 
   const handleOnboardingExit = async () => {
     // Refresh the account status from DB
-    if (!user) return;
+    if (!photographerId) return;
     const { data } = await supabase
       .from("photographers")
       .select("stripe_account_id, stripe_connected_at")
-      .eq("id", user.id)
+      .eq("id", photographerId)
       .single();
     if (data) {
       setStripeAccountId((data as any).stripe_account_id ?? null);
