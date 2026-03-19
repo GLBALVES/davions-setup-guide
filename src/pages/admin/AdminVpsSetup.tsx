@@ -67,7 +67,8 @@ function Section({
 const CADDYFILE = `{
   email admin@davions.com
   on_demand_tls {
-    ask https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?domain={host}
+    # Caddy automatically appends ?domain=<hostname> — do NOT use {host} placeholder here
+    ask https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain
     interval 2m
     burst    5
   }
