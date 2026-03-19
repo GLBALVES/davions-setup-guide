@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
-import { Camera, Clock, MapPin, Image as ImageIcon } from "lucide-react";
+import { Camera, Clock, MapPin, Image as ImageIcon, Images } from "lucide-react";
 import logoPreto from "@/assets/logo_principal_preto.png";
 import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 
@@ -34,10 +34,19 @@ interface Session {
   cover_image_url: string | null;
 }
 
+interface Gallery {
+  id: string;
+  slug: string | null;
+  title: string;
+  category: string;
+  cover_image_url: string | null;
+}
+
 const CustomDomainStore = () => {
   const navigate = useNavigate();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -59,14 +68,24 @@ const CustomDomainStore = () => {
 
       setPhotographer(photoData as Photographer);
 
-      const { data: sessionData } = await supabase
-        .from("sessions")
-        .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
-        .eq("photographer_id", photoData.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: true });
+      // Fetch sessions and galleries in parallel
+      const [{ data: sessionData }, { data: galleryData }] = await Promise.all([
+        supabase
+          .from("sessions")
+          .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
+          .eq("photographer_id", photoData.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("galleries")
+          .select("id, slug, title, category, cover_image_url")
+          .eq("photographer_id", photoData.id)
+          .eq("status", "published")
+          .order("created_at", { ascending: false }),
+      ]);
 
       setSessions(sessionData ?? []);
+      setGalleries(galleryData ?? []);
       setLoading(false);
     };
 
@@ -235,6 +254,51 @@ const CustomDomainStore = () => {
           </>
         )}
       </main>
+
+      {/* ── Published Galleries ── */}
+      {galleries.length > 0 && (
+        <section className="border-t border-border">
+          <div className="max-w-5xl mx-auto px-6 py-14">
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">
+              Portfolio
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleries.map((gallery) => (
+                <button
+                  key={gallery.id}
+                  onClick={() => navigate(`/gallery/${gallery.slug ?? gallery.id}`)}
+                  className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card"
+                >
+                  <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                    {gallery.cover_image_url ? (
+                      <img
+                        src={gallery.cover_image_url}
+                        alt={gallery.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Images className="h-8 w-8 text-muted-foreground/20" />
+                      </div>
+                    )}
+                    {/* Category badge */}
+                    <span className="absolute top-3 left-3 text-[9px] tracking-[0.3em] uppercase bg-black/50 text-white/70 px-2 py-1 backdrop-blur-sm">
+                      {gallery.category}
+                    </span>
+                  </div>
+
+                  <div className="p-5 flex items-center justify-between">
+                    <h2 className="text-sm font-light tracking-wide">{gallery.title}</h2>
+                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors shrink-0 ml-3">
+                      View →
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <footer className="border-t border-border py-6 text-center">
         <p className="text-[9px] tracking-widest uppercase text-muted-foreground/50">
