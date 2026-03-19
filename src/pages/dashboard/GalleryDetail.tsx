@@ -146,7 +146,134 @@ interface SortablePhotoProps {
   settingCover: string | null;
 }
 
-const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect }: SortablePhotoProps) => {
+const SortablePhoto = ({ photo, onRequestDelete, onPreview, isSelected, isSelecting, onToggleSelect, onSetCover, isCover, settingCover }: SortablePhotoProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: photo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  const displayName = photo.filename.length > 22
+    ? photo.filename.slice(0, 10) + "…" + photo.filename.slice(-8)
+    : photo.filename;
+
+  const isSettingThisCover = settingCover === photo.id;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "relative group aspect-square bg-muted overflow-hidden",
+        isSelecting ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+        isSelected && "ring-2 ring-primary ring-offset-1"
+      )}
+      {...(isSelecting ? {} : attributes)}
+      {...(isSelecting ? {} : listeners)}
+      onClick={isSelecting ? () => onToggleSelect(photo.id) : undefined}
+    >
+      {photo.url ? (
+        <img
+          src={photo.url}
+          alt={photo.filename}
+          className="w-full h-full object-cover pointer-events-none select-none"
+          draggable={false}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center pointer-events-none">
+          <span className="text-[10px] text-muted-foreground">No preview</span>
+        </div>
+      )}
+
+      {/* Cover badge (top-right) */}
+      {isCover && !isSelecting && (
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-foreground/80 text-background px-1.5 py-0.5 text-[9px] tracking-wider font-medium pointer-events-none">
+          <ImagePlus className="h-2.5 w-2.5" />
+          COVER
+        </div>
+      )}
+
+      {/* Favorite badge (top-left) */}
+      {(photo.favorite_count ?? 0) > 0 && !isSelecting && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-rose-500/90 text-white px-1.5 py-0.5 text-[9px] tracking-wider font-medium pointer-events-none">
+          <Heart className="h-2.5 w-2.5 fill-white" />
+          {photo.favorite_count}
+        </div>
+      )}
+
+      {/* Selection checkbox */}
+      {isSelecting && (
+        <div className="absolute top-2 left-2 z-10">
+          {isSelected ? (
+            <CheckSquare className="h-5 w-5 text-primary drop-shadow" />
+          ) : (
+            <Square className="h-5 w-5 text-white/80 drop-shadow" />
+          )}
+        </div>
+      )}
+
+      {/* Selected overlay */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
+      )}
+
+      {/* Filename bar */}
+      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 pointer-events-none">
+        <p className="text-[9px] text-white/80 truncate tracking-wide font-mono">
+          {displayName}
+        </p>
+      </div>
+
+      {/* Hover actions */}
+      {!isSelecting && (
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onPreview(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); if (!isCover) onSetCover(photo); }}
+            disabled={isSettingThisCover || isCover}
+            title={isCover ? "Already cover" : "Set as cover"}
+            className={cn(
+              "p-2 transition-colors cursor-pointer",
+              isCover
+                ? "bg-foreground text-background opacity-60 cursor-default"
+                : "bg-background/90 text-foreground hover:bg-foreground hover:text-background"
+            )}
+          >
+            {isSettingThisCover ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImagePlus className="h-4 w-4" />
+            )}
+          </button>
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onRequestDelete(photo); }}
+            className="bg-background/90 text-foreground p-2 hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
   const {
     attributes,
     listeners,
