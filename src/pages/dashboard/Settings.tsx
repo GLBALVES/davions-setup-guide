@@ -284,14 +284,14 @@ const Settings = () => {
   };
 
   const handleSaveGallerySettings = async () => {
-    if (!user) return;
+    if (!photographerId) return;
     setSavingGallerySettings(true);
     const days = parseInt(galleryExpiryDays, 10);
     const valueToSave = (!galleryExpiryDays.trim() || isNaN(days) || days <= 0) ? null : String(days);
     const { error } = await (supabase as any)
       .from("gallery_settings")
       .upsert(
-        { photographer_id: user.id, key: "default_expiry_days", value: valueToSave },
+        { photographer_id: photographerId, key: "default_expiry_days", value: valueToSave },
         { onConflict: "photographer_id,key" }
       );
     if (error) {
