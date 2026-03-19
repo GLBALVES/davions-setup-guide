@@ -74,9 +74,12 @@ export const RegionProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    supabase.functions
-      .invoke("detect-region")
-      .then(({ data, error }) => {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("detect-region timeout")), 4000)
+    );
+
+    Promise.race([supabase.functions.invoke("detect-region"), timeoutPromise])
+      .then(({ data, error }: { data: any; error: any }) => {
         if (error || !data) {
           setRegion({ ...DEFAULT_REGION, loading: false });
           return;
