@@ -329,7 +329,7 @@ const WebsiteSettings = () => {
     const fetchAll = async () => {
       const [profileRes, siteRes] = await Promise.all([
         supabase.from("photographers")
-          .select("full_name, bio, hero_image_url, custom_domain, store_slug")
+          .select("full_name, bio, custom_domain, store_slug")
           .eq("id", user.id).single(),
         (supabase as any).from("photographer_site")
           .select("*").eq("photographer_id", user.id).maybeSingle(),
@@ -339,7 +339,6 @@ const WebsiteSettings = () => {
         const d = profileRes.data;
         setFullName((d as any).full_name ?? "");
         setBio((d as any).bio ?? "");
-        setHeroImageUrl((d as any).hero_image_url ?? "");
         setCustomDomain((d as any).custom_domain ?? "");
         setCustomDomainInput((d as any).custom_domain ?? "");
         setStoreSlug((d as any).store_slug ?? "");
@@ -357,6 +356,8 @@ const WebsiteSettings = () => {
         setCtaLink(s.cta_link ?? "");
         setAboutTitle(s.about_title ?? "About");
         setAboutImageUrl(s.about_image_url ?? "");
+        // Hero image is stored in photographer_site (separate from profile avatar)
+        setHeroImageUrl((s as any).site_hero_image_url ?? "");
         setInstagramUrl(s.instagram_url ?? "");
         setFacebookUrl(s.facebook_url ?? "");
         setPinterestUrl(s.pinterest_url ?? "");
@@ -421,7 +422,6 @@ const WebsiteSettings = () => {
     await supabase.from("photographers").update({
       full_name: fullName.trim() || null,
       bio: bio.trim() || null,
-      hero_image_url: heroImageUrl.trim() || null,
     } as any).eq("id", user.id);
 
     const { error } = await (supabase as any).from("photographer_site").upsert({
@@ -429,6 +429,7 @@ const WebsiteSettings = () => {
       logo_url: logoUrl.trim() || null,
       tagline: tagline.trim() || null,
       accent_color: accentColor,
+      site_hero_image_url: heroImageUrl.trim() || null,
       site_headline: siteHeadline.trim() || null,
       site_subheadline: siteSubheadline.trim() || null,
       cta_text: ctaText.trim() || "Book a Session",
@@ -571,8 +572,8 @@ const WebsiteSettings = () => {
                           <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">{ws.uploadHero}</span>
                         </div>
                       )}
-                      <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "session-covers", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
+                       <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
+                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "site-assets", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
                     </div>
 
                     <FieldRow label={ws.headlineLabel}>

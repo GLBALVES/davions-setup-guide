@@ -1378,6 +1378,7 @@ export type Database = {
           show_contact: boolean | null
           show_store: boolean | null
           site_headline: string | null
+          site_hero_image_url: string | null
           site_subheadline: string | null
           site_template: string | null
           tagline: string | null
@@ -1411,6 +1412,7 @@ export type Database = {
           show_contact?: boolean | null
           show_store?: boolean | null
           site_headline?: string | null
+          site_hero_image_url?: string | null
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
@@ -1444,6 +1446,7 @@ export type Database = {
           show_contact?: boolean | null
           show_store?: boolean | null
           site_headline?: string | null
+          site_hero_image_url?: string | null
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
