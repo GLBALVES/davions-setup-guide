@@ -191,12 +191,12 @@ const Bookings = () => {
           sessions ( title, briefing_id ),
           session_availability ( start_time, end_time, date )
         `)
-        .eq("photographer_id", user!.id)
+        .eq("photographer_id", photographerId ?? user!.id)
         .order("created_at", { ascending: false }),
       supabase
         .from("photographers")
         .select("stripe_account_id, stripe_connected_at")
-        .eq("id", user!.id)
+        .eq("id", photographerId ?? user!.id)
         .single(),
     ]);
 

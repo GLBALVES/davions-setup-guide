@@ -118,7 +118,7 @@ export default function Revenue() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     const fetchData = async () => {
       setLoading(true);
       const { data, error } = await supabase
@@ -128,7 +128,7 @@ export default function Revenue() {
           payment_status, status, extras_total,
           sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
         `)
-        .eq("photographer_id", user.id)
+        .eq("photographer_id", photographerId)
         .order("created_at", { ascending: false });
 
       if (!error && data) {

@@ -69,9 +69,9 @@ const Dashboard = () => {
   const [photographerName, setPhotographerName] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !photographerId) return;
     fetchAll();
-  }, [user]);
+  }, [user, photographerId]);
 
   const fetchAll = async () => {
     setLoading(true);
