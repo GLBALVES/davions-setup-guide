@@ -143,26 +143,33 @@ curl -s "https://pjcegphrngpedujeatrl.supabase.co/functions/v1/validate-domain?d
 # Must return: {"registered":true}  — status 200, otherwise on_demand_tls will be denied`;
 
 const CADDYFILE_EASYPANEL = `{
-  # Traefik handles TLS termination — disable Caddy's auto HTTPS
-  auto_https off
+    auto_https off
 }
 
-:8080 {
-  # Ensure browser requests for assets served through this proxy are not blocked by CORS.
-  header Access-Control-Allow-Origin "*"
-  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
-  # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
-  # which breaks the proxy. Using the primary domain directly returns 200 OK.
-  reverse_proxy https://davions.com {
-    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
-    header_up Host davions.com
-    # Pass the original custom domain so the React app detects it as a custom domain.
-    header_up X-Forwarded-Host {http.request.host}
-    header_up X-Real-IP {remote_host}
-    transport http {
-      tls_server_name davions.com
+:80 {
+    header Access-Control-Allow-Origin "*"
+
+    # Remove headers that may confuse the CDN
+    header_up -X-Forwarded-For
+    header_up -X-Real-IP
+
+    # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
+    # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
+    # which breaks the proxy. Using the primary domain directly returns 200 OK.
+    reverse_proxy https://davions.com {
+        # Host MUST be the primary Lovable domain so Cloudflare serves the app correctly.
+        header_up Host davions.com
+        # Preserve original custom domain for React custom domain detection.
+        header_up X-Forwarded-Host {host}
+        transport http {
+            tls
+            tls_server_name davions.com
+        }
     }
-  }
+
+    handle_errors {
+        rewrite * /index.html
+    }
 }`;
 
 const EASYPANEL_DOCKER_RUN = `# 0. Confirm the Traefik network name (usually "easypanel")
