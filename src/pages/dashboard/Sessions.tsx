@@ -28,7 +28,7 @@ interface Session {
 }
 
 const Sessions = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();

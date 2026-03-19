@@ -32,7 +32,7 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
 const Settings = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();

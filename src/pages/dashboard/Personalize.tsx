@@ -98,7 +98,7 @@ function FieldRow({ label, children }: {label: string;children: React.ReactNode;
 }
 
 const Personalize = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
