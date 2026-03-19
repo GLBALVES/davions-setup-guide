@@ -85,16 +85,17 @@ https:// {
   tls {
     on_demand
   }
-  reverse_proxy https://davions-page-builder.lovable.app {
-    # CRITICAL: rewrite Host to the Lovable CDN hostname so it serves the app.
-    # Without this, the CDN returns 404 because it does not recognise the
-    # photographer's custom domain as a registered host.
-    header_up Host davions-page-builder.lovable.app
-    # Preserve the original domain so the React app can detect it as a custom domain.
+  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
+  # Lovable/Cloudflare redirects .lovable.app subdomains to the primary domain with a 302,
+  # which would cause a redirect loop. Using the primary domain directly returns 200.
+  reverse_proxy https://davions.com {
+    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
+    header_up Host davions.com
+    # Preserve the original custom domain so the React app can detect it.
     header_up X-Forwarded-Host {host}
     header_up X-Real-IP {remote_host}
     transport http {
-      tls_server_name davions-page-builder.lovable.app
+      tls_server_name davions.com
     }
   }
 }`;
@@ -145,24 +146,33 @@ const CADDYFILE_EASYPANEL = `{
 }
 
 :8080 {
-  reverse_proxy https://davions-page-builder.lovable.app {
-    # Rewrite Host so the Lovable CDN recognises the project
-    header_up Host davions-page-builder.lovable.app
-    # Pass the original domain so the React app detects the custom domain
+  # IMPORTANT: use davions.com (primary domain) as upstream — NOT davions-page-builder.lovable.app.
+  # Lovable/Cloudflare issues a 302 redirect from .lovable.app subdomains to the primary domain,
+  # which breaks the proxy. Using the primary domain directly returns 200 OK.
+  reverse_proxy https://davions.com {
+    # Rewrite Host to the primary domain so Cloudflare serves the app correctly.
+    header_up Host davions.com
+    # Pass the original custom domain so the React app detects it as a custom domain.
     header_up X-Forwarded-Host {http.request.host}
     header_up X-Real-IP {remote_host}
     transport http {
-      tls_server_name davions-page-builder.lovable.app
+      tls_server_name davions.com
     }
   }
 }`;
 
-const EASYPANEL_DOCKER_RUN = `# Option A — run directly on the host (internal network only)
+const EASYPANEL_DOCKER_RUN = `# Stop and remove the old container (if already running with wrong config)
+docker stop caddy-proxy && docker rm caddy-proxy
+
+# Start with the corrected Caddyfile (upstream = davions.com)
 docker run -d --name caddy-proxy \\
   --restart unless-stopped \\
   -p 127.0.0.1:8080:8080 \\
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \\
-  caddy:latest`;
+  caddy:latest
+
+# Verify — expected: HTTP/1.1 200 OK (no more 302)
+curl -s -o /dev/null -w "%{http_code}" -H "Host: davions.giombelli.com.br" http://127.0.0.1:8080`;
 
 const EASYPANEL_TRAEFIK_LABELS = `# Option B — docker-compose / Easypanel App service
 # Set image: caddy:latest, internal port 8080.
@@ -467,7 +477,20 @@ export default function AdminVpsSetup() {
             <p>Visitor → custom-domain.com:443</p>
             <p className="pl-4">→ Traefik (port 443, handles TLS)</p>
             <p className="pl-8">→ Caddy container (port 8080, no TLS)</p>
-            <p className="pl-12">→ davions-page-builder.lovable.app (Host rewritten)</p>
+            <p className="pl-12">→ davions.com (Host rewritten — primary domain)</p>
+          </div>
+
+          <div className="border border-border rounded-md px-4 py-3 space-y-1">
+            <p className="text-xs font-light text-foreground flex items-center gap-2">
+              <AlertTriangle size={12} className="text-muted-foreground shrink-0" /> Why <code className="font-mono bg-muted px-1 rounded text-[11px]">davions.com</code> and not <code className="font-mono bg-muted px-1 rounded text-[11px]">davions-page-builder.lovable.app</code>?
+            </p>
+            <p className="text-[11px] font-light text-muted-foreground leading-relaxed pl-[18px]">
+              Lovable/Cloudflare issues a <strong className="text-foreground font-normal">302 redirect</strong> from <code className="font-mono bg-muted px-0.5 rounded text-[10px]">.lovable.app</code> subdomains
+              to the project's primary domain. Pointing the upstream directly at <code className="font-mono bg-muted px-0.5 rounded text-[10px]">davions.com</code> skips
+              the redirect and returns <strong className="text-foreground font-normal">200 OK</strong> immediately.
+              The <code className="font-mono bg-muted px-0.5 rounded text-[10px]">X-Forwarded-Host</code> header still carries the photographer's
+              custom domain so the React app can detect it correctly.
+            </p>
           </div>
 
           <CodeBlock
