@@ -361,6 +361,37 @@ export default function AdminDomains() {
           </Button>
         </div>
 
+        {/* Stale-pending alert */}
+        {stalePendingDomains.length > 0 && (
+          <div className="mb-6 border border-border rounded-md px-4 py-3 flex items-start gap-3">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0 text-muted-foreground" />
+            <div className="space-y-1 flex-1 min-w-0">
+              <p className="text-xs font-light text-foreground">
+                {stalePendingDomains.length === 1
+                  ? "1 domain has been pending for over 24 hours"
+                  : `${stalePendingDomains.length} domains have been pending for over 24 hours`}
+              </p>
+              <p className="text-[11px] font-light text-muted-foreground leading-relaxed">
+                DNS has propagated but the Caddy server may not have issued the TLS certificate yet, or the{" "}
+                <code className="font-mono bg-muted px-1 rounded text-[10px]">:80, :443</code> block conflict is blocking On-Demand TLS.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {stalePendingDomains.map((p) => (
+                  <code key={p.id} className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                    {p.custom_domain}
+                  </code>
+                ))}
+              </div>
+            </div>
+            <a
+              href="/admin/vps-setup"
+              className="shrink-0 text-[10px] tracking-[0.15em] uppercase font-light text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors whitespace-nowrap"
+            >
+              Caddy troubleshooting guide →
+            </a>
+          </div>
+        )}
+
         {/* Table */}
         <div className="border border-border rounded-md overflow-hidden">
           {isLoading ? (
