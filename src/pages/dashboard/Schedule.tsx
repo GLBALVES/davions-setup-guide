@@ -93,6 +93,7 @@ const Schedule = () => {
 
   const fetchData = useCallback(async () => {
     if (!user) return;
+    const pid = photographerId ?? user.id;
     setLoading(true);
 
     let from: Date, to: Date;

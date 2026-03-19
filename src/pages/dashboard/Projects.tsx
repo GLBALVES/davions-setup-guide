@@ -562,7 +562,7 @@ function ArchivedKanbanSection({
 
 // ── Main page ────────────────────────────────────────────────────────────────
 const Projects = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
   const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
