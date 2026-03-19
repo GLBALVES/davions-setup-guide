@@ -120,16 +120,16 @@ function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => vo
   if (status === "active") {
     return (
       <div className="flex items-center gap-1.5">
-        <CheckCircle2 size={11} className="shrink-0" style={{ color: "hsl(142 71% 45%)" }} />
-        <span className="text-xs font-light" style={{ color: "hsl(142 71% 40%)" }}>Active</span>
+        <CheckCircle2 size={11} className="shrink-0 text-foreground" />
+        <span className="text-xs font-light text-foreground">Active</span>
       </div>
     );
   }
   if (status === "pending") {
     return (
       <div className="flex items-center gap-1.5">
-        <Clock size={11} className="shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
-        <span className="text-xs font-light" style={{ color: "hsl(38 80% 40%)" }}>Pending</span>
+        <Clock size={11} className="shrink-0 text-muted-foreground" />
+        <span className="text-xs font-light text-muted-foreground">Pending</span>
       </div>
     );
   }
