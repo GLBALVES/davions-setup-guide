@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -120,16 +120,16 @@ function StatusBadge({ status, onCheck }: { status: RowStatus; onCheck: () => vo
   if (status === "active") {
     return (
       <div className="flex items-center gap-1.5">
-        <CheckCircle2 size={11} className="shrink-0" style={{ color: "hsl(142 71% 45%)" }} />
-        <span className="text-xs font-light" style={{ color: "hsl(142 71% 40%)" }}>Active</span>
+        <CheckCircle2 size={11} className="shrink-0 text-foreground" />
+        <span className="text-xs font-light text-foreground">Active</span>
       </div>
     );
   }
   if (status === "pending") {
     return (
       <div className="flex items-center gap-1.5">
-        <Clock size={11} className="shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
-        <span className="text-xs font-light" style={{ color: "hsl(38 80% 40%)" }}>Pending</span>
+        <Clock size={11} className="shrink-0 text-muted-foreground" />
+        <span className="text-xs font-light text-muted-foreground">Pending</span>
       </div>
     );
   }
@@ -200,9 +200,9 @@ function DnsExpansion({ domain, dns }: { domain: string; dns: DnsDetail | undefi
       </div>
 
       {/* Cloudflare note */}
-      <div className="border border-yellow-500/30 bg-yellow-500/5 p-3">
+      <div className="border border-border bg-muted/40 p-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
+          <AlertTriangle size={12} className="mt-0.5 shrink-0 text-muted-foreground" />
           <div className="space-y-1">
             <p className="text-xs font-medium text-foreground">Using Cloudflare? Nameserver migration required.</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -315,6 +315,19 @@ export default function AdminDomains() {
   const toggleExpand = (id: string) =>
     setExpanded((prev) => (prev === id ? null : id));
 
+  const staleThreshold = Date.now() - 24 * 60 * 60 * 1000; // 24 h ago
+
+  const stalePendingDomains = useMemo(
+    () =>
+      photographers.filter(
+        (p) =>
+          statuses[p.id] === "pending" &&
+          new Date(p.created_at).getTime() < staleThreshold
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [photographers, statuses]
+  );
+
   return (
     <AdminLayout>
       <div className="p-8 max-w-6xl mx-auto">
@@ -347,6 +360,37 @@ export default function AdminDomains() {
             Refresh Status
           </Button>
         </div>
+
+        {/* Stale-pending alert */}
+        {stalePendingDomains.length > 0 && (
+          <div className="mb-6 border border-border rounded-md px-4 py-3 flex items-start gap-3">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0 text-muted-foreground" />
+            <div className="space-y-1 flex-1 min-w-0">
+              <p className="text-xs font-light text-foreground">
+                {stalePendingDomains.length === 1
+                  ? "1 domain has been pending for over 24 hours"
+                  : `${stalePendingDomains.length} domains have been pending for over 24 hours`}
+              </p>
+              <p className="text-[11px] font-light text-muted-foreground leading-relaxed">
+                DNS has propagated but the Caddy server may not have issued the TLS certificate yet, or the{" "}
+                <code className="font-mono bg-muted px-1 rounded text-[10px]">:80, :443</code> block conflict is blocking On-Demand TLS.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {stalePendingDomains.map((p) => (
+                  <code key={p.id} className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                    {p.custom_domain}
+                  </code>
+                ))}
+              </div>
+            </div>
+            <a
+              href="/admin/vps-setup"
+              className="shrink-0 text-[10px] tracking-[0.15em] uppercase font-light text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors whitespace-nowrap"
+            >
+              Caddy troubleshooting guide →
+            </a>
+          </div>
+        )}
 
         {/* Table */}
         <div className="border border-border rounded-md overflow-hidden">
