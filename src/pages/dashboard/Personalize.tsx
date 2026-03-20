@@ -522,17 +522,21 @@ const Personalize = () => {
     if (!photographerId) return;
     setSavingGallerySettings(true);
     const upserts = [
-      { key: "proof_expiry_days",       value: parseIntPos(proofExpiryDays) },
-      { key: "proof_renewal_days",      value: parseIntPos(proofRenewalDays) },
-      { key: "proof_reactivation_fee",  value: parseNum(proofReactivationFee) },
+      { key: "proof_expiry_days",         value: parseIntPos(proofExpiryDays) },
+      { key: "proof_renewal_days",        value: parseIntPos(proofRenewalDays) },
+      { key: "proof_reactivation_fee",    value: parseNum(proofReactivationFee) },
       { key: "proof_auto_unpublish_days", value: parseIntPos(proofAutoUnpublish) },
-      { key: "final_expiry_days",       value: parseIntPos(finalExpiryDays) },
-      { key: "final_renewal_days",      value: parseIntPos(finalRenewalDays) },
-      { key: "final_reactivation_fee",  value: parseNum(finalReactivationFee) },
+      { key: "proof_auto_delete_enabled", value: proofAutoDeleteEnabled ? "true" : "false" },
+      { key: "proof_auto_delete_days",    value: parseIntPos(proofAutoDeleteDays) },
+      { key: "final_expiry_days",         value: parseIntPos(finalExpiryDays) },
+      { key: "final_renewal_days",        value: parseIntPos(finalRenewalDays) },
+      { key: "final_reactivation_fee",    value: parseNum(finalReactivationFee) },
       { key: "final_auto_unpublish_days", value: parseIntPos(finalAutoUnpublish) },
+      { key: "final_auto_delete_enabled", value: finalAutoDeleteEnabled ? "true" : "false" },
+      { key: "final_auto_delete_days",    value: parseIntPos(finalAutoDeleteDays) },
       // legacy keys kept for backward compat
-      { key: "default_expiry_days",     value: parseIntPos(proofExpiryDays) },
-      { key: "reactivation_fee",        value: parseNum(proofReactivationFee) },
+      { key: "default_expiry_days",       value: parseIntPos(proofExpiryDays) },
+      { key: "reactivation_fee",          value: parseNum(proofReactivationFee) },
     ].map((r) => ({ photographer_id: photographerId, key: r.key, value: r.value }));
 
     const { error } = await (supabase as any)
