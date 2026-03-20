@@ -838,6 +838,8 @@ const WebsiteSettings = () => {
                       <input ref={faviconInputRef} type="file" accept="image/png,image/x-icon,image/svg+xml,image/ico" className="hidden"
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "favicon", "site-assets", setFaviconUrl, setUploadingFavicon, "Favicon"); }} />
                     </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FieldRow label={ws.taglineLabel}>
                         <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder={ws.taglinePlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
