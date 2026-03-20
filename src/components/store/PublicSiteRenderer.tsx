@@ -390,8 +390,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
                       <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
                         <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
                         <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
-                        {(session as any).tagline && (
-                          <p className="text-base font-light text-muted-foreground italic">{(session as any).tagline}</p>
+                        {session.tagline && (
+                          <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>
                         )}
                         {session.description && (
                           <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>
