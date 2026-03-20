@@ -291,8 +291,8 @@ function ProjectModal({
   const [notes, setNotes] = useState("");
 
   const stageLabels: Record<string, string> = {
-    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
-    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
+    post_production: "Pós produção", final_gallery: "Galeria final",
   };
 
   useEffect(() => {
