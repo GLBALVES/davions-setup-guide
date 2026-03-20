@@ -2239,6 +2239,43 @@ const SessionForm = () => {
                         </p>
                       )}
                     </div>
+
+                    {/* Virtual Blocking */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Virtual Blocking</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Hides a percentage of available slots from clients, creating artificial scarcity. Blocked slots rotate randomly on each page load.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="90"
+                          step="5"
+                          value={virtualBlockPercent}
+                          onChange={(e) => setVirtualBlockPercent(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">% of slots hidden</span>
+                      </div>
+                      {parseInt(virtualBlockPercent) === 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          All available slots are visible to clients (no virtual blocking).
+                        </p>
+                      )}
+                      {parseInt(virtualBlockPercent) > 0 && parseInt(virtualBlockPercent) <= 90 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          ~{parseInt(virtualBlockPercent)}% of available slots will be hidden from the booking page. Slots remain bookable if a client has a direct link.
+                        </p>
+                      )}
+                      {parseInt(virtualBlockPercent) > 90 && (
+                        <p className="text-[10px] text-amber-500 italic">
+                          Maximum is 90% to ensure clients always see at least some availability.
+                        </p>
+                      )}
+                    </div>
                   </section>
 
                   {/* Step 7 Actions */}
