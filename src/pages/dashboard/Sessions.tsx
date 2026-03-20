@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 
@@ -291,6 +292,29 @@ function SessionCard({
     }
   };
 
+  const handleCopyLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      toast({ title: s.linkCopied, description: s.bookingUrlCopied });
+    } catch {
+      toast({ title: s.failedToCopy, variant: "destructive" });
+    }
+  };
+
+  const handleShareWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(bookingUrl)}`, "_blank");
+  };
+
+  const handleShareEmail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    window.open(`mailto:?subject=${encodeURIComponent(session.title)}&body=${encodeURIComponent(bookingUrl)}`, "_blank");
+  };
+
   return (
     <TooltipProvider>
       <div
@@ -393,20 +417,43 @@ function SessionCard({
                 </TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleShare}
-                    disabled={!bookingUrl}
-                    className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {bookingUrl ? s.copyBookingLink : s.configureStore}
-                </TooltipContent>
-              </Tooltip>
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        disabled={!bookingUrl}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {bookingUrl ? "Share" : s.configureStore}
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleCopyLink}>
+                    <Copy className="h-3.5 w-3.5" />
+                    {s.copyBookingLink}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handlePreview}>
+                    <Link2 className="h-3.5 w-3.5" />
+                    Open link
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareWhatsApp}>
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Share via WhatsApp
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareEmail}>
+                    <Mail className="h-3.5 w-3.5" />
+                    Share via Email
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1 ml-1">
                 <Calendar className="h-3 w-3" />
