@@ -1329,12 +1329,6 @@ const WebsiteSettings = () => {
                         }}
                       />
                     </section>
-                        <Input
-                          value={customDomainInput}
-                          onChange={(e) => { setCustomDomainInput(e.target.value.toLowerCase().trim()); setDomainError(null); }}
-                          placeholder={ws.domainPlaceholder}
-                          className="h-9 text-sm font-light font-mono"
-                        />
                         <div className="flex items-center gap-4 mt-1.5">
                           <p className="text-[10px] text-muted-foreground/60">
                             e.g.{" "}
