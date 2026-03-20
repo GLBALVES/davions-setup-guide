@@ -638,9 +638,31 @@ const Projects = () => {
       .order("position", { ascending: true });
 
     if (allProjects) {
+      // 5. Fetch gallery covers for projects with a booking_id
+      const bookingIds = (allProjects as any[])
+        .map((p) => p.booking_id)
+        .filter(Boolean);
+
+      let galleryCovers: Record<string, string> = {};
+      if (bookingIds.length > 0) {
+        const { data: galleries } = await supabase
+          .from("galleries")
+          .select("booking_id, cover_image_url")
+          .in("booking_id", bookingIds)
+          .not("cover_image_url", "is", null);
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.booking_id && g.cover_image_url) {
+              galleryCovers[g.booking_id] = g.cover_image_url;
+            }
+          }
+        }
+      }
+
       const mapped = (allProjects as any[]).map((p) => ({
         ...p,
         session_title: (p.bookings as any)?.sessions?.title ?? null,
+        gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
       }));
       setProjects(mapped as ClientProject[]);
     }
