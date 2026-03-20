@@ -107,6 +107,8 @@ type MenuItem = {
   badgeKey?: "pendingBookings" | "draftSessions";
   /** permission key from PERMISSION_GROUPS; undefined = always visible */
   permKey?: string;
+  /** Renders this item indented as a sub-item of the preceding top-level item */
+  isSubItem?: boolean;
 };
 
 type MenuGroup = {
@@ -136,7 +138,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
         { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
-        { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
+        { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true },
         { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
@@ -236,7 +238,7 @@ const groups: MenuGroup[] = [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
@@ -775,13 +777,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+    const subItemClass = item.isSubItem && !collapsed ? "pl-7 relative before:absolute before:left-[22px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-px before:bg-border" : "";
 
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
         <NavLink
           to={item.to}
           end={item.end}
-          className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
+          className={`gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50 ${subItemClass}`}
         >
           <div className="relative shrink-0">
             <item.icon className="h-4 w-4" />
