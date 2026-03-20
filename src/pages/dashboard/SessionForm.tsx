@@ -21,14 +21,17 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Eye,
   Globe,
   GlobeLock,
   Loader2,
   Mail,
   Plus,
+  Share2,
   Trash2,
   Upload,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
