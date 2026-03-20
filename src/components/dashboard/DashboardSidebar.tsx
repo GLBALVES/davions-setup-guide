@@ -109,6 +109,10 @@ type MenuItem = {
   permKey?: string;
   /** Renders this item indented as a sub-item of the preceding top-level item */
   isSubItem?: boolean;
+  /** This item is a collapsible parent that toggles sub-items */
+  isCollapsibleParent?: boolean;
+  /** Sub-items with this key are hidden when the parent is collapsed */
+  parentKey?: string;
 };
 
 type MenuGroup = {
@@ -137,8 +141,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.projects, icon: Columns, to: "/dashboard/projects" },
         { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
-        { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
-        { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true },
+        { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
+        { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
         { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
@@ -237,8 +241,8 @@ const groups: MenuGroup[] = [
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
-      { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true },
+      { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
@@ -652,6 +656,17 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const [loaded, setLoaded] = useState(false);
   // Which group popover is open in collapsed mode
   const [collapsedOpenGroup, setCollapsedOpenGroup] = useState<string | null>(null);
+  // Collapsible submenus state — "schedule" starts collapsed
+  const [collapsedSubmenus, setCollapsedSubmenus] = useState<Record<string, boolean>>(() => ({
+    schedule: location.pathname !== "/dashboard/bookings" && location.pathname !== "/dashboard/schedule",
+  }));
+
+  // Auto-expand schedule submenu when navigating to bookings or schedule
+  useEffect(() => {
+    if (location.pathname === "/dashboard/bookings" || location.pathname === "/dashboard/schedule") {
+      setCollapsedSubmenus((prev) => ({ ...prev, schedule: false }));
+    }
+  }, [location.pathname]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -778,6 +793,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     const pinned = isPinned(groupTitle, item.title);
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
     const subItemClass = item.isSubItem && !collapsed ? "pl-7 relative before:absolute before:left-[22px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-px before:bg-border" : "";
+    const isSubmenuOpen = item.isCollapsibleParent && item.parentKey ? !collapsedSubmenus[item.parentKey] : false;
 
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
@@ -809,6 +825,22 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             <span className="ml-auto shrink-0 bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-sm">
               {badgeCount}
             </span>
+          )}
+          {!collapsed && item.isCollapsibleParent && item.parentKey && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCollapsedSubmenus((prev) => ({ ...prev, [item.parentKey!]: !prev[item.parentKey!] }));
+              }}
+              className="shrink-0 p-0.5 rounded-sm text-muted-foreground/50 hover:text-foreground transition-colors"
+              aria-label="Toggle submenu"
+            >
+              <ChevronRight
+                className="h-3 w-3 transition-transform duration-200"
+                style={{ transform: isSubmenuOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+              />
+            </button>
           )}
         </NavLink>
       </SidebarMenuButton>
@@ -1043,7 +1075,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {visibleItems.map((item) => renderRegularItem(item, group.stableKey))}
+                        {visibleItems
+                          .filter((item) => !item.parentKey || !collapsedSubmenus[item.parentKey] || item.isCollapsibleParent)
+                          .map((item) => renderRegularItem(item, group.stableKey))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
