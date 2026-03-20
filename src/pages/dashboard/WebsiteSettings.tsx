@@ -1330,8 +1330,7 @@ const WebsiteSettings = () => {
                       />
                     </section>
 
-                       {/* DNS records — shown as soon as a domain is saved */}
-                       {customDomain && (() => {
+
                          const DAVIONS_VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
                          const parts = customDomain.split(".");
                          const lastTwo = parts.slice(-2).join(".");
