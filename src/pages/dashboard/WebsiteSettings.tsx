@@ -1000,40 +1000,15 @@ const WebsiteSettings = () => {
                   <section className="flex flex-col gap-5">
                     <SectionHeading title={ws.templateTitle} description={ws.templateDesc} />
                     <div className="grid grid-cols-2 gap-3">
-                      {TEMPLATES.map((t) => (
-                        <button
-                          key={t.value}
-                          onClick={() => setSiteTemplate(t.value)}
-                          className={`flex flex-col gap-2 border p-4 text-left transition-colors ${
-                            siteTemplate === t.value ? "border-foreground bg-foreground/[0.03]" : "border-border hover:border-foreground/30"
-                          }`}
-                        >
-                          <div className={`w-full h-10 ${t.preview} flex items-end p-1 gap-0.5`}>
-                            {t.value === "grid" && (
-                              <>
-                                <div className="flex-1 h-5 bg-foreground/20" />
-                                <div className="flex-1 h-7 bg-foreground/30" />
-                                <div className="flex-1 h-4 bg-foreground/20" />
-                              </>
-                            )}
-                            {t.value === "magazine" && (
-                              <div className="flex gap-0.5 w-full h-full">
-                                <div className="flex-[2] bg-foreground/30" />
-                                <div className="flex-1 flex flex-col gap-0.5">
-                                  <div className="flex-1 bg-foreground/20" />
-                                  <div className="flex-1 bg-foreground/15" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-xs font-light tracking-wider uppercase flex items-center gap-1.5">
-                              {siteTemplate === t.value && <Check className="h-3 w-3" />}
-                              {t.label}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{t.description}</p>
-                          </div>
-                        </button>
+                      {TEMPLATES.map((tmpl) => (
+                        <TemplatePreviewCard
+                          key={tmpl.value}
+                          value={tmpl.value}
+                          label={tmpl.label}
+                          description={tmpl.description}
+                          selected={siteTemplate === tmpl.value}
+                          onClick={() => setSiteTemplate(tmpl.value)}
+                        />
                       ))}
                     </div>
                   </section>
