@@ -223,6 +223,9 @@ const Dashboard = () => {
                 <p className="text-[11px] text-muted-foreground font-light tracking-wide">{todayLabel}</p>
               </div>
 
+              {/* ── Onboarding checklist (auto-hides when complete) ── */}
+              <OnboardingChecklist />
+
               {loading ? (
                 <div className="flex items-center justify-center py-24">
                   <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{t.dashboard.loading}</span>
