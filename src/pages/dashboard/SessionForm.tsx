@@ -285,15 +285,16 @@ const SessionForm = () => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
-    // Check if photographer has Stripe configured
+    // Check if photographer has Stripe configured + fetch store slug
     if (user) {
       (supabase as any)
         .from("photographers")
-        .select("stripe_secret_key, stripe_publishable_key")
+        .select("stripe_secret_key, stripe_publishable_key, store_slug")
         .eq("id", user.id)
         .single()
         .then(({ data }: { data: any }) => {
           setStripeConfigured(Boolean(data?.stripe_secret_key && data?.stripe_publishable_key));
+          setStoreSlug(data?.store_slug ?? null);
         });
     }
   }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates, user]);
