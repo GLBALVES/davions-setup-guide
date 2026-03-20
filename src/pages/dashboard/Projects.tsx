@@ -575,7 +575,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ClientProject | null>(null);
-  const [defaultStage, setDefaultStage] = useState<Stage>("lead");
+  const [defaultStage, setDefaultStage] = useState<Stage>("upcoming");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
