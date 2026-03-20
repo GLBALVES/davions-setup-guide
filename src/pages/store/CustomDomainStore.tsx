@@ -47,12 +47,12 @@ const CustomDomainStore = () => {
       const [{ data: siteData }, { data: sessionData }, { data: galleryData }] = await Promise.all([
         supabase
           .from("photographer_site")
-          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template")
+          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text")
           .eq("photographer_id", photoData.id)
           .maybeSingle(),
         supabase
           .from("sessions")
-          .select("id, slug, title, description, price, duration_minutes, num_photos, location, cover_image_url")
+          .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url")
           .eq("photographer_id", photoData.id)
           .eq("status", "active")
           .order("created_at", { ascending: true }),
