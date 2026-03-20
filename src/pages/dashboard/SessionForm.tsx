@@ -2271,7 +2271,7 @@ const SessionForm = () => {
                         </p>
                       )}
                       {parseInt(virtualBlockPercent) > 90 && (
-                        <p className="text-[10px] text-amber-500 italic">
+                        <p className="text-[10px] text-destructive italic">
                           Maximum is 90% to ensure clients always see at least some availability.
                         </p>
                       )}
