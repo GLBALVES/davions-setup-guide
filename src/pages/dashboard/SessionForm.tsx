@@ -162,6 +162,7 @@ const SessionForm = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
