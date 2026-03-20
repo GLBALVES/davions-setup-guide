@@ -4,6 +4,7 @@
  *   editorial (default) | grid | magazine | clean
  */
 
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
@@ -36,6 +37,7 @@ export interface SiteConfig {
   seo_description: string | null;
   og_image_url: string | null;
   site_template: string | null;
+  favicon_url: string | null;
 }
 
 export interface Session {
@@ -789,6 +791,29 @@ export default function PublicSiteRenderer(props: Props) {
       default:         return <EditorialTemplate props={props} derived={derived} />;
     }
   })();
+
+  // Inject photographer's custom favicon into <head>
+  useEffect(() => {
+    const faviconUrl = site?.favicon_url;
+    if (!faviconUrl) return;
+    const setLink = (rel: string, type: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) {
+        el = document.createElement("link");
+        el.rel = rel;
+        document.head.appendChild(el);
+      }
+      el.type = type;
+      el.href = faviconUrl;
+    };
+    setLink("icon", "image/png");
+    setLink("apple-touch-icon", "image/png");
+    return () => {
+      // Restore default favicon on unmount
+      const el = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+      if (el) el.href = "/favicon.png";
+    };
+  }, [site?.favicon_url]);
 
   return (
     <>
