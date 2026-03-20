@@ -150,6 +150,7 @@ const SessionForm = () => {
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
   const [bookingWindowDays, setBookingWindowDays] = useState("60");
+  const [virtualBlockPercent, setVirtualBlockPercent] = useState("0");
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -444,12 +445,13 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
+    setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
     // Load contract text
     const existingContract = sAny3.contract_text ?? "";
     setContractText(existingContract);
@@ -750,6 +752,7 @@ const SessionForm = () => {
       .update({
         booking_notice_days: parseInt(bookingNoticeDays) || 1,
         booking_window_days: parseInt(bookingWindowDays) || 60,
+        virtual_block_percent: Math.min(100, Math.max(0, parseInt(virtualBlockPercent) || 0)),
       } as any)
       .eq("id", sessionId);
 
@@ -2233,6 +2236,43 @@ const SessionForm = () => {
                       {parseInt(bookingWindowDays) > 0 && (
                         <p className="text-[10px] text-muted-foreground/60 italic">
                           Clients can book sessions up to {parseInt(bookingWindowDays)} days from today.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Virtual Blocking */}
+                    <div className="border border-border p-5 flex flex-col gap-3">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Virtual Blocking</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Hides a percentage of available slots from clients, creating artificial scarcity. Blocked slots rotate randomly on each page load.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="90"
+                          step="5"
+                          value={virtualBlockPercent}
+                          onChange={(e) => setVirtualBlockPercent(e.target.value)}
+                          className="w-24 h-10 text-sm text-center"
+                        />
+                        <span className="text-sm text-muted-foreground font-light">% of slots hidden</span>
+                      </div>
+                      {parseInt(virtualBlockPercent) === 0 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          All available slots are visible to clients (no virtual blocking).
+                        </p>
+                      )}
+                      {parseInt(virtualBlockPercent) > 0 && parseInt(virtualBlockPercent) <= 90 && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          ~{parseInt(virtualBlockPercent)}% of available slots will be hidden from the booking page. Slots remain bookable if a client has a direct link.
+                        </p>
+                      )}
+                      {parseInt(virtualBlockPercent) > 90 && (
+                        <p className="text-[10px] text-destructive italic">
+                          Maximum is 90% to ensure clients always see at least some availability.
                         </p>
                       )}
                     </div>
