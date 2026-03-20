@@ -307,13 +307,25 @@ function SessionCard({
               <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
             </div>
           )}
-          <div className="absolute top-2 right-2">
-            <Badge
-              variant={session.status === "active" ? "default" : "secondary"}
-              className="text-[9px] tracking-wider uppercase font-light"
+          <div className="absolute top-2 right-2 group/badge">
+            <button
+              onClick={handleToggleStatus}
+              disabled={toggling}
+              className="relative block"
             >
-              {session.status === "active" ? s.published : s.unpublished}
-            </Badge>
+              <Badge
+                variant={session.status === "active" ? "default" : "secondary"}
+                className="text-[9px] tracking-wider uppercase font-light transition-all group-hover/badge:opacity-0 group-hover/badge:scale-90"
+              >
+                {session.status === "active" ? s.published : s.unpublished}
+              </Badge>
+              <Badge
+                variant={session.status === "active" ? "destructive" : "default"}
+                className="text-[9px] tracking-wider uppercase font-light absolute inset-0 opacity-0 scale-90 group-hover/badge:opacity-100 group-hover/badge:scale-100 transition-all whitespace-nowrap"
+              >
+                {session.status === "active" ? "Unpublish" : "Publish"}
+              </Badge>
+            </button>
           </div>
         </div>
 
