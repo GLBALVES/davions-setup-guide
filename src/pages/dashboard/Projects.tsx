@@ -128,7 +128,7 @@ function KanbanCard({
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
-          <p className="flex-1 text-xs font-medium leading-snug line-clamp-2">{project.title}</p>
+          <p className="flex-1 text-xs font-medium leading-snug truncate">{project.title}</p>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
@@ -156,16 +156,21 @@ function KanbanCard({
 
         {/* meta */}
         <div className="flex flex-col gap-1">
-          {project.client_name && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <User className="h-2.5 w-2.5 shrink-0" />
-              <span className="truncate">{project.client_name}</span>
-            </div>
-          )}
-          {project.shoot_date && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <Calendar className="h-2.5 w-2.5 shrink-0" />
-              <span>{format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}</span>
+          {/* client + date on the same line */}
+          {(project.client_name || project.shoot_date) && (
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground min-w-0">
+              {project.client_name && (
+                <span className="flex items-center gap-1 truncate min-w-0">
+                  <User className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{project.client_name}</span>
+                </span>
+              )}
+              {project.shoot_date && (
+                <span className="flex items-center gap-1 shrink-0">
+                  <Calendar className="h-2.5 w-2.5 shrink-0" />
+                  <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
+                </span>
+              )}
             </div>
           )}
           {project.session_title && (
@@ -209,7 +214,7 @@ function KanbanColumn({
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col min-w-[220px] w-[220px] shrink-0">
+    <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
       {/* header */}
       <div className="flex items-center justify-between mb-2 px-0.5">
         <div className="flex items-center gap-2">
@@ -536,7 +541,7 @@ function ArchivedKanbanSection({
       {open && (
         <div className="flex flex-wrap gap-3 p-4">
           {projects.map((p) => (
-            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[220px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[260px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
               <div className="flex items-start justify-between gap-1">
                 <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
