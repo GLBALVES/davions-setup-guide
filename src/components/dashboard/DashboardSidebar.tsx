@@ -238,8 +238,8 @@ const groups: MenuGroup[] = [
   {
     stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
-      { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Projects", icon: Columns, to: "/dashboard/projects" },
+      { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
       { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
