@@ -1075,7 +1075,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
                   <CollapsibleContent>
                     <SidebarGroupContent>
                       <SidebarMenu className="pl-3">
-                        {visibleItems.map((item) => renderRegularItem(item, group.stableKey))}
+                        {visibleItems
+                          .filter((item) => !item.parentKey || !collapsedSubmenus[item.parentKey] || item.isCollapsibleParent)
+                          .map((item) => renderRegularItem(item, group.stableKey))}
                       </SidebarMenu>
                     </SidebarGroupContent>
                   </CollapsibleContent>
