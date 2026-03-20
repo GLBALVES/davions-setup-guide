@@ -75,6 +75,7 @@ function formatRangeLabel(mode: ViewMode, date: Date): string {
 
 const Schedule = () => {
   const { user, signOut, photographerId } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
   const sc = t.schedule;
