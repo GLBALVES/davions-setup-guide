@@ -514,6 +514,7 @@ const SessionForm = () => {
       status,
       contract_text: contractText.trim() || null,
       briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
+      tagline: tagline.trim() || null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
