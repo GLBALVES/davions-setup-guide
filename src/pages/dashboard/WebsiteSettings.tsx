@@ -1200,21 +1200,21 @@ const WebsiteSettings = () => {
                          const subName = isSubdomain ? parts[0] : null;
                          const dnsRecords = isSubdomain
                            ? [
-                               { type: "A",   name: subName!,    value: DAVIONS_VPS_IP },
+                               { type: "A", name: subName!, value: DAVIONS_VPS_IP },
                              ]
                            : [
-                               { type: "A",   name: "@",         value: DAVIONS_VPS_IP },
-                               { type: "A",   name: "www",       value: DAVIONS_VPS_IP },
+                               { type: "A", name: "@",   value: DAVIONS_VPS_IP },
+                               { type: "A", name: "www", value: DAVIONS_VPS_IP },
                              ];
                          return (
                            <div className="flex flex-col gap-3">
                              <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
                              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                               Add this record at your domain registrar to point{" "}
-                               <span className="font-mono">{customDomain}</span> to your store. SSL is provisioned automatically — no extra steps needed.
+                               Add the record{dnsRecords.length > 1 ? "s" : ""} below at your domain registrar to point{" "}
+                               <span className="font-mono">{customDomain}</span> to your store.
                                {isSubdomain
-                                 ? " Since this is a subdomain, you only need one A record for the subdomain itself."
-                                 : " Since this is a root domain, add both @ and www A records."}
+                                 ? " Subdomain — one A record only."
+                                 : " Root domain — add both @ and www."}
                              </p>
                              <div className="border border-border overflow-hidden">
                                <table className="w-full text-[11px]">
@@ -1223,7 +1223,9 @@ const WebsiteSettings = () => {
                                      <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Type</th>
                                      <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Name</th>
                                      <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Value</th>
-                                     <th className="px-2 py-2.5 w-8" />
+                                     <th className="px-2 py-2.5 w-8 text-right">
+                                       <span className="text-[9px] text-muted-foreground/50 uppercase tracking-wide pr-1">copy</span>
+                                     </th>
                                    </tr>
                                  </thead>
                                  <tbody>
@@ -1233,10 +1235,14 @@ const WebsiteSettings = () => {
                                  </tbody>
                                </table>
                              </div>
+
+                             {/* Step-by-step registrar guide */}
+                             <RegistrarGuide domain={customDomain} vpsIp={DAVIONS_VPS_IP} />
+
                              <div className="flex items-start gap-2 p-3 border border-border bg-muted/10">
                                <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                 Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate. Once the A record is pointing correctly, SSL will be provisioned automatically within minutes.
+                                 Remove any conflicting A or CNAME records for the same name before adding these. DNS changes can take up to 48 hours to propagate. Once pointing correctly, SSL will be provisioned automatically within minutes.
                                </p>
                              </div>
                              <div className="flex items-center gap-2">
