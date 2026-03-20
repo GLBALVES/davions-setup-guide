@@ -437,6 +437,7 @@ const WebsiteSettings = () => {
   const [savingDomain, setSavingDomain] = useState(false);
   const [removingDomain, setRemovingDomain] = useState(false);
   const [domainLastChecked, setDomainLastChecked] = useState<Date | null>(null);
+  const [domainSetupOpen, setDomainSetupOpen] = useState(false);
   type DomainCheckStatus = "idle" | "checking" | "ok" | "error" | "warning";
   interface DomainCheck { id: string; label: string; description: string; status: DomainCheckStatus; detail?: string; }
   const [domainChecks, setDomainChecks] = useState<DomainCheck[]>([
