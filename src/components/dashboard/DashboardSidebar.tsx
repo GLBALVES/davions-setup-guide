@@ -109,6 +109,10 @@ type MenuItem = {
   permKey?: string;
   /** Renders this item indented as a sub-item of the preceding top-level item */
   isSubItem?: boolean;
+  /** This item is a collapsible parent that toggles sub-items */
+  isCollapsibleParent?: boolean;
+  /** Sub-items with this key are hidden when the parent is collapsed */
+  parentKey?: string;
 };
 
 type MenuGroup = {
