@@ -369,14 +369,25 @@ const Bookings = () => {
                   })}
                 </div>
 
-                <div className="relative sm:ml-auto w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder={bk.searchPlaceholder}
-                    className="pl-9 h-8 text-xs"
-                  />
+                <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2 text-xs shrink-0"
+                    onClick={() => navigate("/dashboard/schedule")}
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    {bk.schedule}
+                  </Button>
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder={bk.searchPlaceholder}
+                      className="pl-9 h-8 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
