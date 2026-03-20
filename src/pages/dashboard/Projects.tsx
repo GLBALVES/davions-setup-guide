@@ -183,13 +183,6 @@ function KanbanCard({
               <span className="truncate italic">{project.session_title}</span>
             </div>
           )}
-          <div className="flex flex-wrap gap-1 mt-0.5">
-            {project.session_type && (
-              <span className="text-[9px] tracking-widest uppercase border border-border px-1.5 py-0.5 text-muted-foreground">
-                {project.session_type}
-              </span>
-            )}
-          </div>
         </div>
       </div>
     </div>
