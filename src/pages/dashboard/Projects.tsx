@@ -594,13 +594,52 @@ const Projects = () => {
 
   const fetchProjects = async () => {
     if (!photographerId) return;
-    const { data, error } = await supabase
+
+    // 1. Fetch existing projects
+    const { data: existingProjects, error } = await supabase
       .from("client_projects" as any)
-      .select("*, bookings(sessions(title))")
+      .select("*, bookings(sessions(title), client_name, client_email, booked_date, session_id)")
       .eq("photographer_id", photographerId)
       .order("position", { ascending: true });
-    if (!error && data) {
-      const mapped = (data as any[]).map((p) => ({
+
+    // 2. Fetch confirmed bookings that don't have a project yet
+    const { data: bookings } = await supabase
+      .from("bookings")
+      .select("id, client_name, client_email, booked_date, session_id, sessions(title, session_type_id)")
+      .eq("photographer_id", photographerId)
+      .in("status", ["confirmed", "completed"]);
+
+    const existingBookingIds = new Set(
+      (existingProjects as any[] ?? [])
+        .map((p: any) => p.booking_id)
+        .filter(Boolean)
+    );
+
+    // 3. Auto-create projects for bookings that don't have one
+    const newBookings = (bookings ?? []).filter((b: any) => !existingBookingIds.has(b.id));
+    if (newBookings.length > 0) {
+      const toInsert = newBookings.map((b: any, i: number) => ({
+        photographer_id: photographerId,
+        title: `${b.client_name} — ${(b.sessions as any)?.title ?? "Session"}`,
+        client_name: b.client_name,
+        client_email: b.client_email ?? null,
+        booking_id: b.id,
+        stage: "lead",
+        shoot_date: b.booked_date ?? null,
+        position: (existingProjects?.length ?? 0) + i,
+      }));
+      await supabase.from("client_projects" as any).insert(toInsert as any);
+    }
+
+    // 4. Reload after potential inserts
+    const { data: allProjects } = await supabase
+      .from("client_projects" as any)
+      .select("*, bookings(sessions(title), client_name, client_email, booked_date)")
+      .eq("photographer_id", photographerId)
+      .order("position", { ascending: true });
+
+    if (allProjects) {
+      const mapped = (allProjects as any[]).map((p) => ({
         ...p,
         session_title: (p.bookings as any)?.sessions?.title ?? null,
       }));
