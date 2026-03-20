@@ -48,7 +48,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done" | "archived";
+type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
 interface ClientProject {
   id: string;
@@ -69,22 +69,20 @@ interface ClientProject {
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: "lead",      label: "Lead",     color: "hsl(var(--muted-foreground))" },
-  { key: "briefing",  label: "Briefing", color: "hsl(215 80% 55%)" },
-  { key: "shooting",  label: "Shooting", color: "hsl(280 70% 55%)" },
-  { key: "editing",   label: "Editing",  color: "hsl(35 85% 55%)" },
-  { key: "delivery",  label: "Delivery", color: "hsl(160 60% 45%)" },
-  { key: "done",      label: "Done",     color: "hsl(var(--foreground))" },
+  { key: "upcoming",       label: "Próximas sessões", color: "hsl(var(--muted-foreground))" },
+  { key: "shot",           label: "Fotografadas",     color: "hsl(280 70% 55%)" },
+  { key: "proof_gallery",  label: "Galeria de provas",color: "hsl(35 85% 55%)" },
+  { key: "post_production",label: "Pós produção",     color: "hsl(215 80% 55%)" },
+  { key: "final_gallery",  label: "Galeria final",    color: "hsl(160 60% 45%)" },
 ];
 
 const STAGE_COLORS: Record<Stage, string> = {
-  lead:     "bg-muted/60 text-muted-foreground border-border",
-  briefing: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  shooting: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  editing:  "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  delivery: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  done:     "bg-foreground/10 text-foreground border-foreground/20",
-  archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
+  upcoming:        "bg-muted/60 text-muted-foreground border-border",
+  shot:            "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  proof_gallery:   "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  post_production: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  final_gallery:   "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  archived:        "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
 
