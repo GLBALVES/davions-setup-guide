@@ -303,7 +303,7 @@ function ProjectModal({
       const matched = sessionTypes.find((s) => s.name === initial?.session_type);
       setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
-      setStage(initial?.stage ?? defaultStage ?? "lead");
+      setStage(initial?.stage ?? defaultStage ?? "upcoming");
       setNotes(initial?.notes ?? "");
     }
   }, [open, initial, defaultStage, sessionTypes]);
