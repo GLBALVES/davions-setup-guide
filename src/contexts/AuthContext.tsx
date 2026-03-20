@@ -2,6 +2,11 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+// ── Identity cache ────────────────────────────────────────────────────────────
+// Persists across navigations so resolveIdentity only runs ONCE per login.
+// Keyed by userId so it invalidates automatically on account switch.
+const identityCache = new Map<string, ResolvedIdentity>();
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
