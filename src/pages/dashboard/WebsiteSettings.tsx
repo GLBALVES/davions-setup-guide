@@ -16,8 +16,9 @@ import {
   Check, Copy, Upload, Loader2, X, Globe, ExternalLink, AlertCircle, AlertTriangle, Store,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
-  ShieldCheck, Wifi, RefreshCw, XCircle, Info, ChevronDown, ChevronRight, BookOpen,
+  ShieldCheck, Wifi, RefreshCw, XCircle, Info, ChevronDown, ChevronRight, BookOpen, Eye,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ── Site templates ────────────────────────────────────────────────────────────
@@ -363,6 +364,7 @@ const WebsiteSettings = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const ws = t.websiteSettings;
+  const navigate = useNavigate();
 
   // Branding
   const [logoUrl, setLogoUrl] = useState("");
@@ -755,7 +757,18 @@ const WebsiteSettings = () => {
                    <span className="inline-block w-6 h-px bg-border" />
                    {ws.pageLabel}
                  </p>
-                 <h1 className="text-2xl font-light tracking-wide">{ws.pageTitle}</h1>
+                 <div className="flex items-center justify-between gap-4">
+                   <h1 className="text-2xl font-light tracking-wide">{ws.pageTitle}</h1>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => navigate("/dashboard/website/preview")}
+                     className="h-8 gap-1.5 text-[11px] tracking-[0.15em] uppercase shrink-0"
+                   >
+                     <Eye className="h-3.5 w-3.5" />
+                     Preview Site
+                   </Button>
+                 </div>
                </div>
 
               {loading ? (

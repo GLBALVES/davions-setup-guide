@@ -49,6 +49,7 @@ import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
 import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
+import WebsitePreview from "./pages/dashboard/WebsitePreview";
 import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
@@ -142,6 +143,7 @@ const App = () => {
                  <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/creative" element={<ProtectedRoute><PermissionGate permKey="creative"><CreativeStudio /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/website" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteSettings /></PermissionGate></ProtectedRoute>} />
+                 <Route path="/dashboard/website/preview" element={<ProtectedRoute><WebsitePreview /></ProtectedRoute>} />
                  <Route path="/dashboard/access-control" element={<ProtectedRoute><AccessControl /></ProtectedRoute>} />
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                  <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
