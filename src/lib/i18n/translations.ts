@@ -2965,7 +2965,7 @@ export const translations = {
       dashboard: "Panel",
       projects: "Proyectos",
       sessions: "Sesiones",
-      schedule: "Agenda",
+      schedule: "Calendario",
       bookings: "Reservas",
       proofGalleries: "Galerías de Prueba",
       finalGalleries: "Galerías Finales",
