@@ -651,6 +651,10 @@ const WebsiteSettings = () => {
         setGoogleAnalyticsId(s.google_analytics_id ?? "");
         setFacebookPixelId(s.facebook_pixel_id ?? "");
         setFooterText(s.footer_text ?? "");
+        setQuoteText((s as any).quote_text ?? "");
+        setQuoteAuthor((s as any).quote_author ?? "");
+        setExperienceTitle((s as any).experience_title ?? "");
+        setExperienceText((s as any).experience_text ?? "");
       }
 
       setLoading(false);
