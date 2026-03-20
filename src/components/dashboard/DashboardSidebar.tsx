@@ -656,6 +656,17 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const [loaded, setLoaded] = useState(false);
   // Which group popover is open in collapsed mode
   const [collapsedOpenGroup, setCollapsedOpenGroup] = useState<string | null>(null);
+  // Collapsible submenus state — "schedule" starts collapsed
+  const [collapsedSubmenus, setCollapsedSubmenus] = useState<Record<string, boolean>>(() => ({
+    schedule: location.pathname !== "/dashboard/bookings" && location.pathname !== "/dashboard/schedule",
+  }));
+
+  // Auto-expand schedule submenu when navigating to bookings or schedule
+  useEffect(() => {
+    if (location.pathname === "/dashboard/bookings" || location.pathname === "/dashboard/schedule") {
+      setCollapsedSubmenus((prev) => ({ ...prev, schedule: false }));
+    }
+  }, [location.pathname]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
