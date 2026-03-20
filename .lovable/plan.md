@@ -1,64 +1,65 @@
 
-## Diagnóstico
+## Diagnóstico completo
 
-### Causa raiz: `resolvePhotographerId` sem filtro de usuário
+### O que o dashboard configura (photographer_site):
+- **Branding**: logo, tagline, accent_color
+- **Hero**: site_headline, site_subheadline, cta_text, cta_link, site_hero_image_url
+- **About**: about_title, about_image_url + bio/full_name da tabela photographers
+- **Social**: instagram, facebook, pinterest, tiktok, youtube, whatsapp, linkedin
+- **Navigation**: show_store, show_blog, show_booking, show_about, show_contact
+- **Footer**: footer_text
+- **SEO**: seo_title, seo_description, og_image_url
+- **Template**: site_template (editorial, grid, magazine, clean)
 
-No `AuthContext.tsx`, a função `resolvePhotographerId` está com uma query incorreta:
+### O que as páginas públicas exibem hoje:
+- `StorePage` e `CustomDomainStore`: apenas hero image + nome hardcoded "Photography by" + bio + sessions
+- Nenhum dado de `photographer_site` além de `site_hero_image_url`
+- Headline, subheadline, CTA, logo, social links, about section, footer — tudo ignorado
 
+### Plano de correção
+
+**Arquivo a alterar: `src/pages/store/StorePage.tsx`**
+
+Ampliar o fetch para buscar todos os campos de `photographer_site`:
 ```ts
-const { data: memberRow } = await supabase
-  .from("studio_members")
-  .select("photographer_id")
-  .eq("status", "active")   // ← sem .eq("user_id", userId) ou filtro por email
-  .limit(1)
-  .maybeSingle();
+supabase.from("photographer_site")
+  .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_contact, show_store")
 ```
 
-Ela **não filtra pelo usuário logado** — busca qualquer linha ativa da tabela. Isso significa:
-- Para usuários normais (não membros de studio), pode retornar o `photographer_id` de outro usuário aleatório
-- A RLS deveria bloquear isso, mas pode gerar um comportamento lento/incorreto que impede o carregamento
+Atualizar o render da `StorePage` para usar os dados configurados:
+- **Hero**: usar `site_headline` (em vez de "Photography by"), `site_subheadline` (em vez de bio), `cta_text`/`cta_link` configurados
+- **Logo**: exibir `logo_url` no topo se existir
+- **About section**: exibir se `show_about` = true com `about_title`, bio e `about_image_url`
+- **Social links**: exibir rodapé com ícones das redes configuradas
+- **Footer**: usar `footer_text` configurado (fallback "Powered by Davions")
 
-Olhando a migration `20260319111136`, a função SQL `get_my_photographer_id()` usa `email` para matching. O código JS deveria fazer o mesmo — filtrar por `email`.
+**Arquivo a alterar: `src/pages/store/CustomDomainStore.tsx`**
 
-### Problema secundário: dupla inicialização
+Aplicar as mesmas mudanças — já tem a estrutura correta mas ignora os mesmos campos.
 
-`resolvePhotographerId` é chamada tanto no `getSession()` quanto no `onAuthStateChange` simultaneamente no bootstrap, causando duas queries simultâneas desnecessárias.
+### Estrutura do novo layout (ambas as pages)
 
-### Warning no console (não crítico)
-
-`PublicOnlyRoute` aparece no warning de `ref` — não causa o loading infinito mas pode ser corrigido com `React.forwardRef`.
-
----
-
-## Plano de Fix
-
-### 1. Corrigir `resolvePhotographerId` em `src/contexts/AuthContext.tsx`
-
-Adicionar o filtro de email para que a query seja idêntica à lógica da função SQL:
-
-```ts
-async function resolvePhotographerId(userId: string, userEmail: string): Promise<string> {
-  const { data: memberRow } = await supabase
-    .from("studio_members")
-    .select("photographer_id")
-    .eq("email", userEmail)
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
-
-  if (memberRow?.photographer_id) {
-    return memberRow.photographer_id;
-  }
-  return userId;
-}
+```text
+┌─────────────────────────────┐
+│ [Logo opcional no topo]     │
+│                             │
+│  HERO (imagem + overlay)    │
+│  ─ site_headline            │
+│  ─ site_subheadline         │
+│  ─ [CTA button]             │
+└─────────────────────────────┘
+│  Sessions grid              │
+│  Galleries grid (portfolio) │
+└─────────────────────────────┘
+│  ABOUT (se show_about)      │
+│  ─ about_image + bio        │
+└─────────────────────────────┘
+│  FOOTER                     │
+│  ─ social icons             │
+│  ─ footer_text              │
+└─────────────────────────────┘
 ```
 
-Também passar `session.user.email` nos dois pontos de chamada.
-
-### 2. Evitar dupla execução no bootstrap
-
-Usar uma flag `initialized` para garantir que a resolução só aconteça uma vez no bootstrap, evitando race conditions entre `getSession` e `onAuthStateChange`.
-
-### 3. Arquivo a alterar
-
-- `src/contexts/AuthContext.tsx` — corrigir a query e a lógica de bootstrap
+### Arquivos a alterar
+1. `src/pages/store/StorePage.tsx` — ampliar fetch + novo layout com dados configurados
+2. `src/pages/store/CustomDomainStore.tsx` — mesma correção para domínios customizados
