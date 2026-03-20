@@ -615,16 +615,27 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
   const { t } = useLanguage();
   const [profile, setProfile] = useState<{ full_name: string | null; hero_image_url: string | null } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    // Load profile and check admin role in parallel
     supabase
       .from("photographers")
       .select("full_name, hero_image_url")
       .eq("id", user.id)
       .single()
       .then(({ data }) => { if (data) setProfile(data as any); });
+
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => { setIsAdmin(!!data); });
   }, [user]);
+
   const translatedGroups = buildGroups(t);
 
   // Filter a group's items based on permissions
