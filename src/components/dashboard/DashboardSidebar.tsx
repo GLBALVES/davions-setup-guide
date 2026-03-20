@@ -240,10 +240,10 @@ const groups: MenuGroup[] = [
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
+      { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     ],
   },
   { stableKey: "Marketing", title: "Marketing", icon: Megaphone, disabled: true, items: [
-    { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
     { title: "Blog", icon: BookText, to: "/dashboard/blog", permKey: "blog" },
     { title: "Creative Studio", icon: Share2, to: "/dashboard/creative", permKey: "creative" },
     { title: "Social Media", icon: Instagram, to: "/dashboard/social-media" },
