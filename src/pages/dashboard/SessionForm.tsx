@@ -168,6 +168,7 @@ const SessionForm = () => {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");

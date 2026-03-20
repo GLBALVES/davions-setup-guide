@@ -90,7 +90,7 @@ interface SelectedExtra {
   maxQty: number;
 }
 
-type BookingStep = "slots" | "form" | "addons" | "review";
+type BookingStep = "product" | "slots" | "form" | "addons" | "review";
 
 // ────────────────────────────────────────────
 // Helpers
