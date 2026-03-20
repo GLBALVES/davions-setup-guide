@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera } from "lucide-react";
+import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
   Dialog,
   DialogContent,
@@ -823,9 +824,7 @@ const Projects = () => {
 
             {/* Content */}
             {loading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{p_t.loading}</span>
-              </div>
+              <ProjectsSkeleton />
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
                 <ListView

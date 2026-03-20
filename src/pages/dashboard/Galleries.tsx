@@ -9,6 +9,7 @@ import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GalleriesSkeleton } from "@/components/dashboard/skeletons/GalleriesSkeleton";
 import {
   Plus,
   FolderOpen,
@@ -421,11 +422,7 @@ function GalleryGrid({
   const { t } = useLanguage();
   const g = t.galleries;
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{g.loading}</span>
-      </div>
-    );
+    return <GalleriesSkeleton />;
   }
 
   if (galleries.length === 0) {

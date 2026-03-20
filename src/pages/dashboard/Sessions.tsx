@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 
 interface Session {
   id: string;
@@ -178,11 +179,7 @@ const Sessions = () => {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-                    {s.loading}
-                  </span>
-                </div>
+                <SessionsSkeleton />
               ) : filteredSessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border">
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
