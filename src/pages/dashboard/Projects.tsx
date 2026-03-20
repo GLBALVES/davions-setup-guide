@@ -128,7 +128,7 @@ function KanbanCard({
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
-          <p className="flex-1 text-xs font-medium leading-snug truncate">{project.title}</p>
+          <p className="flex-1 text-xs font-medium leading-snug truncate">{project.client_name || project.title}</p>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
