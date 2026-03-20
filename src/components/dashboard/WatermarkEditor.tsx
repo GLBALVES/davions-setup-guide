@@ -498,24 +498,21 @@ export function WatermarkEditor({ initial, onSaved, onCancel }: WatermarkEditorP
 
             {/* IMAGE watermark layer */}
             {wm.image_enabled && wm.image_url && (
-              <div
+              <img
+                src={wm.image_url}
+                alt="Watermark image"
+                draggable={false}
                 className="absolute pointer-events-none"
-                style={positionToStyle(wm.image_position, wm.image_scale)}
-              >
-                <img
-                  src={wm.image_url}
-                  alt="Watermark image"
-                  draggable={false}
-                  style={{
-                    width: previewImgWidth,
-                    maxWidth: "80%",
-                    minWidth: "40px",
-                    opacity: wm.image_opacity,
-                    display: "block",
-                    filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.4))",
-                  }}
-                />
-              </div>
+                style={{
+                  ...positionToStyle(wm.image_position, wm.image_scale),
+                  width: previewImgWidth,
+                  maxWidth: "80%",
+                  minWidth: "40px",
+                  opacity: wm.image_opacity,
+                  display: "block",
+                  filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.4))",
+                }}
+              />
             )}
 
             {/* Empty state hint */}
