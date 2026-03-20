@@ -364,6 +364,7 @@ const WebsiteSettings = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const ws = t.websiteSettings;
+  const navigate = useNavigate();
 
   // Branding
   const [logoUrl, setLogoUrl] = useState("");
