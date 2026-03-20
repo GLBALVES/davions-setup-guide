@@ -1362,6 +1362,7 @@ export type Database = {
           cta_text: string | null
           facebook_pixel_id: string | null
           facebook_url: string | null
+          favicon_url: string | null
           footer_text: string | null
           google_analytics_id: string | null
           instagram_url: string | null
@@ -1396,6 +1397,7 @@ export type Database = {
           cta_text?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_text?: string | null
           google_analytics_id?: string | null
           instagram_url?: string | null
@@ -1430,6 +1432,7 @@ export type Database = {
           cta_text?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_text?: string | null
           google_analytics_id?: string | null
           instagram_url?: string | null
