@@ -1513,7 +1513,7 @@ export const translations = {
       dashboard: "Painel",
       projects: "Projetos",
       sessions: "Sessões",
-      schedule: "Agenda",
+      schedule: "Calendário",
       bookings: "Agendamentos",
       proofGalleries: "Galerias de Prova",
       finalGalleries: "Galerias Finais",
