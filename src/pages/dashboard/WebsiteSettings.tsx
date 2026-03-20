@@ -641,6 +641,7 @@ const WebsiteSettings = () => {
         setSeoTitle(s.seo_title ?? "");
         setSeoDescription(s.seo_description ?? "");
         setOgImageUrl(s.og_image_url ?? "");
+        setFaviconUrl(s.favicon_url ?? "");
         setGoogleAnalyticsId(s.google_analytics_id ?? "");
         setFacebookPixelId(s.facebook_pixel_id ?? "");
         setFooterText(s.footer_text ?? "");
