@@ -348,6 +348,25 @@ function SessionCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
+                    onClick={handleToggleStatus}
+                    disabled={toggling}
+                    className={`transition-colors ${session.status === "active" ? "text-foreground hover:text-destructive" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40`}
+                  >
+                    {session.status === "active" ? (
+                      <Globe className="h-3.5 w-3.5" />
+                    ) : (
+                      <GlobeLock className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {session.status === "active" ? "Unpublish session" : "Publish session"}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
                     onClick={handlePreview}
                     disabled={!bookingUrl}
                     className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
