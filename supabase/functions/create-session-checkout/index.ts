@@ -337,6 +337,7 @@ serve(async (req) => {
         line_items: lineItems,
         mode: "payment",
         ...(customText ? { custom_text: customText } : {}),
+        ...(allowTip ? { payment_intent_data: { ...(applicationFeeAmount > 0 ? { application_fee_amount: applicationFeeAmount } : {}), setup_future_usage: undefined } } : {}),
         payment_intent_data: applicationFeeAmount > 0 ? {
           application_fee_amount: applicationFeeAmount,
         } : undefined,
