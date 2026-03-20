@@ -252,7 +252,8 @@ function SessionCard({
     const { error } = await supabase
       .from("sessions")
       .update({ status: newStatus })
-      .eq("id", session.id);
+      .eq("id", session.id)
+      .eq("photographer_id", photographerId ?? "");
     setToggling(false);
     if (error) {
       toast({ title: "Failed to update status", variant: "destructive" });

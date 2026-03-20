@@ -23,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  identityLoading: false,
   photographerId: null,
   isOwner: null,
   signOut: async () => {},
@@ -68,6 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [identityLoading, setIdentityLoading] = useState(false);
   const [photographerId, setPhotographerId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   // Flag to prevent double-initialization from getSession + onAuthStateChange
@@ -77,22 +79,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Safety timeout: if Supabase never responds, unblock the UI after 5s
     const safetyTimer = setTimeout(() => setLoading(false), 5000);
 
-    const applySession = async (session: Session | null) => {
+    const applySession = async (incomingSession: Session | null) => {
       clearTimeout(safetyTimer);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const identity = await resolveIdentity(
-          session.user.id,
-          session.user.email ?? ""
-        );
-        setPhotographerId(identity.photographerId);
-        setIsOwner(identity.isOwner);
+      setSession(incomingSession);
+      setUser(incomingSession?.user ?? null);
+
+      // Unblock UI immediately — auth state is now known
+      setLoading(false);
+
+      if (incomingSession?.user) {
+        // Resolve identity in the background without blocking the UI
+        setIdentityLoading(true);
+        try {
+          const identity = await resolveIdentity(
+            incomingSession.user.id,
+            incomingSession.user.email ?? ""
+          );
+          setPhotographerId(identity.photographerId);
+          setIsOwner(identity.isOwner);
+        } finally {
+          setIdentityLoading(false);
+        }
       } else {
         setPhotographerId(null);
         setIsOwner(null);
+        setIdentityLoading(false);
       }
-      setLoading(false);
     };
 
     // Set up auth state listener BEFORE getting session
@@ -129,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, photographerId, isOwner, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, identityLoading, photographerId, isOwner, signOut }}>
       {children}
     </AuthContext.Provider>
   );
