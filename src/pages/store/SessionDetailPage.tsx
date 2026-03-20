@@ -197,7 +197,7 @@ const SessionDetailPage = () => {
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<BookingStep>("slots");
+  const [step, setStep] = useState<BookingStep>("product");
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
