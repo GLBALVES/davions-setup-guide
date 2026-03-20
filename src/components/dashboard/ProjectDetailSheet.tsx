@@ -186,7 +186,7 @@ export function ProjectDetailSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "85vh" }}>
+      <DialogContent className="sm:max-w-2xl w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "85vh" }}>
         <DialogHeader className="p-5 pb-3 shrink-0">
           <DialogTitle className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-normal">
             Project Details
