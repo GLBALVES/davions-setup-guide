@@ -1343,11 +1343,6 @@ const WebsiteSettings = () => {
                             </button>
                             {" "}— subdomain
                           </p>
-                        </div>
-                        {domainError && (
-                          <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
-                            <AlertCircle className="h-3 w-3" />{domainError}
-                          </p>
                         )}
                       </FieldRow>
 
