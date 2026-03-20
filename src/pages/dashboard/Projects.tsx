@@ -170,17 +170,24 @@ function KanbanCard({
               <span>{format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}</span>
             </div>
           )}
-          {project.session_type && (
-            <span className="self-start text-[9px] tracking-widest uppercase border border-border px-1.5 py-0.5 text-muted-foreground">
-              {project.session_type}
-            </span>
-          )}
           {project.session_title && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
               <Camera className="h-2.5 w-2.5 shrink-0" />
               <span className="truncate italic">{project.session_title}</span>
             </div>
           )}
+          <div className="flex flex-wrap gap-1 mt-0.5">
+            {project.session_type && (
+              <span className="text-[9px] tracking-widest uppercase border border-border px-1.5 py-0.5 text-muted-foreground">
+                {project.session_type}
+              </span>
+            )}
+            {project.booking_id && (
+              <span className="text-[9px] tracking-widest uppercase border border-primary/30 px-1.5 py-0.5 text-primary/70 bg-primary/5">
+                Booking
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
