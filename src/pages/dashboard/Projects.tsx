@@ -840,7 +840,7 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
-                const stageLabel = { lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting, editing: p_t.editing, delivery: p_t.delivery, done: p_t.done }[s.key] ?? s.label;
+                const stageLabel = s.label;
                 return (
                   <div
                     key={s.key}
