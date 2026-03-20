@@ -291,9 +291,9 @@ function SessionCard({
 
   return (
     <TooltipProvider>
-      <button
+      <div
         onClick={onClick}
-        className="group text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
+        className="group cursor-pointer text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
       >
         <div className="aspect-video bg-muted relative overflow-hidden">
           {session.cover_image_url ? (
@@ -413,7 +413,7 @@ function SessionCard({
             </div>
           </div>
         </div>
-      </button>
+      </div>
     </TooltipProvider>
   );
 }
