@@ -292,6 +292,29 @@ function SessionCard({
     }
   };
 
+  const handleCopyLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      toast({ title: s.linkCopied, description: s.bookingUrlCopied });
+    } catch {
+      toast({ title: s.failedToCopy, variant: "destructive" });
+    }
+  };
+
+  const handleShareWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(bookingUrl)}`, "_blank");
+  };
+
+  const handleShareEmail = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!bookingUrl) return;
+    window.open(`mailto:?subject=${encodeURIComponent(session.title)}&body=${encodeURIComponent(bookingUrl)}`, "_blank");
+  };
+
   return (
     <TooltipProvider>
       <div
