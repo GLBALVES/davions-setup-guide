@@ -157,20 +157,12 @@ function KanbanCard({
         {/* meta */}
         <div className="flex flex-col gap-1">
           {/* client + date on the same line */}
-          {(project.client_name || project.shoot_date) && (
+          {project.shoot_date && (
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground min-w-0">
-              {project.client_name && (
-                <span className="flex items-center gap-1 truncate min-w-0">
-                  <User className="h-2.5 w-2.5 shrink-0" />
-                  <span className="truncate">{project.client_name}</span>
-                </span>
-              )}
-              {project.shoot_date && (
-                <span className="flex items-center gap-1 shrink-0">
-                  <Calendar className="h-2.5 w-2.5 shrink-0" />
-                  <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
-                </span>
-              )}
+              <span className="flex items-center gap-1 shrink-0">
+                <Calendar className="h-2.5 w-2.5 shrink-0" />
+                <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
+              </span>
             </div>
           )}
           {project.session_title && (
