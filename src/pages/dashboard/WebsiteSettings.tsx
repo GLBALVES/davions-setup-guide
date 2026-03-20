@@ -917,6 +917,42 @@ const WebsiteSettings = () => {
 
                   <Divider />
 
+                  {/* ── 2b. Quote & Experience ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title="Quote & Experience" description="A signature phrase and a paragraph about your process — shown between the hero and your sessions." />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FieldRow label="Signature Quote">
+                        <Textarea
+                          value={quoteText}
+                          onChange={(e) => setQuoteText(e.target.value)}
+                          placeholder="e.g. Preserving your most precious moments…"
+                          className="min-h-[72px] text-sm font-light resize-none"
+                        />
+                      </FieldRow>
+                      <FieldRow label="Quote Author">
+                        <Input value={quoteAuthor} onChange={(e) => setQuoteAuthor(e.target.value)} placeholder="Your name or studio name" className="h-9 text-sm font-light" />
+                      </FieldRow>
+                    </div>
+
+                    <FieldRow label="Experience Section Title">
+                      <Input value={experienceTitle} onChange={(e) => setExperienceTitle(e.target.value)} placeholder="e.g. The Experience, My Process, What to Expect" className="h-9 text-sm font-light" />
+                    </FieldRow>
+                    <FieldRow label="Experience Description">
+                      <Textarea
+                        value={experienceText}
+                        onChange={(e) => setExperienceText(e.target.value)}
+                        placeholder="Describe what it's like to work with you — your process, what clients can expect, your style…"
+                        className="min-h-[120px] text-sm font-light resize-none"
+                      />
+                    </FieldRow>
+                  </section>
+
+                  <Divider />
+
                   {/* ── 3. About Section ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
