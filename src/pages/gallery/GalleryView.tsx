@@ -357,22 +357,28 @@ const GalleryView = () => {
     if (!gallery?.expires_at) return;
     const expired = new Date(gallery.expires_at) < new Date();
     if (!expired || settingsFetched) return;
+    const galleryType = (gallery as any).category ?? "proof"; // "proof" | "final"
     const fetchSettings = async () => {
       const { data } = await supabase
         .from("gallery_settings")
         .select("key, value")
-        .eq("photographer_id", gallery.photographer_id)
-        .in("key", ["reactivation_fee", "default_expiry_days"]);
+        .eq("photographer_id", gallery.photographer_id);
       const map: Record<string, string> = {};
       (data ?? []).forEach((s: { key: string; value: string | null }) => {
         if (s.value != null) map[s.key] = s.value;
       });
-      setRenewalFee(parseFloat(map["reactivation_fee"] ?? "0"));
-      setRenewalDays(parseInt(map["default_expiry_days"] ?? "30", 10));
+      // per-type keys take precedence over legacy global keys
+      const feeKey    = `${galleryType}_reactivation_fee`;
+      const daysKey   = `${galleryType}_renewal_days`;
+      const expiryKey = `${galleryType}_expiry_days`;
+      setRenewalFee(parseFloat(map[feeKey] ?? map["reactivation_fee"] ?? "0"));
+      setRenewalDays(parseInt(map[daysKey] ?? map[expiryKey] ?? map["default_expiry_days"] ?? "30", 10));
       setSettingsFetched(true);
     };
     fetchSettings();
   }, [gallery, settingsFetched]);
+
+
 
   // ── Auto-confirm reactivation on return from Stripe ──────────────────────
   useEffect(() => {
