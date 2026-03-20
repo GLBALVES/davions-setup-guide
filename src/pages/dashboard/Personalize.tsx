@@ -195,11 +195,15 @@ const Personalize = () => {
   const [proofRenewalDays, setProofRenewalDays] = useState<string>("");
   const [proofReactivationFee, setProofReactivationFee] = useState<string>("");
   const [proofAutoUnpublish, setProofAutoUnpublish] = useState<string>("");
+  const [proofAutoDeleteEnabled, setProofAutoDeleteEnabled] = useState<boolean>(false);
+  const [proofAutoDeleteDays, setProofAutoDeleteDays] = useState<string>("");
   // final type
   const [finalExpiryDays, setFinalExpiryDays] = useState<string>("");
   const [finalRenewalDays, setFinalRenewalDays] = useState<string>("");
   const [finalReactivationFee, setFinalReactivationFee] = useState<string>("");
   const [finalAutoUnpublish, setFinalAutoUnpublish] = useState<string>("");
+  const [finalAutoDeleteEnabled, setFinalAutoDeleteEnabled] = useState<boolean>(false);
+  const [finalAutoDeleteDays, setFinalAutoDeleteDays] = useState<string>("");
   // legacy (keep for backward compat reads)
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
