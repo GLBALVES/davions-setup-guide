@@ -496,39 +496,43 @@ const Personalize = () => {
     setSavingBusiness(false);
   };
 
-  const handleSaveExpiry = async () => {
-    if (!user) return;
-    setSavingExpiry(true);
-    const days = parseInt(galleryExpiryDays, 10);
-    const expiryValue = !galleryExpiryDays.trim() || isNaN(days) || days <= 0 ? null : String(days);
-    const { error } = await (supabase as any).from("gallery_settings").upsert(
-      { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
-      { onConflict: "photographer_id,key" }
-    );
+  const parseNum = (v: string) => { const n = parseFloat(v); return isNaN(n) || n < 0 ? null : String(n); };
+  const parseIntPos = (v: string) => { const n = parseInt(v, 10); return !v.trim() || isNaN(n) || n <= 0 ? null : String(n); };
+
+  const handleSaveGallerySettings = async () => {
+    if (!photographerId) return;
+    setSavingGallerySettings(true);
+    const upserts = [
+      { key: "proof_expiry_days",       value: parseIntPos(proofExpiryDays) },
+      { key: "proof_renewal_days",      value: parseIntPos(proofRenewalDays) },
+      { key: "proof_reactivation_fee",  value: parseNum(proofReactivationFee) },
+      { key: "proof_auto_unpublish_days", value: parseIntPos(proofAutoUnpublish) },
+      { key: "final_expiry_days",       value: parseIntPos(finalExpiryDays) },
+      { key: "final_renewal_days",      value: parseIntPos(finalRenewalDays) },
+      { key: "final_reactivation_fee",  value: parseNum(finalReactivationFee) },
+      { key: "final_auto_unpublish_days", value: parseIntPos(finalAutoUnpublish) },
+      // legacy keys kept for backward compat
+      { key: "default_expiry_days",     value: parseIntPos(proofExpiryDays) },
+      { key: "reactivation_fee",        value: parseNum(proofReactivationFee) },
+    ].map((r) => ({ photographer_id: photographerId, key: r.key, value: r.value }));
+
+    const { error } = await (supabase as any)
+      .from("gallery_settings")
+      .upsert(upserts, { onConflict: "photographer_id,key" });
+
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Default expiration saved" });
+      toast({ title: t.personalize.galleriesSettingsSaved });
     }
-    setSavingExpiry(false);
+    setSavingGallerySettings(false);
   };
 
-  const handleSaveReactivationFee = async () => {
-    if (!user) return;
-    setSavingFee(true);
-    const fee = parseFloat(galleryReactivationFee);
-    const feeValue = !galleryReactivationFee.trim() || isNaN(fee) || fee < 0 ? null : String(fee);
-    const { error } = await (supabase as any).from("gallery_settings").upsert(
-      { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
-      { onConflict: "photographer_id,key" }
-    );
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Reactivation fee saved" });
-    }
-    setSavingFee(false);
-  };
+  // Kept as no-ops so old references don't break
+  const handleSaveExpiry = handleSaveGallerySettings;
+  const handleSaveReactivationFee = handleSaveGallerySettings;
+
+
 
   const handleWatermarkSaved = (wm: WatermarkData) => {
     setWatermarks((prev) => {
