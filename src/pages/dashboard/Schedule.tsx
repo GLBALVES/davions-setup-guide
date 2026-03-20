@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -13,6 +14,7 @@ import {
   CalendarDays,
   Plus,
   CalendarOff,
+  BookOpen,
 } from "lucide-react";
 import {
   format,
@@ -73,6 +75,7 @@ function formatRangeLabel(mode: ViewMode, date: Date): string {
 
 const Schedule = () => {
   const { user, signOut, photographerId } = useAuth();
+  const goTo = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
   const sc = t.schedule;
@@ -255,21 +258,32 @@ const Schedule = () => {
                   </span>
                 </div>
 
-                {/* View toggle */}
-                <div className="flex items-center border border-border overflow-hidden rounded-none">
-                  {(["month", "week", "day"] as ViewMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setViewMode(mode)}
-                      className={`px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-r border-border last:border-r-0 ${
-                        viewMode === mode
-                          ? "bg-foreground text-background"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                      }`}
-                    >
-                      {mode === "month" ? sc.month : mode === "week" ? sc.week : sc.day}
-                    </button>
-                  ))}
+                {/* View toggle + Bookings button */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1.5 text-[10px] tracking-[0.15em] uppercase font-light"
+                    onClick={() => goTo("/dashboard/bookings")}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Bookings
+                  </Button>
+                  <div className="flex items-center border border-border overflow-hidden rounded-none">
+                    {(["month", "week", "day"] as ViewMode[]).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setViewMode(mode)}
+                        className={`px-4 py-1.5 text-[10px] tracking-[0.2em] uppercase font-light transition-colors border-r border-border last:border-r-0 ${
+                          viewMode === mode
+                            ? "bg-foreground text-background"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        }`}
+                      >
+                        {mode === "month" ? sc.month : mode === "week" ? sc.week : sc.day}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
