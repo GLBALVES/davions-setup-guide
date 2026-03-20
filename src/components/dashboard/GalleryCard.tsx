@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Image, FolderOpen, User, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X } from "lucide-react";
+import { Image, FolderOpen, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -303,7 +303,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
 
       {/* Thumbnail — hidden in compact list view */}
       {!compact && (
-        <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
+        <Link to={`/dashboard/galleries/${gallery.id}`} className="block h-32 bg-muted overflow-hidden relative">
           {gallery.cover_image_url ? (
             <img
               src={gallery.cover_image_url}
@@ -357,9 +357,9 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
       )}
 
       {/* Info */}
-      <div className={compact ? "flex items-center gap-3 flex-1 min-w-0" : "p-4 flex flex-col gap-2 flex-1"}>
+      <div className={compact ? "flex items-center gap-3 flex-1 min-w-0" : "p-3 flex flex-col gap-1.5 flex-1"}>
         {/* Title + badge */}
-        <div className={compact ? "flex items-center gap-2 flex-1 min-w-0" : "flex items-start justify-between gap-2"}>
+        <div className={compact ? "flex items-center gap-2 flex-1 min-w-0" : "flex items-center justify-between gap-2"}>
           <Link
             to={`/dashboard/galleries/${gallery.id}`}
             className="text-sm font-light tracking-wide truncate text-foreground hover:underline underline-offset-2 no-underline"
@@ -376,31 +376,34 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           )}
         </div>
 
-        {/* Meta — only in card mode */}
-        {!compact && (gallery.client_name || gallery.session_title) && (
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
-            <User className="h-3 w-3 shrink-0" />
-            <span className="truncate">
-              {[gallery.client_name, gallery.session_title].filter(Boolean).join(" · ")}
-            </span>
-          </div>
-        )}
-        {!compact && isUnassigned && (
-          <div className="flex items-center gap-1.5 text-[11px] text-warning truncate">
-            <UserX className="h-3 w-3 shrink-0" />
-            <span>No client assigned</span>
-          </div>
-        )}
-
-        {/* Photo count + date */}
+        {/* Photo count + status inline */}
         {!compact && (
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground tracking-wider uppercase">
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground tracking-wider uppercase">
             <span className="flex items-center gap-1">
               <Image className="h-3 w-3" />
               {gallery.photo_count} photo{gallery.photo_count !== 1 ? "s" : ""}
             </span>
             <span>·</span>
-            <span>{date}</span>
+            {isExpired ? (
+              <span className="flex items-center gap-1 text-destructive">
+                <CalendarX2 className="h-3 w-3" />
+                Expired
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <span className={`h-1.5 w-1.5 rounded-full ${isPublished ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                {gallery.status}
+              </span>
+            )}
+            {isUnassigned && (
+              <>
+                <span>·</span>
+                <span className="flex items-center gap-1 text-warning">
+                  <UserX className="h-3 w-3" />
+                  No client
+                </span>
+              </>
+            )}
           </div>
         )}
 
@@ -441,25 +444,9 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           </div>
         )}
 
-        {/* Footer row — only in card mode */}
+        {/* Actions row — only in card mode */}
         {!compact && (
-          <div className="flex items-center justify-between mt-auto pt-1">
-            <div className="flex items-center gap-1.5">
-              {isExpired ? (
-                <span className="text-[10px] tracking-[0.2em] uppercase text-destructive font-light flex items-center gap-1">
-                  <CalendarX2 className="h-3 w-3" />
-                  Expired {gallery.expires_at && new Date(gallery.expires_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                </span>
-              ) : (
-                <>
-                  <span className={`h-1.5 w-1.5 rounded-full ${isPublished ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-                    {gallery.status}
-                  </span>
-                </>
-              )}
-            </div>
-
+          <div className="flex items-center justify-end pt-0.5">
             <div className="flex items-center gap-1">
               {/* Assign-client button — only for unassigned galleries */}
               {isUnassigned && assignPopover}
