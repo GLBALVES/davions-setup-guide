@@ -385,6 +385,12 @@ const WebsiteSettings = () => {
   const [heroImageUrl, setHeroImageUrl] = useState("");
   const [uploadingHero, setUploadingHero] = useState(false);
 
+  // Quote & Experience
+  const [quoteText, setQuoteText] = useState("");
+  const [quoteAuthor, setQuoteAuthor] = useState("");
+  const [experienceTitle, setExperienceTitle] = useState("");
+  const [experienceText, setExperienceText] = useState("");
+
   // About
   const [aboutTitle, setAboutTitle] = useState("About");
   const [aboutImageUrl, setAboutImageUrl] = useState("");
