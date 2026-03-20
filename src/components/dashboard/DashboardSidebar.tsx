@@ -777,13 +777,14 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+    const subItemClass = item.isSubItem && !collapsed ? "pl-7 relative before:absolute before:left-[22px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-px before:bg-border" : "";
 
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
         <NavLink
           to={item.to}
           end={item.end}
-          className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
+          className={`gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50 ${subItemClass}`}
         >
           <div className="relative shrink-0">
             <item.icon className="h-4 w-4" />
