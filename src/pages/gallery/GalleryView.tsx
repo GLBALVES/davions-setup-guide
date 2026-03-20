@@ -1338,7 +1338,7 @@ const GalleryView = () => {
 
           {/* Cover hero */}
           {gallery?.cover_image_url ? (
-            <div className="relative w-full h-52 md:h-80 overflow-hidden shrink-0" onContextMenu={blockContext}>
+            <div className="relative w-full h-[100dvh] overflow-hidden shrink-0" onContextMenu={blockContext}>
               <img
                 src={gallery.cover_image_url}
                 alt={gallery.title}
