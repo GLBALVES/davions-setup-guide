@@ -1341,6 +1341,8 @@ const SessionDetailPage = () => {
           Powered by Davions
         </p>
       </footer>
+        </>
+      )}
     </div>
   );
 };
