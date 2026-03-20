@@ -824,9 +824,7 @@ const Projects = () => {
 
             {/* Content */}
             {loading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{p_t.loading}</span>
-              </div>
+              <ProjectsSkeleton />
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
                 <ListView

@@ -382,11 +382,7 @@ const Bookings = () => {
 
               {/* Content */}
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-                    Loading…
-                  </span>
-                </div>
+                <BookingsSkeleton />
               ) : filteredBookings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border rounded-sm">
                   <BookOpen className="h-10 w-10 text-muted-foreground/30" />
