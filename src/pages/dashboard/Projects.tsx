@@ -155,6 +155,17 @@ function KanbanCard({
           </div>
         </div>
 
+        {/* Gallery cover thumbnail for proof/final stages */}
+        {(project.stage === "proof_gallery" || project.stage === "final_gallery") && project.gallery_cover_url && (
+          <div className="w-full h-20 rounded-sm overflow-hidden border border-border">
+            <img
+              src={project.gallery_cover_url}
+              alt="Gallery cover"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         {/* meta */}
         <div className="flex flex-col gap-1">
           {/* client + date on the same line */}
