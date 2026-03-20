@@ -109,9 +109,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         // On initial load, getSession() handles it. After that, always apply.
         if (!initialized.current) return;
+
+        // TOKEN_REFRESHED fires when returning to the tab — just update session
+        // silently without re-running identity resolution (avoids full reload flash).
+        if (event === "TOKEN_REFRESHED") {
+          setSession(session);
+          setUser(session?.user ?? null);
+          return;
+        }
+
         await applySession(session);
       }
     );
