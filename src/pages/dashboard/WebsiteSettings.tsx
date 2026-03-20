@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
