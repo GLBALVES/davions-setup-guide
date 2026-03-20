@@ -14,6 +14,7 @@ import {
   CalendarDays,
   Plus,
   CalendarOff,
+  BookOpen,
 } from "lucide-react";
 import {
   format,
