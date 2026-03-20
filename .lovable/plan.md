@@ -1,66 +1,79 @@
 
-## Problema: Múltiplos Loading States em Cascata
+## Dois problemas distintos encontrados
 
-### Causa raiz
+---
 
-A sequência atual tem 4-5 queries ao banco **em série** antes de qualquer página aparecer:
+### Problema 1: Status da session não salva (bug crítico)
 
-```text
-1. getSession()                          → AuthContext
-2. resolvePhotographerId() (studio_members) → AuthContext
-3. useStudioPermissions → photographers   → PermissionGate
-4. useStudioPermissions → studio_members  → PermissionGate (redundante!)
-5. useStudioPermissions → studio_roles    → PermissionGate
-```
+**Causa raiz:** O `UPDATE` na tabela `sessions` usa a política RLS `photographer_id = get_my_photographer_id()`. A função `get_my_photographer_id()` retorna `auth.uid()` OU o `photographer_id` do empregador se o user for membro do estúdio.
 
-Steps 3-5 duplicam o trabalho do step 2, e só disparam **depois** que steps 1-2 terminam.
-
-### Solução
-
-**1. Expor `isOwner` no `AuthContext`**
-
-O `AuthContext` já sabe se o user é dono (ao resolver o `photographerId`, ele consulta `studio_members`). Podemos guardar essa informação e expô-la, evitando que o `useStudioPermissions` refaça as mesmas queries.
+O problema está no código `handleToggleStatus` em `Sessions.tsx`:
 
 ```ts
-// AuthContext — adicionar ao state e ao retorno:
-isOwner: boolean | null   // null = ainda resolvendo
+const { error } = await supabase
+  .from("sessions")
+  .update({ status: newStatus })
+  .eq("id", session.id);
+// NÃO filtra por photographer_id — só por id da session
 ```
 
-Durante `resolvePhotographerId`, se `memberRow` existe → `isOwner = false`, caso contrário → `isOwner = true`.
+Quando o Supabase executa o UPDATE, a política RLS com `get_my_photographer_id()` compara com `photographer_id` da sessão. Se o user está logado como `auth.uid() = X` mas a sessão tem `photographer_id = Y`, o update silencia sem erro — ele simplesmente não encontra linhas para atualizar. O toast de sucesso é exibido mesmo assim porque `error` é null (0 rows affected não é um erro).
 
-**2. Otimizar `useStudioPermissions` para usar dados já resolvidos**
+**Fix:** Adicionar `.eq("photographer_id", photographerId)` ao update para garantir que a RLS policy seja satisfeita corretamente.
 
-Se `AuthContext` já tem `isOwner = true`, o `useStudioPermissions` retorna imediatamente sem fazer nenhuma query adicional.
+---
 
-**3. Adicionar safety timeout no `PermissionGate`**
+### Problema 2: Plataforma lenta (performance)
 
-Se `useStudioPermissions` demorar mais de 4s, libera o acesso para evitar tela infinita (owners nunca devem ser bloqueados).
+**Causas identificadas:**
 
-**4. Paralelizar as queries do `resolvePhotographerId`**
+1. **`ProtectedRoute` + `PermissionGate` em série** — duas camadas de loading separadas. O `ProtectedRoute` bloqueia em loading, depois libera, aí o `PermissionGate` bloqueia em loading novamente. O usuário vê duas telas brancas em sequência.
 
-Atualmente o `AuthContext` faz a query de `studio_members` de forma sequencial. Podemos fazer a query de `photographers` e `studio_members` em paralelo para cortar o tempo pela metade.
+2. **`AuthContext.loading = true` durante `resolveIdentity`** — a UI fica bloqueada não só enquanto o Supabase retorna a sessão, mas também enquanto duas queries adicionais (photographers + studio_members) são executadas. Isso adiciona ~500-1000ms após a sessão já ter retornado.
 
-### Arquivos a alterar
+3. **`QueryClient` sem cache configurado** — `new QueryClient()` com defaults significa `staleTime: 0`, então qualquer dado buscado via react-query é revalidado imediatamente. O dashboard faz 6 queries em paralelo, mas cada mudança de página rebusca tudo.
 
-1. **`src/contexts/AuthContext.tsx`**:
-   - Adicionar `isOwner: boolean | null` ao state e interface
-   - Paralelizar queries: buscar `photographers` e `studio_members` ao mesmo tempo
-   - Expor `isOwner` no context value
+4. **Cada página do dashboard chama `setLoading(true)` antes mesmo de ter o `photographerId`** — quando `photographerId` é null inicialmente, o `useEffect` retorna cedo mas o loading fica true até o próximo render.
 
-2. **`src/hooks/useStudioPermissions.ts`**:
-   - Consumir `isOwner` do `AuthContext` diretamente
-   - Se `isOwner === true`, retornar imediatamente sem queries adicionais
-   - Eliminar a query redundante de `studio_members`
+5. **`RegionContext`** faz uma chamada para edge function `detect-region` em cada sessão (visível nos logs).
 
-3. **`src/components/PermissionGate.tsx`**:
-   - Adicionar safety timeout de 4s que libera a página se o loading persistir
-   - Isso garante que owners nunca fiquem presos
+---
 
-### Resultado esperado
+## Plano de correção
+
+### Fix 1 — Bug do status (Sessions.tsx)
+Adicionar `photographer_id` ao filtro do UPDATE para que a RLS seja satisfeita:
+```ts
+.update({ status: newStatus })
+.eq("id", session.id)
+.eq("photographer_id", photographerId)  // ← ADD
+```
+O `photographerId` já vem via props ou via `useAuth`.
+
+### Fix 2 — Eliminar double loading (ProtectedRoute + PermissionGate)
+Unificar em um único componente `AuthGate` que aguarda tanto auth quanto permissões de uma vez, exibindo apenas uma tela de loading. Atualmente são dois componentes aninhados com estados de loading independentes.
+
+**Abordagem simples:** Fazer o `ProtectedRoute` consumir `photographerId` do AuthContext (que só fica disponível após `resolveIdentity`). Quando `photographerId` é null mas `loading` é false, redirecionar para login. Isso elimina a necessidade de o `PermissionGate` esperar separadamente.
+
+### Fix 3 — Não bloquear UI durante resolveIdentity
+Mudar `AuthContext`: setar `loading = false` assim que a **sessão** retorna, mesmo que `resolveIdentity` ainda esteja rodando. Usar um estado separado `identityLoading` para o resolve. O `ProtectedRoute` usa apenas o `loading` de auth (não mais o `identityLoading`). O `PermissionGate` aguarda `isOwner !== null`.
 
 ```text
-ANTES: getSession → resolveId → [render] → photographers → members → roles = 5 round-trips
-DEPOIS: getSession + [photographers ∥ members] → [render] → roles apenas (se member) = 2-3 round-trips
+ANTES: getSession loading → resolveIdentity loading → página carrega
+DEPOIS: getSession loading → página carrega → (isOwner resolve em bg)
 ```
 
-Para owners (maioria dos usuários), o tempo de loading cai de ~5 queries para ~2 queries em paralelo.
+Para a maioria dos users (owners), `isOwner` resolve em ~200ms e o PermissionGate libera quase imediatamente. A skeleton do PermissionGate substitui a página completa em branco.
+
+### Fix 4 — QueryClient com staleTime razoável
+Configurar `staleTime: 30_000` para evitar refetch desnecessário ao navegar entre páginas.
+
+---
+
+## Arquivos a alterar
+
+1. **`src/contexts/AuthContext.tsx`** — separar `loading` (auth) de `identityLoading` (resolve); setar loading=false assim que session retorna
+2. **`src/components/ProtectedRoute.tsx`** — usar apenas auth loading, não bloquear por identityLoading
+3. **`src/components/PermissionGate.tsx`** — reduzir timeout de 4s para 2s; usar `identityLoading` se disponível
+4. **`src/pages/dashboard/Sessions.tsx`** — adicionar `.eq("photographer_id", photographerId)` no UPDATE do handleToggleStatus; expor `photographerId` via useAuth no SessionCard
+5. **`src/App.tsx`** — configurar QueryClient com `staleTime: 30_000` e `gcTime: 5 * 60 * 1000`
