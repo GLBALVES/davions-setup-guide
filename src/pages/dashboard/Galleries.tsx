@@ -422,11 +422,7 @@ function GalleryGrid({
   const { t } = useLanguage();
   const g = t.galleries;
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{g.loading}</span>
-      </div>
-    );
+    return <GalleriesSkeleton />;
   }
 
   if (galleries.length === 0) {
