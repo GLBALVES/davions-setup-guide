@@ -4,7 +4,7 @@
  *   editorial (default) | grid | magazine | clean
  */
 
-import { useNavigate } from "react-router-dom";
+import { useEffect, useNavigate } from "react-router-dom";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
@@ -36,6 +36,7 @@ export interface SiteConfig {
   seo_description: string | null;
   og_image_url: string | null;
   site_template: string | null;
+  favicon_url: string | null;
 }
 
 export interface Session {
