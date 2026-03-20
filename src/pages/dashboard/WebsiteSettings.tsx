@@ -806,7 +806,38 @@ const WebsiteSettings = () => {
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo", "site-assets", setLogoUrl, setUploadingLogo, "Logo"); }} />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Favicon */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[11px] tracking-wider uppercase font-light">Favicon</Label>
+                      <div className="flex items-center gap-4">
+                        {faviconUrl ? (
+                          <div className="relative h-10 w-10 border border-border bg-muted/20 flex items-center justify-center overflow-hidden rounded-sm">
+                            <img src={faviconUrl} alt="Favicon" className="h-full w-full object-contain" />
+                            <button
+                              onClick={() => setFaviconUrl("")}
+                              className="absolute -top-1 -right-1 bg-background border border-border rounded-full p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <X className="h-2 w-2" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => faviconInputRef.current?.click()}
+                            className="h-10 w-10 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-foreground/30 transition-colors rounded-sm"
+                          >
+                            {uploadingFavicon ? <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /> : <Upload className="h-3 w-3 text-muted-foreground/50" />}
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-1">
+                          <button onClick={() => faviconInputRef.current?.click()} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left">
+                            {faviconUrl ? "Replace favicon" : "Upload favicon"}
+                          </button>
+                          <p className="text-[10px] text-muted-foreground/60">PNG or ICO · 32×32 or 64×64 recommended</p>
+                        </div>
+                      </div>
+                      <input ref={faviconInputRef} type="file" accept="image/png,image/x-icon,image/svg+xml,image/ico" className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "favicon", "site-assets", setFaviconUrl, setUploadingFavicon, "Favicon"); }} />
+                    </div>
                       <FieldRow label={ws.taglineLabel}>
                         <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder={ws.taglinePlaceholder} className="h-9 text-sm font-light" />
                       </FieldRow>
