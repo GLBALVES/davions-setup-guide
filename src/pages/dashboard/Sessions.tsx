@@ -211,6 +211,11 @@ const Sessions = () => {
                       session={session}
                       storeSlug={storeSlug}
                       onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
+                      onStatusChange={(id, status) =>
+                        setSessions((prev) =>
+                          prev.map((s) => (s.id === id ? { ...s, status } : s))
+                        )
+                      }
                     />
                   ))}
                 </div>
