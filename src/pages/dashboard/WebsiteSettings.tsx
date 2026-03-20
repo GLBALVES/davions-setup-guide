@@ -370,9 +370,12 @@ const WebsiteSettings = () => {
 
   // Branding
   const [logoUrl, setLogoUrl] = useState("");
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [tagline, setTagline] = useState("");
   const [accentColor, setAccentColor] = useState("#000000");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   // Hero
   const [siteHeadline, setSiteHeadline] = useState("");
