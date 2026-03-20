@@ -1016,7 +1016,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Regular groups */}
             {translatedGroups.map((group) => {
-              if (group.disabled) return null;
+              if (group.disabled && !isAdmin) return null;
               const visibleItems = filterItems(group.items);
               if (visibleItems.length === 0) return null;
               return (
