@@ -1329,8 +1329,6 @@ const WebsiteSettings = () => {
                         }}
                       />
                     </section>
-                          <p className="text-[10px] text-muted-foreground/60">
-                            e.g.{" "}
                             <button type="button" onClick={() => { setCustomDomainInput("yourstudio.com"); setDomainError(null); }} className="font-mono hover:text-foreground transition-colors">
                               yourstudio.com
                             </button>
