@@ -317,7 +317,28 @@ const SessionDetailPage = () => {
       }));
 
       const occurrences = generateOccurrences(defs, bookedKeys, blockedTimes, s.duration_minutes, noticeDays, windowDays);
-      setGeneratedSlots(occurrences);
+
+      // Apply virtual blocking: hide a % of non-disabled slots (shuffle by seeded-random on current date)
+      const blockPct = Math.min(90, Math.max(0, s.virtual_block_percent ?? 0));
+      let finalSlots = occurrences;
+      if (blockPct > 0) {
+        const availableIndices = occurrences.reduce<number[]>((acc, slot, i) => {
+          if (!slot.disabled) acc.push(i);
+          return acc;
+        }, []);
+        // Deterministic shuffle seeded by today's date so it's consistent within a session
+        const seed = parseInt(format(startOfToday(), "yyyyMMdd"));
+        const shuffled = [...availableIndices].sort((a, b) => {
+          const ha = Math.sin(seed * (a + 1)) * 10000;
+          const hb = Math.sin(seed * (b + 1)) * 10000;
+          return (ha - Math.floor(ha)) - (hb - Math.floor(hb));
+        });
+        const countToHide = Math.round(availableIndices.length * blockPct / 100);
+        const hiddenIndices = new Set(shuffled.slice(0, countToHide));
+        finalSlots = occurrences.filter((_, i) => !hiddenIndices.has(i));
+      }
+
+      setGeneratedSlots(finalSlots);
       setLoading(false);
     };
     load();
