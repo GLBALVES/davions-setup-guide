@@ -734,6 +734,10 @@ const WebsiteSettings = () => {
       google_analytics_id: googleAnalyticsId.trim() || null,
       facebook_pixel_id: facebookPixelId.trim() || null,
       footer_text: footerText.trim() || null,
+      quote_text: quoteText.trim() || null,
+      quote_author: quoteAuthor.trim() || null,
+      experience_title: experienceTitle.trim() || null,
+      experience_text: experienceText.trim() || null,
     }, { onConflict: "photographer_id" });
 
     if (error) {
