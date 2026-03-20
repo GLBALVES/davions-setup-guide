@@ -335,11 +335,22 @@ const Personalize = () => {
       if (watermarksRes.data) setWatermarks(watermarksRes.data as WatermarkData[]);
 
       if (gallerySettingsRes?.data) {
-        const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
-        if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
-        const feeRow = gallerySettingsRes.data.find((r: any) => r.key === "reactivation_fee");
-        if (feeRow) setGalleryReactivationFee(feeRow.value ?? "");
+        const gs = gallerySettingsRes.data;
+        const get = (k: string) => gs.find((r: any) => r.key === k)?.value ?? "";
+        // per-type keys
+        setProofExpiryDays(get("proof_expiry_days") || get("default_expiry_days"));
+        setProofRenewalDays(get("proof_renewal_days"));
+        setProofReactivationFee(get("proof_reactivation_fee") || get("reactivation_fee"));
+        setProofAutoUnpublish(get("proof_auto_unpublish_days"));
+        setFinalExpiryDays(get("final_expiry_days"));
+        setFinalRenewalDays(get("final_renewal_days"));
+        setFinalReactivationFee(get("final_reactivation_fee"));
+        setFinalAutoUnpublish(get("final_auto_unpublish_days"));
+        // legacy state (kept for any remaining references)
+        setGalleryExpiryDays(get("default_expiry_days"));
+        setGalleryReactivationFee(get("reactivation_fee"));
       }
+
 
       if (businessRes?.data) {
         const b = businessRes.data;
