@@ -444,25 +444,9 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           </div>
         )}
 
-        {/* Footer row — only in card mode */}
+        {/* Actions row — only in card mode */}
         {!compact && (
-          <div className="flex items-center justify-between mt-auto pt-1">
-            <div className="flex items-center gap-1.5">
-              {isExpired ? (
-                <span className="text-[10px] tracking-[0.2em] uppercase text-destructive font-light flex items-center gap-1">
-                  <CalendarX2 className="h-3 w-3" />
-                  Expired {gallery.expires_at && new Date(gallery.expires_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                </span>
-              ) : (
-                <>
-                  <span className={`h-1.5 w-1.5 rounded-full ${isPublished ? "bg-green-500" : "bg-muted-foreground/30"}`} />
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-                    {gallery.status}
-                  </span>
-                </>
-              )}
-            </div>
-
+          <div className="flex items-center justify-end pt-0.5">
             <div className="flex items-center gap-1">
               {/* Assign-client button — only for unassigned galleries */}
               {isUnassigned && assignPopover}
