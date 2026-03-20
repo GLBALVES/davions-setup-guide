@@ -503,15 +503,6 @@ const WebsiteSettings = () => {
       setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
       setDomainLastChecked(null);
       toast({ title: ws.domainSaved });
-      // Notify team (fire and forget)
-      supabase.functions.invoke("notify-domain-saved", {
-        body: {
-          domain: savedDomain,
-          photographerName: fullName || undefined,
-          photographerEmail: user?.email,
-          action: "saved",
-        },
-      }).catch((err) => console.warn("notify-domain-saved:", err));
       // Auto-check domain right after saving
       checkDomainConnectivity(savedDomain);
     }
