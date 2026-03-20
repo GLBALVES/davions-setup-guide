@@ -138,8 +138,8 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: Camera,
       defaultOpen: true,
       items: [
-        { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.projects, icon: Columns, to: "/dashboard/projects" },
+        { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
         { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
         { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
