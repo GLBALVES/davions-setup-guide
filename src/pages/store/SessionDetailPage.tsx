@@ -19,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
@@ -30,6 +30,7 @@ interface SessionDetail {
   id: string;
   title: string;
   description: string | null;
+  tagline: string | null;
   price: number;
   duration_minutes: number;
   break_after_minutes: number;
@@ -90,7 +91,7 @@ interface SelectedExtra {
   maxQty: number;
 }
 
-type BookingStep = "slots" | "form" | "addons" | "review";
+type BookingStep = "product" | "slots" | "form" | "addons" | "review";
 
 // ────────────────────────────────────────────
 // Helpers
@@ -196,7 +197,7 @@ const SessionDetailPage = () => {
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<BookingStep>("slots");
+  const [step, setStep] = useState<BookingStep>("product");
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
@@ -467,7 +468,109 @@ const SessionDetailPage = () => {
   return (
     <div className="min-h-screen bg-[hsl(var(--muted))]" style={{ backgroundColor: "#f5f2ee" }}>
 
-      {/* ══════════════ HERO ══════════════ */}
+      {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
+      {step === "product" && (
+        <>
+          {/* Full-bleed hero */}
+          <div className="relative w-full h-[60vh] min-h-[380px] overflow-hidden">
+            {heroImage ? (
+              <img src={heroImage} alt={session.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-foreground" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
+            <button
+              onClick={() => navigate(backPath)}
+              className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center">
+              {photographer?.full_name && (
+                <p className="text-white/50 text-[9px] tracking-[0.45em] uppercase mb-2">{photographer.full_name}</p>
+              )}
+              <h1 className="text-white text-3xl md:text-5xl font-extralight tracking-[0.08em] mb-3" style={{ lineHeight: 1.1 }}>{session.title}</h1>
+              {session.tagline && (
+                <p className="text-white/70 text-base md:text-lg font-light max-w-xl mx-auto italic">{session.tagline}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Product details */}
+          <div className="max-w-4xl mx-auto px-6 py-14">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {/* Main content */}
+              <div className="md:col-span-2 flex flex-col gap-8">
+                {session.description && (
+                  <div>
+                    <div className="w-6 h-px bg-foreground/30 mb-5" />
+                    <p className="text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line">{session.description}</p>
+                  </div>
+                )}
+                {/* What's included */}
+                <div>
+                  <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-4">What's included</p>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-light">{session.duration_minutes} minutes session</span>
+                    </div>
+                    {session.num_photos > 0 && (
+                      <div className="flex items-center gap-3">
+                        <Camera className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-light">{session.num_photos} edited photos delivered</span>
+                      </div>
+                    )}
+                    {session.location && (
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-light">{session.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sticky booking card */}
+              <div className="md:sticky md:top-8 self-start">
+                <div className="bg-background shadow-sm border border-border p-6 flex flex-col gap-5">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Starting at</p>
+                    <p className="text-3xl font-light">{formatCurrency(session.price)}</p>
+                    {session.deposit_enabled && (
+                      <p className="text-[11px] text-muted-foreground">Deposit from {formatCurrency(
+                        session.deposit_type === "percent" || session.deposit_type === "percentage"
+                          ? Math.round(session.price * (session.deposit_amount / 100))
+                          : session.deposit_amount
+                      )}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 text-[11px] text-muted-foreground border-t border-border pt-4">
+                    <span className="flex items-center gap-2"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
+                    {session.num_photos > 0 && <span className="flex items-center gap-2"><Camera className="h-3 w-3" />{session.num_photos} photos</span>}
+                    {session.location && <span className="flex items-center gap-2"><MapPin className="h-3 w-3" />{session.location}</span>}
+                  </div>
+                  <button
+                    onClick={() => setStep("slots")}
+                    className="w-full py-3 bg-foreground text-background text-[10px] tracking-[0.3em] uppercase hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Book this session <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer className="py-8 text-center border-t border-border/30">
+            <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">Powered by Davions</p>
+          </footer>
+        </>
+      )}
+
+      {/* ══════════════ BOOKING FLOW ══════════════ */}
+      {step !== "product" && (
+        <>
+      {/* Hero */}
       <div className="relative w-full h-[42vh] min-h-[280px] overflow-hidden">
         {heroImage ? (
           <img src={heroImage} alt={session.title} className="w-full h-full object-cover" />
@@ -477,7 +580,7 @@ const SessionDetailPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/50" />
 
         <button
-          onClick={() => navigate(backPath)}
+          onClick={() => step === "slots" ? setStep("product") : undefined}
           className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -1238,6 +1341,8 @@ const SessionDetailPage = () => {
           Powered by Davions
         </p>
       </footer>
+        </>
+      )}
     </div>
   );
 };

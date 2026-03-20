@@ -168,6 +168,7 @@ const SessionForm = () => {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
+  const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
@@ -333,6 +334,7 @@ const SessionForm = () => {
       setNumPhotos(String(s.num_photos));
       setLocation(s.location ?? "");
       setCoverImageUrl(s.cover_image_url);
+      setTagline((s as unknown as { tagline?: string | null }).tagline ?? "");
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
       setRequirePayment(s.price > 0);
@@ -512,6 +514,7 @@ const SessionForm = () => {
       status,
       contract_text: contractText.trim() || null,
       briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
+      tagline: tagline.trim() || null,
     };
     const payloadWithType = { ...payload, session_type_id: sessionTypeId };
 
@@ -1100,6 +1103,19 @@ const SessionForm = () => {
                         placeholder="Describe this session for your clients…"
                         rows={3}
                       />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="tagline" className="text-xs tracking-wider uppercase font-light">
+                        Tagline <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <Input
+                        id="tagline"
+                        value={tagline}
+                        onChange={(e) => setTagline(e.target.value)}
+                        placeholder="e.g. Timeless moments that last forever"
+                      />
+                      <p className="text-[10px] text-muted-foreground">A short phrase shown below the session title on your public website.</p>
                     </div>
 
                     <div className="flex flex-col gap-2">
