@@ -1329,17 +1329,6 @@ const WebsiteSettings = () => {
                         }}
                       />
                     </section>
-                            {" "}— root domain
-                          </p>
-                          <span className="text-muted-foreground/30 text-[10px]">or</span>
-                          <p className="text-[10px] text-muted-foreground/60">
-                            <button type="button" onClick={() => { setCustomDomainInput("booking.yourstudio.com"); setDomainError(null); }} className="font-mono hover:text-foreground transition-colors">
-                              booking.yourstudio.com
-                            </button>
-                            {" "}— subdomain
-                          </p>
-                        )}
-                      </FieldRow>
 
                        {/* DNS records — shown as soon as a domain is saved */}
                        {customDomain && (() => {
