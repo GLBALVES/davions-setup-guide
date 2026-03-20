@@ -541,7 +541,7 @@ function ArchivedKanbanSection({
       {open && (
         <div className="flex flex-wrap gap-3 p-4">
           {projects.map((p) => (
-            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[220px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[260px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
               <div className="flex items-start justify-between gap-1">
                 <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
