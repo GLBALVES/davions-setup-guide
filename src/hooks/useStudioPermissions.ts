@@ -22,11 +22,9 @@ export interface StudioPermissionsState {
 const ALL_TRUE: Permissions = {};
 
 export function useStudioPermissions(): StudioPermissionsState {
-  const { user, photographerId: ctxPhotographerId } = useAuth();
+  const { user, photographerId: ctxPhotographerId, isOwner: ctxIsOwner } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
   const [permissions, setPermissions] = useState<Permissions>({});
-  const [photographerId, setPhotographerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -34,78 +32,71 @@ export function useStudioPermissions(): StudioPermissionsState {
       return;
     }
 
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-
-      // Check if the user has a photographers record (= they ARE the owner)
-      const { data: photographer } = await supabase
-        .from("photographers")
-        .select("id")
-        .eq("id", user!.id)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (photographer) {
-        setIsOwner(true);
-        setPermissions(ALL_TRUE);
-        setPhotographerId(user!.id);
-        setLoading(false);
-        return;
-      }
-
-      // Otherwise, look for a studio_member record matching this user's email
-      const { data: memberRows } = await supabase
-        .from("studio_members")
-        .select("role_id, status, photographer_id")
-        .eq("email", user!.email ?? "")
-        .eq("status", "active")
-        .limit(1);
-
-      if (cancelled) return;
-
-      const member = memberRows?.[0];
-
-      if (!member || !member.role_id) {
-        // Invited but no role yet — no permissions
-        setIsOwner(false);
-        setPermissions({});
-        setPhotographerId(member?.photographer_id ?? null);
-        setLoading(false);
-        return;
-      }
-
-      // Set the employer's photographer_id
-      setPhotographerId(member.photographer_id ?? null);
-
-      // Fetch the role's permissions
-      const { data: roleRow } = await supabase
-        .from("studio_roles")
-        .select("permissions")
-        .eq("id", member.role_id)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      const perms = (roleRow?.permissions ?? {}) as Permissions;
-      setIsOwner(false);
-      setPermissions(perms);
+    // If AuthContext already resolved ownership, no need to re-query photographers/members
+    if (ctxIsOwner === true) {
+      setPermissions(ALL_TRUE);
       setLoading(false);
+      return;
     }
 
-    load();
-    return () => { cancelled = true; };
-  }, [user]);
+    // ctxIsOwner === false means this is a studio member — fetch their role permissions
+    if (ctxIsOwner === false) {
+      let cancelled = false;
+
+      async function loadMemberPermissions() {
+        setLoading(true);
+
+        // Fetch the member's role_id using email
+        const { data: memberRows } = await supabase
+          .from("studio_members")
+          .select("role_id")
+          .eq("email", user!.email ?? "")
+          .eq("status", "active")
+          .limit(1);
+
+        if (cancelled) return;
+
+        const roleId = memberRows?.[0]?.role_id;
+
+        if (!roleId) {
+          setPermissions({});
+          setLoading(false);
+          return;
+        }
+
+        const { data: roleRow } = await supabase
+          .from("studio_roles")
+          .select("permissions")
+          .eq("id", roleId)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        const perms = (roleRow?.permissions ?? {}) as Permissions;
+        setPermissions(perms);
+        setLoading(false);
+      }
+
+      loadMemberPermissions();
+      return () => { cancelled = true; };
+    }
+
+    // ctxIsOwner === null means AuthContext is still resolving — wait
+    // loading stays true until ctxIsOwner resolves
+  }, [user, ctxIsOwner]);
+
+  const resolvedIsOwner = ctxIsOwner === true;
 
   const can = (key: string): boolean => {
-    if (isOwner) return true;
+    if (resolvedIsOwner) return true;
     return !!permissions[key];
   };
 
-  // Prefer the context-resolved value (already available from AuthContext)
-  const resolvedPhotographerId = ctxPhotographerId ?? photographerId;
-
-  return { loading, isOwner, photographerId: resolvedPhotographerId, permissions, can };
+  return {
+    loading: ctxIsOwner === null ? true : loading,
+    isOwner: resolvedIsOwner,
+    photographerId: ctxPhotographerId,
+    permissions,
+    can,
+  };
 }
