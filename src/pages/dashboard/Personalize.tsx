@@ -346,10 +346,14 @@ const Personalize = () => {
         setProofRenewalDays(get("proof_renewal_days"));
         setProofReactivationFee(get("proof_reactivation_fee") || get("reactivation_fee"));
         setProofAutoUnpublish(get("proof_auto_unpublish_days"));
+        setProofAutoDeleteEnabled(get("proof_auto_delete_enabled") === "true");
+        setProofAutoDeleteDays(get("proof_auto_delete_days"));
         setFinalExpiryDays(get("final_expiry_days"));
         setFinalRenewalDays(get("final_renewal_days"));
         setFinalReactivationFee(get("final_reactivation_fee"));
         setFinalAutoUnpublish(get("final_auto_unpublish_days"));
+        setFinalAutoDeleteEnabled(get("final_auto_delete_enabled") === "true");
+        setFinalAutoDeleteDays(get("final_auto_delete_days"));
         // legacy state (kept for any remaining references)
         setGalleryExpiryDays(get("default_expiry_days"));
         setGalleryReactivationFee(get("reactivation_fee"));
