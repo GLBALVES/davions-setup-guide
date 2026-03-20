@@ -238,7 +238,7 @@ const groups: MenuGroup[] = [
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule" },
-      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings" },
+      { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true },
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
