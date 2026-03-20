@@ -417,20 +417,43 @@ function SessionCard({
                 </TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleShare}
-                    disabled={!bookingUrl}
-                    className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {bookingUrl ? s.copyBookingLink : s.configureStore}
-                </TooltipContent>
-              </Tooltip>
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        disabled={!bookingUrl}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {bookingUrl ? "Share" : s.configureStore}
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleCopyLink}>
+                    <Copy className="h-3.5 w-3.5" />
+                    {s.copyBookingLink}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handlePreview}>
+                    <Link2 className="h-3.5 w-3.5" />
+                    Open link
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareWhatsApp}>
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Share via WhatsApp
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareEmail}>
+                    <Mail className="h-3.5 w-3.5" />
+                    Share via Email
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1 ml-1">
                 <Calendar className="h-3 w-3" />
