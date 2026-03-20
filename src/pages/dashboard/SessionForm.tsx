@@ -150,6 +150,7 @@ const SessionForm = () => {
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
   const [bookingWindowDays, setBookingWindowDays] = useState("60");
+  const [virtualBlockPercent, setVirtualBlockPercent] = useState("0");
 
   const editor = useEditor({
     extensions: [StarterKit],
