@@ -48,7 +48,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done" | "archived";
+type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
 interface ClientProject {
   id: string;
@@ -69,22 +69,20 @@ interface ClientProject {
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: "lead",      label: "Lead",     color: "hsl(var(--muted-foreground))" },
-  { key: "briefing",  label: "Briefing", color: "hsl(215 80% 55%)" },
-  { key: "shooting",  label: "Shooting", color: "hsl(280 70% 55%)" },
-  { key: "editing",   label: "Editing",  color: "hsl(35 85% 55%)" },
-  { key: "delivery",  label: "Delivery", color: "hsl(160 60% 45%)" },
-  { key: "done",      label: "Done",     color: "hsl(var(--foreground))" },
+  { key: "upcoming",       label: "Próximas sessões", color: "hsl(var(--muted-foreground))" },
+  { key: "shot",           label: "Fotografadas",     color: "hsl(280 70% 55%)" },
+  { key: "proof_gallery",  label: "Galeria de provas",color: "hsl(35 85% 55%)" },
+  { key: "post_production",label: "Pós produção",     color: "hsl(215 80% 55%)" },
+  { key: "final_gallery",  label: "Galeria final",    color: "hsl(160 60% 45%)" },
 ];
 
 const STAGE_COLORS: Record<Stage, string> = {
-  lead:     "bg-muted/60 text-muted-foreground border-border",
-  briefing: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  shooting: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  editing:  "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  delivery: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  done:     "bg-foreground/10 text-foreground border-foreground/20",
-  archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
+  upcoming:        "bg-muted/60 text-muted-foreground border-border",
+  shot:            "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  proof_gallery:   "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  post_production: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  final_gallery:   "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  archived:        "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
 
@@ -289,12 +287,12 @@ function ProjectModal({
   const [clientEmail, setClientEmail] = useState("");
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
   const [shootDate, setShootDate] = useState("");
-  const [stage, setStage] = useState<Stage>("lead");
+  const [stage, setStage] = useState<Stage>("upcoming");
   const [notes, setNotes] = useState("");
 
   const stageLabels: Record<string, string> = {
-    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
-    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
+    post_production: "Pós produção", final_gallery: "Galeria final",
   };
 
   useEffect(() => {
@@ -305,7 +303,7 @@ function ProjectModal({
       const matched = sessionTypes.find((s) => s.name === initial?.session_type);
       setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
-      setStage(initial?.stage ?? defaultStage ?? "lead");
+      setStage(initial?.stage ?? defaultStage ?? "upcoming");
       setNotes(initial?.notes ?? "");
     }
   }, [open, initial, defaultStage, sessionTypes]);
@@ -409,9 +407,10 @@ function ListView({
   const { t } = useLanguage();
   const p_t = t.projects;
   const stageLabels: Record<string, string> = {
-    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
-    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
+    post_production: "Pós produção", final_gallery: "Galeria final",
   };
+
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
@@ -577,7 +576,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ClientProject | null>(null);
-  const [defaultStage, setDefaultStage] = useState<Stage>("lead");
+  const [defaultStage, setDefaultStage] = useState<Stage>("upcoming");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
@@ -631,7 +630,7 @@ const Projects = () => {
         client_name: b.client_name,
         client_email: b.client_email ?? null,
         booking_id: b.id,
-        stage: "lead",
+        stage: "upcoming",
         shoot_date: b.booked_date ?? null,
         position: (existingProjects?.length ?? 0) + i,
       }));
@@ -793,9 +792,9 @@ const Projects = () => {
   };
 
   const handleUnarchive = async (id: string) => {
-    await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
-    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
-    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
+    await supabase.from("client_projects" as any).update({ stage: "upcoming" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "upcoming" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "upcoming" as Stage } : prev);
     toast.success(p_t.restoredToLead);
   };
 
@@ -828,7 +827,7 @@ const Projects = () => {
                 </Tabs>
                 <Button
                   size="sm"
-                  onClick={() => openAdd("lead")}
+                  onClick={() => openAdd("upcoming")}
                   className="gap-2 text-xs tracking-wider uppercase font-light"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -841,7 +840,7 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
-                const stageLabel = { lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting, editing: p_t.editing, delivery: p_t.delivery, done: p_t.done }[s.key] ?? s.label;
+                const stageLabel = s.label;
                 return (
                   <div
                     key={s.key}
