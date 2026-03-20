@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera } from "lucide-react";
+import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
   Dialog,
   DialogContent,

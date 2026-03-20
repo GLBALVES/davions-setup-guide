@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
+import { BookingsSkeleton } from "@/components/dashboard/skeletons/BookingsSkeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,

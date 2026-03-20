@@ -9,6 +9,7 @@ import { GalleryCard } from "@/components/dashboard/GalleryCard";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GalleriesSkeleton } from "@/components/dashboard/skeletons/GalleriesSkeleton";
 import {
   Plus,
   FolderOpen,
