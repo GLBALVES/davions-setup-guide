@@ -1,65 +1,48 @@
 
-## Diagnóstico completo
+## Plano: Implementar toggles de navegacao + menu no site publico
 
-### O que o dashboard configura (photographer_site):
-- **Branding**: logo, tagline, accent_color
-- **Hero**: site_headline, site_subheadline, cta_text, cta_link, site_hero_image_url
-- **About**: about_title, about_image_url + bio/full_name da tabela photographers
-- **Social**: instagram, facebook, pinterest, tiktok, youtube, whatsapp, linkedin
-- **Navigation**: show_store, show_blog, show_booking, show_about, show_contact
-- **Footer**: footer_text
-- **SEO**: seo_title, seo_description, og_image_url
-- **Template**: site_template (editorial, grid, magazine, clean)
+### Problema atual
+Os 5 toggles de navegacao (Store, Booking, About, Blog, Contact) configurados no dashboard nao tem efeito no site publico. Apenas `show_about` funciona parcialmente. Nao existe barra de navegacao no site.
 
-### O que as páginas públicas exibem hoje:
-- `StorePage` e `CustomDomainStore`: apenas hero image + nome hardcoded "Photography by" + bio + sessions
-- Nenhum dado de `photographer_site` além de `site_hero_image_url`
-- Headline, subheadline, CTA, logo, social links, about section, footer — tudo ignorado
+### O que sera implementado
 
-### Plano de correção
+**1. Barra de navegacao no topo do site publico**
+- Fixa/sticky sobre o hero, com fundo transparente que ganha background ao scrollar
+- Exibe logo (se configurado) a esquerda e links das secoes ativas a direita
+- Links condicionais baseados nos toggles: Store, About, Blog, Contact
+- Menu hamburger no mobile
 
-**Arquivo a alterar: `src/pages/store/StorePage.tsx`**
+**2. Toggles controlam visibilidade das secoes**
+- `show_store = false` → oculta grid de Sessions
+- `show_about = false` → oculta secao About (ja funciona)
+- `show_booking = false` → oculta CTA de booking no hero
+- `show_blog = false` → oculta link Blog no menu (a secao de blog no site publico sera uma pagina separada futuramente)
+- `show_contact = false` → oculta secao de social links/contato no footer
 
-Ampliar o fetch para buscar todos os campos de `photographer_site`:
-```ts
-supabase.from("photographer_site")
-  .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_contact, show_store")
-```
+**3. Fetch atualizado**
+- Adicionar `show_booking`, `show_blog`, `show_contact` ao select de `photographer_site`
+- Adicionar esses campos a interface `SiteConfig`
 
-Atualizar o render da `StorePage` para usar os dados configurados:
-- **Hero**: usar `site_headline` (em vez de "Photography by"), `site_subheadline` (em vez de bio), `cta_text`/`cta_link` configurados
-- **Logo**: exibir `logo_url` no topo se existir
-- **About section**: exibir se `show_about` = true com `about_title`, bio e `about_image_url`
-- **Social links**: exibir rodapé com ícones das redes configuradas
-- **Footer**: usar `footer_text` configurado (fallback "Powered by Davions")
-
-**Arquivo a alterar: `src/pages/store/CustomDomainStore.tsx`**
-
-Aplicar as mesmas mudanças — já tem a estrutura correta mas ignora os mesmos campos.
-
-### Estrutura do novo layout (ambas as pages)
+### Estrutura da nav bar
 
 ```text
-┌─────────────────────────────┐
-│ [Logo opcional no topo]     │
-│                             │
-│  HERO (imagem + overlay)    │
-│  ─ site_headline            │
-│  ─ site_subheadline         │
-│  ─ [CTA button]             │
-└─────────────────────────────┘
-│  Sessions grid              │
-│  Galleries grid (portfolio) │
-└─────────────────────────────┘
-│  ABOUT (se show_about)      │
-│  ─ about_image + bio        │
-└─────────────────────────────┘
-│  FOOTER                     │
-│  ─ social icons             │
-│  ─ footer_text              │
-└─────────────────────────────┘
+Desktop:
+┌──────────────────────────────────────────────┐
+│ [Logo]         Store · About · Blog · Contact│
+└──────────────────────────────────────────────┘
+
+Mobile:
+┌──────────────────────────────────────────────┐
+│ [Logo]                              [☰ Menu] │
+│                    ┌─────────────┐           │
+│                    │ Store       │           │
+│                    │ About       │           │
+│                    │ Blog        │           │
+│                    │ Contact     │           │
+│                    └─────────────┘           │
+└──────────────────────────────────────────────┘
 ```
 
 ### Arquivos a alterar
-1. `src/pages/store/StorePage.tsx` — ampliar fetch + novo layout com dados configurados
-2. `src/pages/store/CustomDomainStore.tsx` — mesma correção para domínios customizados
+1. **`src/pages/store/StorePage.tsx`** — adicionar nav bar, fetch dos novos campos, condicionar secoes pelos toggles
+2. **`src/pages/store/CustomDomainStore.tsx`** — mesmas alteracoes
