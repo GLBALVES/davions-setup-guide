@@ -586,7 +586,6 @@ const WebsiteSettings = () => {
   const [saving, setSaving] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const faviconInputRef2 = useRef<HTMLInputElement>(null); // alias for JSX usage below — declared above
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
   const ogInputRef = useRef<HTMLInputElement>(null);
