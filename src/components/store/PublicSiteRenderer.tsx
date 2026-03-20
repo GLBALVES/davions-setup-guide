@@ -390,8 +390,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
                       <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
                         <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
                         <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
-                        {(session as any).tagline && (
-                          <p className="text-base font-light text-muted-foreground italic">{(session as any).tagline}</p>
+                        {session.tagline && (
+                          <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>
                         )}
                         {session.description && (
                           <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>
@@ -508,7 +508,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                     {/* hover overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
                       <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
-                      {(session as any).tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{(session as any).tagline}</p>}
+                      {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
                       <div className="flex items-center justify-between">
                         <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
                         <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
