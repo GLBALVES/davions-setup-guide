@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ShieldOff } from "lucide-react";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PermissionGateProps {
   permKey: string;
@@ -13,25 +14,28 @@ interface PermissionGateProps {
  * Studio owners always pass through.
  */
 export default function PermissionGate({ permKey, children }: PermissionGateProps) {
+  const { identityLoading } = useAuth();
   const { loading, can, isOwner } = useStudioPermissions();
   const [timedOut, setTimedOut] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Combine both loading signals — gate is loading if auth identity or permissions are still resolving
+  const isLoading = identityLoading || loading;
+
   useEffect(() => {
-    if (loading && !timedOut) {
-      // Safety valve: if permissions are still loading after 4s, release the gate
-      // This prevents owners from ever being stuck on a loading screen
-      timerRef.current = setTimeout(() => setTimedOut(true), 4000);
+    if (isLoading && !timedOut) {
+      // Safety valve: release the gate after 2s to prevent owners from ever getting stuck
+      timerRef.current = setTimeout(() => setTimedOut(true), 2000);
     } else {
       if (timerRef.current) clearTimeout(timerRef.current);
     }
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [loading, timedOut]);
+  }, [isLoading, timedOut]);
 
   // Still loading and timeout not yet reached
-  if (loading && !timedOut) {
+  if (isLoading && !timedOut) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
@@ -41,12 +45,8 @@ export default function PermissionGate({ permKey, children }: PermissionGateProp
     );
   }
 
-  // Timed out → let owners through, deny only if explicitly not an owner
-  // (isOwner from the hook is false only when AuthContext has confirmed they're a member)
-  if (timedOut && !isOwner) {
-    // If we timed out and we genuinely know they're not an owner, block
-    // But since we timed out, we give benefit of the doubt and let through
-    // to avoid false denials due to network latency
+  // Timed out → give benefit of the doubt to avoid false denials
+  if (timedOut) {
     return <>{children}</>;
   }
 
