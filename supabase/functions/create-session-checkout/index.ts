@@ -210,6 +210,7 @@ serve(async (req) => {
     const location = (sessionData.location as string) ?? null;
 
     const isDeposit = sessionData.deposit_enabled as boolean;
+    const allowTip = !isDeposit && (sessionData.allow_tip as boolean) === true;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
     // Build session meta line for description
