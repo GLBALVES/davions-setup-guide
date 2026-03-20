@@ -569,6 +569,7 @@ export const translations = {
       businessSaved: "Business settings saved",
       // Galleries tab
       galleriesSettingsSaved: "Gallery settings saved",
+      days: "days",
       proofGalleriesLabel: "Proof Galleries",
       finalGalleriesLabel: "Final Galleries",
       expirationDaysLabel: "Expiration",
