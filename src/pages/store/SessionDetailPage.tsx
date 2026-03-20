@@ -46,6 +46,7 @@ interface SessionDetail {
   booking_notice_days: number;
   booking_window_days: number;
   contract_text: string | null;
+  virtual_block_percent: number;
 }
 
 interface PhotographerInfo {
