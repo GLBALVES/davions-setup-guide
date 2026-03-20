@@ -793,6 +793,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     const pinned = isPinned(groupTitle, item.title);
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
     const subItemClass = item.isSubItem && !collapsed ? "pl-7 relative before:absolute before:left-[22px] before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-px before:bg-border" : "";
+    const isSubmenuOpen = item.isCollapsibleParent && item.parentKey ? !collapsedSubmenus[item.parentKey] : false;
 
     const content = item.to ? (
       <SidebarMenuButton asChild isActive={isItemActive(item)} tooltip={item.title}>
@@ -824,6 +825,22 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             <span className="ml-auto shrink-0 bg-foreground text-background text-[10px] font-medium min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-sm">
               {badgeCount}
             </span>
+          )}
+          {!collapsed && item.isCollapsibleParent && item.parentKey && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCollapsedSubmenus((prev) => ({ ...prev, [item.parentKey!]: !prev[item.parentKey!] }));
+              }}
+              className="shrink-0 p-0.5 rounded-sm text-muted-foreground/50 hover:text-foreground transition-colors"
+              aria-label="Toggle submenu"
+            >
+              <ChevronRight
+                className="h-3 w-3 transition-transform duration-200"
+                style={{ transform: isSubmenuOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+              />
+            </button>
           )}
         </NavLink>
       </SidebarMenuButton>
