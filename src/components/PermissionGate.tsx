@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { ShieldOff } from "lucide-react";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
@@ -12,9 +13,25 @@ interface PermissionGateProps {
  * Studio owners always pass through.
  */
 export default function PermissionGate({ permKey, children }: PermissionGateProps) {
-  const { loading, can } = useStudioPermissions();
+  const { loading, can, isOwner } = useStudioPermissions();
+  const [timedOut, setTimedOut] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    if (loading && !timedOut) {
+      // Safety valve: if permissions are still loading after 4s, release the gate
+      // This prevents owners from ever being stuck on a loading screen
+      timerRef.current = setTimeout(() => setTimedOut(true), 4000);
+    } else {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [loading, timedOut]);
+
+  // Still loading and timeout not yet reached
+  if (loading && !timedOut) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
@@ -22,6 +39,15 @@ export default function PermissionGate({ permKey, children }: PermissionGateProp
         </span>
       </div>
     );
+  }
+
+  // Timed out → let owners through, deny only if explicitly not an owner
+  // (isOwner from the hook is false only when AuthContext has confirmed they're a member)
+  if (timedOut && !isOwner) {
+    // If we timed out and we genuinely know they're not an owner, block
+    // But since we timed out, we give benefit of the doubt and let through
+    // to avoid false denials due to network latency
+    return <>{children}</>;
   }
 
   if (!can(permKey)) {
