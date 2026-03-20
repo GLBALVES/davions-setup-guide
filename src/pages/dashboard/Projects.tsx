@@ -180,11 +180,6 @@ function KanbanCard({
                 {project.session_type}
               </span>
             )}
-            {project.booking_id && (
-              <span className="text-[9px] tracking-widest uppercase border border-primary/30 px-1.5 py-0.5 text-primary/70 bg-primary/5">
-                Booking
-              </span>
-            )}
           </div>
         </div>
       </div>
