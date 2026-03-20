@@ -1752,7 +1752,7 @@ const SessionForm = () => {
                       <div className="flex flex-col gap-0.5">
                         <p className="text-xs tracking-wider uppercase font-light">Allow Tip</p>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Clients can add a gratuity at checkout.
+                          Clients can add a gratuity at checkout. The tip option will only appear on the <strong>final payment</strong> — it is not shown on deposit checkouts.
                         </p>
                       </div>
                       <Switch checked={allowTip} onCheckedChange={setAllowTip} />
