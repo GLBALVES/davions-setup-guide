@@ -21,14 +21,17 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Eye,
   Globe,
   GlobeLock,
   Loader2,
   Mail,
   Plus,
+  Share2,
   Trash2,
   Upload,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
@@ -159,6 +162,7 @@ const SessionForm = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
@@ -281,15 +285,16 @@ const SessionForm = () => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
-    // Check if photographer has Stripe configured
+    // Check if photographer has Stripe configured + fetch store slug
     if (user) {
       (supabase as any)
         .from("photographers")
-        .select("stripe_secret_key, stripe_publishable_key")
+        .select("stripe_secret_key, stripe_publishable_key, store_slug")
         .eq("id", user.id)
         .single()
         .then(({ data }: { data: any }) => {
           setStripeConfigured(Boolean(data?.stripe_secret_key && data?.stripe_publishable_key));
+          setStoreSlug(data?.store_slug ?? null);
         });
     }
   }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates, user]);
@@ -915,13 +920,77 @@ const SessionForm = () => {
                   <ArrowLeft className="h-3 w-3" />
                   Back to Sessions
                 </button>
-                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
-                  <span className="inline-block w-6 h-px bg-border" />
-                  {isEdit ? "Edit Session" : "New Session"}
-                </p>
-                <h1 className="text-2xl font-light tracking-wide">
-                  {isEdit ? title || "Untitled" : "Create Session"}
-                </h1>
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">
+                      <span className="inline-block w-6 h-px bg-border" />
+                      {isEdit ? "Edit Session" : "New Session"}
+                    </p>
+                    <h1 className="text-2xl font-light tracking-wide">
+                      {isEdit ? title || "Untitled" : "Create Session"}
+                    </h1>
+                  </div>
+                  {isEdit && (
+                    <TooltipProvider>
+                      <div className="flex items-center gap-2 pb-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                const bookingUrl = storeSlug
+                                  ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
+                                  : null;
+                                if (bookingUrl) window.open(bookingUrl, "_blank");
+                              }}
+                              disabled={!storeSlug}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
+                                storeSlug
+                                  ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                                  : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+                              }`}
+                            >
+                              <Eye className="h-3 w-3" />
+                              Preview
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            {storeSlug ? "Open booking page" : "Configure store slug in Settings first"}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={async () => {
+                                const bookingUrl = storeSlug
+                                  ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
+                                  : null;
+                                if (!bookingUrl) return;
+                                try {
+                                  await navigator.clipboard.writeText(bookingUrl);
+                                  toast({ title: "Link copied!", description: "Booking URL copied to clipboard." });
+                                } catch {
+                                  toast({ title: "Failed to copy", variant: "destructive" });
+                                }
+                              }}
+                              disabled={!storeSlug}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
+                                storeSlug
+                                  ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                                  : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+                              }`}
+                            >
+                              <Share2 className="h-3 w-3" />
+                              Share
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            {storeSlug ? "Copy booking link to clipboard" : "Configure store slug in Settings first"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+                  )}
+                </div>
               </div>
 
               {/* Step indicator */}
