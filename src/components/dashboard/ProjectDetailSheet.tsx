@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
-  Trash2, Archive, ArchiveRestore, Calendar, User, Mail, Camera,
+  Trash2, Archive, ArchiveRestore, Camera,
   Pencil, Check, X,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -73,7 +75,7 @@ interface Props {
   onRefetchSessionTypes: () => void;
 }
 
-// Inline editable field — click to edit, blur/Enter to save
+// Inline editable field
 function InlineField({
   label,
   value,
@@ -183,13 +185,13 @@ export function ProjectDetailSheet({
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md w-full p-0 flex flex-col">
-        <SheetHeader className="p-5 pb-3 pr-12 shrink-0">
-          <SheetTitle className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-normal">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md w-full p-0 flex flex-col max-h-[90vh]">
+        <DialogHeader className="p-5 pb-3 shrink-0">
+          <DialogTitle className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-normal">
             Project Details
-          </SheetTitle>
-        </SheetHeader>
+          </DialogTitle>
+        </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-5 pb-6 space-y-5">
@@ -383,7 +385,7 @@ export function ProjectDetailSheet({
 
           </div>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
