@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 
@@ -41,6 +41,7 @@ const Sessions = () => {
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const fetchSessions = async () => {
     if (!photographerId) return;
@@ -150,7 +151,7 @@ const Sessions = () => {
                   })}
                 </div>
 
-                {/* Search + Sort */}
+                {/* Search + Sort + View toggle */}
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1 max-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -175,6 +176,24 @@ const Sessions = () => {
                         {label}
                       </button>
                     ))}
+                  </div>
+
+                  {/* View mode toggle */}
+                  <div className="flex items-center border border-border">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                      title="Grid view"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                      title="List view"
+                    >
+                      <List className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -204,10 +223,35 @@ const Sessions = () => {
                     </Button>
                   )}
                 </div>
-              ) : (
+              ) : viewMode === "grid" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredSessions.map((session) => (
                     <SessionCard
+                      key={session.id}
+                      session={session}
+                      storeSlug={storeSlug}
+                      onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
+                      onStatusChange={(id, status) =>
+                        setSessions((prev) =>
+                          prev.map((s) => (s.id === id ? { ...s, status } : s))
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                /* List view */
+                <div className="flex flex-col border border-border divide-y divide-border">
+                  {/* List header */}
+                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 bg-muted/40">
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Session</span>
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Price</span>
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden sm:block">Duration</span>
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden md:block">Status</span>
+                    <span className="w-20" />
+                  </div>
+                  {filteredSessions.map((session) => (
+                    <SessionRow
                       key={session.id}
                       session={session}
                       storeSlug={storeSlug}
@@ -229,24 +273,20 @@ const Sessions = () => {
   );
 };
 
-function SessionCard({
-  session,
-  storeSlug,
-  onClick,
-  onStatusChange,
-}: {
-  session: Session;
-  storeSlug: string | null;
-  onClick: () => void;
-  onStatusChange: (id: string, status: string) => void;
-}) {
+/* ─────────────────────────── shared action helpers ─────────────────────────── */
+
+function useSessionActions(session: Session, storeSlug: string | null) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { photographerId } = useAuth();
   const s = t.sessions;
   const [toggling, setToggling] = useState(false);
 
-  const handleToggleStatus = async (e: React.MouseEvent) => {
+  const bookingUrl = storeSlug
+    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
+    : null;
+
+  const handleToggleStatus = async (e: React.MouseEvent, onStatusChange: (id: string, status: string) => void) => {
     e.stopPropagation();
     const newStatus = session.status === "active" ? "draft" : "active";
     setToggling(true);
@@ -267,29 +307,9 @@ function SessionCard({
     }
   };
 
-  const priceFormatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(session.price / 100);
-
-  const bookingUrl = storeSlug
-    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
-    : null;
-
   const handlePreview = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (bookingUrl) window.open(bookingUrl, "_blank");
-  };
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!bookingUrl) return;
-    try {
-      await navigator.clipboard.writeText(bookingUrl);
-      toast({ title: s.linkCopied, description: s.bookingUrlCopied });
-    } catch {
-      toast({ title: s.failedToCopy, variant: "destructive" });
-    }
   };
 
   const handleCopyLink = async (e: React.MouseEvent) => {
@@ -315,13 +335,39 @@ function SessionCard({
     window.open(`mailto:?subject=${encodeURIComponent(session.title)}&body=${encodeURIComponent(bookingUrl)}`, "_blank");
   };
 
+  return { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, s };
+}
+
+/* ─────────────────────────── Grid card ─────────────────────────── */
+
+function SessionCard({
+  session,
+  storeSlug,
+  onClick,
+  onStatusChange,
+}: {
+  session: Session;
+  storeSlug: string | null;
+  onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  const { t } = useLanguage();
+  const s = t.sessions;
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail } = useSessionActions(session, storeSlug);
+
+  const priceFormatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(session.price / 100);
+
   return (
     <TooltipProvider>
       <div
         onClick={onClick}
         className="group cursor-pointer text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
       >
-        <div className="aspect-video bg-muted relative overflow-hidden">
+        {/* Cover image — flattened height */}
+        <div className="h-32 bg-muted relative overflow-hidden">
           {session.cover_image_url ? (
             <img
               src={session.cover_image_url}
@@ -335,7 +381,7 @@ function SessionCard({
           )}
           <div className="absolute top-2 right-2 group/badge">
             <button
-              onClick={handleToggleStatus}
+              onClick={(e) => handleToggleStatus(e, onStatusChange)}
               disabled={toggling}
               className="relative block"
             >
@@ -355,13 +401,8 @@ function SessionCard({
           </div>
         </div>
 
-        <div className="p-4 flex flex-col gap-3">
-          <div>
-            <h3 className="text-sm font-light tracking-wide truncate">{session.title || "Untitled"}</h3>
-            {session.description && (
-              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{session.description}</p>
-            )}
-          </div>
+        <div className="p-3 flex flex-col gap-2">
+          <h3 className="text-sm font-light tracking-wide truncate">{session.title || "Untitled"}</h3>
 
           <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -380,13 +421,13 @@ function SessionCard({
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-border pt-3">
+          <div className="flex items-center justify-between border-t border-border pt-2">
             <span className="text-base font-light">{priceFormatted}</span>
             <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={handleToggleStatus}
+                    onClick={(e) => handleToggleStatus(e, onStatusChange)}
                     disabled={toggling}
                     className={`transition-colors ${session.status === "active" ? "text-foreground hover:text-destructive" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40`}
                   >
@@ -454,13 +495,152 @@ function SessionCard({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <span className="text-[10px] tracking-wider uppercase text-muted-foreground flex items-center gap-1 ml-1">
-                <Calendar className="h-3 w-3" />
-                {s.manage}
-              </span>
             </div>
           </div>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+/* ─────────────────────────── List row ─────────────────────────── */
+
+function SessionRow({
+  session,
+  storeSlug,
+  onClick,
+  onStatusChange,
+}: {
+  session: Session;
+  storeSlug: string | null;
+  onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  const { t } = useLanguage();
+  const s = t.sessions;
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail } = useSessionActions(session, storeSlug);
+
+  const priceFormatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(session.price / 100);
+
+  return (
+    <TooltipProvider>
+      <div
+        onClick={onClick}
+        className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-4 py-3 items-center hover:bg-muted/30 cursor-pointer transition-colors group"
+      >
+        {/* Title + thumbnail */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="shrink-0 w-10 h-10 bg-muted overflow-hidden">
+            {session.cover_image_url ? (
+              <img src={session.cover_image_url} alt={session.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-light truncate">{session.title || "Untitled"}</p>
+            {session.location && (
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1 truncate">
+                <MapPin className="h-2.5 w-2.5 shrink-0" />
+                {session.location}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Price */}
+        <span className="text-sm font-light">{priceFormatted}</span>
+
+        {/* Duration + photos */}
+        <div className="hidden sm:flex flex-col gap-0.5">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {session.duration_minutes}min
+          </span>
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Camera className="h-3 w-3" />
+            {session.num_photos} {s.photos}
+          </span>
+        </div>
+
+        {/* Status */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${session.status === "active" ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+          <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">
+            {session.status === "active" ? s.published : s.unpublished}
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-20 justify-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={(e) => handleToggleStatus(e, onStatusChange)}
+                disabled={toggling}
+                className={`p-1.5 transition-colors ${session.status === "active" ? "text-foreground hover:text-destructive" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40`}
+              >
+                {session.status === "active" ? <Globe className="h-3.5 w-3.5" /> : <GlobeLock className="h-3.5 w-3.5" />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {session.status === "active" ? "Unpublish" : "Publish"}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handlePreview}
+                disabled={!bookingUrl}
+                className={`p-1.5 transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Preview</TooltipContent>
+          </Tooltip>
+
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    disabled={!bookingUrl}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`p-1.5 transition-colors ${bookingUrl ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30 cursor-not-allowed"}`}
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">Share</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleCopyLink}>
+                <Copy className="h-3.5 w-3.5" />
+                {s.copyBookingLink}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handlePreview}>
+                <Link2 className="h-3.5 w-3.5" />
+                Open link
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareWhatsApp}>
+                <MessageCircle className="h-3.5 w-3.5" />
+                Share via WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 text-xs cursor-pointer" onClick={handleShareEmail}>
+                <Mail className="h-3.5 w-3.5" />
+                Share via Email
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </TooltipProvider>
