@@ -629,7 +629,7 @@ const Projects = () => {
         client_name: b.client_name,
         client_email: b.client_email ?? null,
         booking_id: b.id,
-        stage: "lead",
+        stage: "upcoming",
         shoot_date: b.booked_date ?? null,
         position: (existingProjects?.length ?? 0) + i,
       }));
