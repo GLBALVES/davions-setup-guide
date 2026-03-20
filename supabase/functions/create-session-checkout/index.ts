@@ -62,7 +62,7 @@ serve(async (req) => {
     // Fetch session data
     const { data: sessionData, error: sessionError } = await supabase
       .from("sessions")
-      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location")
+      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location, allow_tip")
       .eq("id", sessionId)
       .single();
 
@@ -210,6 +210,7 @@ serve(async (req) => {
     const location = (sessionData.location as string) ?? null;
 
     const isDeposit = sessionData.deposit_enabled as boolean;
+    const allowTip = !isDeposit && (sessionData.allow_tip as boolean) === true;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
     // Build session meta line for description
@@ -336,6 +337,7 @@ serve(async (req) => {
         line_items: lineItems,
         mode: "payment",
         ...(customText ? { custom_text: customText } : {}),
+        ...(allowTip ? { allow_tipping: true } : {}),
         payment_intent_data: applicationFeeAmount > 0 ? {
           application_fee_amount: applicationFeeAmount,
         } : undefined,
