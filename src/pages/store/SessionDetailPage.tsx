@@ -30,6 +30,7 @@ interface SessionDetail {
   id: string;
   title: string;
   description: string | null;
+  tagline: string | null;
   price: number;
   duration_minutes: number;
   break_after_minutes: number;
