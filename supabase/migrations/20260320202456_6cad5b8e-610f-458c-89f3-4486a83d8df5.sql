@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS virtual_block_percent integer NOT NULL DEFAULT 0;

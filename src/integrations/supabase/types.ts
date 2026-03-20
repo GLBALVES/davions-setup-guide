@@ -1913,6 +1913,7 @@ export type Database = {
           tax_rate: number
           title: string
           updated_at: string
+          virtual_block_percent: number
         }
         Insert: {
           allow_tip?: boolean
@@ -1942,6 +1943,7 @@ export type Database = {
           tax_rate?: number
           title?: string
           updated_at?: string
+          virtual_block_percent?: number
         }
         Update: {
           allow_tip?: boolean
@@ -1971,6 +1973,7 @@ export type Database = {
           tax_rate?: number
           title?: string
           updated_at?: string
+          virtual_block_percent?: number
         }
         Relationships: [
           {
