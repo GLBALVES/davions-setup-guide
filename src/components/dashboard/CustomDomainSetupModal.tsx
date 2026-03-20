@@ -156,10 +156,10 @@ function RegistrarGuide({ domain, vpsIp }: { domain: string; vpsIp: string }) {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(true);
 
-  useState(() => {
+  useEffect(() => {
     if (!domain) return;
     fetchNsRecords(domain).then((ns) => { setNsRecords(ns); setLoading(false); });
-  });
+  }, [domain]);
 
   const registrar = detectRegistrar(nsRecords);
 
