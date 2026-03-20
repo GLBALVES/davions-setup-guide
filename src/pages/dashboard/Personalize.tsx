@@ -195,11 +195,15 @@ const Personalize = () => {
   const [proofRenewalDays, setProofRenewalDays] = useState<string>("");
   const [proofReactivationFee, setProofReactivationFee] = useState<string>("");
   const [proofAutoUnpublish, setProofAutoUnpublish] = useState<string>("");
+  const [proofAutoDeleteEnabled, setProofAutoDeleteEnabled] = useState<boolean>(false);
+  const [proofAutoDeleteDays, setProofAutoDeleteDays] = useState<string>("");
   // final type
   const [finalExpiryDays, setFinalExpiryDays] = useState<string>("");
   const [finalRenewalDays, setFinalRenewalDays] = useState<string>("");
   const [finalReactivationFee, setFinalReactivationFee] = useState<string>("");
   const [finalAutoUnpublish, setFinalAutoUnpublish] = useState<string>("");
+  const [finalAutoDeleteEnabled, setFinalAutoDeleteEnabled] = useState<boolean>(false);
+  const [finalAutoDeleteDays, setFinalAutoDeleteDays] = useState<string>("");
   // legacy (keep for backward compat reads)
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
@@ -342,10 +346,14 @@ const Personalize = () => {
         setProofRenewalDays(get("proof_renewal_days"));
         setProofReactivationFee(get("proof_reactivation_fee") || get("reactivation_fee"));
         setProofAutoUnpublish(get("proof_auto_unpublish_days"));
+        setProofAutoDeleteEnabled(get("proof_auto_delete_enabled") === "true");
+        setProofAutoDeleteDays(get("proof_auto_delete_days"));
         setFinalExpiryDays(get("final_expiry_days"));
         setFinalRenewalDays(get("final_renewal_days"));
         setFinalReactivationFee(get("final_reactivation_fee"));
         setFinalAutoUnpublish(get("final_auto_unpublish_days"));
+        setFinalAutoDeleteEnabled(get("final_auto_delete_enabled") === "true");
+        setFinalAutoDeleteDays(get("final_auto_delete_days"));
         // legacy state (kept for any remaining references)
         setGalleryExpiryDays(get("default_expiry_days"));
         setGalleryReactivationFee(get("reactivation_fee"));
@@ -514,17 +522,21 @@ const Personalize = () => {
     if (!photographerId) return;
     setSavingGallerySettings(true);
     const upserts = [
-      { key: "proof_expiry_days",       value: parseIntPos(proofExpiryDays) },
-      { key: "proof_renewal_days",      value: parseIntPos(proofRenewalDays) },
-      { key: "proof_reactivation_fee",  value: parseNum(proofReactivationFee) },
+      { key: "proof_expiry_days",         value: parseIntPos(proofExpiryDays) },
+      { key: "proof_renewal_days",        value: parseIntPos(proofRenewalDays) },
+      { key: "proof_reactivation_fee",    value: parseNum(proofReactivationFee) },
       { key: "proof_auto_unpublish_days", value: parseIntPos(proofAutoUnpublish) },
-      { key: "final_expiry_days",       value: parseIntPos(finalExpiryDays) },
-      { key: "final_renewal_days",      value: parseIntPos(finalRenewalDays) },
-      { key: "final_reactivation_fee",  value: parseNum(finalReactivationFee) },
+      { key: "proof_auto_delete_enabled", value: proofAutoDeleteEnabled ? "true" : "false" },
+      { key: "proof_auto_delete_days",    value: parseIntPos(proofAutoDeleteDays) },
+      { key: "final_expiry_days",         value: parseIntPos(finalExpiryDays) },
+      { key: "final_renewal_days",        value: parseIntPos(finalRenewalDays) },
+      { key: "final_reactivation_fee",    value: parseNum(finalReactivationFee) },
       { key: "final_auto_unpublish_days", value: parseIntPos(finalAutoUnpublish) },
+      { key: "final_auto_delete_enabled", value: finalAutoDeleteEnabled ? "true" : "false" },
+      { key: "final_auto_delete_days",    value: parseIntPos(finalAutoDeleteDays) },
       // legacy keys kept for backward compat
-      { key: "default_expiry_days",     value: parseIntPos(proofExpiryDays) },
-      { key: "reactivation_fee",        value: parseNum(proofReactivationFee) },
+      { key: "default_expiry_days",       value: parseIntPos(proofExpiryDays) },
+      { key: "reactivation_fee",          value: parseNum(proofReactivationFee) },
     ].map((r) => ({ photographer_id: photographerId, key: r.key, value: r.value }));
 
     const { error } = await (supabase as any)
@@ -1048,6 +1060,8 @@ const Personalize = () => {
                           renewal: proofRenewalDays, setRenewal: setProofRenewalDays,
                           fee: proofReactivationFee, setFee: setProofReactivationFee,
                           auto: proofAutoUnpublish, setAuto: setProofAutoUnpublish,
+                          autoDeleteEnabled: proofAutoDeleteEnabled, setAutoDeleteEnabled: setProofAutoDeleteEnabled,
+                          autoDeleteDays: proofAutoDeleteDays, setAutoDeleteDays: setProofAutoDeleteDays,
                         },
                         {
                           label: t.personalize.finalGalleriesLabel,
@@ -1055,6 +1069,8 @@ const Personalize = () => {
                           renewal: finalRenewalDays, setRenewal: setFinalRenewalDays,
                           fee: finalReactivationFee, setFee: setFinalReactivationFee,
                           auto: finalAutoUnpublish, setAuto: setFinalAutoUnpublish,
+                          autoDeleteEnabled: finalAutoDeleteEnabled, setAutoDeleteEnabled: setFinalAutoDeleteEnabled,
+                          autoDeleteDays: finalAutoDeleteDays, setAutoDeleteDays: setFinalAutoDeleteDays,
                         },
                       ] as {
                         label: string;
@@ -1062,6 +1078,8 @@ const Personalize = () => {
                         renewal: string; setRenewal: (v: string) => void;
                         fee: string; setFee: (v: string) => void;
                         auto: string; setAuto: (v: string) => void;
+                        autoDeleteEnabled: boolean; setAutoDeleteEnabled: (v: boolean) => void;
+                        autoDeleteDays: string; setAutoDeleteDays: (v: string) => void;
                       }[]
                     ).map((gt) => (
                       <section key={gt.label} className="flex flex-col gap-5 border border-border p-5">
@@ -1139,6 +1157,42 @@ const Personalize = () => {
                               <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
                             </div>
                           </div>
+                        </div>
+
+                        {/* Auto-delete after unpublishing */}
+                        <div className="flex flex-col gap-3 border-t border-border pt-4 mt-1">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                                {t.personalize.autoDeleteLabel}
+                              </label>
+                              <p className="text-[10px] text-muted-foreground/70 leading-relaxed max-w-sm">
+                                {t.personalize.autoDeleteDesc}
+                              </p>
+                            </div>
+                            <Switch
+                              checked={gt.autoDeleteEnabled}
+                              onCheckedChange={gt.setAutoDeleteEnabled}
+                              className="shrink-0 mt-0.5"
+                            />
+                          </div>
+                          {gt.autoDeleteEnabled && (
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                                {t.personalize.autoDeleteDaysLabel}
+                              </label>
+                              <div className="flex items-center border border-destructive/40 bg-destructive/5 overflow-hidden w-44">
+                                <input
+                                  type="number" min="1" max="365"
+                                  value={gt.autoDeleteDays}
+                                  onChange={(e) => gt.setAutoDeleteDays(e.target.value)}
+                                  placeholder="e.g. 30"
+                                  className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                                />
+                                <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-destructive/10 border-l border-destructive/30 shrink-0 select-none">{t.personalize.days}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </section>
                     ))}
