@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Calendar, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 
@@ -211,6 +211,11 @@ const Sessions = () => {
                       session={session}
                       storeSlug={storeSlug}
                       onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
+                      onStatusChange={(id, status) =>
+                        setSessions((prev) =>
+                          prev.map((s) => (s.id === id ? { ...s, status } : s))
+                        )
+                      }
                     />
                   ))}
                 </div>
@@ -227,14 +232,37 @@ function SessionCard({
   session,
   storeSlug,
   onClick,
+  onStatusChange,
 }: {
   session: Session;
   storeSlug: string | null;
   onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
 }) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const s = t.sessions;
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggleStatus = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = session.status === "active" ? "draft" : "active";
+    setToggling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ status: newStatus })
+      .eq("id", session.id);
+    setToggling(false);
+    if (error) {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    } else {
+      onStatusChange(session.id, newStatus);
+      toast({
+        title: newStatus === "active" ? "Session published" : "Session unpublished",
+        description: newStatus === "active" ? "Clients can now book this session." : "Session is now hidden from your store.",
+      });
+    }
+  };
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -317,6 +345,25 @@ function SessionCard({
           <div className="flex items-center justify-between border-t border-border pt-3">
             <span className="text-base font-light">{priceFormatted}</span>
             <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleToggleStatus}
+                    disabled={toggling}
+                    className={`transition-colors ${session.status === "active" ? "text-foreground hover:text-destructive" : "text-muted-foreground hover:text-foreground"} disabled:opacity-40`}
+                  >
+                    {session.status === "active" ? (
+                      <Globe className="h-3.5 w-3.5" />
+                    ) : (
+                      <GlobeLock className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {session.status === "active" ? "Unpublish session" : "Publish session"}
+                </TooltipContent>
+              </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
