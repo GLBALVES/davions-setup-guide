@@ -720,6 +720,7 @@ const WebsiteSettings = () => {
       seo_title: seoTitle.trim() || null,
       seo_description: seoDescription.trim() || null,
       og_image_url: ogImageUrl.trim() || null,
+      favicon_url: faviconUrl.trim() || null,
       google_analytics_id: googleAnalyticsId.trim() || null,
       facebook_pixel_id: facebookPixelId.trim() || null,
       footer_text: footerText.trim() || null,
