@@ -227,14 +227,37 @@ function SessionCard({
   session,
   storeSlug,
   onClick,
+  onStatusChange,
 }: {
   session: Session;
   storeSlug: string | null;
   onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
 }) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const s = t.sessions;
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggleStatus = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = session.status === "active" ? "draft" : "active";
+    setToggling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ status: newStatus })
+      .eq("id", session.id);
+    setToggling(false);
+    if (error) {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    } else {
+      onStatusChange(session.id, newStatus);
+      toast({
+        title: newStatus === "active" ? "Session published" : "Session unpublished",
+        description: newStatus === "active" ? "Clients can now book this session." : "Session is now hidden from your store.",
+      });
+    }
+  };
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
