@@ -2,11 +2,58 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-// ── Identity cache ────────────────────────────────────────────────────────────
-// Persists across navigations so resolveIdentity only runs ONCE per login.
-// Keyed by userId so it invalidates automatically on account switch.
+// ── Identity cache ─────────────────────────────────────────────────────────────
+// Persists across navigations so resolveIdentity only runs ONCE per login session.
+// Keyed by userId — invalidates automatically on account switch / sign-out.
+interface ResolvedIdentity {
+  photographerId: string;
+  isOwner: boolean;
+}
+
 const identityCache = new Map<string, ResolvedIdentity>();
 
+async function resolveIdentity(userId: string, userEmail: string): Promise<ResolvedIdentity> {
+  // Return cached result immediately — avoids repeated DB round-trips on navigation
+  if (identityCache.has(userId)) {
+    return identityCache.get(userId)!;
+  }
+
+  // Run both queries in parallel: check if photographer (owner) AND check studio_members
+  const [photographerResult, memberResult] = await Promise.all([
+    supabase
+      .from("photographers")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("studio_members")
+      .select("photographer_id")
+      .eq("email", userEmail)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  let identity: ResolvedIdentity;
+
+  // If user has a photographers record → they are the owner
+  if (photographerResult.data) {
+    identity = { photographerId: userId, isOwner: true };
+  }
+  // If user is an active studio member → use employer's photographer_id
+  else if (memberResult.data?.photographer_id) {
+    identity = { photographerId: memberResult.data.photographer_id, isOwner: false };
+  }
+  // Fallback: treat as owner (new signup flow)
+  else {
+    identity = { photographerId: userId, isOwner: true };
+  }
+
+  identityCache.set(userId, identity);
+  return identity;
+}
+
+// ── Context ────────────────────────────────────────────────────────────────────
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -34,42 +81,6 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-interface ResolvedIdentity {
-  photographerId: string;
-  isOwner: boolean;
-}
-
-async function resolveIdentity(userId: string, userEmail: string): Promise<ResolvedIdentity> {
-  // Run both queries in parallel: check if photographer (owner) AND check studio_members
-  const [photographerResult, memberResult] = await Promise.all([
-    supabase
-      .from("photographers")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase
-      .from("studio_members")
-      .select("photographer_id")
-      .eq("email", userEmail)
-      .eq("status", "active")
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  // If user has a photographers record → they are the owner
-  if (photographerResult.data) {
-    return { photographerId: userId, isOwner: true };
-  }
-
-  // If user is an active studio member → use employer's photographer_id
-  if (memberResult.data?.photographer_id) {
-    return { photographerId: memberResult.data.photographer_id, isOwner: false };
-  }
-
-  // Fallback: treat as owner (new signup flow)
-  return { photographerId: userId, isOwner: true };
-}
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -77,40 +88,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [identityLoading, setIdentityLoading] = useState(false);
   const [photographerId, setPhotographerId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
+
   // Flag to prevent double-initialization from getSession + onAuthStateChange
   const initialized = useRef(false);
+  // Track in-flight resolve to prevent duplicate calls
+  const resolvingFor = useRef<string | null>(null);
+
+  const resetIdentity = () => {
+    setPhotographerId(null);
+    setIsOwner(null);
+    setIdentityLoading(false);
+  };
+
+  const applySession = async (incomingSession: Session | null) => {
+    setSession(incomingSession);
+    setUser(incomingSession?.user ?? null);
+
+    // Unblock auth gate immediately — auth state is now known
+    setLoading(false);
+
+    if (incomingSession?.user) {
+      const userId = incomingSession.user.id;
+      const userEmail = incomingSession.user.email ?? "";
+
+      // If we already have a cached/resolved identity for this user, apply it instantly
+      if (identityCache.has(userId)) {
+        const cached = identityCache.get(userId)!;
+        setPhotographerId(cached.photographerId);
+        setIsOwner(cached.isOwner);
+        return;
+      }
+
+      // Prevent duplicate in-flight resolves
+      if (resolvingFor.current === userId) return;
+      resolvingFor.current = userId;
+
+      setIdentityLoading(true);
+      try {
+        const identity = await resolveIdentity(userId, userEmail);
+        // Only apply if still the same user
+        if (resolvingFor.current === userId) {
+          setPhotographerId(identity.photographerId);
+          setIsOwner(identity.isOwner);
+        }
+      } finally {
+        if (resolvingFor.current === userId) {
+          resolvingFor.current = null;
+          setIdentityLoading(false);
+        }
+      }
+    } else {
+      resetIdentity();
+    }
+  };
 
   useEffect(() => {
     // Safety timeout: if Supabase never responds, unblock the UI after 5s
     const safetyTimer = setTimeout(() => setLoading(false), 5000);
-
-    const applySession = async (incomingSession: Session | null) => {
-      clearTimeout(safetyTimer);
-      setSession(incomingSession);
-      setUser(incomingSession?.user ?? null);
-
-      // Unblock UI immediately — auth state is now known
-      setLoading(false);
-
-      if (incomingSession?.user) {
-        // Resolve identity in the background without blocking the UI
-        setIdentityLoading(true);
-        try {
-          const identity = await resolveIdentity(
-            incomingSession.user.id,
-            incomingSession.user.email ?? ""
-          );
-          setPhotographerId(identity.photographerId);
-          setIsOwner(identity.isOwner);
-        } finally {
-          setIdentityLoading(false);
-        }
-      } else {
-        setPhotographerId(null);
-        setIsOwner(null);
-        setIdentityLoading(false);
-      }
-    };
 
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -126,6 +160,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        if (event === "SIGNED_OUT") {
+          // Clear everything immediately
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          resetIdentity();
+          return;
+        }
+
         await applySession(session);
       }
     );
@@ -134,6 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
         initialized.current = true;
+        clearTimeout(safetyTimer);
         await applySession(session);
       })
       .catch(() => {
@@ -149,8 +193,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    // Clear identity cache and local state immediately for instant UI response
+    if (user?.id) identityCache.delete(user.id);
+    resolvingFor.current = null;
+    setUser(null);
+    setSession(null);
+    setPhotographerId(null);
+    setIsOwner(null);
+
+    // Then tell Supabase to sign out (fires SIGNED_OUT event, handled above)
     await supabase.auth.signOut();
-    // After sign-out the listener fires, but reset immediately for responsiveness
     initialized.current = true;
   };
 
