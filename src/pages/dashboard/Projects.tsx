@@ -66,6 +66,7 @@ interface ClientProject {
   created_at: string;
   updated_at: string;
   session_title?: string | null;
+  gallery_cover_url?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -153,6 +154,17 @@ function KanbanCard({
             </button>
           </div>
         </div>
+
+        {/* Gallery cover thumbnail for proof/final stages */}
+        {(project.stage === "proof_gallery" || project.stage === "final_gallery") && project.gallery_cover_url && (
+          <div className="w-full h-20 rounded-sm overflow-hidden border border-border">
+            <img
+              src={project.gallery_cover_url}
+              alt="Gallery cover"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
         {/* meta */}
         <div className="flex flex-col gap-1">
@@ -637,9 +649,31 @@ const Projects = () => {
       .order("position", { ascending: true });
 
     if (allProjects) {
+      // 5. Fetch gallery covers for projects with a booking_id
+      const bookingIds = (allProjects as any[])
+        .map((p) => p.booking_id)
+        .filter(Boolean);
+
+      let galleryCovers: Record<string, string> = {};
+      if (bookingIds.length > 0) {
+        const { data: galleries } = await supabase
+          .from("galleries")
+          .select("booking_id, cover_image_url")
+          .in("booking_id", bookingIds)
+          .not("cover_image_url", "is", null);
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.booking_id && g.cover_image_url) {
+              galleryCovers[g.booking_id] = g.cover_image_url;
+            }
+          }
+        }
+      }
+
       const mapped = (allProjects as any[]).map((p) => ({
         ...p,
         session_title: (p.bookings as any)?.sessions?.title ?? null,
+        gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
       }));
       setProjects(mapped as ClientProject[]);
     }
