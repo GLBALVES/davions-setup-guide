@@ -287,7 +287,7 @@ function ProjectModal({
   const [clientEmail, setClientEmail] = useState("");
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
   const [shootDate, setShootDate] = useState("");
-  const [stage, setStage] = useState<Stage>("lead");
+  const [stage, setStage] = useState<Stage>("upcoming");
   const [notes, setNotes] = useState("");
 
   const stageLabels: Record<string, string> = {
