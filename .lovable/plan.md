@@ -1,79 +1,58 @@
 
-## Dois problemas distintos encontrados
+## Menu Calendário nasce colapsado com indicador para expandir
 
----
+### Situação atual
 
-### Problema 1: Status da session não salva (bug crítico)
+O item "Calendário" (schedule) e seu sub-item "Agendamentos" (bookings, com `isSubItem: true`) são renderizados como itens planos consecutivos pelo `renderRegularItem`. Não existe nenhum mecanismo de colapso/expansão no nível de item individual — só existe colapso no nível de **grupo** (Photographers, Marketing, etc.) via `openGroups`.
 
-**Causa raiz:** O `UPDATE` na tabela `sessions` usa a política RLS `photographer_id = get_my_photographer_id()`. A função `get_my_photographer_id()` retorna `auth.uid()` OU o `photographer_id` do empregador se o user for membro do estúdio.
+### Solução
 
-O problema está no código `handleToggleStatus` em `Sessions.tsx`:
+Introduzir o conceito de "parent item colapsável" diretamente no `renderRegularItem`. O item "Calendário" terá um comportamento especial: é tanto um link (`/dashboard/schedule`) quanto um gatilho de colapso que mostra/esconde seus sub-itens.
 
-```ts
-const { error } = await supabase
-  .from("sessions")
-  .update({ status: newStatus })
-  .eq("id", session.id);
-// NÃO filtra por photographer_id — só por id da session
+#### Estratégia de implementação
+
+1. **Tipo `MenuItem`**: Adicionar `isCollapsibleParent?: boolean` e `parentKey?: string` (para sub-itens saberem a qual parent pertencem).
+
+2. **Estado de colapso**: Adicionar `const [collapsedSubmenus, setCollapsedSubmenus] = useState<Record<string, boolean>>({ schedule: true })` — começa colapsado.
+
+3. **`renderRegularItem`**: Quando `item.isCollapsibleParent === true`, renderizar um indicador `ChevronRight` ao lado do título (rotaciona 90° quando expandido). O click no chevron alterna o estado sem navegar. O link principal continua funcionando normalmente.
+
+4. **Filtragem de sub-itens**: Na renderização dos itens do grupo, pular o item quando `item.parentKey` existe e `collapsedSubmenus[item.parentKey] === true`.
+
+5. **Definição de itens** (linhas 139-141): 
+   - `schedule`: adicionar `isCollapsibleParent: true, parentKey: "schedule"`
+   - `bookings`: mudar `isSubItem: true` → adicionar `parentKey: "schedule"`
+
+6. **Sidebar colapsada** (`CollapsedGroupPopover`): Os sub-itens aparecem normalmente no popover (não há colapso no modo icon).
+
+#### Comportamento visual esperado
+
+```
+Modo expandido (sidebar aberta):
+  ┌─ 📅 Calendário          [>]   ← chevron, começa apontando para a direita
+  
+  Após clicar no chevron:
+  ┌─ 📅 Calendário          [v]   ← chevron rotaciona 90°
+  │   └─ 📖 Agendamentos [badge]  ← sub-item aparece
+
+Modo colapsado (sidebar icon):
+  [📅]  → popover mostra "Calendário" e "Agendamentos" normalmente
 ```
 
-Quando o Supabase executa o UPDATE, a política RLS com `get_my_photographer_id()` compara com `photographer_id` da sessão. Se o user está logado como `auth.uid() = X` mas a sessão tem `photographer_id = Y`, o update silencia sem erro — ele simplesmente não encontra linhas para atualizar. O toast de sucesso é exibido mesmo assim porque `error` é null (0 rows affected não é um erro).
+#### Auto-expand
 
-**Fix:** Adicionar `.eq("photographer_id", photographerId)` ao update para garantir que a RLS policy seja satisfeita corretamente.
+Quando a rota atual for `/dashboard/bookings`, o submenu deve abrir automaticamente (não ficar colapsado). Isso é feito no `useState` inicial e num `useEffect` que observa `location.pathname`.
 
----
+### Arquivos a alterar
 
-### Problema 2: Plataforma lenta (performance)
+1. **`src/components/dashboard/DashboardSidebar.tsx`**:
+   - `MenuItem` type: adicionar `isCollapsibleParent?: boolean` e `parentKey?: string`
+   - `buildGroups`: schedule ganha `isCollapsibleParent: true, parentKey: "schedule"`; bookings ganha `parentKey: "schedule"` (mantém `isSubItem: true`)
+   - Mesmo em `ALL_ITEMS` (linhas 237-241)
+   - Novo estado `collapsedSubmenus` iniciado com `{ schedule: true }`
+   - `useEffect` que abre quando rota for `/dashboard/bookings` ou `/dashboard/schedule`
+   - `renderRegularItem`: para `isCollapsibleParent`, adicionar chevron clicável
+   - Loop de renderização de itens do grupo: filtrar itens cujo `parentKey` está colapsado
+   - Nenhuma mudança necessária no `CollapsedGroupPopover` (já itera todos os itens)
 
-**Causas identificadas:**
-
-1. **`ProtectedRoute` + `PermissionGate` em série** — duas camadas de loading separadas. O `ProtectedRoute` bloqueia em loading, depois libera, aí o `PermissionGate` bloqueia em loading novamente. O usuário vê duas telas brancas em sequência.
-
-2. **`AuthContext.loading = true` durante `resolveIdentity`** — a UI fica bloqueada não só enquanto o Supabase retorna a sessão, mas também enquanto duas queries adicionais (photographers + studio_members) são executadas. Isso adiciona ~500-1000ms após a sessão já ter retornado.
-
-3. **`QueryClient` sem cache configurado** — `new QueryClient()` com defaults significa `staleTime: 0`, então qualquer dado buscado via react-query é revalidado imediatamente. O dashboard faz 6 queries em paralelo, mas cada mudança de página rebusca tudo.
-
-4. **Cada página do dashboard chama `setLoading(true)` antes mesmo de ter o `photographerId`** — quando `photographerId` é null inicialmente, o `useEffect` retorna cedo mas o loading fica true até o próximo render.
-
-5. **`RegionContext`** faz uma chamada para edge function `detect-region` em cada sessão (visível nos logs).
-
----
-
-## Plano de correção
-
-### Fix 1 — Bug do status (Sessions.tsx)
-Adicionar `photographer_id` ao filtro do UPDATE para que a RLS seja satisfeita:
-```ts
-.update({ status: newStatus })
-.eq("id", session.id)
-.eq("photographer_id", photographerId)  // ← ADD
-```
-O `photographerId` já vem via props ou via `useAuth`.
-
-### Fix 2 — Eliminar double loading (ProtectedRoute + PermissionGate)
-Unificar em um único componente `AuthGate` que aguarda tanto auth quanto permissões de uma vez, exibindo apenas uma tela de loading. Atualmente são dois componentes aninhados com estados de loading independentes.
-
-**Abordagem simples:** Fazer o `ProtectedRoute` consumir `photographerId` do AuthContext (que só fica disponível após `resolveIdentity`). Quando `photographerId` é null mas `loading` é false, redirecionar para login. Isso elimina a necessidade de o `PermissionGate` esperar separadamente.
-
-### Fix 3 — Não bloquear UI durante resolveIdentity
-Mudar `AuthContext`: setar `loading = false` assim que a **sessão** retorna, mesmo que `resolveIdentity` ainda esteja rodando. Usar um estado separado `identityLoading` para o resolve. O `ProtectedRoute` usa apenas o `loading` de auth (não mais o `identityLoading`). O `PermissionGate` aguarda `isOwner !== null`.
-
-```text
-ANTES: getSession loading → resolveIdentity loading → página carrega
-DEPOIS: getSession loading → página carrega → (isOwner resolve em bg)
-```
-
-Para a maioria dos users (owners), `isOwner` resolve em ~200ms e o PermissionGate libera quase imediatamente. A skeleton do PermissionGate substitui a página completa em branco.
-
-### Fix 4 — QueryClient com staleTime razoável
-Configurar `staleTime: 30_000` para evitar refetch desnecessário ao navegar entre páginas.
-
----
-
-## Arquivos a alterar
-
-1. **`src/contexts/AuthContext.tsx`** — separar `loading` (auth) de `identityLoading` (resolve); setar loading=false assim que session retorna
-2. **`src/components/ProtectedRoute.tsx`** — usar apenas auth loading, não bloquear por identityLoading
-3. **`src/components/PermissionGate.tsx`** — reduzir timeout de 4s para 2s; usar `identityLoading` se disponível
-4. **`src/pages/dashboard/Sessions.tsx`** — adicionar `.eq("photographer_id", photographerId)` no UPDATE do handleToggleStatus; expor `photographerId` via useAuth no SessionCard
-5. **`src/App.tsx`** — configurar QueryClient com `staleTime: 30_000` e `gcTime: 5 * 60 * 1000`
+Não há necessidade de alterar translations — os labels existentes são suficientes.
