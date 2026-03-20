@@ -74,7 +74,7 @@ const DnsRow = forwardRef<HTMLTableRowElement, { type: string; name: string; val
         <td className="px-3 py-2.5 font-mono text-foreground">{name}</td>
         <td className="px-3 py-2.5 font-mono text-foreground break-all">{value}</td>
         <td className="px-2 py-2.5">
-          <button onClick={copy} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors" title="Copy">
+          <button onClick={copy} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors" title="Copy value">
             {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
           </button>
         </td>
@@ -83,6 +83,265 @@ const DnsRow = forwardRef<HTMLTableRowElement, { type: string; name: string; val
   }
 );
 DnsRow.displayName = "DnsRow";
+
+// ── Registrar detection ────────────────────────────────────────────────────────
+interface RegistrarInfo {
+  name: string;
+  dnsGuideUrl: string;
+  steps: string[];
+  note?: string;
+}
+
+const REGISTRAR_MAP: Record<string, RegistrarInfo> = {
+  "domaincontrol.com": {
+    name: "GoDaddy",
+    dnsGuideUrl: "https://www.godaddy.com/help/add-an-a-record-19238",
+    steps: [
+      'Go to godaddy.com → My Products → Domains',
+      'Click the domain → DNS → Add New Record',
+      'Type: A · Name: @ · Value: <IP> · TTL: 1 Hour → Save',
+      'Repeat for Name: www (root domains only)',
+    ],
+    note: "GoDaddy changes can take 10–30 minutes.",
+  },
+  "registrar-servers.com": {
+    name: "Namecheap",
+    dnsGuideUrl: "https://www.namecheap.com/support/knowledgebase/article.aspx/319/2237/how-can-i-set-up-an-a-address-record-for-my-domain/",
+    steps: [
+      'Log in → Domain List → Manage → Advanced DNS',
+      'Click Add New Record → A Record',
+      'Host: @ · Value: <IP> · TTL: Automatic → Save',
+      'Repeat for Host: www (root domains only)',
+    ],
+    note: "Namecheap propagates in 30 minutes on average.",
+  },
+  "cloudflare.com": {
+    name: "Cloudflare",
+    dnsGuideUrl: "https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/",
+    steps: [
+      'Log in to dash.cloudflare.com → Select your domain',
+      'Go to DNS → Records → Add record',
+      'Type: A · Name: @ · IPv4: <IP> · Proxy: OFF (grey cloud) → Save',
+      'Repeat for Name: www (root domains only)',
+    ],
+    note: "⚠️ Set proxy status to DNS only (grey cloud) — orange cloud will break SSL provisioning.",
+  },
+  "squarespace.com": {
+    name: "Squarespace Domains",
+    dnsGuideUrl: "https://support.squarespace.com/hc/en-us/articles/205812348",
+    steps: [
+      'Log in → Settings → Domains → Edit Domain → DNS Settings',
+      'Click Add Record → A Record',
+      'Host: @ · Data: <IP> → Save',
+      'Repeat for Host: www (root domains only)',
+    ],
+  },
+  "google.com": {
+    name: "Google Domains / Squarespace",
+    dnsGuideUrl: "https://support.google.com/domains/answer/3290350",
+    steps: [
+      'Go to domains.squarespace.com → Manage → DNS',
+      'Under Custom Records → Add record',
+      'Type: A · Host name: @ · Data: <IP> → Save',
+      'Repeat for Host name: www (root domains only)',
+    ],
+  },
+  "porkbun.com": {
+    name: "Porkbun",
+    dnsGuideUrl: "https://kb.porkbun.com/article/54-how-to-add-or-manage-dns-records",
+    steps: [
+      'Log in → Domain Management → select your domain',
+      'Click DNS → Quick DNS Config or manually Add Record',
+      'Type: A · Host: (blank/@) · Answer: <IP> · TTL: 600 → Save',
+      'Repeat for Host: www (root domains only)',
+    ],
+  },
+  "name.com": {
+    name: "Name.com",
+    dnsGuideUrl: "https://www.name.com/support/articles/115004955688-Adding-an-A-record",
+    steps: [
+      'Log in → My Domains → click domain → Manage DNS Records',
+      'Add Record → Type: A · Host: @ · Answer: <IP> → Add Record',
+      'Repeat for Host: www (root domains only)',
+    ],
+  },
+};
+
+function detectRegistrar(nsRecords: string[]): RegistrarInfo | null {
+  const nsStr = nsRecords.join(" ").toLowerCase();
+  for (const [key, info] of Object.entries(REGISTRAR_MAP)) {
+    if (nsStr.includes(key)) return info;
+  }
+  return null;
+}
+
+async function fetchNsRecords(domain: string): Promise<string[]> {
+  try {
+    // Use root domain for NS lookup
+    const parts = domain.split(".");
+    const compoundTlds = ["com.br","net.br","org.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
+    const lastTwo = parts.slice(-2).join(".");
+    const rootCount = compoundTlds.includes(lastTwo) ? 3 : 2;
+    const root = parts.slice(-rootCount).join(".");
+    const res = await fetch(
+      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(root)}&type=NS`,
+      { headers: { Accept: "application/dns-json" }, signal: AbortSignal.timeout(6000) }
+    );
+    const json = await res.json();
+    if (!json.Answer) return [];
+    return (json.Answer as { type: number; data: string }[])
+      .filter((r) => r.type === 2)
+      .map((r) => r.data.toLowerCase().replace(/\.$/, ""));
+  } catch {
+    return [];
+  }
+}
+
+// ── Registrar guide component ─────────────────────────────────────────────────
+const RegistrarGuide = ({ domain, vpsIp }: { domain: string; vpsIp: string }) => {
+  const [nsRecords, setNsRecords] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (!domain) return;
+    setLoading(true);
+    fetchNsRecords(domain).then((ns) => {
+      setNsRecords(ns);
+      setLoading(false);
+    });
+  }, [domain]);
+
+  const registrar = detectRegistrar(nsRecords);
+
+  return (
+    <div className="border border-border overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
+          <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[11px] tracking-[0.2em] uppercase font-light">
+            {loading ? "Detecting registrar…" : registrar ? `Step-by-step: ${registrar.name}` : "Step-by-step DNS guide"}
+          </span>
+          {!loading && registrar && (
+            <span className="text-[9px] tracking-wider uppercase bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5">
+              Auto-detected
+            </span>
+          )}
+        </div>
+        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 py-4 flex flex-col gap-4">
+              {loading ? (
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Looking up your DNS provider…
+                </div>
+              ) : (
+                <>
+                  {/* NS records badge */}
+                  {nsRecords.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {nsRecords.map((ns) => (
+                        <span key={ns} className="text-[10px] font-mono bg-muted px-2 py-0.5 border border-border text-muted-foreground">
+                          {ns}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {registrar ? (
+                    <>
+                      {/* Steps */}
+                      <ol className="flex flex-col gap-2.5">
+                        {registrar.steps.map((step, i) => {
+                          const rendered = step.replace("<IP>", vpsIp);
+                          return (
+                            <li key={i} className="flex items-start gap-3">
+                              <span className="shrink-0 w-5 h-5 flex items-center justify-center border border-border text-[10px] font-medium text-muted-foreground mt-0.5">
+                                {i + 1}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground leading-relaxed font-mono">{rendered}</span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+
+                      {registrar.note && (
+                        <div className="flex items-start gap-2 p-2.5 bg-muted/30 border border-border">
+                          <Info className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                          <p className="text-[10px] text-muted-foreground">{registrar.note}</p>
+                        </div>
+                      )}
+
+                      <a
+                        href={registrar.dnsGuideUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-fit"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Open {registrar.name} DNS guide
+                      </a>
+                    </>
+                  ) : (
+                    /* Generic guide */
+                    <div className="flex flex-col gap-3">
+                      <ol className="flex flex-col gap-2.5">
+                        {[
+                          `Log in to your domain registrar's dashboard`,
+                          `Find the DNS settings for ${domain}`,
+                          `Add an A record: Name @ → Value ${vpsIp}`,
+                          `If it's a root domain, also add: Name www → Value ${vpsIp}`,
+                          `Remove any conflicting A or CNAME records for the same host`,
+                          `Save and wait up to 48 hours for propagation`,
+                        ].map((step, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="shrink-0 w-5 h-5 flex items-center justify-center border border-border text-[10px] font-medium text-muted-foreground mt-0.5">
+                              {i + 1}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground leading-relaxed">{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                        {Object.values(REGISTRAR_MAP).map((r) => (
+                          <a
+                            key={r.name}
+                            href={r.dnsGuideUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors border border-border px-2.5 py-2 hover:border-foreground/30"
+                          >
+                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                            {r.name}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const Divider = forwardRef<HTMLDivElement>((_, ref) => (
   <div ref={ref} className="border-t border-border" />
