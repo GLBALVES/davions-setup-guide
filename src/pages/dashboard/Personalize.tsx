@@ -189,11 +189,25 @@ const Personalize = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
-  // ── Gallery settings ────────────────────────────────────────────────────────
+  // ── Gallery settings (per type) ────────────────────────────────────────────
+  // proof type
+  const [proofExpiryDays, setProofExpiryDays] = useState<string>("");
+  const [proofRenewalDays, setProofRenewalDays] = useState<string>("");
+  const [proofReactivationFee, setProofReactivationFee] = useState<string>("");
+  const [proofAutoUnpublish, setProofAutoUnpublish] = useState<string>("");
+  // final type
+  const [finalExpiryDays, setFinalExpiryDays] = useState<string>("");
+  const [finalRenewalDays, setFinalRenewalDays] = useState<string>("");
+  const [finalReactivationFee, setFinalReactivationFee] = useState<string>("");
+  const [finalAutoUnpublish, setFinalAutoUnpublish] = useState<string>("");
+  // legacy (keep for backward compat reads)
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
-  const [savingExpiry, setSavingExpiry] = useState(false);
-  const [savingFee, setSavingFee] = useState(false);
+  const [savingGallerySettings, setSavingGallerySettings] = useState(false);
+  // kept for old code paths
+  const [savingExpiry] = useState(false);
+  const [savingFee] = useState(false);
+
 
   // ── Watermarks ──────────────────────────────────────────────────────────────
   const [watermarks, setWatermarks] = useState<WatermarkData[]>([]);
