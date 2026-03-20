@@ -140,6 +140,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
+        { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
       ],
     },
     {
@@ -148,7 +149,6 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: Megaphone,
       disabled: true,
       items: [
-        { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
         { title: t.nav.blog, icon: BookText, to: "/dashboard/blog", permKey: "blog" },
         { title: t.nav.creativeStudio, icon: Share2, to: "/dashboard/creative", permKey: "creative" },
         { title: t.nav.socialMedia, icon: Instagram, to: "/dashboard/social-media" },
