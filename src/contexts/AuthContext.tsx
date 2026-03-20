@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  /** True only while waiting for getSession() — becomes false as soon as we know auth state */
   loading: boolean;
+  /** True while resolving photographerId/isOwner after session is confirmed */
+  identityLoading: boolean;
   /** The resolved photographer/studio owner ID for this session.
    *  - For studio owners: equals user.id
    *  - For studio members: equals the employer's photographer_id

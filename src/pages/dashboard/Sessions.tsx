@@ -241,6 +241,7 @@ function SessionCard({
 }) {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { photographerId } = useAuth();
   const s = t.sessions;
   const [toggling, setToggling] = useState(false);
 
