@@ -303,7 +303,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
 
       {/* Thumbnail — hidden in compact list view */}
       {!compact && (
-        <Link to={`/dashboard/galleries/${gallery.id}`} className="block aspect-[4/3] bg-muted overflow-hidden relative">
+        <Link to={`/dashboard/galleries/${gallery.id}`} className="block h-32 bg-muted overflow-hidden relative">
           {gallery.cover_image_url ? (
             <img
               src={gallery.cover_image_url}
