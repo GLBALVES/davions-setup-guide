@@ -107,6 +107,8 @@ type MenuItem = {
   badgeKey?: "pendingBookings" | "draftSessions";
   /** permission key from PERMISSION_GROUPS; undefined = always visible */
   permKey?: string;
+  /** Renders this item indented as a sub-item of the preceding top-level item */
+  isSubItem?: boolean;
 };
 
 type MenuGroup = {
