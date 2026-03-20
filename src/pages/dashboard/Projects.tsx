@@ -791,9 +791,9 @@ const Projects = () => {
   };
 
   const handleUnarchive = async (id: string) => {
-    await supabase.from("client_projects" as any).update({ stage: "lead" } as any).eq("id", id);
-    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "lead" as Stage } : p));
-    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "lead" as Stage } : prev);
+    await supabase.from("client_projects" as any).update({ stage: "upcoming" } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "upcoming" as Stage } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, stage: "upcoming" as Stage } : prev);
     toast.success(p_t.restoredToLead);
   };
 
