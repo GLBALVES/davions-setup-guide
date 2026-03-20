@@ -334,6 +334,7 @@ const SessionForm = () => {
       setNumPhotos(String(s.num_photos));
       setLocation(s.location ?? "");
       setCoverImageUrl(s.cover_image_url);
+      setTagline((s as unknown as { tagline?: string | null }).tagline ?? "");
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
       setRequirePayment(s.price > 0);
