@@ -5,8 +5,7 @@
  */
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X } from "lucide-react";
+import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
 export interface SiteConfig {
@@ -38,6 +37,10 @@ export interface SiteConfig {
   og_image_url: string | null;
   site_template: string | null;
   favicon_url: string | null;
+  quote_text?: string | null;
+  quote_author?: string | null;
+  experience_title?: string | null;
+  experience_text?: string | null;
 }
 
 export interface Session {
@@ -45,6 +48,7 @@ export interface Session {
   slug: string | null;
   title: string;
   description: string | null;
+  tagline?: string | null;
   price: number;
   duration_minutes: number;
   num_photos: number;
@@ -271,14 +275,58 @@ function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | n
   );
 }
 
+// ─── Quote Section ────────────────────────────────────────────────────────────
+
+function QuoteSection({ site }: { site: SiteConfig | null }) {
+  if (!site?.quote_text) return null;
+  return (
+    <section className="py-16 md:py-24 border-t border-border bg-muted/20">
+      <div className="max-w-3xl mx-auto px-6 text-center">
+        <Quote className="h-5 w-5 text-muted-foreground/30 mx-auto mb-6" />
+        <blockquote className="text-xl md:text-2xl font-light leading-relaxed text-foreground tracking-wide italic mb-6">
+          "{site.quote_text}"
+        </blockquote>
+        {site.quote_author && (
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">— {site.quote_author}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Experience Section ────────────────────────────────────────────────────────
+
+function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; accentColor: string }) {
+  if (!site?.experience_text) return null;
+  return (
+    <section className="border-t border-border py-16 md:py-24">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="flex flex-col md:flex-row gap-12 items-start max-w-5xl mx-auto">
+          <div className="md:w-1/3 shrink-0">
+            <div className="w-8 h-px mb-6" style={{ backgroundColor: accentColor }} />
+            <h2 className="text-2xl md:text-3xl font-light tracking-wide leading-snug">
+              {site.experience_title || "The Experience"}
+            </h2>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line">
+              {site.experience_text}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TEMPLATE: EDITORIAL (default)
-// Hero full-bleed 60vh · 3-col session grid · about · footer
+// Hero full-bleed 60vh · Quote · Alternating full-width session blocks · Experience · About · Footer
 // ═══════════════════════════════════════════════════════════════════════════
 
 function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -289,65 +337,93 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       />
 
       {/* Hero */}
-      <div className="relative w-full h-[60vh] min-h-[380px] overflow-hidden">
+      <div className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
         }
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-end pb-14 px-6 text-center">
-          {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/60 mb-3">Photography by</p>}
-          <h1 className="text-4xl md:text-5xl font-light tracking-[0.15em] uppercase text-white mb-4">{headline}</h1>
-          {subheadline && <p className="text-sm font-light text-white/70 max-w-md leading-relaxed mb-6">{subheadline}</p>}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
+        <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
+          {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
+          <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{headline}</h1>
+          {subheadline && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{subheadline}</p>}
           {showBooking && (site?.cta_link
-            ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-2.5 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
-            : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-2.5 border border-white/50 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
+            ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
+            : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
           )}
         </div>
       </div>
 
-      {/* Sessions */}
+      {/* Quote */}
+      <QuoteSection site={site} />
+
+      {/* Sessions — alternating full-width blocks */}
       {showStore && (
-        <main id="sessions" className="max-w-6xl mx-auto px-6 py-14">
-          {sessions.length === 0
-            ? <div className="flex flex-col items-center justify-center py-20 gap-3"><Camera className="h-10 w-10 text-muted-foreground/30" /><p className="text-sm font-light text-muted-foreground">No sessions available yet.</p></div>
-            : <>
-              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Available sessions</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sessions.map((session) => (
-                  <button key={session.id} onClick={() => props.sessionHref && window.location.assign(sessionHref(session))}
-                    className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card">
-                    <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-                      {session.cover_image_url
-                        ? <img src={session.cover_image_url} alt={session.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                        : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="h-8 w-8 text-muted-foreground/20" /></div>
-                      }
-                    </div>
-                    <div className="p-5 flex flex-col gap-3 flex-1">
-                      <h2 className="text-sm font-light tracking-wide">{session.title}</h2>
-                      {session.description && <p className="text-[11px] text-muted-foreground line-clamp-2">{session.description}</p>}
-                      <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground mt-auto pt-2">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{session.duration_minutes}min</span>
-                        <span className="flex items-center gap-1"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
-                        {session.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{session.location}</span>}
+        <main id="sessions">
+          {sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <Camera className="h-10 w-10 text-muted-foreground/30" />
+              <p className="text-sm font-light text-muted-foreground">No sessions available yet.</p>
+            </div>
+          ) : (
+            <>
+              <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
+                <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Available Sessions</p>
+              </div>
+              {sessions.map((session, i) => {
+                const isEven = i % 2 === 0;
+                return (
+                  <button
+                    key={session.id}
+                    onClick={() => window.location.assign(sessionHref(session))}
+                    className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300"
+                  >
+                    <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
+                      {/* Image */}
+                      <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
+                        {session.cover_image_url
+                          ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
+                        }
                       </div>
-                      <div className="flex items-center justify-between border-t border-border pt-3 mt-1">
-                        <span className="text-lg font-light">{formatPrice(session.price)}</span>
-                        <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">Book →</span>
+                      {/* Text */}
+                      <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
+                        <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
+                        <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
+                        {(session as any).tagline && (
+                          <p className="text-base font-light text-muted-foreground italic">{(session as any).tagline}</p>
+                        )}
+                        {session.description && (
+                          <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
+                          <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
+                          {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
+                        </div>
+                        <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
+                          <span className="text-2xl font-light">{formatPrice(session.price)}</span>
+                          <span className="flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
+                            View details <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </>
-          }
+          )}
         </main>
       )}
+
+      {/* Experience */}
+      <ExperienceSection site={site} accentColor={accentColor} />
 
       {/* Portfolio */}
       {galleries.length > 0 && (
         <section className="border-t border-border">
-          <div className="max-w-6xl mx-auto px-6 py-14">
+          <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {galleries.map((gallery) => (
@@ -384,7 +460,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
 
 function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -412,6 +488,9 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </div>
       </div>
 
+      {/* Quote */}
+      <QuoteSection site={site} />
+
       {/* Sessions dense grid */}
       {showStore && (
         <main id="sessions" className="max-w-7xl mx-auto px-4 py-12">
@@ -429,6 +508,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                     {/* hover overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
                       <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
+                      {(session as any).tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{(session as any).tagline}</p>}
                       <div className="flex items-center justify-between">
                         <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
                         <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
@@ -468,6 +548,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
+      <ExperienceSection site={site} accentColor={accentColor} />
       <SharedAbout site={site} photographer={photographer} displayName={displayName} />
       <SharedFooter site={site} showContact={showContact} />
     </div>
@@ -481,7 +562,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
 function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
 
   const [featured, ...rest] = sessions;
 
@@ -521,6 +602,9 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </div>
       </div>
 
+      {/* Quote */}
+      <QuoteSection site={site} />
+
       {/* Sessions — magazine asymmetric layout */}
       {showStore && sessions.length > 0 && (
         <main id="sessions" className="max-w-6xl mx-auto px-6 py-16">
@@ -544,7 +628,8 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
               <div className="p-8 md:p-10 flex flex-col justify-between">
                 <div>
                   <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground mb-3">Featured</p>
-                  <h2 className="text-2xl font-light tracking-wide mb-3">{featured.title}</h2>
+                  <h2 className="text-2xl font-light tracking-wide mb-2">{featured.title}</h2>
+                  {(featured as any).tagline && <p className="text-sm font-light text-muted-foreground italic mb-3">{(featured as any).tagline}</p>}
                   {featured.description && <p className="text-sm text-muted-foreground leading-relaxed mb-6">{featured.description}</p>}
                 </div>
                 <div>
@@ -555,7 +640,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
                   </div>
                   <div className="flex items-center justify-between border-t border-border pt-4">
                     <span className="text-2xl font-light">{formatPrice(featured.price)}</span>
-                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">Book Now →</span>
+                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View details →</span>
                   </div>
                 </div>
               </div>
@@ -576,9 +661,10 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
                   </div>
                   <div className="p-4 flex flex-col gap-2 flex-1">
                     <h2 className="text-sm font-light tracking-wide">{session.title}</h2>
+                    {(session as any).tagline && <p className="text-[11px] text-muted-foreground italic">{(session as any).tagline}</p>}
                     <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
                       <span className="text-base font-light">{formatPrice(session.price)}</span>
-                      <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">Book →</span>
+                      <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View →</span>
                     </div>
                   </div>
                 </button>
@@ -617,6 +703,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </section>
       )}
 
+      <ExperienceSection site={site} accentColor={accentColor} />
       <SharedAbout site={site} photographer={photographer} displayName={displayName} />
       <SharedFooter site={site} showContact={showContact} />
     </div>
@@ -630,7 +717,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 
 function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -663,6 +750,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </div>
       </div>
 
+      {/* Quote */}
+      <QuoteSection site={site} />
+
       {/* Sessions — centered list, max width, generous spacing */}
       {showStore && sessions.length > 0 && (
         <main id="sessions" className="max-w-2xl mx-auto px-6 py-20">
@@ -675,13 +765,16 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
                   <h2 className="text-xl font-light tracking-wide">{session.title}</h2>
                   <span className="text-xl font-light shrink-0">{formatPrice(session.price)}</span>
                 </div>
+                {(session as any).tagline && (
+                  <p className="text-sm font-light text-muted-foreground italic">{(session as any).tagline}</p>
+                )}
                 {session.description && <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>}
                 <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
                   <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} minutes</span>
                   <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
                   {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
                 </div>
-                <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">Book this session →</span>
+                <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">View details →</span>
               </button>
             ))}
           </div>
@@ -725,6 +818,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
+      <ExperienceSection site={site} accentColor={accentColor} />
       <SharedFooter site={site} showContact={showContact} />
     </div>
   );
@@ -772,7 +866,7 @@ function deriveCommon(props: Props) {
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
-  const { photographer, site, sessions, galleries } = props;
+  const { photographer, site } = props;
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";

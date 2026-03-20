@@ -385,6 +385,12 @@ const WebsiteSettings = () => {
   const [heroImageUrl, setHeroImageUrl] = useState("");
   const [uploadingHero, setUploadingHero] = useState(false);
 
+  // Quote & Experience
+  const [quoteText, setQuoteText] = useState("");
+  const [quoteAuthor, setQuoteAuthor] = useState("");
+  const [experienceTitle, setExperienceTitle] = useState("");
+  const [experienceText, setExperienceText] = useState("");
+
   // About
   const [aboutTitle, setAboutTitle] = useState("About");
   const [aboutImageUrl, setAboutImageUrl] = useState("");
@@ -645,6 +651,10 @@ const WebsiteSettings = () => {
         setGoogleAnalyticsId(s.google_analytics_id ?? "");
         setFacebookPixelId(s.facebook_pixel_id ?? "");
         setFooterText(s.footer_text ?? "");
+        setQuoteText((s as any).quote_text ?? "");
+        setQuoteAuthor((s as any).quote_author ?? "");
+        setExperienceTitle((s as any).experience_title ?? "");
+        setExperienceText((s as any).experience_text ?? "");
       }
 
       setLoading(false);

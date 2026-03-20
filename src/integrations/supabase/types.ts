@@ -1360,6 +1360,8 @@ export type Database = {
           created_at: string
           cta_link: string | null
           cta_text: string | null
+          experience_text: string | null
+          experience_title: string | null
           facebook_pixel_id: string | null
           facebook_url: string | null
           favicon_url: string | null
@@ -1371,6 +1373,8 @@ export type Database = {
           og_image_url: string | null
           photographer_id: string
           pinterest_url: string | null
+          quote_author: string | null
+          quote_text: string | null
           seo_description: string | null
           seo_title: string | null
           show_about: boolean | null
@@ -1395,6 +1399,8 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          experience_text?: string | null
+          experience_title?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
@@ -1406,6 +1412,8 @@ export type Database = {
           og_image_url?: string | null
           photographer_id: string
           pinterest_url?: string | null
+          quote_author?: string | null
+          quote_text?: string | null
           seo_description?: string | null
           seo_title?: string | null
           show_about?: boolean | null
@@ -1430,6 +1438,8 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          experience_text?: string | null
+          experience_title?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
@@ -1441,6 +1451,8 @@ export type Database = {
           og_image_url?: string | null
           photographer_id?: string
           pinterest_url?: string | null
+          quote_author?: string | null
+          quote_text?: string | null
           seo_description?: string | null
           seo_title?: string | null
           show_about?: boolean | null
@@ -1897,6 +1909,7 @@ export type Database = {
           session_type_id: string | null
           slug: string | null
           status: string
+          tagline: string | null
           tax_rate: number
           title: string
           updated_at: string
@@ -1925,6 +1938,7 @@ export type Database = {
           session_type_id?: string | null
           slug?: string | null
           status?: string
+          tagline?: string | null
           tax_rate?: number
           title?: string
           updated_at?: string
@@ -1953,6 +1967,7 @@ export type Database = {
           session_type_id?: string | null
           slug?: string | null
           status?: string
+          tagline?: string | null
           tax_rate?: number
           title?: string
           updated_at?: string
