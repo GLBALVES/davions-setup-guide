@@ -407,9 +407,10 @@ function ListView({
   const { t } = useLanguage();
   const p_t = t.projects;
   const stageLabels: Record<string, string> = {
-    lead: p_t.lead, briefing: p_t.briefing, shooting: p_t.shooting,
-    editing: p_t.editing, delivery: p_t.delivery, done: p_t.done,
+    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
+    post_production: "Pós produção", final_gallery: "Galeria final",
   };
+
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
     const si = STAGES.findIndex((s) => s.key === a.stage);
     const sj = STAGES.findIndex((s) => s.key === b.stage);
