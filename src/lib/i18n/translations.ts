@@ -16,7 +16,7 @@ export const translations = {
       dashboard: "Dashboard",
       projects: "Projects",
       sessions: "Sessions",
-      schedule: "Schedule",
+      schedule: "Calendar",
       bookings: "Bookings",
       proofGalleries: "Proof Galleries",
       finalGalleries: "Final Galleries",
