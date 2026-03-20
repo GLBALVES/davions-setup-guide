@@ -189,11 +189,25 @@ const Personalize = () => {
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
-  // ── Gallery settings ────────────────────────────────────────────────────────
+  // ── Gallery settings (per type) ────────────────────────────────────────────
+  // proof type
+  const [proofExpiryDays, setProofExpiryDays] = useState<string>("");
+  const [proofRenewalDays, setProofRenewalDays] = useState<string>("");
+  const [proofReactivationFee, setProofReactivationFee] = useState<string>("");
+  const [proofAutoUnpublish, setProofAutoUnpublish] = useState<string>("");
+  // final type
+  const [finalExpiryDays, setFinalExpiryDays] = useState<string>("");
+  const [finalRenewalDays, setFinalRenewalDays] = useState<string>("");
+  const [finalReactivationFee, setFinalReactivationFee] = useState<string>("");
+  const [finalAutoUnpublish, setFinalAutoUnpublish] = useState<string>("");
+  // legacy (keep for backward compat reads)
   const [galleryExpiryDays, setGalleryExpiryDays] = useState<string>("");
   const [galleryReactivationFee, setGalleryReactivationFee] = useState<string>("");
-  const [savingExpiry, setSavingExpiry] = useState(false);
-  const [savingFee, setSavingFee] = useState(false);
+  const [savingGallerySettings, setSavingGallerySettings] = useState(false);
+  // kept for old code paths
+  const [savingExpiry] = useState(false);
+  const [savingFee] = useState(false);
+
 
   // ── Watermarks ──────────────────────────────────────────────────────────────
   const [watermarks, setWatermarks] = useState<WatermarkData[]>([]);
@@ -321,11 +335,22 @@ const Personalize = () => {
       if (watermarksRes.data) setWatermarks(watermarksRes.data as WatermarkData[]);
 
       if (gallerySettingsRes?.data) {
-        const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
-        if (expiryRow) setGalleryExpiryDays(expiryRow.value ?? "");
-        const feeRow = gallerySettingsRes.data.find((r: any) => r.key === "reactivation_fee");
-        if (feeRow) setGalleryReactivationFee(feeRow.value ?? "");
+        const gs = gallerySettingsRes.data;
+        const get = (k: string) => gs.find((r: any) => r.key === k)?.value ?? "";
+        // per-type keys
+        setProofExpiryDays(get("proof_expiry_days") || get("default_expiry_days"));
+        setProofRenewalDays(get("proof_renewal_days"));
+        setProofReactivationFee(get("proof_reactivation_fee") || get("reactivation_fee"));
+        setProofAutoUnpublish(get("proof_auto_unpublish_days"));
+        setFinalExpiryDays(get("final_expiry_days"));
+        setFinalRenewalDays(get("final_renewal_days"));
+        setFinalReactivationFee(get("final_reactivation_fee"));
+        setFinalAutoUnpublish(get("final_auto_unpublish_days"));
+        // legacy state (kept for any remaining references)
+        setGalleryExpiryDays(get("default_expiry_days"));
+        setGalleryReactivationFee(get("reactivation_fee"));
       }
+
 
       if (businessRes?.data) {
         const b = businessRes.data;
@@ -482,39 +507,43 @@ const Personalize = () => {
     setSavingBusiness(false);
   };
 
-  const handleSaveExpiry = async () => {
-    if (!user) return;
-    setSavingExpiry(true);
-    const days = parseInt(galleryExpiryDays, 10);
-    const expiryValue = !galleryExpiryDays.trim() || isNaN(days) || days <= 0 ? null : String(days);
-    const { error } = await (supabase as any).from("gallery_settings").upsert(
-      { photographer_id: user.id, key: "default_expiry_days", value: expiryValue },
-      { onConflict: "photographer_id,key" }
-    );
+  const parseNum = (v: string) => { const n = parseFloat(v); return isNaN(n) || n < 0 ? null : String(n); };
+  const parseIntPos = (v: string) => { const n = parseInt(v, 10); return !v.trim() || isNaN(n) || n <= 0 ? null : String(n); };
+
+  const handleSaveGallerySettings = async () => {
+    if (!photographerId) return;
+    setSavingGallerySettings(true);
+    const upserts = [
+      { key: "proof_expiry_days",       value: parseIntPos(proofExpiryDays) },
+      { key: "proof_renewal_days",      value: parseIntPos(proofRenewalDays) },
+      { key: "proof_reactivation_fee",  value: parseNum(proofReactivationFee) },
+      { key: "proof_auto_unpublish_days", value: parseIntPos(proofAutoUnpublish) },
+      { key: "final_expiry_days",       value: parseIntPos(finalExpiryDays) },
+      { key: "final_renewal_days",      value: parseIntPos(finalRenewalDays) },
+      { key: "final_reactivation_fee",  value: parseNum(finalReactivationFee) },
+      { key: "final_auto_unpublish_days", value: parseIntPos(finalAutoUnpublish) },
+      // legacy keys kept for backward compat
+      { key: "default_expiry_days",     value: parseIntPos(proofExpiryDays) },
+      { key: "reactivation_fee",        value: parseNum(proofReactivationFee) },
+    ].map((r) => ({ photographer_id: photographerId, key: r.key, value: r.value }));
+
+    const { error } = await (supabase as any)
+      .from("gallery_settings")
+      .upsert(upserts, { onConflict: "photographer_id,key" });
+
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Default expiration saved" });
+      toast({ title: t.personalize.galleriesSettingsSaved });
     }
-    setSavingExpiry(false);
+    setSavingGallerySettings(false);
   };
 
-  const handleSaveReactivationFee = async () => {
-    if (!user) return;
-    setSavingFee(true);
-    const fee = parseFloat(galleryReactivationFee);
-    const feeValue = !galleryReactivationFee.trim() || isNaN(fee) || fee < 0 ? null : String(fee);
-    const { error } = await (supabase as any).from("gallery_settings").upsert(
-      { photographer_id: user.id, key: "reactivation_fee", value: feeValue },
-      { onConflict: "photographer_id,key" }
-    );
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Reactivation fee saved" });
-    }
-    setSavingFee(false);
-  };
+  // Kept as no-ops so old references don't break
+  const handleSaveExpiry = handleSaveGallerySettings;
+  const handleSaveReactivationFee = handleSaveGallerySettings;
+
+
 
   const handleWatermarkSaved = (wm: WatermarkData) => {
     setWatermarks((prev) => {
@@ -1009,46 +1038,125 @@ const Personalize = () => {
 
                   {/* ── GALLERIES TAB ── */}
                   <TabsContent value="galleries" className="mt-0 flex flex-col gap-8">
-                    <section className="flex flex-col gap-5">
-                      <SectionHeading title={t.personalize.defaultExpiration} description={t.personalize.defaultExpirationDesc} />
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
-                          <input type="number" min="1" max="3650" value={galleryExpiryDays} onChange={(e) => setGalleryExpiryDays(e.target.value)} placeholder="e.g. 90"
-                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
-                          <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
-                        </div>
-                        <Button onClick={handleSaveExpiry} disabled={savingExpiry} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingExpiry ? t.personalize.saving : t.common.save}
-                        </Button>
-                      </div>
-                      {galleryExpiryDays && parseInt(galleryExpiryDays) > 0 &&
-                    <p className="text-[11px] text-muted-foreground/70 -mt-2">New galleries without a set expiry will expire <strong>{galleryExpiryDays} {t.personalize.days}</strong> after creation.</p>
-                    }
-                    </section>
 
-                    <Divider />
+                    {/* ── Per-type gallery rules ── */}
+                    {(
+                      [
+                        {
+                          label: t.personalize.proofGalleriesLabel,
+                          expiry: proofExpiryDays, setExpiry: setProofExpiryDays,
+                          renewal: proofRenewalDays, setRenewal: setProofRenewalDays,
+                          fee: proofReactivationFee, setFee: setProofReactivationFee,
+                          auto: proofAutoUnpublish, setAuto: setProofAutoUnpublish,
+                        },
+                        {
+                          label: t.personalize.finalGalleriesLabel,
+                          expiry: finalExpiryDays, setExpiry: setFinalExpiryDays,
+                          renewal: finalRenewalDays, setRenewal: setFinalRenewalDays,
+                          fee: finalReactivationFee, setFee: setFinalReactivationFee,
+                          auto: finalAutoUnpublish, setAuto: setFinalAutoUnpublish,
+                        },
+                      ] as {
+                        label: string;
+                        expiry: string; setExpiry: (v: string) => void;
+                        renewal: string; setRenewal: (v: string) => void;
+                        fee: string; setFee: (v: string) => void;
+                        auto: string; setAuto: (v: string) => void;
+                      }[]
+                    ).map((gt) => (
+                      <section key={gt.label} className="flex flex-col gap-5 border border-border p-5">
+                        <p className="text-[11px] tracking-[0.25em] uppercase font-light text-foreground">{gt.label}</p>
 
-                    <section className="flex flex-col gap-5">
-                      <SectionHeading title={t.personalize.reactivationFee} description={t.personalize.reactivationFeeDesc} />
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center border border-border bg-background overflow-hidden w-40">
-                          <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
-                          <input type="number" min="0" step="0.01" value={galleryReactivationFee} onChange={(e) => setGalleryReactivationFee(e.target.value)} placeholder="0.00"
-                        className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Expiration */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                              {t.personalize.expirationDaysLabel}
+                            </label>
+                            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{t.personalize.expirationDaysDesc}</p>
+                            <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                              <input
+                                type="number" min="1" max="3650"
+                                value={gt.expiry}
+                                onChange={(e) => gt.setExpiry(e.target.value)}
+                                placeholder="e.g. 90"
+                                className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                              />
+                              <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
+                            </div>
+                          </div>
+
+                          {/* Renewal period */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                              {t.personalize.renewalDaysLabel}
+                            </label>
+                            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{t.personalize.renewalDaysDesc}</p>
+                            <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                              <input
+                                type="number" min="1" max="3650"
+                                value={gt.renewal}
+                                onChange={(e) => gt.setRenewal(e.target.value)}
+                                placeholder="e.g. 30"
+                                className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                              />
+                              <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
+                            </div>
+                          </div>
+
+                          {/* Reactivation fee */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                              {t.personalize.reactivationFeeLabel}
+                            </label>
+                            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{t.personalize.reactivationFeeDesc2}</p>
+                            <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                              <span className="pl-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-r border-border shrink-0 select-none">$</span>
+                              <input
+                                type="number" min="0" step="0.01"
+                                value={gt.fee}
+                                onChange={(e) => gt.setFee(e.target.value)}
+                                placeholder="0.00"
+                                className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Auto-unpublish after inactivity */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                              {t.personalize.autoUnpublishLabel}
+                            </label>
+                            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{t.personalize.autoUnpublishDesc}</p>
+                            <div className="flex items-center border border-border bg-background overflow-hidden w-40">
+                              <input
+                                type="number" min="1" max="3650"
+                                value={gt.auto}
+                                onChange={(e) => gt.setAuto(e.target.value)}
+                                placeholder="e.g. 7"
+                                className="flex-1 h-9 px-3 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                              />
+                              <span className="px-3 h-9 flex items-center text-xs text-muted-foreground bg-muted/40 border-l border-border shrink-0 select-none">{t.personalize.days}</span>
+                            </div>
+                          </div>
                         </div>
-                        <Button onClick={handleSaveReactivationFee} disabled={savingFee} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {savingFee ? t.personalize.saving : t.common.save}
-                        </Button>
-                      </div>
-                      {galleryReactivationFee && parseFloat(galleryReactivationFee) > 0 &&
-                    <p className="text-[11px] text-muted-foreground/70 -mt-2">Clients will be charged <strong>${parseFloat(galleryReactivationFee).toFixed(2)}</strong> to reactivate an expired gallery.</p>
-                    }
-                    </section>
+                      </section>
+                    ))}
+
+                    <Button
+                      onClick={handleSaveGallerySettings}
+                      disabled={savingGallerySettings}
+                      size="sm"
+                      className="gap-2 text-xs tracking-wider uppercase font-light w-fit"
+                    >
+                      {savingGallerySettings ? t.personalize.saving : t.personalize.saveChanges}
+                    </Button>
 
                     <Divider />
 
                     {/* Watermarks */}
                     <div className="flex items-start justify-between gap-4">
+
                       <div>
                         <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{t.personalize.watermarks}</p>
                         <p className="text-[11px] text-muted-foreground">{t.personalize.watermarksDesc}</p>
