@@ -22,25 +22,23 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type Stage = "lead" | "briefing" | "shooting" | "editing" | "delivery" | "done" | "archived";
+type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
 const STAGES: { key: Stage; label: string }[] = [
-  { key: "lead",     label: "Lead" },
-  { key: "briefing", label: "Briefing" },
-  { key: "shooting", label: "Shooting" },
-  { key: "editing",  label: "Editing" },
-  { key: "delivery", label: "Delivery" },
-  { key: "done",     label: "Done" },
+  { key: "upcoming",        label: "Próximas sessões" },
+  { key: "shot",            label: "Fotografadas" },
+  { key: "proof_gallery",   label: "Galeria de provas" },
+  { key: "post_production", label: "Pós produção" },
+  { key: "final_gallery",   label: "Galeria final" },
 ];
 
 const STAGE_COLORS: Record<Stage, string> = {
-  lead:     "bg-muted/60 text-muted-foreground border-border",
-  briefing: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  shooting: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  editing:  "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  delivery: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  done:     "bg-foreground/10 text-foreground border-foreground/20",
-  archived: "bg-muted/40 text-muted-foreground/60 border-border/50",
+  upcoming:        "bg-muted/60 text-muted-foreground border-border",
+  shot:            "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  proof_gallery:   "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  post_production: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  final_gallery:   "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  archived:        "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
 export interface ProjectSheetData {
