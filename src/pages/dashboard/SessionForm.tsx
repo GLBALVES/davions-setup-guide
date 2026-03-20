@@ -1104,6 +1104,19 @@ const SessionForm = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      <Label htmlFor="tagline" className="text-xs tracking-wider uppercase font-light">
+                        Tagline <span className="normal-case tracking-normal text-muted-foreground font-light">(optional)</span>
+                      </Label>
+                      <Input
+                        id="tagline"
+                        value={tagline}
+                        onChange={(e) => setTagline(e.target.value)}
+                        placeholder="e.g. Timeless moments that last forever"
+                      />
+                      <p className="text-[10px] text-muted-foreground">A short phrase shown below the session title on your public website.</p>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
                       <Label htmlFor="location" className="text-xs tracking-wider uppercase font-light">
                         Location
                       </Label>
