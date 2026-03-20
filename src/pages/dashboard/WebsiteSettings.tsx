@@ -1329,7 +1329,6 @@ const WebsiteSettings = () => {
                         }}
                       />
                     </section>
-                        <div className="flex items-center gap-4 mt-1.5">
                           <p className="text-[10px] text-muted-foreground/60">
                             e.g.{" "}
                             <button type="button" onClick={() => { setCustomDomainInput("yourstudio.com"); setDomainError(null); }} className="font-mono hover:text-foreground transition-colors">
