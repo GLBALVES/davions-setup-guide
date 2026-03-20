@@ -66,10 +66,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     };
 
-    // Set up auth state listener BEFORE getting session
+  // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        // Skip if getSession() already handled initial load
+        // On initial load, getSession() handles it. After that, always apply.
         if (!initialized.current) return;
         await applySession(session);
       }
