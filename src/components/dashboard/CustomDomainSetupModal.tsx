@@ -539,9 +539,6 @@ export function CustomDomainSetupModal({ open, onOpenChange, initialDomain = "",
       return;
     }
     toast({ title: "Domain saved" });
-    supabase.functions.invoke("notify-domain-saved", {
-      body: { domain: domain.trim(), photographerEmail: user.email, action: "saved" },
-    }).catch(() => {});
     onSaved?.(domain.trim());
     setSaving(false);
   };
