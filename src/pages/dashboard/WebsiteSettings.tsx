@@ -525,15 +525,6 @@ const WebsiteSettings = () => {
       setDomainLastChecked(null);
       setDomainError(null);
       toast({ title: "Domain removed", description: `${domainSnapshot} has been unlinked from your studio.` });
-      // Notify team (fire and forget)
-      supabase.functions.invoke("notify-domain-saved", {
-        body: {
-          domain: domainSnapshot,
-          photographerName: fullName || undefined,
-          photographerEmail: user?.email,
-          action: "removed",
-        },
-      }).catch((err) => console.warn("notify-domain-saved:", err));
     }
     setRemovingDomain(false);
   };
