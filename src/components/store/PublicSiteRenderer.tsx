@@ -972,13 +972,13 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-4">
           <div className="w-10 h-px bg-white/40 mb-2" />
-          <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{headline}</h1>
-          {subheadline && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{subheadline}</p>}
+          <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
+          {(subheadline || editMode) && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{ed("site_subheadline", subheadline)}</p>}
           {showBooking && (
             <div className="mt-4">
               {site?.cta_link
-                ? <a href={site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ctaText}</a>
-                : <button onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ctaText}</button>
+                ? <a href={editMode ? undefined : site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</a>
+                : <button onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
               }
             </div>
           )}
