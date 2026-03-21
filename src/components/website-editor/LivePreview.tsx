@@ -51,6 +51,15 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
+
+  // Scroll to active block whenever it changes
+  useEffect(() => {
+    if (!activeBlock) return;
+    const el = document.querySelector(`#editor-site-render [data-block-key="${activeBlock}"]`) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [activeBlock]);
   // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
   // doesn't cause a flicker (the enter handler cancels the timer before it fires).
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
