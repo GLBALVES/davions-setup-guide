@@ -117,7 +117,6 @@ export function LivePreview({
 
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return;
-    const mouseY = e.clientY - containerRect.top;
 
     // Temporarily disable the overlay to hit-test the content underneath
     const overlay = e.currentTarget as HTMLDivElement;
