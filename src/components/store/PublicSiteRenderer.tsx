@@ -757,7 +757,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
 
       {/* Hero — left-aligned headline over image */}
