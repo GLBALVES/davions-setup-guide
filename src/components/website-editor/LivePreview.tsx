@@ -10,6 +10,7 @@ const BLOCK_LABELS: Record<string, string> = {
   sessions: "Sessions",
   portfolio: "Portfolio",
   about: "About",
+  testimonials: "Testimonials",
   quote: "Quote",
   experience: "Experience",
   contact: "Contact",
