@@ -211,12 +211,9 @@ export function LivePreview({
             width: toolbarPos.width,
             pointerEvents: "auto",
           }}
-          onMouseEnter={() => { stayRef.current = true; }}
+          onMouseEnter={() => { cancelHide(); }}
           onMouseLeave={() => {
-            stayRef.current = false;
-            setHoveredBlock(null);
-            setToolbarPos(null);
-            setHoveredGap(null);
+            scheduleHide();
           }}
         >
           <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg rounded-sm cursor-default shrink-0">
@@ -247,12 +244,9 @@ export function LivePreview({
         <div
           className="absolute z-20 flex items-center justify-center"
           style={{ top: hoveredGap.top - 12, left: hoveredGap.left, width: hoveredGap.width, height: 24, pointerEvents: "auto" }}
-          onMouseEnter={() => { stayRef.current = true; }}
+          onMouseEnter={() => { cancelHide(); }}
           onMouseLeave={() => {
-            stayRef.current = false;
-            setHoveredBlock(null);
-            setToolbarPos(null);
-            setHoveredGap(null);
+            scheduleHide();
           }}
         >
           <div className="absolute inset-y-1/2 left-0 right-0 h-px bg-primary/60 pointer-events-none" />
