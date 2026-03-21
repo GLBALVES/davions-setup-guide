@@ -5,6 +5,8 @@ import type { BlockKey } from "./BlockPanel";
 
 interface BlockDef {
   key: BlockKey;
+  /** Unique id per variant — used for selection state when multiple cards share the same key */
+  variantId: string;
   label: string;
   description: string;
   thumbnail: React.ReactNode;
@@ -355,108 +357,48 @@ const CATEGORIES: Category[] = [
     id: "hero",
     label: "Hero / Banner",
     blocks: [
-      {
-        key: "hero",
-        label: "Hero — Full Bleed",
-        description: "Full-width image with centered headline and CTA",
-        thumbnail: <ThumbHeroFull />,
-      },
-      {
-        key: "hero",
-        label: "Hero — Split",
-        description: "Text on one side, image on the other",
-        thumbnail: <ThumbHeroSplit />,
-      },
+      { key: "hero", variantId: "hero-full", label: "Hero — Full Bleed", description: "Full-width image with centered headline and CTA", thumbnail: <ThumbHeroFull /> },
+      { key: "hero", variantId: "hero-split", label: "Hero — Split", description: "Text on one side, image on the other", thumbnail: <ThumbHeroSplit /> },
     ],
   },
   {
     id: "content",
     label: "Content",
     blocks: [
-      {
-        key: "about",
-        label: "About — Image Right",
-        description: "Bio text with photo to the right",
-        thumbnail: <ThumbAboutImageRight />,
-      },
-      {
-        key: "about",
-        label: "About — Image Left",
-        description: "Bio text with photo to the left",
-        thumbnail: <ThumbAboutImageLeft />,
-      },
-      {
-        key: "experience",
-        label: "Experience",
-        description: "Highlight key points of your experience",
-        thumbnail: <ThumbExperience />,
-      },
+      { key: "about", variantId: "about-right", label: "About — Image Right", description: "Bio text with photo to the right", thumbnail: <ThumbAboutImageRight /> },
+      { key: "about", variantId: "about-left", label: "About — Image Left", description: "Bio text with photo to the left", thumbnail: <ThumbAboutImageLeft /> },
+      { key: "experience", variantId: "experience", label: "Experience", description: "Highlight key points of your experience", thumbnail: <ThumbExperience /> },
     ],
   },
   {
     id: "testimonials",
     label: "Testimonials",
     blocks: [
-      {
-        key: "testimonials",
-        label: "Reviews — Cards",
-        description: "Client reviews in a card grid with star ratings",
-        thumbnail: <ThumbTestimonialsCards />,
-      },
-      {
-        key: "testimonials",
-        label: "Reviews — Quotes",
-        description: "Centered pull-quote style testimonials",
-        thumbnail: <ThumbTestimonialsQuotes />,
-      },
+      { key: "testimonials", variantId: "testimonials-cards", label: "Reviews — Cards", description: "Client reviews in a card grid with star ratings", thumbnail: <ThumbTestimonialsCards /> },
+      { key: "testimonials", variantId: "testimonials-quotes", label: "Reviews — Quotes", description: "Centered pull-quote style testimonials", thumbnail: <ThumbTestimonialsQuotes /> },
     ],
   },
   {
     id: "quote",
     label: "Quote",
     blocks: [
-      {
-        key: "quote",
-        label: "Pull Quote",
-        description: "Large styled quote with attribution",
-        thumbnail: <ThumbQuote />,
-      },
+      { key: "quote", variantId: "quote", label: "Pull Quote", description: "Large styled quote with attribution", thumbnail: <ThumbQuote /> },
     ],
   },
   {
     id: "links",
     label: "Sessions & Portfolio",
     blocks: [
-      {
-        key: "sessions",
-        label: "Sessions",
-        description: "Grid of your bookable photo sessions",
-        thumbnail: <ThumbSessions />,
-      },
-      {
-        key: "portfolio",
-        label: "Portfolio",
-        description: "Masonry grid of your published galleries",
-        thumbnail: <ThumbPortfolio />,
-      },
+      { key: "sessions", variantId: "sessions", label: "Sessions", description: "Grid of your bookable photo sessions", thumbnail: <ThumbSessions /> },
+      { key: "portfolio", variantId: "portfolio", label: "Portfolio", description: "Masonry grid of your published galleries", thumbnail: <ThumbPortfolio /> },
     ],
   },
   {
     id: "contact",
     label: "Contact & Footer",
     blocks: [
-      {
-        key: "contact",
-        label: "Contact",
-        description: "Contact form or social links section",
-        thumbnail: <ThumbContact />,
-      },
-      {
-        key: "footer",
-        label: "Footer",
-        description: "Site footer with social icons and copyright",
-        thumbnail: <ThumbFooter />,
-      },
+      { key: "contact", variantId: "contact", label: "Contact", description: "Contact form or social links section", thumbnail: <ThumbContact /> },
+      { key: "footer", variantId: "footer", label: "Footer", description: "Site footer with social icons and copyright", thumbnail: <ThumbFooter /> },
     ],
   },
 ];
@@ -472,20 +414,25 @@ interface Props {
 export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, onClose }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
-  const [selectedBlock, setSelectedBlock] = useState<BlockKey | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
   const isAvailable = (_key: BlockKey) => true;
 
+  // Resolve the BlockKey from the selected variantId
+  const selectedBlockKey = selectedVariantId
+    ? CATEGORIES.flatMap(c => c.blocks).find(b => b.variantId === selectedVariantId)?.key ?? null
+    : null;
+
   const handleClose = () => {
-    setSelectedBlock(null);
+    setSelectedVariantId(null);
     onClose();
   };
 
   const handleConfirm = () => {
-    if (!selectedBlock) return;
-    onAdd(selectedBlock, insertAfterIndex);
-    setSelectedBlock(null);
+    if (!selectedBlockKey) return;
+    onAdd(selectedBlockKey, insertAfterIndex);
+    setSelectedVariantId(null);
   };
 
   return (
@@ -495,10 +442,10 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
           <DialogTitle className="text-sm font-light tracking-[0.12em] uppercase">
             Add Section
           </DialogTitle>
-          {selectedBlock && (
+          {selectedVariantId && (
             <div className="flex items-center gap-2 mr-6">
               <span className="text-[10px] text-muted-foreground tracking-wide">
-                {CATEGORIES.flatMap(c => c.blocks).find(b => b.key === selectedBlock)?.label}
+                {CATEGORIES.flatMap(c => c.blocks).find(b => b.variantId === selectedVariantId)?.label}
               </span>
               <button
                 onClick={handleClose}
@@ -539,14 +486,14 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
             <div className="grid grid-cols-3 gap-4">
               {currentCategory.blocks.map((block, i) => {
                 const available = isAvailable(block.key);
-                const hoverKey = `${block.key}-${i}`;
+                const hoverKey = `${block.variantId}-${i}`;
                 const isHovered = hoveredBlock === hoverKey;
-                const isSelected = selectedBlock === block.key;
+                const isSelected = selectedVariantId === block.variantId;
 
                 return (
                   <button
-                    key={hoverKey}
-                    onClick={() => available && setSelectedBlock(isSelected ? null : block.key)}
+                    key={block.variantId}
+                    onClick={() => available && setSelectedVariantId(isSelected ? null : block.variantId)}
                     onMouseEnter={() => available && setHoveredBlock(hoverKey)}
                     onMouseLeave={() => setHoveredBlock(null)}
                     className={`group flex flex-col rounded-md overflow-hidden text-left transition-all duration-200 ${
