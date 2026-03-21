@@ -189,10 +189,12 @@ export function LivePreview({
           sessionHref={() => "#"}
           galleryHref={() => "#"}
           blogHref="#"
+          editMode={!!activeBlock}
+          onFieldChange={(fieldKey, value) => onDataChange({ [fieldKey]: value } as any)}
         />
       </div>
 
-      {/* Transparent interaction overlay */}
+      {/* Transparent interaction overlay — disabled when a block is being edited inline */}
       <div
         className="absolute inset-0 z-10"
         style={{ cursor: hoveredBlock ? "pointer" : "default", pointerEvents: activeBlock ? "none" : "auto" }}
