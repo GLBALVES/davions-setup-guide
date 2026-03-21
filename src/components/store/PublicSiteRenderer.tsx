@@ -8,6 +8,15 @@ import { useEffect } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
+export interface Testimonial {
+  id: string;
+  name: string;
+  role?: string;
+  text: string;
+  avatar_url?: string;
+  rating?: number;
+}
+
 export interface SiteConfig {
   site_hero_image_url: string | null;
   site_headline: string | null;
@@ -45,6 +54,12 @@ export interface SiteConfig {
   hero_layout?: "full" | "split" | null;
   /** About layout: "image-right" (default) | "image-left" | "text-only" */
   about_layout?: "image-right" | "image-left" | "text-only" | null;
+  /** Testimonials / client reviews */
+  testimonials?: Testimonial[] | null;
+  /** Testimonials section title */
+  testimonials_title?: string | null;
+  /** Testimonials layout: "cards" | "quotes" */
+  testimonials_layout?: "cards" | "quotes" | null;
 }
 
 export interface Session {

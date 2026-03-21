@@ -43,14 +43,15 @@ export interface SectionDef {
 }
 
 const DEFAULT_SECTIONS: SectionDef[] = [
-  { key: "hero",       label: "Hero",        icon: "🖼️",  visible: true },
-  { key: "sessions",   label: "Sessions",    icon: "📅",  visible: true },
-  { key: "portfolio",  label: "Portfolio",   icon: "🖼️",  visible: true },
-  { key: "about",      label: "About",       icon: "👤",  visible: true },
-  { key: "quote",      label: "Quote",       icon: "💬",  visible: true },
-  { key: "experience", label: "Experience",  icon: "✨",  visible: true },
-  { key: "contact",    label: "Contact",     icon: "📱",  visible: true },
-  { key: "footer",     label: "Footer",      icon: "📄",  visible: true },
+  { key: "hero",         label: "Hero",          icon: "🖼️",  visible: true },
+  { key: "sessions",     label: "Sessions",      icon: "📅",  visible: true },
+  { key: "portfolio",    label: "Portfolio",     icon: "🖼️",  visible: true },
+  { key: "about",        label: "About",         icon: "👤",  visible: true },
+  { key: "testimonials", label: "Testimonials",  icon: "⭐",  visible: true },
+  { key: "quote",        label: "Quote",         icon: "💬",  visible: true },
+  { key: "experience",   label: "Experience",    icon: "✨",  visible: true },
+  { key: "contact",      label: "Contact",       icon: "📱",  visible: true },
+  { key: "footer",       label: "Footer",        icon: "📄",  visible: true },
 ];
 
 // ── Sortable Section subitem ─────────────────────────────────────────────────
