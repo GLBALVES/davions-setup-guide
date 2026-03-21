@@ -1,7 +1,20 @@
 import { useRef, useState } from "react";
+import { Settings2, Eye, EyeOff, GripVertical } from "lucide-react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
+import type { SectionDef } from "./EditorSidebar";
+
+const BLOCK_LABELS: Record<string, string> = {
+  hero: "Hero",
+  sessions: "Sessions",
+  portfolio: "Portfolio",
+  about: "About",
+  quote: "Quote",
+  experience: "Experience",
+  contact: "Contact",
+  footer: "Footer",
+};
 
 interface Props {
   data: Partial<SiteConfig>;
@@ -11,11 +24,14 @@ interface Props {
   viewport: "desktop" | "tablet" | "mobile";
   onSelectBlock: (key: BlockKey) => void;
   activeBlock: BlockKey | null;
+  onToggleVisibility: (key: BlockKey) => void;
+  sections: SectionDef[];
 }
 
-export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock, activeBlock }: Props) {
+export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock, activeBlock, onToggleVisibility, sections }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -50,11 +66,23 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
     quote_author: data.quote_author ?? null,
     experience_title: data.experience_title ?? null,
     experience_text: data.experience_text ?? null,
+    hero_layout: (data as any).hero_layout ?? "full",
+    about_layout: (data as any).about_layout ?? "image-right",
   };
 
-  // Handle mouse events bubbled up through the overlay to find the closest data-block-key
+  const getBlockElementRect = (key: string) => {
+    const el = document.querySelector(`#editor-site-render [data-block-key="${key}"]`) as HTMLElement | null;
+    if (!el || !containerRef.current) return null;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    return {
+      top: elRect.top - containerRect.top,
+      left: elRect.left - containerRect.left,
+      width: elRect.width,
+    };
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Get the element under the pointer from the rendered site (beneath the overlay)
     const overlay = e.currentTarget;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -62,9 +90,19 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
 
     if (el) {
       const blockEl = el.closest("[data-block-key]") as HTMLElement | null;
-      setHoveredBlock(blockEl?.getAttribute("data-block-key") ?? null);
+      const key = blockEl?.getAttribute("data-block-key") ?? null;
+      if (key !== hoveredBlock) {
+        setHoveredBlock(key);
+        if (key) {
+          const rect = getBlockElementRect(key);
+          setToolbarPos(rect);
+        } else {
+          setToolbarPos(null);
+        }
+      }
     } else {
       setHoveredBlock(null);
+      setToolbarPos(null);
     }
   };
 
@@ -81,14 +119,17 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
     }
   };
 
-  const handleMouseLeave = () => setHoveredBlock(null);
+  const handleMouseLeave = () => {
+    setHoveredBlock(null);
+    setToolbarPos(null);
+  };
 
-  // Determine cursor based on hovered block
+  const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
   const cursor = hoveredBlock ? "pointer" : "default";
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {/* Site render — pointer-events disabled */}
+      {/* Site render */}
       <div id="editor-site-render">
         <PublicSiteRenderer
           photographer={photographer}
@@ -105,7 +146,7 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
         />
       </div>
 
-      {/* Transparent full-coverage overlay that detects hover/click */}
+      {/* Transparent overlay for hover/click detection */}
       <div
         className="absolute inset-0 z-20"
         style={{ cursor }}
@@ -114,7 +155,42 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
         onClick={handleClick}
       />
 
-      {/* Hover/active highlight injected via style tag so it can target data-block-key */}
+      {/* Floating inline toolbar — shown on hover */}
+      {hoveredBlock && toolbarPos && (
+        <div
+          className="absolute z-30 flex items-center gap-px pointer-events-none"
+          style={{
+            top: Math.max(0, toolbarPos.top),
+            left: toolbarPos.left,
+            width: toolbarPos.width,
+          }}
+        >
+          {/* Left label + actions bar */}
+          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg pointer-events-auto rounded-sm">
+            <GripVertical className="h-3 w-3 opacity-50" />
+            <span>{BLOCK_LABELS[hoveredBlock] ?? hoveredBlock}</span>
+          </div>
+          <div className="flex items-center gap-px pointer-events-auto ml-1">
+            <button
+              className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 text-[10px] hover:bg-primary/80 transition-colors shadow-lg rounded-sm"
+              onClick={(e) => { e.stopPropagation(); onSelectBlock(hoveredBlock as BlockKey); }}
+              title="Edit section"
+            >
+              <Settings2 className="h-3 w-3" />
+              <span className="tracking-widest uppercase text-[9px]">Edit</span>
+            </button>
+            <button
+              className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 text-[10px] hover:bg-primary/80 transition-colors shadow-lg rounded-sm ml-px"
+              onClick={(e) => { e.stopPropagation(); onToggleVisibility(hoveredBlock as BlockKey); }}
+              title={isVisible(hoveredBlock) ? "Hide section" : "Show section"}
+            >
+              {isVisible(hoveredBlock) ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hover/active highlight via injected style targeting data-block-key */}
       <style>{`
         #editor-site-render [data-block-key="${hoveredBlock || "__none__"}"] {
           outline: 2px solid hsl(214, 100%, 55%);
@@ -123,6 +199,7 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
         #editor-site-render [data-block-key="${activeBlock || "__none__"}"] {
           outline: 2px solid hsl(214, 100%, 45%);
           outline-offset: -2px;
+          background-color: hsla(214, 100%, 55%, 0.04);
         }
       `}</style>
     </div>

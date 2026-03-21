@@ -61,6 +61,28 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
         {blockKey === "hero" && (
           <>
+            {/* Layout selector */}
+            <Field label="Layout">
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { value: "full", label: "Full Bleed", desc: "Image fills background" },
+                  { value: "split", label: "Split", desc: "Image + text side-by-side" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => p({ hero_layout: opt.value } as any)}
+                    className={`p-2.5 border rounded-sm text-left transition-colors ${
+                      ((data as any).hero_layout ?? "full") === opt.value
+                        ? "border-foreground bg-foreground/5"
+                        : "border-border hover:border-foreground/40"
+                    }`}
+                  >
+                    <span className="text-[10px] font-medium block mb-0.5">{opt.label}</span>
+                    <span className="text-[9px] text-muted-foreground leading-tight">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
             <ImageUploadField label="Hero Image" value={data.site_hero_image_url ?? null} onChange={(url) => p({ site_hero_image_url: url })} />
             <Field label="Headline">
               <Input value={data.site_headline ?? ""} onChange={(e) => p({ site_headline: e.target.value })} className="h-8 text-xs" placeholder="Your studio name" />
@@ -73,12 +95,6 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
             </Field>
             <Field label="CTA Link (optional)">
               <Input value={data.cta_link ?? ""} onChange={(e) => p({ cta_link: e.target.value })} className="h-8 text-xs" placeholder="https://..." />
-            </Field>
-            <Field label="Accent Color">
-              <div className="flex items-center gap-2">
-                <input type="color" value={data.accent_color ?? "#000000"} onChange={(e) => p({ accent_color: e.target.value })} className="h-8 w-10 rounded-sm border border-border cursor-pointer bg-transparent" />
-                <Input value={data.accent_color ?? "#000000"} onChange={(e) => p({ accent_color: e.target.value })} className="h-8 text-xs flex-1" />
-              </div>
             </Field>
           </>
         )}

@@ -41,6 +41,10 @@ export interface SiteConfig {
   quote_author?: string | null;
   experience_title?: string | null;
   experience_text?: string | null;
+  /** Hero layout: "full" (default full-bleed) | "split" (image left, text right) */
+  hero_layout?: "full" | "split" | null;
+  /** About layout: "image-right" (default) | "image-left" | "text-only" */
+  about_layout?: "image-right" | "image-left" | "text-only" | null;
 }
 
 export interface Session {
