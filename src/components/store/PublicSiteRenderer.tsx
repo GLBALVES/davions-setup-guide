@@ -597,7 +597,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
 
       {/* Sessions — alternating full-width blocks */}
       {showStore && (
