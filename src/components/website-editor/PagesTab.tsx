@@ -102,6 +102,9 @@ function SortablePageItem({
     if (editing) inputRef.current?.focus();
   }, [editing]);
 
+  // Fix: remove duplicate style prop - merge into one
+
+
   const commit = () => {
     setEditing(false);
     const trimmed = draft.trim();
