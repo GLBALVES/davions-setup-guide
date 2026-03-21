@@ -719,7 +719,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       />
 
       {/* Hero — centered, image behind, big type */}
-      <div className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -742,11 +742,11 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
-      {/* Sessions — centered list, max width, generous spacing */}
+      {/* Sessions */}
       {showStore && sessions.length > 0 && (
-        <main id="sessions" className="max-w-2xl mx-auto px-6 py-20">
+        <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
           <div className="flex flex-col gap-0">
             {sessions.map((session, i) => (
@@ -772,9 +772,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </main>
       )}
 
-      {/* Portfolio — simple centered 2-col */}
+      {/* Portfolio */}
       {galleries.length > 0 && (
-        <section className="border-t border-border bg-muted/20">
+        <section data-block-key="portfolio" className="border-t border-border bg-muted/20">
           <div className="max-w-4xl mx-auto px-6 py-20">
             <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -795,9 +795,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      {/* About — clean centered */}
+      {/* About */}
       {(site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
-        <section id="about" className="border-t border-border">
+        <section data-block-key="about" id="about" className="border-t border-border">
           <div className="max-w-2xl mx-auto px-6 py-20 text-center">
             {site?.about_image_url && (
               <img src={site.about_image_url} alt={displayName} className="w-32 h-32 object-cover rounded-full mx-auto mb-8 grayscale" />
@@ -809,8 +809,8 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
