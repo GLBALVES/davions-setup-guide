@@ -125,6 +125,12 @@ export interface SiteConfig {
   testimonials_title?: string | null;
   /** Testimonials layout: "cards" | "quotes" */
   testimonials_layout?: "cards" | "quotes" | null;
+  /** Header background color (null = transparent/scroll-aware) */
+  header_bg_color?: string | null;
+  /** Header menu font color (null = auto based on scroll state) */
+  header_text_color?: string | null;
+  /** Which social icons to show in the header (null/empty = show all that have URLs) */
+  header_visible_socials?: string[] | null;
 }
 
 export interface Session {
@@ -208,52 +214,114 @@ interface NavProps {
   site?: SiteConfig | null;
 }
 
-function SocialIcons({ site, scrolled, size = "sm" }: { site?: SiteConfig | null; scrolled: boolean; size?: "sm" | "xs" }) {
+const ALL_SOCIALS = ["instagram", "facebook", "youtube", "tiktok", "pinterest", "linkedin", "whatsapp"] as const;
+
+function SocialIcons({
+  site,
+  scrolled,
+  size = "sm",
+  forceColor,
+  filterKeys,
+}: {
+  site?: SiteConfig | null;
+  scrolled: boolean;
+  size?: "sm" | "xs";
+  forceColor?: string;
+  filterKeys?: string[] | null;
+}) {
   if (!site) return null;
-  const cls = `transition-colors duration-300 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/60 hover:text-white"}`;
   const iconCls = size === "xs" ? "h-3.5 w-3.5" : "h-4 w-4";
+
+  const entries: { key: string; href: string; icon: React.ReactNode }[] = [
+    site.instagram_url ? { key: "instagram", href: site.instagram_url, icon: <Instagram className={iconCls} /> } : null,
+    site.facebook_url  ? { key: "facebook",  href: site.facebook_url,  icon: <Facebook className={iconCls} />  } : null,
+    site.youtube_url   ? { key: "youtube",   href: site.youtube_url,   icon: <Youtube className={iconCls} />   } : null,
+    site.tiktok_url    ? { key: "tiktok",    href: site.tiktok_url,    icon: <TikTokIcon className={iconCls} />} : null,
+    site.pinterest_url ? { key: "pinterest", href: site.pinterest_url, icon: <PinterestIcon className={iconCls} />} : null,
+    site.linkedin_url  ? { key: "linkedin",  href: site.linkedin_url,  icon: <Linkedin className={iconCls} />  } : null,
+    site.whatsapp      ? { key: "whatsapp",  href: `https://wa.me/${site.whatsapp.replace(/\D/g, "")}`, icon: <WhatsAppIcon className={iconCls} />} : null,
+  ].filter(Boolean) as { key: string; href: string; icon: React.ReactNode }[];
+
+  // Filter by visible list if provided (non-empty array = explicit selection)
+  const visible = filterKeys && filterKeys.length > 0
+    ? entries.filter((e) => filterKeys.includes(e.key))
+    : entries;
+
+  if (visible.length === 0) return null;
+
   return (
     <div className="flex items-center gap-3">
-      {site.instagram_url && <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className={cls}><Instagram className={iconCls} /></a>}
-      {site.facebook_url && <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className={cls}><Facebook className={iconCls} /></a>}
-      {site.youtube_url && <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className={cls}><Youtube className={iconCls} /></a>}
-      {site.tiktok_url && <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className={cls}><TikTokIcon className={iconCls} /></a>}
-      {site.pinterest_url && <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className={cls}><PinterestIcon className={iconCls} /></a>}
-      {site.linkedin_url && <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className={cls}><Linkedin className={iconCls} /></a>}
-      {site.whatsapp && <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className={cls}><WhatsAppIcon className={iconCls} /></a>}
+      {visible.map((e) => (
+        <a
+          key={e.key}
+          href={e.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={forceColor ? { color: forceColor } : undefined}
+          className={forceColor ? "transition-opacity hover:opacity-70" : `transition-colors duration-300 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/60 hover:text-white"}`}
+        >
+          {e.icon}
+        </a>
+      ))}
     </div>
   );
 }
 
 function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site }: NavProps) {
+  const hasBg = !!site?.header_bg_color;
+  const bgColor = site?.header_bg_color ?? undefined;
+  const textColor = site?.header_text_color ?? undefined;
+  const visibleSocials = site?.header_visible_socials ?? null;
+
+  // When a custom bg color is set we always show as "scrolled" visually (opaque)
+  const isOpaque = hasBg || scrolled;
+
+  const headerStyle: React.CSSProperties = hasBg
+    ? { backgroundColor: bgColor, borderBottom: "1px solid rgba(0,0,0,0.08)" }
+    : undefined as any;
+
+  const logoFilter = !hasBg && !scrolled ? "brightness-0 invert" : "";
+  const textCls = isOpaque
+    ? "text-muted-foreground hover:text-foreground"
+    : "text-white/70 hover:text-white";
+
   return (
     <header
       data-block-key="header"
+      style={headerStyle}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : "bg-transparent"
-      }`}
+        !hasBg && scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : ""
+      } ${!hasBg && !scrolled ? "bg-transparent" : ""}`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={displayName}
-            className={`h-8 object-contain transition-all duration-300 shrink-0 ${scrolled ? "" : "brightness-0 invert"}`}
-          />
-        ) : (
-          <span className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 shrink-0 ${scrolled ? "text-foreground" : "text-white/80"}`}>
-            {displayName}
-          </span>
-        )}
+      <div className="max-w-6xl mx-auto px-6 h-14 grid grid-cols-3 items-center gap-4">
+        {/* Left: logo / studio name */}
+        <div className="flex items-center">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={displayName}
+              className={`h-8 object-contain transition-all duration-300 ${logoFilter}`}
+            />
+          ) : (
+            <span
+              style={textColor ? { color: textColor } : undefined}
+              className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/80" : ""}`}
+            >
+              {displayName}
+            </span>
+          )}
+        </div>
 
+        {/* Center: nav links */}
         {navLinks.length > 0 && (
-          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
+          <nav className="hidden md:flex items-center gap-6 justify-center">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 onClick={() => onNavClick(link.href)}
+                style={textColor ? { color: textColor } : undefined}
                 className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 ${
-                  scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"
+                  textColor ? "hover:opacity-70" : textCls
                 }`}
               >
                 {link.label}
@@ -261,16 +329,26 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
             ))}
           </nav>
         )}
+        {navLinks.length === 0 && <div />}
 
-        {/* Right side: social icons + CTA */}
-        <div className="hidden md:flex items-center gap-3 shrink-0">
-          <SocialIcons site={site} scrolled={scrolled} size="xs" />
+        {/* Right: social icons */}
+        <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
+          <SocialIcons
+            site={site}
+            scrolled={isOpaque}
+            size="xs"
+            forceColor={textColor}
+            filterKeys={visibleSocials}
+          />
           {showBooking && (
             <button
               onClick={() => onNavClick("#sessions")}
-              style={{ borderColor: scrolled ? accentColor : "rgba(255,255,255,0.6)" }}
+              style={{
+                borderColor: textColor ?? (isOpaque ? accentColor : "rgba(255,255,255,0.6)"),
+                color: textColor ?? undefined,
+              }}
               className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
-                scrolled ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
+                textColor ? "hover:opacity-70" : isOpaque ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
               }`}
             >
               {ctaText}
@@ -281,7 +359,8 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         {navLinks.length > 0 && (
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden transition-colors duration-300 ${scrolled ? "text-foreground" : "text-white"}`}
+            style={textColor ? { color: textColor } : undefined}
+            className={`md:hidden col-start-3 justify-self-end transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -312,7 +391,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
             {/* Mobile social icons */}
             {site && (
               <div className="pt-3 border-t border-border/50 mt-1">
-                <SocialIcons site={site} scrolled={true} size="sm" />
+                <SocialIcons site={site} scrolled={true} size="sm" filterKeys={visibleSocials} />
               </div>
             )}
           </nav>

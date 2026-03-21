@@ -1367,6 +1367,9 @@ export type Database = {
           favicon_url: string | null
           footer_text: string | null
           google_analytics_id: string | null
+          header_bg_color: string | null
+          header_text_color: string | null
+          header_visible_socials: Json | null
           instagram_url: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -1408,6 +1411,9 @@ export type Database = {
           favicon_url?: string | null
           footer_text?: string | null
           google_analytics_id?: string | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          header_visible_socials?: Json | null
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -1449,6 +1455,9 @@ export type Database = {
           favicon_url?: string | null
           footer_text?: string | null
           google_analytics_id?: string | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          header_visible_socials?: Json | null
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
