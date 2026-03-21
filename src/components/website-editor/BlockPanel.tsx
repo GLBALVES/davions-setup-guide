@@ -147,6 +147,10 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
               <Input value={data.about_title ?? "About"} onChange={(e) => p({ about_title: e.target.value })} className="h-8 text-xs" />
             </Field>
             <ImageUploadField label="About Image" value={data.about_image_url ?? null} onChange={(url) => p({ about_image_url: url })} />
+            <div className="flex flex-col gap-0.5 -mt-2">
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">📍 Portrait photo shown next to your bio in the <strong>About section</strong>.</p>
+              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">Recommended: JPG or PNG · 600×800 px (3:4 portrait) · max 3 MB</p>
+            </div>
             <Field label="Bio">
               <Textarea value={data.bio ?? ""} onChange={(e) => p({ bio: e.target.value })} className="text-xs min-h-[100px] resize-none" placeholder="Tell clients about yourself..." />
             </Field>
