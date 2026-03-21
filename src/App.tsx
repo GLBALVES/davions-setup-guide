@@ -50,6 +50,7 @@ import Clients from "./pages/dashboard/Clients";
 import CreativeStudio from "./pages/dashboard/CreativeStudio";
 import WebsiteSettings from "./pages/dashboard/WebsiteSettings";
 import WebsitePreview from "./pages/dashboard/WebsitePreview";
+import WebsiteEditor from "./pages/dashboard/WebsiteEditor";
 import AccessControl from "./pages/dashboard/AccessControl";
 import Projects from "./pages/dashboard/Projects";
 import SocialMedia from "./pages/dashboard/SocialMedia";
