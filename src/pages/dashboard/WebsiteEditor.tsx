@@ -351,7 +351,7 @@ export default function WebsiteEditor() {
     photographer.full_name ||
     "My Site";
 
-  const hiddenSections = sections.filter((s) => s.visible === false).map((s) => s.key);
+  const hiddenSections = activePageSections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
     return (
