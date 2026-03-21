@@ -245,6 +245,36 @@ export default function WebsiteEditor() {
     setActiveBlock(null); // Clear active block when switching pages
   };
 
+  const handlePageContentChange = async (pageId: string, content: PageContent) => {
+    if (!user) return;
+    // Update local state immediately
+    setPages((prev) =>
+      prev.map((p) => p.id === pageId ? { ...p, page_content: content as any } : p)
+    );
+    // Debounced save to site_pages
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSaveStatus("pending");
+      const { error } = await supabase
+        .from("site_pages")
+        .update({ page_content: content as any, title: content.page_title ?? "" } as any)
+        .eq("id", pageId);
+      if (!error) {
+        // Also update local title in pages
+        if (content.page_title) {
+          setPages((prev) =>
+            prev.map((p) => p.id === pageId ? { ...p, title: content.page_title! } : p)
+          );
+        }
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2500);
+      } else {
+        setSaveStatus("idle");
+      }
+    }, 1200);
+    setSaveStatus("pending");
+  };
+
   const handlePublish = async () => {
     await save(siteData, sections, true);
     toast({ title: "Published!", description: "Your site is live." });
