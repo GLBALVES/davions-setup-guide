@@ -316,12 +316,13 @@ interface PagesTreeProps {
   onSelectBlock: (key: BlockKey) => void;
   onReorder: (sections: SectionDef[]) => void;
   onToggleVisibility: (key: BlockKey) => void;
+  onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
 }
 
 function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
-  sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility,
+  sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
 }: PagesTreeProps) {
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
