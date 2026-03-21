@@ -191,10 +191,19 @@ export default function WebsiteEditor() {
     setAddBlockState({ open: true, insertAfter: insertAfterIndex, targetPageId: targetPageId ?? activePageId });
   };
 
-  const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number) => {
+  const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number, variantId?: string) => {
     const targetPageId = addBlockState.targetPageId;
     const targetPage = targetPageId ? pages.find((p) => p.id === targetPageId) : null;
     const isCustomPage = targetPage && !targetPage.is_home;
+
+    // Apply variant-specific layout changes
+    const variantPatch: Partial<typeof siteData> = {};
+    if (variantId === "hero-split") variantPatch.hero_layout = "split" as any;
+    else if (variantId === "hero-full") variantPatch.hero_layout = "full" as any;
+    else if (variantId === "about-left") variantPatch.about_layout = "image-left" as any;
+    else if (variantId === "about-right") variantPatch.about_layout = "image-right" as any;
+    else if (variantId === "testimonials-quotes") variantPatch.testimonials_layout = "quotes" as any;
+    else if (variantId === "testimonials-cards") variantPatch.testimonials_layout = "cards" as any;
 
     if (isCustomPage && targetPageId) {
       // Adding to a custom page — persist to site_pages.sections_order
