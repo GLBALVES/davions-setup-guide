@@ -574,6 +574,7 @@ export function EditorSidebar({
             activePageId={activePageId}
             onSelectPage={onSelectPage}
             onAddPage={onAddPage}
+            onAddSection={onAddSection}
             onDeletePage={onDeletePage}
             onRenamePage={onRenamePage}
             onTogglePageVisibility={onTogglePageVisibility}
