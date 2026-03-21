@@ -658,7 +658,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Experience */}
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
 
       {/* Portfolio */}
       {galleries.length > 0 && (
