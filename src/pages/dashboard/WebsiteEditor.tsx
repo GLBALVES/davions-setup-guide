@@ -375,7 +375,14 @@ export default function WebsiteEditor() {
     ? ((activePage.sections_order as SectionDef[]) ?? [])
     : sections;
 
-  const hiddenSections = activePageSections.filter((s) => s.visible === false).map((s) => s.key);
+  // hiddenSections for the modal uses the TARGET page (may differ from active page)
+  const targetPageForModal = addBlockState.targetPageId
+    ? pages.find((p) => p.id === addBlockState.targetPageId)
+    : null;
+  const modalSections: SectionDef[] = targetPageForModal && !targetPageForModal.is_home
+    ? ((targetPageForModal.sections_order as SectionDef[]) ?? [])
+    : sections;
+  const hiddenSections = modalSections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
     return (
