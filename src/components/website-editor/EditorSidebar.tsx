@@ -419,6 +419,7 @@ function PagesTree({
                       onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
                       onToggle={() => onToggleVisibility(section.key)}
                       onRename={(label) => onReorder(sections.map((s) => s.key === section.key ? { ...s, label } : s))}
+                      onRemove={() => onRemoveSection(null, section.key)}
                     />
                   ))}
                 </SortableContext>
