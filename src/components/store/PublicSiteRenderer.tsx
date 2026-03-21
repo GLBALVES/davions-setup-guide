@@ -643,7 +643,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
       {/* Hero */}
-      {(site?.hero_layout ?? "full") === "split" ? (
+      {showBlock("hero") && (site?.hero_layout ?? "full") === "split" ? (
         <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
           {/* Image half */}
           <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
