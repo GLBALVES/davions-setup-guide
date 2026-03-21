@@ -514,6 +514,7 @@ interface Props {
   activePageId: string | null;
   onSelectPage: (id: string | null) => void;
   onAddPage: (parentId?: string | null) => void;
+  onAddSection: (pageId: string) => void;
   onDeletePage: (id: string) => void;
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
@@ -524,7 +525,7 @@ type Tab = "pages" | "styles";
 
 export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
-  pages, activePageId, onSelectPage, onAddPage, onDeletePage, onRenamePage,
+  pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
