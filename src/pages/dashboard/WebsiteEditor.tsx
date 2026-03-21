@@ -235,6 +235,8 @@ export default function WebsiteEditor() {
         .from("site_pages")
         .update({ sections_order: newOrder as any } as any)
         .eq("id", targetPageId);
+      // Apply variant layout patch to siteData if any
+      if (Object.keys(variantPatch).length > 0) handleDataChange(variantPatch);
       setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
       setActivePageId(targetPageId);
       setActiveBlock(blockKey);
@@ -263,7 +265,14 @@ export default function WebsiteEditor() {
       newSections.splice(clamped, 0, removed);
     }
     setSections(newSections);
-    save(siteData, newSections);
+    // Apply variant layout patch and save together
+    if (Object.keys(variantPatch).length > 0) {
+      const nextData = { ...siteData, ...variantPatch };
+      setSiteData(nextData);
+      save(nextData, newSections);
+    } else {
+      save(siteData, newSections);
+    }
     setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
     setActiveBlock(blockKey);
   };
