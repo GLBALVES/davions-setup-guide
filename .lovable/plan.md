@@ -1,89 +1,98 @@
 
-## Análise comparativa: Editor atual vs. Pixieset
+## Análise do código-fonte do Pixieset — O que aprender e implementar
 
-### O que o Pixieset tem que nosso editor não tem
+### O que o código revela sobre a arquitetura do Pixieset
 
-Olhando o screenshot do Pixieset e comparando com a implementação atual, identifiquei 6 diferenças críticas de UX:
+**1. Sistema de blocos com `data-blockkey` em cada container**
+Cada bloco tem: `data-blockid`, `data-blockUuid`, `data-blockkey` (ex: `"single_text_block"`, `"single_photo_with_text_horizontal_block"`, `"divider_block"`, `"feature_links_multiple_photos_block"`)
+→ **Nosso editor já implementou isso com `data-block-key`** — estamos no caminho certo.
 
-**1. Hierarquia de navegação clara no painel esquerdo**
-- Pixieset: painel tem abas fixas no topo (Pages icon, Styles icon, Settings icon, Analytics icon) — cada aba tem um propósito distinto
-- Nosso editor: painel é uma lista plana de seções sem hierarquia. Não há separação entre "conteúdo das seções" e "estilos globais" (cores, fontes, logo)
+**2. Toolbar inline flutuante por bloco (block-container__menu)**
+Cada `block-container` tem um `block-container__menu` escondido que aparece no hover com:
+- **Layout A/B/C** — shortcut para trocar variação de layout do bloco
+- **Edit** (ícone engrenagem) — abre painel lateral
+- **Duplicate** (ícone clone)
+- **Delete** (ícone trash)
+- **Move** (drag handle vertical `fa-arrows-v`)
 
-**2. Preview clicável com hover highlights**
-- Pixieset: passar o mouse sobre uma seção no canvas mostra um outline colorido + botão de ação flutuante (ex: "LAYOUT A" + engrenagem + ícones de copiar/apagar)
-- Nosso editor: o canvas tem `pointer-events-none` — totalmente não interativo. O usuário só pode clicar no painel esquerdo
+Isso aparece diretamente no canvas, sobreposto ao bloco.
 
-**3. Botão "+" entre seções para adicionar novos blocos**
-- Pixieset: entre cada seção do site aparece um botão "+" centralizado com linha horizontal — permite inserir uma nova seção em qualquer posição
-- Nosso editor: não existe esta funcionalidade
+**3. Botão "+" entre blocos (block-container__add-block-link)**
+Cada bloco tem dois links: `--top` e `--bottom`, que mostram `<i class="far fa-plus">` centralizado com uma linha horizontal. Clica e abre `#add-block-modal`.
 
-**4. Estrutura de páginas (site menu)**
-- Pixieset: painel esquerdo mostra "SITE MENU" com árvore de páginas hierárquica (Home, The Experience > subpages, Investment > subpages, Blog, etc.)
-- Nosso editor: sem conceito de páginas múltiplas (não vamos implementar isso agora — fora do escopo)
+**4. Sistema de CSS variables por bloco para cores**
+Cada bloco tem `style="--primary-background:#FFFFFF; --primary-headings:#826645; ..."` — esquema de cores individual por bloco (não apenas cor de accent global).
 
-**5. Controles contextuais no canvas (LAYOUT A, Settings, Delete, Resize)**
-- Pixieset: ao selecionar um bloco no canvas, aparece toolbar inline com opções de layout, duplicar, deletar e redimensionar
-- Nosso editor: nenhum controle visual no canvas
-
-**6. Topbar com identidade da marca do site**
-- Pixieset: topbar esquerda mostra "Website ˅" como nome/domínio do site atual, com link para o site ao vivo
-- Nosso editor: só tem "Exit Editor" — sem nome do site nem link direto para o site ao vivo
+**5. Color shuffler por bloco**
+`<div class="block-color-scheme__menu"><div class="color-shuffler__menu"></div></div>` — cada bloco pode ter seu próprio esquema de cores (light/accent/dark).
 
 ---
 
-### Melhorias que vamos implementar (escopo realista)
+### O que implementar agora (baseado no código real)
 
-**Prioridade Alta:**
+**A. Toolbar inline no canvas** ← diferencial principal
+Quando o usuário hover sobre uma seção no preview, mostrar uma toolbar flutuante no topo do bloco com:
+- Label do bloco (ex: "Hero")
+- Botão Edit (abre painel esquerdo)
+- Botão de visibilidade toggle (show/hide)
+- Drag handle (apenas visual por ora)
 
-A. **Preview clicável com hover outlines**
-   - Remover `pointer-events-none` do canvas
-   - Adicionar overlay invisível por seção com `data-block-key` attributes no `PublicSiteRenderer`
-   - Ao hover: mostrar outline colorido (ring azul) e tooltip "Click to edit"
-   - Ao click: ativa o bloco correspondente no painel esquerdo
+Implementação: em `LivePreview.tsx`, além do overlay transparente, renderizar condicionalmente um `div` posicionado absolute no topo do `hoveredBlock`, com os botões de ação. Coordenadas calculadas via `getBoundingClientRect()` do elemento com `data-block-key`.
 
-B. **Botão "+" entre seções no canvas**
-   - Não precisamos adicionar seções novas — mas o botão pode servir para ativar rapidamente a edição da seção abaixo dele
-   - Alternativa mais simples: botão "+" no painel esquerdo abre um menu para mostrar seções ocultas
+**B. Botão "+" entre seções no canvas**
+Pixieset coloca o `+` no topo E na base de cada bloco. Ao clicar, poderia scrollar o painel esquerdo para a seção correspondente ou mostrar seções ocultas.
 
-C. **Abas no painel esquerdo**
-   - Aba 1: "Sections" (lista de blocos atual)
-   - Aba 2: "Styles" (cores, fonte, logo — campos que hoje estão fragmentados no BlockPanel do Hero)
-   - Aba 3: "Pages" placeholder (futuro)
-   - Topbar mostra nome do site com link para o site ao vivo
+Implementação mais simples: ao hover sobre a borda inferior de um bloco, mostrar um botão `+` centralizado que, ao clicar, alterna a visibilidade da próxima seção oculta ou abre a lista de seções no painel.
 
-**Prioridade Média:**
+**C. Variação de layout por bloco (Layout A/B/C)**
+Pixieset tem múltiplas variações de layout para o mesmo tipo de bloco (text-only, photo+text lado esquerdo, photo+text lado direito, etc.). Nosso sistema atualmente tem apenas um layout fixo por seção.
 
-D. **Nome do site na topbar**
-   - Substituir "Exit Editor" por "← [Nome do estúdio]" e adicionar ícone de link para abrir o site ao vivo
-   - Separar botão "View Site" do botão "Publish"
-
-E. **Painel "Styles" global**
-   - Accent color, Logo upload, Tagline, Font family (no futuro) agrupados em uma aba dedicada
-   - Limpa o BlockPanel do Hero que atualmente mistura conteúdo com configurações globais
+Implementação: adicionar campo `hero_layout` (values: "full", "split-left", "split-right"), `about_layout` ("text-only", "image-left", "image-right") no `SiteConfig` e no `BlockPanel`. Renderizar variações diferentes no `PublicSiteRenderer` baseado nesses campos.
 
 ---
 
-### Arquivos a alterar
+### Plano de implementação
 
-1. **`src/components/store/PublicSiteRenderer.tsx`**
-   - Adicionar `data-block-key` em cada seção principal (hero div, sessions div, etc.)
-   - Não há mudança visual — apenas atributos HTML adicionados
+**Arquivo: `LivePreview.tsx`**
+- Calcular a posição do bloco hovado via `getBoundingClientRect`
+- Renderizar toolbar flutuante posicionada no topo do bloco hovado
+- Toolbar contém: label, botão edit (→ onSelectBlock), botão eye (→ onToggleVisibility), drag handle visual
 
-2. **`src/components/website-editor/LivePreview.tsx`**
-   - Remover `pointer-events-none`
-   - Adicionar event listener de click que lê `data-block-key` do elemento clicado e chama `onSelectBlock`
-   - Adicionar hover highlight: ao mouseover em elementos com `data-block-key`, aplicar outline via CSS
+**Arquivo: `BlockPanel.tsx`**
+- Adicionar seletor de variação de layout para Hero ("Imagem cheia", "Texto + Imagem") e About ("Texto + Imagem Lado Direito", "Texto + Imagem Lado Esquerdo")
+- Usar um seletor visual com thumbnails ou botões
 
-3. **`src/components/website-editor/EditorSidebar.tsx`**
-   - Adicionar abas: "Sections" | "Styles"
-   - Nova aba "Styles" com campos de Accent Color, Logo, Tagline
+**Arquivo: `PublicSiteRenderer.tsx`**
+- Suporte à variação de layout no Hero (full-bleed vs split)
+- Suporte à variação de layout no About (imagem à esquerda vs direita)
 
-4. **`src/pages/dashboard/WebsiteEditor.tsx`**
-   - Topbar: substituir "Exit Editor" por nome do estúdio com link para ver o site
-   - Adicionar botão "View Site" separado do "Publish"
-   - Passar handlers de style para EditorSidebar
+**Arquivo: `EditorSidebar.tsx`** (mudança menor)
+- No hover de cada item da lista de seções, mostrar os mesmos botões (eye + settings) que já existem mas de forma mais visível
 
-### O que NÃO vamos implementar (fora do escopo atual)
-- Múltiplas páginas (The Experience, Investment, etc.) — requer schema novo
-- Toolbar inline com LAYOUT A (requer refatoração grande do PublicSiteRenderer)
-- Duplicar/deletar blocos inline no canvas
+### Props adicionais necessárias em LivePreview
+
+```tsx
+interface Props {
+  // existentes...
+  onToggleVisibility: (key: BlockKey) => void;  // ← novo
+  sections: SectionDef[];                        // ← novo (para saber quais estão visíveis)
+}
+```
+
+### Mudanças no SiteConfig / banco
+
+Adicionar campos opcionais (sem migração obrigatória, default para layout existente):
+- `hero_layout?: "full" | "split"` — default "full"
+- `about_layout?: "image-left" | "image-right"` — default "image-right"
+
+Adicionar esses campos no tipo `SiteConfig` e na lógica do `PublicSiteRenderer`.
+
+### Arquivos a editar
+
+1. `src/components/website-editor/LivePreview.tsx` — toolbar inline flutuante
+2. `src/components/website-editor/BlockPanel.tsx` — seletor de layout por bloco
+3. `src/components/store/PublicSiteRenderer.tsx` — variações de layout (hero split, about image-left/right)
+4. `src/pages/dashboard/WebsiteEditor.tsx` — passar `onToggleVisibility` e `sections` para LivePreview
+
+### Sem migração de banco necessária
+Os novos campos de layout são adicionados ao tipo TypeScript como opcionais; o `upsert` existente já cuida do salvamento.
