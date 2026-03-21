@@ -426,6 +426,7 @@ function PagesTree({
           const children = nonHomePages
             .filter((p) => p.parent_id === page.id)
             .sort((a, b) => a.sort_order - b.sort_order);
+          const pageSections = (page.sections_order as SectionDef[] | null) ?? [];
           return (
             <div key={page.id}>
               <PageRow
@@ -439,8 +440,30 @@ function PagesTree({
                 onRename={(title) => onRenamePage(page.id, title)}
                 onToggleVisibility={() => onTogglePageVisibility(page.id)}
                 onAddSection={() => onAddSection(page.id)}
-                hasChildren={children.length > 0}
+                hasChildren={children.length > 0 || pageSections.length > 0}
               />
+
+              {/* Custom page sections as sub-items */}
+              {expanded[page.id] && pageSections.length > 0 && (
+                <div>
+                  {pageSections.map((section) => (
+                    <div
+                      key={section.key}
+                      className={`flex items-center gap-1.5 pl-7 pr-2 py-1.5 rounded-sm transition-colors cursor-pointer group ${
+                        activeBlock === section.key && activePageId === page.id
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-muted/50"
+                      } ${!section.visible ? "opacity-40" : ""}`}
+                      onClick={() => { onSelectPage(page.id); onSelectBlock(section.key); }}
+                    >
+                      <CornerDownRight className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0 ml-1" />
+                      <span className="text-xs shrink-0">{section.icon}</span>
+                      <span className="text-[11px] font-light tracking-wide truncate flex-1">{section.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Sub-pages */}
               {expanded[page.id] &&
                 children.map((child) => (
