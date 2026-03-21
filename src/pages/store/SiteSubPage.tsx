@@ -65,7 +65,7 @@ const SiteSubPage = () => {
       if (!foundPage) { setNotFound(true); setLoading(false); return; }
 
       setPhotographer(photoData as Photographer);
-      setSite(siteData as SiteConfig ?? null);
+      setSite(siteData as unknown as SiteConfig ?? null);
       setPage(foundPage);
       setSitePages(rawPages);
       setSessions(sessionData ?? []);

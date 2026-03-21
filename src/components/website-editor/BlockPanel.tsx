@@ -24,6 +24,7 @@ const BLOCK_LABELS: Record<BlockKey, string> = {
   experience: "Experience",
   contact: "Contact",
   footer: "Footer",
+  testimonials: "Testimonials",
 };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
