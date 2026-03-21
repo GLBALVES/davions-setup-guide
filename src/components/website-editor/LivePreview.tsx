@@ -10,6 +10,7 @@ const BLOCK_LABELS: Record<string, string> = {
   sessions: "Sessions",
   portfolio: "Portfolio",
   about: "About",
+  testimonials: "Testimonials",
   quote: "Quote",
   experience: "Experience",
   contact: "Contact",
@@ -82,6 +83,9 @@ export function LivePreview({
     experience_text: data.experience_text ?? null,
     hero_layout: (data as any).hero_layout ?? "full",
     about_layout: (data as any).about_layout ?? "image-right",
+    testimonials: (data as any).testimonials ?? [],
+    testimonials_title: (data as any).testimonials_title ?? null,
+    testimonials_layout: (data as any).testimonials_layout ?? "cards",
   };
 
   const getBlockRect = useCallback((key: string) => {

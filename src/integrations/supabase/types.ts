@@ -1388,6 +1388,7 @@ export type Database = {
           site_subheadline: string | null
           site_template: string | null
           tagline: string | null
+          testimonials: Json | null
           tiktok_url: string | null
           updated_at: string
           whatsapp: string | null
@@ -1428,6 +1429,7 @@ export type Database = {
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
+          testimonials?: Json | null
           tiktok_url?: string | null
           updated_at?: string
           whatsapp?: string | null
@@ -1468,6 +1470,7 @@ export type Database = {
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
+          testimonials?: Json | null
           tiktok_url?: string | null
           updated_at?: string
           whatsapp?: string | null

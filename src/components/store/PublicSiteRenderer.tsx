@@ -8,6 +8,15 @@ import { useEffect } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
+export interface Testimonial {
+  id: string;
+  name: string;
+  role?: string;
+  text: string;
+  avatar_url?: string;
+  rating?: number;
+}
+
 export interface SiteConfig {
   site_hero_image_url: string | null;
   site_headline: string | null;
@@ -45,6 +54,12 @@ export interface SiteConfig {
   hero_layout?: "full" | "split" | null;
   /** About layout: "image-right" (default) | "image-left" | "text-only" */
   about_layout?: "image-right" | "image-left" | "text-only" | null;
+  /** Testimonials / client reviews */
+  testimonials?: Testimonial[] | null;
+  /** Testimonials section title */
+  testimonials_title?: string | null;
+  /** Testimonials layout: "cards" | "quotes" */
+  testimonials_layout?: "cards" | "quotes" | null;
 }
 
 export interface Session {
@@ -296,6 +311,83 @@ function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | n
   );
 }
 
+// ─── Testimonials Section ────────────────────────────────────────────────────
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i} className={i <= rating ? "text-foreground" : "text-muted-foreground/20"} style={{ fontSize: "10px" }}>★</span>
+      ))}
+    </div>
+  );
+}
+
+function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; accentColor: string }) {
+  const items = site?.testimonials ?? [];
+  if (items.length === 0) return null;
+  const layout = site?.testimonials_layout ?? "cards";
+  const title = site?.testimonials_title || "What Clients Say";
+
+  if (layout === "quotes") {
+    return (
+      <section className="border-t border-border py-16 md:py-24 bg-muted/20">
+        <div className="max-w-4xl mx-auto px-6">
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
+          <div className="flex flex-col gap-12">
+            {items.map((t) => (
+              <div key={t.id} className="flex flex-col items-center text-center gap-4">
+                <Quote className="h-5 w-5 text-muted-foreground/30" />
+                <blockquote className="text-lg md:text-xl font-light leading-relaxed italic text-foreground">
+                  "{t.text}"
+                </blockquote>
+                {t.rating && t.rating > 0 && <StarRating rating={t.rating} />}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[11px] tracking-[0.15em] uppercase font-medium">{t.name}</span>
+                  {t.role && <span className="text-[10px] text-muted-foreground">{t.role}</span>}
+                </div>
+                <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // cards layout
+  return (
+    <section className="border-t border-border py-16 md:py-24">
+      <div className="max-w-6xl mx-auto px-6">
+        <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map((t) => (
+            <div key={t.id} className="border border-border p-6 flex flex-col gap-4 bg-card">
+              {t.rating && t.rating > 0 && <StarRating rating={t.rating} />}
+              <blockquote className="text-sm font-light text-muted-foreground leading-relaxed flex-1">
+                "{t.text}"
+              </blockquote>
+              <div className="flex items-center gap-3 pt-3 border-t border-border">
+                {t.avatar_url ? (
+                  <img src={t.avatar_url} alt={t.name} className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-medium text-background" style={{ backgroundColor: accentColor }}>
+                    {t.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] font-medium tracking-wide">{t.name}</p>
+                  {t.role && <p className="text-[10px] text-muted-foreground">{t.role}</p>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Quote Section ────────────────────────────────────────────────────────────
 
 function QuoteSection({ site }: { site: SiteConfig | null }) {
@@ -489,6 +581,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
@@ -589,6 +682,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
       <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
@@ -739,6 +833,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 
       <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
@@ -853,6 +948,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       )}
 
       <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
