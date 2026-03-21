@@ -262,39 +262,14 @@ export function LivePreview({
         </div>
       )}
 
-      {/* ── Floating edit panel — slides in from the right over the canvas ── */}
+      {/* When editing inline, show a dismiss hint at top */}
       {activeBlock && (
-        <div
-          className="absolute top-0 right-0 z-30 h-full bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden"
-          style={{ width: PANEL_W }}
-          // Prevent overlay from eating mouse events inside this panel
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-            <span className="text-[11px] tracking-[0.25em] uppercase font-light">
-              {BLOCK_LABELS[activeBlock] ?? activeBlock}
-            </span>
-            <button
-              onClick={() => onSelectBlock(null as any)}
-              className="p-1 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              title="Close"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Panel body — reuse BlockPanel fields, stripping its own header */}
-          <div className="flex-1 overflow-y-auto">
-            <BlockPanel
-              blockKey={activeBlock}
-              data={data}
-              onChange={onDataChange}
-              onBack={() => onSelectBlock(null as any)}
-              hideHeader
-            />
-          </div>
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full shadow-lg text-[10px] tracking-[0.1em] uppercase pointer-events-auto">
+          <span>Editing · Click text to edit · </span>
+          <button
+            className="underline hover:no-underline"
+            onClick={() => onSelectBlock(null as any)}
+          >Done</button>
         </div>
       )}
 
