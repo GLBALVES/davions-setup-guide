@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
@@ -10,6 +10,7 @@ interface Props {
   galleries: Gallery[];
   viewport: "desktop" | "tablet" | "mobile";
   onSelectBlock: (key: BlockKey) => void;
+  activeBlock: BlockKey | null;
 }
 
 const VIEWPORT_WIDTHS: Record<string, number> = {
@@ -18,12 +19,20 @@ const VIEWPORT_WIDTHS: Record<string, number> = {
   mobile: 375,
 };
 
-export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock }: Props) {
-  const [scrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+// Map section ids / data-block-key values to BlockKey
+const BLOCK_KEY_MAP: Record<string, BlockKey> = {
+  hero: "hero",
+  sessions: "sessions",
+  portfolio: "portfolio",
+  about: "about",
+  quote: "quote",
+  experience: "experience",
+  contact: "contact",
+  footer: "footer",
+};
 
-  const containerWidth = VIEWPORT_WIDTHS[viewport];
-  const scale = viewport === "desktop" ? 1 : undefined;
+export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock, activeBlock }: Props) {
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -60,40 +69,65 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
     experience_text: data.experience_text ?? null,
   };
 
-  const innerStyle = viewport !== "desktop"
-    ? { width: `${containerWidth}px`, transformOrigin: "top left" }
-    : { width: "100%" };
+  // Handle clicks on the overlay — find the data-block-key of the clicked element
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const blockEl = target.closest("[data-block-key]") as HTMLElement | null;
+    if (blockEl) {
+      const key = blockEl.getAttribute("data-block-key") as BlockKey;
+      if (key && BLOCK_KEY_MAP[key]) {
+        onSelectBlock(BLOCK_KEY_MAP[key]);
+      }
+    }
+  };
 
   return (
-    <div className="relative flex-1 h-full overflow-auto bg-muted/30">
-      {/* Viewport frame */}
+    <div className="relative w-full h-full">
+      {/* Actual site render — pointer-events disabled so links/buttons don't fire */}
+      <div className="pointer-events-none">
+        <PublicSiteRenderer
+          photographer={photographer}
+          site={siteConfig}
+          sessions={sessions}
+          galleries={galleries}
+          scrolled={false}
+          mobileMenuOpen={false}
+          setMobileMenuOpen={() => {}}
+          seoUrl=""
+          sessionHref={() => "#"}
+          galleryHref={() => "#"}
+          blogHref="#"
+        />
+      </div>
+
+      {/* Transparent overlay that captures clicks and shows hover highlights */}
       <div
-        className="relative mx-auto bg-background shadow-lg overflow-hidden"
-        style={
-          viewport === "desktop"
-            ? { width: "100%", minHeight: "100%" }
-            : { width: `${containerWidth}px`, minHeight: "100%" }
-        }
+        ref={overlayRef}
+        className="absolute inset-0 z-10 editor-overlay"
+        onClick={handleOverlayClick}
       >
-        {/* Click overlay layer to intercept section clicks */}
-        <div className="relative">
-          <div className="pointer-events-none" style={innerStyle}>
-            <PublicSiteRenderer
-              photographer={photographer}
-              site={siteConfig}
-              sessions={sessions}
-              galleries={galleries}
-              scrolled={scrolled}
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              seoUrl=""
-              sessionHref={() => "#"}
-              galleryHref={() => "#"}
-              blogHref="#"
-            />
-          </div>
-        </div>
+        {/* Invisible block zones matching the sections */}
+        {(["hero", "sessions", "portfolio", "about", "quote", "experience", "contact", "footer"] as BlockKey[]).map((key) => (
+          <BlockZone
+            key={key}
+            blockKey={key}
+            isActive={activeBlock === key}
+            onSelect={() => onSelectBlock(key)}
+          />
+        ))}
       </div>
     </div>
   );
+}
+
+// ── Block Zone overlay ──────────────────────────────────────────────────────
+// Each zone is a transparent absolute element that sits on top of the section.
+// Because the actual rendered site has data-block-key attributes, we use a simpler
+// approach: a full-coverage click overlay that reads data-block-key on the underlying
+// elements. The visible hover highlight is done via CSS on the data-block-key elements.
+
+function BlockZone({ blockKey, isActive, onSelect }: { blockKey: BlockKey; isActive: boolean; onSelect: () => void }) {
+  // We don't render explicit zone divs — the click is handled at the overlay level.
+  // This component is kept for potential future use (e.g., absolute positioning per-block).
+  return null;
 }

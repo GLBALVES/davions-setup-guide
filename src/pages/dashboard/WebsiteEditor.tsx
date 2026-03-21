@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft, Monitor, Tablet, Smartphone, Save, Loader2,
-  ChevronDown, Globe, Check,
+  ArrowLeft, Monitor, Tablet, Smartphone, Loader2,
+  ChevronDown, Globe, Check, ExternalLink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +41,7 @@ export default function WebsiteEditor() {
   const [photographer, setPhotographer] = useState<Photographer>({ id: "", full_name: null, email: "", store_slug: null, bio: null, business_name: null });
   const [sessions, setSessions] = useState<Session[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
 
   const [sections, setSections] = useState<SectionDef[]>(DEFAULT_SECTIONS);
   const [activeBlock, setActiveBlock] = useState<BlockKey | null>(null);
@@ -70,7 +71,10 @@ export default function WebsiteEditor() {
         setSiteData({ bio: pgRes.data.bio ?? "" });
       }
 
-      if (pgRes.data) setPhotographer(pgRes.data as Photographer);
+      if (pgRes.data) {
+        setPhotographer(pgRes.data as Photographer);
+        setStoreSlug(pgRes.data.store_slug ?? null);
+      }
       if (sessRes.data) setSessions(sessRes.data as Session[]);
       if (galRes.data) setGalleries(galRes.data as Gallery[]);
       setLoading(false);
@@ -89,12 +93,10 @@ export default function WebsiteEditor() {
         setSaveStatus("pending");
         try {
           const { bio, ...siteFields } = data;
-          // Upsert photographer_site
           const { error: siteErr } = await supabase.from("photographer_site").upsert(
             { ...siteFields, photographer_id: user.id, site_sections_order: secs as any } as any,
             { onConflict: "photographer_id" }
           );
-          // Update bio on photographers
           if (bio !== undefined) {
             await supabase.from("photographers").update({ bio } as any).eq("id", user.id);
           }
@@ -141,9 +143,8 @@ export default function WebsiteEditor() {
   const handlePublish = async () => {
     await save(siteData, sections, true);
     toast({ title: "Published!", description: "Your site is live." });
-    const { data: pg } = await supabase.from("photographers").select("store_slug").eq("id", user!.id).maybeSingle();
-    if (pg?.store_slug) {
-      window.open(`/store/${pg.store_slug}`, "_blank");
+    if (storeSlug) {
+      window.open(`/store/${storeSlug}`, "_blank");
     }
   };
 
@@ -155,6 +156,12 @@ export default function WebsiteEditor() {
     ...photographer,
     bio: siteData.bio ?? photographer.bio,
   };
+
+  const studioName =
+    siteData.tagline ||
+    photographer.business_name ||
+    photographer.full_name ||
+    "My Site";
 
   if (loading) {
     return (
@@ -168,20 +175,37 @@ export default function WebsiteEditor() {
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* ── Topbar ── */}
       <header className="flex items-center justify-between h-12 px-4 border-b border-border shrink-0 gap-3">
-        {/* Left */}
-        <div className="flex items-center gap-3">
+        {/* Left: back + studio name + template */}
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate("/dashboard/website")}
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Exit Editor</span>
+            <span className="hidden sm:inline">Exit</span>
           </button>
+
+          <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+            <span className="text-[11px] font-light tracking-wide truncate max-w-[140px] text-foreground">{studioName}</span>
+            {storeSlug && (
+              <a
+                href={`/store/${storeSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                title="View live site"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+
+          <div className="w-px h-4 bg-border hidden sm:block shrink-0" />
 
           {/* Template selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px] font-light tracking-wider uppercase px-2">
+              <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px] font-light tracking-wider uppercase px-2 shrink-0">
                 {TEMPLATES.find((t) => t.value === (siteData.site_template ?? "editorial"))?.label ?? "Template"}
                 <ChevronDown className="h-3 w-3" />
               </Button>
@@ -198,7 +222,7 @@ export default function WebsiteEditor() {
         </div>
 
         {/* Center — viewport switcher */}
-        <div className="flex items-center border border-border rounded-sm overflow-hidden">
+        <div className="flex items-center border border-border rounded-sm overflow-hidden shrink-0">
           {([
             { key: "desktop" as Viewport, Icon: Monitor },
             { key: "tablet"  as Viewport, Icon: Tablet },
@@ -214,9 +238,8 @@ export default function WebsiteEditor() {
           ))}
         </div>
 
-        {/* Right */}
+        {/* Right: save status + view site + publish */}
         <div className="flex items-center gap-2">
-          {/* Save status */}
           {saveStatus === "pending" && (
             <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" /> Saving…
@@ -228,6 +251,20 @@ export default function WebsiteEditor() {
             </span>
           )}
 
+          {storeSlug && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-[10px] tracking-wider uppercase font-light px-3 hidden sm:flex"
+              asChild
+            >
+              <a href={`/store/${storeSlug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3 w-3" />
+                View Site
+              </a>
+            </Button>
+          )}
+
           <Button onClick={handlePublish} disabled={saving} size="sm" className="h-7 gap-1.5 text-[10px] tracking-wider uppercase font-light px-3">
             <Globe className="h-3.5 w-3.5" />
             Publish
@@ -237,8 +274,8 @@ export default function WebsiteEditor() {
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel (280px) */}
-        <aside className="w-[280px] border-r border-border flex flex-col shrink-0 overflow-hidden">
+        {/* Left panel (260px) */}
+        <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
           {activeBlock ? (
             <BlockPanel
               blockKey={activeBlock}
@@ -254,6 +291,7 @@ export default function WebsiteEditor() {
               onSelectBlock={setActiveBlock}
               onReorder={handleReorder}
               onToggleVisibility={handleToggleVisibility}
+              onStyleChange={handleDataChange}
             />
           )}
         </aside>
@@ -261,7 +299,7 @@ export default function WebsiteEditor() {
         {/* Canvas */}
         <main className="flex-1 overflow-auto bg-muted/20 flex items-start justify-center">
           {viewport === "desktop" ? (
-            <div className="w-full h-full overflow-auto">
+            <div className="w-full h-full overflow-auto relative">
               <LivePreview
                 data={siteData}
                 photographer={photographerWithBio}
@@ -269,12 +307,13 @@ export default function WebsiteEditor() {
                 galleries={galleries}
                 viewport={viewport}
                 onSelectBlock={setActiveBlock}
+                activeBlock={activeBlock}
               />
             </div>
           ) : (
             <div className="p-6 w-full flex justify-center">
               <div
-                className="bg-background shadow-2xl overflow-auto"
+                className="bg-background shadow-2xl overflow-auto relative"
                 style={{ width: viewport === "tablet" ? 768 : 375, minHeight: "calc(100vh - 12rem)" }}
               >
                 <LivePreview
@@ -284,6 +323,7 @@ export default function WebsiteEditor() {
                   galleries={galleries}
                   viewport={viewport}
                   onSelectBlock={setActiveBlock}
+                  activeBlock={activeBlock}
                 />
               </div>
             </div>
