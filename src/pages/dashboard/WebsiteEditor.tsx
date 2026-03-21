@@ -378,6 +378,7 @@ export default function WebsiteEditor() {
     onAddBlock: handleOpenAddBlock,
     sections: activePageSections,
     onDataChange: handleDataChange,
+    storeSlug,
   };
 
   return (
