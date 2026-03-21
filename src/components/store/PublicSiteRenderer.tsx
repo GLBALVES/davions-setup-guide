@@ -545,7 +545,7 @@ function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; acc
 
 function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed } = derived;
 
   return (
     <div className="min-h-screen bg-background">
