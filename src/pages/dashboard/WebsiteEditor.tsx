@@ -351,6 +351,11 @@ export default function WebsiteEditor() {
     photographer.full_name ||
     "My Site";
 
+  const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
+  const activePageSections: SectionDef[] = activePage && !activePage.is_home
+    ? ((activePage.sections_order as SectionDef[]) ?? [])
+    : sections;
+
   const hiddenSections = activePageSections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
@@ -360,11 +365,6 @@ export default function WebsiteEditor() {
       </div>
     );
   }
-
-  const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
-  const activePageSections: SectionDef[] = activePage && !activePage.is_home
-    ? ((activePage.sections_order as SectionDef[]) ?? [])
-    : sections;
 
   const livePreviewProps = {
     data: siteData,
