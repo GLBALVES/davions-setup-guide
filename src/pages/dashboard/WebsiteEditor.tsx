@@ -19,6 +19,7 @@ import { BlockPanel, type BlockKey } from "@/components/website-editor/BlockPane
 import { LivePreview } from "@/components/website-editor/LivePreview";
 import { AddBlockModal } from "@/components/website-editor/AddBlockModal";
 import { type SitePage } from "@/components/website-editor/PagesTab";
+import { PageContentPanel, type PageContent } from "@/components/website-editor/PageContentPanel";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
 type Viewport = "desktop" | "tablet" | "mobile";
