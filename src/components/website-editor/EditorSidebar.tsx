@@ -53,13 +53,7 @@ const DEFAULT_SECTIONS: SectionDef[] = [
   { key: "contact",      label: "Contact",       icon: "📱",  visible: true },
 ];
 
-/** Sections that are fixed (not sortable) and shared across all pages */
-const FIXED_TOP_SECTIONS: SectionDef[] = [
-  { key: "hero" as BlockKey, label: "Header / Nav", icon: "🔝", visible: true },
-];
-const FIXED_BOTTOM_SECTIONS: SectionDef[] = [
-  { key: "footer" as BlockKey, label: "Footer", icon: "📄", visible: true },
-];
+// Header and Footer are fixed structural elements rendered separately in PagesTree
 
 // ── Sortable Section subitem ─────────────────────────────────────────────────
 
