@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Eye, EyeOff, GripVertical, Plus, X } from "lucide-react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
