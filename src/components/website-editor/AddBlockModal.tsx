@@ -303,6 +303,53 @@ function ThumbExperience() {
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
+function ThumbTestimonialsCards() {
+  return (
+    <div className="relative w-full h-full flex flex-col justify-center px-2.5 gap-1.5 bg-background rounded-sm">
+      {/* Section label */}
+      <div className="w-14 h-1.5 bg-foreground/40 rounded-full mx-auto mb-1" />
+      {/* 3-column card grid */}
+      <div className="grid grid-cols-3 gap-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="border border-border/50 rounded-sm p-1 flex flex-col gap-0.5">
+            {/* Stars */}
+            <div className="flex gap-0.5">
+              {[0,1,2,3,4].map((s) => <div key={s} className="w-1 h-1 bg-foreground/50 rounded-full" />)}
+            </div>
+            {/* Quote lines */}
+            <div className="w-full h-0.5 bg-foreground/12 rounded-full mt-0.5" />
+            <div className="w-4/5 h-0.5 bg-foreground/12 rounded-full" />
+            <div className="w-3/5 h-0.5 bg-foreground/12 rounded-full" />
+            {/* Avatar + name */}
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <div className="w-2 h-2 rounded-full bg-foreground/30 shrink-0" />
+              <div className="w-5 h-0.5 bg-foreground/30 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ThumbTestimonialsQuotes() {
+  return (
+    <div className="relative w-full h-full flex flex-col items-center justify-center gap-2 px-2.5 bg-muted/20 rounded-sm">
+      {[0, 1].map((i) => (
+        <div key={i} className="flex flex-col items-center gap-0.5 w-full">
+          <div className="w-2 h-1.5 bg-foreground/20 rounded-sm" />
+          <div className="w-full h-0.5 bg-foreground/20 rounded-full" />
+          <div className="w-4/5 h-0.5 bg-foreground/15 rounded-full" />
+          <div className="flex gap-0.5 mt-0.5">
+            {[0,1,2,3,4].map((s) => <div key={s} className="w-1 h-1 bg-foreground/40 rounded-full" />)}
+          </div>
+          <div className="w-8 h-0.5 bg-foreground/30 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const CATEGORIES: Category[] = [
   {
     id: "hero",
@@ -343,6 +390,24 @@ const CATEGORIES: Category[] = [
         label: "Experience",
         description: "Highlight key points of your experience",
         thumbnail: <ThumbExperience />,
+      },
+    ],
+  },
+  {
+    id: "testimonials",
+    label: "Testimonials",
+    blocks: [
+      {
+        key: "testimonials",
+        label: "Reviews — Cards",
+        description: "Client reviews in a card grid with star ratings",
+        thumbnail: <ThumbTestimonialsCards />,
+      },
+      {
+        key: "testimonials",
+        label: "Reviews — Quotes",
+        description: "Centered pull-quote style testimonials",
+        thumbnail: <ThumbTestimonialsQuotes />,
       },
     ],
   },
