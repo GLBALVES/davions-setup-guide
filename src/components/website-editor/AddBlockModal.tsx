@@ -479,16 +479,10 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl h-[580px] p-0 gap-0 flex flex-col overflow-hidden">
-        <DialogHeader className="flex-row items-center justify-between px-5 py-3 border-b border-border shrink-0">
+        <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
           <DialogTitle className="text-sm font-light tracking-[0.12em] uppercase">
             Add Section
           </DialogTitle>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
