@@ -161,11 +161,13 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
-    // If the user clicked a CTA / nav scroll button, perform the scroll
+    // If the user clicked a CTA / nav scroll button, open site preview in new tab
     const scrollTarget = el?.closest("[data-scroll-to]")?.getAttribute("data-scroll-to");
     if (scrollTarget) {
-      const target = document.querySelector(scrollTarget);
-      if (target) { target.scrollIntoView({ behavior: "smooth" }); return; }
+      if (storeSlug) {
+        window.open(`/store/${storeSlug}`, "_blank", "noopener,noreferrer");
+      }
+      return;
     }
 
     const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
