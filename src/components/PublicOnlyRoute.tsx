@@ -15,7 +15,7 @@ const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard/projects" replace />;
   }
 
   return <>{children}</>;
