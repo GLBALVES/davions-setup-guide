@@ -761,17 +761,27 @@ const WebsiteSettings = () => {
                    <span className="inline-block w-6 h-px bg-border" />
                    {ws.pageLabel}
                  </p>
-                 <div className="flex items-center justify-between gap-4">
+                 <div className="flex items-center justify-between gap-4 flex-wrap">
                    <h1 className="text-2xl font-light tracking-wide">{ws.pageTitle}</h1>
-                   <Button
-                     variant="outline"
-                     size="sm"
-                     onClick={() => navigate("/dashboard/website/preview")}
-                     className="h-8 gap-1.5 text-[11px] tracking-[0.15em] uppercase shrink-0"
-                   >
-                     <Eye className="h-3.5 w-3.5" />
-                     Preview Site
-                   </Button>
+                   <div className="flex items-center gap-2 shrink-0">
+                     <Button
+                       size="sm"
+                       onClick={() => navigate("/dashboard/website/editor")}
+                       className="h-8 gap-1.5 text-[11px] tracking-[0.15em] uppercase"
+                     >
+                       <Layout className="h-3.5 w-3.5" />
+                       Open Visual Editor
+                     </Button>
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => navigate("/dashboard/website/preview")}
+                       className="h-8 gap-1.5 text-[11px] tracking-[0.15em] uppercase"
+                     >
+                       <Eye className="h-3.5 w-3.5" />
+                       Preview Site
+                     </Button>
+                   </div>
                  </div>
                </div>
 
