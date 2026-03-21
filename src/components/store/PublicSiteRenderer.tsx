@@ -719,12 +719,12 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         }
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
         <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{headline}</h1>
-          {subheadline && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{subheadline}</p>}
+          <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
+          {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{ed("site_subheadline", subheadline)}</p>}
           {showBooking && (
             site?.cta_link
-              ? <a href={site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
           )}
         </div>
       </div>
