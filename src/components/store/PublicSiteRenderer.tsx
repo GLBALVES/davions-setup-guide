@@ -469,7 +469,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       />
 
       {/* Compact hero */}
-      <div className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -487,11 +487,11 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions dense grid */}
       {showStore && (
-        <main id="sessions" className="max-w-7xl mx-auto px-4 py-12">
+        <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
           {sessions.length > 0 && (
             <>
               <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Sessions</p>
@@ -503,7 +503,6 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                       ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
                     }
-                    {/* hover overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
                       <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
                       {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
@@ -512,7 +511,6 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                         <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
                       </div>
                     </div>
-                    {/* price badge always visible */}
                     <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
                       {formatPrice(session.price)}
                     </div>
@@ -524,7 +522,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
           {/* Galleries */}
           {galleries.length > 0 && (
-            <div className="mt-12">
+            <div data-block-key="portfolio" className="mt-12">
               <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Portfolio</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {galleries.map((gallery) => (
@@ -546,9 +544,9 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
