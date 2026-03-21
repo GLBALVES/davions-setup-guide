@@ -49,7 +49,20 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
-  const stayRef = useRef(false);
+  // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
+  // doesn't cause a flicker (the enter handler cancels the timer before it fires).
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      setHoveredBlock(null);
+      setToolbarPos(null);
+      setHoveredGap(null);
+    }, 120);
+  }, []);
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  }, []);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
