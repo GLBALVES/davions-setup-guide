@@ -341,7 +341,7 @@ function PagesTree({
       <div className="my-1 mx-2 border-t border-dashed border-border/40" />
 
       {/* ── Pages tree ── */}
-      <div className="flex-1">
+      <div>
         {/* Home page row */}
         {homePage && (
           <>
