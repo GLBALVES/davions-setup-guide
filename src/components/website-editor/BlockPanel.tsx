@@ -117,6 +117,28 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
         {blockKey === "about" && (
           <>
             <ToggleField label="Show About section" checked={data.show_about ?? true} onChange={(v) => p({ show_about: v })} />
+            {/* Layout selector */}
+            <Field label="Image Layout">
+              <div className="grid grid-cols-3 gap-1.5">
+                {([
+                  { value: "image-right", label: "Right" },
+                  { value: "image-left", label: "Left" },
+                  { value: "text-only", label: "Text Only" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => p({ about_layout: opt.value } as any)}
+                    className={`py-2 px-1 border rounded-sm text-[10px] transition-colors ${
+                      ((data as any).about_layout ?? "image-right") === opt.value
+                        ? "border-foreground bg-foreground/5 font-medium"
+                        : "border-border hover:border-foreground/40"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
             <Field label="Section Title">
               <Input value={data.about_title ?? "About"} onChange={(e) => p({ about_title: e.target.value })} className="h-8 text-xs" />
             </Field>
