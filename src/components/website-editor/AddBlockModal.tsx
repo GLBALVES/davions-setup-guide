@@ -474,7 +474,8 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
-  const isAvailable = (key: BlockKey) => hiddenSections.includes(key);
+  // All blocks are always selectable — clicking adds/repositions the section
+  const isAvailable = (_key: BlockKey) => true;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
