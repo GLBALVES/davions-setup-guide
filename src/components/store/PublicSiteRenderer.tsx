@@ -927,8 +927,8 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      {showStore && sessions.length > 0 && (
+      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("sessions") && showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-4 mb-10">
             <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
