@@ -19,9 +19,9 @@ function FaviconTabPreview({ src }: { src: string }) {
       <div className="rounded-t-md overflow-hidden border border-border shadow-sm">
         {/* Window controls bar */}
         <div className="bg-muted/60 px-3 py-2 flex items-center gap-1.5 border-b border-border">
-          <span className="w-2.5 h-2.5 rounded-full bg-destructive/50" />
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/50" />
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+          <span className="w-2.5 h-2.5 rounded-full bg-destructive/40" />
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
+          <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/20" />
         </div>
         {/* Tab bar */}
         <div className="bg-muted/30 px-2 pt-2 flex items-end gap-0">
