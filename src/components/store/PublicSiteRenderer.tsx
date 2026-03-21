@@ -590,7 +590,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
             {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
               ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
-              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
+              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
