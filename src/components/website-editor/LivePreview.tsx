@@ -150,13 +150,14 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
-    // Gap detection
-    const gap = detectGap(mouseY);
+    // Gap detection — pass current key for fallback bottom-of-block detection
+    const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
+    const key = blockEl?.getAttribute("data-block-key") ?? null;
+
+    const gap = detectGap(mouseY, key);
     setHoveredGap(gap);
 
     // Block detection
-    const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
-    const key = blockEl?.getAttribute("data-block-key") ?? null;
     if (key !== hoveredBlock) {
       setHoveredBlock(key);
       if (key) {
