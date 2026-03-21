@@ -540,6 +540,7 @@ export default function WebsiteEditor() {
               onRenamePage={handleRenamePage}
               onTogglePageVisibility={handleTogglePageVisibility}
               onReorderPages={handleReorderPages}
+              onRemoveSection={handleRemoveSection}
             />
           )}
         </aside>
