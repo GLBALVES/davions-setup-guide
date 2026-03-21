@@ -45,6 +45,7 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -120,6 +121,12 @@ export function LivePreview({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Cancel any pending leave timer
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+
     const overlay = e.currentTarget;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -163,9 +170,12 @@ export function LivePreview({
   };
 
   const handleMouseLeave = () => {
-    setHoveredBlock(null);
-    setToolbarPos(null);
-    setHoveredGap(null);
+    // Delay clearing so the user can move to the floating toolbar without it vanishing
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredBlock(null);
+      setToolbarPos(null);
+      setHoveredGap(null);
+    }, 300);
   };
 
   const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
@@ -207,6 +217,19 @@ export function LivePreview({
             top: Math.max(0, toolbarPos.top),
             left: toolbarPos.left,
             width: toolbarPos.width,
+          }}
+          onMouseEnter={() => {
+            if (leaveTimerRef.current) {
+              clearTimeout(leaveTimerRef.current);
+              leaveTimerRef.current = null;
+            }
+          }}
+          onMouseLeave={() => {
+            leaveTimerRef.current = setTimeout(() => {
+              setHoveredBlock(null);
+              setToolbarPos(null);
+              setHoveredGap(null);
+            }, 200);
           }}
         >
           <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg pointer-events-auto rounded-sm">
