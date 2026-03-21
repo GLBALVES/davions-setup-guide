@@ -253,19 +253,28 @@ function SharedFooter({ site, showContact }: { site: SiteConfig | null; showCont
 function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | null; photographer: Photographer; displayName: string }) {
   if (!site?.show_about && site?.show_about !== null) return null;
   if (!photographer?.bio && !site?.about_image_url) return null;
+
+  const layout = site?.about_layout ?? "image-right";
+
   return (
     <section id="about" className="border-t border-border">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">
           {site?.about_title || "About"}
         </p>
-        <div className="flex flex-col md:flex-row gap-10 items-center max-w-4xl mx-auto">
-          {site?.about_image_url && (
+        <div className={`flex flex-col gap-10 items-center max-w-4xl mx-auto ${
+          layout === "text-only"
+            ? "md:flex-col"
+            : layout === "image-left"
+            ? "md:flex-row"
+            : "md:flex-row-reverse"
+        }`}>
+          {layout !== "text-only" && site?.about_image_url && (
             <div className="w-full md:w-64 shrink-0">
               <img src={site.about_image_url} alt={displayName} className="w-full aspect-[3/4] object-cover" />
             </div>
           )}
-          <div className="flex-1">
+          <div className={`flex-1 ${layout === "text-only" ? "text-center max-w-2xl mx-auto" : ""}`}>
             <h2 className="text-2xl font-light tracking-[0.1em] uppercase mb-4">
               {photographer?.full_name || photographer?.business_name || displayName}
             </h2>
