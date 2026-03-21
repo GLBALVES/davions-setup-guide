@@ -362,7 +362,7 @@ function PagesTree({
               onDelete={() => onDeletePage(page.id)}
               onRename={(title) => onRenamePage(page.id, title)}
               onToggleVisibility={() => onTogglePageVisibility(page.id)}
-              onAddSubPage={() => onAddPage(page.id)}
+              onAddSection={() => onAddSection(page.id)}
               hasChildren={children.length > 0}
             />
             {/* Sub-pages */}
