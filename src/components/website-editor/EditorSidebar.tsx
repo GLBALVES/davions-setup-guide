@@ -51,8 +51,9 @@ const DEFAULT_SECTIONS: SectionDef[] = [
   { key: "quote",        label: "Quote",         icon: "💬",  visible: true },
   { key: "experience",   label: "Experience",    icon: "✨",  visible: true },
   { key: "contact",      label: "Contact",       icon: "📱",  visible: true },
-  { key: "footer",       label: "Footer",        icon: "📄",  visible: true },
 ];
+
+// Header and Footer are fixed structural elements rendered separately in PagesTree
 
 // ── Sortable Section subitem ─────────────────────────────────────────────────
 
@@ -315,100 +316,128 @@ function PagesTree({
   );
   ordered.push(...orphans.filter((o) => !ordered.find((op) => op.id === o.id)));
 
-  return (
-    <div className="flex-1 overflow-y-auto py-1 px-1.5">
-      {/* Home page row */}
-      {homePage && (
-        <>
-          <PageRow
-            page={homePage}
-            isActive={activePageId === null || activePageId === homePage.id}
-            isExpanded={!!expanded[homePage.id]}
-            depth={0}
-            onSelect={() => onSelectPage(null)}
-            onToggleExpand={() => toggleExpand(homePage.id)}
-            onDelete={() => {}}
-            onRename={() => {}}
-            onToggleVisibility={() => {}}
-            onAddSection={() => onAddSection(homePage.id)}
-            hasChildren={sections.length > 0}
-          />
+  /** Shared fixed row (header / footer) — not sortable, shown as structural anchor */
+  const FixedRow = ({ label, icon, blockKey }: { label: string; icon: string; blockKey: BlockKey }) => (
+    <div
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer transition-colors ${
+        activeBlock === blockKey && activePageId === null
+          ? "bg-accent text-accent-foreground"
+          : "hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+      }`}
+      onClick={() => { onSelectPage(null); onSelectBlock(blockKey); }}
+      title={`Edit ${label} (shared across all pages)`}
+    >
+      <span className="text-[11px] w-4 text-center">{icon}</span>
+      <span className="text-[11px] tracking-wide flex-1">{label}</span>
+      <span className="text-[8px] tracking-[0.15em] uppercase text-muted-foreground/50 font-light">ALL PAGES</span>
+    </div>
+  );
 
-          {/* Home's sections as sub-items */}
-          {expanded[homePage.id] && (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
-              <SortableContext items={sections.map((s) => s.key)} strategy={verticalListSortingStrategy}>
-                {sections.map((section) => (
-                  <SortableItem
-                    key={section.key}
-                    section={section}
-                    isActive={activeBlock === section.key && (activePageId === null || activePageId === homePage.id)}
-                    onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
-                    onToggle={() => onToggleVisibility(section.key)}
+  return (
+    <div className="flex-1 overflow-y-auto py-1 px-1.5 flex flex-col">
+      {/* ── Fixed: Header (shared) ── */}
+      <FixedRow label="Header / Nav" icon="🔝" blockKey="hero" />
+      <div className="my-1 mx-2 border-t border-dashed border-border/40" />
+
+      {/* ── Pages tree ── */}
+      <div className="flex-1">
+        {/* Home page row */}
+        {homePage && (
+          <>
+            <PageRow
+              page={homePage}
+              isActive={activePageId === null || activePageId === homePage.id}
+              isExpanded={!!expanded[homePage.id]}
+              depth={0}
+              onSelect={() => onSelectPage(null)}
+              onToggleExpand={() => toggleExpand(homePage.id)}
+              onDelete={() => {}}
+              onRename={() => {}}
+              onToggleVisibility={() => {}}
+              onAddSection={() => onAddSection(homePage.id)}
+              hasChildren={sections.length > 0}
+            />
+
+            {/* Home's sections as sub-items */}
+            {expanded[homePage.id] && (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
+                <SortableContext items={sections.map((s) => s.key)} strategy={verticalListSortingStrategy}>
+                  {sections.map((section) => (
+                    <SortableItem
+                      key={section.key}
+                      section={section}
+                      isActive={activeBlock === section.key && (activePageId === null || activePageId === homePage.id)}
+                      onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
+                      onToggle={() => onToggleVisibility(section.key)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
+          </>
+        )}
+
+        {/* Divider before other pages */}
+        {ordered.length > 0 && <div className="my-1.5 mx-2 border-t border-border/30" />}
+
+        {/* Other pages */}
+        {ordered.map((page) => {
+          const children = nonHomePages
+            .filter((p) => p.parent_id === page.id)
+            .sort((a, b) => a.sort_order - b.sort_order);
+          return (
+            <div key={page.id}>
+              <PageRow
+                page={page}
+                isActive={activePageId === page.id}
+                isExpanded={!!expanded[page.id]}
+                depth={page.parent_id ? 1 : 0}
+                onSelect={() => onSelectPage(page.id)}
+                onToggleExpand={() => toggleExpand(page.id)}
+                onDelete={() => onDeletePage(page.id)}
+                onRename={(title) => onRenamePage(page.id, title)}
+                onToggleVisibility={() => onTogglePageVisibility(page.id)}
+                onAddSection={() => onAddSection(page.id)}
+                hasChildren={children.length > 0}
+              />
+              {/* Sub-pages */}
+              {expanded[page.id] &&
+                children.map((child) => (
+                  <PageRow
+                    key={child.id}
+                    page={child}
+                    isActive={activePageId === child.id}
+                    isExpanded={false}
+                    depth={2}
+                    onSelect={() => onSelectPage(child.id)}
+                    onToggleExpand={() => {}}
+                    onDelete={() => onDeletePage(child.id)}
+                    onRename={(title) => onRenamePage(child.id, title)}
+                    onToggleVisibility={() => onTogglePageVisibility(child.id)}
+                    onAddSection={() => onAddSection(child.id)}
+                    hasChildren={false}
                   />
                 ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </>
-      )}
+            </div>
+          );
+        })}
 
-      {/* Divider */}
-      {ordered.length > 0 && <div className="my-1.5 mx-2 border-t border-border/30" />}
-
-      {/* Other pages */}
-      {ordered.map((page) => {
-        const children = nonHomePages
-          .filter((p) => p.parent_id === page.id)
-          .sort((a, b) => a.sort_order - b.sort_order);
-        return (
-          <div key={page.id}>
-            <PageRow
-              page={page}
-              isActive={activePageId === page.id}
-              isExpanded={!!expanded[page.id]}
-              depth={page.parent_id ? 1 : 0}
-              onSelect={() => onSelectPage(page.id)}
-              onToggleExpand={() => toggleExpand(page.id)}
-              onDelete={() => onDeletePage(page.id)}
-              onRename={(title) => onRenamePage(page.id, title)}
-              onToggleVisibility={() => onTogglePageVisibility(page.id)}
-              onAddSection={() => onAddSection(page.id)}
-              hasChildren={children.length > 0}
-            />
-            {/* Sub-pages */}
-            {expanded[page.id] &&
-              children.map((child) => (
-                <PageRow
-                  key={child.id}
-                  page={child}
-                  isActive={activePageId === child.id}
-                  isExpanded={false}
-                  depth={2}
-                  onSelect={() => onSelectPage(child.id)}
-                  onToggleExpand={() => {}}
-                  onDelete={() => onDeletePage(child.id)}
-                  onRename={(title) => onRenamePage(child.id, title)}
-                  onToggleVisibility={() => onTogglePageVisibility(child.id)}
-                  onAddSection={() => onAddSection(child.id)}
-                  hasChildren={false}
-                />
-              ))}
+        {/* Empty state */}
+        {ordered.length === 0 && (
+          <div className="px-3 py-3 text-center">
+            <p className="text-[10px] text-muted-foreground/40 leading-relaxed mb-2">
+              Add pages like <strong>About</strong> or <strong>Investment</strong>.
+            </p>
+            <button onClick={() => onAddPage(null)} className="text-[10px] text-primary hover:underline">
+              + Add your first page
+            </button>
           </div>
-        );
-      })}
+        )}
+      </div>
 
-      {/* Empty state */}
-      {ordered.length === 0 && (
-        <div className="px-3 py-4 text-center">
-          <p className="text-[10px] text-muted-foreground/40 leading-relaxed mb-2">
-            Add pages like <strong>About</strong> or <strong>Investment</strong>.
-          </p>
-          <button onClick={() => onAddPage(null)} className="text-[10px] text-primary hover:underline">
-            + Add your first page
-          </button>
-        </div>
-      )}
+      {/* ── Fixed: Footer (shared) ── */}
+      <div className="my-1 mx-2 border-t border-dashed border-border/40" />
+      <FixedRow label="Footer" icon="📄" blockKey="footer" />
     </div>
   );
 }
