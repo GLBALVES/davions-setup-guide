@@ -169,8 +169,8 @@ export default function WebsiteEditor() {
     save(siteData, newSections);
   };
 
-  const handleOpenAddBlock = (insertAfterIndex: number) => {
-    setAddBlockState({ open: true, insertAfter: insertAfterIndex });
+  const handleOpenAddBlock = (insertAfterIndex: number, targetPageId?: string | null) => {
+    setAddBlockState({ open: true, insertAfter: insertAfterIndex, targetPageId: targetPageId ?? activePageId });
   };
 
   const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number) => {
