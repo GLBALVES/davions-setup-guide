@@ -99,21 +99,17 @@ export function LivePreview({
 
   const getVisibleSections = () => sections.filter((s) => s.visible !== false);
 
-  const detectGap = useCallback((mouseY: number) => {
-    const visibleSections = getVisibleSections();
-    for (let i = 0; i < visibleSections.length; i++) {
-      const rect = getBlockRect(visibleSections[i].key);
-      if (!rect) continue;
-      if (Math.abs(mouseY - rect.bottom) <= 28) {
-        return {
-          index: sections.findIndex((s) => s.key === visibleSections[i].key) + 1,
-          top: rect.bottom,
-          left: rect.left,
-          width: rect.width,
-        };
-      }
-    }
-    return null;
+  // Always show "+" at the bottom edge of whichever block is hovered
+  const getGapForBlock = useCallback((hoveredKey: string | null) => {
+    if (!hoveredKey) return null;
+    const rect = getBlockRect(hoveredKey);
+    if (!rect) return null;
+    return {
+      index: sections.findIndex((s) => s.key === hoveredKey) + 1,
+      top: rect.bottom,
+      left: rect.left,
+      width: rect.width,
+    };
   }, [sections, getBlockRect]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -121,7 +117,6 @@ export function LivePreview({
 
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return;
-    const mouseY = e.clientY - containerRect.top;
 
     // Temporarily disable the overlay to hit-test the content underneath
     const overlay = e.currentTarget as HTMLDivElement;
@@ -129,13 +124,14 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
-    // Gap detection
-    const gap = detectGap(mouseY);
+    // Gap detection — always at bottom of hovered block
+    const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
+    const key = blockEl?.getAttribute("data-block-key") ?? null;
+
+    const gap = getGapForBlock(key);
     setHoveredGap(gap);
 
     // Block detection
-    const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
-    const key = blockEl?.getAttribute("data-block-key") ?? null;
     if (key !== hoveredBlock) {
       setHoveredBlock(key);
       if (key) {
