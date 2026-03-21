@@ -114,13 +114,13 @@ interface PageRowProps {
   onDelete: () => void;
   onRename: (title: string) => void;
   onToggleVisibility: () => void;
-  onAddSubPage: () => void;
+  onAddSection: () => void;
   hasChildren: boolean;
 }
 
 function PageRow({
   page, isActive, isExpanded, depth, onSelect, onToggleExpand,
-  onDelete, onRename, onToggleVisibility, onAddSubPage, hasChildren,
+  onDelete, onRename, onToggleVisibility, onAddSection, hasChildren,
 }: PageRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
