@@ -118,11 +118,10 @@ function SortablePageItem({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`group flex items-center gap-1.5 px-3 py-2 rounded-sm transition-colors cursor-pointer ${
+      style={{ ...style, paddingLeft: `${12 + depth * 16}px` }}
+      className={`group flex items-center gap-1.5 py-2 rounded-sm transition-colors cursor-pointer ${
         isActive ? "bg-accent text-accent-foreground" : "hover:bg-muted/60"
       } ${!page.is_visible && !page.is_home ? "opacity-50" : ""}`}
-      style={{ ...style, paddingLeft: `${12 + depth * 16}px` }}
     >
       {/* Drag handle — disabled for home */}
       {page.is_home ? (

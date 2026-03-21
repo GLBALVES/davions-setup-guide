@@ -92,6 +92,14 @@ interface Props {
   galleryHref: (gallery: Gallery) => string;
   /** For blog nav link */
   blogHref: string;
+  /** Extra nav links injected from site_pages (multi-page) */
+  extraNavLinks?: { label: string; href: string }[];
+  /** Sub-page title (for non-home pages) */
+  subPageTitle?: string;
+  /** Sub-page content data */
+  subPageData?: Record<string, any>;
+  /** Sub-page sections order */
+  subPageSections?: any[];
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────

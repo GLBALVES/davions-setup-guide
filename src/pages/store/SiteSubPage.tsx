@@ -2,20 +2,34 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
-import type { SitePage } from "@/components/website-editor/PagesTab";
+
+interface RawPage {
+  id: string;
+  photographer_id: string;
+  title: string;
+  slug: string;
+  parent_id: string | null;
+  sort_order: number;
+  is_home: boolean;
+  is_visible: boolean;
+  sections_order: unknown;
+  page_content: unknown;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Renders a sub-page of a photographer's public site.
- * Route: /store/:slug/:pagePath  (where pagePath is NOT a session slug)
+ * Route: /store/:slug/page/:pagePath
  */
 const SiteSubPage = () => {
   const { slug, pagePath } = useParams();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
-  const [page, setPage] = useState<SitePage | null>(null);
+  const [page, setPage] = useState<RawPage | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
-  const [sitePages, setSitePages] = useState<SitePage[]>([]);
+  const [sitePages, setSitePages] = useState<RawPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -45,16 +59,15 @@ const SiteSubPage = () => {
           supabase.from("site_pages").select("*").eq("photographer_id", photoData.id).order("sort_order"),
         ]);
 
-      const foundPage = (pagesData ?? []).find(
-        (p: SitePage) => p.slug === pagePath && !p.is_home
-      );
+      const rawPages = (pagesData ?? []) as RawPage[];
+      const foundPage = rawPages.find((p) => p.slug === pagePath && !p.is_home) ?? null;
 
       if (!foundPage) { setNotFound(true); setLoading(false); return; }
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);
       setPage(foundPage);
-      setSitePages(pagesData ?? []);
+      setSitePages(rawPages);
       setSessions(sessionData ?? []);
       setGalleries(galleryData ?? []);
       setLoading(false);
@@ -78,14 +91,14 @@ const SiteSubPage = () => {
     );
   }
 
-  // Build nav links from sitePages
-  const navLinks = (sitePages ?? [])
-    .filter((p: SitePage) => p.is_visible && !p.is_home && !p.parent_id)
-    .sort((a: SitePage, b: SitePage) => a.sort_order - b.sort_order)
-    .map((p: SitePage) => ({ label: p.title, href: `/store/${slug}/${p.slug}` }));
+  // Build extra nav links from visible non-home top-level pages
+  const extraNavLinks = sitePages
+    .filter((p) => p.is_visible && !p.is_home && !p.parent_id)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((p) => ({ label: p.title, href: `/store/${slug}/page/${p.slug}` }));
 
-  const pageContent = page.page_content ?? {};
-  const sections = (page.sections_order ?? []) as any[];
+  const pageContent = (page.page_content as Record<string, any>) ?? {};
+  const sections = (page.sections_order as any[]) ?? [];
 
   return (
     <PublicSiteRenderer
@@ -96,11 +109,11 @@ const SiteSubPage = () => {
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      seoUrl={`${window.location.origin}/store/${slug}/${pagePath}`}
+      seoUrl={`${window.location.origin}/store/${slug}/page/${pagePath}`}
       sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={`/store/${slug}/blog`}
-      extraNavLinks={navLinks}
+      extraNavLinks={extraNavLinks}
       subPageData={pageContent}
       subPageTitle={page.title}
       subPageSections={sections}
