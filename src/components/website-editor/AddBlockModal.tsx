@@ -472,18 +472,48 @@ interface Props {
 export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, onClose }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<BlockKey | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
-  // All blocks are always selectable — clicking adds/repositions the section
   const isAvailable = (_key: BlockKey) => true;
 
+  const handleClose = () => {
+    setSelectedBlock(null);
+    onClose();
+  };
+
+  const handleConfirm = () => {
+    if (!selectedBlock) return;
+    onAdd(selectedBlock, insertAfterIndex);
+    setSelectedBlock(null);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl h-[580px] p-0 gap-0 flex flex-col overflow-hidden">
-        <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent className="max-w-4xl h-[620px] p-0 gap-0 flex flex-col overflow-hidden">
+        <DialogHeader className="px-5 py-3 border-b border-border shrink-0 flex-row items-center justify-between">
           <DialogTitle className="text-sm font-light tracking-[0.12em] uppercase">
             Add Section
           </DialogTitle>
+          {selectedBlock && (
+            <div className="flex items-center gap-2 mr-6">
+              <span className="text-[10px] text-muted-foreground tracking-wide">
+                {CATEGORIES.flatMap(c => c.blocks).find(b => b.key === selectedBlock)?.label}
+              </span>
+              <button
+                onClick={handleClose}
+                className="px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors rounded-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-4 py-1.5 text-[10px] tracking-[0.1em] uppercase bg-foreground text-background hover:bg-foreground/90 transition-colors rounded-sm"
+              >
+                Add Section
+              </button>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
@@ -511,46 +541,48 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
                 const available = isAvailable(block.key);
                 const hoverKey = `${block.key}-${i}`;
                 const isHovered = hoveredBlock === hoverKey;
+                const isSelected = selectedBlock === block.key;
 
                 return (
                   <button
                     key={hoverKey}
-                    onClick={() => available && onAdd(block.key, insertAfterIndex)}
+                    onClick={() => available && setSelectedBlock(isSelected ? null : block.key)}
                     onMouseEnter={() => available && setHoveredBlock(hoverKey)}
                     onMouseLeave={() => setHoveredBlock(null)}
                     className={`group flex flex-col rounded-md overflow-hidden text-left transition-all duration-200 ${
                       available
-                        ? isHovered
-                          ? "ring-2 ring-foreground shadow-lg"
-                          : "border border-border hover:border-foreground/40 hover:shadow-md"
+                        ? isSelected
+                          ? "ring-2 ring-foreground shadow-lg border border-foreground"
+                          : isHovered
+                            ? "ring-1 ring-foreground/40 shadow-md border border-foreground/40"
+                            : "border border-border hover:border-foreground/30 hover:shadow-sm"
                         : "border border-border/40 opacity-50 cursor-not-allowed"
                     }`}
                     disabled={!available}
-                    title={!available ? "This section is already visible on your site" : undefined}
                   >
-                    {/* Thumbnail — taller for better visual fidelity */}
+                    {/* Thumbnail */}
                     <div
                       className={`relative w-full overflow-hidden bg-background transition-transform duration-200 ${
-                        isHovered && available ? "scale-[1.01]" : "scale-100"
+                        (isHovered || isSelected) && available ? "scale-[1.01]" : "scale-100"
                       }`}
                       style={{ aspectRatio: "16/9" }}
                     >
                       {block.thumbnail}
 
-                      {/* Already-in-use overlay */}
-                      {!available && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-                          <span className="text-[9px] text-muted-foreground tracking-widest uppercase px-2 py-0.5 bg-muted rounded-full border border-border">
-                            Already visible
-                          </span>
+                      {/* Selected checkmark */}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-foreground flex items-center justify-center shadow-md">
+                          <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-background" />
+                          </svg>
                         </div>
                       )}
 
-                      {/* Hover "Add" overlay */}
-                      {available && isHovered && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-foreground/8">
+                      {/* Hover select overlay */}
+                      {available && isHovered && !isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-foreground/5">
                           <span className="px-3 py-1 bg-foreground text-background text-[10px] tracking-[0.1em] uppercase font-medium rounded-sm shadow-md">
-                            + Add Section
+                            Select
                           </span>
                         </div>
                       )}
@@ -559,9 +591,11 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
                     {/* Label row */}
                     <div
                       className={`px-2.5 py-2 border-t transition-colors duration-200 ${
-                        isHovered && available
-                          ? "border-foreground/30 bg-foreground/[0.04]"
-                          : "border-border"
+                        isSelected
+                          ? "border-foreground/30 bg-foreground/[0.05]"
+                          : isHovered && available
+                            ? "border-foreground/20 bg-foreground/[0.02]"
+                            : "border-border"
                       }`}
                     >
                       <p className="text-[11px] font-medium tracking-[0.05em] text-foreground leading-tight">
