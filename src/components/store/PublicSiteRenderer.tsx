@@ -1,12 +1,29 @@
-/**
- * Shared renderer for the photographer's public site.
- * Routes to one of 4 templates based on site_template:
- *   editorial (default) | grid | magazine | clean
- */
-
 import { useEffect } from "react";
-import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight } from "lucide-react";
+import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+
+// ─── Inline SVG icons for networks not in lucide ────────────────────────────
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
+    </svg>
+  );
+}
+function PinterestIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
+    </svg>
+  );
+}
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+    </svg>
+  );
+}
 
 export interface Testimonial {
   id: string;
@@ -136,30 +153,48 @@ interface NavProps {
   showBooking: boolean;
   ctaText: string;
   onNavClick: (href: string) => void;
+  site?: SiteConfig | null;
 }
 
-function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick }: NavProps) {
+function SocialIcons({ site, scrolled, size = "sm" }: { site?: SiteConfig | null; scrolled: boolean; size?: "sm" | "xs" }) {
+  if (!site) return null;
+  const cls = `transition-colors duration-300 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/60 hover:text-white"}`;
+  const iconCls = size === "xs" ? "h-3.5 w-3.5" : "h-4 w-4";
+  return (
+    <div className="flex items-center gap-3">
+      {site.instagram_url && <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className={cls}><Instagram className={iconCls} /></a>}
+      {site.facebook_url && <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className={cls}><Facebook className={iconCls} /></a>}
+      {site.youtube_url && <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className={cls}><Youtube className={iconCls} /></a>}
+      {site.tiktok_url && <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className={cls}><TikTokIcon className={iconCls} /></a>}
+      {site.pinterest_url && <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className={cls}><PinterestIcon className={iconCls} /></a>}
+      {site.linkedin_url && <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className={cls}><Linkedin className={iconCls} /></a>}
+      {site.whatsapp && <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className={cls}><WhatsAppIcon className={iconCls} /></a>}
+    </div>
+  );
+}
+
+function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site }: NavProps) {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={displayName}
-            className={`h-8 object-contain transition-all duration-300 ${scrolled ? "" : "brightness-0 invert"}`}
+            className={`h-8 object-contain transition-all duration-300 shrink-0 ${scrolled ? "" : "brightness-0 invert"}`}
           />
         ) : (
-          <span className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 ${scrolled ? "text-foreground" : "text-white/80"}`}>
+          <span className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 shrink-0 ${scrolled ? "text-foreground" : "text-white/80"}`}>
             {displayName}
           </span>
         )}
 
         {navLinks.length > 0 && (
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {navLinks.map((link) => (
               <button
                 key={link.label}
@@ -171,19 +206,24 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                 {link.label}
               </button>
             ))}
-            {showBooking && (
-              <button
-                onClick={() => onNavClick("#sessions")}
-                style={{ borderColor: scrolled ? accentColor : "rgba(255,255,255,0.6)" }}
-                className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
-                  scrolled ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
-                }`}
-              >
-                {ctaText}
-              </button>
-            )}
           </nav>
         )}
+
+        {/* Right side: social icons + CTA */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
+          <SocialIcons site={site} scrolled={scrolled} size="xs" />
+          {showBooking && (
+            <button
+              onClick={() => onNavClick("#sessions")}
+              style={{ borderColor: scrolled ? accentColor : "rgba(255,255,255,0.6)" }}
+              className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
+                scrolled ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
+              }`}
+            >
+              {ctaText}
+            </button>
+          )}
+        </div>
 
         {navLinks.length > 0 && (
           <button
@@ -216,6 +256,12 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                 {ctaText} →
               </button>
             )}
+            {/* Mobile social icons */}
+            {site && (
+              <div className="pt-3 border-t border-border/50 mt-1">
+                <SocialIcons site={site} scrolled={true} size="sm" />
+              </div>
+            )}
           </nav>
         </div>
       )}
@@ -229,44 +275,52 @@ function SharedFooter({ site, showContact }: { site: SiteConfig | null; showCont
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
   return (
-    <footer id="contact" className="border-t border-border py-10">
-      {showContact && hasSocials && (
-        <div className="flex items-center justify-center gap-5 mb-6">
-          {site?.instagram_url && (
-            <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Instagram className="h-4 w-4" />
-            </a>
-          )}
-          {site?.facebook_url && (
-            <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Facebook className="h-4 w-4" />
-            </a>
-          )}
-          {site?.youtube_url && (
-            <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Youtube className="h-4 w-4" />
-            </a>
-          )}
-          {site?.linkedin_url && (
-            <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Linkedin className="h-4 w-4" />
-            </a>
-          )}
-          {site?.tiktok_url && (
-            <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">TK</a>
-          )}
-          {site?.pinterest_url && (
-            <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">PT</a>
-          )}
-          {site?.whatsapp && (
-            <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">WA</a>
-          )}
-        </div>
-      )}
-      {site?.footer_text && (
-        <p className="text-[10px] font-light text-muted-foreground text-center mb-3">{site.footer_text}</p>
-      )}
-      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/50 text-center">Powered by Davions</p>
+    <footer id="contact" className="border-t border-border py-12">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
+        {showContact && hasSocials && (
+          <div className="flex items-center justify-center gap-5">
+            {site?.instagram_url && (
+              <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Instagram className="h-4 w-4" />
+              </a>
+            )}
+            {site?.facebook_url && (
+              <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Facebook className="h-4 w-4" />
+              </a>
+            )}
+            {site?.youtube_url && (
+              <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Youtube className="h-4 w-4" />
+              </a>
+            )}
+            {site?.linkedin_url && (
+              <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Linkedin className="h-4 w-4" />
+              </a>
+            )}
+            {site?.tiktok_url && (
+              <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <TikTokIcon className="h-4 w-4" />
+              </a>
+            )}
+            {site?.pinterest_url && (
+              <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <PinterestIcon className="h-4 w-4" />
+              </a>
+            )}
+            {site?.whatsapp && (
+              <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <WhatsAppIcon className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        )}
+        {site?.footer_text && (
+          <p className="text-[10px] font-light text-muted-foreground text-center">{site.footer_text}</p>
+        )}
+        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40 text-center">Powered by Davions</p>
+      </div>
     </footer>
   );
 }
@@ -446,9 +500,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
-
       {/* Hero */}
       {(site?.hero_layout ?? "full") === "split" ? (
         <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
@@ -601,7 +654,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
 
       {/* Compact hero */}
@@ -704,7 +757,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
 
       {/* Hero — left-aligned headline over image */}
@@ -853,7 +906,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
 
       {/* Hero — centered, image behind, big type */}
