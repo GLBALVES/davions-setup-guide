@@ -435,9 +435,11 @@ function PagesTree({
         )}
       </div>
 
-      {/* ── Fixed: Footer (shared) ── */}
+      {/* ── Fixed: Footer (shared) — right below pages, not pushed to bottom ── */}
       <div className="my-1 mx-2 border-t border-dashed border-border/40" />
       <FixedRow label="Footer" icon="📄" blockKey="footer" />
+      {/* Spacer so content doesn't feel cramped at bottom */}
+      <div className="pb-2" />
     </div>
   );
 }
