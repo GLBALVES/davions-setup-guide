@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Eye, EyeOff, GripVertical, Plus, X } from "lucide-react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
@@ -51,6 +51,15 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
+
+  // Scroll to active block whenever it changes
+  useEffect(() => {
+    if (!activeBlock) return;
+    const el = document.querySelector(`#editor-site-render [data-block-key="${activeBlock}"]`) as HTMLElement | null;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [activeBlock]);
   // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
   // doesn't cause a flicker (the enter handler cancels the timer before it fires).
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,6 +113,9 @@ export function LivePreview({
     testimonials: (data as any).testimonials ?? [],
     testimonials_title: (data as any).testimonials_title ?? null,
     testimonials_layout: (data as any).testimonials_layout ?? "cards",
+    header_bg_color: (data as any).header_bg_color ?? null,
+    header_text_color: (data as any).header_text_color ?? null,
+    header_visible_socials: (data as any).header_visible_socials ?? null,
   };
 
   const getBlockRect = useCallback((key: string) => {
