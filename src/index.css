@@ -76,3 +76,23 @@
     letter-spacing: 0.05em;
   }
 }
+
+/* ── Website Editor: hover highlights on editable sections ── */
+.editor-overlay ~ * [data-block-key],
+[data-block-key] {
+  position: relative;
+}
+
+/* When the parent container has the editor-overlay sibling, highlight blocks on hover */
+.editor-overlay:hover ~ * [data-block-key]:hover,
+.editor-overlay ~ * [data-block-key]:hover {
+  outline: 2px solid hsl(214 100% 50% / 0.6);
+  outline-offset: 0px;
+  cursor: pointer;
+}
+
+/* Active (selected) block highlight */
+[data-block-key].editor-block-active {
+  outline: 2px solid hsl(214 100% 50%);
+  outline-offset: 0px;
+}
