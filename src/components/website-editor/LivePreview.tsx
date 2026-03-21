@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import { Eye, EyeOff, GripVertical, Plus, X } from "lucide-react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
 import { BlockPanel } from "./BlockPanel";
