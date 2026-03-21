@@ -414,7 +414,7 @@ interface Props {
 export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, onClose }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
-  const [selectedBlock, setSelectedBlock] = useState<BlockKey | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
   const isAvailable = (_key: BlockKey) => true;
