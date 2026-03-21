@@ -63,9 +63,10 @@ interface SortableItemProps {
   onSelect: () => void;
   onToggle: () => void;
   onRename: (label: string) => void;
+  onRemove: () => void;
 }
 
-function SortableItem({ section, isActive, onSelect, onToggle, onRename }: SortableItemProps) {
+function SortableItem({ section, isActive, onSelect, onToggle, onRename, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.key });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -135,6 +136,13 @@ function SortableItem({ section, isActive, onSelect, onToggle, onRename }: Sorta
         </button>
         <button onClick={onSelect} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors">
           <Settings2 className="h-2.5 w-2.5" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+          title="Remove section"
+        >
+          <Trash2 className="h-2.5 w-2.5" />
         </button>
       </div>
     </div>
@@ -308,12 +316,13 @@ interface PagesTreeProps {
   onSelectBlock: (key: BlockKey) => void;
   onReorder: (sections: SectionDef[]) => void;
   onToggleVisibility: (key: BlockKey) => void;
+  onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
 }
 
 function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
-  sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility,
+  sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
 }: PagesTreeProps) {
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
@@ -410,6 +419,7 @@ function PagesTree({
                       onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
                       onToggle={() => onToggleVisibility(section.key)}
                       onRename={(label) => onReorder(sections.map((s) => s.key === section.key ? { ...s, label } : s))}
+                      onRemove={() => onRemoveSection(null, section.key)}
                     />
                   ))}
                 </SortableContext>
@@ -459,6 +469,13 @@ function PagesTree({
                       <CornerDownRight className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0 ml-1" />
                       <span className="text-xs shrink-0">{section.icon}</span>
                       <span className="text-[11px] font-light tracking-wide truncate flex-1">{section.label}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onRemoveSection(page.id, section.key); }}
+                        className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                        title="Remove section"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -625,6 +642,7 @@ interface Props {
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
   onReorderPages: (pages: SitePage[]) => void;
+  onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
 }
 
 type Tab = "pages" | "styles";
@@ -632,7 +650,7 @@ type Tab = "pages" | "styles";
 export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
-  onTogglePageVisibility, onReorderPages,
+  onTogglePageVisibility, onReorderPages, onRemoveSection,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
 
@@ -690,6 +708,7 @@ export function EditorSidebar({
             onSelectBlock={onSelectBlock}
             onReorder={onReorder}
             onToggleVisibility={onToggleVisibility}
+            onRemoveSection={onRemoveSection}
           />
         </>
       )}

@@ -169,6 +169,24 @@ export default function WebsiteEditor() {
     save(siteData, newSections);
   };
 
+  const handleRemoveSection = async (pageId: string | null, sectionKey: BlockKey) => {
+    if (pageId === null) {
+      // Home page — remove from global sections array
+      const newSections = sections.filter((s) => s.key !== sectionKey);
+      setSections(newSections);
+      save(siteData, newSections);
+    } else {
+      // Custom page — remove from site_pages.sections_order
+      const page = pages.find((p) => p.id === pageId);
+      if (!page) return;
+      const currentOrder: SectionDef[] = (page.sections_order as SectionDef[]) ?? [];
+      const newOrder = currentOrder.filter((s) => s.key !== sectionKey);
+      setPages((prev) => prev.map((p) => p.id === pageId ? { ...p, sections_order: newOrder as any } : p));
+      await supabase.from("site_pages").update({ sections_order: newOrder as any } as any).eq("id", pageId);
+    }
+    if (activeBlock === sectionKey) setActiveBlock(null);
+  };
+
   const handleOpenAddBlock = (insertAfterIndex: number, targetPageId?: string | null) => {
     setAddBlockState({ open: true, insertAfter: insertAfterIndex, targetPageId: targetPageId ?? activePageId });
   };
@@ -522,6 +540,7 @@ export default function WebsiteEditor() {
               onRenamePage={handleRenamePage}
               onTogglePageVisibility={handleTogglePageVisibility}
               onReorderPages={handleReorderPages}
+              onRemoveSection={handleRemoveSection}
             />
           )}
         </aside>
