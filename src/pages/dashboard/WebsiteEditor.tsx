@@ -462,6 +462,10 @@ export default function WebsiteEditor() {
               activePageId={activePageId}
               onSelectPage={handleSelectPage}
               onAddPage={handleAddPage}
+              onAddSection={(pageId) => {
+                handleSelectPage(pageId);
+                handleOpenAddBlock(sections.length);
+              }}
               onDeletePage={handleDeletePage}
               onRenamePage={handleRenamePage}
               onTogglePageVisibility={handleTogglePageVisibility}

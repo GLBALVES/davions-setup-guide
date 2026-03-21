@@ -114,13 +114,13 @@ interface PageRowProps {
   onDelete: () => void;
   onRename: (title: string) => void;
   onToggleVisibility: () => void;
-  onAddSubPage: () => void;
+  onAddSection: () => void;
   hasChildren: boolean;
 }
 
 function PageRow({
   page, isActive, isExpanded, depth, onSelect, onToggleExpand,
-  onDelete, onRename, onToggleVisibility, onAddSubPage, hasChildren,
+  onDelete, onRename, onToggleVisibility, onAddSection, hasChildren,
 }: PageRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
@@ -189,7 +189,7 @@ function PageRow({
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           {/* + Add Section (always visible on hover for all pages) */}
           <button
-            onClick={(e) => { e.stopPropagation(); onAddSubPage(); }}
+            onClick={(e) => { e.stopPropagation(); onAddSection(); }}
             className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             title="Add section"
           >
@@ -245,6 +245,7 @@ interface PagesTreeProps {
   activePageId: string | null;
   onSelectPage: (id: string | null) => void;
   onAddPage: (parentId?: string | null) => void;
+  onAddSection: (pageId: string) => void;
   onDeletePage: (id: string) => void;
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
@@ -258,7 +259,7 @@ interface PagesTreeProps {
 }
 
 function PagesTree({
-  pages, activePageId, onSelectPage, onAddPage, onDeletePage, onRenamePage,
+  pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility,
 }: PagesTreeProps) {
@@ -318,7 +319,7 @@ function PagesTree({
             onDelete={() => {}}
             onRename={() => {}}
             onToggleVisibility={() => {}}
-            onAddSubPage={() => {}}
+            onAddSection={() => onAddSection(homePage.id)}
             hasChildren={sections.length > 0}
           />
 
@@ -361,7 +362,7 @@ function PagesTree({
               onDelete={() => onDeletePage(page.id)}
               onRename={(title) => onRenamePage(page.id, title)}
               onToggleVisibility={() => onTogglePageVisibility(page.id)}
-              onAddSubPage={() => onAddPage(page.id)}
+              onAddSection={() => onAddSection(page.id)}
               hasChildren={children.length > 0}
             />
             {/* Sub-pages */}
@@ -378,7 +379,7 @@ function PagesTree({
                   onDelete={() => onDeletePage(child.id)}
                   onRename={(title) => onRenamePage(child.id, title)}
                   onToggleVisibility={() => onTogglePageVisibility(child.id)}
-                  onAddSubPage={() => onAddPage(child.id)}
+                  onAddSection={() => onAddSection(child.id)}
                   hasChildren={false}
                 />
               ))}
@@ -513,6 +514,7 @@ interface Props {
   activePageId: string | null;
   onSelectPage: (id: string | null) => void;
   onAddPage: (parentId?: string | null) => void;
+  onAddSection: (pageId: string) => void;
   onDeletePage: (id: string) => void;
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
@@ -523,7 +525,7 @@ type Tab = "pages" | "styles";
 
 export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
-  pages, activePageId, onSelectPage, onAddPage, onDeletePage, onRenamePage,
+  pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
@@ -572,6 +574,7 @@ export function EditorSidebar({
             activePageId={activePageId}
             onSelectPage={onSelectPage}
             onAddPage={onAddPage}
+            onAddSection={onAddSection}
             onDeletePage={onDeletePage}
             onRenamePage={onRenamePage}
             onTogglePageVisibility={onTogglePageVisibility}
