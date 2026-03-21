@@ -221,7 +221,7 @@ function PageRow({
                   onClick={(e) => { e.stopPropagation(); onAddSubPage(); }}
                   className="gap-2"
                 >
-                  <CornerDownRight className="h-3 w-3" /> Add Sub-page
+                  <CornerDownRight className="h-3 w-3" /> Add Section
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
