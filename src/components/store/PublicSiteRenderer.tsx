@@ -1145,7 +1145,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange, visibleSections } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -1190,7 +1190,15 @@ function deriveCommon(props: Props) {
     />
   );
 
-  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed };
+  /**
+   * Returns true if the given block key should be rendered.
+   * When visibleSections is null/undefined (home page or public view), everything renders.
+   * When it's an array, only keys present in the array render.
+   */
+  const showBlock = (key: string): boolean =>
+    !visibleSections || visibleSections.includes(key);
+
+  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed, showBlock };
 }
 
 // ─── Main Router ─────────────────────────────────────────────────────────
