@@ -406,12 +406,10 @@ export default function WebsiteEditor() {
               variant="outline"
               size="sm"
               className="h-7 gap-1.5 text-[10px] tracking-wider uppercase font-light px-3 hidden sm:flex"
-              asChild
+              onClick={() => window.open(`/store/${storeSlug}`, "_blank", "noopener,noreferrer")}
             >
-              <a href={`/store/${storeSlug}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3" />
-                View Site
-              </a>
+              <ExternalLink className="h-3 w-3" />
+              View Site
             </Button>
           )}
 
