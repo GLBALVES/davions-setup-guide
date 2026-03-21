@@ -54,9 +54,10 @@ export default function WebsiteEditor() {
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePageId, setActivePageId] = useState<string | null>(null); // null = home
 
-  const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number }>({
+  const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number; targetPageId: string | null }>({
     open: false,
     insertAfter: 0,
+    targetPageId: null,
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
