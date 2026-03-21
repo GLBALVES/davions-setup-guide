@@ -1,126 +1,89 @@
 
-## Site Editor — Editor visual de site estilo Pixieset
+## Análise comparativa: Editor atual vs. Pixieset
 
-### Diagnóstico atual
+### O que o Pixieset tem que nosso editor não tem
 
-O sistema já possui:
-- `photographer_site` table com todos os campos de configuração (headline, hero, about, redes sociais, template, etc.)
-- `WebsiteSettings.tsx` — formulário de configuração com abas (Branding, Hero, About, Social, SEO, Domain)
-- `WebsitePreview.tsx` — preview separado do site
-- `PublicSiteRenderer.tsx` — 4 templates renderizados (editorial, grid, magazine, clean)
-- Rota `/dashboard/website` já existente
+Olhando o screenshot do Pixieset e comparando com a implementação atual, identifiquei 6 diferenças críticas de UX:
 
-O problema: a experiência atual é um formulário de formulários. O usuário não vê o site enquanto edita. O objetivo é transformar isso em um editor split-screen com preview ao vivo, onde o usuário clica nos elementos do site para editá-los — como o Pixieset.
+**1. Hierarquia de navegação clara no painel esquerdo**
+- Pixieset: painel tem abas fixas no topo (Pages icon, Styles icon, Settings icon, Analytics icon) — cada aba tem um propósito distinto
+- Nosso editor: painel é uma lista plana de seções sem hierarquia. Não há separação entre "conteúdo das seções" e "estilos globais" (cores, fontes, logo)
 
----
+**2. Preview clicável com hover highlights**
+- Pixieset: passar o mouse sobre uma seção no canvas mostra um outline colorido + botão de ação flutuante (ex: "LAYOUT A" + engrenagem + ícones de copiar/apagar)
+- Nosso editor: o canvas tem `pointer-events-none` — totalmente não interativo. O usuário só pode clicar no painel esquerdo
 
-### Arquitetura da solução
+**3. Botão "+" entre seções para adicionar novos blocos**
+- Pixieset: entre cada seção do site aparece um botão "+" centralizado com linha horizontal — permite inserir uma nova seção em qualquer posição
+- Nosso editor: não existe esta funcionalidade
 
-```text
-/dashboard/website/editor          ← nova rota, editor visual
-  ┌──────────────────────────────────────────────────────────────┐
-  │  [← Sair]  [Template]  [Mobile|Tablet|Desktop]  [Publicar] │  ← Topbar
-  ├──────────────────────┬───────────────────────────────────────┤
-  │                      │                                       │
-  │   PAINEL ESQUERDO    │       CANVAS / PREVIEW AO VIVO       │
-  │   (blocos/seções)    │                                       │
-  │                      │   [clique para editar inline]         │
-  │  + Adicionar seção   │                                       │
-  └──────────────────────┴───────────────────────────────────────┘
-```
+**4. Estrutura de páginas (site menu)**
+- Pixieset: painel esquerdo mostra "SITE MENU" com árvore de páginas hierárquica (Home, The Experience > subpages, Investment > subpages, Blog, etc.)
+- Nosso editor: sem conceito de páginas múltiplas (não vamos implementar isso agora — fora do escopo)
 
-**Painel esquerdo**: lista de seções do site (Hero, Sessions, Portfolio, About, Quote, Contact, Footer). Cada seção tem um botão de configuração. Seções podem ser reordenadas, mostradas/ocultadas.
+**5. Controles contextuais no canvas (LAYOUT A, Settings, Delete, Resize)**
+- Pixieset: ao selecionar um bloco no canvas, aparece toolbar inline com opções de layout, duplicar, deletar e redimensionar
+- Nosso editor: nenhum controle visual no canvas
 
-**Canvas (direito)**: preview do site renderizado com os dados atuais em um `<iframe>` ou renderização direta. Elementos clicáveis abrem o painel de edição correspondente.
-
-**Auto-save**: salva automaticamente no banco quando o usuário para de editar (debounce de 1s).
+**6. Topbar com identidade da marca do site**
+- Pixieset: topbar esquerda mostra "Website ˅" como nome/domínio do site atual, com link para o site ao vivo
+- Nosso editor: só tem "Exit Editor" — sem nome do site nem link direto para o site ao vivo
 
 ---
 
-### Estrutura de seções (Blocks)
+### Melhorias que vamos implementar (escopo realista)
 
-Cada bloco corresponde a uma seção do `photographer_site`:
+**Prioridade Alta:**
 
-| Bloco | Campos editáveis |
-|-------|-----------------|
-| **Hero** | Imagem, Headline, Subheadline, CTA text, CTA link |
-| **Sessions** | Visibilidade (show_store), título da seção |
-| **Portfolio** | Visibilidade (show_store para galerias), título |
-| **About** | Título, imagem, bio, visibilidade (show_about) |
-| **Quote** | Texto, autor |
-| **Experience** | Título, texto |
-| **Contact** | Visibilidade (show_contact) |
-| **Footer** | Texto, links sociais (Instagram, Facebook, etc.) |
+A. **Preview clicável com hover outlines**
+   - Remover `pointer-events-none` do canvas
+   - Adicionar overlay invisível por seção com `data-block-key` attributes no `PublicSiteRenderer`
+   - Ao hover: mostrar outline colorido (ring azul) e tooltip "Click to edit"
+   - Ao click: ativa o bloco correspondente no painel esquerdo
 
----
+B. **Botão "+" entre seções no canvas**
+   - Não precisamos adicionar seções novas — mas o botão pode servir para ativar rapidamente a edição da seção abaixo dele
+   - Alternativa mais simples: botão "+" no painel esquerdo abre um menu para mostrar seções ocultas
 
-### Componentes a criar
+C. **Abas no painel esquerdo**
+   - Aba 1: "Sections" (lista de blocos atual)
+   - Aba 2: "Styles" (cores, fonte, logo — campos que hoje estão fragmentados no BlockPanel do Hero)
+   - Aba 3: "Pages" placeholder (futuro)
+   - Topbar mostra nome do site com link para o site ao vivo
 
-1. **`src/pages/dashboard/WebsiteEditor.tsx`** — página principal do editor
-   - Layout split: painel esquerdo (280px) + canvas
-   - Estado local de `siteData` sincronizado com Supabase via debounce
-   - Controle de `activeBlock` para qual bloco está sendo editado
-   - Viewport switcher (Desktop/Tablet/Mobile)
-   - Botão "Publicar" (salva imediatamente) e badge "Salvando..."
+**Prioridade Média:**
 
-2. **`src/components/website-editor/EditorSidebar.tsx`** — painel de blocos
-   - Lista de seções arrastáveis com drag-and-drop via `@dnd-kit`
-   - Toggle de visibilidade por seção (olho)
-   - Clique na seção abre o `BlockPanel` correspondente
+D. **Nome do site na topbar**
+   - Substituir "Exit Editor" por "← [Nome do estúdio]" e adicionar ícone de link para abrir o site ao vivo
+   - Separar botão "View Site" do botão "Publish"
 
-3. **`src/components/website-editor/BlockPanel.tsx`** — painel de edição de bloco
-   - Renderiza os campos do bloco ativo (inputs, textarea, upload de imagem, color picker)
-   - Botão "Voltar para blocos"
-
-4. **`src/components/website-editor/LivePreview.tsx`** — canvas do preview
-   - Renderiza `PublicSiteRenderer` diretamente (não iframe) com os dados do estado atual
-   - Overlay de clique nos elementos para ativar o bloco correspondente
-   - Wraper com scale CSS para viewports menores (tablet/mobile)
-
-5. **`src/components/website-editor/ImageUploadField.tsx`** — componente reutilizável para upload de imagens no editor
+E. **Painel "Styles" global**
+   - Accent color, Logo upload, Tagline, Font family (no futuro) agrupados em uma aba dedicada
+   - Limpa o BlockPanel do Hero que atualmente mistura conteúdo com configurações globais
 
 ---
 
-### Banco de dados
+### Arquivos a alterar
 
-**Não são necessárias migrações.** A tabela `photographer_site` já contém todos os campos necessários. O editor apenas lê e grava nesta tabela.
+1. **`src/components/store/PublicSiteRenderer.tsx`**
+   - Adicionar `data-block-key` em cada seção principal (hero div, sessions div, etc.)
+   - Não há mudança visual — apenas atributos HTML adicionados
 
-A coluna `site_sections_order` será adicionada como um array JSON em `photographer_site` para persistir a ordem e visibilidade das seções configuradas pelo usuário.
+2. **`src/components/website-editor/LivePreview.tsx`**
+   - Remover `pointer-events-none`
+   - Adicionar event listener de click que lê `data-block-key` do elemento clicado e chama `onSelectBlock`
+   - Adicionar hover highlight: ao mouseover em elementos com `data-block-key`, aplicar outline via CSS
 
-**1 migração**: adicionar `site_sections_order jsonb default null` em `photographer_site`.
+3. **`src/components/website-editor/EditorSidebar.tsx`**
+   - Adicionar abas: "Sections" | "Styles"
+   - Nova aba "Styles" com campos de Accent Color, Logo, Tagline
 
----
+4. **`src/pages/dashboard/WebsiteEditor.tsx`**
+   - Topbar: substituir "Exit Editor" por nome do estúdio com link para ver o site
+   - Adicionar botão "View Site" separado do "Publish"
+   - Passar handlers de style para EditorSidebar
 
-### Integração na navegação
-
-- Adicionar rota `/dashboard/website/editor` em `App.tsx`
-- Botão "Abrir Editor" na página `WebsiteSettings.tsx` existente (link para o novo editor)
-- O `DashboardSidebar` já aponta para `/dashboard/website` — mantém o fluxo natural
-
----
-
-### Arquivos a criar/editar
-
-**Criar (4 novos):**
-- `src/pages/dashboard/WebsiteEditor.tsx`
-- `src/components/website-editor/EditorSidebar.tsx`
-- `src/components/website-editor/BlockPanel.tsx`
-- `src/components/website-editor/LivePreview.tsx`
-
-**Editar:**
-- `src/App.tsx` — adicionar rota `/dashboard/website/editor`
-- `src/pages/dashboard/WebsiteSettings.tsx` — adicionar botão "Abrir Editor Visual"
-
-**Migração:**
-- Adicionar coluna `site_sections_order jsonb` em `photographer_site`
-
----
-
-### UX do fluxo
-
-1. Usuário acessa **Website → "Abrir Editor Visual"**
-2. Editor carrega com split-screen: blocos à esquerda, preview do site ao vivo à direita
-3. Clica em uma seção na lista ou diretamente no canvas → painel de edição abre à esquerda
-4. Edita campos → preview atualiza instantaneamente (estado local)
-5. Salva automaticamente após 1s sem digitação
-6. "Publicar" salva imediatamente e redireciona para o site ao vivo
+### O que NÃO vamos implementar (fora do escopo atual)
+- Múltiplas páginas (The Experience, Investment, etc.) — requer schema novo
+- Toolbar inline com LAYOUT A (requer refatoração grande do PublicSiteRenderer)
+- Duplicar/deletar blocos inline no canvas
