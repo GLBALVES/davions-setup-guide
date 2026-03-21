@@ -112,11 +112,21 @@ function StylesTab({ data, onChange }: StylesTabProps) {
       </div>
 
       {/* Logo */}
-      <ImageUploadField
-        label="Logo"
-        value={data.logo_url ?? null}
-        onChange={(url) => onChange({ logo_url: url })}
-      />
+      <div className="flex flex-col gap-0">
+        <ImageUploadField
+          label="Logo"
+          value={data.logo_url ?? null}
+          onChange={(url) => onChange({ logo_url: url })}
+        />
+        <div className="mt-1.5 flex flex-col gap-0.5">
+          <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+            📍 Appears in the <strong>navigation bar</strong> at the top of every page.
+          </p>
+          <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+            Recommended: PNG or SVG with transparent background · 200×60 px minimum · max 2 MB
+          </p>
+        </div>
+      </div>
 
       {/* Tagline / Studio Name */}
       <div className="flex flex-col gap-1.5">
@@ -131,11 +141,21 @@ function StylesTab({ data, onChange }: StylesTabProps) {
       </div>
 
       {/* Favicon */}
-      <ImageUploadField
-        label="Favicon"
-        value={data.favicon_url ?? null}
-        onChange={(url) => onChange({ favicon_url: url })}
-      />
+      <div className="flex flex-col gap-0">
+        <ImageUploadField
+          label="Favicon"
+          value={data.favicon_url ?? null}
+          onChange={(url) => onChange({ favicon_url: url })}
+        />
+        <div className="mt-1.5 flex flex-col gap-0.5">
+          <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+            📍 Appears in the <strong>browser tab</strong> and bookmarks.
+          </p>
+          <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+            Recommended: PNG or ICO · exactly <strong>32×32 px</strong> or 64×64 px · square format required
+          </p>
+        </div>
+      </div>
 
       <div className="border-t border-border pt-4">
         <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground mb-3">SEO</p>
