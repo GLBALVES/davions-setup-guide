@@ -130,10 +130,7 @@ export function LivePreview({
   }, [sections, getBlockRect]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (stayRef.current) return;
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    if (!containerRect) return;
-
+    cancelHide();
     const overlay = e.currentTarget as HTMLDivElement;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -168,10 +165,7 @@ export function LivePreview({
   };
 
   const handleMouseLeave = () => {
-    if (stayRef.current) return;
-    setHoveredBlock(null);
-    setToolbarPos(null);
-    setHoveredGap(null);
+    scheduleHide();
   };
 
   const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
