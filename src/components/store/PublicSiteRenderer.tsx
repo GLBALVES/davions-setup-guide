@@ -581,6 +581,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
