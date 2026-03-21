@@ -45,6 +45,7 @@ export function LivePreview({
   onAddBlock,
   sections,
   onDataChange,
+  storeSlug,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
