@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditorSidebar, DEFAULT_SECTIONS, type SectionDef } from "@/components/website-editor/EditorSidebar";
-import { BlockPanel, type BlockKey } from "@/components/website-editor/BlockPanel";
+import { type BlockKey } from "@/components/website-editor/BlockPanel";
 import { LivePreview } from "@/components/website-editor/LivePreview";
 import { AddBlockModal } from "@/components/website-editor/AddBlockModal";
 import { type SitePage } from "@/components/website-editor/PagesTab";
