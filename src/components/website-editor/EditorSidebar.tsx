@@ -178,16 +178,18 @@ function PageRow({
           />
         ) : (
           <span
-            className={`text-[11px] font-light tracking-wide truncate block ${!page.is_home ? "cursor-text hover:text-foreground" : ""}`}
+            className={`text-[11px] font-light tracking-wide truncate block ${!page.is_home ? "cursor-pointer hover:text-foreground" : ""}`}
             onClick={(e) => {
+              if (page.is_home) onSelect();
+              else e.stopPropagation();
+            }}
+            onDoubleClick={(e) => {
               if (!page.is_home) {
                 e.stopPropagation();
                 setEditing(true);
-              } else {
-                onSelect();
               }
             }}
-            title={!page.is_home ? "Click to rename" : undefined}
+            title={!page.is_home ? "Double-click to rename" : undefined}
           >
             {page.title}
             {page.is_home && (
