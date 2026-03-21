@@ -84,6 +84,10 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
               </div>
             </Field>
             <ImageUploadField label="Hero Image" value={data.site_hero_image_url ?? null} onChange={(url) => p({ site_hero_image_url: url })} />
+            <div className="flex flex-col gap-0.5 -mt-2">
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">📍 Full-screen background of the <strong>hero section</strong> at the top of your site.</p>
+              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">Recommended: JPG or WebP · 1920×1080 px (16:9) · max 5 MB · horizontal/landscape</p>
+            </div>
             <Field label="Headline">
               <Input value={data.site_headline ?? ""} onChange={(e) => p({ site_headline: e.target.value })} className="h-8 text-xs" placeholder="Your studio name" />
             </Field>
