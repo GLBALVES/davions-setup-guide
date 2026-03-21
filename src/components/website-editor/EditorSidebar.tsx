@@ -189,7 +189,7 @@ function PageRow({
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           {/* + Add Section (always visible on hover for all pages) */}
           <button
-            onClick={(e) => { e.stopPropagation(); onAddSubPage(); }}
+            onClick={(e) => { e.stopPropagation(); onAddSection(); }}
             className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             title="Add section"
           >
