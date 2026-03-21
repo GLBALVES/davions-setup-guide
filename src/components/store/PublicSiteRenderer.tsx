@@ -1,6 +1,54 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+
+// ─── Inline editable text ────────────────────────────────────────────────────
+interface EditableTextProps {
+  value: string;
+  fieldKey: string;
+  editMode: boolean;
+  onSave: (fieldKey: string, value: string) => void;
+  className?: string;
+  as?: keyof React.JSX.IntrinsicElements;
+  placeholder?: string;
+}
+
+function EditableText({ value, fieldKey, editMode, onSave, className = "", as: Tag = "span", placeholder }: EditableTextProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (ref.current && !editMode) {
+      ref.current.textContent = value;
+    }
+  }, [value, editMode]);
+
+  if (!editMode) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <Tag className={className}>{value}</Tag>;
+  }
+
+  return (
+    <span
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      data-editable-field={fieldKey}
+      className={`${className} outline-none cursor-text`}
+      style={{ boxShadow: "0 0 0 1.5px hsl(214 100% 55% / 0.6)", borderRadius: "2px", minWidth: "2ch" }}
+      onBlur={(e) => {
+        const text = e.currentTarget.textContent ?? "";
+        if (text !== value) onSave(fieldKey, text);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+    >
+      {value}
+    </span>
+  );
+}
 
 // ─── Inline SVG icons for networks not in lucide ────────────────────────────
 function TikTokIcon({ className }: { className?: string }) {
@@ -132,6 +180,10 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** When true (editor mode), text nodes become contentEditable */
+  editMode?: boolean;
+  /** Callback when an inline text field is edited */
+  onFieldChange?: (fieldKey: string, value: string) => void;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -444,17 +496,18 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
 // ─── Quote Section ────────────────────────────────────────────────────────────
 
-function QuoteSection({ site }: { site: SiteConfig | null }) {
-  if (!site?.quote_text) return null;
+function QuoteSection({ site, editMode, onFieldChange }: { site: SiteConfig | null; editMode?: boolean; onFieldChange?: (k: string, v: string) => void }) {
+  if (!site?.quote_text && !editMode) return null;
+  const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
     <section className="py-16 md:py-24 border-t border-border bg-muted/20">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <Quote className="h-5 w-5 text-muted-foreground/30 mx-auto mb-6" />
         <blockquote className="text-xl md:text-2xl font-light leading-relaxed text-foreground tracking-wide italic mb-6">
-          "{site.quote_text}"
+          "<EditableText value={site?.quote_text ?? "Your quote here"} fieldKey="quote_text" editMode={!!editMode} onSave={save} />"
         </blockquote>
-        {site.quote_author && (
-          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">— {site.quote_author}</p>
+        {(site?.quote_author || editMode) && (
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">— <EditableText value={site?.quote_author ?? "Author"} fieldKey="quote_author" editMode={!!editMode} onSave={save} /></p>
         )}
       </div>
     </section>
@@ -463,8 +516,9 @@ function QuoteSection({ site }: { site: SiteConfig | null }) {
 
 // ─── Experience Section ────────────────────────────────────────────────────────
 
-function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; accentColor: string }) {
-  if (!site?.experience_text) return null;
+function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { site: SiteConfig | null; accentColor: string; editMode?: boolean; onFieldChange?: (k: string, v: string) => void }) {
+  if (!site?.experience_text && !editMode) return null;
+  const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
     <section className="border-t border-border py-16 md:py-24">
       <div className="max-w-6xl mx-auto px-6">
@@ -472,12 +526,12 @@ function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; acc
           <div className="md:w-1/3 shrink-0">
             <div className="w-8 h-px mb-6" style={{ backgroundColor: accentColor }} />
             <h2 className="text-2xl md:text-3xl font-light tracking-wide leading-snug">
-              {site.experience_title || "The Experience"}
+              <EditableText value={site?.experience_title || "The Experience"} fieldKey="experience_title" editMode={!!editMode} onSave={save} />
             </h2>
           </div>
           <div className="flex-1">
             <p className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line">
-              {site.experience_text}
+              <EditableText value={site?.experience_text ?? ""} fieldKey="experience_text" editMode={!!editMode} onSave={save} />
             </p>
           </div>
         </div>
@@ -493,7 +547,7 @@ function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; acc
 
 function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -515,11 +569,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
           {/* Text half */}
           <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
             {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{headline}</h1>
-            {subheadline && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{subheadline}</p>}
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
-              ? <a href={site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
@@ -532,18 +586,18 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
           <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
             {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
-            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{headline}</h1>
-            {subheadline && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{subheadline}</p>}
+            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
-              ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
       )}
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
 
       {/* Sessions — alternating full-width blocks */}
       {showStore && (
@@ -604,7 +658,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Experience */}
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
 
       {/* Portfolio */}
       {galleries.length > 0 && (
@@ -647,7 +701,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
 
 function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -665,19 +719,18 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         }
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
         <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{headline}</h1>
-          {subheadline && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{subheadline}</p>}
+          <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
+          {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{ed("site_subheadline", subheadline)}</p>}
           {showBooking && (
             site?.cta_link
-              ? <a href={site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
           )}
         </div>
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
-
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
       {/* Sessions dense grid */}
       {showStore && (
         <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
@@ -733,7 +786,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
       <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
@@ -748,7 +801,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
 function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
 
   const [featured, ...rest] = sessions;
 
@@ -772,13 +825,13 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
             <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
             <div>
               <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-2">Photography</p>
-              <h1 className="text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{headline}</h1>
-              {subheadline && <p className="text-sm font-light text-white/65 leading-relaxed max-w-md">{subheadline}</p>}
+              <h1 className="text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{ed("site_headline", headline)}</h1>
+              {(subheadline || editMode) && <p className="text-sm font-light text-white/65 leading-relaxed max-w-md">{ed("site_subheadline", subheadline)}</p>}
               {showBooking && (
                 <div className="mt-5">
                   {site?.cta_link
-                    ? <a href={site.cta_link} style={{ color: accentColor, borderColor: accentColor }} className="inline-block px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ctaText}</a>
-                    : <button onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ctaText}</button>
+                    ? <a href={editMode ? undefined : site.cta_link} style={{ color: accentColor, borderColor: accentColor }} className="inline-block px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</a>
+                    : <button onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</button>
                   }
                 </div>
               )}
@@ -788,9 +841,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
-
-      {/* Sessions — magazine asymmetric layout */}
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
       {showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-4 mb-10">
@@ -884,7 +935,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </section>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
       <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
       <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
@@ -899,7 +950,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 
 function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -918,13 +969,13 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-4">
           <div className="w-10 h-px bg-white/40 mb-2" />
-          <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{headline}</h1>
-          {subheadline && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{subheadline}</p>}
+          <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
+          {(subheadline || editMode) && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{ed("site_subheadline", subheadline)}</p>}
           {showBooking && (
             <div className="mt-4">
               {site?.cta_link
-                ? <a href={site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ctaText}</a>
-                : <button onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ctaText}</button>
+                ? <a href={editMode ? undefined : site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</a>
+                : <button onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
               }
             </div>
           )}
@@ -933,9 +984,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
-
-      {/* Sessions */}
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
       {showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
@@ -1000,7 +1049,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
       <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
       <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
@@ -1010,7 +1059,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -1026,7 +1075,6 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  // If extraNavLinks provided (multi-page), use those; else fall back to section anchors
   const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
     ? extraNavLinks
     : [
@@ -1037,6 +1085,7 @@ function deriveCommon(props: Props) {
       ];
 
   const handleNavClick = (href: string) => {
+    if (editMode) return; // block navigation in edit mode
     setMobileMenuOpen(false);
     if (href.startsWith("#")) {
       const el = document.getElementById(href.slice(1));
@@ -1046,7 +1095,16 @@ function deriveCommon(props: Props) {
     }
   };
 
-  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick };
+  const ed = (fieldKey: string, value: string | null | undefined) => (
+    <EditableText
+      value={value ?? ""}
+      fieldKey={fieldKey}
+      editMode={editMode}
+      onSave={(k, v) => onFieldChange?.(k, v)}
+    />
+  );
+
+  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed };
 }
 
 // ─── Main Router ─────────────────────────────────────────────────────────
