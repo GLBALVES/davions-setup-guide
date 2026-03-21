@@ -472,18 +472,48 @@ interface Props {
 export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, onClose }: Props) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<BlockKey | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
-  // All blocks are always selectable — clicking adds/repositions the section
   const isAvailable = (_key: BlockKey) => true;
 
+  const handleClose = () => {
+    setSelectedBlock(null);
+    onClose();
+  };
+
+  const handleConfirm = () => {
+    if (!selectedBlock) return;
+    onAdd(selectedBlock, insertAfterIndex);
+    setSelectedBlock(null);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-4xl h-[580px] p-0 gap-0 flex flex-col overflow-hidden">
-        <DialogHeader className="px-5 py-3 border-b border-border shrink-0">
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent className="max-w-4xl h-[620px] p-0 gap-0 flex flex-col overflow-hidden">
+        <DialogHeader className="px-5 py-3 border-b border-border shrink-0 flex-row items-center justify-between">
           <DialogTitle className="text-sm font-light tracking-[0.12em] uppercase">
             Add Section
           </DialogTitle>
+          {selectedBlock && (
+            <div className="flex items-center gap-2 mr-6">
+              <span className="text-[10px] text-muted-foreground tracking-wide">
+                {CATEGORIES.flatMap(c => c.blocks).find(b => b.key === selectedBlock)?.label}
+              </span>
+              <button
+                onClick={handleClose}
+                className="px-3 py-1.5 text-[10px] tracking-[0.1em] uppercase border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors rounded-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-4 py-1.5 text-[10px] tracking-[0.1em] uppercase bg-foreground text-background hover:bg-foreground/90 transition-colors rounded-sm"
+              >
+                Add Section
+              </button>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
