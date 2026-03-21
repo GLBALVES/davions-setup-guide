@@ -308,6 +308,8 @@ export default function WebsiteEditor() {
                 viewport={viewport}
                 onSelectBlock={setActiveBlock}
                 activeBlock={activeBlock}
+                onToggleVisibility={handleToggleVisibility}
+                sections={sections}
               />
             </div>
           ) : (
@@ -324,6 +326,8 @@ export default function WebsiteEditor() {
                   viewport={viewport}
                   onSelectBlock={setActiveBlock}
                   activeBlock={activeBlock}
+                  onToggleVisibility={handleToggleVisibility}
+                  sections={sections}
                 />
               </div>
             </div>

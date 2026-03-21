@@ -41,6 +41,10 @@ export interface SiteConfig {
   quote_author?: string | null;
   experience_title?: string | null;
   experience_text?: string | null;
+  /** Hero layout: "full" (default full-bleed) | "split" (image left, text right) */
+  hero_layout?: "full" | "split" | null;
+  /** About layout: "image-right" (default) | "image-left" | "text-only" */
+  about_layout?: "image-right" | "image-left" | "text-only" | null;
 }
 
 export interface Session {
@@ -249,19 +253,28 @@ function SharedFooter({ site, showContact }: { site: SiteConfig | null; showCont
 function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | null; photographer: Photographer; displayName: string }) {
   if (!site?.show_about && site?.show_about !== null) return null;
   if (!photographer?.bio && !site?.about_image_url) return null;
+
+  const layout = site?.about_layout ?? "image-right";
+
   return (
     <section id="about" className="border-t border-border">
       <div className="max-w-6xl mx-auto px-6 py-16">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">
           {site?.about_title || "About"}
         </p>
-        <div className="flex flex-col md:flex-row gap-10 items-center max-w-4xl mx-auto">
-          {site?.about_image_url && (
+        <div className={`flex flex-col gap-10 items-center max-w-4xl mx-auto ${
+          layout === "text-only"
+            ? "md:flex-col"
+            : layout === "image-left"
+            ? "md:flex-row"
+            : "md:flex-row-reverse"
+        }`}>
+          {layout !== "text-only" && site?.about_image_url && (
             <div className="w-full md:w-64 shrink-0">
               <img src={site.about_image_url} alt={displayName} className="w-full aspect-[3/4] object-cover" />
             </div>
           )}
-          <div className="flex-1">
+          <div className={`flex-1 ${layout === "text-only" ? "text-center max-w-2xl mx-auto" : ""}`}>
             <h2 className="text-2xl font-light tracking-[0.1em] uppercase mb-4">
               {photographer?.full_name || photographer?.business_name || displayName}
             </h2>
@@ -337,22 +350,44 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       />
 
       {/* Hero */}
-      <div data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
-        {site?.site_hero_image_url
-          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-          : <div className="absolute inset-0 bg-foreground" />
-        }
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
-          {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
-          <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{headline}</h1>
-          {subheadline && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{subheadline}</p>}
-          {showBooking && (site?.cta_link
-            ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
-            : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
-          )}
+      {(site?.hero_layout ?? "full") === "split" ? (
+        <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
+          {/* Image half */}
+          <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
+            {site?.site_hero_image_url
+              ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+              : <div className="absolute inset-0 bg-foreground" />
+            }
+          </div>
+          {/* Text half */}
+          <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
+            {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{headline}</h1>
+            {subheadline && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{subheadline}</p>}
+            {showBooking && (site?.cta_link
+              ? <a href={site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</a>
+              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</button>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
+          {site?.site_hero_image_url
+            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+            : <div className="absolute inset-0 bg-foreground" />
+          }
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
+            {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
+            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{headline}</h1>
+            {subheadline && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{subheadline}</p>}
+            {showBooking && (site?.cta_link
+              ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
+              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quote */}
       <div data-block-key="quote"><QuoteSection site={site} /></div>
