@@ -730,8 +730,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
-
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
       {/* Sessions dense grid */}
       {showStore && (
         <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
