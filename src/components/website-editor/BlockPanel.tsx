@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ImageUploadField } from "./ImageUploadField";
 import type { SiteConfig } from "@/components/store/PublicSiteRenderer";
 
-export type BlockKey = "hero" | "sessions" | "portfolio" | "about" | "quote" | "experience" | "contact" | "footer" | "testimonials";
+export type BlockKey = "header" | "hero" | "sessions" | "portfolio" | "about" | "quote" | "experience" | "contact" | "footer" | "testimonials";
 
 interface Props {
   blockKey: BlockKey;
@@ -19,6 +19,7 @@ interface Props {
 }
 
 const BLOCK_LABELS: Record<BlockKey, string> = {
+  header: "Header / Nav",
   hero: "Hero",
   sessions: "Sessions",
   portfolio: "Portfolio",
