@@ -226,6 +226,7 @@ export function LivePreview({
           blogHref="#"
           editMode={!!activeBlock}
           onFieldChange={(fieldKey, value) => onDataChange({ [fieldKey]: value } as any)}
+          visibleSections={sections.filter((s) => s.visible !== false).map((s) => s.key)}
         />
       </div>
 
