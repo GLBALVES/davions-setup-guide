@@ -861,7 +861,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -877,12 +877,15 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  const navLinks: { label: string; href: string }[] = [
-    ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
-    ...(showAbout ? [{ label: "About", href: "#about" }] : []),
-    ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
-    ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
-  ];
+  // If extraNavLinks provided (multi-page), use those; else fall back to section anchors
+  const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
+    ? extraNavLinks
+    : [
+        ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
+        ...(showAbout ? [{ label: "About", href: "#about" }] : []),
+        ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
+        ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
+      ];
 
   const handleNavClick = (href: string) => {
     setMobileMenuOpen(false);
