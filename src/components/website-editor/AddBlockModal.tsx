@@ -5,6 +5,8 @@ import type { BlockKey } from "./BlockPanel";
 
 interface BlockDef {
   key: BlockKey;
+  /** Unique id per variant — used for selection state when multiple cards share the same key */
+  variantId: string;
   label: string;
   description: string;
   thumbnail: React.ReactNode;
