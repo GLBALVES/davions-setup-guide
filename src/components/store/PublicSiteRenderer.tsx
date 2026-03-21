@@ -567,11 +567,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
           {/* Text half */}
           <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
             {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{headline}</h1>
-            {subheadline && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{subheadline}</p>}
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
-              ? <a href={site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
@@ -584,11 +584,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
           <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
             {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
-            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{headline}</h1>
-            {subheadline && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{subheadline}</p>}
+            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
-              ? <a href={site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</a>
-              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ctaText}</button>
+              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
+              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
