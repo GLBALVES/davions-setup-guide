@@ -872,10 +872,10 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
