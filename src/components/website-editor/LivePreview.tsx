@@ -125,11 +125,11 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
-    // Gap detection — pass current key for fallback bottom-of-block detection
+    // Gap detection — always at bottom of hovered block
     const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
     const key = blockEl?.getAttribute("data-block-key") ?? null;
 
-    const gap = detectGap(mouseY, key);
+    const gap = getGapForBlock(key);
     setHoveredGap(gap);
 
     // Block detection
