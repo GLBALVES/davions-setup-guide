@@ -125,6 +125,12 @@ export interface SiteConfig {
   testimonials_title?: string | null;
   /** Testimonials layout: "cards" | "quotes" */
   testimonials_layout?: "cards" | "quotes" | null;
+  /** Header background color (null = transparent/scroll-aware) */
+  header_bg_color?: string | null;
+  /** Header menu font color (null = auto based on scroll state) */
+  header_text_color?: string | null;
+  /** Which social icons to show in the header (null/empty = show all that have URLs) */
+  header_visible_socials?: string[] | null;
 }
 
 export interface Session {
