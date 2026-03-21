@@ -245,6 +245,7 @@ interface PagesTreeProps {
   activePageId: string | null;
   onSelectPage: (id: string | null) => void;
   onAddPage: (parentId?: string | null) => void;
+  onAddSection: (pageId: string) => void;
   onDeletePage: (id: string) => void;
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
@@ -258,7 +259,7 @@ interface PagesTreeProps {
 }
 
 function PagesTree({
-  pages, activePageId, onSelectPage, onAddPage, onDeletePage, onRenamePage,
+  pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility,
 }: PagesTreeProps) {
