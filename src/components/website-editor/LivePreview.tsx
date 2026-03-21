@@ -132,6 +132,9 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "all";
 
+    // If the mouse moved onto our own toolbar/gap button, keep state as-is
+    if (el?.closest("[data-editor-toolbar]")) return;
+
     const containerRect = containerRef.current?.getBoundingClientRect();
     const mouseY = containerRect ? e.clientY - containerRect.top : 0;
 
