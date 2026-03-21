@@ -190,6 +190,12 @@ interface Props {
   editMode?: boolean;
   /** Callback when an inline text field is edited */
   onFieldChange?: (fieldKey: string, value: string) => void;
+  /**
+   * When provided (editor mode for a specific page), only render the blocks
+   * whose key is in this array, in the order they appear in the array.
+   * null / undefined = render everything (default behaviour).
+   */
+  visibleSections?: string[] | null;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
