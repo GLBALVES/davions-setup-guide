@@ -49,7 +49,20 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
-  const stayRef = useRef(false);
+  // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
+  // doesn't cause a flicker (the enter handler cancels the timer before it fires).
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => {
+      setHoveredBlock(null);
+      setToolbarPos(null);
+      setHoveredGap(null);
+    }, 120);
+  }, []);
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  }, []);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -117,10 +130,7 @@ export function LivePreview({
   }, [sections, getBlockRect]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (stayRef.current) return;
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    if (!containerRect) return;
-
+    cancelHide();
     const overlay = e.currentTarget as HTMLDivElement;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -155,10 +165,7 @@ export function LivePreview({
   };
 
   const handleMouseLeave = () => {
-    if (stayRef.current) return;
-    setHoveredBlock(null);
-    setToolbarPos(null);
-    setHoveredGap(null);
+    scheduleHide();
   };
 
   const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
@@ -204,12 +211,9 @@ export function LivePreview({
             width: toolbarPos.width,
             pointerEvents: "auto",
           }}
-          onMouseEnter={() => { stayRef.current = true; }}
+          onMouseEnter={() => { cancelHide(); }}
           onMouseLeave={() => {
-            stayRef.current = false;
-            setHoveredBlock(null);
-            setToolbarPos(null);
-            setHoveredGap(null);
+            scheduleHide();
           }}
         >
           <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg rounded-sm cursor-default shrink-0">
@@ -240,12 +244,9 @@ export function LivePreview({
         <div
           className="absolute z-20 flex items-center justify-center"
           style={{ top: hoveredGap.top - 12, left: hoveredGap.left, width: hoveredGap.width, height: 24, pointerEvents: "auto" }}
-          onMouseEnter={() => { stayRef.current = true; }}
+          onMouseEnter={() => { cancelHide(); }}
           onMouseLeave={() => {
-            stayRef.current = false;
-            setHoveredBlock(null);
-            setToolbarPos(null);
-            setHoveredGap(null);
+            scheduleHide();
           }}
         >
           <div className="absolute inset-y-1/2 left-0 right-0 h-px bg-primary/60 pointer-events-none" />
