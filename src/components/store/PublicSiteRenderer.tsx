@@ -1122,7 +1122,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       )}
 
       {/* About */}
-      {(site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
+      {showBlock("about") && (site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
         <section data-block-key="about" id="about" className="border-t border-border">
           <div className="max-w-2xl mx-auto px-6 py-20 text-center">
             {site?.about_image_url && (
