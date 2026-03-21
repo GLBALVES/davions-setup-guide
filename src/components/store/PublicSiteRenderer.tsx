@@ -1062,7 +1062,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -1078,7 +1078,6 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  // If extraNavLinks provided (multi-page), use those; else fall back to section anchors
   const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
     ? extraNavLinks
     : [
@@ -1089,6 +1088,7 @@ function deriveCommon(props: Props) {
       ];
 
   const handleNavClick = (href: string) => {
+    if (editMode) return; // block navigation in edit mode
     setMobileMenuOpen(false);
     if (href.startsWith("#")) {
       const el = document.getElementById(href.slice(1));
@@ -1098,7 +1098,16 @@ function deriveCommon(props: Props) {
     }
   };
 
-  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick };
+  const ed = (fieldKey: string, value: string | null | undefined) => (
+    <EditableText
+      value={value ?? ""}
+      fieldKey={fieldKey}
+      editMode={editMode}
+      onSave={(k, v) => onFieldChange?.(k, v)}
+    />
+  );
+
+  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed };
 }
 
 // ─── Main Router ─────────────────────────────────────────────────────────
