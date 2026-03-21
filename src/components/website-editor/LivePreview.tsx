@@ -7,6 +7,7 @@ import { BlockPanel } from "./BlockPanel";
 import type { SectionDef } from "./EditorSidebar";
 
 const BLOCK_LABELS: Record<string, string> = {
+  header: "Header",
   hero: "Hero",
   sessions: "Sessions",
   portfolio: "Portfolio",

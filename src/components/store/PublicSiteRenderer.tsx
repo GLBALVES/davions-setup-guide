@@ -407,7 +407,7 @@ function SharedFooter({ site, showContact }: { site: SiteConfig | null; showCont
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
   return (
-    <footer id="contact" className="border-t border-border py-12">
+    <footer id="contact" data-block-key="footer" className="border-t border-border py-12">
       <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
         {showContact && hasSocials && (
           <div className="flex items-center justify-center gap-5">
