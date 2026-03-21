@@ -14,8 +14,7 @@ interface EditableTextProps {
 }
 
 function EditableText({ value, fieldKey, editMode, onSave, className = "", as: Tag = "span", placeholder }: EditableTextProps) {
-  const ref = useRef<HTMLElement>(null);
-  // Sync content only when not focused (avoids cursor jump)
+  const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (ref.current && !editMode) {
       ref.current.textContent = value;
@@ -23,35 +22,31 @@ function EditableText({ value, fieldKey, editMode, onSave, className = "", as: T
   }, [value, editMode]);
 
   if (!editMode) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <Tag className={className}>{value}</Tag>;
   }
 
   return (
-    <Tag
-      ref={ref as any}
+    <span
+      ref={ref}
       contentEditable
       suppressContentEditableWarning
       data-editable-field={fieldKey}
-      className={`${className} outline-none cursor-text relative`}
-      style={{
-        boxShadow: "0 0 0 1.5px hsl(214 100% 55% / 0.6)",
-        borderRadius: "2px",
-        minWidth: "2ch",
-      }}
+      className={`${className} outline-none cursor-text`}
+      style={{ boxShadow: "0 0 0 1.5px hsl(214 100% 55% / 0.6)", borderRadius: "2px", minWidth: "2ch" }}
       onBlur={(e) => {
-        const text = (e.currentTarget as HTMLElement).textContent ?? "";
+        const text = e.currentTarget.textContent ?? "";
         if (text !== value) onSave(fieldKey, text);
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && !(e.shiftKey)) {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          (e.currentTarget as HTMLElement).blur();
+          e.currentTarget.blur();
         }
       }}
-      data-placeholder={placeholder}
     >
       {value}
-    </Tag>
+    </span>
   );
 }
 
