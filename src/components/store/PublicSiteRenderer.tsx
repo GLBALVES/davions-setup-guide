@@ -180,6 +180,10 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** When true (editor mode), text nodes become contentEditable */
+  editMode?: boolean;
+  /** Callback when an inline text field is edited */
+  onFieldChange?: (fieldKey: string, value: string) => void;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
