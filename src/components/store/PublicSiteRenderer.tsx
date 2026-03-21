@@ -1,6 +1,59 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+
+// ─── Inline editable text ────────────────────────────────────────────────────
+interface EditableTextProps {
+  value: string;
+  fieldKey: string;
+  editMode: boolean;
+  onSave: (fieldKey: string, value: string) => void;
+  className?: string;
+  as?: keyof React.JSX.IntrinsicElements;
+  placeholder?: string;
+}
+
+function EditableText({ value, fieldKey, editMode, onSave, className = "", as: Tag = "span", placeholder }: EditableTextProps) {
+  const ref = useRef<HTMLElement>(null);
+  // Sync content only when not focused (avoids cursor jump)
+  useEffect(() => {
+    if (ref.current && !editMode) {
+      ref.current.textContent = value;
+    }
+  }, [value, editMode]);
+
+  if (!editMode) {
+    return <Tag className={className}>{value}</Tag>;
+  }
+
+  return (
+    <Tag
+      ref={ref as any}
+      contentEditable
+      suppressContentEditableWarning
+      data-editable-field={fieldKey}
+      className={`${className} outline-none cursor-text relative`}
+      style={{
+        boxShadow: "0 0 0 1.5px hsl(214 100% 55% / 0.6)",
+        borderRadius: "2px",
+        minWidth: "2ch",
+      }}
+      onBlur={(e) => {
+        const text = (e.currentTarget as HTMLElement).textContent ?? "";
+        if (text !== value) onSave(fieldKey, text);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !(e.shiftKey)) {
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).blur();
+        }
+      }}
+      data-placeholder={placeholder}
+    >
+      {value}
+    </Tag>
+  );
+}
 
 // ─── Inline SVG icons for networks not in lucide ────────────────────────────
 function TikTokIcon({ className }: { className?: string }) {
