@@ -218,6 +218,19 @@ export function LivePreview({
             left: toolbarPos.left,
             width: toolbarPos.width,
           }}
+          onMouseEnter={() => {
+            if (leaveTimerRef.current) {
+              clearTimeout(leaveTimerRef.current);
+              leaveTimerRef.current = null;
+            }
+          }}
+          onMouseLeave={() => {
+            leaveTimerRef.current = setTimeout(() => {
+              setHoveredBlock(null);
+              setToolbarPos(null);
+              setHoveredGap(null);
+            }, 200);
+          }}
         >
           <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg pointer-events-auto rounded-sm">
             <GripVertical className="h-3 w-3 opacity-50" />
