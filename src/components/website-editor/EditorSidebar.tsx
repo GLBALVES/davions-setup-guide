@@ -159,7 +159,17 @@ function PageRow({
         : <FileText className="h-3 w-3 text-muted-foreground shrink-0" />}
 
       {/* Title */}
-      <div className="flex-1 min-w-0" onClick={onSelect} onDoubleClick={() => !page.is_home && setEditing(true)}>
+      <div
+        className="flex-1 min-w-0"
+        onClick={onSelect}
+        onDoubleClick={(e) => {
+          if (!page.is_home) {
+            e.stopPropagation();
+            setEditing(true);
+          }
+        }}
+        title={!page.is_home ? "Double-click to rename" : undefined}
+      >
         {editing ? (
           <input
             ref={inputRef}
@@ -175,7 +185,7 @@ function PageRow({
             className="w-full text-[11px] bg-transparent border-b border-primary outline-none font-light py-0.5"
           />
         ) : (
-          <span className="text-[11px] font-light tracking-wide truncate block">
+          <span className={`text-[11px] font-light tracking-wide truncate block ${!page.is_home ? "cursor-text" : ""}`}>
             {page.title}
             {page.is_home && (
               <span className="ml-1 text-[9px] text-muted-foreground/50 tracking-widest uppercase">Home</span>
