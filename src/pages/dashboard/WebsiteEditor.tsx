@@ -18,6 +18,7 @@ import { EditorSidebar, DEFAULT_SECTIONS, type SectionDef } from "@/components/w
 import { BlockPanel, type BlockKey } from "@/components/website-editor/BlockPanel";
 import { LivePreview } from "@/components/website-editor/LivePreview";
 import { AddBlockModal } from "@/components/website-editor/AddBlockModal";
+import { type SitePage } from "@/components/website-editor/PagesTab";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
 type Viewport = "desktop" | "tablet" | "mobile";
@@ -48,6 +49,10 @@ export default function WebsiteEditor() {
   const [activeBlock, setActiveBlock] = useState<BlockKey | null>(null);
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
+  // Pages
+  const [pages, setPages] = useState<SitePage[]>([]);
+  const [activePageId, setActivePageId] = useState<string | null>(null); // null = home
+
   const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number }>({
     open: false,
     insertAfter: 0,
@@ -60,11 +65,12 @@ export default function WebsiteEditor() {
     if (!user) return;
     const load = async () => {
       setLoading(true);
-      const [siteRes, pgRes, sessRes, galRes] = await Promise.all([
+      const [siteRes, pgRes, sessRes, galRes, pagesRes] = await Promise.all([
         supabase.from("photographer_site").select("*").eq("photographer_id", user.id).maybeSingle(),
         supabase.from("photographers").select("id, full_name, email, store_slug, bio, business_name").eq("id", user.id).maybeSingle(),
         supabase.from("sessions").select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url").eq("photographer_id", user.id).eq("status", "active"),
         supabase.from("galleries").select("id, slug, title, category, cover_image_url").eq("photographer_id", user.id).eq("status", "published"),
+        supabase.from("site_pages").select("*").eq("photographer_id", user.id).order("sort_order"),
       ]);
 
       if (siteRes.data) {
@@ -83,6 +89,21 @@ export default function WebsiteEditor() {
       }
       if (sessRes.data) setSessions(sessRes.data as Session[]);
       if (galRes.data) setGalleries(galRes.data as Gallery[]);
+
+      // Load pages — ensure there's always a home page
+      const rawPages = (pagesRes.data ?? []) as SitePage[];
+      if (rawPages.length === 0) {
+        // Create home page automatically
+        const { data: newHome } = await supabase
+          .from("site_pages")
+          .insert({ photographer_id: user.id, title: "Home", slug: "home", is_home: true, sort_order: 0, is_visible: true })
+          .select()
+          .single();
+        if (newHome) setPages([newHome as SitePage]);
+      } else {
+        setPages(rawPages);
+      }
+
       setLoading(false);
     };
     load();
@@ -153,20 +174,74 @@ export default function WebsiteEditor() {
   const handleAddBlock = (blockKey: BlockKey, insertAfterIndex: number) => {
     const idx = sections.findIndex((s) => s.key === blockKey);
     if (idx === -1) return;
-
-    // Make the section visible and move it to the desired position
     const newSections = sections.map((s) =>
       s.key === blockKey ? { ...s, visible: true } : s
     );
     const [removed] = newSections.splice(idx, 1);
-    // Clamp insert index
     const clampedIndex = Math.min(insertAfterIndex, newSections.length);
     newSections.splice(clampedIndex, 0, removed);
-
     setSections(newSections);
     save(siteData, newSections);
     setAddBlockState({ open: false, insertAfter: 0 });
     setActiveBlock(blockKey);
+  };
+
+  // ── Page handlers ──────────────────────────────────────────────────────────
+  const handleAddPage = async (parentId?: string | null) => {
+    if (!user) return;
+    const title = "New Page";
+    const slug = `page-${Date.now()}`;
+    const sortOrder = pages.filter((p) => !p.is_home).length;
+    const { data, error } = await supabase
+      .from("site_pages")
+      .insert({
+        photographer_id: user.id,
+        title,
+        slug,
+        parent_id: parentId ?? null,
+        sort_order: sortOrder,
+        is_home: false,
+        is_visible: true,
+      })
+      .select()
+      .single();
+    if (error) { toast({ title: "Failed to create page", variant: "destructive" }); return; }
+    if (data) {
+      setPages((prev) => [...prev, data as SitePage]);
+      setActivePageId(data.id);
+    }
+  };
+
+  const handleDeletePage = async (id: string) => {
+    await supabase.from("site_pages").delete().eq("id", id);
+    setPages((prev) => prev.filter((p) => p.id !== id));
+    if (activePageId === id) setActivePageId(null);
+  };
+
+  const handleRenamePage = async (id: string, title: string) => {
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `page-${id.slice(0, 8)}`;
+    await supabase.from("site_pages").update({ title, slug } as any).eq("id", id);
+    setPages((prev) => prev.map((p) => p.id === id ? { ...p, title, slug } : p));
+  };
+
+  const handleTogglePageVisibility = async (id: string) => {
+    const page = pages.find((p) => p.id === id);
+    if (!page) return;
+    const newVal = !page.is_visible;
+    await supabase.from("site_pages").update({ is_visible: newVal } as any).eq("id", id);
+    setPages((prev) => prev.map((p) => p.id === id ? { ...p, is_visible: newVal } : p));
+  };
+
+  const handleReorderPages = async (reordered: SitePage[]) => {
+    setPages(reordered);
+    for (const p of reordered) {
+      await supabase.from("site_pages").update({ sort_order: p.sort_order } as any).eq("id", p.id);
+    }
+  };
+
+  const handleSelectPage = (id: string | null) => {
+    setActivePageId(id);
+    setActiveBlock(null); // Clear active block when switching pages
   };
 
   const handlePublish = async () => {
@@ -192,7 +267,6 @@ export default function WebsiteEditor() {
     photographer.full_name ||
     "My Site";
 
-  // Hidden sections (available to add)
   const hiddenSections = sections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
@@ -337,6 +411,14 @@ export default function WebsiteEditor() {
               onReorder={handleReorder}
               onToggleVisibility={handleToggleVisibility}
               onStyleChange={handleDataChange}
+              pages={pages}
+              activePageId={activePageId}
+              onSelectPage={handleSelectPage}
+              onAddPage={handleAddPage}
+              onDeletePage={handleDeletePage}
+              onRenamePage={handleRenamePage}
+              onTogglePageVisibility={handleTogglePageVisibility}
+              onReorderPages={handleReorderPages}
             />
           )}
         </aside>

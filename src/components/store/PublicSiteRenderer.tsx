@@ -92,6 +92,14 @@ interface Props {
   galleryHref: (gallery: Gallery) => string;
   /** For blog nav link */
   blogHref: string;
+  /** Extra nav links injected from site_pages (multi-page) */
+  extraNavLinks?: { label: string; href: string }[];
+  /** Sub-page title (for non-home pages) */
+  subPageTitle?: string;
+  /** Sub-page content data */
+  subPageData?: Record<string, any>;
+  /** Sub-page sections order */
+  subPageSections?: any[];
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -853,7 +861,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -869,12 +877,15 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  const navLinks: { label: string; href: string }[] = [
-    ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
-    ...(showAbout ? [{ label: "About", href: "#about" }] : []),
-    ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
-    ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
-  ];
+  // If extraNavLinks provided (multi-page), use those; else fall back to section anchors
+  const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
+    ? extraNavLinks
+    : [
+        ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
+        ...(showAbout ? [{ label: "About", href: "#about" }] : []),
+        ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
+        ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
+      ];
 
   const handleNavClick = (href: string) => {
     setMobileMenuOpen(false);
@@ -892,25 +903,18 @@ function deriveCommon(props: Props) {
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
-  const { photographer, site } = props;
+  const { photographer, site, subPageTitle, subPageData } = props;
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const subheadline = site?.site_subheadline || photographer?.bio || "";
-  const seoTitle = site?.seo_title || `${displayName} — Photography`;
+  const seoTitle = subPageTitle
+    ? `${subPageTitle} — ${displayName}`
+    : site?.seo_title || `${displayName} — Photography`;
   const seoDescription = site?.seo_description || subheadline || undefined;
 
   const derived = deriveCommon(props);
   const template = site?.site_template || "editorial";
-
-  const templateEl = (() => {
-    switch (template) {
-      case "grid":     return <GridTemplate props={props} derived={derived} />;
-      case "magazine": return <MagazineTemplate props={props} derived={derived} />;
-      case "clean":    return <CleanTemplate props={props} derived={derived} />;
-      default:         return <EditorialTemplate props={props} derived={derived} />;
-    }
-  })();
 
   // Inject photographer's custom favicon into <head>
   useEffect(() => {
@@ -929,11 +933,63 @@ export default function PublicSiteRenderer(props: Props) {
     setLink("icon", "image/png");
     setLink("apple-touch-icon", "image/png");
     return () => {
-      // Restore default favicon on unmount
       const el = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
       if (el) el.href = "/favicon.png";
     };
   }, [site?.favicon_url]);
+
+  // Sub-page rendering (non-home pages from site_pages)
+  if (subPageTitle) {
+    const accentColor = site?.accent_color || "#000000";
+    const { navLinks, handleNavClick } = derived;
+    return (
+      <>
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          ogImage={site?.og_image_url || undefined}
+          ogUrl={seoUrl}
+          canonical={seoUrl}
+        />
+        <div className="min-h-screen bg-background">
+          <SharedNav
+            scrolled={props.scrolled}
+            mobileMenuOpen={props.mobileMenuOpen}
+            setMobileMenuOpen={props.setMobileMenuOpen}
+            displayName={displayName}
+            logoUrl={site?.logo_url ?? null}
+            accentColor={accentColor}
+            navLinks={navLinks}
+            showBooking={false}
+            ctaText=""
+            onNavClick={handleNavClick}
+          />
+          <div className="pt-24 max-w-4xl mx-auto px-6 pb-20">
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+            {subPageData?.content ? (
+              <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
+                {subPageData.content}
+              </div>
+            ) : (
+              <p className="text-sm font-light text-muted-foreground">
+                This page has no content yet. Edit it in the site editor.
+              </p>
+            )}
+          </div>
+          <SharedFooter site={site} showContact={true} />
+        </div>
+      </>
+    );
+  }
+
+  const templateEl = (() => {
+    switch (template) {
+      case "grid":     return <GridTemplate props={props} derived={derived} />;
+      case "magazine": return <MagazineTemplate props={props} derived={derived} />;
+      case "clean":    return <CleanTemplate props={props} derived={derived} />;
+      default:         return <EditorialTemplate props={props} derived={derived} />;
+    }
+  })();
 
   return (
     <>
@@ -948,3 +1004,5 @@ export default function PublicSiteRenderer(props: Props) {
     </>
   );
 }
+
+

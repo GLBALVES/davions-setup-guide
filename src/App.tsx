@@ -23,6 +23,7 @@ import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway
 import { isCustomDomain } from "./lib/custom-domain";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
+import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import Blog from "./pages/blog/Blog";
@@ -110,6 +111,7 @@ const App = () => {
                 <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/store/:slug" element={<StorePage />} />
+                <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
 

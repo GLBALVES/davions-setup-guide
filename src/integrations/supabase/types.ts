@@ -2026,6 +2026,59 @@ export type Database = {
         }
         Relationships: []
       }
+      site_pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_home: boolean
+          is_visible: boolean
+          page_content: Json | null
+          parent_id: string | null
+          photographer_id: string
+          sections_order: Json | null
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          is_visible?: boolean
+          page_content?: Json | null
+          parent_id?: string | null
+          photographer_id: string
+          sections_order?: Json | null
+          slug: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          is_visible?: boolean
+          page_content?: Json | null
+          parent_id?: string | null
+          photographer_id?: string
+          sections_order?: Json | null
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_pages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_api_connections: {
         Row: {
           created_at: string
