@@ -773,9 +773,9 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         </section>
       )}
 
-      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
