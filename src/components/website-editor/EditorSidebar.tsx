@@ -63,9 +63,10 @@ interface SortableItemProps {
   onSelect: () => void;
   onToggle: () => void;
   onRename: (label: string) => void;
+  onRemove: () => void;
 }
 
-function SortableItem({ section, isActive, onSelect, onToggle, onRename }: SortableItemProps) {
+function SortableItem({ section, isActive, onSelect, onToggle, onRename, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.key });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -135,6 +136,13 @@ function SortableItem({ section, isActive, onSelect, onToggle, onRename }: Sorta
         </button>
         <button onClick={onSelect} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors">
           <Settings2 className="h-2.5 w-2.5" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+          title="Remove section"
+        >
+          <Trash2 className="h-2.5 w-2.5" />
         </button>
       </div>
     </div>
