@@ -216,6 +216,97 @@ export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
             <ToggleField label="Show Blog link in nav" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
           </>
         )}
+
+        {blockKey === "testimonials" && (() => {
+          const testimonials: import("@/components/store/PublicSiteRenderer").Testimonial[] = (data as any).testimonials ?? [];
+          const update = (items: typeof testimonials) => (onChange as any)({ testimonials: items });
+          const add = () => update([...testimonials, { id: crypto.randomUUID(), name: "", text: "", role: "", rating: 5 }]);
+          const remove = (id: string) => update(testimonials.filter((t) => t.id !== id));
+          const edit = (id: string, patch: Partial<typeof testimonials[0]>) =>
+            update(testimonials.map((t) => t.id === id ? { ...t, ...patch } : t));
+
+          return (
+            <>
+              {/* Layout selector */}
+              <Field label="Layout">
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: "cards", label: "Cards", desc: "Grid of review cards" },
+                    { value: "quotes", label: "Quotes", desc: "Centered pull quotes" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => (onChange as any)({ testimonials_layout: opt.value })}
+                      className={`p-2.5 border rounded-sm text-left transition-colors ${
+                        ((data as any).testimonials_layout ?? "cards") === opt.value
+                          ? "border-foreground bg-foreground/5"
+                          : "border-border hover:border-foreground/40"
+                      }`}
+                    >
+                      <span className="text-[10px] font-medium block mb-0.5">{opt.label}</span>
+                      <span className="text-[9px] text-muted-foreground leading-tight">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="Section Title">
+                <Input
+                  value={(data as any).testimonials_title ?? ""}
+                  onChange={(e) => (onChange as any)({ testimonials_title: e.target.value })}
+                  className="h-8 text-xs"
+                  placeholder="What Clients Say"
+                />
+              </Field>
+
+              {/* Testimonial list */}
+              <div className="flex flex-col gap-4">
+                {testimonials.map((t, idx) => (
+                  <div key={t.id} className="border border-border rounded-sm p-3 flex flex-col gap-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">#{idx + 1}</span>
+                      <button onClick={() => remove(t.id)} className="p-0.5 text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <Field label="Name">
+                      <Input value={t.name} onChange={(e) => edit(t.id, { name: e.target.value })} className="h-7 text-xs" placeholder="Client Name" />
+                    </Field>
+                    <Field label="Role / Location (optional)">
+                      <Input value={t.role ?? ""} onChange={(e) => edit(t.id, { role: e.target.value })} className="h-7 text-xs" placeholder="Wedding Client · São Paulo" />
+                    </Field>
+                    <Field label="Review">
+                      <Textarea value={t.text} onChange={(e) => edit(t.id, { text: e.target.value })} className="text-xs min-h-[70px] resize-none" placeholder="Write what this client said..." />
+                    </Field>
+                    {/* Star rating */}
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Rating</Label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => edit(t.id, { rating: star })}
+                            className={`transition-colors ${star <= (t.rating ?? 5) ? "text-foreground" : "text-muted-foreground/30"}`}
+                          >
+                            <Star className="h-4 w-4 fill-current" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={add}
+                className="flex items-center justify-center gap-2 w-full py-2.5 border border-dashed border-border hover:border-foreground/50 text-[10px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors rounded-sm"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Testimonial
+              </button>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
