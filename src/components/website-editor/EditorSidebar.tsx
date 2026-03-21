@@ -174,7 +174,7 @@ function PageRow({
               e.stopPropagation();
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full text-[11px] bg-transparent border-b border-primary outline-none font-light py-0.5"
+            className="w-full text-[11px] bg-background border border-primary rounded-sm outline-none font-light px-1.5 py-0.5 ring-2 ring-primary/20"
           />
         ) : (
           <span
