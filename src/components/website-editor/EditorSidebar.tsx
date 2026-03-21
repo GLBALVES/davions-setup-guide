@@ -187,50 +187,50 @@ function PageRow({
       {/* Actions */}
       {!editing && (
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          {/* + Add Section (always visible on hover for all pages) */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddSubPage(); }}
+            className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Add section"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+
           {!page.is_home && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
-              className="p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-              title={page.is_visible ? "Hide page" : "Show page"}
-            >
-              {page.is_visible ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
-            </button>
-          )}
-          {page.is_home ? (
-            <span className="p-0.5" title="Home page cannot be deleted">
-              <Lock className="h-2.5 w-2.5 text-muted-foreground/30" />
-            </span>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="p-0.5 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreHorizontal className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="text-xs">
-                <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); setEditing(true); setDraft(page.title); }}
-                  className="gap-2"
-                >
-                  <FileText className="h-3 w-3" /> Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); onAddSubPage(); }}
-                  className="gap-2"
-                >
-                  <CornerDownRight className="h-3 w-3" /> Add Section
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="gap-2 text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
+                className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title={page.is_visible ? "Hide page" : "Show page"}
+              >
+                {page.is_visible ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="text-xs">
+                  <DropdownMenuItem
+                    onClick={(e) => { e.stopPropagation(); setEditing(true); setDraft(page.title); }}
+                    className="gap-2"
+                  >
+                    <FileText className="h-3 w-3" /> Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    className="gap-2 text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           )}
         </div>
       )}
