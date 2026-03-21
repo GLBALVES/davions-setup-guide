@@ -67,40 +67,150 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
 
       {/* Fields */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
-        {blockKey === "header" && (
-          <>
-            <ImageUploadField label="Logo" value={data.logo_url ?? null} onChange={(url) => p({ logo_url: url })} />
-            <div className="flex flex-col gap-0.5 -mt-2">
-              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">📍 Shown in the <strong>navigation bar</strong> at the top of every page.</p>
-              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">Recommended: SVG or PNG with transparent background · max 200×60 px</p>
-            </div>
-            <Field label="Site / Studio Name">
-              <Input value={data.tagline ?? ""} onChange={(e) => p({ tagline: e.target.value })} className="h-8 text-xs" placeholder="Your Studio Name" />
-            </Field>
-            <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
-              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Navigation visibility</p>
-              <ToggleField label="Show Sessions link" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
-              <ToggleField label="Show About link" checked={data.show_about ?? true} onChange={(v) => p({ show_about: v })} />
-              <ToggleField label="Show Blog link" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
-              <ToggleField label="Show Contact / Social links" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
-            </div>
-            <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
-              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Social links in header</p>
-              <Field label="Instagram">
-                <Input value={data.instagram_url ?? ""} onChange={(e) => p({ instagram_url: e.target.value })} className="h-8 text-xs" placeholder="https://instagram.com/yourstudio" />
+        {blockKey === "header" && (() => {
+          const SOCIAL_OPTIONS: { key: string; label: string }[] = [
+            { key: "instagram", label: "Instagram" },
+            { key: "facebook",  label: "Facebook" },
+            { key: "youtube",   label: "YouTube" },
+            { key: "tiktok",    label: "TikTok" },
+            { key: "pinterest", label: "Pinterest" },
+            { key: "linkedin",  label: "LinkedIn" },
+            { key: "whatsapp",  label: "WhatsApp" },
+          ];
+          const visibleSocials: string[] = (data as any).header_visible_socials ?? SOCIAL_OPTIONS.map((s) => s.key);
+          const toggleSocial = (key: string, checked: boolean) => {
+            const next = checked
+              ? [...visibleSocials.filter((k) => k !== key), key]
+              : visibleSocials.filter((k) => k !== key);
+            (onChange as any)({ header_visible_socials: next });
+          };
+
+          return (
+            <>
+              <ImageUploadField label="Logo" value={data.logo_url ?? null} onChange={(url) => p({ logo_url: url })} />
+              <div className="flex flex-col gap-0.5 -mt-2">
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed">📍 Shown in the <strong>navigation bar</strong> at the top of every page.</p>
+                <p className="text-[10px] text-muted-foreground/50 leading-relaxed">Recommended: SVG or PNG with transparent background · max 200×60 px</p>
+              </div>
+              <Field label="Site / Studio Name">
+                <Input value={data.tagline ?? ""} onChange={(e) => p({ tagline: e.target.value })} className="h-8 text-xs" placeholder="Your Studio Name" />
               </Field>
-              <Field label="Facebook">
-                <Input value={data.facebook_url ?? ""} onChange={(e) => p({ facebook_url: e.target.value })} className="h-8 text-xs" placeholder="https://facebook.com/yourstudio" />
-              </Field>
-              <Field label="TikTok">
-                <Input value={data.tiktok_url ?? ""} onChange={(e) => p({ tiktok_url: e.target.value })} className="h-8 text-xs" placeholder="https://tiktok.com/@yourstudio" />
-              </Field>
-              <Field label="WhatsApp (number only)">
-                <Input value={data.whatsapp ?? ""} onChange={(e) => p({ whatsapp: e.target.value })} className="h-8 text-xs" placeholder="5511999999999" />
-              </Field>
-            </div>
-          </>
-        )}
+
+              {/* ── Colors ── */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Header colors</p>
+                {/* Background color */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(data as any).header_bg_color ?? "#ffffff"}
+                      onChange={(e) => (onChange as any)({ header_bg_color: e.target.value })}
+                      className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5"
+                    />
+                    <Input
+                      value={(data as any).header_bg_color ?? ""}
+                      onChange={(e) => (onChange as any)({ header_bg_color: e.target.value || null })}
+                      className="h-8 text-xs flex-1"
+                      placeholder="transparent (scroll-aware)"
+                    />
+                    {(data as any).header_bg_color && (
+                      <button
+                        onClick={() => (onChange as any)({ header_bg_color: null })}
+                        className="text-[9px] text-muted-foreground hover:text-destructive shrink-0"
+                        title="Reset to transparent"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-muted-foreground/60">Leave empty for the default scroll-aware transparent header.</p>
+                </div>
+                {/* Text / menu color */}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Menu Font Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(data as any).header_text_color ?? "#000000"}
+                      onChange={(e) => (onChange as any)({ header_text_color: e.target.value })}
+                      className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5"
+                    />
+                    <Input
+                      value={(data as any).header_text_color ?? ""}
+                      onChange={(e) => (onChange as any)({ header_text_color: e.target.value || null })}
+                      className="h-8 text-xs flex-1"
+                      placeholder="auto"
+                    />
+                    {(data as any).header_text_color && (
+                      <button
+                        onClick={() => (onChange as any)({ header_text_color: null })}
+                        className="text-[9px] text-muted-foreground hover:text-destructive shrink-0"
+                        title="Reset to auto"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Social icons visible in header ── */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-2.5">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Social icons in header</p>
+                <p className="text-[9px] text-muted-foreground/60 leading-relaxed">Select which icons to display. Only networks with a URL set will appear.</p>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  {SOCIAL_OPTIONS.map((opt) => (
+                    <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={visibleSocials.includes(opt.key)}
+                        onCheckedChange={(checked) => toggleSocial(opt.key, !!checked)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="text-[11px] font-light text-foreground">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Nav visibility ── */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Navigation visibility</p>
+                <ToggleField label="Show Sessions link" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
+                <ToggleField label="Show About link" checked={data.show_about ?? true} onChange={(v) => p({ show_about: v })} />
+                <ToggleField label="Show Blog link" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
+                <ToggleField label="Show Contact / Social links" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
+              </div>
+
+              {/* ── Social URLs ── */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Social URLs</p>
+                <Field label="Instagram">
+                  <Input value={data.instagram_url ?? ""} onChange={(e) => p({ instagram_url: e.target.value })} className="h-8 text-xs" placeholder="https://instagram.com/yourstudio" />
+                </Field>
+                <Field label="Facebook">
+                  <Input value={data.facebook_url ?? ""} onChange={(e) => p({ facebook_url: e.target.value })} className="h-8 text-xs" placeholder="https://facebook.com/yourstudio" />
+                </Field>
+                <Field label="YouTube">
+                  <Input value={data.youtube_url ?? ""} onChange={(e) => p({ youtube_url: e.target.value })} className="h-8 text-xs" placeholder="https://youtube.com/..." />
+                </Field>
+                <Field label="TikTok">
+                  <Input value={data.tiktok_url ?? ""} onChange={(e) => p({ tiktok_url: e.target.value })} className="h-8 text-xs" placeholder="https://tiktok.com/@yourstudio" />
+                </Field>
+                <Field label="Pinterest">
+                  <Input value={data.pinterest_url ?? ""} onChange={(e) => p({ pinterest_url: e.target.value })} className="h-8 text-xs" placeholder="https://pinterest.com/..." />
+                </Field>
+                <Field label="LinkedIn">
+                  <Input value={data.linkedin_url ?? ""} onChange={(e) => p({ linkedin_url: e.target.value })} className="h-8 text-xs" placeholder="https://linkedin.com/in/..." />
+                </Field>
+                <Field label="WhatsApp (number only)">
+                  <Input value={data.whatsapp ?? ""} onChange={(e) => p({ whatsapp: e.target.value })} className="h-8 text-xs" placeholder="5511999999999" />
+                </Field>
+              </div>
+            </>
+          );
+        })()}
 
         {blockKey === "hero" && (
           <>
