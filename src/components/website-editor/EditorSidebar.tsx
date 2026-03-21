@@ -469,6 +469,13 @@ function PagesTree({
                       <CornerDownRight className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0 ml-1" />
                       <span className="text-xs shrink-0">{section.icon}</span>
                       <span className="text-[11px] font-light tracking-wide truncate flex-1">{section.label}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onRemoveSection(page.id, section.key); }}
+                        className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                        title="Remove section"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
