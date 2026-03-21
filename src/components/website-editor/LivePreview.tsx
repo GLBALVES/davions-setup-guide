@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
@@ -13,26 +13,9 @@ interface Props {
   activeBlock: BlockKey | null;
 }
 
-const VIEWPORT_WIDTHS: Record<string, number> = {
-  desktop: 1280,
-  tablet: 768,
-  mobile: 375,
-};
-
-// Map section ids / data-block-key values to BlockKey
-const BLOCK_KEY_MAP: Record<string, BlockKey> = {
-  hero: "hero",
-  sessions: "sessions",
-  portfolio: "portfolio",
-  about: "about",
-  quote: "quote",
-  experience: "experience",
-  contact: "contact",
-  footer: "footer",
-};
-
 export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock, activeBlock }: Props) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -69,22 +52,44 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
     experience_text: data.experience_text ?? null,
   };
 
-  // Handle clicks on the overlay — find the data-block-key of the clicked element
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    const blockEl = target.closest("[data-block-key]") as HTMLElement | null;
-    if (blockEl) {
-      const key = blockEl.getAttribute("data-block-key") as BlockKey;
-      if (key && BLOCK_KEY_MAP[key]) {
-        onSelectBlock(BLOCK_KEY_MAP[key]);
-      }
+  // Handle mouse events bubbled up through the overlay to find the closest data-block-key
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Get the element under the pointer from the rendered site (beneath the overlay)
+    const overlay = e.currentTarget;
+    overlay.style.pointerEvents = "none";
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    overlay.style.pointerEvents = "all";
+
+    if (el) {
+      const blockEl = el.closest("[data-block-key]") as HTMLElement | null;
+      setHoveredBlock(blockEl?.getAttribute("data-block-key") ?? null);
+    } else {
+      setHoveredBlock(null);
     }
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const overlay = e.currentTarget;
+    overlay.style.pointerEvents = "none";
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    overlay.style.pointerEvents = "all";
+
+    if (el) {
+      const blockEl = el.closest("[data-block-key]") as HTMLElement | null;
+      const key = blockEl?.getAttribute("data-block-key") as BlockKey | null;
+      if (key) onSelectBlock(key);
+    }
+  };
+
+  const handleMouseLeave = () => setHoveredBlock(null);
+
+  // Determine cursor based on hovered block
+  const cursor = hoveredBlock ? "pointer" : "default";
+
   return (
-    <div className="relative w-full h-full">
-      {/* Actual site render — pointer-events disabled so links/buttons don't fire */}
-      <div className="pointer-events-none">
+    <div ref={containerRef} className="relative w-full">
+      {/* Site render — pointer-events disabled */}
+      <div id="editor-site-render">
         <PublicSiteRenderer
           photographer={photographer}
           site={siteConfig}
@@ -100,34 +105,26 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
         />
       </div>
 
-      {/* Transparent overlay that captures clicks and shows hover highlights */}
+      {/* Transparent full-coverage overlay that detects hover/click */}
       <div
-        ref={overlayRef}
-        className="absolute inset-0 z-10 editor-overlay"
-        onClick={handleOverlayClick}
-      >
-        {/* Invisible block zones matching the sections */}
-        {(["hero", "sessions", "portfolio", "about", "quote", "experience", "contact", "footer"] as BlockKey[]).map((key) => (
-          <BlockZone
-            key={key}
-            blockKey={key}
-            isActive={activeBlock === key}
-            onSelect={() => onSelectBlock(key)}
-          />
-        ))}
-      </div>
+        className="absolute inset-0 z-20"
+        style={{ cursor }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+      />
+
+      {/* Hover/active highlight injected via style tag so it can target data-block-key */}
+      <style>{`
+        #editor-site-render [data-block-key="${hoveredBlock || "__none__"}"] {
+          outline: 2px solid hsl(214, 100%, 55%);
+          outline-offset: -2px;
+        }
+        #editor-site-render [data-block-key="${activeBlock || "__none__"}"] {
+          outline: 2px solid hsl(214, 100%, 45%);
+          outline-offset: -2px;
+        }
+      `}</style>
     </div>
   );
-}
-
-// ── Block Zone overlay ──────────────────────────────────────────────────────
-// Each zone is a transparent absolute element that sits on top of the section.
-// Because the actual rendered site has data-block-key attributes, we use a simpler
-// approach: a full-coverage click overlay that reads data-block-key on the underlying
-// elements. The visible hover highlight is done via CSS on the data-block-key elements.
-
-function BlockZone({ blockKey, isActive, onSelect }: { blockKey: BlockKey; isActive: boolean; onSelect: () => void }) {
-  // We don't render explicit zone divs — the click is handled at the overlay level.
-  // This component is kept for potential future use (e.g., absolute positioning per-block).
-  return null;
 }
