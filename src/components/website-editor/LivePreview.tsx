@@ -53,14 +53,25 @@ export function LivePreview({
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
 
-  // Scroll to active block whenever it changes
+  // Scroll to active block whenever it changes.
+  // We retry with increasing delays because newly-added sections may not be in the DOM yet.
   useEffect(() => {
     if (!activeBlock) return;
-    const el = document.querySelector(`#editor-site-render [data-block-key="${activeBlock}"]`) as HTMLElement | null;
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    const scrollTo = () => {
+      const el = document.querySelector(`#editor-site-render [data-block-key="${activeBlock}"]`) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return true;
+      }
+      return false;
+    };
+    // Immediate attempt (works for already-rendered blocks)
+    if (!scrollTo()) {
+      // Retry after first paint (newly added section still rendering)
+      const t1 = setTimeout(() => { if (!scrollTo()) setTimeout(scrollTo, 300); }, 80);
+      return () => clearTimeout(t1);
     }
-  }, [activeBlock]);
+  }, [activeBlock, sections]);
   // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
   // doesn't cause a flicker (the enter handler cancels the timer before it fires).
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
