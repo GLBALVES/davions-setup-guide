@@ -1099,7 +1099,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       )}
 
       {/* Portfolio */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border bg-muted/20">
           <div className="max-w-4xl mx-auto px-6 py-20">
             <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
