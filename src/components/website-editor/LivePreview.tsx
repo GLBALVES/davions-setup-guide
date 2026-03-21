@@ -121,6 +121,12 @@ export function LivePreview({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Cancel any pending leave timer
+    if (leaveTimerRef.current) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+
     const overlay = e.currentTarget;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
@@ -164,9 +170,12 @@ export function LivePreview({
   };
 
   const handleMouseLeave = () => {
-    setHoveredBlock(null);
-    setToolbarPos(null);
-    setHoveredGap(null);
+    // Delay clearing so the user can move to the floating toolbar without it vanishing
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredBlock(null);
+      setToolbarPos(null);
+      setHoveredGap(null);
+    }, 300);
   };
 
   const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
