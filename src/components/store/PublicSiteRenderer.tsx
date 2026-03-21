@@ -516,8 +516,9 @@ function QuoteSection({ site, editMode, onFieldChange }: { site: SiteConfig | nu
 
 // ─── Experience Section ────────────────────────────────────────────────────────
 
-function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; accentColor: string }) {
-  if (!site?.experience_text) return null;
+function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { site: SiteConfig | null; accentColor: string; editMode?: boolean; onFieldChange?: (k: string, v: string) => void }) {
+  if (!site?.experience_text && !editMode) return null;
+  const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
     <section className="border-t border-border py-16 md:py-24">
       <div className="max-w-6xl mx-auto px-6">
@@ -525,12 +526,12 @@ function ExperienceSection({ site, accentColor }: { site: SiteConfig | null; acc
           <div className="md:w-1/3 shrink-0">
             <div className="w-8 h-px mb-6" style={{ backgroundColor: accentColor }} />
             <h2 className="text-2xl md:text-3xl font-light tracking-wide leading-snug">
-              {site.experience_title || "The Experience"}
+              <EditableText value={site?.experience_title || "The Experience"} fieldKey="experience_title" editMode={!!editMode} onSave={save} />
             </h2>
           </div>
           <div className="flex-1">
             <p className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line">
-              {site.experience_text}
+              <EditableText value={site?.experience_text ?? ""} fieldKey="experience_text" editMode={!!editMode} onSave={save} />
             </p>
           </div>
         </div>
