@@ -99,42 +99,17 @@ export function LivePreview({
 
   const getVisibleSections = () => sections.filter((s) => s.visible !== false);
 
-  const detectGap = useCallback((mouseY: number, hoveredKey: string | null) => {
-    const visibleSections = getVisibleSections();
-    // First check if near a boundary (±36px)
-    for (let i = 0; i < visibleSections.length; i++) {
-      const rect = getBlockRect(visibleSections[i].key);
-      if (!rect) continue;
-      if (Math.abs(mouseY - rect.bottom) <= 36) {
-        return {
-          index: sections.findIndex((s) => s.key === visibleSections[i].key) + 1,
-          top: rect.bottom,
-          left: rect.left,
-          width: rect.width,
-        };
-      }
-      if (i > 0 && Math.abs(mouseY - rect.top) <= 36) {
-        return {
-          index: sections.findIndex((s) => s.key === visibleSections[i].key),
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-        };
-      }
-    }
-    // Fallback: show at bottom of hovered block
-    if (hoveredKey) {
-      const rect = getBlockRect(hoveredKey);
-      if (rect && mouseY > rect.bottom - 80) {
-        return {
-          index: sections.findIndex((s) => s.key === hoveredKey) + 1,
-          top: rect.bottom,
-          left: rect.left,
-          width: rect.width,
-        };
-      }
-    }
-    return null;
+  // Always show "+" at the bottom edge of whichever block is hovered
+  const getGapForBlock = useCallback((hoveredKey: string | null) => {
+    if (!hoveredKey) return null;
+    const rect = getBlockRect(hoveredKey);
+    if (!rect) return null;
+    return {
+      index: sections.findIndex((s) => s.key === hoveredKey) + 1,
+      top: rect.bottom,
+      left: rect.left,
+      width: rect.width,
+    };
   }, [sections, getBlockRect]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
