@@ -17,6 +17,7 @@ import {
 import { EditorSidebar, DEFAULT_SECTIONS, type SectionDef } from "@/components/website-editor/EditorSidebar";
 import { BlockPanel, type BlockKey } from "@/components/website-editor/BlockPanel";
 import { LivePreview } from "@/components/website-editor/LivePreview";
+import { AddBlockModal } from "@/components/website-editor/AddBlockModal";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
 type Viewport = "desktop" | "tablet" | "mobile";
@@ -46,6 +47,11 @@ export default function WebsiteEditor() {
   const [sections, setSections] = useState<SectionDef[]>(DEFAULT_SECTIONS);
   const [activeBlock, setActiveBlock] = useState<BlockKey | null>(null);
   const [viewport, setViewport] = useState<Viewport>("desktop");
+
+  const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number }>({
+    open: false,
+    insertAfter: 0,
+  });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -140,6 +146,29 @@ export default function WebsiteEditor() {
     save(siteData, newSections);
   };
 
+  const handleOpenAddBlock = (insertAfterIndex: number) => {
+    setAddBlockState({ open: true, insertAfter: insertAfterIndex });
+  };
+
+  const handleAddBlock = (blockKey: BlockKey, insertAfterIndex: number) => {
+    const idx = sections.findIndex((s) => s.key === blockKey);
+    if (idx === -1) return;
+
+    // Make the section visible and move it to the desired position
+    const newSections = sections.map((s) =>
+      s.key === blockKey ? { ...s, visible: true } : s
+    );
+    const [removed] = newSections.splice(idx, 1);
+    // Clamp insert index
+    const clampedIndex = Math.min(insertAfterIndex, newSections.length);
+    newSections.splice(clampedIndex, 0, removed);
+
+    setSections(newSections);
+    save(siteData, newSections);
+    setAddBlockState({ open: false, insertAfter: 0 });
+    setActiveBlock(blockKey);
+  };
+
   const handlePublish = async () => {
     await save(siteData, sections, true);
     toast({ title: "Published!", description: "Your site is live." });
@@ -163,6 +192,9 @@ export default function WebsiteEditor() {
     photographer.full_name ||
     "My Site";
 
+  // Hidden sections (available to add)
+  const hiddenSections = sections.filter((s) => s.visible === false).map((s) => s.key);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -170,6 +202,19 @@ export default function WebsiteEditor() {
       </div>
     );
   }
+
+  const livePreviewProps = {
+    data: siteData,
+    photographer: photographerWithBio,
+    sessions,
+    galleries,
+    viewport,
+    onSelectBlock: setActiveBlock,
+    activeBlock,
+    onToggleVisibility: handleToggleVisibility,
+    onAddBlock: handleOpenAddBlock,
+    sections,
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
@@ -300,17 +345,7 @@ export default function WebsiteEditor() {
         <main className="flex-1 overflow-auto bg-muted/20 flex items-start justify-center">
           {viewport === "desktop" ? (
             <div className="w-full h-full overflow-auto relative">
-              <LivePreview
-                data={siteData}
-                photographer={photographerWithBio}
-                sessions={sessions}
-                galleries={galleries}
-                viewport={viewport}
-                onSelectBlock={setActiveBlock}
-                activeBlock={activeBlock}
-                onToggleVisibility={handleToggleVisibility}
-                sections={sections}
-              />
+              <LivePreview {...livePreviewProps} viewport="desktop" />
             </div>
           ) : (
             <div className="p-6 w-full flex justify-center">
@@ -318,22 +353,21 @@ export default function WebsiteEditor() {
                 className="bg-background shadow-2xl overflow-auto relative"
                 style={{ width: viewport === "tablet" ? 768 : 375, minHeight: "calc(100vh - 12rem)" }}
               >
-                <LivePreview
-                  data={siteData}
-                  photographer={photographerWithBio}
-                  sessions={sessions}
-                  galleries={galleries}
-                  viewport={viewport}
-                  onSelectBlock={setActiveBlock}
-                  activeBlock={activeBlock}
-                  onToggleVisibility={handleToggleVisibility}
-                  sections={sections}
-                />
+                <LivePreview {...livePreviewProps} viewport={viewport} />
               </div>
             </div>
           )}
         </main>
       </div>
+
+      {/* Add Block Modal */}
+      <AddBlockModal
+        open={addBlockState.open}
+        insertAfterIndex={addBlockState.insertAfter}
+        hiddenSections={hiddenSections}
+        onAdd={handleAddBlock}
+        onClose={() => setAddBlockState((s) => ({ ...s, open: false }))}
+      />
     </div>
   );
 }
