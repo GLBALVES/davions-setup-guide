@@ -48,18 +48,20 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
-export function BlockPanel({ blockKey, data, onChange, onBack }: Props) {
+export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Props) {
   const p = (patch: Parameters<typeof onChange>[0]) => onChange(patch);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-        <button onClick={onBack} className="p-1 hover:bg-muted rounded-sm transition-colors">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="text-[11px] tracking-[0.25em] uppercase font-light">{BLOCK_LABELS[blockKey]}</span>
-      </div>
+      {/* Header — hidden when embedded in LivePreview float panel */}
+      {!hideHeader && (
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
+          <button onClick={onBack} className="p-1 hover:bg-muted rounded-sm transition-colors">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[11px] tracking-[0.25em] uppercase font-light">{BLOCK_LABELS[blockKey]}</span>
+        </div>
+      )}
 
       {/* Fields */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
