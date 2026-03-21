@@ -903,16 +903,108 @@ function deriveCommon(props: Props) {
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
-  const { photographer, site } = props;
+  const { photographer, site, subPageTitle, subPageData } = props;
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const subheadline = site?.site_subheadline || photographer?.bio || "";
-  const seoTitle = site?.seo_title || `${displayName} — Photography`;
+  const seoTitle = subPageTitle
+    ? `${subPageTitle} — ${displayName}`
+    : site?.seo_title || `${displayName} — Photography`;
   const seoDescription = site?.seo_description || subheadline || undefined;
 
   const derived = deriveCommon(props);
   const template = site?.site_template || "editorial";
+
+  // Inject photographer's custom favicon into <head>
+  useEffect(() => {
+    const faviconUrl = site?.favicon_url;
+    if (!faviconUrl) return;
+    const setLink = (rel: string, type: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) {
+        el = document.createElement("link");
+        el.rel = rel;
+        document.head.appendChild(el);
+      }
+      el.type = type;
+      el.href = faviconUrl;
+    };
+    setLink("icon", "image/png");
+    setLink("apple-touch-icon", "image/png");
+    return () => {
+      const el = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+      if (el) el.href = "/favicon.png";
+    };
+  }, [site?.favicon_url]);
+
+  // Sub-page rendering (non-home pages from site_pages)
+  if (subPageTitle) {
+    const accentColor = site?.accent_color || "#000000";
+    const { navLinks, handleNavClick } = derived;
+    return (
+      <>
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          ogImage={site?.og_image_url || undefined}
+          ogUrl={seoUrl}
+          canonical={seoUrl}
+        />
+        <div className="min-h-screen bg-background">
+          <SharedNav
+            scrolled={props.scrolled}
+            mobileMenuOpen={props.mobileMenuOpen}
+            setMobileMenuOpen={props.setMobileMenuOpen}
+            displayName={displayName}
+            logoUrl={site?.logo_url ?? null}
+            accentColor={accentColor}
+            navLinks={navLinks}
+            showBooking={false}
+            ctaText=""
+            onNavClick={handleNavClick}
+          />
+          <div className="pt-24 max-w-4xl mx-auto px-6 pb-20">
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+            {subPageData?.content ? (
+              <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
+                {subPageData.content}
+              </div>
+            ) : (
+              <p className="text-sm font-light text-muted-foreground">
+                This page has no content yet. Edit it in the site editor.
+              </p>
+            )}
+          </div>
+          <SharedFooter site={site} showContact={true} />
+        </div>
+      </>
+    );
+  }
+
+  const templateEl = (() => {
+    switch (template) {
+      case "grid":     return <GridTemplate props={props} derived={derived} />;
+      case "magazine": return <MagazineTemplate props={props} derived={derived} />;
+      case "clean":    return <CleanTemplate props={props} derived={derived} />;
+      default:         return <EditorialTemplate props={props} derived={derived} />;
+    }
+  })();
+
+  return (
+    <>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        ogImage={site?.og_image_url || site?.site_hero_image_url || undefined}
+        ogUrl={seoUrl}
+        canonical={seoUrl}
+      />
+      {templateEl}
+    </>
+  );
+}
+
 
   const templateEl = (() => {
     switch (template) {
