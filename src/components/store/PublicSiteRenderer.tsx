@@ -337,7 +337,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       />
 
       {/* Hero */}
-      <div className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -355,11 +355,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions — alternating full-width blocks */}
       {showStore && (
-        <main id="sessions">
+        <main data-block-key="sessions" id="sessions">
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Camera className="h-10 w-10 text-muted-foreground/30" />
@@ -379,14 +379,12 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
                     className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300"
                   >
                     <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
-                      {/* Image */}
                       <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
                         {session.cover_image_url
                           ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                           : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
                         }
                       </div>
-                      {/* Text */}
                       <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
                         <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
                         <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
@@ -418,11 +416,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Experience */}
-      <ExperienceSection site={site} accentColor={accentColor} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
 
       {/* Portfolio */}
       {galleries.length > 0 && (
-        <section className="border-t border-border">
+        <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -447,8 +445,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         </section>
       )}
 
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
@@ -471,7 +469,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       />
 
       {/* Compact hero */}
-      <div className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -489,11 +487,11 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions dense grid */}
       {showStore && (
-        <main id="sessions" className="max-w-7xl mx-auto px-4 py-12">
+        <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
           {sessions.length > 0 && (
             <>
               <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Sessions</p>
@@ -505,7 +503,6 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                       ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
                     }
-                    {/* hover overlay */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
                       <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
                       {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
@@ -514,7 +511,6 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
                         <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
                       </div>
                     </div>
-                    {/* price badge always visible */}
                     <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
                       {formatPrice(session.price)}
                     </div>
@@ -526,7 +522,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
           {/* Galleries */}
           {galleries.length > 0 && (
-            <div className="mt-12">
+            <div data-block-key="portfolio" className="mt-12">
               <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Portfolio</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {galleries.map((gallery) => (
@@ -548,9 +544,9 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
@@ -575,13 +571,12 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       />
 
       {/* Hero — left-aligned headline over image */}
-      <div className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
         }
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        {/* Vertical accent line */}
         <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-8 md:px-16">
           <div className="flex items-start gap-5 max-w-2xl">
             <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
@@ -603,17 +598,15 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions — magazine asymmetric layout */}
       {showStore && sessions.length > 0 && (
-        <main id="sessions" className="max-w-6xl mx-auto px-6 py-16">
+        <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-4 mb-10">
             <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Sessions</p>
           </div>
-
-          {/* Featured large card */}
           {featured && (
             <button
               onClick={() => window.location.assign(sessionHref(featured))}
@@ -646,8 +639,6 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
               </div>
             </button>
           )}
-
-          {/* Remaining sessions in 3 cols */}
           {rest.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {rest.map((session) => (
@@ -674,9 +665,9 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </main>
       )}
 
-      {/* Galleries — masonry-like rows */}
+      {/* Galleries */}
       {galleries.length > 0 && (
-        <section className="border-t border-border">
+        <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
@@ -703,9 +694,9 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </section>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
@@ -728,7 +719,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       />
 
       {/* Hero — centered, image behind, big type */}
-      <div className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -751,11 +742,11 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
-      {/* Sessions — centered list, max width, generous spacing */}
+      {/* Sessions */}
       {showStore && sessions.length > 0 && (
-        <main id="sessions" className="max-w-2xl mx-auto px-6 py-20">
+        <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
           <div className="flex flex-col gap-0">
             {sessions.map((session, i) => (
@@ -781,9 +772,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </main>
       )}
 
-      {/* Portfolio — simple centered 2-col */}
+      {/* Portfolio */}
       {galleries.length > 0 && (
-        <section className="border-t border-border bg-muted/20">
+        <section data-block-key="portfolio" className="border-t border-border bg-muted/20">
           <div className="max-w-4xl mx-auto px-6 py-20">
             <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -804,9 +795,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      {/* About — clean centered */}
+      {/* About */}
       {(site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
-        <section id="about" className="border-t border-border">
+        <section data-block-key="about" id="about" className="border-t border-border">
           <div className="max-w-2xl mx-auto px-6 py-20 text-center">
             {site?.about_image_url && (
               <img src={site.about_image_url} alt={displayName} className="w-32 h-32 object-cover rounded-full mx-auto mb-8 grayscale" />
@@ -818,8 +809,8 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }

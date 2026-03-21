@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
@@ -10,20 +10,12 @@ interface Props {
   galleries: Gallery[];
   viewport: "desktop" | "tablet" | "mobile";
   onSelectBlock: (key: BlockKey) => void;
+  activeBlock: BlockKey | null;
 }
 
-const VIEWPORT_WIDTHS: Record<string, number> = {
-  desktop: 1280,
-  tablet: 768,
-  mobile: 375,
-};
-
-export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock }: Props) {
-  const [scrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const containerWidth = VIEWPORT_WIDTHS[viewport];
-  const scale = viewport === "desktop" ? 1 : undefined;
+export function LivePreview({ data, photographer, sessions, galleries, viewport, onSelectBlock, activeBlock }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -60,40 +52,79 @@ export function LivePreview({ data, photographer, sessions, galleries, viewport,
     experience_text: data.experience_text ?? null,
   };
 
-  const innerStyle = viewport !== "desktop"
-    ? { width: `${containerWidth}px`, transformOrigin: "top left" }
-    : { width: "100%" };
+  // Handle mouse events bubbled up through the overlay to find the closest data-block-key
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Get the element under the pointer from the rendered site (beneath the overlay)
+    const overlay = e.currentTarget;
+    overlay.style.pointerEvents = "none";
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    overlay.style.pointerEvents = "all";
+
+    if (el) {
+      const blockEl = el.closest("[data-block-key]") as HTMLElement | null;
+      setHoveredBlock(blockEl?.getAttribute("data-block-key") ?? null);
+    } else {
+      setHoveredBlock(null);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const overlay = e.currentTarget;
+    overlay.style.pointerEvents = "none";
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    overlay.style.pointerEvents = "all";
+
+    if (el) {
+      const blockEl = el.closest("[data-block-key]") as HTMLElement | null;
+      const key = blockEl?.getAttribute("data-block-key") as BlockKey | null;
+      if (key) onSelectBlock(key);
+    }
+  };
+
+  const handleMouseLeave = () => setHoveredBlock(null);
+
+  // Determine cursor based on hovered block
+  const cursor = hoveredBlock ? "pointer" : "default";
 
   return (
-    <div className="relative flex-1 h-full overflow-auto bg-muted/30">
-      {/* Viewport frame */}
-      <div
-        className="relative mx-auto bg-background shadow-lg overflow-hidden"
-        style={
-          viewport === "desktop"
-            ? { width: "100%", minHeight: "100%" }
-            : { width: `${containerWidth}px`, minHeight: "100%" }
-        }
-      >
-        {/* Click overlay layer to intercept section clicks */}
-        <div className="relative">
-          <div className="pointer-events-none" style={innerStyle}>
-            <PublicSiteRenderer
-              photographer={photographer}
-              site={siteConfig}
-              sessions={sessions}
-              galleries={galleries}
-              scrolled={scrolled}
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              seoUrl=""
-              sessionHref={() => "#"}
-              galleryHref={() => "#"}
-              blogHref="#"
-            />
-          </div>
-        </div>
+    <div ref={containerRef} className="relative w-full">
+      {/* Site render — pointer-events disabled */}
+      <div id="editor-site-render">
+        <PublicSiteRenderer
+          photographer={photographer}
+          site={siteConfig}
+          sessions={sessions}
+          galleries={galleries}
+          scrolled={false}
+          mobileMenuOpen={false}
+          setMobileMenuOpen={() => {}}
+          seoUrl=""
+          sessionHref={() => "#"}
+          galleryHref={() => "#"}
+          blogHref="#"
+        />
       </div>
+
+      {/* Transparent full-coverage overlay that detects hover/click */}
+      <div
+        className="absolute inset-0 z-20"
+        style={{ cursor }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+      />
+
+      {/* Hover/active highlight injected via style tag so it can target data-block-key */}
+      <style>{`
+        #editor-site-render [data-block-key="${hoveredBlock || "__none__"}"] {
+          outline: 2px solid hsl(214, 100%, 55%);
+          outline-offset: -2px;
+        }
+        #editor-site-render [data-block-key="${activeBlock || "__none__"}"] {
+          outline: 2px solid hsl(214, 100%, 45%);
+          outline-offset: -2px;
+        }
+      `}</style>
     </div>
   );
 }
