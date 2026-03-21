@@ -419,15 +419,20 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
   const currentCategory = CATEGORIES.find((c) => c.id === activeCategory) ?? CATEGORIES[0];
   const isAvailable = (_key: BlockKey) => true;
 
+  // Resolve the BlockKey from the selected variantId
+  const selectedBlockKey = selectedVariantId
+    ? CATEGORIES.flatMap(c => c.blocks).find(b => b.variantId === selectedVariantId)?.key ?? null
+    : null;
+
   const handleClose = () => {
-    setSelectedBlock(null);
+    setSelectedVariantId(null);
     onClose();
   };
 
   const handleConfirm = () => {
-    if (!selectedBlock) return;
-    onAdd(selectedBlock, insertAfterIndex);
-    setSelectedBlock(null);
+    if (!selectedBlockKey) return;
+    onAdd(selectedBlockKey, insertAfterIndex);
+    setSelectedVariantId(null);
   };
 
   return (
@@ -437,10 +442,10 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
           <DialogTitle className="text-sm font-light tracking-[0.12em] uppercase">
             Add Section
           </DialogTitle>
-          {selectedBlock && (
+          {selectedVariantId && (
             <div className="flex items-center gap-2 mr-6">
               <span className="text-[10px] text-muted-foreground tracking-wide">
-                {CATEGORIES.flatMap(c => c.blocks).find(b => b.key === selectedBlock)?.label}
+                {CATEGORIES.flatMap(c => c.blocks).find(b => b.variantId === selectedVariantId)?.label}
               </span>
               <button
                 onClick={handleClose}
@@ -481,14 +486,14 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
             <div className="grid grid-cols-3 gap-4">
               {currentCategory.blocks.map((block, i) => {
                 const available = isAvailable(block.key);
-                const hoverKey = `${block.key}-${i}`;
+                const hoverKey = `${block.variantId}-${i}`;
                 const isHovered = hoveredBlock === hoverKey;
-                const isSelected = selectedBlock === block.key;
+                const isSelected = selectedVariantId === block.variantId;
 
                 return (
                   <button
-                    key={hoverKey}
-                    onClick={() => available && setSelectedBlock(isSelected ? null : block.key)}
+                    key={block.variantId}
+                    onClick={() => available && setSelectedVariantId(isSelected ? null : block.variantId)}
                     onMouseEnter={() => available && setHoveredBlock(hoverKey)}
                     onMouseLeave={() => setHoveredBlock(null)}
                     className={`group flex flex-col rounded-md overflow-hidden text-left transition-all duration-200 ${
