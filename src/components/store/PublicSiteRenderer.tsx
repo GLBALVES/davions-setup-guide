@@ -337,7 +337,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       />
 
       {/* Hero */}
-      <div className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
