@@ -14,6 +14,8 @@ interface Props {
   data: Partial<SiteConfig> & { bio?: string };
   onChange: (patch: Partial<SiteConfig> & { bio?: string }) => void;
   onBack: () => void;
+  /** When true, suppress the built-in header (used when the panel is hosted in LivePreview) */
+  hideHeader?: boolean;
 }
 
 const BLOCK_LABELS: Record<BlockKey, string> = {

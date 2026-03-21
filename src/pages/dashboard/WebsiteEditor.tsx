@@ -319,6 +319,7 @@ export default function WebsiteEditor() {
     onToggleVisibility: handleToggleVisibility,
     onAddBlock: handleOpenAddBlock,
     sections,
+    onDataChange: handleDataChange,
   };
 
   return (
