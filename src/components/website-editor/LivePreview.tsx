@@ -159,6 +159,13 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
+    // If the user clicked a CTA / nav scroll button, perform the scroll
+    const scrollTarget = el?.closest("[data-scroll-to]")?.getAttribute("data-scroll-to");
+    if (scrollTarget) {
+      const target = document.querySelector(scrollTarget);
+      if (target) { target.scrollIntoView({ behavior: "smooth" }); return; }
+    }
+
     const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
     const key = blockEl?.getAttribute("data-block-key") as BlockKey | null;
     if (key) onSelectBlock(key);

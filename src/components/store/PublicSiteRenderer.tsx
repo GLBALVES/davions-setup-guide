@@ -573,7 +573,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
             {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
               ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
+              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
@@ -590,7 +590,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
             {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (site?.cta_link
               ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
-              : <button onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
+              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
             )}
           </div>
         </div>
@@ -724,7 +724,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
           {showBooking && (
             site?.cta_link
               ? <a href={editMode ? undefined : site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</a>
-              : <button onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
+              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
           )}
         </div>
       </div>
@@ -831,7 +831,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
                 <div className="mt-5">
                   {site?.cta_link
                     ? <a href={editMode ? undefined : site.cta_link} style={{ color: accentColor, borderColor: accentColor }} className="inline-block px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</a>
-                    : <button onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</button>
+                    : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</button>
                   }
                 </div>
               )}
@@ -975,7 +975,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
             <div className="mt-4">
               {site?.cta_link
                 ? <a href={editMode ? undefined : site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</a>
-                : <button onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
+                : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
               }
             </div>
           )}
