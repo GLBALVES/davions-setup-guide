@@ -355,11 +355,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions — alternating full-width blocks */}
       {showStore && (
-        <main id="sessions">
+        <main data-block-key="sessions" id="sessions">
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Camera className="h-10 w-10 text-muted-foreground/30" />
@@ -379,14 +379,12 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
                     className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300"
                   >
                     <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
-                      {/* Image */}
                       <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
                         {session.cover_image_url
                           ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                           : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
                         }
                       </div>
-                      {/* Text */}
                       <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
                         <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
                         <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
@@ -418,11 +416,11 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Experience */}
-      <ExperienceSection site={site} accentColor={accentColor} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
 
       {/* Portfolio */}
       {galleries.length > 0 && (
-        <section className="border-t border-border">
+        <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -447,8 +445,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         </section>
       )}
 
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
