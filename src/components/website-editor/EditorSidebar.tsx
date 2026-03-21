@@ -409,6 +409,7 @@ function PagesTree({
                       isActive={activeBlock === section.key && (activePageId === null || activePageId === homePage.id)}
                       onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
                       onToggle={() => onToggleVisibility(section.key)}
+                      onRename={(label) => onReorder(sections.map((s) => s.key === section.key ? { ...s, label } : s))}
                     />
                   ))}
                 </SortableContext>
