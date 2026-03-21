@@ -361,6 +361,11 @@ export default function WebsiteEditor() {
     );
   }
 
+  const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
+  const activePageSections: SectionDef[] = activePage && !activePage.is_home
+    ? ((activePage.sections_order as SectionDef[]) ?? [])
+    : sections;
+
   const livePreviewProps = {
     data: siteData,
     photographer: photographerWithBio,
@@ -371,7 +376,7 @@ export default function WebsiteEditor() {
     activeBlock,
     onToggleVisibility: handleToggleVisibility,
     onAddBlock: handleOpenAddBlock,
-    sections,
+    sections: activePageSections,
     onDataChange: handleDataChange,
   };
 
