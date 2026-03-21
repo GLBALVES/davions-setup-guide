@@ -686,7 +686,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
 
       {/* Sessions — alternating full-width blocks */}
-      {showStore && (
+      {showBlock("sessions") && showStore && (
         <main data-block-key="sessions" id="sessions">
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
