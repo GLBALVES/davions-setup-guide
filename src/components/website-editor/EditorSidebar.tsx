@@ -16,12 +16,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Eye, EyeOff, GripVertical, Settings2, Layers, Palette } from "lucide-react";
+import { Eye, EyeOff, GripVertical, Settings2, Layers, Palette, LayoutList } from "lucide-react";
 import type { BlockKey } from "./BlockPanel";
 import type { SiteConfig } from "@/components/store/PublicSiteRenderer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUploadField } from "./ImageUploadField";
+import { PagesTab, type SitePage } from "./PagesTab";
 
 export interface SectionDef {
   key: BlockKey;
@@ -203,11 +204,23 @@ interface Props {
   onReorder: (sections: SectionDef[]) => void;
   onToggleVisibility: (key: BlockKey) => void;
   onStyleChange: (patch: Partial<SiteConfig>) => void;
+  // Pages
+  pages: SitePage[];
+  activePageId: string | null;
+  onSelectPage: (id: string | null) => void;
+  onAddPage: (parentId?: string | null) => void;
+  onDeletePage: (id: string) => void;
+  onRenamePage: (id: string, title: string) => void;
+  onTogglePageVisibility: (id: string) => void;
+  onReorderPages: (pages: SitePage[]) => void;
 }
 
-type Tab = "sections" | "styles";
+type Tab = "sections" | "styles" | "pages";
 
-export function EditorSidebar({ data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange }: Props) {
+export function EditorSidebar({
+  data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
+  pages, activePageId, onSelectPage, onAddPage, onDeletePage, onRenamePage, onTogglePageVisibility, onReorderPages,
+}: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("sections");
 
   const sensors = useSensors(
@@ -224,32 +237,30 @@ export function EditorSidebar({ data, sections, activeBlock, onSelectBlock, onRe
     }
   };
 
+  const tabs = [
+    { key: "sections" as Tab, label: "Sections", Icon: Layers },
+    { key: "styles"   as Tab, label: "Styles",   Icon: Palette },
+    { key: "pages"    as Tab, label: "Pages",     Icon: LayoutList },
+  ];
+
   return (
     <div className="flex flex-col h-full">
       {/* Tab Bar */}
       <div className="flex border-b border-border shrink-0">
-        <button
-          onClick={() => setActiveTab("sections")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] tracking-[0.2em] uppercase font-light transition-colors ${
-            activeTab === "sections"
-              ? "text-foreground border-b-2 border-foreground -mb-px"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Layers className="h-3 w-3" />
-          Sections
-        </button>
-        <button
-          onClick={() => setActiveTab("styles")}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] tracking-[0.2em] uppercase font-light transition-colors ${
-            activeTab === "styles"
-              ? "text-foreground border-b-2 border-foreground -mb-px"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Palette className="h-3 w-3" />
-          Styles
-        </button>
+        {tabs.map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] tracking-[0.2em] uppercase font-light transition-colors ${
+              activeTab === key
+                ? "text-foreground border-b-2 border-foreground -mb-px"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-3 w-3" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {activeTab === "sections" && (
@@ -277,6 +288,19 @@ export function EditorSidebar({ data, sections, activeBlock, onSelectBlock, onRe
 
       {activeTab === "styles" && (
         <StylesTab data={data} onChange={onStyleChange} />
+      )}
+
+      {activeTab === "pages" && (
+        <PagesTab
+          pages={pages}
+          activePageId={activePageId}
+          onSelectPage={onSelectPage}
+          onAddPage={onAddPage}
+          onDeletePage={onDeletePage}
+          onRenamePage={onRenamePage}
+          onToggleVisibility={onTogglePageVisibility}
+          onReorder={onReorderPages}
+        />
       )}
     </div>
   );
