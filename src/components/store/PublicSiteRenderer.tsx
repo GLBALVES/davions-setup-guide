@@ -190,6 +190,12 @@ interface Props {
   editMode?: boolean;
   /** Callback when an inline text field is edited */
   onFieldChange?: (fieldKey: string, value: string) => void;
+  /**
+   * When provided (editor mode for a specific page), only render the blocks
+   * whose key is in this array, in the order they appear in the array.
+   * null / undefined = render everything (default behaviour).
+   */
+  visibleSections?: string[] | null;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -627,7 +633,7 @@ function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { sit
 
 function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -637,7 +643,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
       {/* Hero */}
-      {(site?.hero_layout ?? "full") === "split" ? (
+      {showBlock("hero") && (site?.hero_layout ?? "full") === "split" ? (
         <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
           {/* Image half */}
           <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
@@ -677,10 +683,10 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
+      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
 
       {/* Sessions — alternating full-width blocks */}
-      {showStore && (
+      {showBlock("sessions") && showStore && (
         <main data-block-key="sessions" id="sessions">
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
@@ -738,10 +744,10 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       )}
 
       {/* Experience */}
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
+      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
 
       {/* Portfolio */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
@@ -767,9 +773,9 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         </section>
       )}
 
-      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
@@ -781,7 +787,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
 
 function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -810,9 +816,9 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
+      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
       {/* Sessions dense grid */}
-      {showStore && (
+      {showBlock("sessions") && showStore && (
         <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
           {sessions.length > 0 && (
             <>
@@ -866,10 +872,10 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </main>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
@@ -881,7 +887,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
 function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   const [featured, ...rest] = sessions;
 
@@ -921,8 +927,8 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      {showStore && sessions.length > 0 && (
+      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("sessions") && showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-4 mb-10">
             <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
@@ -987,7 +993,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       )}
 
       {/* Galleries */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
@@ -1015,10 +1021,10 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </section>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
@@ -1030,7 +1036,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 
 function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   return (
     <div className="min-h-screen bg-background">
@@ -1064,8 +1070,8 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      {showStore && sessions.length > 0 && (
+      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("sessions") && showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
           <div className="flex flex-col gap-0">
@@ -1093,7 +1099,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       )}
 
       {/* Portfolio */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border bg-muted/20">
           <div className="max-w-4xl mx-auto px-6 py-20">
             <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
@@ -1116,7 +1122,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       )}
 
       {/* About */}
-      {(site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
+      {showBlock("about") && (site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
         <section data-block-key="about" id="about" className="border-t border-border">
           <div className="max-w-2xl mx-auto px-6 py-20 text-center">
             {site?.about_image_url && (
@@ -1129,9 +1135,9 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         </section>
       )}
 
-      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
-      <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
+      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
+      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
     </div>
   );
 }
@@ -1139,7 +1145,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
-  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange } = props;
+  const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange, visibleSections } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const headline = site?.site_headline || displayName;
@@ -1184,7 +1190,15 @@ function deriveCommon(props: Props) {
     />
   );
 
-  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed };
+  /**
+   * Returns true if the given block key should be rendered.
+   * When visibleSections is null/undefined (home page or public view), everything renders.
+   * When it's an array, only keys present in the array render.
+   */
+  const showBlock = (key: string): boolean =>
+    !visibleSections || visibleSections.includes(key);
+
+  return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed, showBlock };
 }
 
 // ─── Main Router ─────────────────────────────────────────────────────────
