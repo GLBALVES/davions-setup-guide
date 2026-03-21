@@ -151,6 +151,7 @@ const App = () => {
                  <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/creative" element={<ProtectedRoute><PermissionGate permKey="creative"><CreativeStudio /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/website" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteSettings /></PermissionGate></ProtectedRoute>} />
+                 <Route path="/dashboard/website/editor" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteEditor /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/website/preview" element={<ProtectedRoute><WebsitePreview /></ProtectedRoute>} />
                  <Route path="/dashboard/access-control" element={<ProtectedRoute><AccessControl /></ProtectedRoute>} />
                  <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
