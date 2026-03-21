@@ -132,6 +132,9 @@ export function LivePreview({
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "all";
 
+    // If the mouse moved onto our own toolbar/gap button, keep state as-is
+    if (el?.closest("[data-editor-toolbar]")) return;
+
     const containerRect = containerRef.current?.getBoundingClientRect();
     const mouseY = containerRect ? e.clientY - containerRect.top : 0;
 
@@ -212,7 +215,8 @@ export function LivePreview({
       {/* Floating inline toolbar — shown on hover */}
       {hoveredBlock && toolbarPos && (
         <div
-          className="absolute z-30 flex items-center gap-px pointer-events-none"
+          data-editor-toolbar
+          className="absolute z-30 flex items-center gap-px"
           style={{
             top: Math.max(0, toolbarPos.top),
             left: toolbarPos.left,
@@ -232,11 +236,11 @@ export function LivePreview({
             }, 200);
           }}
         >
-          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg pointer-events-auto rounded-sm">
+          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg rounded-sm cursor-default">
             <GripVertical className="h-3 w-3 opacity-50" />
             <span>{BLOCK_LABELS[hoveredBlock] ?? hoveredBlock}</span>
           </div>
-          <div className="flex items-center gap-px pointer-events-auto ml-1">
+          <div className="flex items-center gap-px ml-1">
             <button
               className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 text-[10px] hover:bg-primary/80 transition-colors shadow-lg rounded-sm"
               onClick={(e) => { e.stopPropagation(); onSelectBlock(hoveredBlock as BlockKey); }}
