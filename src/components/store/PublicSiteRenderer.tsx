@@ -1036,7 +1036,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 
 function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   return (
     <div className="min-h-screen bg-background">
