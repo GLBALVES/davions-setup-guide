@@ -19,6 +19,7 @@ import { BlockPanel, type BlockKey } from "@/components/website-editor/BlockPane
 import { LivePreview } from "@/components/website-editor/LivePreview";
 import { AddBlockModal } from "@/components/website-editor/AddBlockModal";
 import { type SitePage } from "@/components/website-editor/PagesTab";
+import { PageContentPanel, type PageContent } from "@/components/website-editor/PageContentPanel";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
 type Viewport = "desktop" | "tablet" | "mobile";
@@ -244,6 +245,36 @@ export default function WebsiteEditor() {
     setActiveBlock(null); // Clear active block when switching pages
   };
 
+  const handlePageContentChange = async (pageId: string, content: PageContent) => {
+    if (!user) return;
+    // Update local state immediately
+    setPages((prev) =>
+      prev.map((p) => p.id === pageId ? { ...p, page_content: content as any } : p)
+    );
+    // Debounced save to site_pages
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSaveStatus("pending");
+      const { error } = await supabase
+        .from("site_pages")
+        .update({ page_content: content as any, title: content.page_title ?? "" } as any)
+        .eq("id", pageId);
+      if (!error) {
+        // Also update local title in pages
+        if (content.page_title) {
+          setPages((prev) =>
+            prev.map((p) => p.id === pageId ? { ...p, title: content.page_title! } : p)
+          );
+        }
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2500);
+      } else {
+        setSaveStatus("idle");
+      }
+    }, 1200);
+    setSaveStatus("pending");
+  };
+
   const handlePublish = async () => {
     await save(siteData, sections, true);
     toast({ title: "Published!", description: "Your site is live." });
@@ -395,14 +426,30 @@ export default function WebsiteEditor() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel (260px) */}
         <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
-          {activeBlock ? (
+          {/* Non-home page selected → show page content editor */}
+          {activePageId !== null && !activeBlock && (() => {
+            const activePage = pages.find((p) => p.id === activePageId);
+            return activePage && !activePage.is_home ? (
+              <PageContentPanel
+                page={activePage}
+                onBack={() => setActivePageId(null)}
+                onChange={handlePageContentChange}
+              />
+            ) : null;
+          })()}
+
+          {/* Home page with active block → BlockPanel */}
+          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && activeBlock && (
             <BlockPanel
               blockKey={activeBlock}
               data={siteData}
               onChange={handleDataChange}
               onBack={() => setActiveBlock(null)}
             />
-          ) : (
+          )}
+
+          {/* Default: EditorSidebar (home page, no block selected) */}
+          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && !activeBlock && (
             <EditorSidebar
               data={siteData}
               sections={sections}
