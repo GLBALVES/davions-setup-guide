@@ -30,6 +30,7 @@ interface Props {
   onAddBlock: (insertAfterIndex: number) => void;
   sections: SectionDef[];
   onDataChange: (patch: Partial<SiteConfig> & { bio?: string }) => void;
+  storeSlug?: string | null;
 }
 
 export function LivePreview({
