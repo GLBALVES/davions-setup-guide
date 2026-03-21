@@ -19,7 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Eye, EyeOff, GripVertical, Settings2, Palette, LayoutList,
   ChevronDown, ChevronRight, Home, Plus, Trash2, CornerDownRight,
-  MoreHorizontal, FileText, Lock,
+  MoreHorizontal, FileText,
 } from "lucide-react";
 import type { BlockKey } from "./BlockPanel";
 import type { SiteConfig } from "@/components/store/PublicSiteRenderer";
