@@ -45,6 +45,7 @@ export function LivePreview({
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
