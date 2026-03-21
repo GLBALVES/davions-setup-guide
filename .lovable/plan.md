@@ -1,98 +1,81 @@
 
-## Análise do código-fonte do Pixieset — O que aprender e implementar
+## Botão "+" entre seções — Modal "Add Block" estilo Pixieset
 
-### O que o código revela sobre a arquitetura do Pixieset
+### O que o usuário quer
+Ao passar o mouse entre duas seções no preview do editor, aparecer um botão "+" que ao ser clicado abre um modal com um catálogo de blocos/layouts disponíveis para adicionar àquela posição — exatamente como no Pixieset (imagem de referência).
 
-**1. Sistema de blocos com `data-blockkey` em cada container**
-Cada bloco tem: `data-blockid`, `data-blockUuid`, `data-blockkey` (ex: `"single_text_block"`, `"single_photo_with_text_horizontal_block"`, `"divider_block"`, `"feature_links_multiple_photos_block"`)
-→ **Nosso editor já implementou isso com `data-block-key`** — estamos no caminho certo.
+### Abordagem
 
-**2. Toolbar inline flutuante por bloco (block-container__menu)**
-Cada `block-container` tem um `block-container__menu` escondido que aparece no hover com:
-- **Layout A/B/C** — shortcut para trocar variação de layout do bloco
-- **Edit** (ícone engrenagem) — abre painel lateral
-- **Duplicate** (ícone clone)
-- **Delete** (ícone trash)
-- **Move** (drag handle vertical `fa-arrows-v`)
+O sistema atual usa seções fixas com toggle de visibilidade. A lógica do "+" será: **mostrar uma seção oculta** ou **reposicionar** uma seção oculta para a posição entre dois blocos existentes. O modal exibe thumbnails visuais agrupados por categoria (Banner, Info Block, Quote, About, etc.), e ao clicar num bloco, ele é inserido/ativado naquela posição.
 
-Isso aparece diretamente no canvas, sobreposto ao bloco.
+#### Fluxo
+1. No `LivePreview`, ao hover sobre a borda inferior de um bloco, aparece uma linha com botão `+` centralizado
+2. Clicar no `+` abre `AddBlockModal` — modal tela cheia com painel de categorias à esquerda e grid de thumbnails à direita
+3. Ao selecionar um template de bloco: se a seção já existe mas está oculta → torná-la visível e movê-la para essa posição; se já está visível → abrir o `BlockPanel` para edição
 
-**3. Botão "+" entre blocos (block-container__add-block-link)**
-Cada bloco tem dois links: `--top` e `--bottom`, que mostram `<i class="far fa-plus">` centralizado com uma linha horizontal. Clica e abre `#add-block-modal`.
+### Componentes
 
-**4. Sistema de CSS variables por bloco para cores**
-Cada bloco tem `style="--primary-background:#FFFFFF; --primary-headings:#826645; ..."` — esquema de cores individual por bloco (não apenas cor de accent global).
+**1. `src/components/website-editor/AddBlockModal.tsx`** (novo)
+- Dialog fullscreen ou max-w-4xl
+- Sidebar esquerda com categorias: Hero, Sessions, Portfolio, About, Quote, Experience, Contact, Footer
+- Grid de "cards preview" para cada categoria com mockup visual SVG/div
+- Cada card mostra um mini thumbnail descritivo + label
+- Ao clicar: chama `onAdd(blockKey, insertAfterIndex)`
 
-**5. Color shuffler por bloco**
-`<div class="block-color-scheme__menu"><div class="color-shuffler__menu"></div></div>` — cada bloco pode ter seu próprio esquema de cores (light/accent/dark).
+**2. `src/components/website-editor/LivePreview.tsx`** (editar)
+- Novo estado: `hoveredGap: number | null` — índice da "gap" entre seções (0 = antes do primeiro, n = após o nth)
+- Calcular posições de todas as seções visíveis para detectar quando o mouse está perto do limite inferior de um bloco
+- Renderizar linha `+` posicionada entre os blocos ao hover
+- Botão `+` é `pointer-events-auto` e chama `onAddBlock(insertAfterIndex)`
 
----
+**3. `src/pages/dashboard/WebsiteEditor.tsx`** (editar)
+- Novo estado `addBlockState: { open: boolean; insertAfter: number } | null`
+- Handler `handleAddBlock(blockKey, insertAfter)`: 
+  - Se seção está oculta: `setSections` para torná-la visível e reordenar
+  - Se já visível: apenas ativar o `BlockPanel` correspondente
+  - Chama `save()`
 
-### O que implementar agora (baseado no código real)
-
-**A. Toolbar inline no canvas** ← diferencial principal
-Quando o usuário hover sobre uma seção no preview, mostrar uma toolbar flutuante no topo do bloco com:
-- Label do bloco (ex: "Hero")
-- Botão Edit (abre painel esquerdo)
-- Botão de visibilidade toggle (show/hide)
-- Drag handle (apenas visual por ora)
-
-Implementação: em `LivePreview.tsx`, além do overlay transparente, renderizar condicionalmente um `div` posicionado absolute no topo do `hoveredBlock`, com os botões de ação. Coordenadas calculadas via `getBoundingClientRect()` do elemento com `data-block-key`.
-
-**B. Botão "+" entre seções no canvas**
-Pixieset coloca o `+` no topo E na base de cada bloco. Ao clicar, poderia scrollar o painel esquerdo para a seção correspondente ou mostrar seções ocultas.
-
-Implementação mais simples: ao hover sobre a borda inferior de um bloco, mostrar um botão `+` centralizado que, ao clicar, alterna a visibilidade da próxima seção oculta ou abre a lista de seções no painel.
-
-**C. Variação de layout por bloco (Layout A/B/C)**
-Pixieset tem múltiplas variações de layout para o mesmo tipo de bloco (text-only, photo+text lado esquerdo, photo+text lado direito, etc.). Nosso sistema atualmente tem apenas um layout fixo por seção.
-
-Implementação: adicionar campo `hero_layout` (values: "full", "split-left", "split-right"), `about_layout` ("text-only", "image-left", "image-right") no `SiteConfig` e no `BlockPanel`. Renderizar variações diferentes no `PublicSiteRenderer` baseado nesses campos.
-
----
-
-### Plano de implementação
-
-**Arquivo: `LivePreview.tsx`**
-- Calcular a posição do bloco hovado via `getBoundingClientRect`
-- Renderizar toolbar flutuante posicionada no topo do bloco hovado
-- Toolbar contém: label, botão edit (→ onSelectBlock), botão eye (→ onToggleVisibility), drag handle visual
-
-**Arquivo: `BlockPanel.tsx`**
-- Adicionar seletor de variação de layout para Hero ("Imagem cheia", "Texto + Imagem") e About ("Texto + Imagem Lado Direito", "Texto + Imagem Lado Esquerdo")
-- Usar um seletor visual com thumbnails ou botões
-
-**Arquivo: `PublicSiteRenderer.tsx`**
-- Suporte à variação de layout no Hero (full-bleed vs split)
-- Suporte à variação de layout no About (imagem à esquerda vs direita)
-
-**Arquivo: `EditorSidebar.tsx`** (mudança menor)
-- No hover de cada item da lista de seções, mostrar os mesmos botões (eye + settings) que já existem mas de forma mais visível
-
-### Props adicionais necessárias em LivePreview
-
+**4. `src/components/website-editor/LivePreview.tsx` — Props adicionais**
 ```tsx
-interface Props {
-  // existentes...
-  onToggleVisibility: (key: BlockKey) => void;  // ← novo
-  sections: SectionDef[];                        // ← novo (para saber quais estão visíveis)
+onAddBlock: (insertAfterIndex: number) => void;
+```
+
+### Categorias e thumbnails do modal
+
+| Categoria | Blocos disponíveis | Mockup visual |
+|---|---|---|
+| Banner/Hero | Hero Full Bleed, Hero Split | Div com bg escuro + texto centrado |
+| Content | About (image-right), About (image-left), About (text-only), Experience | Layout 50/50 ou texto |
+| Quote | Quote | Aspas grandes + texto |
+| Links | Sessions, Portfolio | Grid de cards |
+| Contact | Contact, Footer | Ícones sociais + texto |
+
+Os thumbnails são **mini representações CSS puras** (não imagens reais) — retângulos coloridos dispostos para imitar o layout visual.
+
+### Lógica de inserção
+
+```ts
+// Se o bloco NÃO existe nas sections (foi removido) → não aplicável no sistema atual
+// Se o bloco existe mas está OCULTO → torná-lo visível e mover para posição insertAfter
+// Se o bloco já está VISÍVEL → focar no BlockPanel (não duplicar)
+function handleAddBlock(blockKey: BlockKey, insertAfterIndex: number) {
+  const idx = sections.findIndex(s => s.key === blockKey);
+  const newSections = sections.map(s => s.key === blockKey ? { ...s, visible: true } : s);
+  // Reordenar: mover blockKey para posição insertAfterIndex
+  const [removed] = newSections.splice(idx, 1);
+  newSections.splice(insertAfterIndex, 0, removed);
+  setSections(newSections);
+  save(siteData, newSections);
+  setActiveBlock(blockKey);
 }
 ```
 
-### Mudanças no SiteConfig / banco
+### Detecção de gap no hover (LivePreview)
 
-Adicionar campos opcionais (sem migração obrigatória, default para layout existente):
-- `hero_layout?: "full" | "split"` — default "full"
-- `about_layout?: "image-left" | "image-right"` — default "image-right"
+Usar `getBoundingClientRect` das seções visíveis ordenadas. Quando `mouseY` está dentro de ±20px da borda inferior de um bloco → `hoveredGap = index`. A linha "+" aparece centrada nessa borda.
 
-Adicionar esses campos no tipo `SiteConfig` e na lógica do `PublicSiteRenderer`.
+### Arquivos a criar/editar
 
-### Arquivos a editar
-
-1. `src/components/website-editor/LivePreview.tsx` — toolbar inline flutuante
-2. `src/components/website-editor/BlockPanel.tsx` — seletor de layout por bloco
-3. `src/components/store/PublicSiteRenderer.tsx` — variações de layout (hero split, about image-left/right)
-4. `src/pages/dashboard/WebsiteEditor.tsx` — passar `onToggleVisibility` e `sections` para LivePreview
-
-### Sem migração de banco necessária
-Os novos campos de layout são adicionados ao tipo TypeScript como opcionais; o `upsert` existente já cuida do salvamento.
+- **Criar**: `src/components/website-editor/AddBlockModal.tsx`
+- **Editar**: `src/components/website-editor/LivePreview.tsx` — detecção de gap + botão "+"
+- **Editar**: `src/pages/dashboard/WebsiteEditor.tsx` — estado e handler de addBlock
