@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ImageUploadField } from "./ImageUploadField";
 import type { SiteConfig } from "@/components/store/PublicSiteRenderer";
 
-export type BlockKey = "hero" | "sessions" | "portfolio" | "about" | "quote" | "experience" | "contact" | "footer" | "testimonials";
+export type BlockKey = "header" | "hero" | "sessions" | "portfolio" | "about" | "quote" | "experience" | "contact" | "footer" | "testimonials";
 
 interface Props {
   blockKey: BlockKey;
@@ -19,6 +19,7 @@ interface Props {
 }
 
 const BLOCK_LABELS: Record<BlockKey, string> = {
+  header: "Header / Nav",
   hero: "Hero",
   sessions: "Sessions",
   portfolio: "Portfolio",
@@ -65,6 +66,41 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
 
       {/* Fields */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
+        {blockKey === "header" && (
+          <>
+            <ImageUploadField label="Logo" value={data.logo_url ?? null} onChange={(url) => p({ logo_url: url })} />
+            <div className="flex flex-col gap-0.5 -mt-2">
+              <p className="text-[10px] text-muted-foreground/70 leading-relaxed">📍 Shown in the <strong>navigation bar</strong> at the top of every page.</p>
+              <p className="text-[10px] text-muted-foreground/50 leading-relaxed">Recommended: SVG or PNG with transparent background · max 200×60 px</p>
+            </div>
+            <Field label="Site / Studio Name">
+              <Input value={data.tagline ?? ""} onChange={(e) => p({ tagline: e.target.value })} className="h-8 text-xs" placeholder="Your Studio Name" />
+            </Field>
+            <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Navigation visibility</p>
+              <ToggleField label="Show Sessions link" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
+              <ToggleField label="Show About link" checked={data.show_about ?? true} onChange={(v) => p({ show_about: v })} />
+              <ToggleField label="Show Blog link" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
+              <ToggleField label="Show Contact / Social links" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
+            </div>
+            <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Social links in header</p>
+              <Field label="Instagram">
+                <Input value={data.instagram_url ?? ""} onChange={(e) => p({ instagram_url: e.target.value })} className="h-8 text-xs" placeholder="https://instagram.com/yourstudio" />
+              </Field>
+              <Field label="Facebook">
+                <Input value={data.facebook_url ?? ""} onChange={(e) => p({ facebook_url: e.target.value })} className="h-8 text-xs" placeholder="https://facebook.com/yourstudio" />
+              </Field>
+              <Field label="TikTok">
+                <Input value={data.tiktok_url ?? ""} onChange={(e) => p({ tiktok_url: e.target.value })} className="h-8 text-xs" placeholder="https://tiktok.com/@yourstudio" />
+              </Field>
+              <Field label="WhatsApp (number only)">
+                <Input value={data.whatsapp ?? ""} onChange={(e) => p({ whatsapp: e.target.value })} className="h-8 text-xs" placeholder="5511999999999" />
+              </Field>
+            </div>
+          </>
+        )}
+
         {blockKey === "hero" && (
           <>
             {/* Layout selector */}

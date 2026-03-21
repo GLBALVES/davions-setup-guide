@@ -337,7 +337,7 @@ function PagesTree({
   return (
     <div className="flex-1 overflow-y-auto py-1 px-1.5 flex flex-col">
       {/* ── Fixed: Header (shared) ── */}
-      <FixedRow label="Header / Nav" icon="🔝" blockKey="hero" />
+      <FixedRow label="Header / Nav" icon="🔝" blockKey="header" />
       <div className="my-1 mx-2 border-t border-dashed border-border/40" />
 
       {/* ── Pages tree ── */}
