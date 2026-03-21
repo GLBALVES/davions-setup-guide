@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback } from "react";
-import { Settings2, Eye, EyeOff, GripVertical, Plus } from "lucide-react";
+import { Eye, EyeOff, GripVertical, Plus, X } from "lucide-react";
 import type { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import PublicSiteRenderer from "@/components/store/PublicSiteRenderer";
 import type { BlockKey } from "./BlockPanel";
+import { BlockPanel } from "./BlockPanel";
 import type { SectionDef } from "./EditorSidebar";
 
 const BLOCK_LABELS: Record<string, string> = {
@@ -18,7 +19,7 @@ const BLOCK_LABELS: Record<string, string> = {
 };
 
 interface Props {
-  data: Partial<SiteConfig>;
+  data: Partial<SiteConfig> & { bio?: string };
   photographer: Photographer;
   sessions: Session[];
   galleries: Gallery[];
@@ -28,6 +29,7 @@ interface Props {
   onToggleVisibility: (key: BlockKey) => void;
   onAddBlock: (insertAfterIndex: number) => void;
   sections: SectionDef[];
+  onDataChange: (patch: Partial<SiteConfig> & { bio?: string }) => void;
 }
 
 export function LivePreview({
@@ -41,12 +43,13 @@ export function LivePreview({
   onToggleVisibility,
   onAddBlock,
   sections,
+  onDataChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [hoveredGap, setHoveredGap] = useState<{ index: number; top: number; left: number; width: number } | null>(null);
-  const stayRef = useRef(false); // true while mouse is on toolbar or gap btn
+  const stayRef = useRef(false);
 
   const siteConfig: SiteConfig = {
     site_hero_image_url: data.site_hero_image_url ?? null,
@@ -101,9 +104,6 @@ export function LivePreview({
     };
   }, []);
 
-  const getVisibleSections = () => sections.filter((s) => s.visible !== false);
-
-  // Always show "+" at the bottom edge of whichever block is hovered
   const getGapForBlock = useCallback((hoveredKey: string | null) => {
     if (!hoveredKey) return null;
     const rect = getBlockRect(hoveredKey);
@@ -118,24 +118,20 @@ export function LivePreview({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (stayRef.current) return;
-
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return;
 
-    // Temporarily disable the overlay to hit-test the content underneath
     const overlay = e.currentTarget as HTMLDivElement;
     overlay.style.pointerEvents = "none";
     const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
     overlay.style.pointerEvents = "auto";
 
-    // Gap detection — always at bottom of hovered block
     const blockEl = el?.closest("[data-block-key]") as HTMLElement | null;
     const key = blockEl?.getAttribute("data-block-key") ?? null;
 
     const gap = getGapForBlock(key);
     setHoveredGap(gap);
 
-    // Block detection
     if (key !== hoveredBlock) {
       setHoveredBlock(key);
       if (key) {
@@ -167,6 +163,9 @@ export function LivePreview({
 
   const isVisible = (key: string) => sections.find((s) => s.key === key)?.visible ?? true;
 
+  // Panel width for the floating editor
+  const PANEL_W = 300;
+
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Site render */}
@@ -186,24 +185,23 @@ export function LivePreview({
         />
       </div>
 
-      {/* Transparent interaction overlay — pointer-events:auto so we capture hover/click */}
+      {/* Transparent interaction overlay */}
       <div
         className="absolute inset-0 z-10"
-        style={{ cursor: hoveredBlock ? "pointer" : "default" }}
+        style={{ cursor: hoveredBlock ? "pointer" : "default", pointerEvents: activeBlock ? "none" : "auto" }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
       />
 
-      {/* Floating inline toolbar — z-20, above the overlay */}
-      {hoveredBlock && toolbarPos && (
+      {/* Floating toolbar — only when no block is actively being edited */}
+      {!activeBlock && hoveredBlock && toolbarPos && (
         <div
           className="absolute z-20 flex items-center gap-px select-none"
           style={{
             top: Math.max(0, toolbarPos.top),
             left: toolbarPos.left,
             width: toolbarPos.width,
-            // Allow clicks to pass to toolbar buttons
             pointerEvents: "auto",
           }}
           onMouseEnter={() => { stayRef.current = true; }}
@@ -214,33 +212,21 @@ export function LivePreview({
             setHoveredGap(null);
           }}
         >
-          {/* Label chip */}
           <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-lg rounded-sm cursor-default shrink-0">
             <GripVertical className="h-3 w-3 opacity-50" />
             <span>{BLOCK_LABELS[hoveredBlock] ?? hoveredBlock}</span>
           </div>
-
-          {/* Action buttons */}
           <div className="flex items-center gap-px ml-1">
             <button
               className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 text-[10px] hover:bg-primary/80 active:bg-primary/70 transition-colors shadow-lg rounded-sm"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onSelectBlock(hoveredBlock as BlockKey);
-              }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onSelectBlock(hoveredBlock as BlockKey); }}
               title="Edit section"
             >
-              <Settings2 className="h-3 w-3" />
               <span className="tracking-widest uppercase text-[9px]">Edit</span>
             </button>
             <button
               className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 text-[10px] hover:bg-primary/80 active:bg-primary/70 transition-colors shadow-lg rounded-sm ml-px"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleVisibility(hoveredBlock as BlockKey);
-              }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onToggleVisibility(hoveredBlock as BlockKey); }}
               title={isVisible(hoveredBlock) ? "Hide section" : "Show section"}
             >
               {isVisible(hoveredBlock) ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
@@ -249,17 +235,11 @@ export function LivePreview({
         </div>
       )}
 
-      {/* Gap "+" button between sections */}
-      {hoveredGap && (
+      {/* Gap "+" button */}
+      {!activeBlock && hoveredGap && (
         <div
           className="absolute z-20 flex items-center justify-center"
-          style={{
-            top: hoveredGap.top - 12,
-            left: hoveredGap.left,
-            width: hoveredGap.width,
-            height: 24,
-            pointerEvents: "auto",
-          }}
+          style={{ top: hoveredGap.top - 12, left: hoveredGap.left, width: hoveredGap.width, height: 24, pointerEvents: "auto" }}
           onMouseEnter={() => { stayRef.current = true; }}
           onMouseLeave={() => {
             stayRef.current = false;
@@ -268,20 +248,50 @@ export function LivePreview({
             setHoveredGap(null);
           }}
         >
-          {/* Horizontal line */}
           <div className="absolute inset-y-1/2 left-0 right-0 h-px bg-primary/60 pointer-events-none" />
-          {/* Plus button */}
           <button
             className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 active:scale-95 transition-transform"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onAddBlock(hoveredGap.index);
-            }}
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddBlock(hoveredGap.index); }}
             title="Add section here"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
+        </div>
+      )}
+
+      {/* ── Floating edit panel — slides in from the right over the canvas ── */}
+      {activeBlock && (
+        <div
+          className="absolute top-0 right-0 z-30 h-full bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden"
+          style={{ width: PANEL_W }}
+          // Prevent overlay from eating mouse events inside this panel
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+            <span className="text-[11px] tracking-[0.25em] uppercase font-light">
+              {BLOCK_LABELS[activeBlock] ?? activeBlock}
+            </span>
+            <button
+              onClick={() => onSelectBlock(null as any)}
+              className="p-1 rounded-sm hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title="Close"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Panel body — reuse BlockPanel fields, stripping its own header */}
+          <div className="flex-1 overflow-y-auto">
+            <BlockPanel
+              blockKey={activeBlock}
+              data={data}
+              onChange={onDataChange}
+              onBack={() => onSelectBlock(null as any)}
+              hideHeader
+            />
+          </div>
         </div>
       )}
 
