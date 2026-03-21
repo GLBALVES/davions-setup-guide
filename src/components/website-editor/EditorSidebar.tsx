@@ -708,6 +708,7 @@ export function EditorSidebar({
             onSelectBlock={onSelectBlock}
             onReorder={onReorder}
             onToggleVisibility={onToggleVisibility}
+            onRemoveSection={onRemoveSection}
           />
         </>
       )}
