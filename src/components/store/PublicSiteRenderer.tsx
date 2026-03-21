@@ -275,44 +275,52 @@ function SharedFooter({ site, showContact }: { site: SiteConfig | null; showCont
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
   return (
-    <footer id="contact" className="border-t border-border py-10">
-      {showContact && hasSocials && (
-        <div className="flex items-center justify-center gap-5 mb-6">
-          {site?.instagram_url && (
-            <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Instagram className="h-4 w-4" />
-            </a>
-          )}
-          {site?.facebook_url && (
-            <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Facebook className="h-4 w-4" />
-            </a>
-          )}
-          {site?.youtube_url && (
-            <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Youtube className="h-4 w-4" />
-            </a>
-          )}
-          {site?.linkedin_url && (
-            <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Linkedin className="h-4 w-4" />
-            </a>
-          )}
-          {site?.tiktok_url && (
-            <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">TK</a>
-          )}
-          {site?.pinterest_url && (
-            <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">PT</a>
-          )}
-          {site?.whatsapp && (
-            <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors text-[11px] tracking-widest font-medium">WA</a>
-          )}
-        </div>
-      )}
-      {site?.footer_text && (
-        <p className="text-[10px] font-light text-muted-foreground text-center mb-3">{site.footer_text}</p>
-      )}
-      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/50 text-center">Powered by Davions</p>
+    <footer id="contact" className="border-t border-border py-12">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
+        {showContact && hasSocials && (
+          <div className="flex items-center justify-center gap-5">
+            {site?.instagram_url && (
+              <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Instagram className="h-4 w-4" />
+              </a>
+            )}
+            {site?.facebook_url && (
+              <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Facebook className="h-4 w-4" />
+              </a>
+            )}
+            {site?.youtube_url && (
+              <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Youtube className="h-4 w-4" />
+              </a>
+            )}
+            {site?.linkedin_url && (
+              <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Linkedin className="h-4 w-4" />
+              </a>
+            )}
+            {site?.tiktok_url && (
+              <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <TikTokIcon className="h-4 w-4" />
+              </a>
+            )}
+            {site?.pinterest_url && (
+              <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <PinterestIcon className="h-4 w-4" />
+              </a>
+            )}
+            {site?.whatsapp && (
+              <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                <WhatsAppIcon className="h-4 w-4" />
+              </a>
+            )}
+          </div>
+        )}
+        {site?.footer_text && (
+          <p className="text-[10px] font-light text-muted-foreground text-center">{site.footer_text}</p>
+        )}
+        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40 text-center">Powered by Davions</p>
+      </div>
     </footer>
   );
 }
