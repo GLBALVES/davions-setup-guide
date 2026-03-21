@@ -496,17 +496,18 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
 // ─── Quote Section ────────────────────────────────────────────────────────────
 
-function QuoteSection({ site }: { site: SiteConfig | null }) {
-  if (!site?.quote_text) return null;
+function QuoteSection({ site, editMode, onFieldChange }: { site: SiteConfig | null; editMode?: boolean; onFieldChange?: (k: string, v: string) => void }) {
+  if (!site?.quote_text && !editMode) return null;
+  const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
     <section className="py-16 md:py-24 border-t border-border bg-muted/20">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <Quote className="h-5 w-5 text-muted-foreground/30 mx-auto mb-6" />
         <blockquote className="text-xl md:text-2xl font-light leading-relaxed text-foreground tracking-wide italic mb-6">
-          "{site.quote_text}"
+          "<EditableText value={site?.quote_text ?? "Your quote here"} fieldKey="quote_text" editMode={!!editMode} onSave={save} />"
         </blockquote>
-        {site.quote_author && (
-          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">— {site.quote_author}</p>
+        {(site?.quote_author || editMode) && (
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">— <EditableText value={site?.quote_author ?? "Author"} fieldKey="quote_author" editMode={!!editMode} onSave={save} /></p>
         )}
       </div>
     </section>
