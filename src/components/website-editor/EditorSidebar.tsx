@@ -51,7 +51,14 @@ const DEFAULT_SECTIONS: SectionDef[] = [
   { key: "quote",        label: "Quote",         icon: "💬",  visible: true },
   { key: "experience",   label: "Experience",    icon: "✨",  visible: true },
   { key: "contact",      label: "Contact",       icon: "📱",  visible: true },
-  { key: "footer",       label: "Footer",        icon: "📄",  visible: true },
+];
+
+/** Sections that are fixed (not sortable) and shared across all pages */
+const FIXED_TOP_SECTIONS: SectionDef[] = [
+  { key: "hero" as BlockKey, label: "Header / Nav", icon: "🔝", visible: true },
+];
+const FIXED_BOTTOM_SECTIONS: SectionDef[] = [
+  { key: "footer" as BlockKey, label: "Footer", icon: "📄", visible: true },
 ];
 
 // ── Sortable Section subitem ─────────────────────────────────────────────────
