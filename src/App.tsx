@@ -23,6 +23,7 @@ import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway
 import { isCustomDomain } from "./lib/custom-domain";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
+import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import NotFound from "./pages/NotFound";
 import Blog from "./pages/blog/Blog";
