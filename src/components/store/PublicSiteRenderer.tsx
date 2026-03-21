@@ -993,7 +993,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       )}
 
       {/* Galleries */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
