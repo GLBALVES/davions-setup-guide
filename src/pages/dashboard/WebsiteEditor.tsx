@@ -179,6 +179,13 @@ export default function WebsiteEditor() {
       const currentOrder: SectionDef[] = (page?.sections_order as SectionDef[]) ?? [];
       const exists = currentOrder.find((s) => s.key === blockKey);
       let newOrder: SectionDef[];
+      // Label/icon map for page sections
+      const META: Record<string, { label: string; icon: string }> = {
+        hero: { label: "Hero", icon: "🖼️" }, sessions: { label: "Sessions", icon: "📅" },
+        portfolio: { label: "Portfolio", icon: "🖼️" }, about: { label: "About", icon: "👤" },
+        testimonials: { label: "Testimonials", icon: "⭐" }, quote: { label: "Quote", icon: "💬" },
+        experience: { label: "Experience", icon: "✨" }, contact: { label: "Contact", icon: "📱" },
+      };
       if (exists) {
         // move to desired position
         const without = currentOrder.filter((s) => s.key !== blockKey);
@@ -186,7 +193,8 @@ export default function WebsiteEditor() {
         without.splice(clamped, 0, { ...exists, visible: true });
         newOrder = without;
       } else {
-        const newSection: SectionDef = { key: blockKey, visible: true };
+        const meta = META[blockKey] ?? { label: blockKey, icon: "📄" };
+        const newSection: SectionDef = { key: blockKey, visible: true, label: meta.label, icon: meta.icon };
         const clamped = Math.min(insertAfterIndex, currentOrder.length);
         newOrder = [...currentOrder];
         newOrder.splice(clamped, 0, newSection);
