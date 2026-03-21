@@ -511,8 +511,12 @@ export default function WebsiteEditor() {
               activePageId={activePageId}
               onSelectPage={handleSelectPage}
               onAddPage={handleAddPage}
-              onAddSection={(_pageId) => {
-                handleOpenAddBlock(sections.length);
+              onAddSection={(pageId) => {
+                const pg = pages.find((p) => p.id === pageId);
+                const count = pg?.is_home
+                  ? sections.length
+                  : ((pg?.sections_order as SectionDef[]) ?? []).length;
+                setAddBlockState({ open: true, insertAfter: count, targetPageId: pageId });
               }}
               onDeletePage={handleDeletePage}
               onRenamePage={handleRenamePage}
