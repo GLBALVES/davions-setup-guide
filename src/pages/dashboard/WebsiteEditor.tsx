@@ -212,14 +212,28 @@ export default function WebsiteEditor() {
     }
 
     // Home page — modifies the global sections array
+    const META: Record<string, { label: string; icon: string }> = {
+      hero: { label: "Hero", icon: "🖼️" }, sessions: { label: "Sessions", icon: "📅" },
+      portfolio: { label: "Portfolio", icon: "🖼️" }, about: { label: "About", icon: "👤" },
+      testimonials: { label: "Testimonials", icon: "⭐" }, quote: { label: "Quote", icon: "💬" },
+      experience: { label: "Experience", icon: "✨" }, contact: { label: "Contact", icon: "📱" },
+    };
     const idx = sections.findIndex((s) => s.key === blockKey);
-    if (idx === -1) return;
-    const newSections = sections.map((s) =>
-      s.key === blockKey ? { ...s, visible: true } : s
-    );
-    const [removed] = newSections.splice(idx, 1);
-    const clampedIndex = Math.min(insertAfterIndex, newSections.length);
-    newSections.splice(clampedIndex, 0, removed);
+    let newSections: SectionDef[];
+    if (idx === -1) {
+      // New section not yet in the list — insert it
+      const meta = META[blockKey] ?? { label: blockKey, icon: "📄" };
+      const newSection: SectionDef = { key: blockKey, visible: true, label: meta.label, icon: meta.icon };
+      newSections = [...sections];
+      const clamped = Math.min(insertAfterIndex, newSections.length);
+      newSections.splice(clamped, 0, newSection);
+    } else {
+      // Section already exists — make visible and move to target position
+      newSections = sections.map((s) => s.key === blockKey ? { ...s, visible: true } : s);
+      const [removed] = newSections.splice(idx, 1);
+      const clamped = Math.min(insertAfterIndex, newSections.length);
+      newSections.splice(clamped, 0, removed);
+    }
     setSections(newSections);
     save(siteData, newSections);
     setAddBlockState({ open: false, insertAfter: 0 });
@@ -337,7 +351,12 @@ export default function WebsiteEditor() {
     photographer.full_name ||
     "My Site";
 
-  const hiddenSections = sections.filter((s) => s.visible === false).map((s) => s.key);
+  const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
+  const activePageSections: SectionDef[] = activePage && !activePage.is_home
+    ? ((activePage.sections_order as SectionDef[]) ?? [])
+    : sections;
+
+  const hiddenSections = activePageSections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
     return (
@@ -357,7 +376,7 @@ export default function WebsiteEditor() {
     activeBlock,
     onToggleVisibility: handleToggleVisibility,
     onAddBlock: handleOpenAddBlock,
-    sections,
+    sections: activePageSections,
     onDataChange: handleDataChange,
   };
 
