@@ -500,9 +500,8 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
-
       {/* Hero */}
       {(site?.hero_layout ?? "full") === "split" ? (
         <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
