@@ -62,11 +62,26 @@ interface SortableItemProps {
   isActive: boolean;
   onSelect: () => void;
   onToggle: () => void;
+  onRename: (label: string) => void;
 }
 
-function SortableItem({ section, isActive, onSelect, onToggle }: SortableItemProps) {
+function SortableItem({ section, isActive, onSelect, onToggle, onRename }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.key });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(section.label);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+  useEffect(() => { setDraft(section.label); }, [section.label]);
+
+  const commit = () => {
+    setEditing(false);
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== section.label) onRename(trimmed);
+    else setDraft(section.label);
+  };
 
   return (
     <div
@@ -84,10 +99,32 @@ function SortableItem({ section, isActive, onSelect, onToggle }: SortableItemPro
         <GripVertical className="h-3 w-3" />
       </button>
       <CornerDownRight className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0" />
-      <button onClick={onSelect} className="flex items-center gap-1.5 flex-1 min-w-0 text-left">
-        <span className="text-xs">{section.icon}</span>
-        <span className="text-[11px] font-light tracking-wide truncate">{section.label}</span>
-      </button>
+      <div className="flex items-center gap-1.5 flex-1 min-w-0" onClick={onSelect}>
+        <span className="text-xs shrink-0">{section.icon}</span>
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+              if (e.key === "Escape") { setEditing(false); setDraft(section.label); }
+              e.stopPropagation();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 min-w-0 text-[11px] bg-background border border-primary rounded-sm outline-none font-light px-1.5 py-0.5 ring-2 ring-primary/20"
+          />
+        ) : (
+          <span
+            className="text-[11px] font-light tracking-wide truncate"
+            onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
+            title="Double-click to rename"
+          >
+            {section.label}
+          </span>
+        )}
+      </div>
       <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={onToggle}
@@ -372,6 +409,7 @@ function PagesTree({
                       isActive={activeBlock === section.key && (activePageId === null || activePageId === homePage.id)}
                       onSelect={() => { onSelectPage(null); onSelectBlock(section.key); }}
                       onToggle={() => onToggleVisibility(section.key)}
+                      onRename={(label) => onReorder(sections.map((s) => s.key === section.key ? { ...s, label } : s))}
                     />
                   ))}
                 </SortableContext>
