@@ -153,30 +153,48 @@ interface NavProps {
   showBooking: boolean;
   ctaText: string;
   onNavClick: (href: string) => void;
+  site?: SiteConfig | null;
 }
 
-function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick }: NavProps) {
+function SocialIcons({ site, scrolled, size = "sm" }: { site?: SiteConfig | null; scrolled: boolean; size?: "sm" | "xs" }) {
+  if (!site) return null;
+  const cls = `transition-colors duration-300 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/60 hover:text-white"}`;
+  const iconCls = size === "xs" ? "h-3.5 w-3.5" : "h-4 w-4";
+  return (
+    <div className="flex items-center gap-3">
+      {site.instagram_url && <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className={cls}><Instagram className={iconCls} /></a>}
+      {site.facebook_url && <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className={cls}><Facebook className={iconCls} /></a>}
+      {site.youtube_url && <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className={cls}><Youtube className={iconCls} /></a>}
+      {site.tiktok_url && <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className={cls}><TikTokIcon className={iconCls} /></a>}
+      {site.pinterest_url && <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className={cls}><PinterestIcon className={iconCls} /></a>}
+      {site.linkedin_url && <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className={cls}><Linkedin className={iconCls} /></a>}
+      {site.whatsapp && <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className={cls}><WhatsAppIcon className={iconCls} /></a>}
+    </div>
+  );
+}
+
+function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site }: NavProps) {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={displayName}
-            className={`h-8 object-contain transition-all duration-300 ${scrolled ? "" : "brightness-0 invert"}`}
+            className={`h-8 object-contain transition-all duration-300 shrink-0 ${scrolled ? "" : "brightness-0 invert"}`}
           />
         ) : (
-          <span className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 ${scrolled ? "text-foreground" : "text-white/80"}`}>
+          <span className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 shrink-0 ${scrolled ? "text-foreground" : "text-white/80"}`}>
             {displayName}
           </span>
         )}
 
         {navLinks.length > 0 && (
-          <nav className="hidden md:flex items-center gap-7">
+          <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
             {navLinks.map((link) => (
               <button
                 key={link.label}
@@ -188,19 +206,24 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                 {link.label}
               </button>
             ))}
-            {showBooking && (
-              <button
-                onClick={() => onNavClick("#sessions")}
-                style={{ borderColor: scrolled ? accentColor : "rgba(255,255,255,0.6)" }}
-                className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
-                  scrolled ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
-                }`}
-              >
-                {ctaText}
-              </button>
-            )}
           </nav>
         )}
+
+        {/* Right side: social icons + CTA */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
+          <SocialIcons site={site} scrolled={scrolled} size="xs" />
+          {showBooking && (
+            <button
+              onClick={() => onNavClick("#sessions")}
+              style={{ borderColor: scrolled ? accentColor : "rgba(255,255,255,0.6)" }}
+              className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
+                scrolled ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
+              }`}
+            >
+              {ctaText}
+            </button>
+          )}
+        </div>
 
         {navLinks.length > 0 && (
           <button
@@ -232,6 +255,12 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
               >
                 {ctaText} →
               </button>
+            )}
+            {/* Mobile social icons */}
+            {site && (
+              <div className="pt-3 border-t border-border/50 mt-1">
+                <SocialIcons site={site} scrolled={true} size="sm" />
+              </div>
             )}
           </nav>
         </div>
