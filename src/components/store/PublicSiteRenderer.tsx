@@ -984,9 +984,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       </div>
 
       {/* Quote */}
-      <div data-block-key="quote"><QuoteSection site={site} /></div>
-
-      {/* Sessions */}
+      <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
       {showStore && sessions.length > 0 && (
         <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
