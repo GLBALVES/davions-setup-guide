@@ -571,13 +571,12 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       />
 
       {/* Hero — left-aligned headline over image */}
-      <div className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
+      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
         }
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        {/* Vertical accent line */}
         <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-8 md:px-16">
           <div className="flex items-start gap-5 max-w-2xl">
             <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
@@ -599,17 +598,15 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
       </div>
 
       {/* Quote */}
-      <QuoteSection site={site} />
+      <div data-block-key="quote"><QuoteSection site={site} /></div>
 
       {/* Sessions — magazine asymmetric layout */}
       {showStore && sessions.length > 0 && (
-        <main id="sessions" className="max-w-6xl mx-auto px-6 py-16">
+        <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-4 mb-10">
             <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Sessions</p>
           </div>
-
-          {/* Featured large card */}
           {featured && (
             <button
               onClick={() => window.location.assign(sessionHref(featured))}
@@ -642,8 +639,6 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
               </div>
             </button>
           )}
-
-          {/* Remaining sessions in 3 cols */}
           {rest.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {rest.map((session) => (
@@ -670,9 +665,9 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </main>
       )}
 
-      {/* Galleries — masonry-like rows */}
+      {/* Galleries */}
       {galleries.length > 0 && (
-        <section className="border-t border-border">
+        <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
@@ -699,9 +694,9 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         </section>
       )}
 
-      <ExperienceSection site={site} accentColor={accentColor} />
-      <SharedAbout site={site} photographer={photographer} displayName={displayName} />
-      <SharedFooter site={site} showContact={showContact} />
+      <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} /></div>
+      <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
