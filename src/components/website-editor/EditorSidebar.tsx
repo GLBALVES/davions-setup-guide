@@ -158,7 +158,10 @@ function StylesTab({ data, onChange }: StylesTabProps) {
       </div>
 
       <div className="border-t border-border pt-4">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground mb-3">SEO</p>
+        <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground mb-1">SEO</p>
+        <p className="text-[10px] text-muted-foreground/60 leading-relaxed mb-3">
+          Controls how your site appears in <strong>Google search results</strong> and when shared on social media.
+        </p>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10px] font-light text-muted-foreground">Page Title</Label>
@@ -168,6 +171,9 @@ function StylesTab({ data, onChange }: StylesTabProps) {
               className="h-8 text-xs"
               placeholder="Studio Name — Photography"
             />
+            <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+              📍 Shown as the <strong>clickable headline</strong> in Google results and in the browser tab. Keep it under 60 characters.
+            </p>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10px] font-light text-muted-foreground">Meta Description</Label>
@@ -177,6 +183,9 @@ function StylesTab({ data, onChange }: StylesTabProps) {
               className="text-xs min-h-[70px] resize-none rounded-md border border-input bg-background px-3 py-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               placeholder="A short description of your studio..."
             />
+            <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+              📍 The <strong>summary text</strong> shown below your title in search results. Aim for 120–160 characters to maximize visibility.
+            </p>
           </div>
         </div>
       </div>
