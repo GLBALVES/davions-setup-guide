@@ -747,7 +747,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
       {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
 
       {/* Portfolio */}
-      {galleries.length > 0 && (
+      {showBlock("portfolio") && galleries.length > 0 && (
         <section data-block-key="portfolio" className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
