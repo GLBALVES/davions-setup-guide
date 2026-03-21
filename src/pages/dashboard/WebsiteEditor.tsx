@@ -423,10 +423,10 @@ export default function WebsiteEditor() {
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel (260px) */}
+        {/* Left panel (260px) — always shows pages/sections tree or page content editor */}
         <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
           {/* Non-home page selected → show page content editor */}
-          {activePageId !== null && !activeBlock && (() => {
+          {activePageId !== null && (() => {
             const activePage = pages.find((p) => p.id === activePageId);
             return activePage && !activePage.is_home ? (
               <PageContentPanel
@@ -437,18 +437,8 @@ export default function WebsiteEditor() {
             ) : null;
           })()}
 
-          {/* Home page with active block → BlockPanel */}
-          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && activeBlock && (
-            <BlockPanel
-              blockKey={activeBlock}
-              data={siteData}
-              onChange={handleDataChange}
-              onBack={() => setActiveBlock(null)}
-            />
-          )}
-
-          {/* Default: EditorSidebar (home page, no block selected) */}
-          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && !activeBlock && (
+          {/* Default: EditorSidebar (home page or no custom page content) */}
+          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && (
             <EditorSidebar
               data={siteData}
               sections={sections}
