@@ -654,7 +654,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
       <SharedNav
         scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
       />
 
       {/* Compact hero */}
