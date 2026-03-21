@@ -113,6 +113,9 @@ export function LivePreview({
     testimonials: (data as any).testimonials ?? [],
     testimonials_title: (data as any).testimonials_title ?? null,
     testimonials_layout: (data as any).testimonials_layout ?? "cards",
+    header_bg_color: (data as any).header_bg_color ?? null,
+    header_text_color: (data as any).header_text_color ?? null,
+    header_visible_socials: (data as any).header_visible_socials ?? null,
   };
 
   const getBlockRect = useCallback((key: string) => {
