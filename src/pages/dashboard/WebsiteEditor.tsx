@@ -54,9 +54,10 @@ export default function WebsiteEditor() {
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePageId, setActivePageId] = useState<string | null>(null); // null = home
 
-  const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number }>({
+  const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number; targetPageId: string | null }>({
     open: false,
     insertAfter: 0,
+    targetPageId: null,
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -168,18 +169,20 @@ export default function WebsiteEditor() {
     save(siteData, newSections);
   };
 
-  const handleOpenAddBlock = (insertAfterIndex: number) => {
-    setAddBlockState({ open: true, insertAfter: insertAfterIndex });
+  const handleOpenAddBlock = (insertAfterIndex: number, targetPageId?: string | null) => {
+    setAddBlockState({ open: true, insertAfter: insertAfterIndex, targetPageId: targetPageId ?? activePageId });
   };
 
   const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number) => {
-    if (activePageId) {
+    const targetPageId = addBlockState.targetPageId;
+    const targetPage = targetPageId ? pages.find((p) => p.id === targetPageId) : null;
+    const isCustomPage = targetPage && !targetPage.is_home;
+
+    if (isCustomPage && targetPageId) {
       // Adding to a custom page — persist to site_pages.sections_order
-      const page = pages.find((p) => p.id === activePageId);
-      const currentOrder: SectionDef[] = (page?.sections_order as SectionDef[]) ?? [];
+      const currentOrder: SectionDef[] = (targetPage.sections_order as SectionDef[]) ?? [];
       const exists = currentOrder.find((s) => s.key === blockKey);
       let newOrder: SectionDef[];
-      // Label/icon map for page sections
       const META: Record<string, { label: string; icon: string }> = {
         hero: { label: "Hero", icon: "🖼️" }, sessions: { label: "Sessions", icon: "📅" },
         portfolio: { label: "Portfolio", icon: "🖼️" }, about: { label: "About", icon: "👤" },
@@ -187,7 +190,6 @@ export default function WebsiteEditor() {
         experience: { label: "Experience", icon: "✨" }, contact: { label: "Contact", icon: "📱" },
       };
       if (exists) {
-        // move to desired position
         const without = currentOrder.filter((s) => s.key !== blockKey);
         const clamped = Math.min(insertAfterIndex, without.length);
         without.splice(clamped, 0, { ...exists, visible: true });
@@ -200,13 +202,14 @@ export default function WebsiteEditor() {
         newOrder.splice(clamped, 0, newSection);
       }
       setPages((prev) =>
-        prev.map((p) => p.id === activePageId ? { ...p, sections_order: newOrder as any } : p)
+        prev.map((p) => p.id === targetPageId ? { ...p, sections_order: newOrder as any } : p)
       );
       await supabase
         .from("site_pages")
         .update({ sections_order: newOrder as any } as any)
-        .eq("id", activePageId);
-      setAddBlockState({ open: false, insertAfter: 0 });
+        .eq("id", targetPageId);
+      setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
+      setActivePageId(targetPageId);
       setActiveBlock(blockKey);
       return;
     }
@@ -221,14 +224,12 @@ export default function WebsiteEditor() {
     const idx = sections.findIndex((s) => s.key === blockKey);
     let newSections: SectionDef[];
     if (idx === -1) {
-      // New section not yet in the list — insert it
       const meta = META[blockKey] ?? { label: blockKey, icon: "📄" };
       const newSection: SectionDef = { key: blockKey, visible: true, label: meta.label, icon: meta.icon };
       newSections = [...sections];
       const clamped = Math.min(insertAfterIndex, newSections.length);
       newSections.splice(clamped, 0, newSection);
     } else {
-      // Section already exists — make visible and move to target position
       newSections = sections.map((s) => s.key === blockKey ? { ...s, visible: true } : s);
       const [removed] = newSections.splice(idx, 1);
       const clamped = Math.min(insertAfterIndex, newSections.length);
@@ -236,7 +237,7 @@ export default function WebsiteEditor() {
     }
     setSections(newSections);
     save(siteData, newSections);
-    setAddBlockState({ open: false, insertAfter: 0 });
+    setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
     setActiveBlock(blockKey);
   };
 
@@ -510,8 +511,12 @@ export default function WebsiteEditor() {
               activePageId={activePageId}
               onSelectPage={handleSelectPage}
               onAddPage={handleAddPage}
-              onAddSection={(_pageId) => {
-                handleOpenAddBlock(sections.length);
+              onAddSection={(pageId) => {
+                const pg = pages.find((p) => p.id === pageId);
+                const count = pg?.is_home
+                  ? sections.length
+                  : ((pg?.sections_order as SectionDef[]) ?? []).length;
+                setAddBlockState({ open: true, insertAfter: count, targetPageId: pageId });
               }}
               onDeletePage={handleDeletePage}
               onRenamePage={handleRenamePage}
