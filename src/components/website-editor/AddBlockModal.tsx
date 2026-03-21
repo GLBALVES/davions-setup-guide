@@ -407,7 +407,7 @@ interface Props {
   open: boolean;
   insertAfterIndex: number;
   hiddenSections: string[];
-  onAdd: (blockKey: BlockKey, insertAfterIndex: number) => void;
+  onAdd: (blockKey: BlockKey, insertAfterIndex: number, variantId?: string) => void;
   onClose: () => void;
 }
 
@@ -430,8 +430,8 @@ export function AddBlockModal({ open, insertAfterIndex, hiddenSections, onAdd, o
   };
 
   const handleConfirm = () => {
-    if (!selectedBlockKey) return;
-    onAdd(selectedBlockKey, insertAfterIndex);
+    if (!selectedBlockKey || !selectedVariantId) return;
+    onAdd(selectedBlockKey, insertAfterIndex, selectedVariantId);
     setSelectedVariantId(null);
   };
 

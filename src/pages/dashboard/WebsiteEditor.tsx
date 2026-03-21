@@ -191,10 +191,19 @@ export default function WebsiteEditor() {
     setAddBlockState({ open: true, insertAfter: insertAfterIndex, targetPageId: targetPageId ?? activePageId });
   };
 
-  const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number) => {
+  const handleAddBlock = async (blockKey: BlockKey, insertAfterIndex: number, variantId?: string) => {
     const targetPageId = addBlockState.targetPageId;
     const targetPage = targetPageId ? pages.find((p) => p.id === targetPageId) : null;
     const isCustomPage = targetPage && !targetPage.is_home;
+
+    // Apply variant-specific layout changes
+    const variantPatch: Partial<typeof siteData> = {};
+    if (variantId === "hero-split") variantPatch.hero_layout = "split" as any;
+    else if (variantId === "hero-full") variantPatch.hero_layout = "full" as any;
+    else if (variantId === "about-left") variantPatch.about_layout = "image-left" as any;
+    else if (variantId === "about-right") variantPatch.about_layout = "image-right" as any;
+    else if (variantId === "testimonials-quotes") variantPatch.testimonials_layout = "quotes" as any;
+    else if (variantId === "testimonials-cards") variantPatch.testimonials_layout = "cards" as any;
 
     if (isCustomPage && targetPageId) {
       // Adding to a custom page — persist to site_pages.sections_order
@@ -226,6 +235,8 @@ export default function WebsiteEditor() {
         .from("site_pages")
         .update({ sections_order: newOrder as any } as any)
         .eq("id", targetPageId);
+      // Apply variant layout patch to siteData if any
+      if (Object.keys(variantPatch).length > 0) handleDataChange(variantPatch);
       setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
       setActivePageId(targetPageId);
       setActiveBlock(blockKey);
@@ -254,7 +265,14 @@ export default function WebsiteEditor() {
       newSections.splice(clamped, 0, removed);
     }
     setSections(newSections);
-    save(siteData, newSections);
+    // Apply variant layout patch and save together
+    if (Object.keys(variantPatch).length > 0) {
+      const nextData = { ...siteData, ...variantPatch };
+      setSiteData(nextData);
+      save(nextData, newSections);
+    } else {
+      save(siteData, newSections);
+    }
     setAddBlockState({ open: false, insertAfter: 0, targetPageId: null });
     setActiveBlock(blockKey);
   };
@@ -375,7 +393,14 @@ export default function WebsiteEditor() {
     ? ((activePage.sections_order as SectionDef[]) ?? [])
     : sections;
 
-  const hiddenSections = activePageSections.filter((s) => s.visible === false).map((s) => s.key);
+  // hiddenSections for the modal uses the TARGET page (may differ from active page)
+  const targetPageForModal = addBlockState.targetPageId
+    ? pages.find((p) => p.id === addBlockState.targetPageId)
+    : null;
+  const modalSections: SectionDef[] = targetPageForModal && !targetPageForModal.is_home
+    ? ((targetPageForModal.sections_order as SectionDef[]) ?? [])
+    : sections;
+  const hiddenSections = modalSections.filter((s) => s.visible === false).map((s) => s.key);
 
   if (loading) {
     return (
