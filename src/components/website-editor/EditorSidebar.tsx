@@ -702,6 +702,7 @@ interface Props {
   onReorderPages: (pages: SitePage[]) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
   onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
+  onOpenPageSettings: (pageId: string) => void;
 }
 
 type Tab = "pages" | "styles";
@@ -710,6 +711,7 @@ export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages, onRemoveSection, onReorderPageSections,
+  onOpenPageSettings,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
 
