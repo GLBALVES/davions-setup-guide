@@ -317,6 +317,7 @@ interface PagesTreeProps {
   onReorder: (sections: SectionDef[]) => void;
   onToggleVisibility: (key: BlockKey) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
+  onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
 }
 
 function PagesTree({
