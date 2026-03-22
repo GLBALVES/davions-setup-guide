@@ -275,7 +275,7 @@ function PageRow({
           </button>
 
           {!page.is_home && (
-            <>
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
                 className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -316,7 +316,7 @@ function PageRow({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
+            </div>
           )}
         </div>
       )}
