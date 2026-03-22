@@ -1168,14 +1168,14 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
 // TEMPLATE: GRID
 // ═══════════════════════════════════════════════════════════════════════════
 
-const GRID_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials", "footer"];
+const GRID_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials"];
 
 function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
-  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText, showContact } = derived;
 
   const blocks = buildBlockMap("grid", props, derived);
-  const orderedKeys = props.visibleSections ?? GRID_DEFAULT_ORDER;
+  const orderedKeys = (props.visibleSections ?? GRID_DEFAULT_ORDER).filter((k) => k !== "footer");
 
   return (
     <div className="min-h-screen bg-background">
@@ -1183,6 +1183,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
@@ -1191,14 +1192,14 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 // TEMPLATE: MAGAZINE
 // ═══════════════════════════════════════════════════════════════════════════
 
-const MAGAZINE_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials", "footer"];
+const MAGAZINE_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials"];
 
 function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
-  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText, showContact } = derived;
 
   const blocks = buildBlockMap("magazine", props, derived);
-  const orderedKeys = props.visibleSections ?? MAGAZINE_DEFAULT_ORDER;
+  const orderedKeys = (props.visibleSections ?? MAGAZINE_DEFAULT_ORDER).filter((k) => k !== "footer");
 
   return (
     <div className="min-h-screen bg-background">
@@ -1206,6 +1207,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
@@ -1214,14 +1216,14 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
 // TEMPLATE: CLEAN
 // ═══════════════════════════════════════════════════════════════════════════
 
-const CLEAN_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "about", "experience", "testimonials", "footer"];
+const CLEAN_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "about", "experience", "testimonials"];
 
 function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
   const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
-  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText, showContact } = derived;
 
   const blocks = buildBlockMap("clean", props, derived);
-  const orderedKeys = props.visibleSections ?? CLEAN_DEFAULT_ORDER;
+  const orderedKeys = (props.visibleSections ?? CLEAN_DEFAULT_ORDER).filter((k) => k !== "footer");
 
   return (
     <div className="min-h-screen bg-background">
@@ -1229,6 +1231,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
     </div>
   );
 }
