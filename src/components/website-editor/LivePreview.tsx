@@ -303,16 +303,31 @@ export function LivePreview({
         </div>
       )}
 
-      {/* When editing inline, show a dismiss hint at top */}
-      {activeBlock && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full shadow-lg text-[10px] tracking-[0.1em] uppercase pointer-events-auto">
-          <span>Editing · Click text to edit · </span>
-          <button
-            className="underline hover:no-underline"
-            onClick={() => onSelectBlock(null as any)}
-          >Done</button>
-        </div>
-      )}
+      {/* Active block indicator: accent bar + label badge pinned at top of the active section */}
+      {activeBlock && (() => {
+        const rect = getBlockRect(activeBlock);
+        if (!rect) return null;
+        return (
+          <div
+            className="absolute z-30 pointer-events-none"
+            style={{ top: rect.top, left: rect.left, width: rect.width }}
+          >
+            {/* Top accent bar */}
+            <div className="w-full h-[2px] bg-primary" />
+            {/* Section name + Done badge */}
+            <div className="absolute top-[2px] left-0 flex items-center gap-1.5 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-md rounded-b-sm pointer-events-auto">
+              <span>{BLOCK_LABELS[activeBlock] ?? activeBlock}</span>
+              <span className="opacity-40 text-[8px]">|</span>
+              <button
+                className="opacity-70 hover:opacity-100 transition-opacity text-[9px] tracking-widest underline decoration-dotted"
+                onMouseDown={(e) => { e.preventDefault(); onSelectBlock(null as any); }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Hover/active highlight */}
       <style>{`
