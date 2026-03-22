@@ -303,8 +303,8 @@ export function LivePreview({
         </div>
       )}
 
-      {/* Active block: floating label badge pinned at top-left of the section */}
-      {activeBlock && toolbarPos === null && (() => {
+      {/* Active block indicator: accent bar + label badge pinned at top of the active section */}
+      {activeBlock && (() => {
         const rect = getBlockRect(activeBlock);
         if (!rect) return null;
         return (
@@ -313,13 +313,13 @@ export function LivePreview({
             style={{ top: rect.top, left: rect.left, width: rect.width }}
           >
             {/* Top accent bar */}
-            <div className="w-full h-[3px] bg-primary rounded-t-sm" />
-            {/* Section name badge */}
-            <div className="absolute top-[3px] left-0 flex items-center gap-1.5 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-md rounded-br-sm pointer-events-auto">
+            <div className="w-full h-[2px] bg-primary" />
+            {/* Section name + Done badge */}
+            <div className="absolute top-[2px] left-0 flex items-center gap-1.5 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-md rounded-b-sm pointer-events-auto">
               <span>{BLOCK_LABELS[activeBlock] ?? activeBlock}</span>
-              <span className="opacity-40">·</span>
+              <span className="opacity-40 text-[8px]">|</span>
               <button
-                className="opacity-70 hover:opacity-100 transition-opacity text-[9px] tracking-widest"
+                className="opacity-70 hover:opacity-100 transition-opacity text-[9px] tracking-widest underline decoration-dotted"
                 onMouseDown={(e) => { e.preventDefault(); onSelectBlock(null as any); }}
               >
                 Done
@@ -328,17 +328,6 @@ export function LivePreview({
           </div>
         );
       })()}
-
-      {/* When toolbar is visible (no active block), show inline dismiss hint */}
-      {activeBlock && toolbarPos !== null && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full shadow-lg text-[10px] tracking-[0.1em] uppercase pointer-events-auto">
-          <span>Editing · Click text to edit · </span>
-          <button
-            className="underline hover:no-underline"
-            onClick={() => onSelectBlock(null as any)}
-          >Done</button>
-        </div>
-      )}
 
       {/* Hover/active highlight */}
       <style>{`
