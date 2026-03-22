@@ -193,7 +193,7 @@ interface Props {
   /**
    * When provided (editor mode for a specific page), only render the blocks
    * whose key is in this array, in the order they appear in the array.
-   * null / undefined = render everything (default behaviour).
+   * null / undefined = render everything in default order.
    */
   visibleSections?: string[] | null;
 }
@@ -626,522 +626,6 @@ function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { sit
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TEMPLATE: EDITORIAL (default)
-// Hero full-bleed 60vh · Quote · Alternating full-width session blocks · Experience · About · Footer
-// ═══════════════════════════════════════════════════════════════════════════
-
-function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
-  const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SharedNav
-        scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
-      />
-      {/* Hero */}
-      {showBlock("hero") && (site?.hero_layout ?? "full") === "split" ? (
-        <div data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
-          {/* Image half */}
-          <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
-            {site?.site_hero_image_url
-              ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-              : <div className="absolute inset-0 bg-foreground" />
-            }
-          </div>
-          {/* Text half */}
-          <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
-            {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
-            {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
-            {showBooking && (site?.cta_link
-              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
-              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
-          {site?.site_hero_image_url
-            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-            : <div className="absolute inset-0 bg-foreground" />
-          }
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
-          <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
-            {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
-            <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
-            {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
-            {showBooking && (site?.cta_link
-              ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
-              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Quote */}
-      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-
-      {/* Sessions — alternating full-width blocks */}
-      {showBlock("sessions") && showStore && (
-        <main data-block-key="sessions" id="sessions">
-          {sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-3">
-              <Camera className="h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm font-light text-muted-foreground">No sessions available yet.</p>
-            </div>
-          ) : (
-            <>
-              <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
-                <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Available Sessions</p>
-              </div>
-              {sessions.map((session, i) => {
-                const isEven = i % 2 === 0;
-                return (
-                  <button
-                    key={session.id}
-                    onClick={() => window.location.assign(sessionHref(session))}
-                    className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300"
-                  >
-                    <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
-                      <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
-                        {session.cover_image_url
-                          ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                          : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
-                        }
-                      </div>
-                      <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
-                        <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
-                        <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
-                        {session.tagline && (
-                          <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>
-                        )}
-                        {session.description && (
-                          <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>
-                        )}
-                        <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
-                          <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
-                          {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
-                        </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
-                          <span className="text-2xl font-light">{formatPrice(session.price)}</span>
-                          <span className="flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
-                            View details <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </>
-          )}
-        </main>
-      )}
-
-      {/* Experience */}
-      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-
-      {/* Portfolio */}
-      {showBlock("portfolio") && galleries.length > 0 && (
-        <section data-block-key="portfolio" className="border-t border-border">
-          <div className="max-w-6xl mx-auto px-6 py-16">
-            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleries.map((gallery) => (
-                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
-                  className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card">
-                  <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-                    {gallery.cover_image_url
-                      ? <img src={gallery.cover_image_url} alt={gallery.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                      : <div className="w-full h-full flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
-                    }
-                    <span className="absolute top-3 left-3 text-[9px] tracking-[0.3em] uppercase bg-black/50 text-white/70 px-2 py-1 backdrop-blur-sm">{gallery.category}</span>
-                  </div>
-                  <div className="p-5 flex items-center justify-between">
-                    <h2 className="text-sm font-light tracking-wide">{gallery.title}</h2>
-                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors shrink-0 ml-3">View →</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
-      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
-      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TEMPLATE: GRID
-// Compact hero 40vh · Dense image-dominant grid with overlay info on hover
-// ═══════════════════════════════════════════════════════════════════════════
-
-function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
-  const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SharedNav
-        scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
-      />
-
-      {/* Compact hero */}
-      <div data-block-key="hero" className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
-        {site?.site_hero_image_url
-          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-          : <div className="absolute inset-0 bg-foreground" />
-        }
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-        <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
-          {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{ed("site_subheadline", subheadline)}</p>}
-          {showBooking && (
-            site?.cta_link
-              ? <a href={editMode ? undefined : site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</a>
-              : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
-          )}
-        </div>
-      </div>
-
-      {/* Quote */}
-      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {/* Sessions dense grid */}
-      {showBlock("sessions") && showStore && (
-        <main data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
-          {sessions.length > 0 && (
-            <>
-              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Sessions</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sessions.map((session) => (
-                  <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                    className="group relative aspect-square overflow-hidden bg-muted">
-                    {session.cover_image_url
-                      ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
-                    }
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
-                      <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
-                      {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
-                        <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
-                      {formatPrice(session.price)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Galleries */}
-          {galleries.length > 0 && (
-            <div data-block-key="portfolio" className="mt-12">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Portfolio</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {galleries.map((gallery) => (
-                  <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
-                    className="group relative aspect-square overflow-hidden bg-muted">
-                    {gallery.cover_image_url
-                      ? <img src={gallery.cover_image_url} alt={gallery.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      : <div className="absolute inset-0 flex items-center justify-center"><Images className="h-10 w-10 text-muted-foreground/20" /></div>
-                    }
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
-                      <h2 className="text-white text-sm font-light tracking-wide">{gallery.title}</h2>
-                      <span className="text-white/60 text-[9px] tracking-wider uppercase">{gallery.category}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
-      )}
-
-      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
-      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
-      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TEMPLATE: MAGAZINE
-// Hero 50vh with headline left-aligned · Asymmetric sessions (1 featured + rest)
-// ═══════════════════════════════════════════════════════════════════════════
-
-function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
-  const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
-
-  const [featured, ...rest] = sessions;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SharedNav
-        scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
-      />
-
-      {/* Hero — left-aligned headline over image */}
-      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
-        {site?.site_hero_image_url
-          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-          : <div className="absolute inset-0 bg-foreground" />
-        }
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-8 md:px-16">
-          <div className="flex items-start gap-5 max-w-2xl">
-            <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
-            <div>
-              <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-2">Photography</p>
-              <h1 className="text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{ed("site_headline", headline)}</h1>
-              {(subheadline || editMode) && <p className="text-sm font-light text-white/65 leading-relaxed max-w-md">{ed("site_subheadline", subheadline)}</p>}
-              {showBooking && (
-                <div className="mt-5">
-                  {site?.cta_link
-                    ? <a href={editMode ? undefined : site.cta_link} style={{ color: accentColor, borderColor: accentColor }} className="inline-block px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</a>
-                    : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</button>
-                  }
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quote */}
-      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {showBlock("sessions") && showStore && sessions.length > 0 && (
-        <main data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
-            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Sessions</p>
-          </div>
-          {featured && (
-            <button
-              onClick={() => window.location.assign(sessionHref(featured))}
-              className="group w-full mb-6 grid grid-cols-1 md:grid-cols-2 border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden bg-card text-left"
-            >
-              <div className="aspect-[4/3] md:aspect-auto md:min-h-[320px] bg-muted relative overflow-hidden">
-                {featured.cover_image_url
-                  ? <img src={featured.cover_image_url} alt={featured.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
-                }
-              </div>
-              <div className="p-8 md:p-10 flex flex-col justify-between">
-                <div>
-                  <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground mb-3">Featured</p>
-                  <h2 className="text-2xl font-light tracking-wide mb-2">{featured.title}</h2>
-                  {(featured as any).tagline && <p className="text-sm font-light text-muted-foreground italic mb-3">{(featured as any).tagline}</p>}
-                  {featured.description && <p className="text-sm text-muted-foreground leading-relaxed mb-6">{featured.description}</p>}
-                </div>
-                <div>
-                  <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground mb-6">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{featured.duration_minutes}min</span>
-                    <span className="flex items-center gap-1"><Camera className="h-3 w-3" />{featured.num_photos} photos</span>
-                    {featured.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{featured.location}</span>}
-                  </div>
-                  <div className="flex items-center justify-between border-t border-border pt-4">
-                    <span className="text-2xl font-light">{formatPrice(featured.price)}</span>
-                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View details →</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-          )}
-          {rest.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rest.map((session) => (
-                <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                  className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card">
-                  <div className="aspect-[16/9] bg-muted relative overflow-hidden">
-                    {session.cover_image_url
-                      ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                      : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-8 w-8 text-muted-foreground/20" /></div>
-                    }
-                  </div>
-                  <div className="p-4 flex flex-col gap-2 flex-1">
-                    <h2 className="text-sm font-light tracking-wide">{session.title}</h2>
-                    {(session as any).tagline && <p className="text-[11px] text-muted-foreground italic">{(session as any).tagline}</p>}
-                    <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
-                      <span className="text-base font-light">{formatPrice(session.price)}</span>
-                      <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View →</span>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </main>
-      )}
-
-      {/* Galleries */}
-      {showBlock("portfolio") && galleries.length > 0 && (
-        <section data-block-key="portfolio" className="border-t border-border">
-          <div className="max-w-6xl mx-auto px-6 py-16">
-            <div className="flex items-center gap-4 mb-10">
-              <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
-              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Portfolio</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {galleries.map((gallery, i) => (
-                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
-                  className={`group relative overflow-hidden bg-muted ${i === 0 ? "col-span-2 md:col-span-1 row-span-2" : ""}`}
-                  style={{ aspectRatio: i === 0 ? "1/1.6" : "4/3" }}>
-                  {gallery.cover_image_url
-                    ? <img src={gallery.cover_image_url} alt={gallery.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    : <div className="absolute inset-0 flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
-                  }
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <h2 className="text-white text-sm font-light tracking-wide">{gallery.title}</h2>
-                  </div>
-                  <span className="absolute top-3 left-3 text-[9px] tracking-[0.3em] uppercase bg-black/50 text-white/70 px-2 py-1 backdrop-blur-sm">{gallery.category}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {showBlock("about") && <div data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>}
-      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
-      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TEMPLATE: CLEAN
-// Centered single-column · generous whitespace · large typography
-// ═══════════════════════════════════════════════════════════════════════════
-
-function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
-  const { photographer, site, sessions, galleries, scrolled, mobileMenuOpen, setMobileMenuOpen, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SharedNav
-        scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
-        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
-        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site}
-      />
-
-      {/* Hero — centered, image behind, big type */}
-      <div data-block-key="hero" className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
-        {site?.site_hero_image_url
-          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
-          : <div className="absolute inset-0 bg-foreground" />
-        }
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-4">
-          <div className="w-10 h-px bg-white/40 mb-2" />
-          <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
-          {(subheadline || editMode) && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{ed("site_subheadline", subheadline)}</p>}
-          {showBooking && (
-            <div className="mt-4">
-              {site?.cta_link
-                ? <a href={editMode ? undefined : site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</a>
-                : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
-              }
-            </div>
-          )}
-          <div className="w-10 h-px bg-white/40 mt-2" />
-        </div>
-      </div>
-
-      {/* Quote */}
-      {showBlock("quote") && <div data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {showBlock("sessions") && showStore && sessions.length > 0 && (
-        <main data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
-          <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
-          <div className="flex flex-col gap-0">
-            {sessions.map((session, i) => (
-              <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                className={`group text-left py-8 flex flex-col gap-3 ${i > 0 ? "border-t border-border" : ""} hover:pl-2 transition-all duration-300`}>
-                <div className="flex items-start justify-between gap-4">
-                  <h2 className="text-xl font-light tracking-wide">{session.title}</h2>
-                  <span className="text-xl font-light shrink-0">{formatPrice(session.price)}</span>
-                </div>
-                {(session as any).tagline && (
-                  <p className="text-sm font-light text-muted-foreground italic">{(session as any).tagline}</p>
-                )}
-                {session.description && <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>}
-                <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
-                  <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} minutes</span>
-                  <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
-                  {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
-                </div>
-                <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">View details →</span>
-              </button>
-            ))}
-          </div>
-        </main>
-      )}
-
-      {/* Portfolio */}
-      {showBlock("portfolio") && galleries.length > 0 && (
-        <section data-block-key="portfolio" className="border-t border-border bg-muted/20">
-          <div className="max-w-4xl mx-auto px-6 py-20">
-            <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {galleries.map((gallery) => (
-                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
-                  className="group text-left">
-                  <div className="aspect-[4/3] overflow-hidden mb-4 bg-muted">
-                    {gallery.cover_image_url
-                      ? <img src={gallery.cover_image_url} alt={gallery.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                      : <div className="w-full h-full flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
-                    }
-                  </div>
-                  <h2 className="text-sm font-light tracking-widest uppercase text-center group-hover:text-muted-foreground transition-colors">{gallery.title}</h2>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* About */}
-      {showBlock("about") && (site?.show_about !== false) && (photographer?.bio || site?.about_image_url) && (
-        <section data-block-key="about" id="about" className="border-t border-border">
-          <div className="max-w-2xl mx-auto px-6 py-20 text-center">
-            {site?.about_image_url && (
-              <img src={site.about_image_url} alt={displayName} className="w-32 h-32 object-cover rounded-full mx-auto mb-8 grayscale" />
-            )}
-            <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 mb-6">{site?.about_title || "About"}</p>
-            <h2 className="text-2xl font-light tracking-wide mb-6">{photographer?.full_name || photographer?.business_name || displayName}</h2>
-            {photographer?.bio && <p className="text-sm font-light text-muted-foreground leading-relaxed">{photographer.bio}</p>}
-          </div>
-        </section>
-      )}
-
-      {showBlock("experience") && <div data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>}
-      {showBlock("testimonials") && <div data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>}
-      {showBlock("footer") && <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>}
-    </div>
-  );
-}
-
 // ─── Common derived values ────────────────────────────────────────────────
 
 function deriveCommon(props: Props) {
@@ -1192,13 +676,558 @@ function deriveCommon(props: Props) {
 
   /**
    * Returns true if the given block key should be rendered.
-   * When visibleSections is null/undefined (home page or public view), everything renders.
+   * When visibleSections is null/undefined, everything renders.
    * When it's an array, only keys present in the array render.
    */
   const showBlock = (key: string): boolean =>
     !visibleSections || visibleSections.includes(key);
 
   return { displayName, headline, subheadline, ctaText, accentColor, showStore, showAbout, showBooking, showBlog, showContact, hasSocials, navLinks, handleNavClick, editMode, onFieldChange: onFieldChange ?? (() => {}), ed, showBlock };
+}
+
+// ─── Block builders (template-agnostic) ─────────────────────────────────────
+
+/** Build the blockMap for a given template variant. Each key returns a React node or null. */
+function buildBlockMap(
+  variant: "editorial" | "grid" | "magazine" | "clean",
+  props: Props,
+  derived: ReturnType<typeof deriveCommon>
+): Record<string, React.ReactNode> {
+  const { photographer, site, sessions, galleries, sessionHref, galleryHref } = props;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks: _navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
+
+  // ── Hero ──────────────────────────────────────────────────────────────────
+  let hero: React.ReactNode = null;
+  if (showBlock("hero")) {
+    if (variant === "editorial") {
+      if ((site?.hero_layout ?? "full") === "split") {
+        hero = (
+          <div key="hero" data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
+            <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
+              {site?.site_hero_image_url
+                ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+                : <div className="absolute inset-0 bg-foreground" />
+              }
+            </div>
+            <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
+              {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
+              <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
+              {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
+              {showBooking && (site?.cta_link
+                ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
+                : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</button>
+              )}
+            </div>
+          </div>
+        );
+      } else {
+        hero = (
+          <div key="hero" data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
+            {site?.site_hero_image_url
+              ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+              : <div className="absolute inset-0 bg-foreground" />
+            }
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
+            <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
+              {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
+              <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
+              {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
+              {showBooking && (site?.cta_link
+                ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
+                : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="mt-2 px-8 py-3 border border-white/40 text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</button>
+              )}
+            </div>
+          </div>
+        );
+      }
+    } else if (variant === "grid") {
+      hero = (
+        <div key="hero" data-block-key="hero" className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
+          {site?.site_hero_image_url
+            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+            : <div className="absolute inset-0 bg-foreground" />
+          }
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
+          <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
+            <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{ed("site_subheadline", subheadline)}</p>}
+            {showBooking && (
+              site?.cta_link
+                ? <a href={editMode ? undefined : site.cta_link} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</a>
+                : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ backgroundColor: accentColor }} className="self-start px-6 py-2 text-[9px] tracking-[0.3em] uppercase text-white hover:opacity-90 transition-opacity">{ed("cta_text", ctaText)}</button>
+            )}
+          </div>
+        </div>
+      );
+    } else if (variant === "magazine") {
+      hero = (
+        <div key="hero" data-block-key="hero" className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
+          {site?.site_hero_image_url
+            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+            : <div className="absolute inset-0 bg-foreground" />
+          }
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-8 md:px-16">
+            <div className="flex items-start gap-5 max-w-2xl">
+              <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
+              <div>
+                <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-2">Photography</p>
+                <h1 className="text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{ed("site_headline", headline)}</h1>
+                {(subheadline || editMode) && <p className="text-sm font-light text-white/65 leading-relaxed max-w-md">{ed("site_subheadline", subheadline)}</p>}
+                {showBooking && (
+                  <div className="mt-5">
+                    {site?.cta_link
+                      ? <a href={editMode ? undefined : site.cta_link} style={{ color: accentColor, borderColor: accentColor }} className="inline-block px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</a>
+                      : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} style={{ color: accentColor, borderColor: accentColor }} className="px-6 py-2 border text-[9px] tracking-[0.3em] uppercase hover:bg-white/10 transition-colors text-white">{ed("cta_text", ctaText)}</button>
+                    }
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      // clean
+      hero = (
+        <div key="hero" data-block-key="hero" className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
+          {site?.site_hero_image_url
+            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+            : <div className="absolute inset-0 bg-foreground" />
+          }
+          <div className="absolute inset-0 bg-black/55" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-4">
+            <div className="w-10 h-px bg-white/40 mb-2" />
+            <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
+            {(subheadline || editMode) && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{ed("site_subheadline", subheadline)}</p>}
+            {showBooking && (
+              <div className="mt-4">
+                {site?.cta_link
+                  ? <a href={editMode ? undefined : site.cta_link} className="inline-block px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</a>
+                  : <button data-scroll-to="#sessions" onClick={() => handleNavClick("#sessions")} className="px-8 py-3 bg-white text-background text-[10px] tracking-[0.4em] uppercase hover:bg-white/90 transition-colors">{ed("cta_text", ctaText)}</button>
+                }
+              </div>
+            )}
+            <div className="w-10 h-px bg-white/40 mt-2" />
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // ── Quote ─────────────────────────────────────────────────────────────────
+  const quote: React.ReactNode = showBlock("quote")
+    ? <div key="quote" data-block-key="quote"><QuoteSection site={site} editMode={editMode} onFieldChange={onFieldChange} /></div>
+    : null;
+
+  // ── Sessions ──────────────────────────────────────────────────────────────
+  let sessionsBlock: React.ReactNode = null;
+  if (showBlock("sessions") && showStore) {
+    if (variant === "editorial") {
+      sessionsBlock = (
+        <main key="sessions" data-block-key="sessions" id="sessions">
+          {sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <Camera className="h-10 w-10 text-muted-foreground/30" />
+              <p className="text-sm font-light text-muted-foreground">No sessions available yet.</p>
+            </div>
+          ) : (
+            <>
+              <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
+                <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Available Sessions</p>
+              </div>
+              {sessions.map((session, i) => {
+                const isEven = i % 2 === 0;
+                return (
+                  <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+                    className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300">
+                    <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
+                      <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
+                        {session.cover_image_url
+                          ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
+                        }
+                      </div>
+                      <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
+                        <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
+                        <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
+                        {session.tagline && <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>}
+                        {session.description && <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>}
+                        <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
+                          <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
+                          {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
+                        </div>
+                        <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
+                          <span className="text-2xl font-light">{formatPrice(session.price)}</span>
+                          <span className="flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
+                            View details <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </main>
+      );
+    } else if (variant === "grid") {
+      sessionsBlock = sessions.length > 0 ? (
+        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Sessions</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {sessions.map((session) => (
+              <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+                className="group relative aspect-square overflow-hidden bg-muted">
+                {session.cover_image_url
+                  ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
+                }
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
+                  <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
+                  {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
+                    <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
+                  {formatPrice(session.price)}
+                </div>
+              </button>
+            ))}
+          </div>
+        </main>
+      ) : null;
+    } else if (variant === "magazine") {
+      const [featured, ...rest] = sessions;
+      sessionsBlock = sessions.length > 0 ? (
+        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Sessions</p>
+          </div>
+          {featured && (
+            <button onClick={() => window.location.assign(sessionHref(featured))}
+              className="group w-full mb-6 grid grid-cols-1 md:grid-cols-2 border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden bg-card text-left">
+              <div className="aspect-[4/3] md:aspect-auto md:min-h-[320px] bg-muted relative overflow-hidden">
+                {featured.cover_image_url
+                  ? <img src={featured.cover_image_url} alt={featured.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
+                }
+              </div>
+              <div className="p-8 md:p-10 flex flex-col justify-between">
+                <div>
+                  <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground mb-3">Featured</p>
+                  <h2 className="text-2xl font-light tracking-wide mb-2">{featured.title}</h2>
+                  {featured.tagline && <p className="text-sm font-light text-muted-foreground italic mb-3">{featured.tagline}</p>}
+                  {featured.description && <p className="text-sm text-muted-foreground leading-relaxed mb-6">{featured.description}</p>}
+                </div>
+                <div>
+                  <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground mb-6">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{featured.duration_minutes}min</span>
+                    <span className="flex items-center gap-1"><Camera className="h-3 w-3" />{featured.num_photos} photos</span>
+                    {featured.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{featured.location}</span>}
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border pt-4">
+                    <span className="text-2xl font-light">{formatPrice(featured.price)}</span>
+                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View details →</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          )}
+          {rest.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rest.map((session) => (
+                <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+                  className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card">
+                  <div className="aspect-[16/9] bg-muted relative overflow-hidden">
+                    {session.cover_image_url
+                      ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-8 w-8 text-muted-foreground/20" /></div>
+                    }
+                  </div>
+                  <div className="p-4 flex flex-col gap-2 flex-1">
+                    <h2 className="text-sm font-light tracking-wide">{session.title}</h2>
+                    {session.tagline && <p className="text-[11px] text-muted-foreground italic">{session.tagline}</p>}
+                    <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
+                      <span className="text-base font-light">{formatPrice(session.price)}</span>
+                      <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View →</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </main>
+      ) : null;
+    } else {
+      // clean
+      sessionsBlock = sessions.length > 0 ? (
+        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
+          <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
+          <div className="flex flex-col gap-0">
+            {sessions.map((session, i) => (
+              <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+                className={`group text-left py-8 flex flex-col gap-3 ${i > 0 ? "border-t border-border" : ""} hover:pl-2 transition-all duration-300`}>
+                <div className="flex items-start justify-between gap-4">
+                  <h2 className="text-xl font-light tracking-wide">{session.title}</h2>
+                  <span className="text-xl font-light shrink-0">{formatPrice(session.price)}</span>
+                </div>
+                {session.tagline && <p className="text-sm font-light text-muted-foreground italic">{session.tagline}</p>}
+                {session.description && <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>}
+                <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
+                  <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} minutes</span>
+                  <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
+                  {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
+                </div>
+                <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">View details →</span>
+              </button>
+            ))}
+          </div>
+        </main>
+      ) : null;
+    }
+  }
+
+  // ── Portfolio ─────────────────────────────────────────────────────────────
+  let portfolio: React.ReactNode = null;
+  if (showBlock("portfolio") && galleries.length > 0) {
+    if (variant === "editorial") {
+      portfolio = (
+        <section key="portfolio" data-block-key="portfolio" className="border-t border-border">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleries.map((gallery) => (
+                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
+                  className="group text-left border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden flex flex-col bg-card">
+                  <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                    {gallery.cover_image_url
+                      ? <img src={gallery.cover_image_url} alt={gallery.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      : <div className="w-full h-full flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
+                    }
+                    <span className="absolute top-3 left-3 text-[9px] tracking-[0.3em] uppercase bg-black/50 text-white/70 px-2 py-1 backdrop-blur-sm">{gallery.category}</span>
+                  </div>
+                  <div className="p-5 flex items-center justify-between">
+                    <h2 className="text-sm font-light tracking-wide">{gallery.title}</h2>
+                    <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors shrink-0 ml-3">View →</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    } else if (variant === "grid") {
+      portfolio = (
+        <div key="portfolio" data-block-key="portfolio" className="max-w-7xl mx-auto px-4 py-12">
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Portfolio</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {galleries.map((gallery) => (
+              <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
+                className="group relative aspect-square overflow-hidden bg-muted">
+                {gallery.cover_image_url
+                  ? <img src={gallery.cover_image_url} alt={gallery.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  : <div className="absolute inset-0 flex items-center justify-center"><Images className="h-10 w-10 text-muted-foreground/20" /></div>
+                }
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
+                  <h2 className="text-white text-sm font-light tracking-wide">{gallery.title}</h2>
+                  <span className="text-white/60 text-[9px] tracking-wider uppercase">{gallery.category}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    } else if (variant === "magazine") {
+      portfolio = (
+        <section key="portfolio" data-block-key="portfolio" className="border-t border-border">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Portfolio</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {galleries.map((gallery, i) => (
+                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
+                  className={`group relative overflow-hidden bg-muted ${i === 0 ? "col-span-2 md:col-span-1 row-span-2" : ""}`}
+                  style={{ aspectRatio: i === 0 ? "1/1.6" : "4/3" }}>
+                  {gallery.cover_image_url
+                    ? <img src={gallery.cover_image_url} alt={gallery.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    : <div className="absolute inset-0 flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
+                  }
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <h2 className="text-white text-sm font-light tracking-wide">{gallery.title}</h2>
+                  </div>
+                  <span className="absolute top-3 left-3 text-[9px] tracking-[0.3em] uppercase bg-black/50 text-white/70 px-2 py-1 backdrop-blur-sm">{gallery.category}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    } else {
+      // clean
+      portfolio = (
+        <section key="portfolio" data-block-key="portfolio" className="border-t border-border bg-muted/20">
+          <div className="max-w-4xl mx-auto px-6 py-20">
+            <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {galleries.map((gallery) => (
+                <button key={gallery.id} onClick={() => window.location.assign(galleryHref(gallery))}
+                  className="group text-left">
+                  <div className="aspect-[4/3] overflow-hidden mb-4 bg-muted">
+                    {gallery.cover_image_url
+                      ? <img src={gallery.cover_image_url} alt={gallery.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      : <div className="w-full h-full flex items-center justify-center"><Images className="h-8 w-8 text-muted-foreground/20" /></div>
+                    }
+                  </div>
+                  <h2 className="text-sm font-light tracking-widest uppercase text-center group-hover:text-muted-foreground transition-colors">{gallery.title}</h2>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+  }
+
+  // ── Experience ────────────────────────────────────────────────────────────
+  const experience: React.ReactNode = showBlock("experience")
+    ? <div key="experience" data-block-key="experience"><ExperienceSection site={site} accentColor={accentColor} editMode={editMode} onFieldChange={onFieldChange} /></div>
+    : null;
+
+  // ── About ─────────────────────────────────────────────────────────────────
+  let about: React.ReactNode = null;
+  if (showBlock("about")) {
+    if (variant === "clean") {
+      if ((site?.show_about !== false) && (photographer?.bio || site?.about_image_url)) {
+        about = (
+          <section key="about" data-block-key="about" id="about" className="border-t border-border">
+            <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+              {site?.about_image_url && (
+                <img src={site.about_image_url} alt={displayName} className="w-32 h-32 object-cover rounded-full mx-auto mb-8 grayscale" />
+              )}
+              <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 mb-6">{site?.about_title || "About"}</p>
+              <h2 className="text-2xl font-light tracking-wide mb-6">{photographer?.full_name || photographer?.business_name || displayName}</h2>
+              {photographer?.bio && <p className="text-sm font-light text-muted-foreground leading-relaxed">{photographer.bio}</p>}
+            </div>
+          </section>
+        );
+      }
+    } else {
+      about = <div key="about" data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>;
+    }
+  }
+
+  // ── Testimonials ──────────────────────────────────────────────────────────
+  const testimonials: React.ReactNode = showBlock("testimonials")
+    ? <div key="testimonials" data-block-key="testimonials"><SharedTestimonials site={site} accentColor={accentColor} /></div>
+    : null;
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  const footer: React.ReactNode = showBlock("footer")
+    ? <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+    : null;
+
+  return { hero, quote, sessions: sessionsBlock, experience, portfolio, about, testimonials, footer };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: EDITORIAL (default)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const EDITORIAL_DEFAULT_ORDER = ["hero", "quote", "sessions", "experience", "portfolio", "about", "testimonials", "footer"];
+
+function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, sessions: _s, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+
+  const blocks = buildBlockMap("editorial", props, derived);
+  const orderedKeys = props.visibleSections ?? EDITORIAL_DEFAULT_ORDER;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: GRID
+// ═══════════════════════════════════════════════════════════════════════════
+
+const GRID_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials", "footer"];
+
+function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+
+  const blocks = buildBlockMap("grid", props, derived);
+  const orderedKeys = props.visibleSections ?? GRID_DEFAULT_ORDER;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: MAGAZINE
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MAGAZINE_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials", "footer"];
+
+function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+
+  const blocks = buildBlockMap("magazine", props, derived);
+  const orderedKeys = props.visibleSections ?? MAGAZINE_DEFAULT_ORDER;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: CLEAN
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CLEAN_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "about", "experience", "testimonials", "footer"];
+
+function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, accentColor, showBooking, navLinks, handleNavClick, ctaText } = derived;
+
+  const blocks = buildBlockMap("clean", props, derived);
+  const orderedKeys = props.visibleSections ?? CLEAN_DEFAULT_ORDER;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+    </div>
+  );
 }
 
 // ─── Main Router ─────────────────────────────────────────────────────────
@@ -1305,5 +1334,3 @@ export default function PublicSiteRenderer(props: Props) {
     </>
   );
 }
-
-
