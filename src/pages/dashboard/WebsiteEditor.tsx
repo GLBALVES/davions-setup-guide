@@ -559,10 +559,20 @@ export default function WebsiteEditor() {
 
       {/* ── Body ── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel (260px) — always shows pages/sections tree or page content editor */}
+        {/* Left panel (260px) */}
         <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
-          {/* Page Content Panel — only when explicitly opened via "Page Settings" */}
-          {pageContentPanelOpen && activePageId !== null && activeBlock === null && (() => {
+          {/* 1. Block editor — shown when any block is actively selected */}
+          {activeBlock !== null && (
+            <BlockPanel
+              blockKey={activeBlock}
+              data={effectiveSiteData}
+              onChange={handleDataChange}
+              onBack={() => setActiveBlock(null)}
+            />
+          )}
+
+          {/* 2. Page Content Panel — only when explicitly opened via "Page Settings" */}
+          {activeBlock === null && pageContentPanelOpen && activePageId !== null && (() => {
             const activePage = pages.find((p) => p.id === activePageId);
             return activePage && !activePage.is_home ? (
               <PageContentPanel
@@ -573,8 +583,8 @@ export default function WebsiteEditor() {
             ) : null;
           })()}
 
-          {/* Default: EditorSidebar — home, OR custom page not in settings mode, OR section active */}
-          {(!pageContentPanelOpen || activePageId === null || pages.find((p) => p.id === activePageId)?.is_home || activeBlock !== null) && (
+          {/* 3. Default: EditorSidebar */}
+          {activeBlock === null && (!pageContentPanelOpen || activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && (
             <EditorSidebar
               data={siteData}
               sections={sections}
