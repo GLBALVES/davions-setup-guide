@@ -1,42 +1,62 @@
 
-## Problem
+## Problema
 
-Clicking "Page 1" (or any custom page) in the sidebar immediately opens the `PageContentPanel` (title, cover image, headline fields) instead of loading the page's content into the preview — unlike Home, which loads its sections.
+As opções de edição de Header e Footer **existem** no `BlockPanel.tsx` — mas nunca aparecem no sidebar lateral. O `BlockPanel` só é renderizado como um painel flutuante dentro do `LivePreview`, e para Header/Footer esse painel flutuante não funciona bem (o header está no topo da página, o footer no rodapé — fora da área de scroll visível do canvas).
 
-**Root cause (`WebsiteEditor.tsx` lines 562–572):**
-```ts
-// ANY click on a custom page → shows PageContentPanel
-{activePageId !== null && activeBlock === null && (() => {
-  const activePage = pages.find(p => p.id === activePageId);
-  return activePage && !activePage.is_home ? <PageContentPanel ...> : null;
-})()}
+Quando o usuário clica em "Header / Nav" ou "Footer" no `FixedRow` do sidebar:
+1. `activeBlock` é definido como "header" ou "footer" ✓
+2. `WebsiteEditor.tsx` mantém o `EditorSidebar` visível (a árvore de páginas) — o `BlockPanel` nunca aparece no sidebar ✗
+3. O painel flutuante do `LivePreview` existe mas é difícil de usar/ver para esses elementos fixos ✗
+
+**Causa raiz**: O `WebsiteEditor.tsx` nunca renderiza o `BlockPanel` no sidebar esquerdo. A condição atual (linha 577) sempre mostra o `EditorSidebar` quando `activeBlock !== null` — nunca substitui pelo `BlockPanel`.
+
+## Solução
+
+Adicionar o `BlockPanel` no sidebar esquerdo do `WebsiteEditor.tsx` quando `activeBlock` está definido — **substituindo** o `EditorSidebar`. Isso é consistente com o padrão já esperado: clicar em uma seção ou em Header/Footer abre as opções de edição no painel lateral.
+
+### Mudanças em `WebsiteEditor.tsx`
+
+1. Importar `BlockPanel` de `@/components/website-editor/BlockPanel`
+2. Adicionar terceiro estado no aside:
+   - Se `activeBlock !== null` → mostrar `BlockPanel` com `blockKey={activeBlock}`, `data={effectiveSiteData}`, `onChange={handleDataChange}`, `onBack={() => setActiveBlock(null)}`
+   - Se `pageContentPanelOpen && activePageId && !home` → mostrar `PageContentPanel`
+   - Senão → mostrar `EditorSidebar`
+
+```tsx
+<aside className="w-[260px] ...">
+  {/* 1. Block editor — shown when any block is actively selected */}
+  {activeBlock !== null && (
+    <BlockPanel
+      blockKey={activeBlock}
+      data={effectiveSiteData}
+      onChange={handleDataChange}
+      onBack={() => setActiveBlock(null)}
+    />
+  )}
+
+  {/* 2. Page Content Panel — only when explicitly opened via Page Settings */}
+  {activeBlock === null && pageContentPanelOpen && activePageId && !activePage?.is_home && (
+    <PageContentPanel
+      page={activePage}
+      onBack={() => setPageContentPanelOpen(false)}
+      onChange={handlePageContentChange}
+    />
+  )}
+
+  {/* 3. Default: sidebar tree */}
+  {activeBlock === null && (!pageContentPanelOpen || !activePageId || activePage?.is_home) && (
+    <EditorSidebar ... />
+  )}
+</aside>
 ```
 
-There is no distinction between "I just selected this page" vs "I want to edit its properties."
+3. Remover o `BlockPanel` flutuante do `LivePreview` (ou mantê-lo apenas como indicador visual, sem o painel de edição duplicado). O painel de indicação/destaque da seção ativa continua, só o painel de edição flutuante será removido.
 
-## Solution
+### Resultado
+- Clicar em "Header / Nav" no sidebar → `BlockPanel` de Header abre no sidebar esquerdo com todas as opções (logo, cores, sociais, visibilidade) ✓
+- Clicar em "Footer" → `BlockPanel` de Footer abre com templates, elementos e cores ✓
+- Clicar em qualquer seção (Hero, About, etc.) → `BlockPanel` abre no sidebar ✓
+- Botão "←" no `BlockPanel` → volta para o `EditorSidebar` ✓
+- O indicador visual azul no canvas continua funcionando para mostrar qual seção está ativa ✓
 
-Introduce a separate boolean state `pageContentPanelOpen` (default `false`). The `PageContentPanel` only appears when this flag is `true`. Clicking a page name selects it (updates preview) but does NOT set this flag. A dedicated button in the `PageRow` (e.g., the settings/gear icon or a "Page Settings" option in the existing dropdown menu) toggles it.
-
-### Changes
-
-**`WebsiteEditor.tsx`**:
-1. Add `const [pageContentPanelOpen, setPageContentPanelOpen] = useState(false);`
-2. Update `handleSelectPage` to reset `pageContentPanelOpen` to `false` when switching pages.
-3. Change the sidebar condition: show `PageContentPanel` only when `pageContentPanelOpen === true` (and `activeBlock === null`).
-4. Show `EditorSidebar` when `pageContentPanelOpen === false`.
-5. Pass `onOpenPageSettings={(id) => { setActivePageId(id); setPageContentPanelOpen(true); }}` to `EditorSidebar`.
-6. Update `PageContentPanel`'s back button to call `setPageContentPanelOpen(false)` instead of `setActivePageId(null)`.
-
-**`EditorSidebar.tsx`**:
-1. Accept new prop `onOpenPageSettings: (pageId: string) => void`.
-2. In the dropdown menu of `PageRow`/`SortablePage`, add a "Page Settings" item that calls `onOpenPageSettings(page.id)`.
-3. Remove or repurpose the `onSelect` handler — clicking the page row now only selects the page, never opens properties.
-
-### Result
-- Click page name → preview loads that page's sections (same behavior as Home) ✓
-- Click "Page Settings" in dropdown → `PageContentPanel` opens for editing title, cover, CTA ✓
-- Click back in `PageContentPanel` → returns to normal `EditorSidebar` ✓
-- Section click still opens section editor as before ✓
-
-**Files to edit:** `src/pages/dashboard/WebsiteEditor.tsx`, `src/components/website-editor/EditorSidebar.tsx`
+**Arquivo a editar:** apenas `src/pages/dashboard/WebsiteEditor.tsx`
