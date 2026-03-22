@@ -299,11 +299,42 @@ export function ProjectDetailSheet({
                   )}
                 </div>
               </div>
+
+              {/* Gallery deadline — only relevant when stage is "shot" */}
+              {project.stage === "shot" && (
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] tracking-widest uppercase text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-2.5 w-2.5" /> Prazo para galeria
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      defaultValue={project.gallery_deadline ?? ""}
+                      key={project.id + "-gallery-deadline"}
+                      onBlur={(e) => save({ gallery_deadline: e.target.value || null } as any)}
+                      className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors w-full"
+                    />
+                    {project.gallery_deadline && (() => {
+                      const d = parseISO(project.gallery_deadline);
+                      const now = new Date();
+                      if (isPast(d)) return <span className="text-[10px] text-destructive shrink-0 flex items-center gap-0.5"><AlertTriangle className="h-2.5 w-2.5" />Vencido</span>;
+                      const days = differenceInDays(d, now);
+                      if (days <= 1) {
+                        const h = differenceInHours(d, now);
+                        return <span className="text-[10px] text-orange-500 shrink-0">{h}h restantes</span>;
+                      }
+                      const color = days <= 3 ? "text-yellow-500" : "text-emerald-500";
+                      return <span className={cn("text-[10px] shrink-0", color)}>{days}d restantes</span>;
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
 
             <Separator />
 
             {/* Notes */}
+
             <div className="space-y-1.5">
               <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Notes</Label>
               <textarea
