@@ -68,6 +68,7 @@ interface ClientProject {
   updated_at: string;
   session_title?: string | null;
   gallery_cover_url?: string | null;
+  gallery_deadline?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
