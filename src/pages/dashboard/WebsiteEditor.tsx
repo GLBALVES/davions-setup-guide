@@ -389,9 +389,29 @@ export default function WebsiteEditor() {
     "My Site";
 
   const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
-  const activePageSections: SectionDef[] = activePage && !activePage.is_home
-    ? ((activePage.sections_order as SectionDef[]) ?? [])
-    : sections;
+
+  // For custom pages, merge page_content fields into siteData so the preview shows
+  // the page's own headline/cover/cta instead of the Home content.
+  const effectiveSiteData = activePage && !activePage.is_home && activePage.page_content
+    ? {
+        ...siteData,
+        site_headline: (activePage.page_content as any).page_headline ?? siteData.site_headline,
+        site_subheadline: (activePage.page_content as any).page_subheadline ?? siteData.site_subheadline,
+        site_hero_image_url: (activePage.page_content as any).page_cover_url ?? siteData.site_hero_image_url,
+        cta_text: (activePage.page_content as any).page_cta_text ?? siteData.cta_text,
+        cta_link: (activePage.page_content as any).page_cta_link ?? siteData.cta_link,
+      }
+    : siteData;
+
+  const activePageSections: SectionDef[] =
+    activePage && !activePage.is_home
+      ? (() => {
+          const order = (activePage.sections_order as SectionDef[]) ?? [];
+          // If the custom page has no sections yet, show a default hero so preview isn't blank
+          if (order.length === 0) return [{ key: "hero", label: "Hero", icon: "🖼️", visible: true }];
+          return order;
+        })()
+      : sections;
 
   // hiddenSections for the modal uses the TARGET page (may differ from active page)
   const targetPageForModal = addBlockState.targetPageId
@@ -411,7 +431,7 @@ export default function WebsiteEditor() {
   }
 
   const livePreviewProps = {
-    data: siteData,
+    data: effectiveSiteData,
     photographer: photographerWithBio,
     sessions,
     galleries,
