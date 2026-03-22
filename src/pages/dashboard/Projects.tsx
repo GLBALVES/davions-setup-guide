@@ -718,10 +718,15 @@ const Projects = () => {
 
         // Build set of booking_ids that have a proof gallery
         const proofGalleryBookings = new Set<string>();
+        // Build set of booking_ids that have a final gallery
+        const finalGalleryBookings = new Set<string>();
         if (galleries) {
           for (const g of galleries as any[]) {
             if (g.booking_id && g.category === "proof") {
               proofGalleryBookings.add(g.booking_id);
+            }
+            if (g.booking_id && g.category === "final") {
+              finalGalleryBookings.add(g.booking_id);
             }
           }
         }
@@ -742,6 +747,25 @@ const Projects = () => {
             .in("id", toProofGallery);
           for (const p of allProjects as any[]) {
             if (toProofGallery.includes(p.id)) p.stage = "proof_gallery";
+          }
+        }
+
+        // Auto-advance "post_production" → "final_gallery" when a final gallery is linked
+        const toFinalGallery: string[] = [];
+        for (const p of (allProjects as any[])) {
+          if (p.stage !== "post_production") continue;
+          if (p.booking_id && finalGalleryBookings.has(p.booking_id)) {
+            toFinalGallery.push(p.id);
+          }
+        }
+
+        if (toFinalGallery.length > 0) {
+          await supabase
+            .from("client_projects" as any)
+            .update({ stage: "final_gallery" } as any)
+            .in("id", toFinalGallery);
+          for (const p of allProjects as any[]) {
+            if (toFinalGallery.includes(p.id)) p.stage = "final_gallery";
           }
         }
       }
