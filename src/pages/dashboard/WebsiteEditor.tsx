@@ -453,6 +453,7 @@ export default function WebsiteEditor() {
     sections: activePageSections,
     onDataChange: handleDataChange,
     storeSlug,
+    activePageId,
   };
 
   return (
