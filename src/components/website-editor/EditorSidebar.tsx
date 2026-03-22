@@ -298,6 +298,14 @@ function PageRow({
                   >
                     <FileText className="h-3 w-3" /> Rename
                   </DropdownMenuItem>
+                  {onOpenPageSettings && (
+                    <DropdownMenuItem
+                      onClick={(e) => { e.stopPropagation(); onOpenPageSettings(); }}
+                      className="gap-2"
+                    >
+                      <SlidersHorizontal className="h-3 w-3" /> Page Settings
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
                     className="gap-2 text-destructive focus:text-destructive"
