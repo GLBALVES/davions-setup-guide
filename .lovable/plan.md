@@ -1,62 +1,66 @@
 
-## Problema
+## Feature: Auto-advance "shot" → "proof_gallery" when a proof gallery is linked
 
-As opções de edição de Header e Footer **existem** no `BlockPanel.tsx` — mas nunca aparecem no sidebar lateral. O `BlockPanel` só é renderizado como um painel flutuante dentro do `LivePreview`, e para Header/Footer esse painel flutuante não funciona bem (o header está no topo da página, o footer no rodapé — fora da área de scroll visível do canvas).
+### How it works today
 
-Quando o usuário clica em "Header / Nav" ou "Footer" no `FixedRow` do sidebar:
-1. `activeBlock` é definido como "header" ou "footer" ✓
-2. `WebsiteEditor.tsx` mantém o `EditorSidebar` visível (a árvore de páginas) — o `BlockPanel` nunca aparece no sidebar ✗
-3. O painel flutuante do `LivePreview` existe mas é difícil de usar/ver para esses elementos fixos ✗
+In `fetchProjects` (Projects.tsx lines 644–664), galleries are already fetched for each project via `booking_id`. The code builds `galleryCovers` (a `Record<booking_id → cover_image_url>`), but only uses it to show a thumbnail — it never checks whether a gallery exists to advance the stage.
 
-**Causa raiz**: O `WebsiteEditor.tsx` nunca renderiza o `BlockPanel` no sidebar esquerdo. A condição atual (linha 577) sempre mostra o `EditorSidebar` quando `activeBlock !== null` — nunca substitui pelo `BlockPanel`.
+### What needs to change
 
-## Solução
+After the `galleryCovers` map is built (and before `setProjects`), add an auto-advance check:
 
-Adicionar o `BlockPanel` no sidebar esquerdo do `WebsiteEditor.tsx` quando `activeBlock` está definido — **substituindo** o `EditorSidebar`. Isso é consistente com o padrão já esperado: clicar em uma seção ou em Header/Footer abre as opções de edição no painel lateral.
+> For every project in stage **"shot"** that has a `booking_id` and has a **proof** gallery linked (`category === "proof"`) → advance to `"proof_gallery"`.
 
-### Mudanças em `WebsiteEditor.tsx`
+Since the existing gallery fetch only selects `booking_id` and `cover_image_url`, it needs to also select `category` and `status` (only published/draft galleries count — not expired ones).
 
-1. Importar `BlockPanel` de `@/components/website-editor/BlockPanel`
-2. Adicionar terceiro estado no aside:
-   - Se `activeBlock !== null` → mostrar `BlockPanel` com `blockKey={activeBlock}`, `data={effectiveSiteData}`, `onChange={handleDataChange}`, `onBack={() => setActiveBlock(null)}`
-   - Se `pageContentPanelOpen && activePageId && !home` → mostrar `PageContentPanel`
-   - Senão → mostrar `EditorSidebar`
+### Changes in `Projects.tsx`
 
-```tsx
-<aside className="w-[260px] ...">
-  {/* 1. Block editor — shown when any block is actively selected */}
-  {activeBlock !== null && (
-    <BlockPanel
-      blockKey={activeBlock}
-      data={effectiveSiteData}
-      onChange={handleDataChange}
-      onBack={() => setActiveBlock(null)}
-    />
-  )}
-
-  {/* 2. Page Content Panel — only when explicitly opened via Page Settings */}
-  {activeBlock === null && pageContentPanelOpen && activePageId && !activePage?.is_home && (
-    <PageContentPanel
-      page={activePage}
-      onBack={() => setPageContentPanelOpen(false)}
-      onChange={handlePageContentChange}
-    />
-  )}
-
-  {/* 3. Default: sidebar tree */}
-  {activeBlock === null && (!pageContentPanelOpen || !activePageId || activePage?.is_home) && (
-    <EditorSidebar ... />
-  )}
-</aside>
+**Step 1 — Expand the gallery query** (line 652–656) to include `category` and `status`:
+```ts
+const { data: galleries } = await supabase
+  .from("galleries")
+  .select("booking_id, cover_image_url, category, status")
+  .in("booking_id", bookingIds)
+  .neq("status", "expired"); // ignore expired galleries
 ```
 
-3. Remover o `BlockPanel` flutuante do `LivePreview` (ou mantê-lo apenas como indicador visual, sem o painel de edição duplicado). O painel de indicação/destaque da seção ativa continua, só o painel de edição flutuante será removido.
+**Step 2 — Build a secondary map** of `booking_id → hasProofGallery`:
+```ts
+const proofGalleryBookings = new Set<string>();
+for (const g of galleries as any[]) {
+  if (g.booking_id && g.category === "proof") {
+    proofGalleryBookings.add(g.booking_id);
+  }
+}
+```
 
-### Resultado
-- Clicar em "Header / Nav" no sidebar → `BlockPanel` de Header abre no sidebar esquerdo com todas as opções (logo, cores, sociais, visibilidade) ✓
-- Clicar em "Footer" → `BlockPanel` de Footer abre com templates, elementos e cores ✓
-- Clicar em qualquer seção (Hero, About, etc.) → `BlockPanel` abre no sidebar ✓
-- Botão "←" no `BlockPanel` → volta para o `EditorSidebar` ✓
-- O indicador visual azul no canvas continua funcionando para mostrar qual seção está ativa ✓
+**Step 3 — Auto-advance "shot" → "proof_gallery"** after the `toAdvance` (shot) block:
+```ts
+const toProofGallery: string[] = [];
+for (const p of mapped) {
+  if (p.stage !== "shot") continue;
+  if (p.booking_id && proofGalleryBookings.has(p.booking_id)) {
+    toProofGallery.push(p.id);
+  }
+}
 
-**Arquivo a editar:** apenas `src/pages/dashboard/WebsiteEditor.tsx`
+if (toProofGallery.length > 0) {
+  await supabase
+    .from("client_projects" as any)
+    .update({ stage: "proof_gallery" } as any)
+    .in("id", toProofGallery);
+  for (const p of mapped) {
+    if (toProofGallery.includes(p.id)) p.stage = "proof_gallery";
+  }
+}
+```
+
+**Note on ordering**: the `toAdvance` (upcoming→shot) block runs first, so a project that just got moved to "shot" in the same load won't be immediately moved again — it will only advance to "proof_gallery" on the next `fetchProjects` call (page reload or next visit), which is the correct and safe behavior.
+
+### Result
+- A project in "Fotografadas" with a linked proof gallery → automatically moves to "Galeria de provas" on next page load ✓
+- Projects without a linked gallery stay in "Fotografadas" ✓
+- Manually created projects (no `booking_id`) are unaffected ✓
+- Expired galleries don't trigger the transition ✓
+
+**File to edit:** only `src/pages/dashboard/Projects.tsx` — 3 small additions
