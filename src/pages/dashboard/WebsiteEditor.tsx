@@ -53,6 +53,7 @@ export default function WebsiteEditor() {
   // Pages
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePageId, setActivePageId] = useState<string | null>(null); // null = home
+  const [pageContentPanelOpen, setPageContentPanelOpen] = useState(false);
 
   const [addBlockState, setAddBlockState] = useState<{ open: boolean; insertAfter: number; targetPageId: string | null }>({
     open: false,
