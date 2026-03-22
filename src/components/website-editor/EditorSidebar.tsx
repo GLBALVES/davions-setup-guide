@@ -652,6 +652,7 @@ interface Props {
   onTogglePageVisibility: (id: string) => void;
   onReorderPages: (pages: SitePage[]) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
+  onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
 }
 
 type Tab = "pages" | "styles";
