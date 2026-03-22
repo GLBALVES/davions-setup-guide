@@ -1,33 +1,66 @@
 
-## Diagnóstico real do problema
+## Diagnóstico do Problema
 
-O fluxo de dados atual ao adicionar uma seção em uma página customizada:
+### Causa raiz: o `LivePreview` ignora a página ativa
 
-1. Usuário clica `+` na página customizada → `onAddSection(pageId)` chamado corretamente
-2. `setAddBlockState({ open: true, insertAfter: count, targetPageId: pageId })` — correto
-3. Usuário confirma no modal → `handleAddBlock(blockKey, insertAfterIndex)` — salva no `site_pages.sections_order` corretamente
-4. **Problema**: `setActivePageId(targetPageId)` é chamado, mas o `LivePreview` sempre renderiza o mesmo `PublicSiteRenderer` sem distinção de página — ele renderiza as seções de `activePageSections` (prop passada), mas o `PublicSiteRenderer` ignora completamente esse array e renderiza tudo fixo baseado em booleanos `show_*` e seções hardcoded.
+Ao clicar em uma página customizada no sidebar, o `handleSelectPage` define `activePageId` corretamente. Mas o `livePreviewProps` passa `sections: activePageSections` ao `LivePreview`, que por sua vez passa `visibleSections` ao `PublicSiteRenderer`.
 
-### O problema real está em dois lugares:
+O problema está na linha 392–394 do `WebsiteEditor.tsx`:
 
-**1. `WebsiteEditor.tsx`**: O `livePreviewProps` passa `sections: activePageSections`, mas o `PublicSiteRenderer` não usa esse array para decidir O QUE renderizar — ele tem sua própria lógica interna.
+```ts
+const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
+const activePageSections: SectionDef[] = activePage && !activePage.is_home
+  ? ((activePage.sections_order as SectionDef[]) ?? [])
+  : sections;
+```
 
-**2. `PublicSiteRenderer.tsx`**: Recebe `sections` prop? **Não recebe**. O renderer sempre renderiza todas as seções visíveis com base nos campos `show_*` de `siteConfig`, independente de qual página está ativa.
+Quando uma página customizada **não tem seções** (array vazio), `activePageSections` é `[]`. O `LivePreview` passa `visibleSections={[]}` ao renderer — e o `PublicSiteRenderer` interpreta um array vazio como "não há seções para mostrar", então renderiza vazio ou reverte para o comportamento padrão, que são as seções da Home.
+
+Mas há **um segundo problema maior**: o `PublicSiteRenderer` nunca muda de conteúdo porque o `data` sempre é o global `siteData`. Páginas customizadas têm seu conteúdo em `page.page_content` (`page_headline`, `page_body`, etc.), e esse conteúdo **nunca é passado** ao `PublicSiteRenderer`.
+
+### Dois problemas confirmados:
+
+1. **`visibleSections`**: quando uma página customizada tem seções, o array é passado corretamente. Mas o `PublicSiteRenderer` usa `showBlock(key)` que só filtra baseado no array. O conteúdo textual (headline, body, cover, etc.) da página nunca é injetado.
+
+2. **A sidebar esconde o `EditorSidebar` quando `activePageId !== null` e a página não é Home** (linha 532–541 do WebsiteEditor). Isso já funciona para mostrar o `PageContentPanel`. **O preview no entanto ainda mostra o conteúdo da home.**
 
 ### Solução
 
-O `PublicSiteRenderer` precisa receber uma prop `visibleSections: string[] | null` (null = renderiza tudo como hoje). Quando passada, renderiza **somente** as seções cujas keys estão no array, na ordem definida.
+**`WebsiteEditor.tsx`** — passar o conteúdo da página ativa ao `LivePreview` quando for uma página customizada:
+
+```ts
+// Merge page_content into siteData when a custom page is active
+const effectiveSiteData = activePage && !activePage.is_home && activePage.page_content
+  ? {
+      ...siteData,
+      site_headline: (activePage.page_content as PageContent).page_headline ?? siteData.site_headline,
+      site_subheadline: (activePage.page_content as PageContent).page_subheadline ?? siteData.site_subheadline,
+      site_hero_image_url: (activePage.page_content as PageContent).page_cover_url ?? siteData.site_hero_image_url,
+      cta_text: (activePage.page_content as PageContent).page_cta_text ?? siteData.cta_text,
+      cta_link: (activePage.page_content as PageContent).page_cta_link ?? siteData.cta_link,
+    }
+  : siteData;
+```
+
+E usar `effectiveSiteData` em vez de `siteData` no `livePreviewProps`.
+
+**Problema de array vazio**: quando uma página customizada não tem seções, o preview fica em branco. Isso é correto — a página está vazia. Mas se o usuário nunca adicionou seções, a página deve mostrar pelo menos o bloco de conteúdo básico (headline/body/cover). 
+
+Para isso, quando `activePageSections` está vazio E a página tem `page_content`, exibir pelo menos uma seção placeholder `hero` no preview:
+
+```ts
+const activePageSections: SectionDef[] =
+  activePage && !activePage.is_home
+    ? (() => {
+        const order = (activePage.sections_order as SectionDef[]) ?? [];
+        // Se não há seções definidas mas há page_content, mostrar hero por padrão
+        if (order.length === 0) return [{ key: "hero", label: "Hero", icon: "🖼️", visible: true }];
+        return order;
+      })()
+    : sections;
+```
 
 **Arquivos a editar:**
-
-1. **`src/components/store/PublicSiteRenderer.tsx`** — adicionar prop `visibleSections?: string[] | null` ao componente principal; envolver cada bloco (hero, sessions, portfolio, about, testimonials, quote, experience, contact) numa condição `!visibleSections || visibleSections.includes('hero')` etc., e também respeitar a ordem do array quando renderizar.
-
-2. **`src/components/website-editor/LivePreview.tsx`** — passar `visibleSections` para o `PublicSiteRenderer` baseado no `sections` prop que já recebe (filtrar as `visible: true` e extrair as keys em ordem).
-
-3. **`src/pages/dashboard/WebsiteEditor.tsx`** — nenhuma mudança necessária, já passa `sections: activePageSections` corretamente ao `LivePreview`.
-
-### Comportamento resultante
-
-- Home page selecionada → `activePageSections` = `sections` global → `PublicSiteRenderer` renderiza todas as seções visíveis na ordem salva
-- Página customizada selecionada → `activePageSections` = `page.sections_order` → `PublicSiteRenderer` renderiza somente aquelas seções naquela ordem
-- Seção adicionada à página customizada aparece imediatamente no preview porque o `activePageSections` é atualizado no estado e o preview re-renderiza com o novo array
+- `src/pages/dashboard/WebsiteEditor.tsx` — único arquivo, 2 mudanças:
+  1. Adicionar `effectiveSiteData` que mescla `page_content` da página ativa
+  2. Ajustar `activePageSections` para exibir `hero` por padrão quando uma página customizada não tem seções ainda
