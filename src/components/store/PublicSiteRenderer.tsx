@@ -1202,7 +1202,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
     </div>
   );
 }
@@ -1226,7 +1226,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
     </div>
   );
 }
@@ -1250,7 +1250,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
     </div>
   );
 }
@@ -1274,7 +1274,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
     </div>
   );
 }
