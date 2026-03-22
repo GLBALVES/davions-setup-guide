@@ -8,7 +8,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle } from "lucide-react";
+import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
   Dialog,
@@ -67,6 +68,7 @@ interface ClientProject {
   updated_at: string;
   session_title?: string | null;
   gallery_cover_url?: string | null;
+  gallery_deadline?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -86,6 +88,32 @@ const STAGE_COLORS: Record<Stage, string> = {
   archived:        "bg-muted/40 text-muted-foreground/60 border-border/50",
 };
 
+
+// ── Deadline helpers ─────────────────────────────────────────────────────────
+function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
+  if (!deadline) return null;
+  const d = parseISO(deadline);
+  const now = new Date();
+  const daysLeft = differenceInDays(d, now);
+  if (isPast(d)) return "overdue";
+  if (daysLeft <= 1) return "urgent";
+  if (daysLeft <= 3) return "warning";
+  return "ok";
+}
+
+const DEADLINE_BORDER: Record<string, string> = {
+  overdue: "border-destructive shadow-[0_0_0_1px_hsl(var(--destructive))]",
+  urgent:  "border-orange-500 shadow-[0_0_0_1px_theme(colors.orange.500)]",
+  warning: "border-yellow-400 shadow-[0_0_0_1px_theme(colors.yellow.400)]",
+  ok:      "border-emerald-500 shadow-[0_0_0_1px_theme(colors.emerald.500)]",
+};
+
+const DEADLINE_BADGE: Record<string, string> = {
+  overdue: "text-destructive",
+  urgent:  "text-orange-500",
+  warning: "text-yellow-500",
+  ok:      "text-emerald-500",
+};
 
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
@@ -112,10 +140,25 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
+  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(project.gallery_deadline) : null;
+  const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
+
+  // Human-readable deadline label
+  const deadlineLabel = (() => {
+    if (!project.gallery_deadline || project.stage !== "shot") return null;
+    const d = parseISO(project.gallery_deadline);
+    const now = new Date();
+    if (isPast(d)) return "Prazo vencido";
+    const h = differenceInHours(d, now);
+    if (h < 24) return `${h}h restantes`;
+    const days = differenceInDays(d, now);
+    return `${days}d restantes`;
+  })();
+
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
-        className="border border-border bg-card rounded-sm p-3 flex flex-col gap-2 hover:border-foreground/30 transition-colors cursor-pointer"
+        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass}`}
         onClick={() => onView(project)}
       >
         {/* drag handle + actions */}
@@ -168,7 +211,6 @@ function KanbanCard({
 
         {/* meta */}
         <div className="flex flex-col gap-1">
-          {/* client + date on the same line */}
           {project.shoot_date && (
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground min-w-0">
               <span className="flex items-center gap-1 shrink-0">
@@ -181,6 +223,18 @@ function KanbanCard({
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
               <Camera className="h-2.5 w-2.5 shrink-0" />
               <span className="truncate italic">{project.session_title}</span>
+            </div>
+          )}
+
+          {/* Deadline alert — only for "shot" stage */}
+          {deadlineLabel && deadlineStatus && (
+            <div className={`flex items-center gap-1 text-[10px] font-medium mt-0.5 ${DEADLINE_BADGE[deadlineStatus]}`}>
+              {deadlineStatus === "overdue" ? (
+                <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+              ) : (
+                <Clock className="h-2.5 w-2.5 shrink-0" />
+              )}
+              <span>Galeria: {deadlineLabel}</span>
             </div>
           )}
         </div>
@@ -696,6 +750,7 @@ const Projects = () => {
         ...p,
         session_title: (p.bookings as any)?.sessions?.title ?? null,
         gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
+        gallery_deadline: p.gallery_deadline ?? null,
       }));
 
       // 6. Auto-advance "upcoming" → "shot" when session has ended
