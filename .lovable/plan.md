@@ -1,51 +1,29 @@
 
-## Diagnóstico
+## Problema raiz
 
-O `PublicSiteRenderer` renderiza os blocos em **ordem fixa e hardcoded** no JSX de cada template (Editorial, Grid, Magazine, Clean). A prop `visibleSections` só filtra SE um bloco aparece — mas nunca controla a **ordem** em que aparecem.
+No componente `PageRow` (`EditorSidebar.tsx`), o `div` container da linha não tem um handler `onClick` vinculado a `onSelect()`. Para páginas não-home, o span do título chama `e.stopPropagation()` no clique simples (para não conflitar com o duplo clique de renomear) — mas nunca chama `onSelect()`. O resultado: clicar em qualquer página customizada não aciona a seleção.
 
-Quando o usuário reordena via drag-and-drop no sidebar:
-1. `handleReorderPageSections` atualiza `pages` → `activePageSections` muda (sidebar correto ✓)
-2. `LivePreview` passa `visibleSections={sections.filter(v).map(key)}` ao `PublicSiteRenderer` com as keys na nova ordem ✓
-3. `PublicSiteRenderer` ignora a ordem do array e renderiza hero → quote → sessions → experience → portfolio → about → testimonials → footer sempre na mesma sequência ✗
+```tsx
+// Div externo — SEM onClick → onSelect nunca é chamado
+<div className="group flex items-center gap-1.5 ...">
+  <span
+    onClick={(e) => {
+      if (page.is_home) onSelect();     // ✓ home chama onSelect
+      else e.stopPropagation();         // ✗ não-home apenas bloqueia propagação
+    }}
+  >
+```
 
 ## Solução
 
-Adicionar renderização dinâmica baseada na ordem de `visibleSections` em cada template.
+**`EditorSidebar.tsx` — `PageRow`**:
 
-A abordagem mais limpa: criar um mapa de render functions para cada bloco, e quando `visibleSections` for passado (modo editor), renderizar iterando o array em ordem. Quando `visibleSections` for null (site público), renderizar na ordem fixa atual.
+1. Adicionar `onClick={() => onSelect()}` no `div` container da linha (para capturar cliques em qualquer área da linha).
+2. Corrigir o span do título: remover o `e.stopPropagation()` do clique simples em não-home, e deixar o duplo clique (`onDoubleClick`) cuidar exclusivamente do rename — para evitar conflito, usar um pequeno timer para distinguir clique simples de duplo clique, ou simplesmente aceitar que o duplo clique também aciona a seleção (comportamento padrão aceitável).
+3. Os botões de ação (add section, visibility, delete, dropdown) já têm `e.stopPropagation()` e continuam funcionando corretamente.
 
-### Mudanças
+**Comportamento após a correção:**
+- Clique simples em qualquer página → `onSelect(page.id)` → `handleSelectPage(id)` → `activePageId` atualizado → `effectiveSiteData` e `activePageSections` computados → preview recarrega com conteúdo da página
 
-**`src/components/store/PublicSiteRenderer.tsx`** — 4 templates afetados (Editorial, Grid, Magazine, Clean):
-
-Para cada template, extrair os blocos como um `Record<string, ReactNode>` e quando `visibleSections` estiver presente, renderizar mapeando o array:
-
-```tsx
-// Dentro de cada template:
-const blockMap: Record<string, React.ReactNode> = {
-  hero: <div data-block-key="hero">...</div>,
-  quote: showBlock("quote") ? <div data-block-key="quote">...</div> : null,
-  sessions: showBlock("sessions") && showStore ? <main data-block-key="sessions">...</main> : null,
-  experience: showBlock("experience") ? <div data-block-key="experience">...</div> : null,
-  portfolio: showBlock("portfolio") ? <section data-block-key="portfolio">...</section> : null,
-  about: showBlock("about") ? <div data-block-key="about">...</div> : null,
-  testimonials: showBlock("testimonials") ? <div data-block-key="testimonials">...</div> : null,
-  footer: showBlock("footer") ? <div data-block-key="footer">...</div> : null,
-};
-
-// Renderização:
-const orderedKeys = props.visibleSections ?? Object.keys(blockMap);
-return (
-  <div className="min-h-screen bg-background">
-    <SharedNav ... />
-    {orderedKeys.map(key => blockMap[key] ?? null)}
-  </div>
-);
-```
-
-**Arquivo a editar:** apenas `src/components/store/PublicSiteRenderer.tsx` — refatorar os 4 templates para usar `blockMap` + renderização ordenada.
-
-### Resultado
-- Reordenar no sidebar → `visibleSections` chega na nova ordem → preview renderiza na ordem correta
-- Site público (sem `visibleSections`) → ordem padrão mantida
-- Visibilidade (hide/show) → continua funcionando via `showBlock`
+**Arquivo a editar:**
+- `src/components/website-editor/EditorSidebar.tsx` — apenas o `PageRow`, 2 mudanças pequenas
