@@ -359,14 +359,149 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
           </>
         )}
 
-        {blockKey === "footer" && (
-          <>
-            <Field label="Footer Text">
-              <Input value={data.footer_text ?? ""} onChange={(e) => p({ footer_text: e.target.value })} className="h-8 text-xs" placeholder="© 2025 Your Studio" />
-            </Field>
-            <ToggleField label="Show Blog link in nav" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
-          </>
-        )}
+        {blockKey === "footer" && (() => {
+          const FOOTER_PRESETS = [
+            { id: "minimal",  label: "Minimal",   desc: "Text only, clean" },
+            { id: "social",   label: "Social",    desc: "Icons + text" },
+            { id: "full",     label: "Full",      desc: "Logo + icons + text" },
+          ] as const;
+          const FOOTER_SOCIAL_OPTIONS = [
+            { key: "instagram", label: "Instagram" },
+            { key: "facebook",  label: "Facebook" },
+            { key: "youtube",   label: "YouTube" },
+            { key: "tiktok",    label: "TikTok" },
+            { key: "pinterest", label: "Pinterest" },
+            { key: "linkedin",  label: "LinkedIn" },
+            { key: "whatsapp",  label: "WhatsApp" },
+          ];
+          const footerPreset: string = (data as any).footer_preset ?? "social";
+          const footerSocials: string[] = (data as any).footer_visible_socials ?? FOOTER_SOCIAL_OPTIONS.map(s => s.key);
+          const toggleFooterSocial = (key: string, checked: boolean) => {
+            const next = checked ? [...footerSocials.filter(k => k !== key), key] : footerSocials.filter(k => k !== key);
+            (onChange as any)({ footer_visible_socials: next });
+          };
+          const applyPreset = (id: string) => {
+            const patches: Record<string, any> = {
+              minimal: { footer_preset: "minimal", footer_show_logo: false, footer_show_socials: false },
+              social:  { footer_preset: "social",  footer_show_logo: false, footer_show_socials: true  },
+              full:    { footer_preset: "full",     footer_show_logo: true,  footer_show_socials: true  },
+            };
+            (onChange as any)(patches[id] ?? {});
+          };
+
+          return (
+            <>
+              {/* Preset templates */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Template</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {FOOTER_PRESETS.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => applyPreset(preset.id)}
+                      className={`p-2.5 border rounded-sm text-left transition-colors ${
+                        footerPreset === preset.id
+                          ? "border-foreground bg-foreground/5"
+                          : "border-border hover:border-foreground/40"
+                      }`}
+                    >
+                      <span className="text-[10px] font-medium block mb-0.5">{preset.label}</span>
+                      <span className="text-[9px] text-muted-foreground leading-tight">{preset.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Elements */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-2.5">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Elements</p>
+                <ToggleField label="Show Logo / Studio Name" checked={(data as any).footer_show_logo ?? false} onChange={(v) => (onChange as any)({ footer_show_logo: v })} />
+                <ToggleField label="Show Social Icons" checked={(data as any).footer_show_socials ?? true} onChange={(v) => (onChange as any)({ footer_show_socials: v })} />
+                <ToggleField label="Show Contact section" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
+              </div>
+
+              {/* Social icon selection (when socials enabled) */}
+              {((data as any).footer_show_socials ?? true) && (
+                <div className="border-t border-border/40 pt-4 flex flex-col gap-2.5">
+                  <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Social icons in footer</p>
+                  <p className="text-[9px] text-muted-foreground/60">Only networks with a URL set will appear.</p>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                    {FOOTER_SOCIAL_OPTIONS.map(opt => (
+                      <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={footerSocials.includes(opt.key)}
+                          onCheckedChange={(checked) => toggleFooterSocial(opt.key, !!checked)}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span className="text-[11px] font-light text-foreground">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Background & Text colors */}
+              <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Background & Colors</p>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(data as any).footer_bg_color ?? "#ffffff"}
+                      onChange={(e) => (onChange as any)({ footer_bg_color: e.target.value })}
+                      className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5"
+                    />
+                    <Input
+                      value={(data as any).footer_bg_color ?? ""}
+                      onChange={(e) => (onChange as any)({ footer_bg_color: e.target.value || null })}
+                      className="h-8 text-xs flex-1"
+                      placeholder="default (matches theme)"
+                    />
+                    {(data as any).footer_bg_color && (
+                      <button
+                        onClick={() => (onChange as any)({ footer_bg_color: null })}
+                        className="text-[9px] text-muted-foreground hover:text-destructive shrink-0"
+                        title="Reset"
+                      >✕</button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Text / Icon Color</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={(data as any).footer_text_color ?? "#6b7280"}
+                      onChange={(e) => (onChange as any)({ footer_text_color: e.target.value })}
+                      className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5"
+                    />
+                    <Input
+                      value={(data as any).footer_text_color ?? ""}
+                      onChange={(e) => (onChange as any)({ footer_text_color: e.target.value || null })}
+                      className="h-8 text-xs flex-1"
+                      placeholder="auto"
+                    />
+                    {(data as any).footer_text_color && (
+                      <button
+                        onClick={() => (onChange as any)({ footer_text_color: null })}
+                        className="text-[9px] text-muted-foreground hover:text-destructive shrink-0"
+                        title="Reset"
+                      >✕</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer text */}
+              <div className="border-t border-border/40 pt-4">
+                <Field label="Footer Text">
+                  <Input value={data.footer_text ?? ""} onChange={(e) => p({ footer_text: e.target.value })} className="h-8 text-xs" placeholder="© 2025 Your Studio" />
+                </Field>
+              </div>
+            </>
+          );
+        })()}
 
         {blockKey === "testimonials" && (() => {
           const testimonials: import("@/components/store/PublicSiteRenderer").Testimonial[] = (data as any).testimonials ?? [];
