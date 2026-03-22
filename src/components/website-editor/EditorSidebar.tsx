@@ -660,7 +660,7 @@ type Tab = "pages" | "styles";
 export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
-  onTogglePageVisibility, onReorderPages, onRemoveSection,
+  onTogglePageVisibility, onReorderPages, onRemoveSection, onReorderPageSections,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
 
