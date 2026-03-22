@@ -121,7 +121,7 @@ export default function WebsiteEditor() {
         setSaving(true);
         setSaveStatus("pending");
         try {
-          const { bio, ...siteFields } = data;
+          const { bio, hero_layout, about_layout, testimonials_layout, ...siteFields } = data as any;
           const { error: siteErr } = await supabase.from("photographer_site").upsert(
             { ...siteFields, photographer_id: user.id, site_sections_order: secs as any } as any,
             { onConflict: "photographer_id" }
