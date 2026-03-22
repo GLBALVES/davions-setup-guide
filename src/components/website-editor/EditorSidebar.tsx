@@ -189,10 +189,11 @@ function PageRow({
       className={`group flex items-center gap-1.5 py-1.5 pr-2 rounded-sm transition-colors cursor-pointer ${
         isActive ? "bg-accent text-accent-foreground" : "hover:bg-muted/50"
       } ${!page.is_visible && !page.is_home ? "opacity-50" : ""}`}
+      onClick={onSelect}
     >
       {/* Expand / collapse chevron */}
       <button
-        onClick={onToggleExpand}
+        onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
         className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0"
       >
         {isExpanded
@@ -206,7 +207,7 @@ function PageRow({
         : <FileText className="h-3 w-3 text-muted-foreground shrink-0" />}
 
       {/* Title */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
         {editing ? (
           <input
             ref={inputRef}
@@ -223,16 +224,11 @@ function PageRow({
           />
         ) : (
           <span
-            className={`text-[11px] font-light tracking-wide truncate block ${!page.is_home ? "cursor-pointer hover:text-foreground" : ""}`}
-            onClick={(e) => {
-              if (page.is_home) onSelect();
-              else e.stopPropagation();
-            }}
+            className="text-[11px] font-light tracking-wide truncate block cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); onSelect(); }}
             onDoubleClick={(e) => {
-              if (!page.is_home) {
-                e.stopPropagation();
-                setEditing(true);
-              }
+              e.stopPropagation();
+              if (!page.is_home) setEditing(true);
             }}
             title={!page.is_home ? "Double-click to rename" : undefined}
           >
