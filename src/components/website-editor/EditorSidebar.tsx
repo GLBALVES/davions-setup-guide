@@ -170,7 +170,7 @@ interface PageRowProps {
 
 function PageRow({
   page, isActive, isExpanded, depth, onSelect, onToggleExpand,
-  onDelete, onRename, onToggleVisibility, onAddSection, hasChildren,
+  onDelete, onRename, onToggleVisibility, onAddSection, onOpenPageSettings, hasChildren,
   dragHandleListeners, dragHandleAttributes,
 }: PageRowProps) {
   const [editing, setEditing] = useState(false);
