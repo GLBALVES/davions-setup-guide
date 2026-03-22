@@ -1355,7 +1355,7 @@ export default function PublicSiteRenderer(props: Props) {
               </p>
             )}
           </div>
-          <SharedFooter site={site} showContact={true} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
       </>
     );
