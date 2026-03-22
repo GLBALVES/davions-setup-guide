@@ -19,7 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Eye, EyeOff, GripVertical, Settings2, Palette, LayoutList,
   ChevronDown, ChevronRight, Home, Plus, Trash2, CornerDownRight,
-  MoreHorizontal, FileText,
+  MoreHorizontal, FileText, SlidersHorizontal,
 } from "lucide-react";
 import type { BlockKey } from "./BlockPanel";
 import type { SiteConfig } from "@/components/store/PublicSiteRenderer";
@@ -162,6 +162,7 @@ interface PageRowProps {
   onRename: (title: string) => void;
   onToggleVisibility: () => void;
   onAddSection: () => void;
+  onOpenPageSettings?: () => void;
   hasChildren: boolean;
   dragHandleListeners?: ReturnType<typeof useSortable>["listeners"];
   dragHandleAttributes?: ReturnType<typeof useSortable>["attributes"];
@@ -169,7 +170,7 @@ interface PageRowProps {
 
 function PageRow({
   page, isActive, isExpanded, depth, onSelect, onToggleExpand,
-  onDelete, onRename, onToggleVisibility, onAddSection, hasChildren,
+  onDelete, onRename, onToggleVisibility, onAddSection, onOpenPageSettings, hasChildren,
   dragHandleListeners, dragHandleAttributes,
 }: PageRowProps) {
   const [editing, setEditing] = useState(false);
@@ -297,6 +298,14 @@ function PageRow({
                   >
                     <FileText className="h-3 w-3" /> Rename
                   </DropdownMenuItem>
+                  {onOpenPageSettings && (
+                    <DropdownMenuItem
+                      onClick={(e) => { e.stopPropagation(); onOpenPageSettings(); }}
+                      className="gap-2"
+                    >
+                      <SlidersHorizontal className="h-3 w-3" /> Page Settings
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
                     className="gap-2 text-destructive focus:text-destructive"
@@ -341,6 +350,7 @@ interface PagesTreeProps {
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
   onReorderPages: (pages: SitePage[]) => void;
+  onOpenPageSettings: (pageId: string) => void;
   // Sections (for home page)
   sections: SectionDef[];
   activeBlock: BlockKey | null;
@@ -353,7 +363,7 @@ interface PagesTreeProps {
 
 function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
-  onTogglePageVisibility, onReorderPages,
+  onTogglePageVisibility, onReorderPages, onOpenPageSettings,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
   onReorderPageSections,
 }: PagesTreeProps) {
@@ -489,6 +499,7 @@ function PagesTree({
                     onRename={(title) => onRenamePage(page.id, title)}
                     onToggleVisibility={() => onTogglePageVisibility(page.id)}
                     onAddSection={() => onAddSection(page.id)}
+                    onOpenPageSettings={() => onOpenPageSettings(page.id)}
                     hasChildren={children.length > 0 || pageSections.length > 0}
                   />
 
@@ -692,6 +703,7 @@ interface Props {
   onReorderPages: (pages: SitePage[]) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
   onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
+  onOpenPageSettings: (pageId: string) => void;
 }
 
 type Tab = "pages" | "styles";
@@ -700,6 +712,7 @@ export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages, onRemoveSection, onReorderPageSections,
+  onOpenPageSettings,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
 
@@ -752,6 +765,7 @@ export function EditorSidebar({
             onRenamePage={onRenamePage}
             onTogglePageVisibility={onTogglePageVisibility}
             onReorderPages={onReorderPages}
+            onOpenPageSettings={onOpenPageSettings}
             sections={sections}
             activeBlock={activeBlock}
             onSelectBlock={onSelectBlock}
