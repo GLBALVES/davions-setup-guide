@@ -317,12 +317,14 @@ interface PagesTreeProps {
   onReorder: (sections: SectionDef[]) => void;
   onToggleVisibility: (key: BlockKey) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
+  onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
 }
 
 function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
+  onReorderPageSections,
 }: PagesTreeProps) {
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
@@ -453,32 +455,39 @@ function PagesTree({
                 hasChildren={children.length > 0 || pageSections.length > 0}
               />
 
-              {/* Custom page sections as sub-items */}
+              {/* Custom page sections as sortable sub-items */}
               {expanded[page.id] && pageSections.length > 0 && (
-                <div>
-                  {pageSections.map((section) => (
-                    <div
-                      key={section.key}
-                      className={`flex items-center gap-1.5 pl-7 pr-2 py-1.5 rounded-sm transition-colors cursor-pointer group ${
-                        activeBlock === section.key && activePageId === page.id
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-muted/50"
-                      } ${!section.visible ? "opacity-40" : ""}`}
-                      onClick={() => { onSelectPage(page.id); onSelectBlock(section.key); }}
-                    >
-                      <CornerDownRight className="h-2.5 w-2.5 text-muted-foreground/30 shrink-0 ml-1" />
-                      <span className="text-xs shrink-0">{section.icon}</span>
-                      <span className="text-[11px] font-light tracking-wide truncate flex-1">{section.label}</span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onRemoveSection(page.id, section.key); }}
-                        className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                        title="Remove section"
-                      >
-                        <Trash2 className="h-2.5 w-2.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event) => {
+                    const { active, over } = event;
+                    if (over && active.id !== over.id) {
+                      const oldIdx = pageSections.findIndex((s) => s.key === active.id);
+                      const newIdx = pageSections.findIndex((s) => s.key === over.id);
+                      onReorderPageSections(page.id, arrayMove(pageSections, oldIdx, newIdx));
+                    }
+                  }}
+                >
+                  <SortableContext items={pageSections.map((s) => s.key)} strategy={verticalListSortingStrategy}>
+                    {pageSections.map((section) => (
+                      <SortableItem
+                        key={section.key}
+                        section={section}
+                        isActive={activeBlock === section.key && activePageId === page.id}
+                        onSelect={() => { onSelectPage(page.id); onSelectBlock(section.key); }}
+                        onToggle={() => {}}
+                        onRename={(label) =>
+                          onReorderPageSections(
+                            page.id,
+                            pageSections.map((s) => s.key === section.key ? { ...s, label } : s)
+                          )
+                        }
+                        onRemove={() => onRemoveSection(page.id, section.key)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
 
               {/* Sub-pages */}
@@ -643,6 +652,7 @@ interface Props {
   onTogglePageVisibility: (id: string) => void;
   onReorderPages: (pages: SitePage[]) => void;
   onRemoveSection: (pageId: string | null, sectionKey: BlockKey) => void;
+  onReorderPageSections: (pageId: string, sections: SectionDef[]) => void;
 }
 
 type Tab = "pages" | "styles";
@@ -650,7 +660,7 @@ type Tab = "pages" | "styles";
 export function EditorSidebar({
   data, sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onStyleChange,
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
-  onTogglePageVisibility, onReorderPages, onRemoveSection,
+  onTogglePageVisibility, onReorderPages, onRemoveSection, onReorderPageSections,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("pages");
 
@@ -709,6 +719,7 @@ export function EditorSidebar({
             onReorder={onReorder}
             onToggleVisibility={onToggleVisibility}
             onRemoveSection={onRemoveSection}
+            onReorderPageSections={onReorderPageSections}
           />
         </>
       )}
