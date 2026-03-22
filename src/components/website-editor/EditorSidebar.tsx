@@ -350,6 +350,7 @@ interface PagesTreeProps {
   onRenamePage: (id: string, title: string) => void;
   onTogglePageVisibility: (id: string) => void;
   onReorderPages: (pages: SitePage[]) => void;
+  onOpenPageSettings: (pageId: string) => void;
   // Sections (for home page)
   sections: SectionDef[];
   activeBlock: BlockKey | null;
@@ -362,7 +363,7 @@ interface PagesTreeProps {
 
 function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
-  onTogglePageVisibility, onReorderPages,
+  onTogglePageVisibility, onReorderPages, onOpenPageSettings,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
   onReorderPageSections,
 }: PagesTreeProps) {
