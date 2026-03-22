@@ -18,9 +18,9 @@ import {
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
-  Pencil, Check, X,
+  Pencil, Check, X, Clock, AlertTriangle,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
