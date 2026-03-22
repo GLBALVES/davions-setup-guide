@@ -1175,8 +1175,9 @@ function buildBlockMap(
   // ── Footer ────────────────────────────────────────────────────────────────
   // Footer is always rendered (like the nav) — outside orderedKeys so it never disappears
   // in editor mode where visibleSections doesn't include "footer"
+  const logoUrl = site?.logo_url ?? null;
   const footer: React.ReactNode = (
-    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} /></div>
+    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={logoUrl} /></div>
   );
 
   return { hero, quote, sessions: sessionsBlock, experience, portfolio, about, testimonials, footer };
