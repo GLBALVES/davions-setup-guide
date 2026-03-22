@@ -634,10 +634,10 @@ const Projects = () => {
       await supabase.from("client_projects" as any).insert(toInsert as any);
     }
 
-    // 4. Reload after potential inserts
+    // 4. Reload after potential inserts — also fetch duration + availability start_time for auto-advance
     const { data: allProjects } = await supabase
       .from("client_projects" as any)
-      .select("*, bookings(sessions(title), client_name, client_email, booked_date)")
+      .select("*, bookings(sessions(title, duration_minutes), session_availability(start_time, end_time), client_name, client_email, booked_date)")
       .eq("photographer_id", photographerId)
       .order("position", { ascending: true });
 
@@ -668,6 +668,46 @@ const Projects = () => {
         session_title: (p.bookings as any)?.sessions?.title ?? null,
         gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
       }));
+
+      // 6. Auto-advance "upcoming" → "shot" when session has ended
+      const now = new Date();
+      const toAdvance: string[] = [];
+
+      for (const p of mapped) {
+        if (p.stage !== "upcoming") continue;
+
+        const booking = (p as any).bookings;
+        let sessionEnd: Date | null = null;
+
+        if (p.shoot_date && booking?.session_availability?.start_time && booking?.sessions?.duration_minutes != null) {
+          // Precise: shoot_date + booking start_time + duration_minutes
+          const startStr = `${p.shoot_date}T${booking.session_availability.start_time}`;
+          const start = new Date(startStr);
+          if (!isNaN(start.getTime())) {
+            sessionEnd = new Date(start.getTime() + booking.sessions.duration_minutes * 60 * 1000);
+          }
+        } else if (p.shoot_date) {
+          // Fallback for manually created projects: end of shoot day
+          const d = new Date(p.shoot_date + "T23:59:59");
+          if (!isNaN(d.getTime())) sessionEnd = d;
+        }
+
+        if (sessionEnd && sessionEnd < now) {
+          toAdvance.push(p.id);
+        }
+      }
+
+      if (toAdvance.length > 0) {
+        await supabase
+          .from("client_projects" as any)
+          .update({ stage: "shot" } as any)
+          .in("id", toAdvance);
+
+        for (const p of mapped) {
+          if (toAdvance.includes(p.id)) p.stage = "shot";
+        }
+      }
+
       setProjects(mapped as ClientProject[]);
     }
     setLoading(false);
