@@ -465,89 +465,94 @@ function PagesTree({
         )}
 
         {/* Divider before other pages */}
-        {ordered.length > 0 && <div className="my-1.5 mx-2 border-t border-border/30" />}
+        {topLevel.length > 0 && <div className="my-1.5 mx-2 border-t border-border/30" />}
 
-        {/* Other pages */}
-        {ordered.map((page) => {
-          const children = nonHomePages
-            .filter((p) => p.parent_id === page.id)
-            .sort((a, b) => a.sort_order - b.sort_order);
-          const pageSections = (page.sections_order as SectionDef[] | null) ?? [];
-          return (
-            <div key={page.id}>
-              <PageRow
-                page={page}
-                isActive={activePageId === page.id}
-                isExpanded={!!expanded[page.id]}
-                depth={page.parent_id ? 1 : 0}
-                onSelect={() => onSelectPage(page.id)}
-                onToggleExpand={() => toggleExpand(page.id)}
-                onDelete={() => onDeletePage(page.id)}
-                onRename={(title) => onRenamePage(page.id, title)}
-                onToggleVisibility={() => onTogglePageVisibility(page.id)}
-                onAddSection={() => onAddSection(page.id)}
-                hasChildren={children.length > 0 || pageSections.length > 0}
-              />
+        {/* Other pages — sortable by drag */}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePageDragEnd}>
+          <SortableContext items={topLevel.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+            {topLevel.map((page) => {
+              const children = nonHomePages
+                .filter((p) => p.parent_id === page.id)
+                .sort((a, b) => a.sort_order - b.sort_order);
+              const pageSections = (page.sections_order as SectionDef[] | null) ?? [];
+              return (
+                <div key={page.id}>
+                  <SortablePage
+                    id={page.id}
+                    page={page}
+                    isActive={activePageId === page.id}
+                    isExpanded={!!expanded[page.id]}
+                    depth={0}
+                    onSelect={() => onSelectPage(page.id)}
+                    onToggleExpand={() => toggleExpand(page.id)}
+                    onDelete={() => onDeletePage(page.id)}
+                    onRename={(title) => onRenamePage(page.id, title)}
+                    onToggleVisibility={() => onTogglePageVisibility(page.id)}
+                    onAddSection={() => onAddSection(page.id)}
+                    hasChildren={children.length > 0 || pageSections.length > 0}
+                  />
 
-              {/* Custom page sections as sortable sub-items */}
-              {expanded[page.id] && pageSections.length > 0 && (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={(event) => {
-                    const { active, over } = event;
-                    if (over && active.id !== over.id) {
-                      const oldIdx = pageSections.findIndex((s) => s.key === active.id);
-                      const newIdx = pageSections.findIndex((s) => s.key === over.id);
-                      onReorderPageSections(page.id, arrayMove(pageSections, oldIdx, newIdx));
-                    }
-                  }}
-                >
-                  <SortableContext items={pageSections.map((s) => s.key)} strategy={verticalListSortingStrategy}>
-                    {pageSections.map((section) => (
-                      <SortableItem
-                        key={section.key}
-                        section={section}
-                        isActive={activeBlock === section.key && activePageId === page.id}
-                        onSelect={() => { onSelectPage(page.id); onSelectBlock(section.key); }}
-                        onToggle={() => {}}
-                        onRename={(label) =>
-                          onReorderPageSections(
-                            page.id,
-                            pageSections.map((s) => s.key === section.key ? { ...s, label } : s)
-                          )
+                  {/* Custom page sections as sortable sub-items */}
+                  {expanded[page.id] && pageSections.length > 0 && (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event) => {
+                        const { active, over } = event;
+                        if (over && active.id !== over.id) {
+                          const oldIdx = pageSections.findIndex((s) => s.key === active.id);
+                          const newIdx = pageSections.findIndex((s) => s.key === over.id);
+                          onReorderPageSections(page.id, arrayMove(pageSections, oldIdx, newIdx));
                         }
-                        onRemove={() => onRemoveSection(page.id, section.key)}
+                      }}
+                    >
+                      <SortableContext items={pageSections.map((s) => s.key)} strategy={verticalListSortingStrategy}>
+                        {pageSections.map((section) => (
+                          <SortableItem
+                            key={section.key}
+                            section={section}
+                            isActive={activeBlock === section.key && activePageId === page.id}
+                            onSelect={() => { onSelectPage(page.id); onSelectBlock(section.key); }}
+                            onToggle={() => {}}
+                            onRename={(label) =>
+                              onReorderPageSections(
+                                page.id,
+                                pageSections.map((s) => s.key === section.key ? { ...s, label } : s)
+                              )
+                            }
+                            onRemove={() => onRemoveSection(page.id, section.key)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  )}
+
+                  {/* Sub-pages */}
+                  {expanded[page.id] &&
+                    children.map((child) => (
+                      <PageRow
+                        key={child.id}
+                        page={child}
+                        isActive={activePageId === child.id}
+                        isExpanded={false}
+                        depth={1}
+                        onSelect={() => onSelectPage(child.id)}
+                        onToggleExpand={() => {}}
+                        onDelete={() => onDeletePage(child.id)}
+                        onRename={(title) => onRenamePage(child.id, title)}
+                        onToggleVisibility={() => onTogglePageVisibility(child.id)}
+                        onAddSection={() => onAddSection(child.id)}
+                        hasChildren={false}
                       />
                     ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-
-              {/* Sub-pages */}
-              {expanded[page.id] &&
-                children.map((child) => (
-                  <PageRow
-                    key={child.id}
-                    page={child}
-                    isActive={activePageId === child.id}
-                    isExpanded={false}
-                    depth={2}
-                    onSelect={() => onSelectPage(child.id)}
-                    onToggleExpand={() => {}}
-                    onDelete={() => onDeletePage(child.id)}
-                    onRename={(title) => onRenamePage(child.id, title)}
-                    onToggleVisibility={() => onTogglePageVisibility(child.id)}
-                    onAddSection={() => onAddSection(child.id)}
-                    hasChildren={false}
-                  />
-                ))}
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
 
         {/* Empty state */}
-        {ordered.length === 0 && (
+        {topLevel.length === 0 && (
           <div className="px-3 py-3 text-center">
             <p className="text-[10px] text-muted-foreground/40 leading-relaxed mb-2">
               Add pages like <strong>About</strong> or <strong>Investment</strong>.
