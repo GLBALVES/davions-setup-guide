@@ -163,11 +163,14 @@ interface PageRowProps {
   onToggleVisibility: () => void;
   onAddSection: () => void;
   hasChildren: boolean;
+  dragHandleListeners?: ReturnType<typeof useSortable>["listeners"];
+  dragHandleAttributes?: ReturnType<typeof useSortable>["attributes"];
 }
 
 function PageRow({
   page, isActive, isExpanded, depth, onSelect, onToggleExpand,
   onDelete, onRename, onToggleVisibility, onAddSection, hasChildren,
+  dragHandleListeners, dragHandleAttributes,
 }: PageRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(page.title);
