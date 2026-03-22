@@ -591,6 +591,7 @@ export type Database = {
           client_name: string
           color: string | null
           created_at: string
+          gallery_deadline: string | null
           id: string
           notes: string | null
           photographer_id: string
@@ -607,6 +608,7 @@ export type Database = {
           client_name?: string
           color?: string | null
           created_at?: string
+          gallery_deadline?: string | null
           id?: string
           notes?: string | null
           photographer_id: string
@@ -623,6 +625,7 @@ export type Database = {
           client_name?: string
           color?: string | null
           created_at?: string
+          gallery_deadline?: string | null
           id?: string
           notes?: string | null
           photographer_id?: string

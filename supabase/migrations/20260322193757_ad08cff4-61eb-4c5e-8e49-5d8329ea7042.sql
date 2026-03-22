@@ -1,0 +1,1 @@
+ALTER TABLE public.client_projects ADD COLUMN gallery_deadline date NULL;
