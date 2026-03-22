@@ -383,20 +383,23 @@ function PagesTree({
     }
   };
 
-  // Flat ordered list of non-home pages
+  // Flat ordered list of non-home top-level pages (only top-level are sortable)
   const topLevel = nonHomePages.filter((p) => !p.parent_id).sort((a, b) => a.sort_order - b.sort_order);
-  const ordered: SitePage[] = [];
-  for (const page of topLevel) {
-    ordered.push(page);
-    const children = nonHomePages
-      .filter((p) => p.parent_id === page.id)
-      .sort((a, b) => a.sort_order - b.sort_order);
-    ordered.push(...children);
-  }
-  const orphans = nonHomePages.filter(
-    (p) => p.parent_id && !nonHomePages.find((pp) => pp.id === p.parent_id)
-  );
-  ordered.push(...orphans.filter((o) => !ordered.find((op) => op.id === o.id)));
+
+  const handlePageDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = topLevel.findIndex((p) => p.id === active.id);
+    const newIndex = topLevel.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(topLevel, oldIndex, newIndex).map((p, i) => ({ ...p, sort_order: i }));
+    // Merge back with child pages (keep their positions in the full pages array)
+    onReorderPages([
+      ...pages.filter((p) => p.is_home),
+      ...reordered,
+      ...nonHomePages.filter((p) => p.parent_id),
+    ]);
+  };
 
   /** Shared fixed row (header / footer) — not sortable, shown as structural anchor */
   const FixedRow = ({ label, icon, blockKey }: { label: string; icon: string; blockKey: BlockKey }) => (
