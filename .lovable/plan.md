@@ -1,60 +1,40 @@
 
-## Diagnóstico
+## Problema
 
-Quando uma seção de uma página customizada é clicada no sidebar:
+O footer nunca aparece no preview do editor porque:
 
-1. `onSelect` do `SortableItem` chama `onSelectPage(page.id)` + `onSelectBlock(section.key)` — correto
-2. `activePageId` passa a ser não-nulo e a página não é home
-3. `WebsiteEditor.tsx` linhas 562–571 detectam isso e **substituem o `EditorSidebar` pelo `PageContentPanel`**
-4. O `BlockPanel` para editar a seção nunca aparece — o usuário vê as propriedades gerais da página
+1. `DEFAULT_SECTIONS` em `EditorSidebar.tsx` não inclui `"footer"` (é tratado como elemento fixo global, junto com o header)
+2. `LivePreview.tsx` passa `visibleSections={sections.filter(s => s.visible !== false).map(s => s.key)}` — array que **nunca contém** `"footer"`
+3. Em `buildBlockMap` (`PublicSiteRenderer.tsx`), `showBlock("footer")` retorna `false` porque `visibleSections` não inclui `"footer"` → footer é `null`
+4. Os templates iteram `orderedKeys` (que é `visibleSections` no editor) e o footer nunca está lá
 
-Na Home: `onSelectPage(null)` → `activePageId` fica `null` → `EditorSidebar` permanece visível → `BlockPanel` renderiza normalmente para a seção.
+O header não sofre o mesmo problema porque é renderizado fora do `blockMap` via `<SharedNav>`, que é chamado diretamente no JSX de cada template antes do `orderedKeys.map(...)`.
 
 ## Solução
 
-A lógica de renderização do sidebar precisa de um terceiro estado:
+O footer, assim como o header/nav, é um elemento **sempre presente**. A correção mais limpa é renderizá-lo **fora** do `blockMap` nos templates, diretamente no JSX, igualando ao comportamento do `SharedNav`.
 
-```text
-activePageId == null                     → EditorSidebar (home)
-activePageId != null AND activeBlock != null → EditorSidebar (seção da página customizada)
-activePageId != null AND activeBlock == null → PageContentPanel (propriedades da página)
+### Mudança em `PublicSiteRenderer.tsx`
+
+Nos 4 templates (Editorial, Grid, Magazine, Clean), mover o `SharedFooter` para fora do `orderedKeys.map(...)` e renderizá-lo diretamente após o mapeamento, mantendo o `data-block-key="footer"` para o click do editor funcionar:
+
+```tsx
+// Em cada template:
+return (
+  <div className="min-h-screen bg-background">
+    <SharedNav ... />
+    {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+    {/* Footer sempre renderizado — é global como o header */}
+    <SharedFooter site={site} showContact={showContact} />
+  </div>
+);
 ```
 
-### Mudança em `WebsiteEditor.tsx`
+E remover `footer` do `buildBlockMap` (não precisa mais estar no blockMap) e dos `*_DEFAULT_ORDER` arrays.
 
-**Condição para mostrar `PageContentPanel`** (linha 562):
-```ts
-// Antes:
-activePageId !== null && página não é home
+**Arquivo a editar:** apenas `src/components/store/PublicSiteRenderer.tsx`
+- Remover `footer` do `buildBlockMap` return (linha 1138)
+- Remover `"footer"` dos 4 arrays `*_DEFAULT_ORDER`
+- Nos 4 templates, adicionar `<SharedFooter ... />` após o `orderedKeys.map()`
+- Passar `showContact` ao `SharedFooter` via `derived`
 
-// Depois:
-activePageId !== null && página não é home && activeBlock === null
-```
-
-**Condição para mostrar `EditorSidebar`** (linha 574):
-```ts
-// Antes:
-activePageId === null || página é home
-
-// Depois:
-activePageId === null || página é home || activeBlock !== null
-```
-
-**Ao selecionar uma página (sem bloco ativo)** — `handleSelectPage` deve limpar `activeBlock`:
-```ts
-const handleSelectPage = (id: string | null) => {
-  setActivePageId(id);
-  setActiveBlock(null); // limpa seleção de seção
-};
-```
-
-Isso garante que:
-- Clicar numa **página** (não numa seção) → `activeBlock = null` → `PageContentPanel` abre
-- Clicar numa **seção** de página customizada → `activeBlock = section.key` → `EditorSidebar` fica visível com `BlockPanel` renderizado para aquela seção
-
-### Resultado
-- Clicar seção de página customizada → abre o painel de edição da seção (igual à Home) ✓
-- Clicar na página (nome) → abre `PageContentPanel` para editar título, cover, headline etc. ✓
-- Comportamento da Home → inalterado ✓
-
-**Arquivo a editar:** apenas `src/pages/dashboard/WebsiteEditor.tsx` — 3 mudanças pequenas nas linhas 562–574 e em `handleSelectPage`.
