@@ -262,18 +262,20 @@ function PageRow({
 
       {/* Actions */}
       {!editing && (
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {/* + Add Section (always visible on hover for all pages) */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          {/* + Add Section — always shown for home (always active), hidden until hover for other pages */}
           <button
             onClick={(e) => { e.stopPropagation(); onAddSection(); }}
-            className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className={`p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ${
+              page.is_home ? "opacity-100" : "opacity-0 group-hover:opacity-100 transition-opacity"
+            }`}
             title="Add section"
           >
             <Plus className="h-3 w-3" />
           </button>
 
           {!page.is_home && (
-            <>
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
                 className="p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -314,7 +316,7 @@ function PageRow({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
+            </div>
           )}
         </div>
       )}
