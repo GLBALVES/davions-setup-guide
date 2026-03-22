@@ -162,6 +162,7 @@ interface PageRowProps {
   onRename: (title: string) => void;
   onToggleVisibility: () => void;
   onAddSection: () => void;
+  onOpenPageSettings?: () => void;
   hasChildren: boolean;
   dragHandleListeners?: ReturnType<typeof useSortable>["listeners"];
   dragHandleAttributes?: ReturnType<typeof useSortable>["attributes"];
