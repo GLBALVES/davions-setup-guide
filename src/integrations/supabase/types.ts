@@ -1365,7 +1365,13 @@ export type Database = {
           facebook_pixel_id: string | null
           facebook_url: string | null
           favicon_url: string | null
+          footer_bg_color: string | null
+          footer_preset: string | null
+          footer_show_logo: boolean | null
+          footer_show_socials: boolean | null
           footer_text: string | null
+          footer_text_color: string | null
+          footer_visible_socials: Json | null
           google_analytics_id: string | null
           header_bg_color: string | null
           header_text_color: string | null
@@ -1409,7 +1415,13 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_bg_color?: string | null
+          footer_preset?: string | null
+          footer_show_logo?: boolean | null
+          footer_show_socials?: boolean | null
           footer_text?: string | null
+          footer_text_color?: string | null
+          footer_visible_socials?: Json | null
           google_analytics_id?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
@@ -1453,7 +1465,13 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_bg_color?: string | null
+          footer_preset?: string | null
+          footer_show_logo?: boolean | null
+          footer_show_socials?: boolean | null
           footer_text?: string | null
+          footer_text_color?: string | null
+          footer_visible_socials?: Json | null
           google_analytics_id?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
