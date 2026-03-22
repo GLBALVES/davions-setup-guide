@@ -207,8 +207,8 @@ function PageRow({
           <GripVertical className="h-3 w-3" />
         </span>
       ) : (
-        /* Spacer so alignment matches rows without handle */
-        !page.is_home && <span className="w-4 shrink-0" />
+        /* Spacer so alignment matches rows without handle — always render */
+        <span className="w-4 shrink-0" />
       )}
 
       {/* Expand / collapse chevron */}
