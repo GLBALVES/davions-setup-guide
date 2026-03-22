@@ -651,14 +651,43 @@ const Projects = () => {
       if (bookingIds.length > 0) {
         const { data: galleries } = await supabase
           .from("galleries")
-          .select("booking_id, cover_image_url")
+          .select("booking_id, cover_image_url, category, status")
           .in("booking_id", bookingIds)
-          .not("cover_image_url", "is", null);
+          .neq("status", "expired");
         if (galleries) {
           for (const g of galleries as any[]) {
             if (g.booking_id && g.cover_image_url) {
               galleryCovers[g.booking_id] = g.cover_image_url;
             }
+          }
+        }
+
+        // Build set of booking_ids that have a proof gallery
+        const proofGalleryBookings = new Set<string>();
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.booking_id && g.category === "proof") {
+              proofGalleryBookings.add(g.booking_id);
+            }
+          }
+        }
+
+        // Auto-advance "shot" → "proof_gallery" when a proof gallery is linked
+        const toProofGallery: string[] = [];
+        for (const p of (allProjects as any[])) {
+          if (p.stage !== "shot") continue;
+          if (p.booking_id && proofGalleryBookings.has(p.booking_id)) {
+            toProofGallery.push(p.id);
+          }
+        }
+
+        if (toProofGallery.length > 0) {
+          await supabase
+            .from("client_projects" as any)
+            .update({ stage: "proof_gallery" } as any)
+            .in("id", toProofGallery);
+          for (const p of allProjects as any[]) {
+            if (toProofGallery.includes(p.id)) p.stage = "proof_gallery";
           }
         }
       }
