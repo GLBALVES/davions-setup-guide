@@ -596,6 +596,7 @@ export default function WebsiteEditor() {
               onTogglePageVisibility={handleTogglePageVisibility}
               onReorderPages={handleReorderPages}
               onRemoveSection={handleRemoveSection}
+              onReorderPageSections={handleReorderPageSections}
             />
           )}
         </aside>
