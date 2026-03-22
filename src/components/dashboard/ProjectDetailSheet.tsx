@@ -59,6 +59,7 @@ export interface ProjectSheetData {
   position: number;
   created_at: string;
   updated_at: string;
+  gallery_deadline?: string | null;
 }
 
 interface Props {
