@@ -561,20 +561,20 @@ export default function WebsiteEditor() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel (260px) — always shows pages/sections tree or page content editor */}
         <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
-          {/* Non-home page selected → show page content editor */}
-          {activePageId !== null && activeBlock === null && (() => {
+          {/* Page Content Panel — only when explicitly opened via "Page Settings" */}
+          {pageContentPanelOpen && activePageId !== null && activeBlock === null && (() => {
             const activePage = pages.find((p) => p.id === activePageId);
             return activePage && !activePage.is_home ? (
               <PageContentPanel
                 page={activePage}
-                onBack={() => setActivePageId(null)}
+                onBack={() => setPageContentPanelOpen(false)}
                 onChange={handlePageContentChange}
               />
             ) : null;
           })()}
 
-          {/* Default: EditorSidebar (home page, no page selected, or a section is active on custom page) */}
-          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home || activeBlock !== null) && (
+          {/* Default: EditorSidebar — home, OR custom page not in settings mode, OR section active */}
+          {(!pageContentPanelOpen || activePageId === null || pages.find((p) => p.id === activePageId)?.is_home || activeBlock !== null) && (
             <EditorSidebar
               data={siteData}
               sections={sections}
@@ -600,6 +600,7 @@ export default function WebsiteEditor() {
               onReorderPages={handleReorderPages}
               onRemoveSection={handleRemoveSection}
               onReorderPageSections={handleReorderPageSections}
+              onOpenPageSettings={(id) => { setActivePageId(id); setPageContentPanelOpen(true); }}
             />
           )}
         </aside>
