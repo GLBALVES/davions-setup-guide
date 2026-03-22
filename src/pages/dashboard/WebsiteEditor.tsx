@@ -559,7 +559,7 @@ export default function WebsiteEditor() {
         {/* Left panel (260px) — always shows pages/sections tree or page content editor */}
         <aside className="w-[260px] border-r border-border flex flex-col shrink-0 overflow-hidden">
           {/* Non-home page selected → show page content editor */}
-          {activePageId !== null && (() => {
+          {activePageId !== null && activeBlock === null && (() => {
             const activePage = pages.find((p) => p.id === activePageId);
             return activePage && !activePage.is_home ? (
               <PageContentPanel
@@ -570,8 +570,8 @@ export default function WebsiteEditor() {
             ) : null;
           })()}
 
-          {/* Default: EditorSidebar (home page or no custom page content) */}
-          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home) && (
+          {/* Default: EditorSidebar (home page, no page selected, or a section is active on custom page) */}
+          {(activePageId === null || pages.find((p) => p.id === activePageId)?.is_home || activeBlock !== null) && (
             <EditorSidebar
               data={siteData}
               sections={sections}
