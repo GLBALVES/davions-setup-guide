@@ -1,29 +1,60 @@
 
-## Problema raiz
+## Diagnóstico
 
-No componente `PageRow` (`EditorSidebar.tsx`), o `div` container da linha não tem um handler `onClick` vinculado a `onSelect()`. Para páginas não-home, o span do título chama `e.stopPropagation()` no clique simples (para não conflitar com o duplo clique de renomear) — mas nunca chama `onSelect()`. O resultado: clicar em qualquer página customizada não aciona a seleção.
+Quando uma seção de uma página customizada é clicada no sidebar:
 
-```tsx
-// Div externo — SEM onClick → onSelect nunca é chamado
-<div className="group flex items-center gap-1.5 ...">
-  <span
-    onClick={(e) => {
-      if (page.is_home) onSelect();     // ✓ home chama onSelect
-      else e.stopPropagation();         // ✗ não-home apenas bloqueia propagação
-    }}
-  >
-```
+1. `onSelect` do `SortableItem` chama `onSelectPage(page.id)` + `onSelectBlock(section.key)` — correto
+2. `activePageId` passa a ser não-nulo e a página não é home
+3. `WebsiteEditor.tsx` linhas 562–571 detectam isso e **substituem o `EditorSidebar` pelo `PageContentPanel`**
+4. O `BlockPanel` para editar a seção nunca aparece — o usuário vê as propriedades gerais da página
+
+Na Home: `onSelectPage(null)` → `activePageId` fica `null` → `EditorSidebar` permanece visível → `BlockPanel` renderiza normalmente para a seção.
 
 ## Solução
 
-**`EditorSidebar.tsx` — `PageRow`**:
+A lógica de renderização do sidebar precisa de um terceiro estado:
 
-1. Adicionar `onClick={() => onSelect()}` no `div` container da linha (para capturar cliques em qualquer área da linha).
-2. Corrigir o span do título: remover o `e.stopPropagation()` do clique simples em não-home, e deixar o duplo clique (`onDoubleClick`) cuidar exclusivamente do rename — para evitar conflito, usar um pequeno timer para distinguir clique simples de duplo clique, ou simplesmente aceitar que o duplo clique também aciona a seleção (comportamento padrão aceitável).
-3. Os botões de ação (add section, visibility, delete, dropdown) já têm `e.stopPropagation()` e continuam funcionando corretamente.
+```text
+activePageId == null                     → EditorSidebar (home)
+activePageId != null AND activeBlock != null → EditorSidebar (seção da página customizada)
+activePageId != null AND activeBlock == null → PageContentPanel (propriedades da página)
+```
 
-**Comportamento após a correção:**
-- Clique simples em qualquer página → `onSelect(page.id)` → `handleSelectPage(id)` → `activePageId` atualizado → `effectiveSiteData` e `activePageSections` computados → preview recarrega com conteúdo da página
+### Mudança em `WebsiteEditor.tsx`
 
-**Arquivo a editar:**
-- `src/components/website-editor/EditorSidebar.tsx` — apenas o `PageRow`, 2 mudanças pequenas
+**Condição para mostrar `PageContentPanel`** (linha 562):
+```ts
+// Antes:
+activePageId !== null && página não é home
+
+// Depois:
+activePageId !== null && página não é home && activeBlock === null
+```
+
+**Condição para mostrar `EditorSidebar`** (linha 574):
+```ts
+// Antes:
+activePageId === null || página é home
+
+// Depois:
+activePageId === null || página é home || activeBlock !== null
+```
+
+**Ao selecionar uma página (sem bloco ativo)** — `handleSelectPage` deve limpar `activeBlock`:
+```ts
+const handleSelectPage = (id: string | null) => {
+  setActivePageId(id);
+  setActiveBlock(null); // limpa seleção de seção
+};
+```
+
+Isso garante que:
+- Clicar numa **página** (não numa seção) → `activeBlock = null` → `PageContentPanel` abre
+- Clicar numa **seção** de página customizada → `activeBlock = section.key` → `EditorSidebar` fica visível com `BlockPanel` renderizado para aquela seção
+
+### Resultado
+- Clicar seção de página customizada → abre o painel de edição da seção (igual à Home) ✓
+- Clicar na página (nome) → abre `PageContentPanel` para editar título, cover, headline etc. ✓
+- Comportamento da Home → inalterado ✓
+
+**Arquivo a editar:** apenas `src/pages/dashboard/WebsiteEditor.tsx` — 3 mudanças pequenas nas linhas 562–574 e em `handleSelectPage`.
