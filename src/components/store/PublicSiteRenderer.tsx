@@ -421,55 +421,85 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
 
 // ─── Shared Footer ───────────────────────────────────────────────────────────
 
-function SharedFooter({ site, showContact }: { site: SiteConfig | null; showContact: boolean }) {
-  const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
+function SharedFooter({ site, showContact, displayName, logoUrl }: { site: SiteConfig | null; showContact: boolean; displayName?: string; logoUrl?: string | null }) {
+  const showSocials = site?.footer_show_socials ?? true;
+  const showLogo = site?.footer_show_logo ?? false;
+  const bgColor = site?.footer_bg_color ?? null;
+  const textColor = site?.footer_text_color ?? null;
+  const filterKeys = site?.footer_visible_socials ?? null;
+
+  const ALL_SOCIAL_ENTRIES: { key: string; href: string | null | undefined; icon: React.ReactNode }[] = [
+    { key: "instagram", href: site?.instagram_url, icon: <Instagram className="h-4 w-4" /> },
+    { key: "facebook",  href: site?.facebook_url,  icon: <Facebook className="h-4 w-4" /> },
+    { key: "youtube",   href: site?.youtube_url,   icon: <Youtube className="h-4 w-4" /> },
+    { key: "linkedin",  href: site?.linkedin_url,  icon: <Linkedin className="h-4 w-4" /> },
+    { key: "tiktok",    href: site?.tiktok_url,    icon: <TikTokIcon className="h-4 w-4" /> },
+    { key: "pinterest", href: site?.pinterest_url, icon: <PinterestIcon className="h-4 w-4" /> },
+    { key: "whatsapp",  href: site?.whatsapp ? `https://wa.me/${site.whatsapp.replace(/\D/g, "")}` : null, icon: <WhatsAppIcon className="h-4 w-4" /> },
+  ];
+
+  const visibleSocialEntries = ALL_SOCIAL_ENTRIES.filter(e => {
+    if (!e.href) return false;
+    if (filterKeys && filterKeys.length > 0) return filterKeys.includes(e.key);
+    return true;
+  });
+
+  const footerStyle: React.CSSProperties = bgColor ? { backgroundColor: bgColor } : {};
+  const iconColorCls = textColor ? "" : "text-muted-foreground hover:text-foreground";
 
   return (
-    <footer id="contact" data-block-key="footer" className="border-t border-border py-12">
+    <footer
+      id="contact"
+      data-block-key="footer"
+      className="border-t border-border py-12"
+      style={footerStyle}
+    >
       <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
-        {showContact && hasSocials && (
-          <div className="flex items-center justify-center gap-5">
-            {site?.instagram_url && (
-              <a href={site.instagram_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Instagram className="h-4 w-4" />
-              </a>
-            )}
-            {site?.facebook_url && (
-              <a href={site.facebook_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Facebook className="h-4 w-4" />
-              </a>
-            )}
-            {site?.youtube_url && (
-              <a href={site.youtube_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Youtube className="h-4 w-4" />
-              </a>
-            )}
-            {site?.linkedin_url && (
-              <a href={site.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Linkedin className="h-4 w-4" />
-              </a>
-            )}
-            {site?.tiktok_url && (
-              <a href={site.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <TikTokIcon className="h-4 w-4" />
-              </a>
-            )}
-            {site?.pinterest_url && (
-              <a href={site.pinterest_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <PinterestIcon className="h-4 w-4" />
-              </a>
-            )}
-            {site?.whatsapp && (
-              <a href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                <WhatsAppIcon className="h-4 w-4" />
-              </a>
+        {/* Logo / Studio Name */}
+        {showLogo && (
+          <div className="flex items-center justify-center">
+            {logoUrl ? (
+              <img src={logoUrl} alt={displayName} className="h-8 object-contain" style={textColor ? { filter: "none" } : undefined} />
+            ) : (
+              <span
+                className="text-[10px] tracking-[0.4em] uppercase font-light"
+                style={{ color: textColor ?? undefined }}
+              >
+                {displayName}
+              </span>
             )}
           </div>
         )}
-        {site?.footer_text && (
-          <p className="text-[10px] font-light text-muted-foreground text-center">{site.footer_text}</p>
+
+        {/* Social icons */}
+        {showContact && showSocials && visibleSocialEntries.length > 0 && (
+          <div className="flex items-center justify-center gap-5">
+            {visibleSocialEntries.map(e => (
+              <a
+                key={e.key}
+                href={e.href!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`transition-colors ${iconColorCls}`}
+                style={textColor ? { color: textColor } : undefined}
+              >
+                {e.icon}
+              </a>
+            ))}
+          </div>
         )}
-        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40 text-center">Powered by Davions</p>
+
+        {/* Footer text */}
+        {site?.footer_text && (
+          <p
+            className="text-[10px] font-light text-center"
+            style={{ color: textColor ?? undefined }}
+          >
+            {site.footer_text}
+          </p>
+        )}
+
+        <p className="text-[9px] tracking-widest uppercase text-center" style={{ color: textColor ? textColor + "66" : undefined, opacity: textColor ? undefined : 0.4 }}>Powered by Davions</p>
       </div>
     </footer>
   );
