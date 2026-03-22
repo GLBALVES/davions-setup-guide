@@ -303,8 +303,34 @@ export function LivePreview({
         </div>
       )}
 
-      {/* When editing inline, show a dismiss hint at top */}
-      {activeBlock && (
+      {/* Active block: floating label badge pinned at top-left of the section */}
+      {activeBlock && toolbarPos === null && (() => {
+        const rect = getBlockRect(activeBlock);
+        if (!rect) return null;
+        return (
+          <div
+            className="absolute z-30 pointer-events-none"
+            style={{ top: rect.top, left: rect.left, width: rect.width }}
+          >
+            {/* Top accent bar */}
+            <div className="w-full h-[3px] bg-primary rounded-t-sm" />
+            {/* Section name badge */}
+            <div className="absolute top-[3px] left-0 flex items-center gap-1.5 bg-primary text-primary-foreground px-2.5 py-1 text-[10px] font-medium tracking-[0.15em] uppercase shadow-md rounded-br-sm pointer-events-auto">
+              <span>{BLOCK_LABELS[activeBlock] ?? activeBlock}</span>
+              <span className="opacity-40">·</span>
+              <button
+                className="opacity-70 hover:opacity-100 transition-opacity text-[9px] tracking-widest"
+                onMouseDown={(e) => { e.preventDefault(); onSelectBlock(null as any); }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* When toolbar is visible (no active block), show inline dismiss hint */}
+      {activeBlock && toolbarPos !== null && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-foreground text-background px-3 py-1.5 rounded-full shadow-lg text-[10px] tracking-[0.1em] uppercase pointer-events-auto">
           <span>Editing · Click text to edit · </span>
           <button
