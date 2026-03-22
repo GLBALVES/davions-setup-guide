@@ -1,66 +1,51 @@
 
-## Diagnóstico do Problema
+## Diagnóstico
 
-### Causa raiz: o `LivePreview` ignora a página ativa
+O `PublicSiteRenderer` renderiza os blocos em **ordem fixa e hardcoded** no JSX de cada template (Editorial, Grid, Magazine, Clean). A prop `visibleSections` só filtra SE um bloco aparece — mas nunca controla a **ordem** em que aparecem.
 
-Ao clicar em uma página customizada no sidebar, o `handleSelectPage` define `activePageId` corretamente. Mas o `livePreviewProps` passa `sections: activePageSections` ao `LivePreview`, que por sua vez passa `visibleSections` ao `PublicSiteRenderer`.
+Quando o usuário reordena via drag-and-drop no sidebar:
+1. `handleReorderPageSections` atualiza `pages` → `activePageSections` muda (sidebar correto ✓)
+2. `LivePreview` passa `visibleSections={sections.filter(v).map(key)}` ao `PublicSiteRenderer` com as keys na nova ordem ✓
+3. `PublicSiteRenderer` ignora a ordem do array e renderiza hero → quote → sessions → experience → portfolio → about → testimonials → footer sempre na mesma sequência ✗
 
-O problema está na linha 392–394 do `WebsiteEditor.tsx`:
+## Solução
 
-```ts
-const activePage = activePageId ? pages.find((p) => p.id === activePageId) : null;
-const activePageSections: SectionDef[] = activePage && !activePage.is_home
-  ? ((activePage.sections_order as SectionDef[]) ?? [])
-  : sections;
+Adicionar renderização dinâmica baseada na ordem de `visibleSections` em cada template.
+
+A abordagem mais limpa: criar um mapa de render functions para cada bloco, e quando `visibleSections` for passado (modo editor), renderizar iterando o array em ordem. Quando `visibleSections` for null (site público), renderizar na ordem fixa atual.
+
+### Mudanças
+
+**`src/components/store/PublicSiteRenderer.tsx`** — 4 templates afetados (Editorial, Grid, Magazine, Clean):
+
+Para cada template, extrair os blocos como um `Record<string, ReactNode>` e quando `visibleSections` estiver presente, renderizar mapeando o array:
+
+```tsx
+// Dentro de cada template:
+const blockMap: Record<string, React.ReactNode> = {
+  hero: <div data-block-key="hero">...</div>,
+  quote: showBlock("quote") ? <div data-block-key="quote">...</div> : null,
+  sessions: showBlock("sessions") && showStore ? <main data-block-key="sessions">...</main> : null,
+  experience: showBlock("experience") ? <div data-block-key="experience">...</div> : null,
+  portfolio: showBlock("portfolio") ? <section data-block-key="portfolio">...</section> : null,
+  about: showBlock("about") ? <div data-block-key="about">...</div> : null,
+  testimonials: showBlock("testimonials") ? <div data-block-key="testimonials">...</div> : null,
+  footer: showBlock("footer") ? <div data-block-key="footer">...</div> : null,
+};
+
+// Renderização:
+const orderedKeys = props.visibleSections ?? Object.keys(blockMap);
+return (
+  <div className="min-h-screen bg-background">
+    <SharedNav ... />
+    {orderedKeys.map(key => blockMap[key] ?? null)}
+  </div>
+);
 ```
 
-Quando uma página customizada **não tem seções** (array vazio), `activePageSections` é `[]`. O `LivePreview` passa `visibleSections={[]}` ao renderer — e o `PublicSiteRenderer` interpreta um array vazio como "não há seções para mostrar", então renderiza vazio ou reverte para o comportamento padrão, que são as seções da Home.
+**Arquivo a editar:** apenas `src/components/store/PublicSiteRenderer.tsx` — refatorar os 4 templates para usar `blockMap` + renderização ordenada.
 
-Mas há **um segundo problema maior**: o `PublicSiteRenderer` nunca muda de conteúdo porque o `data` sempre é o global `siteData`. Páginas customizadas têm seu conteúdo em `page.page_content` (`page_headline`, `page_body`, etc.), e esse conteúdo **nunca é passado** ao `PublicSiteRenderer`.
-
-### Dois problemas confirmados:
-
-1. **`visibleSections`**: quando uma página customizada tem seções, o array é passado corretamente. Mas o `PublicSiteRenderer` usa `showBlock(key)` que só filtra baseado no array. O conteúdo textual (headline, body, cover, etc.) da página nunca é injetado.
-
-2. **A sidebar esconde o `EditorSidebar` quando `activePageId !== null` e a página não é Home** (linha 532–541 do WebsiteEditor). Isso já funciona para mostrar o `PageContentPanel`. **O preview no entanto ainda mostra o conteúdo da home.**
-
-### Solução
-
-**`WebsiteEditor.tsx`** — passar o conteúdo da página ativa ao `LivePreview` quando for uma página customizada:
-
-```ts
-// Merge page_content into siteData when a custom page is active
-const effectiveSiteData = activePage && !activePage.is_home && activePage.page_content
-  ? {
-      ...siteData,
-      site_headline: (activePage.page_content as PageContent).page_headline ?? siteData.site_headline,
-      site_subheadline: (activePage.page_content as PageContent).page_subheadline ?? siteData.site_subheadline,
-      site_hero_image_url: (activePage.page_content as PageContent).page_cover_url ?? siteData.site_hero_image_url,
-      cta_text: (activePage.page_content as PageContent).page_cta_text ?? siteData.cta_text,
-      cta_link: (activePage.page_content as PageContent).page_cta_link ?? siteData.cta_link,
-    }
-  : siteData;
-```
-
-E usar `effectiveSiteData` em vez de `siteData` no `livePreviewProps`.
-
-**Problema de array vazio**: quando uma página customizada não tem seções, o preview fica em branco. Isso é correto — a página está vazia. Mas se o usuário nunca adicionou seções, a página deve mostrar pelo menos o bloco de conteúdo básico (headline/body/cover). 
-
-Para isso, quando `activePageSections` está vazio E a página tem `page_content`, exibir pelo menos uma seção placeholder `hero` no preview:
-
-```ts
-const activePageSections: SectionDef[] =
-  activePage && !activePage.is_home
-    ? (() => {
-        const order = (activePage.sections_order as SectionDef[]) ?? [];
-        // Se não há seções definidas mas há page_content, mostrar hero por padrão
-        if (order.length === 0) return [{ key: "hero", label: "Hero", icon: "🖼️", visible: true }];
-        return order;
-      })()
-    : sections;
-```
-
-**Arquivos a editar:**
-- `src/pages/dashboard/WebsiteEditor.tsx` — único arquivo, 2 mudanças:
-  1. Adicionar `effectiveSiteData` que mescla `page_content` da página ativa
-  2. Ajustar `activePageSections` para exibir `hero` por padrão quando uma página customizada não tem seções ainda
+### Resultado
+- Reordenar no sidebar → `visibleSections` chega na nova ordem → preview renderiza na ordem correta
+- Site público (sem `visibleSections`) → ordem padrão mantida
+- Visibilidade (hide/show) → continua funcionando via `showBlock`
