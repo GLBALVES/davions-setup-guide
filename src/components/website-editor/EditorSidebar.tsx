@@ -194,6 +194,22 @@ function PageRow({
       } ${!page.is_visible && !page.is_home ? "opacity-50" : ""}`}
       onClick={onSelect}
     >
+      {/* Drag handle — only for non-home pages */}
+      {!page.is_home && dragHandleListeners ? (
+        <span
+          {...dragHandleListeners}
+          {...dragHandleAttributes}
+          className="p-0.5 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-3 w-3" />
+        </span>
+      ) : (
+        /* Spacer so alignment matches rows without handle */
+        !page.is_home && <span className="w-4 shrink-0" />
+      )}
+
       {/* Expand / collapse chevron */}
       <button
         onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
