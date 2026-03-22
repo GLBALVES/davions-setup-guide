@@ -313,6 +313,22 @@ function PageRow({
   );
 }
 
+// ── Sortable page wrapper ─────────────────────────────────────────────────────
+
+interface SortablePageProps extends Omit<PageRowProps, "dragHandleListeners" | "dragHandleAttributes"> {
+  id: string;
+}
+
+function SortablePage({ id, ...rest }: SortablePageProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <PageRow {...rest} dragHandleListeners={listeners} dragHandleAttributes={attributes} />
+    </div>
+  );
+}
+
 // ── Pages + Sections tree ────────────────────────────────────────────────────
 
 interface PagesTreeProps {
