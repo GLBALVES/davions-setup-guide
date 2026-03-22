@@ -719,6 +719,7 @@ export function EditorSidebar({
             onReorder={onReorder}
             onToggleVisibility={onToggleVisibility}
             onRemoveSection={onRemoveSection}
+            onReorderPageSections={onReorderPageSections}
           />
         </>
       )}
