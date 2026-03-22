@@ -32,6 +32,7 @@ interface Props {
   sections: SectionDef[];
   onDataChange: (patch: Partial<SiteConfig> & { bio?: string }) => void;
   storeSlug?: string | null;
+  activePageId?: string | null;
 }
 
 export function LivePreview({
@@ -47,6 +48,7 @@ export function LivePreview({
   sections,
   onDataChange,
   storeSlug,
+  activePageId,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredBlock, setHoveredBlock] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export function LivePreview({
 
   // Scroll to active block whenever it changes.
   // We retry with increasing delays because newly-added sections may not be in the DOM yet.
+  // activePageId is included so the effect re-fires when switching between pages even if
+  // activeBlock key stays the same (e.g. "hero" exists on both pages).
   useEffect(() => {
     if (!activeBlock) return;
     const scrollTo = () => {
@@ -67,11 +71,12 @@ export function LivePreview({
     };
     // Immediate attempt (works for already-rendered blocks)
     if (!scrollTo()) {
-      // Retry after first paint (newly added section still rendering)
-      const t1 = setTimeout(() => { if (!scrollTo()) setTimeout(scrollTo, 300); }, 80);
+      // Retry after first paint (newly added section / page still rendering)
+      const t1 = setTimeout(() => { if (!scrollTo()) setTimeout(scrollTo, 400); }, 100);
       return () => clearTimeout(t1);
     }
-  }, [activeBlock, sections]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBlock, activePageId]);
   // Debounced hide: schedule clearing hover state so that moving from overlay → toolbar/gap
   // doesn't cause a flicker (the enter handler cancels the timer before it fires).
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
