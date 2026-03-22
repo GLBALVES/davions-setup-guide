@@ -343,7 +343,8 @@ export default function WebsiteEditor() {
 
   const handleSelectPage = (id: string | null) => {
     setActivePageId(id);
-    setActiveBlock(null); // Clear active block when switching pages
+    setActiveBlock(null);
+    setPageContentPanelOpen(false); // switching page always shows sections, not properties
   };
 
   const handlePageContentChange = async (pageId: string, content: PageContent) => {
