@@ -131,6 +131,18 @@ export interface SiteConfig {
   header_text_color?: string | null;
   /** Which social icons to show in the header (null/empty = show all that have URLs) */
   header_visible_socials?: string[] | null;
+  /** Footer background color */
+  footer_bg_color?: string | null;
+  /** Footer text / icon color */
+  footer_text_color?: string | null;
+  /** Show logo/studio name in footer */
+  footer_show_logo?: boolean | null;
+  /** Show social icons in footer */
+  footer_show_socials?: boolean | null;
+  /** Which social icons to show in footer */
+  footer_visible_socials?: string[] | null;
+  /** Footer preset template id */
+  footer_preset?: string | null;
 }
 
 export interface Session {
