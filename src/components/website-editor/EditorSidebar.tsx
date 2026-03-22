@@ -764,6 +764,7 @@ export function EditorSidebar({
             onRenamePage={onRenamePage}
             onTogglePageVisibility={onTogglePageVisibility}
             onReorderPages={onReorderPages}
+            onOpenPageSettings={onOpenPageSettings}
             sections={sections}
             activeBlock={activeBlock}
             onSelectBlock={onSelectBlock}
