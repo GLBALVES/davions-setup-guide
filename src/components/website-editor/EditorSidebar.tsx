@@ -324,6 +324,7 @@ function PagesTree({
   pages, activePageId, onSelectPage, onAddPage, onAddSection, onDeletePage, onRenamePage,
   onTogglePageVisibility, onReorderPages,
   sections, activeBlock, onSelectBlock, onReorder, onToggleVisibility, onRemoveSection,
+  onReorderPageSections,
 }: PagesTreeProps) {
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
