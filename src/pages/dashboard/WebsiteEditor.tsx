@@ -330,6 +330,16 @@ export default function WebsiteEditor() {
     }
   };
 
+  const handleReorderPageSections = async (pageId: string, newSections: SectionDef[]) => {
+    setPages((prev) =>
+      prev.map((p) => p.id === pageId ? { ...p, sections_order: newSections as any } : p)
+    );
+    await supabase
+      .from("site_pages")
+      .update({ sections_order: newSections as any } as any)
+      .eq("id", pageId);
+  };
+
   const handleSelectPage = (id: string | null) => {
     setActivePageId(id);
     setActiveBlock(null); // Clear active block when switching pages
