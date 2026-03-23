@@ -1799,6 +1799,7 @@ export const translations = {
       removeDeadline: "Remover prazo",
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
+      refresh: "Atualizar",
     },
     clients: {
       title: "Clientes",
