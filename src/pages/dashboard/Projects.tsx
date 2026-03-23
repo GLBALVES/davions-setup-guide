@@ -151,10 +151,10 @@ function KanbanCard({
   const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
-  // Human-readable deadline label
+  // Human-readable deadline label (uses effective deadline = per-card or column-level)
   const deadlineLabel = (() => {
-    if (!project.gallery_deadline || project.stage !== "shot") return null;
-    const d = parseISO(project.gallery_deadline);
+    if (!effectiveDeadline || project.stage !== "shot") return null;
+    const d = parseISO(effectiveDeadline);
     const now = new Date();
     if (isPast(d)) return "Prazo vencido";
     const h = differenceInHours(d, now);
@@ -222,7 +222,7 @@ function KanbanCard({
           {project.shoot_date && (
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground min-w-0">
               <span className="flex items-center gap-1 shrink-0">
-                <Calendar className="h-2.5 w-2.5 shrink-0" />
+                <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
                 <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
               </span>
             </div>
