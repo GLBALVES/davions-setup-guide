@@ -402,11 +402,13 @@ function KanbanColumn({
   };
 
   // Example date: today + shotDeadlineDays
+  const { lang } = useLanguage();
+  const dateLocale = lang === "pt" ? "pt-BR" : lang === "es" ? "es-MX" : "en-US";
   const exampleDate = shotDeadlineDays != null
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + shotDeadlineDays);
-        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+        return d.toLocaleDateString(dateLocale, { day: "2-digit", month: "short" });
       })()
     : null;
 
@@ -415,7 +417,7 @@ function KanbanColumn({
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + postProdDeadlineDays);
-        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+        return d.toLocaleDateString(dateLocale, { day: "2-digit", month: "short" });
       })()
     : null;
 
