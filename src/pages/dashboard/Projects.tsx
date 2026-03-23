@@ -1026,6 +1026,7 @@ const Projects = () => {
         session_title: (p.bookings as any)?.sessions?.title ?? null,
         gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
         gallery_deadline: p.gallery_deadline ?? null,
+        gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
       }));
 
       // 6. Auto-advance "upcoming" → "shot" when session has ended
