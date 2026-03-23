@@ -3287,6 +3287,7 @@ export const translations = {
       removeDeadline: "Eliminar plazo",
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
+      refresh: "Actualizar",
     },
     clients: {
       title: "Clientes",
