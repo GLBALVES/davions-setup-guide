@@ -15,12 +15,14 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
-  Pencil, Check, X, Clock, AlertTriangle,
+  Pencil, Check, X, Clock, AlertTriangle, CalendarIcon, Timer,
 } from "lucide-react";
-import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
+import { format, differenceInDays, differenceInHours, isPast, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
