@@ -339,7 +339,7 @@ function KanbanCard({
                 ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
                 : <Clock className="h-2.5 w-2.5 shrink-0" />
               }
-              <span>Galeria: {galleryExpiryLabel}</span>
+              <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
             </div>
           )}
           {project.session_title && (
