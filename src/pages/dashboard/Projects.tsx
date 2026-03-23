@@ -210,11 +210,11 @@ function KanbanCard({
     if (!upcomingSessionStatus || !project.shoot_date) return null;
     const d = new Date(project.shoot_date);
     const now = new Date();
-    if (isPast(d)) return "Sessão passou";
+    if (isPast(d)) return p_t.sessionPassed;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h para a sessão`;
+    if (h < 24) return p_t.sessionInHours(h);
     const days = differenceInDays(d, now);
-    return `${days}d para a sessão`;
+    return p_t.sessionInDays(days);
   })();
 
   // Border: expiry urgency takes priority for gallery stages, else deadline urgency, else upcoming session
