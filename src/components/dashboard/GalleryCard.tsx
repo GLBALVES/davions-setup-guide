@@ -433,6 +433,18 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
                 {gallery.status}
               </span>
             )}
+            {!isExpired && expiryUrgency && expiryLabel && (
+              <>
+                <span>·</span>
+                <span className={`flex items-center gap-1 font-medium ${
+                  expiryUrgency === "critical" ? "text-destructive" :
+                  expiryUrgency === "warning" ? "text-orange-500" : "text-yellow-600"
+                }`}>
+                  <Clock className="h-3 w-3" />
+                  Expira em {expiryLabel}
+                </span>
+              </>
+            )}
             {isUnassigned && (
               <>
                 <span>·</span>
