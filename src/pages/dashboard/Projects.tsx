@@ -946,13 +946,23 @@ const Projects = () => {
       if (bookingIds.length > 0) {
         const { data: galleries } = await supabase
           .from("galleries")
-          .select("booking_id, cover_image_url, category, status")
-          .in("booking_id", bookingIds)
-          .neq("status", "expired");
+          .select("booking_id, cover_image_url, category, status, expires_at")
+          .in("booking_id", bookingIds);
+        // Map cover images (skip expired for cover)
         if (galleries) {
           for (const g of galleries as any[]) {
-            if (g.booking_id && g.cover_image_url) {
+            if (g.booking_id && g.cover_image_url && g.status !== "expired") {
               galleryCovers[g.booking_id] = g.cover_image_url;
+            }
+          }
+        }
+
+        // Map gallery expiry per booking_id (proof → proof_gallery stage, final → final_gallery)
+        const galleryExpiry: Record<string, string> = {};
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.booking_id && g.expires_at) {
+              galleryExpiry[g.booking_id] = g.expires_at;
             }
           }
         }
