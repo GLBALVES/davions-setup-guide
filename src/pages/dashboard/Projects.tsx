@@ -773,6 +773,23 @@ const Projects = () => {
     } catch { /* ignore */ }
   };
 
+  // Column-level deadline for "post_production" stage — persisted in localStorage
+  const [postProdDeadlineDays, setPostProdDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("post_prod_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+
+  const handleSetPostProdDeadlineDays = (days: number | null) => {
+    setPostProdDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("post_prod_deadline_days", String(days));
+      else localStorage.removeItem("post_prod_deadline_days");
+    } catch { /* ignore */ }
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
