@@ -353,6 +353,7 @@ function KanbanColumn({
   onSetShotDeadlineDays,
   postProdDeadlineDays,
   onSetPostProdDeadlineDays,
+  onSetDeadline,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -365,6 +366,7 @@ function KanbanColumn({
   onSetShotDeadlineDays?: (days: number | null) => void;
   postProdDeadlineDays?: number | null;
   onSetPostProdDeadlineDays?: (days: number | null) => void;
+  onSetDeadline?: (projectId: string, deadline: string | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
@@ -547,7 +549,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} />
           ))}
         </SortableContext>
 
