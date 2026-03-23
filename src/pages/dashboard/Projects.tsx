@@ -191,11 +191,39 @@ function KanbanCard({
     return getDeadlineStatus(project.gallery_expires_at);
   })();
 
-  // Border: expiry urgency takes priority for gallery stages, else deadline urgency
+  // Upcoming session proximity alert
+  const upcomingSessionStatus = (() => {
+    if (project.stage !== "upcoming") return null;
+    if (!project.shoot_date) return null;
+    const d = new Date(project.shoot_date);
+    const now = new Date();
+    if (isPast(d)) return "overdue"; // session already passed (shouldn't happen normally)
+    const daysUntil = differenceInDays(d, now);
+    const hoursUntil = differenceInHours(d, now);
+    if (hoursUntil < 24) return "urgent";   // less than 24h → red
+    if (daysUntil <= 3) return "warning";   // ≤ 3 days → yellow
+    if (daysUntil <= 7) return "ok";        // ≤ 7 days → green
+    return null;                            // more than 7 days → no color
+  })();
+
+  const upcomingSessionLabel = (() => {
+    if (!upcomingSessionStatus || !project.shoot_date) return null;
+    const d = new Date(project.shoot_date);
+    const now = new Date();
+    if (isPast(d)) return "Sessão passou";
+    const h = differenceInHours(d, now);
+    if (h < 24) return `${h}h para a sessão`;
+    const days = differenceInDays(d, now);
+    return `${days}d para a sessão`;
+  })();
+
+  // Border: expiry urgency takes priority for gallery stages, else deadline urgency, else upcoming session
   const borderClass = galleryExpiryStatus
     ? DEADLINE_BORDER[galleryExpiryStatus]
     : deadlineStatus
     ? DEADLINE_BORDER[deadlineStatus]
+    : upcomingSessionStatus
+    ? DEADLINE_BORDER[upcomingSessionStatus]
     : "border-border hover:border-foreground/30";
 
   // Human-readable deadline label
@@ -291,6 +319,15 @@ function KanbanCard({
                     : <Timer className="h-2.5 w-2.5 shrink-0" />
                   }
                   <span>{deadlineLabel}</span>
+                </span>
+              )}
+              {upcomingSessionStatus && upcomingSessionLabel && !effectiveDeadline && (
+                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
+                  {upcomingSessionStatus === "overdue"
+                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                    : <Clock className="h-2.5 w-2.5 shrink-0" />
+                  }
+                  <span>{upcomingSessionLabel}</span>
                 </span>
               )}
             </div>
