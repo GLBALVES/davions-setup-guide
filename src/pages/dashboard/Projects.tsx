@@ -124,14 +124,14 @@ function KanbanCard({
   onEdit,
   onDelete,
   onArchive,
-  shotDeadline,
+  shotDeadlineDays,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
-  shotDeadline?: string | null;
+  shotDeadlineDays?: number | null;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -144,14 +144,28 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
-  // Use per-card deadline if set, otherwise fall back to column-level deadline
-  const effectiveDeadline = project.stage === "shot"
-    ? (project.gallery_deadline ?? shotDeadline ?? null)
-    : null;
+  // Compute effective deadline:
+  // 1. Per-card gallery_deadline (absolute date string) takes priority
+  // 2. Otherwise: shoot_date + column-level days
+  const effectiveDeadline = (() => {
+    if (project.stage !== "shot") return null;
+    if (project.gallery_deadline) return project.gallery_deadline;
+    if (shotDeadlineDays != null && project.shoot_date) {
+      try {
+        const shoot = new Date(project.shoot_date);
+        if (!isNaN(shoot.getTime())) {
+          const d = new Date(shoot);
+          d.setDate(d.getDate() + shotDeadlineDays);
+          return d.toISOString();
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  })();
   const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
-  // Human-readable deadline label (uses effective deadline = per-card or column-level)
+  // Human-readable deadline label
   const deadlineLabel = (() => {
     if (!effectiveDeadline || project.stage !== "shot") return null;
     const d = parseISO(effectiveDeadline);
