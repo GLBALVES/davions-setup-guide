@@ -274,7 +274,7 @@ function KanbanCard({
               ) : (
                 <Clock className="h-2.5 w-2.5 shrink-0" />
               )}
-              <span>Galeria: {deadlineLabel}</span>
+              <span>{deadlineStagLabel} {deadlineLabel}</span>
             </div>
           )}
         </div>
