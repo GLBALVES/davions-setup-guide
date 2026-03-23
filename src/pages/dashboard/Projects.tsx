@@ -444,7 +444,7 @@ function KanbanColumn({
             className="h-2 w-2 rounded-full shrink-0"
             style={{ background: stage.color }}
           />
-          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{stage.label}</span>
+          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{({ upcoming: t.projects.upcoming, shot: t.projects.shot, proof_gallery: t.projects.proof_gallery, post_production: t.projects.post_production, final_gallery: t.projects.final_gallery } as Record<string,string>)[stage.key] ?? stage.label}</span>
           <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -635,8 +635,8 @@ function ProjectModal({
   const [notes, setNotes] = useState("");
 
   const stageLabels: Record<string, string> = {
-    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
-    post_production: "Pós produção", final_gallery: "Galeria final",
+    upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery,
+    post_production: p_t.post_production, final_gallery: p_t.final_gallery,
   };
 
   useEffect(() => {
@@ -751,8 +751,8 @@ function ListView({
   const { t } = useLanguage();
   const p_t = t.projects;
   const stageLabels: Record<string, string> = {
-    upcoming: "Próximas sessões", shot: "Fotografadas", proof_gallery: "Galeria de provas",
-    post_production: "Pós produção", final_gallery: "Galeria final",
+    upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery,
+    post_production: p_t.post_production, final_gallery: p_t.final_gallery,
   };
 
   const active = [...projects.filter((p) => p.stage !== "archived")].sort((a, b) => {
@@ -1383,7 +1383,7 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
-                const stageLabel = s.label;
+                const stageLabel = ({ upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery, post_production: p_t.post_production, final_gallery: p_t.final_gallery } as Record<string,string>)[s.key] ?? s.label;
                 return (
                   <div
                     key={s.key}
