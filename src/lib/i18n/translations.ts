@@ -275,6 +275,16 @@ export const translations = {
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
       refresh: "Refresh",
+      // Project detail fields
+      location: "Location",
+      description: "Description",
+      phone: "Phone",
+      projectDetails: "Project Details",
+      addLocation: "Add location…",
+      addPhone: "Add phone…",
+      addDescription: "Project details, briefing, references…",
+      sessionSection: "Session",
+      notesPlaceholder: "Write a note…",
     },
     // ── Clients page ──
     clients: {
