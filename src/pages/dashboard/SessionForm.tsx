@@ -31,7 +31,9 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { Copy, MessageCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
@@ -963,36 +965,80 @@ const SessionForm = () => {
                             {storeSlug ? "Open booking page" : "Configure store slug in Settings first"}
                           </TooltipContent>
                         </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={async () => {
-                                const bookingUrl = storeSlug
-                                  ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
-                                  : null;
-                                if (!bookingUrl) return;
-                                try {
-                                  await navigator.clipboard.writeText(bookingUrl);
-                                  toast({ title: "Link copied!", description: "Booking URL copied to clipboard." });
-                                } catch {
-                                  toast({ title: "Failed to copy", variant: "destructive" });
-                                }
-                              }}
-                              disabled={!storeSlug}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
-                                storeSlug
-                                  ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
-                                  : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
-                              }`}
-                            >
-                              <Share2 className="h-3 w-3" />
-                              Share
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="text-xs">
-                            {storeSlug ? "Copy booking link to clipboard" : "Configure store slug in Settings first"}
-                          </TooltipContent>
-                        </Tooltip>
+                        {/* Share popover */}
+                        {(() => {
+                          const bookingUrl = storeSlug
+                            ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
+                            : null;
+                          return (
+                            <Popover>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      disabled={!storeSlug}
+                                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
+                                        storeSlug
+                                          ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                                          : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
+                                      }`}
+                                    >
+                                      <Share2 className="h-3 w-3" />
+                                      Share
+                                    </button>
+                                  </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs">
+                                  {storeSlug ? "Share booking link" : "Configure store slug in Settings first"}
+                                </TooltipContent>
+                              </Tooltip>
+                              {bookingUrl && (
+                                <PopoverContent side="bottom" align="end" className="w-64 p-3 flex flex-col gap-1">
+                                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium mb-2">Share booking link</p>
+                                  {/* Copy link */}
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(bookingUrl);
+                                        toast({ title: "Link copied!", description: "Booking URL copied to clipboard." });
+                                      } catch {
+                                        toast({ title: "Failed to copy", variant: "destructive" });
+                                      }
+                                    }}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-xs text-left rounded-sm hover:bg-muted transition-colors w-full"
+                                  >
+                                    <Copy className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    Copy link
+                                  </button>
+                                  {/* Open in browser */}
+                                  <button
+                                    onClick={() => window.open(bookingUrl, "_blank")}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-xs text-left rounded-sm hover:bg-muted transition-colors w-full"
+                                  >
+                                    <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    Open in browser
+                                  </button>
+                                  {/* WhatsApp */}
+                                  <button
+                                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(bookingUrl)}`, "_blank")}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-xs text-left rounded-sm hover:bg-muted transition-colors w-full"
+                                  >
+                                    <MessageCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    Share via WhatsApp
+                                  </button>
+                                  {/* Email */}
+                                  <button
+                                    onClick={() => window.open(`mailto:?subject=Book%20a%20session&body=${encodeURIComponent(bookingUrl)}`, "_blank")}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-xs text-left rounded-sm hover:bg-muted transition-colors w-full"
+                                  >
+                                    <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    Share via Email
+                                  </button>
+                                </PopoverContent>
+                              )}
+                            </Popover>
+                          );
+                        })()}
                       </div>
                     </TooltipProvider>
                   )}
