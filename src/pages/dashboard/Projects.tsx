@@ -125,6 +125,7 @@ function KanbanCard({
   onDelete,
   onArchive,
   shotDeadlineDays,
+  postProdDeadlineDays,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -132,6 +133,7 @@ function KanbanCard({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   shotDeadlineDays?: number | null;
+  postProdDeadlineDays?: number | null;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -294,6 +296,8 @@ function KanbanColumn({
   onAddCard,
   shotDeadlineDays,
   onSetShotDeadlineDays,
+  postProdDeadlineDays,
+  onSetPostProdDeadlineDays,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -304,6 +308,8 @@ function KanbanColumn({
   onAddCard: (stage: Stage) => void;
   shotDeadlineDays?: number | null;
   onSetShotDeadlineDays?: (days: number | null) => void;
+  postProdDeadlineDays?: number | null;
+  onSetPostProdDeadlineDays?: (days: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
