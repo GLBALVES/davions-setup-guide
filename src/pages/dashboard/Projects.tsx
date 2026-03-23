@@ -424,7 +424,7 @@ function KanbanColumn({
             <Popover open={ppPopoverOpen} onOpenChange={setPpPopoverOpen}>
               <PopoverTrigger asChild>
                 <button
-                  className={}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${postProdDeadlineDays != null ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"}`}
                   title="Prazo para entrega da pós-produção"
                 >
                   <Timer className="h-3 w-3 shrink-0" />
