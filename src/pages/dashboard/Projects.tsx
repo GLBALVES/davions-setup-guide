@@ -696,6 +696,19 @@ const Projects = () => {
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // Column-level deadline for "shot" stage — persisted in localStorage
+  const [shotDeadline, setShotDeadline] = useState<string | null>(() => {
+    try { return localStorage.getItem("shot_gallery_deadline"); } catch { return null; }
+  });
+
+  const handleSetShotDeadline = (date: string | null) => {
+    setShotDeadline(date);
+    try {
+      if (date) localStorage.setItem("shot_gallery_deadline", date);
+      else localStorage.removeItem("shot_gallery_deadline");
+    } catch { /* ignore */ }
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
