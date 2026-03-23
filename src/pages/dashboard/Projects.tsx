@@ -688,16 +688,20 @@ const Projects = () => {
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Column-level deadline for "shot" stage — persisted in localStorage
-  const [shotDeadline, setShotDeadline] = useState<string | null>(() => {
-    try { return localStorage.getItem("shot_gallery_deadline"); } catch { return null; }
+  // Column-level deadline for "shot" stage (days after shoot) — persisted in localStorage
+  const [shotDeadlineDays, setShotDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("shot_gallery_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
   });
 
-  const handleSetShotDeadline = (date: string | null) => {
-    setShotDeadline(date);
+  const handleSetShotDeadlineDays = (days: number | null) => {
+    setShotDeadlineDays(days);
     try {
-      if (date) localStorage.setItem("shot_gallery_deadline", date);
-      else localStorage.removeItem("shot_gallery_deadline");
+      if (days != null) localStorage.setItem("shot_gallery_deadline_days", String(days));
+      else localStorage.removeItem("shot_gallery_deadline_days");
     } catch { /* ignore */ }
   };
 
