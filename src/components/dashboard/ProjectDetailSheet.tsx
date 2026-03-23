@@ -21,10 +21,13 @@ import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionT
 import {
   Trash2, Archive, ArchiveRestore, Camera,
   Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Phone, Mail, User, FileText,
+  Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
 } from "lucide-react";
 import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
@@ -43,6 +46,31 @@ const STAGE_COLORS: Record<Stage, string> = {
   post_production: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   final_gallery:   "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   archived:        "bg-muted/40 text-muted-foreground/60 border-border/50",
+};
+
+type InvoiceStatus = "pending" | "paid" | "partial" | "overdue" | "cancelled";
+
+interface ProjectInvoice {
+  id: string;
+  project_id: string;
+  photographer_id: string;
+  description: string;
+  amount: number;
+  status: InvoiceStatus;
+  due_date: string | null;
+  paid_at: string | null;
+  paid_amount: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const INVOICE_STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string; bg: string; icon: typeof CheckCircle2 }> = {
+  pending:   { label: "Pendente",  color: "text-amber-600",     bg: "bg-amber-500/10 border-amber-500/20",   icon: Clock },
+  paid:      { label: "Pago",      color: "text-emerald-600",   bg: "bg-emerald-500/10 border-emerald-500/20", icon: CheckCircle2 },
+  partial:   { label: "Parcial",   color: "text-blue-600",      bg: "bg-blue-500/10 border-blue-500/20",     icon: CreditCard },
+  overdue:   { label: "Vencido",   color: "text-destructive",   bg: "bg-destructive/10 border-destructive/20", icon: AlertTriangle },
+  cancelled: { label: "Cancelado", color: "text-muted-foreground", bg: "bg-muted/40 border-border/40",       icon: XCircle },
 };
 
 export interface ProjectSheetData {
@@ -84,64 +112,33 @@ interface Props {
 
 // Inline editable field
 function InlineField({
-  label,
-  value,
-  placeholder,
-  onSave,
-  type = "text",
-  icon,
+  label, value, placeholder, onSave, type = "text", icon,
 }: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  onSave: (v: string) => void;
-  type?: string;
-  icon?: React.ReactNode;
+  label: string; value: string; placeholder?: string;
+  onSave: (v: string) => void; type?: string; icon?: React.ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-
   useEffect(() => { setDraft(value); }, [value]);
-
-  const commit = () => {
-    setEditing(false);
-    if (draft !== value) onSave(draft);
-  };
-
+  const commit = () => { setEditing(false); if (draft !== value) onSave(draft); };
   if (editing) {
     return (
       <div className="flex items-center gap-2 min-w-0">
         {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
         <div className="flex items-center gap-1 flex-1 min-w-0">
-          <Input
-            type={type}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+          <Input type={type} value={draft} onChange={(e) => setDraft(e.target.value)}
             onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit();
-              if (e.key === "Escape") { setDraft(value); setEditing(false); }
-            }}
-            className="h-7 text-sm"
-            autoFocus
-          />
-          <button onClick={commit} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-            <Check className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={() => { setDraft(value); setEditing(false); }} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
-            <X className="h-3.5 w-3.5" />
-          </button>
+            onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
+            className="h-7 text-sm" autoFocus />
+          <button onClick={commit} className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><Check className="h-3.5 w-3.5" /></button>
+          <button onClick={() => { setDraft(value); setEditing(false); }} className="text-muted-foreground hover:text-foreground transition-colors shrink-0"><X className="h-3.5 w-3.5" /></button>
         </div>
       </div>
     );
   }
-
   return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className="group flex items-center gap-2 w-full text-sm text-left border border-transparent hover:border-border rounded-sm px-1 py-0.5 -mx-1 transition-colors"
-    >
+    <button type="button" onClick={() => setEditing(true)}
+      className="group flex items-center gap-2 w-full text-sm text-left border border-transparent hover:border-border rounded-sm px-1 py-0.5 -mx-1 transition-colors">
       {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
       <span className={cn("flex-1 min-w-0 truncate", value ? "text-foreground" : "text-muted-foreground/40 italic text-xs")}>
         {value || placeholder || label}
@@ -151,7 +148,6 @@ function InlineField({
   );
 }
 
-// Section label
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-medium mb-2">
@@ -160,17 +156,289 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── Payments section component ──
+function PaymentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Form state
+  const [formDesc, setFormDesc]       = useState("");
+  const [formAmount, setFormAmount]   = useState("");
+  const [formDue, setFormDue]         = useState("");
+  const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
+  const [formPaid, setFormPaid]       = useState("");
+
+  const qKey = ["project-invoices", project.id];
+
+  const { data: invoices = [] } = useQuery<ProjectInvoice[]>({
+    queryKey: qKey,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_invoices" as any)
+        .select("*")
+        .eq("project_id", project.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ProjectInvoice[];
+    },
+    enabled: !!project.id,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("project_invoices" as any).insert({
+        project_id:      project.id,
+        photographer_id: photographerId,
+        description:     formDesc.trim() || "Serviço",
+        amount:          parseFloat(formAmount) || 0,
+        status:          formStatus,
+        due_date:        formDue || null,
+        paid_amount:     parseFloat(formPaid) || 0,
+        paid_at:         formStatus === "paid" ? new Date().toISOString() : null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success("Cobrança adicionada");
+      setShowForm(false);
+      setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+    },
+    onError: () => toast.error("Erro ao adicionar cobrança"),
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status, paid_amount }: { id: string; status: InvoiceStatus; paid_amount?: number }) => {
+      const { error } = await supabase.from("project_invoices" as any).update({
+        status,
+        paid_amount: paid_amount ?? undefined,
+        paid_at: status === "paid" ? new Date().toISOString() : null,
+      } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qKey }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_invoices" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success("Cobrança removida");
+    },
+  });
+
+  // Financial summary
+  const totalAmount  = invoices.reduce((s, i) => s + Number(i.amount), 0);
+  const totalPaid    = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
+  const totalBalance = totalAmount - totalPaid;
+
+  const fmt = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Pagamentos</SectionLabel>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Plus className="h-3 w-3" /> Nova cobrança
+        </button>
+      </div>
+
+      {/* Summary bar — only shown when there are invoices */}
+      {invoices.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "Total",    value: totalAmount,  color: "text-foreground" },
+            { label: "Recebido", value: totalPaid,    color: "text-emerald-600" },
+            { label: "Saldo",    value: totalBalance, color: totalBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
+          ].map((s) => (
+            <div key={s.label} className="flex flex-col items-center rounded-md border border-border/50 bg-muted/20 py-2 px-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</span>
+              <span className={cn("text-sm font-semibold tabular-nums mt-0.5", s.color)}>{fmt(s.value)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add invoice form */}
+      {showForm && (
+        <div className="rounded-md border border-border/60 bg-muted/20 p-3 flex flex-col gap-2.5">
+          <p className="text-xs font-medium">Nova cobrança</p>
+
+          <div className="flex flex-col gap-1">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Descrição</Label>
+            <Input placeholder="Ex: Pacote Básico de Fotos" value={formDesc}
+              onChange={(e) => setFormDesc(e.target.value)} className="h-7 text-xs" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor (R$)</Label>
+              <Input type="number" placeholder="0,00" min={0} value={formAmount}
+                onChange={(e) => setFormAmount(e.target.value)} className="h-7 text-xs" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Vencimento</Label>
+              <Input type="date" value={formDue} onChange={(e) => setFormDue(e.target.value)} className="h-7 text-xs" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</Label>
+              <Select value={formStatus} onValueChange={(v) => setFormStatus(v as InvoiceStatus)}>
+                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(INVOICE_STATUS_CONFIG) as InvoiceStatus[]).map((k) => (
+                    <SelectItem key={k} value={k} className="text-xs">{INVOICE_STATUS_CONFIG[k].label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor pago (R$)</Label>
+              <Input type="number" placeholder="0,00" min={0} value={formPaid}
+                onChange={(e) => setFormPaid(e.target.value)} className="h-7 text-xs" />
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-1">
+            <Button variant="ghost" size="sm" className="h-7 text-xs"
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid(""); }}>
+              Cancelar
+            </Button>
+            <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
+              disabled={addMutation.isPending || !formAmount}>
+              {addMutation.isPending ? "Salvando…" : "Adicionar"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice list */}
+      {invoices.length === 0 && !showForm && (
+        <div className="flex flex-col items-center gap-1.5 py-5 border border-dashed border-border/50 rounded-md">
+          <DollarSign className="h-6 w-6 text-muted-foreground/30" />
+          <p className="text-xs text-muted-foreground/50">Nenhuma cobrança registrada</p>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {invoices.map((inv) => {
+          const cfg     = INVOICE_STATUS_CONFIG[inv.status] ?? INVOICE_STATUS_CONFIG.pending;
+          const Icon    = cfg.icon;
+          const isOpen  = expandedId === inv.id;
+          const balance = Number(inv.amount) - Number(inv.paid_amount);
+          const isDue   = inv.due_date && isPast(parseISO(inv.due_date)) && inv.status !== "paid" && inv.status !== "cancelled";
+
+          return (
+            <div key={inv.id} className={cn("rounded-md border transition-colors", cfg.bg)}>
+              {/* Row */}
+              <div className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+                onClick={() => setExpandedId(isOpen ? null : inv.id)}>
+                <Icon className={cn("h-3.5 w-3.5 shrink-0", cfg.color)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate leading-tight">{inv.description}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground tabular-nums">{fmt(Number(inv.amount))}</span>
+                    {inv.due_date && (
+                      <span className={cn("text-[10px]", isDue ? "text-destructive font-medium" : "text-muted-foreground/60")}>
+                        · {isDue ? "Vencido " : ""}{format(parseISO(inv.due_date), "d MMM")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfg.bg, cfg.color)}>
+                  {cfg.label}
+                </span>
+                {isOpen ? <ChevronUp className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />}
+              </div>
+
+              {/* Expanded detail */}
+              {isOpen && (
+                <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2.5 bg-background/50 rounded-b-md">
+                  <div className="grid grid-cols-3 gap-2 text-[10px]">
+                    <div>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Valor</p>
+                      <p className="font-semibold tabular-nums">{fmt(Number(inv.amount))}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Pago</p>
+                      <p className="font-semibold tabular-nums text-emerald-600">{fmt(Number(inv.paid_amount))}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Saldo</p>
+                      <p className={cn("font-semibold tabular-nums", balance > 0 ? "text-amber-600" : "text-muted-foreground")}>
+                        {fmt(balance)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {inv.due_date && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Vencimento: <span className={cn("font-medium", isDue ? "text-destructive" : "text-foreground")}>
+                        {format(parseISO(inv.due_date), "d 'de' MMMM 'de' yyyy")}
+                      </span>
+                    </p>
+                  )}
+                  {inv.paid_at && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Recebido em: <span className="font-medium text-foreground">{format(parseISO(inv.paid_at), "d MMM yyyy")}</span>
+                    </p>
+                  )}
+
+                  {/* Status quick-actions */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {inv.status !== "paid" && (
+                      <button
+                        onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "paid", paid_amount: Number(inv.amount) })}
+                        className="text-[10px] px-2 py-0.5 rounded-sm border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+                      >
+                        ✓ Marcar como pago
+                      </button>
+                    )}
+                    {inv.status !== "overdue" && inv.status !== "paid" && inv.status !== "cancelled" && (
+                      <button
+                        onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "overdue" })}
+                        className="text-[10px] px-2 py-0.5 rounded-sm border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                      >
+                        Marcar vencido
+                      </button>
+                    )}
+                    {inv.status !== "cancelled" && inv.status !== "paid" && (
+                      <button
+                        onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "cancelled" })}
+                        className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteMutation.mutate(inv.id)}
+                      className="ml-auto text-[10px] text-destructive/60 hover:text-destructive transition-colors"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ProjectDetailSheet({
-  project,
-  open,
-  onOpenChange,
-  onUpdate,
-  onDelete,
-  onArchive,
-  onUnarchive,
-  photographerId,
-  sessionTypes,
-  onRefetchSessionTypes,
+  project, open, onOpenChange, onUpdate, onDelete, onArchive, onUnarchive,
+  photographerId, sessionTypes, onRefetchSessionTypes,
 }: Props) {
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
 
@@ -183,10 +451,7 @@ export function ProjectDetailSheet({
   if (!project) return null;
 
   const isArchived = project.stage === "archived";
-
-  const save = async (data: Partial<ProjectSheetData>) => {
-    await onUpdate(project.id, data);
-  };
+  const save = async (data: Partial<ProjectSheetData>) => { await onUpdate(project.id, data); };
 
   const handleSessionTypeChange = async (id: string | null) => {
     setSessionTypeId(id);
@@ -196,13 +461,11 @@ export function ProjectDetailSheet({
 
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
 
-  // Deadline section for shot / post_production
   const renderDeadlineSection = () => {
     if (project.stage !== "shot" && project.stage !== "post_production") return null;
     const label = project.stage === "shot" ? "Prazo para galeria de prova" : "Prazo para entrega final";
     const deadline = project.gallery_deadline ? parseISO(project.gallery_deadline) : undefined;
     const now = new Date();
-
     const urgencyBadge = (() => {
       if (!deadline) return null;
       if (isPast(deadline)) return (
@@ -216,7 +479,6 @@ export function ProjectDetailSheet({
       const color = d <= 3 ? "text-orange-500" : d <= 7 ? "text-yellow-600" : "text-emerald-500";
       return <span className={cn("text-[10px] font-medium shrink-0", color)}>{d}d restantes</span>;
     })();
-
     return (
       <div className="flex flex-col gap-1.5">
         <Label className="text-[10px] tracking-widest uppercase text-muted-foreground flex items-center gap-1">
@@ -225,37 +487,22 @@ export function ProjectDetailSheet({
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "flex items-center gap-1.5 h-7 px-2 rounded-md border text-sm transition-colors flex-1 text-left",
-                  deadline
-                    ? isPast(deadline)
-                      ? "border-destructive/50 text-destructive"
-                      : "border-input text-foreground hover:border-foreground/40"
-                    : "border-input text-muted-foreground/60 hover:border-foreground/40"
-                )}
-              >
+              <button type="button" className={cn(
+                "flex items-center gap-1.5 h-7 px-2 rounded-md border text-sm transition-colors flex-1 text-left",
+                deadline ? isPast(deadline) ? "border-destructive/50 text-destructive" : "border-input text-foreground hover:border-foreground/40" : "border-input text-muted-foreground/60 hover:border-foreground/40"
+              )}>
                 <CalendarIcon className="h-3 w-3 shrink-0" />
-                <span className="text-xs">
-                  {deadline ? format(deadline, "d MMM yyyy") : "Definir prazo…"}
-                </span>
+                <span className="text-xs">{deadline ? format(deadline, "d MMM yyyy") : "Definir prazo…"}</span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" side="bottom">
-              <Calendar
-                mode="single"
-                selected={deadline}
+              <Calendar mode="single" selected={deadline}
                 onSelect={(d) => save({ gallery_deadline: d ? format(d, "yyyy-MM-dd") : null } as any)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
+                initialFocus className={cn("p-3 pointer-events-auto")} />
               {deadline && (
                 <div className="px-3 pb-3">
-                  <button
-                    onClick={() => save({ gallery_deadline: null } as any)}
-                    className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
-                  >
+                  <button onClick={() => save({ gallery_deadline: null } as any)}
+                    className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm">
                     Remover prazo
                   </button>
                 </div>
@@ -273,30 +520,25 @@ export function ProjectDetailSheet({
     );
   };
 
+  const deadlineSection = renderDeadlineSection();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "88vh" }}>
 
-        {/* ── Header ── */}
+        {/* Header */}
         <DialogHeader className="p-5 pb-3 shrink-0 border-b border-border/50">
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
-              {/* Editable title */}
               <input
                 defaultValue={project.title}
                 key={project.id + "-title"}
-                onBlur={(e) => {
-                  const v = e.target.value.trim();
-                  if (v && v !== project.title) save({ title: v });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                }}
+                onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) save({ title: v }); }}
+                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                 className="text-lg font-semibold bg-transparent border-0 border-b border-transparent hover:border-border focus:border-foreground/40 outline-none w-full py-0.5 transition-colors leading-tight"
                 placeholder="Project title"
               />
             </div>
-            {/* Stage badge / selector */}
             {isArchived ? (
               <span className={cn("self-start inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0", STAGE_COLORS.archived)}>
                 <Archive className="h-2.5 w-2.5" /> Archived
@@ -318,48 +560,33 @@ export function ProjectDetailSheet({
 
         <ScrollArea className="flex-1 overflow-auto">
           <div className="p-5">
-            {/* ── Two-column layout ── */}
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_260px] gap-5">
 
-              {/* ── LEFT column ── */}
+              {/* LEFT column */}
               <div className="flex flex-col gap-5 min-w-0">
 
-                {/* Session section */}
+                {/* Session */}
                 <div>
                   <SectionLabel>Sessão</SectionLabel>
                   <div className="flex flex-col gap-3">
                     <SessionTypeManager
-                      photographerId={photographerId}
-                      sessionTypes={sessionTypes}
-                      selectedTypeId={sessionTypeId}
-                      onSelect={handleSessionTypeChange}
-                      onRefetch={onRefetchSessionTypes}
-                      mode="select"
+                      photographerId={photographerId} sessionTypes={sessionTypes}
+                      selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
+                      onRefetch={onRefetchSessionTypes} mode="select"
                     />
-
                     {project.session_title && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Camera className="h-3 w-3 shrink-0" />
                         <span className="italic">{project.session_title}</span>
                       </div>
                     )}
-
-                    {/* Shoot date + time */}
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Data & hora</Label>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <input
-                          type="date"
-                          defaultValue={project.shoot_date ?? ""}
-                          key={project.id + "-date"}
+                        <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
                           onBlur={(e) => save({ shoot_date: e.target.value || null })}
-                          className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors"
-                        />
-                        <TimePickerInput
-                          value={project.shoot_time ?? "09:00"}
-                          onChange={(v) => save({ shoot_time: v })}
-                          className="shrink-0"
-                        />
+                          className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors" />
+                        <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => save({ shoot_time: v })} className="shrink-0" />
                         {project.shoot_date && (
                           <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
                             {isOverdue ? "Overdue" : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
@@ -367,43 +594,36 @@ export function ProjectDetailSheet({
                         )}
                       </div>
                     </div>
-
-                    {/* Location */}
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Localização</Label>
-                      <InlineField
-                        label="Localização"
-                        value={project.location ?? ""}
-                        placeholder="Adicionar localização…"
-                        icon={<MapPin className="h-3.5 w-3.5" />}
-                        onSave={(v) => save({ location: v || null } as any)}
-                      />
+                      <InlineField label="Localização" value={project.location ?? ""} placeholder="Adicionar localização…"
+                        icon={<MapPin className="h-3.5 w-3.5" />} onSave={(v) => save({ location: v || null } as any)} />
                     </div>
                   </div>
                 </div>
 
                 <Separator />
 
-                {/* Deadline section */}
-                {renderDeadlineSection() && (
+                {/* Deadline */}
+                {deadlineSection && (
                   <>
-                    {renderDeadlineSection()}
+                    {deadlineSection}
                     <Separator />
                   </>
                 )}
+
+                {/* Payments */}
+                <PaymentsSection project={project} photographerId={photographerId} />
+
+                <Separator />
 
                 {/* Notes */}
                 <div>
                   <SectionLabel>Notas</SectionLabel>
                   <textarea
-                    key={project.id + "-notes"}
-                    defaultValue={project.notes ?? ""}
-                    onBlur={(e) => {
-                      const v = e.target.value;
-                      if (v !== (project.notes ?? "")) save({ notes: v || null });
-                    }}
-                    rows={5}
-                    placeholder="Escreva uma nota…"
+                    key={project.id + "-notes"} defaultValue={project.notes ?? ""}
+                    onBlur={(e) => { const v = e.target.value; if (v !== (project.notes ?? "")) save({ notes: v || null }); }}
+                    rows={5} placeholder="Escreva uma nota…"
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                   />
                 </div>
@@ -412,65 +632,36 @@ export function ProjectDetailSheet({
                 <div>
                   <SectionLabel>Descrição</SectionLabel>
                   <textarea
-                    key={project.id + "-desc"}
-                    defaultValue={project.description ?? ""}
-                    onBlur={(e) => {
-                      const v = e.target.value;
-                      if (v !== (project.description ?? "")) save({ description: v || null } as any);
-                    }}
-                    rows={3}
-                    placeholder="Detalhes do projeto, briefing, referências…"
+                    key={project.id + "-desc"} defaultValue={project.description ?? ""}
+                    onBlur={(e) => { const v = e.target.value; if (v !== (project.description ?? "")) save({ description: v || null } as any); }}
+                    rows={3} placeholder="Detalhes do projeto, briefing, referências…"
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                   />
                 </div>
               </div>
 
-              {/* ── RIGHT column — Project Details panel ── */}
+              {/* RIGHT column — Project Details panel */}
               <div className="flex flex-col gap-0 bg-muted/30 rounded-md border border-border/50 overflow-hidden self-start">
                 <div className="px-3 py-2.5 border-b border-border/50 bg-muted/40">
                   <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-medium">Detalhes do projeto</p>
                 </div>
 
                 <div className="flex flex-col divide-y divide-border/40">
-                  {/* Client */}
                   <div className="px-3 py-2.5">
                     <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Cliente</p>
-                    <InlineField
-                      label="Nome"
-                      value={project.client_name}
-                      placeholder="Adicionar cliente…"
-                      icon={<User className="h-3.5 w-3.5" />}
-                      onSave={(v) => save({ client_name: v })}
-                    />
+                    <InlineField label="Nome" value={project.client_name} placeholder="Adicionar cliente…"
+                      icon={<User className="h-3.5 w-3.5" />} onSave={(v) => save({ client_name: v })} />
                   </div>
-
-                  {/* Email */}
                   <div className="px-3 py-2.5">
                     <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">E-mail</p>
-                    <InlineField
-                      label="E-mail"
-                      value={project.client_email ?? ""}
-                      placeholder="Adicionar e-mail…"
-                      type="email"
-                      icon={<Mail className="h-3.5 w-3.5" />}
-                      onSave={(v) => save({ client_email: v || null })}
-                    />
+                    <InlineField label="E-mail" value={project.client_email ?? ""} placeholder="Adicionar e-mail…"
+                      type="email" icon={<Mail className="h-3.5 w-3.5" />} onSave={(v) => save({ client_email: v || null })} />
                   </div>
-
-                  {/* Phone */}
                   <div className="px-3 py-2.5">
                     <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Telefone</p>
-                    <InlineField
-                      label="Telefone"
-                      value={project.client_phone ?? ""}
-                      placeholder="Adicionar telefone…"
-                      type="tel"
-                      icon={<Phone className="h-3.5 w-3.5" />}
-                      onSave={(v) => save({ client_phone: v || null } as any)}
-                    />
+                    <InlineField label="Telefone" value={project.client_phone ?? ""} placeholder="Adicionar telefone…"
+                      type="tel" icon={<Phone className="h-3.5 w-3.5" />} onSave={(v) => save({ client_phone: v || null } as any)} />
                   </div>
-
-                  {/* Session type read-only display */}
                   {project.session_type && (
                     <div className="px-3 py-2.5">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Tipo de sessão</p>
@@ -480,8 +671,6 @@ export function ProjectDetailSheet({
                       </div>
                     </div>
                   )}
-
-                  {/* Date */}
                   {project.shoot_date && (
                     <div className="px-3 py-2.5">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Data da sessão</p>
@@ -499,8 +688,6 @@ export function ProjectDetailSheet({
                       </div>
                     </div>
                   )}
-
-                  {/* Location */}
                   {project.location && (
                     <div className="px-3 py-2.5">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Localização</p>
@@ -510,8 +697,6 @@ export function ProjectDetailSheet({
                       </div>
                     </div>
                   )}
-
-                  {/* Metadata */}
                   <div className="px-3 py-2.5">
                     <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Criado em</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -525,39 +710,23 @@ export function ProjectDetailSheet({
 
             <Separator className="mt-5" />
 
-            {/* ── Actions footer ── */}
+            {/* Actions footer */}
             <div className="flex items-center justify-between gap-2 pt-4">
               {isArchived ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => { onUnarchive(project.id); onOpenChange(false); }}
-                >
-                  <ArchiveRestore className="h-3.5 w-3.5" />
-                  Restaurar
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                  onClick={() => { onUnarchive(project.id); onOpenChange(false); }}>
+                  <ArchiveRestore className="h-3.5 w-3.5" /> Restaurar
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => { onArchive(project.id); onOpenChange(false); }}
-                >
-                  <Archive className="h-3.5 w-3.5" />
-                  Arquivar
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                  onClick={() => { onArchive(project.id); onOpenChange(false); }}>
+                  <Archive className="h-3.5 w-3.5" /> Arquivar
                 </Button>
               )}
-
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Excluir
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-3.5 w-3.5" /> Excluir
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -571,8 +740,7 @@ export function ProjectDetailSheet({
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => { onDelete(project.id); onOpenChange(false); }}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                       Excluir
                     </AlertDialogAction>
                   </AlertDialogFooter>
