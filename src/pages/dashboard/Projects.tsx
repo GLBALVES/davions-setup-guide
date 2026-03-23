@@ -231,11 +231,11 @@ function KanbanCard({
     if (!effectiveDeadline) return null;
     const d = parseISO(effectiveDeadline);
     const now = new Date();
-    if (isPast(d)) return "Prazo vencido";
+    if (isPast(d)) return p_t.deadlineOverdue;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h restantes`;
+    if (h < 24) return p_t.deadlineHoursLeft(h);
     const days = differenceInDays(d, now);
-    return `${days}d restantes`;
+    return p_t.deadlineDaysLeft(days);
   })();
 
   // Human-readable gallery expiry label
@@ -243,11 +243,11 @@ function KanbanCard({
     if (!project.gallery_expires_at || !galleryExpiryStatus) return null;
     const d = parseISO(project.gallery_expires_at);
     const now = new Date();
-    if (isPast(d)) return "Expirada";
+    if (isPast(d)) return p_t.galleryExpired;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h p/ expirar`;
+    if (h < 24) return p_t.galleryExpiresHours(h);
     const days = differenceInDays(d, now);
-    return `${days}d p/ expirar`;
+    return p_t.galleryExpiresDays(days);
   })();
 
   return (
