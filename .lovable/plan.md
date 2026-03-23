@@ -1,47 +1,100 @@
 
-## Root Cause Analysis
+## Problem Identified
 
-The console errors show two problems:
+There are **3 places** where stage labels are hardcoded in Portuguese instead of using translations:
 
-1. **`Cross-Origin Request Blocked` to `https://davions.com/~api/analytics`** — This is NOT code from the application. The URL `~api/analytics` is specific to **Cloudflare Web Analytics** (formerly called Browser Insights). It is injected automatically by Cloudflare when the `davions.com` domain has Web Analytics enabled in the Cloudflare dashboard. When a visitor accesses the photographer's custom domain (`davions.giombelli.com.br`), the app bundle (served via davions.com's CDN) includes the Cloudflare analytics beacon script, which then tries to report back to `davions.com/~api/analytics`. Since the page origin is `davions.giombelli.com.br`, the browser blocks it as cross-origin.
+### 1. `STAGES` constant — module level (lines 81–87)
+```ts
+const STAGES = [
+  { key: "upcoming", label: "Próximas sessões", ... },
+  { key: "shot",     label: "Fotografadas",     ... },
+  ...
+]
+```
+This is a **module-level constant**, so `useLanguage()` can't be used here. The `stage.label` value is then rendered directly in the column header (`KanbanColumn`, line 447) and in the summary pills (line 1392).
 
-2. **`Cookie "__cf_bm" has been rejected for invalid domain`** — Cloudflare's bot-management cookie (`__cf_bm`) is set for `davions.com` but the visitor's current origin is `davions.giombelli.com.br`, so the browser rejects the cookie as invalid for that domain. This is a side-effect of the same Cloudflare configuration.
+### 2. `stageLabels` in `ProjectModal` (lines 637–640)
+```ts
+const stageLabels = {
+  upcoming: "Próximas sessões", shot: "Fotografadas", ...
+}
+```
+Used in the `<Select>` dropdown for stage selection. Already inside a component but not using translations.
 
-### What is NOT causing the error
-- No code in the app makes a request to `~api/analytics` or `davions.com` for analytics
-- The Supabase `trackPageview` function is clean and posts to Supabase only
-- There are no `gtag`, `fbq`, or custom analytics injection scripts in the codebase
+### 3. `stageLabels` in `ListView` (lines 753–756)
+```ts
+const stageLabels = {
+  upcoming: "Próximas sessões", shot: "Fotografadas", ...
+}
+```
+Used to render the stage badge on each row. Already inside a component but not using translations.
 
-### The actual source
-Cloudflare Web Analytics injects a JS beacon (`<script src='https://static.cloudflare.com/beacon.min.js' ...>`) at the **network edge** (directly into the HTML response). This happens transparently outside the application code — the Lovable CDN / Cloudflare processes the HTML and injects it. It is not visible in the source code.
+---
 
-### Fix options
+## Solution
 
-**Option A — Disable Cloudflare Web Analytics for the davions.com zone** (correct long-term fix)
-- Go to Cloudflare dashboard → davions.com zone → Analytics & Logs → Web Analytics → disable the automatic injection
-- This stops the beacon from being injected entirely
-- **Cannot be done via code** — requires Cloudflare dashboard access
+The fix is straightforward — no new translation keys needed (they all exist already in all 3 languages under `t.projects.upcoming`, `t.projects.shot`, etc.).
 
-**Option B — CSP/meta tag to block the beacon from loading on custom domains** (partial mitigation)
-- Add a `Content-Security-Policy` meta tag in the `<head>` when running on a custom domain that blocks `davions.com` connections
-- This would suppress the errors but is complex and may have side effects
+### Fix 1 — `STAGES` constant: remove labels, resolve at render time
 
-**Option C — No code change needed; document the fix**
-The correct action is entirely in the Cloudflare dashboard:
-1. Log in to Cloudflare → select `davions.com` zone
-2. Go to **Analytics & Logs → Web Analytics**
-3. Find the site and **disable "Automatic setup"** (inject via Workers/edge) OR disable Web Analytics entirely for this zone
-4. Alternatively, in the beacon settings, restrict it to only fire on the `davions.com` hostname (not custom domains)
+Keep `STAGES` as a pure array of `{ key, color }` (no `label`). Then resolve labels from `t.projects[key]` wherever the stage label is rendered. Two render sites:
 
-### Why the errors are functionally harmless
-- The photographer's site still loads and functions correctly
-- The CORS error means Cloudflare analytics simply fails silently — no user-facing breakage
-- The cookie rejection is a cosmetic browser warning
+**Column header** (`KanbanColumn`, line 447):
+```tsx
+<span>{t.projects[stage.key as keyof typeof t.projects] as string ?? stage.key}</span>
+```
 
-### Recommendation
-This is a **Cloudflare dashboard configuration issue**, not a code bug. The fix is:
+**Summary pills** (main `Projects` page, line 1392):
+```tsx
+<span>{p_t[s.key as keyof typeof p_t] as string ?? s.key}</span>
+```
 
-1. Go to Cloudflare → davions.com → Web Analytics → disable automatic injection
-2. If analytics are still desired, use manual Google Analytics (via the `google_analytics_id` field already in the photographer_site settings) injected only for the photographer's own domain — which the code already supports
+Alternatively — simpler and cleaner — build a `stageLabels` inside `KanbanColumn` and in the main page using `t.projects`.
 
-The application code is correct. No file changes are needed.
+### Fix 2 — `ProjectModal` `stageLabels`
+
+Replace hardcoded object with:
+```tsx
+const stageLabels: Record<string, string> = {
+  upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery,
+  post_production: p_t.post_production, final_gallery: p_t.final_gallery,
+};
+```
+
+### Fix 3 — `ListView` `stageLabels`
+
+Same as Fix 2:
+```tsx
+const stageLabels: Record<string, string> = {
+  upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery,
+  post_production: p_t.post_production, final_gallery: p_t.final_gallery,
+};
+```
+
+### Fix 4 — `KanbanColumn` column header label
+
+The column header renders `{stage.label}` from the STAGES object (line 447). Since `STAGES` will remain with hardcoded labels (it's module-level), we need the column component to resolve the label from translations instead.
+
+Add a `stageLabels` lookup inside `KanbanColumn`:
+```tsx
+const stageLabels: Record<string, string> = {
+  upcoming: t.projects.upcoming, shot: t.projects.shot,
+  proof_gallery: t.projects.proof_gallery,
+  post_production: t.projects.post_production,
+  final_gallery: t.projects.final_gallery,
+};
+// Then render:
+<span>{stageLabels[stage.key] ?? stage.label}</span>
+```
+
+---
+
+## Files to Edit
+
+- `src/pages/dashboard/Projects.tsx` only — 4 targeted line edits:
+  1. `KanbanColumn` body: add `stageLabels` lookup and use it in the header (line 447)
+  2. `ProjectModal` body: replace hardcoded `stageLabels` with translation-based one (lines 637–640)
+  3. `ListView` body: replace hardcoded `stageLabels` with translation-based one (lines 753–756)
+  4. Main `Projects` component summary pills: replace `s.label` with `p_t[s.key]` lookup (line 1392)
+
+No translation keys need to be added — all keys exist in EN, PT, and ES. The fix is entirely in `Projects.tsx`.
