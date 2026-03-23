@@ -971,8 +971,9 @@ const Projects = () => {
     if (data) setSessionTypes(data as SessionType[]);
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async (silent = false) => {
     if (!photographerId) return;
+    if (silent) setRefreshing(true);
 
     // 1. Fetch existing projects
     const { data: existingProjects, error } = await supabase
