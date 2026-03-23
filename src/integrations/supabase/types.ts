@@ -598,6 +598,7 @@ export type Database = {
           position: number
           session_type: string | null
           shoot_date: string | null
+          shoot_time: string | null
           stage: string
           title: string
           updated_at: string
@@ -615,6 +616,7 @@ export type Database = {
           position?: number
           session_type?: string | null
           shoot_date?: string | null
+          shoot_time?: string | null
           stage?: string
           title?: string
           updated_at?: string
@@ -632,6 +634,7 @@ export type Database = {
           position?: number
           session_type?: string | null
           shoot_date?: string | null
+          shoot_time?: string | null
           stage?: string
           title?: string
           updated_at?: string
