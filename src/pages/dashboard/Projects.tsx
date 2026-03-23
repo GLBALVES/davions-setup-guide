@@ -144,10 +144,8 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
-  // Compute effective deadline:
-  // 1. Per-card gallery_deadline (absolute date string) takes priority
-  // 2. Otherwise: shoot_date + column-level days
-  const effectiveDeadline = (() => {
+  // Compute effective deadline for "shot" stage
+  const shotEffectiveDeadline = (() => {
     if (project.stage !== "shot") return null;
     if (project.gallery_deadline) return project.gallery_deadline;
     if (shotDeadlineDays != null && project.shoot_date) {
@@ -162,12 +160,30 @@ function KanbanCard({
     }
     return null;
   })();
-  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
+
+  // Compute effective deadline for "post_production" stage
+  const postProdEffectiveDeadline = (() => {
+    if (project.stage !== "post_production") return null;
+    if (postProdDeadlineDays != null && project.shoot_date) {
+      try {
+        const shoot = new Date(project.shoot_date);
+        if (!isNaN(shoot.getTime())) {
+          const d = new Date(shoot);
+          d.setDate(d.getDate() + postProdDeadlineDays);
+          return d.toISOString();
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  })();
+
+  const effectiveDeadline = shotEffectiveDeadline ?? postProdEffectiveDeadline;
+  const deadlineStatus = effectiveDeadline ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
   // Human-readable deadline label
   const deadlineLabel = (() => {
-    if (!effectiveDeadline || project.stage !== "shot") return null;
+    if (!effectiveDeadline) return null;
     const d = parseISO(effectiveDeadline);
     const now = new Date();
     if (isPast(d)) return "Prazo vencido";
@@ -176,6 +192,8 @@ function KanbanCard({
     const days = differenceInDays(d, now);
     return `${days}d restantes`;
   })();
+
+  const deadlineStagLabel = project.stage === "shot" ? "Galeria:" : "Entrega:";
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
