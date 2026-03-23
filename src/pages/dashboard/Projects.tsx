@@ -444,7 +444,7 @@ function KanbanColumn({
             className="h-2 w-2 rounded-full shrink-0"
             style={{ background: stage.color }}
           />
-          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{stage.label}</span>
+          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{({ upcoming: t.projects.upcoming, shot: t.projects.shot, proof_gallery: t.projects.proof_gallery, post_production: t.projects.post_production, final_gallery: t.projects.final_gallery } as Record<string,string>)[stage.key] ?? stage.label}</span>
           <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
