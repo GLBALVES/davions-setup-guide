@@ -20,7 +20,7 @@ import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
-  Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Phone, Mail, User, FileText,
+  Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Mail, User, FileText,
   Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
   Paperclip, Download, File, Image, FileText as FileTextIcon, Loader2, UploadCloud,
 } from "lucide-react";
@@ -33,6 +33,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
+
+const STAGE_KEYS: Stage[] = ["upcoming", "shot", "proof_gallery", "post_production", "final_gallery"];
 
 const STAGE_COLORS: Record<Stage, string> = {
   upcoming:        "bg-muted/60 text-muted-foreground border-border",
@@ -60,13 +62,23 @@ interface ProjectInvoice {
   updated_at: string;
 }
 
-// Static style configs (labels translated inline in components)
+// Static style configs — colors only, labels come from translations
 const INVOICE_STATUS_STYLES: Record<InvoiceStatus, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
   pending:   { color: "text-amber-600",        bg: "bg-amber-500/10 border-amber-500/20",       icon: Clock },
   paid:      { color: "text-emerald-600",      bg: "bg-emerald-500/10 border-emerald-500/20",   icon: CheckCircle2 },
   partial:   { color: "text-blue-600",         bg: "bg-blue-500/10 border-blue-500/20",         icon: CreditCard },
   overdue:   { color: "text-destructive",      bg: "bg-destructive/10 border-destructive/20",   icon: AlertTriangle },
   cancelled: { color: "text-muted-foreground", bg: "bg-muted/40 border-border/40",              icon: XCircle },
+};
+
+// Document category colors only — labels from translations
+type DocCategory = "contract" | "invoice" | "reference" | "other";
+
+const DOC_CATEGORY_COLORS: Record<DocCategory, string> = {
+  contract:  "text-purple-600 bg-purple-500/10 border-purple-500/20",
+  invoice:   "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+  reference: "text-blue-600 bg-blue-500/10 border-blue-500/20",
+  other:     "text-muted-foreground bg-muted/40 border-border/40",
 };
 
 export interface ProjectSheetData {
@@ -154,6 +166,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ── Payments section component ──
 function PaymentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const { t } = useLanguage();
+  const tp = t.projects;
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -166,6 +180,14 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formPaid, setFormPaid]       = useState("");
 
   const qKey = ["project-invoices", project.id];
+
+  const invoiceStatusLabels: Record<InvoiceStatus, string> = {
+    pending:   tp.invoiceStatusPending,
+    paid:      tp.invoiceStatusPaid,
+    partial:   tp.invoiceStatusPartial,
+    overdue:   tp.invoiceStatusOverdue,
+    cancelled: tp.invoiceStatusCancelled,
+  };
 
   const { data: invoices = [] } = useQuery<ProjectInvoice[]>({
     queryKey: qKey,
@@ -186,7 +208,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       const { error } = await supabase.from("project_invoices" as any).insert({
         project_id:      project.id,
         photographer_id: photographerId,
-        description:     formDesc.trim() || "Serviço",
+        description:     formDesc.trim() || tp.chargeDescription,
         amount:          parseFloat(formAmount) || 0,
         status:          formStatus,
         due_date:        formDue || null,
@@ -197,11 +219,11 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
-      toast.success("Cobrança adicionada");
+      toast.success(tp.chargeAdded);
       setShowForm(false);
       setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
     },
-    onError: () => toast.error("Erro ao adicionar cobrança"),
+    onError: () => toast.error(tp.errorAddingCharge),
   });
 
   const updateStatusMutation = useMutation({
@@ -223,11 +245,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
-      toast.success("Cobrança removida");
+      toast.success(tp.chargeRemoved);
     },
   });
 
-  // Financial summary
   const totalAmount  = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const totalPaid    = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
   const totalBalance = totalAmount - totalPaid;
@@ -237,22 +258,22 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <SectionLabel>Pagamentos</SectionLabel>
+        <SectionLabel>{tp.paymentsSection}</SectionLabel>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
         >
-          <Plus className="h-3 w-3" /> Nova cobrança
+          <Plus className="h-3 w-3" /> {tp.newCharge}
         </button>
       </div>
 
-      {/* Summary bar — only shown when there are invoices */}
+      {/* Summary bar */}
       {invoices.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "Total",    value: totalAmount,  color: "text-foreground" },
-            { label: "Recebido", value: totalPaid,    color: "text-emerald-600" },
-            { label: "Saldo",    value: totalBalance, color: totalBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
+            { label: tp.chargeTotal,    value: totalAmount,  color: "text-foreground" },
+            { label: tp.chargeReceived, value: totalPaid,    color: "text-emerald-600" },
+            { label: tp.chargeBalance,  value: totalBalance, color: totalBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center rounded-md border border-border/50 bg-muted/20 py-2 px-1">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</span>
@@ -265,40 +286,40 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       {/* Add invoice form */}
       {showForm && (
         <div className="rounded-md border border-border/60 bg-muted/20 p-3 flex flex-col gap-2.5">
-          <p className="text-xs font-medium">Nova cobrança</p>
+          <p className="text-xs font-medium">{tp.newChargeTitle}</p>
 
           <div className="flex flex-col gap-1">
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Descrição</Label>
-            <Input placeholder="Ex: Pacote Básico de Fotos" value={formDesc}
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDescription}</Label>
+            <Input placeholder={tp.descriptionPlaceholder} value={formDesc}
               onChange={(e) => setFormDesc(e.target.value)} className="h-7 text-xs" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor (R$)</Label>
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeAmount}</Label>
               <Input type="number" placeholder="0,00" min={0} value={formAmount}
                 onChange={(e) => setFormAmount(e.target.value)} className="h-7 text-xs" />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Vencimento</Label>
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDueDate}</Label>
               <Input type="date" value={formDue} onChange={(e) => setFormDue(e.target.value)} className="h-7 text-xs" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</Label>
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeStatus}</Label>
               <Select value={formStatus} onValueChange={(v) => setFormStatus(v as InvoiceStatus)}>
                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(INVOICE_STATUS_CONFIG) as InvoiceStatus[]).map((k) => (
-                    <SelectItem key={k} value={k} className="text-xs">{INVOICE_STATUS_CONFIG[k].label}</SelectItem>
+                  {(Object.keys(INVOICE_STATUS_STYLES) as InvoiceStatus[]).map((k) => (
+                    <SelectItem key={k} value={k} className="text-xs">{invoiceStatusLabels[k]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Valor pago (R$)</Label>
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargePaidAmount}</Label>
               <Input type="number" placeholder="0,00" min={0} value={formPaid}
                 onChange={(e) => setFormPaid(e.target.value)} className="h-7 text-xs" />
             </div>
@@ -307,35 +328,34 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
               onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid(""); }}>
-              Cancelar
+              {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
               disabled={addMutation.isPending || !formAmount}>
-              {addMutation.isPending ? "Salvando…" : "Adicionar"}
+              {addMutation.isPending ? tp.chargeSaving : tp.chargeSave}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Invoice list */}
+      {/* Empty state */}
       {invoices.length === 0 && !showForm && (
         <div className="flex flex-col items-center gap-1.5 py-5 border border-dashed border-border/50 rounded-md">
           <DollarSign className="h-6 w-6 text-muted-foreground/30" />
-          <p className="text-xs text-muted-foreground/50">Nenhuma cobrança registrada</p>
+          <p className="text-xs text-muted-foreground/50">{tp.noChargesRecorded}</p>
         </div>
       )}
 
       <div className="flex flex-col gap-2">
         {invoices.map((inv) => {
-          const cfg     = INVOICE_STATUS_CONFIG[inv.status] ?? INVOICE_STATUS_CONFIG.pending;
-          const Icon    = cfg.icon;
-          const isOpen  = expandedId === inv.id;
+          const cfg    = INVOICE_STATUS_STYLES[inv.status] ?? INVOICE_STATUS_STYLES.pending;
+          const Icon   = cfg.icon;
+          const isOpen = expandedId === inv.id;
           const balance = Number(inv.amount) - Number(inv.paid_amount);
-          const isDue   = inv.due_date && isPast(parseISO(inv.due_date)) && inv.status !== "paid" && inv.status !== "cancelled";
+          const isDue  = inv.due_date && isPast(parseISO(inv.due_date)) && inv.status !== "paid" && inv.status !== "cancelled";
 
           return (
             <div key={inv.id} className={cn("rounded-md border transition-colors", cfg.bg)}>
-              {/* Row */}
               <div className="flex items-center gap-2 px-3 py-2 cursor-pointer"
                 onClick={() => setExpandedId(isOpen ? null : inv.id)}>
                 <Icon className={cn("h-3.5 w-3.5 shrink-0", cfg.color)} />
@@ -345,31 +365,30 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                     <span className="text-[10px] text-muted-foreground tabular-nums">{fmt(Number(inv.amount))}</span>
                     {inv.due_date && (
                       <span className={cn("text-[10px]", isDue ? "text-destructive font-medium" : "text-muted-foreground/60")}>
-                        · {isDue ? "Vencido " : ""}{format(parseISO(inv.due_date), "d MMM")}
+                        · {isDue ? `${tp.chargeDue} ` : ""}{format(parseISO(inv.due_date), "d MMM")}
                       </span>
                     )}
                   </div>
                 </div>
                 <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfg.bg, cfg.color)}>
-                  {cfg.label}
+                  {invoiceStatusLabels[inv.status]}
                 </span>
                 {isOpen ? <ChevronUp className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />}
               </div>
 
-              {/* Expanded detail */}
               {isOpen && (
                 <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2.5 bg-background/50 rounded-b-md">
                   <div className="grid grid-cols-3 gap-2 text-[10px]">
                     <div>
-                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Valor</p>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">{tp.chargeValue}</p>
                       <p className="font-semibold tabular-nums">{fmt(Number(inv.amount))}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Pago</p>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">{tp.chargePaid}</p>
                       <p className="font-semibold tabular-nums text-emerald-600">{fmt(Number(inv.paid_amount))}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">Saldo</p>
+                      <p className="text-muted-foreground uppercase tracking-wider mb-0.5">{tp.chargeBalance}</p>
                       <p className={cn("font-semibold tabular-nums", balance > 0 ? "text-amber-600" : "text-muted-foreground")}>
                         {fmt(balance)}
                       </p>
@@ -378,25 +397,24 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
                   {inv.due_date && (
                     <p className="text-[10px] text-muted-foreground">
-                      Vencimento: <span className={cn("font-medium", isDue ? "text-destructive" : "text-foreground")}>
-                        {format(parseISO(inv.due_date), "d 'de' MMMM 'de' yyyy")}
+                      {tp.chargeDueDate}: <span className={cn("font-medium", isDue ? "text-destructive" : "text-foreground")}>
+                        {format(parseISO(inv.due_date), "d MMM yyyy")}
                       </span>
                     </p>
                   )}
                   {inv.paid_at && (
                     <p className="text-[10px] text-muted-foreground">
-                      Recebido em: <span className="font-medium text-foreground">{format(parseISO(inv.paid_at), "d MMM yyyy")}</span>
+                      {tp.chargeReceived}: <span className="font-medium text-foreground">{format(parseISO(inv.paid_at), "d MMM yyyy")}</span>
                     </p>
                   )}
 
-                  {/* Status quick-actions */}
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {inv.status !== "paid" && (
                       <button
                         onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "paid", paid_amount: Number(inv.amount) })}
                         className="text-[10px] px-2 py-0.5 rounded-sm border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
                       >
-                        ✓ Marcar como pago
+                        {tp.markAsPaid}
                       </button>
                     )}
                     {inv.status !== "overdue" && inv.status !== "paid" && inv.status !== "cancelled" && (
@@ -404,7 +422,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "overdue" })}
                         className="text-[10px] px-2 py-0.5 rounded-sm border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                       >
-                        Marcar vencido
+                        {tp.markOverdue}
                       </button>
                     )}
                     {inv.status !== "cancelled" && inv.status !== "paid" && (
@@ -412,14 +430,14 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "cancelled" })}
                         className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        Cancelar
+                        {tp.cancelCharge}
                       </button>
                     )}
                     <button
                       onClick={() => deleteMutation.mutate(inv.id)}
                       className="ml-auto text-[10px] text-destructive/60 hover:text-destructive transition-colors"
                     >
-                      Excluir
+                      {tp.deleteCharge}
                     </button>
                   </div>
                 </div>
@@ -431,16 +449,6 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     </div>
   );
 }
-
-// ── Document category config ──
-type DocCategory = "contract" | "invoice" | "reference" | "other";
-
-const DOC_CATEGORY_CONFIG: Record<DocCategory, { label: string; color: string }> = {
-  contract:  { label: "Contrato",   color: "text-purple-600 bg-purple-500/10 border-purple-500/20" },
-  invoice:   { label: "Nota/Fatura", color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20" },
-  reference: { label: "Referência", color: "text-blue-600 bg-blue-500/10 border-blue-500/20" },
-  other:     { label: "Outro",      color: "text-muted-foreground bg-muted/40 border-border/40" },
-};
 
 interface ProjectDocument {
   id: string;
@@ -468,11 +476,20 @@ function getFileIcon(fileType: string) {
 }
 
 function DocumentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const { t } = useLanguage();
+  const tp = t.projects;
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<DocCategory>("other");
   const [dragOver, setDragOver] = useState(false);
+
+  const docCategoryLabels: Record<DocCategory, string> = {
+    contract:  tp.docCategoryContract,
+    invoice:   tp.docCategoryInvoice,
+    reference: tp.docCategoryReference,
+    other:     tp.docCategoryOther,
+  };
 
   const qKey = ["project-documents", project.id];
 
@@ -492,17 +509,15 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
   const deleteMutation = useMutation({
     mutationFn: async (doc: ProjectDocument) => {
-      // Remove from storage
       await supabase.storage.from("project-documents").remove([doc.storage_path]);
-      // Remove from DB
       const { error } = await supabase.from("project_documents" as any).delete().eq("id", doc.id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
-      toast.success("Documento removido");
+      toast.success(tp.docRemoved);
     },
-    onError: () => toast.error("Erro ao remover documento"),
+    onError: () => toast.error(tp.errorRemovingDoc),
   });
 
   const handleUpload = async (files: FileList | null) => {
@@ -517,7 +532,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
           .from("project-documents")
           .upload(storagePath, file, { upsert: false });
 
-        if (uploadError) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+        if (uploadError) { toast.error(tp.errorUploadingFile(file.name)); continue; }
 
         const { data: urlData } = supabase.storage.from("project-documents").getPublicUrl(storagePath);
 
@@ -532,10 +547,10 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
           category:        selectedCategory,
         } as any);
 
-        if (dbError) toast.error(`Erro ao registrar ${file.name}`);
+        if (dbError) toast.error(tp.errorRegisteringFile(file.name));
       }
       queryClient.invalidateQueries({ queryKey: qKey });
-      toast.success(files.length === 1 ? "Documento adicionado" : `${files.length} documentos adicionados`);
+      toast.success(files.length === 1 ? tp.docAdded : tp.docsAdded(files.length));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -545,16 +560,15 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <SectionLabel>Documentos</SectionLabel>
-        {/* Category selector + upload button */}
+        <SectionLabel>{tp.documentsSection}</SectionLabel>
         <div className="flex items-center gap-1.5">
           <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as DocCategory)}>
             <SelectTrigger className="h-6 text-[10px] w-28 px-2 border-border/50">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(DOC_CATEGORY_CONFIG) as DocCategory[]).map((k) => (
-                <SelectItem key={k} value={k} className="text-xs">{DOC_CATEGORY_CONFIG[k].label}</SelectItem>
+              {(Object.keys(DOC_CATEGORY_COLORS) as DocCategory[]).map((k) => (
+                <SelectItem key={k} value={k} className="text-xs">{docCategoryLabels[k]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -564,7 +578,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
             {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-            Anexar
+            {tp.attach}
           </button>
           <input
             ref={fileInputRef}
@@ -590,16 +604,16 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         )}
       >
         {uploading ? (
-          <><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /><p className="text-[11px] text-muted-foreground">Enviando…</p></>
+          <><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /><p className="text-[11px] text-muted-foreground">{tp.uploading}</p></>
         ) : documents.length === 0 ? (
           <>
             <UploadCloud className="h-6 w-6 text-muted-foreground/40" />
-            <p className="text-[11px] text-muted-foreground/60">Arraste arquivos aqui ou clique para anexar</p>
-            <p className="text-[10px] text-muted-foreground/40">PDF, Word, Excel, imagens</p>
+            <p className="text-[11px] text-muted-foreground/60">{tp.dragFilesHere}</p>
+            <p className="text-[10px] text-muted-foreground/40">{tp.supportedFormats}</p>
           </>
         ) : (
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
-            <Paperclip className="h-3 w-3" /> Clique ou arraste para adicionar mais
+            <Paperclip className="h-3 w-3" /> {tp.clickOrDragMore}
           </div>
         )}
       </div>
@@ -608,15 +622,15 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       {documents.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {documents.map((doc) => {
-            const catCfg = DOC_CATEGORY_CONFIG[doc.category] ?? DOC_CATEGORY_CONFIG.other;
+            const catColor = DOC_CATEGORY_COLORS[doc.category] ?? DOC_CATEGORY_COLORS.other;
             return (
               <div key={doc.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group">
                 {getFileIcon(doc.file_type)}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-sm border font-medium", catCfg.color)}>
-                      {catCfg.label}
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-sm border font-medium", catColor)}>
+                      {docCategoryLabels[doc.category] ?? doc.category}
                     </span>
                     <span className="text-[10px] text-muted-foreground/60">{formatBytes(doc.file_size)}</span>
                     <span className="text-[10px] text-muted-foreground/40">{format(new Date(doc.created_at), "d MMM")}</span>
@@ -630,28 +644,28 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
                     download={doc.name}
                     onClick={(e) => e.stopPropagation()}
                     className="p-1 rounded-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title="Baixar"
+                    title={tp.download}
                   >
                     <Download className="h-3.5 w-3.5" />
                   </a>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <button className="p-1 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Remover">
+                      <button className="p-1 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title={tp.removeDocument}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remover documento?</AlertDialogTitle>
-                        <AlertDialogDescription>"{doc.name}" será removido permanentemente.</AlertDialogDescription>
+                        <AlertDialogTitle>{tp.removeDocument}</AlertDialogTitle>
+                        <AlertDialogDescription>{tp.removeDocumentConfirm(doc.name)}</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel>{tp.chargeCancel}</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => deleteMutation.mutate(doc)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                          Remover
+                          {tp.remove}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -670,7 +684,18 @@ export function ProjectDetailSheet({
   project, open, onOpenChange, onUpdate, onDelete, onArchive, onUnarchive,
   photographerId, sessionTypes, onRefetchSessionTypes,
 }: Props) {
+  const { t } = useLanguage();
+  const tp = t.projects;
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
+
+  // Build STAGES from translations
+  const STAGES: { key: Stage; label: string }[] = [
+    { key: "upcoming",        label: tp.upcoming },
+    { key: "shot",            label: tp.shot },
+    { key: "proof_gallery",   label: tp.proof_gallery },
+    { key: "post_production", label: tp.post_production },
+    { key: "final_gallery",   label: tp.final_gallery },
+  ];
 
   useEffect(() => {
     if (!project) return;
@@ -693,21 +718,21 @@ export function ProjectDetailSheet({
 
   const renderDeadlineSection = () => {
     if (project.stage !== "shot" && project.stage !== "post_production") return null;
-    const label = project.stage === "shot" ? "Prazo para galeria de prova" : "Prazo para entrega final";
+    const label = project.stage === "shot" ? tp.deadlineProofGallery : tp.deadlineFinalDelivery;
     const deadline = project.gallery_deadline ? parseISO(project.gallery_deadline) : undefined;
     const now = new Date();
     const urgencyBadge = (() => {
       if (!deadline) return null;
       if (isPast(deadline)) return (
         <span className="flex items-center gap-0.5 text-[10px] text-destructive font-medium shrink-0">
-          <AlertTriangle className="h-2.5 w-2.5" /> Vencido
+          <AlertTriangle className="h-2.5 w-2.5" /> {tp.deadlineOverdue}
         </span>
       );
       const h = differenceInHours(deadline, now);
-      if (h < 24) return <span className="text-[10px] text-destructive font-medium shrink-0">{h}h restantes</span>;
+      if (h < 24) return <span className="text-[10px] text-destructive font-medium shrink-0">{tp.hoursRemaining(h)}</span>;
       const d = differenceInDays(deadline, now);
       const color = d <= 3 ? "text-orange-500" : d <= 7 ? "text-yellow-600" : "text-emerald-500";
-      return <span className={cn("text-[10px] font-medium shrink-0", color)}>{d}d restantes</span>;
+      return <span className={cn("text-[10px] font-medium shrink-0", color)}>{tp.daysRemaining(d)}</span>;
     })();
     return (
       <div className="flex flex-col gap-1.5">
@@ -722,7 +747,7 @@ export function ProjectDetailSheet({
                 deadline ? isPast(deadline) ? "border-destructive/50 text-destructive" : "border-input text-foreground hover:border-foreground/40" : "border-input text-muted-foreground/60 hover:border-foreground/40"
               )}>
                 <CalendarIcon className="h-3 w-3 shrink-0" />
-                <span className="text-xs">{deadline ? format(deadline, "d MMM yyyy") : "Definir prazo…"}</span>
+                <span className="text-xs">{deadline ? format(deadline, "d MMM yyyy") : tp.setDeadline}</span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" side="bottom">
@@ -733,7 +758,7 @@ export function ProjectDetailSheet({
                 <div className="px-3 pb-3">
                   <button onClick={() => save({ gallery_deadline: null } as any)}
                     className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm">
-                    Remover prazo
+                    {tp.removeDeadline2}
                   </button>
                 </div>
               )}
@@ -743,7 +768,7 @@ export function ProjectDetailSheet({
         </div>
         {deadline && !isPast(deadline) && project.shoot_date && (
           <p className="text-[10px] text-muted-foreground/60 italic">
-            {differenceInDays(deadline, parseISO(project.shoot_date))}d após a sessão
+            {differenceInDays(deadline, parseISO(project.shoot_date))}{tp.daysAfterSessionSuffix}
           </p>
         )}
       </div>
@@ -766,12 +791,12 @@ export function ProjectDetailSheet({
                 onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) save({ title: v }); }}
                 onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                 className="text-lg font-semibold bg-transparent border-0 border-b border-transparent hover:border-border focus:border-foreground/40 outline-none w-full py-0.5 transition-colors leading-tight"
-                placeholder="Project title"
+                placeholder={tp.title_field}
               />
             </div>
             {isArchived ? (
               <span className={cn("self-start inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0", STAGE_COLORS.archived)}>
-                <Archive className="h-2.5 w-2.5" /> Archived
+                <Archive className="h-2.5 w-2.5" /> {tp.archivedLabel}
               </span>
             ) : (
               <Select value={project.stage} onValueChange={(v) => save({ stage: v as Stage })}>
@@ -797,7 +822,7 @@ export function ProjectDetailSheet({
 
                 {/* Session */}
                 <div>
-                  <SectionLabel>Sessão</SectionLabel>
+                  <SectionLabel>{tp.sessionSection}</SectionLabel>
                   <div className="flex flex-col gap-3">
                     <SessionTypeManager
                       photographerId={photographerId} sessionTypes={sessionTypes}
@@ -811,7 +836,7 @@ export function ProjectDetailSheet({
                       </div>
                     )}
                     <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Data & hora</Label>
+                      <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.dateTime}</Label>
                       <div className="flex items-center gap-2 flex-wrap">
                         <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
                           onBlur={(e) => save({ shoot_date: e.target.value || null })}
@@ -819,14 +844,14 @@ export function ProjectDetailSheet({
                         <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => save({ shoot_time: v })} className="shrink-0" />
                         {project.shoot_date && (
                           <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
-                            {isOverdue ? "Overdue" : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+                            {isOverdue ? tp.overdue : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Localização</Label>
-                      <InlineField label="Localização" value={project.location ?? ""} placeholder="Adicionar localização…"
+                      <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.locationLabel}</Label>
+                      <InlineField label={tp.location} value={project.location ?? ""} placeholder={tp.addLocation}
                         icon={<MapPin className="h-3.5 w-3.5" />} onSave={(v) => save({ location: v || null } as any)} />
                     </div>
                   </div>
@@ -854,22 +879,22 @@ export function ProjectDetailSheet({
 
                 {/* Notes */}
                 <div>
-                  <SectionLabel>Notas</SectionLabel>
+                  <SectionLabel>{tp.notes}</SectionLabel>
                   <textarea
                     key={project.id + "-notes"} defaultValue={project.notes ?? ""}
                     onBlur={(e) => { const v = e.target.value; if (v !== (project.notes ?? "")) save({ notes: v || null }); }}
-                    rows={5} placeholder="Escreva uma nota…"
+                    rows={5} placeholder={tp.notesPlaceholder}
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <SectionLabel>Descrição</SectionLabel>
+                  <SectionLabel>{tp.description}</SectionLabel>
                   <textarea
                     key={project.id + "-desc"} defaultValue={project.description ?? ""}
                     onBlur={(e) => { const v = e.target.value; if (v !== (project.description ?? "")) save({ description: v || null } as any); }}
-                    rows={3} placeholder="Detalhes do projeto, briefing, referências…"
+                    rows={3} placeholder={tp.addDescription}
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                   />
                 </div>
@@ -878,28 +903,28 @@ export function ProjectDetailSheet({
               {/* RIGHT column — Project Details panel */}
               <div className="flex flex-col gap-0 bg-muted/30 rounded-md border border-border/50 overflow-hidden self-start">
                 <div className="px-3 py-2.5 border-b border-border/50 bg-muted/40">
-                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-medium">Detalhes do projeto</p>
+                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-medium">{tp.projectDetails}</p>
                 </div>
 
                 <div className="flex flex-col divide-y divide-border/40">
                   <div className="px-3 py-2.5">
-                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Cliente</p>
-                    <InlineField label="Nome" value={project.client_name} placeholder="Adicionar cliente…"
+                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.clientLabel}</p>
+                    <InlineField label={tp.clientName} value={project.client_name} placeholder={tp.addClientPlaceholder}
                       icon={<User className="h-3.5 w-3.5" />} onSave={(v) => save({ client_name: v })} />
                   </div>
                   <div className="px-3 py-2.5">
-                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">E-mail</p>
-                    <InlineField label="E-mail" value={project.client_email ?? ""} placeholder="Adicionar e-mail…"
+                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.emailLabel}</p>
+                    <InlineField label={tp.email} value={project.client_email ?? ""} placeholder={tp.addEmailPlaceholder}
                       type="email" icon={<Mail className="h-3.5 w-3.5" />} onSave={(v) => save({ client_email: v || null })} />
                   </div>
                   <div className="px-3 py-2.5">
-                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Telefone</p>
-                    <InlineField label="Telefone" value={project.client_phone ?? ""} placeholder="Adicionar telefone…"
-                      type="tel" icon={<Phone className="h-3.5 w-3.5" />} onSave={(v) => save({ client_phone: v || null } as any)} />
+                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.phoneLabel}</p>
+                    <InlineField label={tp.phone} value={project.client_phone ?? ""} placeholder={tp.addPhonePlaceholder}
+                      type="tel" icon={<FileText className="h-3.5 w-3.5" />} onSave={(v) => save({ client_phone: v || null } as any)} />
                   </div>
                   {project.session_type && (
                     <div className="px-3 py-2.5">
-                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Tipo de sessão</p>
+                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.sessionTypeLabel}</p>
                       <div className="flex items-center gap-2 text-sm text-foreground">
                         <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span>{project.session_type}</span>
@@ -908,7 +933,7 @@ export function ProjectDetailSheet({
                   )}
                   {project.shoot_date && (
                     <div className="px-3 py-2.5">
-                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Data da sessão</p>
+                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.shootDateLabel}</p>
                       <div className={cn("flex items-center gap-2 text-sm", isOverdue ? "text-destructive" : "text-foreground")}>
                         <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span>
@@ -925,7 +950,7 @@ export function ProjectDetailSheet({
                   )}
                   {project.location && (
                     <div className="px-3 py-2.5">
-                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Localização</p>
+                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.locationLabel}</p>
                       <div className="flex items-center gap-2 text-sm text-foreground">
                         <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="truncate">{project.location}</span>
@@ -933,7 +958,7 @@ export function ProjectDetailSheet({
                     </div>
                   )}
                   <div className="px-3 py-2.5">
-                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">Criado em</p>
+                    <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.createdAtLabel}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <FileText className="h-3.5 w-3.5 shrink-0" />
                       <span>{format(new Date(project.created_at), "d MMM yyyy")}</span>
@@ -950,33 +975,33 @@ export function ProjectDetailSheet({
               {isArchived ? (
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs"
                   onClick={() => { onUnarchive(project.id); onOpenChange(false); }}>
-                  <ArchiveRestore className="h-3.5 w-3.5" /> Restaurar
+                  <ArchiveRestore className="h-3.5 w-3.5" /> {tp.restore}
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs"
                   onClick={() => { onArchive(project.id); onOpenChange(false); }}>
-                  <Archive className="h-3.5 w-3.5" /> Arquivar
+                  <Archive className="h-3.5 w-3.5" /> {tp.archive}
                 </Button>
               )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
-                    <Trash2 className="h-3.5 w-3.5" /> Excluir
+                    <Trash2 className="h-3.5 w-3.5" /> {tp.deleteProject}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Excluir projeto?</AlertDialogTitle>
+                    <AlertDialogTitle>{tp.deleteProjectTitle}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Isso excluirá permanentemente "{project.title}". Esta ação não pode ser desfeita.
+                      {tp.deleteProjectDesc(project.title)}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel>{tp.cancel}</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => { onDelete(project.id); onOpenChange(false); }}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Excluir
+                      {tp.deleteProject}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
