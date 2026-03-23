@@ -1142,6 +1142,8 @@ const Projects = () => {
                         onDelete={handleDelete}
                         onArchive={handleArchive}
                         onAddCard={openAdd}
+                        shotDeadline={s.key === "shot" ? shotDeadline : undefined}
+                        onSetShotDeadline={s.key === "shot" ? handleSetShotDeadline : undefined}
                       />
                     ))}
                   </div>
