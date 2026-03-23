@@ -126,6 +126,7 @@ function KanbanCard({
   onArchive,
   shotDeadlineDays,
   postProdDeadlineDays,
+  onSetDeadline,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -134,6 +135,7 @@ function KanbanCard({
   onArchive: (id: string) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
+  onSetDeadline?: (projectId: string, deadline: string | null) => void;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -145,6 +147,9 @@ function KanbanCard({
     transition,
     opacity: isDragging ? 0.35 : 1,
   };
+  const [deadlineOpen, setDeadlineOpen] = useState(false);
+  const showDeadlineRow = project.stage === "shot" || project.stage === "post_production";
+  const deadlineStageLabel = project.stage === "shot" ? "Galeria" : "Entrega";
 
   // Compute effective deadline for "shot" stage
   const shotEffectiveDeadline = (() => {
@@ -268,15 +273,65 @@ function KanbanCard({
             </div>
           )}
 
-          {/* Deadline alert — only for "shot" stage */}
-          {deadlineLabel && deadlineStatus && (
-            <div className={`flex items-center gap-1 text-[10px] font-medium mt-0.5 ${DEADLINE_BADGE[deadlineStatus]}`}>
-              {deadlineStatus === "overdue" ? (
-                <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-              ) : (
-                <Clock className="h-2.5 w-2.5 shrink-0" />
-              )}
-              <span>{deadlineStagLabel} {deadlineLabel}</span>
+          {/* Deadline row — always visible for shot / post_production */}
+          {showDeadlineRow && (
+            <div className="flex items-center justify-between mt-0.5">
+              <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className={`flex items-center gap-1 text-[10px] rounded-sm px-1 py-0.5 transition-colors ${
+                      effectiveDeadline
+                        ? deadlineStatus ? DEADLINE_BADGE[deadlineStatus] + " hover:opacity-80" : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground/40 hover:text-muted-foreground"
+                    }`}
+                    title={`Definir prazo de ${deadlineStageLabel.toLowerCase()}`}
+                  >
+                    {deadlineStatus === "overdue" ? (
+                      <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                    ) : (
+                      <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
+                    )}
+                    <span className="font-medium">
+                      {effectiveDeadline
+                        ? (deadlineLabel ?? format(parseISO(effectiveDeadline), "d MMM"))
+                        : `Prazo ${deadlineStageLabel}`}
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="start" className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 border-b border-border">
+                    <p className="text-xs font-semibold">Prazo de {deadlineStageLabel.toLowerCase()}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {project.gallery_deadline
+                        ? `Definido: ${format(parseISO(project.gallery_deadline), "d MMM yyyy")}`
+                        : effectiveDeadline
+                        ? `Calculado pela coluna`
+                        : "Sem prazo definido"}
+                    </p>
+                  </div>
+                  <Calendar
+                    mode="single"
+                    selected={project.gallery_deadline ? parseISO(project.gallery_deadline) : undefined}
+                    onSelect={(d) => {
+                      onSetDeadline?.(project.id, d ? d.toISOString() : null);
+                      setDeadlineOpen(false);
+                    }}
+                    className="p-3 pointer-events-auto"
+                    initialFocus
+                  />
+                  {project.gallery_deadline && (
+                    <div className="p-2 pt-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onSetDeadline?.(project.id, null); setDeadlineOpen(false); }}
+                        className="w-full text-[11px] text-destructive/70 hover:text-destructive py-1 transition-colors"
+                      >
+                        Remover prazo individual
+                      </button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </div>
