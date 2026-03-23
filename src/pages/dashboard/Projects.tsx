@@ -1225,6 +1225,8 @@ const Projects = () => {
                         onAddCard={openAdd}
                         shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
                         onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
+                        postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
+                        onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
                       />
                     ))}
                   </div>
