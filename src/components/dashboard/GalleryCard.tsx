@@ -331,13 +331,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
 
   return (
     <>
-    <div className={`border flex group transition-colors ${
-      isExpired
-        ? "border-destructive/40 hover:border-destructive/60"
-        : isDraft
-        ? "border-border border-dashed hover:border-foreground/30"
-        : "border-border hover:border-foreground/30"
-    } ${compact ? "flex-row items-center gap-3 p-3" : "flex-col"}`}>
+    <div className={`border flex group transition-colors ${expiryBorderClass} ${compact ? "flex-row items-center gap-3 p-3" : "flex-col"}`}>
 
       {/* Thumbnail — hidden in compact list view */}
       {!compact && (
