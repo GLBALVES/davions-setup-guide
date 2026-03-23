@@ -1342,6 +1342,16 @@ const Projects = () => {
                   </TabsList>
                 </Tabs>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchProjects(true)}
+                  disabled={refreshing}
+                  className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                  title={p_t.refresh ?? "Refresh"}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                </Button>
+                <Button
                   size="sm"
                   onClick={() => openAdd("upcoming")}
                   className="gap-2 text-xs tracking-wider uppercase font-light"
