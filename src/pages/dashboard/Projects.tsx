@@ -8,7 +8,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
@@ -122,12 +124,14 @@ function KanbanCard({
   onEdit,
   onDelete,
   onArchive,
+  shotDeadline,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  shotDeadline?: string | null;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -140,13 +144,17 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
-  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(project.gallery_deadline) : null;
+  // Use per-card deadline if set, otherwise fall back to column-level deadline
+  const effectiveDeadline = project.stage === "shot"
+    ? (project.gallery_deadline ?? shotDeadline ?? null)
+    : null;
+  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
-  // Human-readable deadline label
+  // Human-readable deadline label (uses effective deadline = per-card or column-level)
   const deadlineLabel = (() => {
-    if (!project.gallery_deadline || project.stage !== "shot") return null;
-    const d = parseISO(project.gallery_deadline);
+    if (!effectiveDeadline || project.stage !== "shot") return null;
+    const d = parseISO(effectiveDeadline);
     const now = new Date();
     if (isPast(d)) return "Prazo vencido";
     const h = differenceInHours(d, now);
@@ -214,7 +222,7 @@ function KanbanCard({
           {project.shoot_date && (
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground min-w-0">
               <span className="flex items-center gap-1 shrink-0">
-                <Calendar className="h-2.5 w-2.5 shrink-0" />
+                <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
                 <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
               </span>
             </div>
@@ -252,6 +260,8 @@ function KanbanColumn({
   onDelete,
   onArchive,
   onAddCard,
+  shotDeadline,
+  onSetShotDeadline,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -260,29 +270,80 @@ function KanbanColumn({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   onAddCard: (stage: Stage) => void;
+  shotDeadline?: string | null;
+  onSetShotDeadline?: (date: string | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
+
+  const deadlineDate = shotDeadline ? new Date(shotDeadline) : undefined;
+  const deadlineLabel = (() => {
+    if (!shotDeadline) return null;
+    try {
+      return format(new Date(shotDeadline), "dd/MM/yy");
+    } catch { return null; }
+  })();
 
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
       {/* header */}
       <div className="flex items-center justify-between mb-2 px-0.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span
             className="h-2 w-2 rounded-full shrink-0"
             style={{ background: stage.color }}
           />
-          <span className="text-[10px] tracking-[0.25em] uppercase font-medium">{stage.label}</span>
-          <span className="text-[10px] text-muted-foreground/60">{projects.length}</span>
+          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{stage.label}</span>
+          <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
-        <button
-          className="text-muted-foreground/40 hover:text-foreground transition-colors"
-          onClick={() => onAddCard(stage.key)}
-          aria-label={stage.label}
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Deadline picker — only for "shot" column */}
+          {stage.key === "shot" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 text-[10px] rounded px-1 py-0.5 transition-colors ${
+                    deadlineLabel
+                      ? "text-purple-500 hover:text-purple-600"
+                      : "text-muted-foreground/40 hover:text-muted-foreground"
+                  }`}
+                  title="Prazo para galeria de provas"
+                >
+                  <CalendarIcon className="h-3 w-3 shrink-0" />
+                  {deadlineLabel && <span>{deadlineLabel}</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="flex flex-col">
+                  <Calendar
+                    mode="single"
+                    selected={deadlineDate}
+                    onSelect={(d) => onSetShotDeadline?.(d ? d.toISOString() : null)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                  {shotDeadline && (
+                    <div className="border-t px-3 pb-3">
+                      <button
+                        className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => onSetShotDeadline?.(null)}
+                      >
+                        Remover prazo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <button
+            className="text-muted-foreground/40 hover:text-foreground transition-colors"
+            onClick={() => onAddCard(stage.key)}
+            aria-label={stage.label}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* drop zone */}
@@ -294,7 +355,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadline={shotDeadline} />
           ))}
         </SortableContext>
 
@@ -634,6 +695,19 @@ const Projects = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Column-level deadline for "shot" stage — persisted in localStorage
+  const [shotDeadline, setShotDeadline] = useState<string | null>(() => {
+    try { return localStorage.getItem("shot_gallery_deadline"); } catch { return null; }
+  });
+
+  const handleSetShotDeadline = (date: string | null) => {
+    setShotDeadline(date);
+    try {
+      if (date) localStorage.setItem("shot_gallery_deadline", date);
+      else localStorage.removeItem("shot_gallery_deadline");
+    } catch { /* ignore */ }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -1068,6 +1142,8 @@ const Projects = () => {
                         onDelete={handleDelete}
                         onArchive={handleArchive}
                         onAddCard={openAdd}
+                        shotDeadline={s.key === "shot" ? shotDeadline : undefined}
+                        onSetShotDeadline={s.key === "shot" ? handleSetShotDeadline : undefined}
                       />
                     ))}
                   </div>
