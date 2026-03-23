@@ -124,12 +124,14 @@ function KanbanCard({
   onEdit,
   onDelete,
   onArchive,
+  shotDeadline,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  shotDeadline?: string | null;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -142,7 +144,11 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
-  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(project.gallery_deadline) : null;
+  // Use per-card deadline if set, otherwise fall back to column-level deadline
+  const effectiveDeadline = project.stage === "shot"
+    ? (project.gallery_deadline ?? shotDeadline ?? null)
+    : null;
+  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
   // Human-readable deadline label
