@@ -1,47 +1,61 @@
 
-## Problem
 
-The current card has a separate "deadline row" below the shoot date that includes a `Popover` with a full `Calendar` component for setting per-card deadlines. The user says: "É só para mostrar o prazo" — it should only **display** the deadline, not allow editing from the card. And it should be on the **same line as the shoot date**.
+## Enriching the ProjectDetailSheet — Inspired by Reference
 
-## Solution
+The reference image shows a full project management view with: Project Details sidebar (Client, Project Type, Date, Location, Description), Payments section, Documents, Sessions, and Notes. We'll adapt what's realistic given our data model.
 
-Simplify the `KanbanCard` deadline display:
+### What we can add (we have the data)
 
-1. **Remove** the entire `showDeadlineRow` section (lines 277–336) — the `Popover`, `Calendar`, and separate row.
-2. **Remove** `deadlineOpen` state, `onSetDeadline` prop usage from the card display area, and the calendar import dependency from the card.
-3. **Add** the deadline info inline on the same line as the shoot date — right side of the date row.
+1. **Two-column layout** — Left: session/booking details. Right: Project Details summary (read-only style like reference)
+2. **Location field** — new DB column on `client_projects` (the session table already has `location`)
+3. **Description field** — new DB column on `client_projects`  
+4. **Client phone** — new DB column on `client_projects`
+5. **Linked booking/session info** — already fetched via `booking_id` join; show session title, price, duration
+6. **Notes section** — already exists, keep as-is but style like the reference (with placeholder "Write a note...")
+7. **Stage badge next to title** — move stage to header area as a colored badge (like reference)
 
-### New shoot date + deadline line
+### What we won't add (no data available yet)
+- Payments/invoices (no invoicing table linked to projects)
+- Documents section (no document storage per project)
+- Conversations (no chat per project)
 
-```tsx
-{project.shoot_date && (
-  <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground min-w-0">
-    <span className="flex items-center gap-1 shrink-0">
-      <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
-      <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
-    </span>
-    {effectiveDeadline && deadlineLabel && (
-      <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
-        {deadlineStatus === "overdue"
-          ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-          : <Timer className="h-2.5 w-2.5 shrink-0" />
-        }
-        <span>{deadlineLabel}</span>
-      </span>
-    )}
-  </div>
-)}
+These can be future features.
+
+### Plan
+
+**1. Database migration** — Add 3 new columns to `client_projects`:
+```sql
+ALTER TABLE public.client_projects 
+  ADD COLUMN IF NOT EXISTS location text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS description text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS client_phone text DEFAULT NULL;
 ```
 
-### What stays the same
-- `effectiveDeadline` computation (shot + post_production) — unchanged
-- `deadlineStatus` and color logic — unchanged  
-- `deadlineLabel` human-readable text — unchanged
-- Border color alert on the card — unchanged
-- `onSetDeadline` prop can be removed from `KanbanCard` entirely (per-card deadline setting moves exclusively to `ProjectDetailSheet`)
+**2. ProjectDetailSheet.tsx** — Major redesign:
+
+- **Header**: Project title (large, editable) + Stage badge inline (colored chip, clickable to change)
+- **Two-column layout** (on `sm:` screens):
+  - **Left column**: 
+    - Session info section (linked booking session name, type, date/time, location)
+    - Gallery deadline (existing)
+    - Notes (existing, restyled)
+  - **Right column** "Project Details" panel:
+    - Client name (editable, linked style like reference)
+    - Client email
+    - Client phone (new)
+    - Project Type (session type selector)
+    - Project Date (shoot date + time)
+    - Location (new, editable)
+    - Description (new, editable)
+- **Footer**: Archive/Delete actions + metadata timestamps
+
+**3. Projects.tsx** — Update `ClientProject` interface and `fetchProjects` to include new fields. Update `ProjectSheetData` export.
+
+**4. Translations** — Add keys for Location, Description, Phone in all 3 languages.
 
 ### Files to edit
-- `src/pages/dashboard/Projects.tsx` only — lines 150–340 (KanbanCard body)
+- `src/components/dashboard/ProjectDetailSheet.tsx` — full redesign
+- `src/pages/dashboard/Projects.tsx` — interface + fetch updates
+- `src/lib/i18n/translations.ts` — new translation keys
+- New migration SQL for the 3 columns
 
-Remove: `deadlineOpen` state, the `showDeadlineRow` block, the separate deadline row JSX, the `onSetDeadline` prop from KanbanCard interface.
-Add: inline deadline display on the shoot date row.
