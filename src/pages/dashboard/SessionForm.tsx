@@ -32,6 +32,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Copy, MessageCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
