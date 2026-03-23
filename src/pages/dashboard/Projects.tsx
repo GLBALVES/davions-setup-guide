@@ -8,7 +8,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle, Timer } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
@@ -290,12 +290,22 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
   const [inputVal, setInputVal] = useState(shotDeadlineDays != null ? String(shotDeadlineDays) : "");
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const handleDaysBlur = () => {
-    const n = parseInt(inputVal, 10);
+  const handleDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
     if (!isNaN(n) && n > 0) onSetShotDeadlineDays?.(n);
     else { onSetShotDeadlineDays?.(null); setInputVal(""); }
   };
+
+  // Example date: today + shotDeadlineDays
+  const exampleDate = shotDeadlineDays != null
+    ? (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + shotDeadlineDays);
+        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+      })()
+    : null;
 
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
@@ -310,23 +320,63 @@ function KanbanColumn({
           <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Numeric deadline input — only for "shot" column */}
+          {/* Deadline popover — only for "shot" column */}
           {stage.key === "shot" && (
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={1}
-                max={365}
-                value={inputVal}
-                onChange={(e) => setInputVal(e.target.value)}
-                onBlur={handleDaysBlur}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
-                placeholder="–"
-                className="w-8 h-5 text-center text-[10px] bg-transparent border border-border rounded-sm focus:outline-none focus:border-foreground/40 text-muted-foreground placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                title="Prazo em dias após a sessão para entrega da galeria de provas"
-              />
-              <span className="text-[10px] text-muted-foreground/50">d</span>
-            </div>
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                    shotDeadlineDays != null
+                      ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
+                      : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                  }`}
+                  title="Prazo para publicação da galeria de prova"
+                >
+                  <Timer className="h-3 w-3 shrink-0" />
+                  {shotDeadlineDays != null && <span>{shotDeadlineDays}d</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                <div>
+                  <p className="text-xs font-semibold">Prazo para galeria de prova</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    Número de dias após a data da sessão para publicar a galeria de provas
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={inputVal}
+                    onChange={(e) => setInputVal(e.target.value)}
+                    onBlur={() => handleDaysCommit(inputVal)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleDaysCommit(inputVal);
+                        setPopoverOpen(false);
+                      }
+                    }}
+                    placeholder="ex: 7"
+                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
+                </div>
+                {shotDeadlineDays != null && exampleDate && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{exampleDate}</span>
+                  </p>
+                )}
+                {shotDeadlineDays != null && (
+                  <button
+                    onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); setPopoverOpen(false); }}
+                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                  >
+                    Remover prazo
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
           )}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
