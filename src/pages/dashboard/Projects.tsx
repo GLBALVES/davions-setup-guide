@@ -943,6 +943,7 @@ const Projects = () => {
         .filter(Boolean);
 
       let galleryCovers: Record<string, string> = {};
+      let galleryExpiry: Record<string, string> = {};
       if (bookingIds.length > 0) {
         const { data: galleries } = await supabase
           .from("galleries")
@@ -957,8 +958,7 @@ const Projects = () => {
           }
         }
 
-        // Map gallery expiry per booking_id (proof → proof_gallery stage, final → final_gallery)
-        const galleryExpiry: Record<string, string> = {};
+        // Map gallery expiry per booking_id
         if (galleries) {
           for (const g of galleries as any[]) {
             if (g.booking_id && g.expires_at) {
