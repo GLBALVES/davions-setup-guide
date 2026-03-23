@@ -3308,6 +3308,16 @@ export const translations = {
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
       refresh: "Actualizar",
+      // Campos del detalle del proyecto
+      location: "Ubicación",
+      description: "Descripción",
+      phone: "Teléfono",
+      projectDetails: "Detalles del proyecto",
+      addLocation: "Agregar ubicación…",
+      addPhone: "Agregar teléfono…",
+      addDescription: "Detalles del proyecto, briefing, referencias…",
+      sessionSection: "Sesión",
+      notesPlaceholder: "Escribe una nota…",
     },
     clients: {
       title: "Clientes",
