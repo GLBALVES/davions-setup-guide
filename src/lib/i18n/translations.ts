@@ -3559,7 +3559,7 @@ export const translations = {
       // Pie de página
       restore: "Restaurar",
       archive: "Archivar",
-      archived: "Archivado",
+      archivedLabel: "Archivado",
       deleteProject: "Eliminar",
       deleteProjectTitle: "¿Eliminar proyecto?",
       deleteProjectDesc: (title: string) => `Esto eliminará permanentemente "${title}". Esta acción no se puede deshacer.`,
