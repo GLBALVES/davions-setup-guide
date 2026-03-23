@@ -125,6 +125,7 @@ function KanbanCard({
   onDelete,
   onArchive,
   shotDeadlineDays,
+  postProdDeadlineDays,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -132,6 +133,7 @@ function KanbanCard({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   shotDeadlineDays?: number | null;
+  postProdDeadlineDays?: number | null;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -144,10 +146,8 @@ function KanbanCard({
     opacity: isDragging ? 0.35 : 1,
   };
 
-  // Compute effective deadline:
-  // 1. Per-card gallery_deadline (absolute date string) takes priority
-  // 2. Otherwise: shoot_date + column-level days
-  const effectiveDeadline = (() => {
+  // Compute effective deadline for "shot" stage
+  const shotEffectiveDeadline = (() => {
     if (project.stage !== "shot") return null;
     if (project.gallery_deadline) return project.gallery_deadline;
     if (shotDeadlineDays != null && project.shoot_date) {
@@ -162,12 +162,30 @@ function KanbanCard({
     }
     return null;
   })();
-  const deadlineStatus = project.stage === "shot" ? getDeadlineStatus(effectiveDeadline) : null;
+
+  // Compute effective deadline for "post_production" stage
+  const postProdEffectiveDeadline = (() => {
+    if (project.stage !== "post_production") return null;
+    if (postProdDeadlineDays != null && project.shoot_date) {
+      try {
+        const shoot = new Date(project.shoot_date);
+        if (!isNaN(shoot.getTime())) {
+          const d = new Date(shoot);
+          d.setDate(d.getDate() + postProdDeadlineDays);
+          return d.toISOString();
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  })();
+
+  const effectiveDeadline = shotEffectiveDeadline ?? postProdEffectiveDeadline;
+  const deadlineStatus = effectiveDeadline ? getDeadlineStatus(effectiveDeadline) : null;
   const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
 
   // Human-readable deadline label
   const deadlineLabel = (() => {
-    if (!effectiveDeadline || project.stage !== "shot") return null;
+    if (!effectiveDeadline) return null;
     const d = parseISO(effectiveDeadline);
     const now = new Date();
     if (isPast(d)) return "Prazo vencido";
@@ -176,6 +194,8 @@ function KanbanCard({
     const days = differenceInDays(d, now);
     return `${days}d restantes`;
   })();
+
+  const deadlineStagLabel = project.stage === "shot" ? "Galeria:" : "Entrega:";
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
@@ -256,7 +276,7 @@ function KanbanCard({
               ) : (
                 <Clock className="h-2.5 w-2.5 shrink-0" />
               )}
-              <span>Galeria: {deadlineLabel}</span>
+              <span>{deadlineStagLabel} {deadlineLabel}</span>
             </div>
           )}
         </div>
@@ -276,6 +296,8 @@ function KanbanColumn({
   onAddCard,
   shotDeadlineDays,
   onSetShotDeadlineDays,
+  postProdDeadlineDays,
+  onSetPostProdDeadlineDays,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -286,11 +308,15 @@ function KanbanColumn({
   onAddCard: (stage: Stage) => void;
   shotDeadlineDays?: number | null;
   onSetShotDeadlineDays?: (days: number | null) => void;
+  postProdDeadlineDays?: number | null;
+  onSetPostProdDeadlineDays?: (days: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
   const [inputVal, setInputVal] = useState(shotDeadlineDays != null ? String(shotDeadlineDays) : "");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [ppInputVal, setPpInputVal] = useState(postProdDeadlineDays != null ? String(postProdDeadlineDays) : "");
+  const [ppPopoverOpen, setPpPopoverOpen] = useState(false);
 
   const handleDaysCommit = (val: string) => {
     const n = parseInt(val, 10);
@@ -298,11 +324,26 @@ function KanbanColumn({
     else { onSetShotDeadlineDays?.(null); setInputVal(""); }
   };
 
+  const handlePpDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetPostProdDeadlineDays?.(n);
+    else { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); }
+  };
+
   // Example date: today + shotDeadlineDays
   const exampleDate = shotDeadlineDays != null
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + shotDeadlineDays);
+        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+      })()
+    : null;
+
+  // Example date: today + postProdDeadlineDays
+  const ppExampleDate = postProdDeadlineDays != null
+    ? (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + postProdDeadlineDays);
         return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
       })()
     : null;
@@ -378,6 +419,60 @@ function KanbanColumn({
               </PopoverContent>
             </Popover>
           )}
+          {/* Deadline popover — only for "post_production" column */}
+          {stage.key === "post_production" && (
+            <Popover open={ppPopoverOpen} onOpenChange={setPpPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className={}
+                  title="Prazo para entrega da pós-produção"
+                >
+                  <Timer className="h-3 w-3 shrink-0" />
+                  {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                <div>
+                  <p className="text-xs font-semibold">Prazo para entrega da pós-produção</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    Número de dias após a data da sessão para concluir a pós-produção
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={ppInputVal}
+                    onChange={(e) => setPpInputVal(e.target.value)}
+                    onBlur={() => handlePpDaysCommit(ppInputVal)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handlePpDaysCommit(ppInputVal);
+                        setPpPopoverOpen(false);
+                      }
+                    }}
+                    placeholder="ex: 30"
+                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
+                </div>
+                {postProdDeadlineDays != null && ppExampleDate && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{ppExampleDate}</span>
+                  </p>
+                )}
+                {postProdDeadlineDays != null && (
+                  <button
+                    onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
+                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                  >
+                    Remover prazo
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
+          )}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
             onClick={() => onAddCard(stage.key)}
@@ -397,7 +492,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} />
           ))}
         </SortableContext>
 
@@ -752,6 +847,23 @@ const Projects = () => {
     try {
       if (days != null) localStorage.setItem("shot_gallery_deadline_days", String(days));
       else localStorage.removeItem("shot_gallery_deadline_days");
+    } catch { /* ignore */ }
+  };
+
+  // Column-level deadline for "post_production" stage — persisted in localStorage
+  const [postProdDeadlineDays, setPostProdDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("post_prod_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+
+  const handleSetPostProdDeadlineDays = (days: number | null) => {
+    setPostProdDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("post_prod_deadline_days", String(days));
+      else localStorage.removeItem("post_prod_deadline_days");
     } catch { /* ignore */ }
   };
 
@@ -1190,6 +1302,8 @@ const Projects = () => {
                         onAddCard={openAdd}
                         shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
                         onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
+                        postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
+                        onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
                       />
                     ))}
                   </div>
