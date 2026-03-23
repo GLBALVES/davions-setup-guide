@@ -274,8 +274,8 @@ function KanbanColumn({
   onDelete,
   onArchive,
   onAddCard,
-  shotDeadline,
-  onSetShotDeadline,
+  shotDeadlineDays,
+  onSetShotDeadlineDays,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -284,19 +284,18 @@ function KanbanColumn({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   onAddCard: (stage: Stage) => void;
-  shotDeadline?: string | null;
-  onSetShotDeadline?: (date: string | null) => void;
+  shotDeadlineDays?: number | null;
+  onSetShotDeadlineDays?: (days: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
+  const [inputVal, setInputVal] = useState(shotDeadlineDays != null ? String(shotDeadlineDays) : "");
 
-  const deadlineDate = shotDeadline ? new Date(shotDeadline) : undefined;
-  const deadlineLabel = (() => {
-    if (!shotDeadline) return null;
-    try {
-      return format(new Date(shotDeadline), "dd/MM/yy");
-    } catch { return null; }
-  })();
+  const handleDaysBlur = () => {
+    const n = parseInt(inputVal, 10);
+    if (!isNaN(n) && n > 0) onSetShotDeadlineDays?.(n);
+    else { onSetShotDeadlineDays?.(null); setInputVal(""); }
+  };
 
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
@@ -310,45 +309,24 @@ function KanbanColumn({
           <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{stage.label}</span>
           <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {/* Deadline picker — only for "shot" column */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Numeric deadline input — only for "shot" column */}
           {stage.key === "shot" && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className={`flex items-center gap-1 text-[10px] rounded px-1 py-0.5 transition-colors ${
-                    deadlineLabel
-                      ? "text-purple-500 hover:text-purple-600"
-                      : "text-muted-foreground/40 hover:text-muted-foreground"
-                  }`}
-                  title="Prazo para galeria de provas"
-                >
-                  <CalendarIcon className="h-3 w-3 shrink-0" />
-                  {deadlineLabel && <span>{deadlineLabel}</span>}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <div className="flex flex-col">
-                  <Calendar
-                    mode="single"
-                    selected={deadlineDate}
-                    onSelect={(d) => onSetShotDeadline?.(d ? d.toISOString() : null)}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                  {shotDeadline && (
-                    <div className="border-t px-3 pb-3">
-                      <button
-                        className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
-                        onClick={() => onSetShotDeadline?.(null)}
-                      >
-                        Remover prazo
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                onBlur={handleDaysBlur}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+                placeholder="–"
+                className="w-8 h-5 text-center text-[10px] bg-transparent border border-border rounded-sm focus:outline-none focus:border-foreground/40 text-muted-foreground placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                title="Prazo em dias após a sessão para entrega da galeria de provas"
+              />
+              <span className="text-[10px] text-muted-foreground/50">d</span>
+            </div>
           )}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
@@ -369,7 +347,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadline={shotDeadline} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} />
           ))}
         </SortableContext>
 
