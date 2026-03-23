@@ -176,6 +176,44 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const isPublished = gallery.status === "published";
   const isUnassigned = !gallery.booking_id;
 
+  // Expiry urgency for published galleries approaching expiration
+  const expiryUrgency: "critical" | "warning" | "soon" | null = (() => {
+    if (!gallery.expires_at || isExpired || !isPublished) return null;
+    const msLeft = new Date(gallery.expires_at).getTime() - Date.now();
+    const daysLeft = msLeft / (1000 * 60 * 60 * 24);
+    if (daysLeft <= 1) return "critical";
+    if (daysLeft <= 3) return "warning";
+    if (daysLeft <= 7) return "soon";
+    return null;
+  })();
+
+  const expiryBorderClass = isExpired
+    ? "border-destructive/50 hover:border-destructive/70"
+    : expiryUrgency === "critical"
+    ? "border-destructive/60 hover:border-destructive/80"
+    : expiryUrgency === "warning"
+    ? "border-orange-500/50 hover:border-orange-500/70"
+    : expiryUrgency === "soon"
+    ? "border-yellow-500/40 hover:border-yellow-500/60"
+    : isDraft
+    ? "border-border border-dashed hover:border-foreground/30"
+    : "border-border hover:border-foreground/30";
+
+  const expiryLabelClass = expiryUrgency === "critical"
+    ? "bg-destructive text-destructive-foreground"
+    : expiryUrgency === "warning"
+    ? "bg-orange-500 text-white"
+    : "bg-yellow-500 text-white";
+
+  const expiryLabel = (() => {
+    if (!gallery.expires_at || isExpired || !expiryUrgency) return null;
+    const msLeft = new Date(gallery.expires_at).getTime() - Date.now();
+    const h = Math.floor(msLeft / (1000 * 60 * 60));
+    if (h < 24) return `${h}h`;
+    const d = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+    return `${d}d`;
+  })();
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
@@ -293,13 +331,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
 
   return (
     <>
-    <div className={`border flex group transition-colors ${
-      isExpired
-        ? "border-destructive/40 hover:border-destructive/60"
-        : isDraft
-        ? "border-border border-dashed hover:border-foreground/30"
-        : "border-border hover:border-foreground/30"
-    } ${compact ? "flex-row items-center gap-3 p-3" : "flex-col"}`}>
+    <div className={`border flex group transition-colors ${expiryBorderClass} ${compact ? "flex-row items-center gap-3 p-3" : "flex-col"}`}>
 
       {/* Thumbnail — hidden in compact list view */}
       {!compact && (
@@ -319,6 +351,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
             <div className="absolute top-2 left-2 flex items-center gap-1 bg-destructive text-destructive-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light">
               <CalendarX2 className="h-2.5 w-2.5" />
               Expired
+            </div>
+          )}
+          {!isExpired && expiryUrgency && expiryLabel && (
+            <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light ${expiryLabelClass}`}>
+              <Clock className="h-2.5 w-2.5" />
+              Expira em {expiryLabel}
             </div>
           )}
           {isDraft && !isExpired && (
@@ -394,6 +432,18 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
                 <span className={`h-1.5 w-1.5 rounded-full ${isPublished ? "bg-green-500" : "bg-muted-foreground/30"}`} />
                 {gallery.status}
               </span>
+            )}
+            {!isExpired && expiryUrgency && expiryLabel && (
+              <>
+                <span>·</span>
+                <span className={`flex items-center gap-1 font-medium ${
+                  expiryUrgency === "critical" ? "text-destructive" :
+                  expiryUrgency === "warning" ? "text-orange-500" : "text-yellow-600"
+                }`}>
+                  <Clock className="h-3 w-3" />
+                  Expira em {expiryLabel}
+                </span>
+              </>
             )}
             {isUnassigned && (
               <>
