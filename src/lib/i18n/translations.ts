@@ -253,6 +253,27 @@ export const translations = {
       failedToUpdate: "Failed to update",
       failedToCreate: "Failed to create",
       dragHandle: "Drag",
+      // Deadline system
+      deadlineOverdue: "Overdue",
+      deadlineHoursLeft: (h: number) => `${h}h left`,
+      deadlineDaysLeft: (d: number) => `${d}d left`,
+      galleryExpired: "Expired",
+      galleryExpiresHours: (h: number) => `${h}h to expire`,
+      galleryExpiresDays: (d: number) => `${d}d to expire`,
+      galleryPrefix: "Gallery:",
+      sessionPassed: "Session passed",
+      sessionInHours: (h: number) => `${h}h to session`,
+      sessionInDays: (d: number) => `${d}d to session`,
+      // Column deadline popovers
+      shotDeadlineTitle: "Proof gallery deadline",
+      shotDeadlineDesc: "Days after session date to publish the proof gallery",
+      postProdDeadlineTitle: "Post-production deadline",
+      postProdDeadlineDesc: "Days after session date to complete post-production",
+      daysAfterSession: "days after session",
+      deadlineExample: (date: string) => `e.g.: session today → due ${date}`,
+      removeDeadline: "Remove deadline",
+      deadlineTooltipShot: "Proof gallery publication deadline",
+      deadlineTooltipPostProd: "Post-production delivery deadline",
     },
     // ── Clients page ──
     clients: {
