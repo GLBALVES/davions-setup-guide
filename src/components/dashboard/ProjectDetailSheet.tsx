@@ -180,7 +180,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         .eq("project_id", project.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as ProjectInvoice[];
+      return (data ?? []) as unknown as ProjectInvoice[];
     },
     enabled: !!project.id,
   });
