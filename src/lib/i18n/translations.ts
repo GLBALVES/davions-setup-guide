@@ -274,6 +274,7 @@ export const translations = {
       removeDeadline: "Remove deadline",
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
+      refresh: "Refresh",
     },
     // ── Clients page ──
     clients: {
@@ -1798,6 +1799,7 @@ export const translations = {
       removeDeadline: "Remover prazo",
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
+      refresh: "Atualizar",
     },
     clients: {
       title: "Clientes",
@@ -3285,6 +3287,7 @@ export const translations = {
       removeDeadline: "Eliminar plazo",
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
+      refresh: "Actualizar",
     },
     clients: {
       title: "Clientes",

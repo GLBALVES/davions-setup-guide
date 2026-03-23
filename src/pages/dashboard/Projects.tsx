@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle, Timer } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, ChevronDown, ChevronRight, Camera, Clock, AlertTriangle, Timer, RefreshCw } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
@@ -904,6 +904,7 @@ const Projects = () => {
   const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ClientProject | null>(null);
   const [defaultStage, setDefaultStage] = useState<Stage>("upcoming");
@@ -970,8 +971,9 @@ const Projects = () => {
     if (data) setSessionTypes(data as SessionType[]);
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async (silent = false) => {
     if (!photographerId) return;
+    if (silent) setRefreshing(true);
 
     // 1. Fetch existing projects
     const { data: existingProjects, error } = await supabase
@@ -1151,9 +1153,24 @@ const Projects = () => {
       setProjects(mapped as ClientProject[]);
     }
     setLoading(false);
-  };
+    if (silent) setRefreshing(false);
+  }, [photographerId]);
 
-  useEffect(() => { if (photographerId) { fetchProjects(); fetchSessionTypes(); } }, [photographerId]);
+  // Realtime subscription — refetch on any change to client_projects, bookings or galleries
+  useEffect(() => {
+    if (!photographerId) return;
+    fetchProjects();
+    fetchSessionTypes();
+
+    const channel = supabase
+      .channel("projects-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_projects", filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings",         filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "galleries",        filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [photographerId]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);
@@ -1324,6 +1341,16 @@ const Projects = () => {
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchProjects(true)}
+                  disabled={refreshing}
+                  className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                  title={p_t.refresh ?? "Refresh"}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                </Button>
                 <Button
                   size="sm"
                   onClick={() => openAdd("upcoming")}
