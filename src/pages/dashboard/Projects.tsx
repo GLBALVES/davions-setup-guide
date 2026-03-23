@@ -321,6 +321,15 @@ function KanbanCard({
                   <span>{deadlineLabel}</span>
                 </span>
               )}
+              {upcomingSessionStatus && upcomingSessionLabel && !effectiveDeadline && (
+                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
+                  {upcomingSessionStatus === "overdue"
+                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                    : <Clock className="h-2.5 w-2.5 shrink-0" />
+                  }
+                  <span>{upcomingSessionLabel}</span>
+                </span>
+              )}
             </div>
           )}
           {/* Gallery expiry indicator for proof_gallery / final_gallery */}
