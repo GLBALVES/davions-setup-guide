@@ -274,6 +274,7 @@ export const translations = {
       removeDeadline: "Remove deadline",
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
+      refresh: "Refresh",
     },
     // ── Clients page ──
     clients: {
