@@ -1153,9 +1153,24 @@ const Projects = () => {
       setProjects(mapped as ClientProject[]);
     }
     setLoading(false);
-  };
+    if (silent) setRefreshing(false);
+  }, [photographerId]);
 
-  useEffect(() => { if (photographerId) { fetchProjects(); fetchSessionTypes(); } }, [photographerId]);
+  // Realtime subscription — refetch on any change to client_projects, bookings or galleries
+  useEffect(() => {
+    if (!photographerId) return;
+    fetchProjects();
+    fetchSessionTypes();
+
+    const channel = supabase
+      .channel("projects-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "client_projects", filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings",         filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .on("postgres_changes", { event: "*", schema: "public", table: "galleries",        filter: `photographer_id=eq.${photographerId}` }, () => fetchProjects(true))
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [photographerId]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);
