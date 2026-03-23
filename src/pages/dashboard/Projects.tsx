@@ -59,6 +59,7 @@ interface ClientProject {
   title: string;
   client_name: string;
   client_email: string | null;
+  client_phone?: string | null;
   session_type: string | null;
   booking_id: string | null;
   stage: Stage;
@@ -73,6 +74,8 @@ interface ClientProject {
   gallery_cover_url?: string | null;
   gallery_deadline?: string | null;
   gallery_expires_at?: string | null;
+  location?: string | null;
+  description?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -1120,6 +1123,9 @@ const Projects = () => {
         gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
         gallery_deadline: p.gallery_deadline ?? null,
         gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
+        location: p.location ?? null,
+        description: p.description ?? null,
+        client_phone: p.client_phone ?? null,
       }));
 
       // 6. Auto-advance "upcoming" → "shot" when session has ended

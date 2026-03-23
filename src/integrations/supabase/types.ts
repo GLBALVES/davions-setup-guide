@@ -589,10 +589,13 @@ export type Database = {
           booking_id: string | null
           client_email: string | null
           client_name: string
+          client_phone: string | null
           color: string | null
           created_at: string
+          description: string | null
           gallery_deadline: string | null
           id: string
+          location: string | null
           notes: string | null
           photographer_id: string
           position: number
@@ -607,10 +610,13 @@ export type Database = {
           booking_id?: string | null
           client_email?: string | null
           client_name?: string
+          client_phone?: string | null
           color?: string | null
           created_at?: string
+          description?: string | null
           gallery_deadline?: string | null
           id?: string
+          location?: string | null
           notes?: string | null
           photographer_id: string
           position?: number
@@ -625,10 +631,13 @@ export type Database = {
           booking_id?: string | null
           client_email?: string | null
           client_name?: string
+          client_phone?: string | null
           color?: string | null
           created_at?: string
+          description?: string | null
           gallery_deadline?: string | null
           id?: string
+          location?: string | null
           notes?: string | null
           photographer_id?: string
           position?: number

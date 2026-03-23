@@ -275,6 +275,16 @@ export const translations = {
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
       refresh: "Refresh",
+      // Project detail fields
+      location: "Location",
+      description: "Description",
+      phone: "Phone",
+      projectDetails: "Project Details",
+      addLocation: "Add location…",
+      addPhone: "Add phone…",
+      addDescription: "Project details, briefing, references…",
+      sessionSection: "Session",
+      notesPlaceholder: "Write a note…",
     },
     // ── Clients page ──
     clients: {
@@ -1800,6 +1810,16 @@ export const translations = {
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
       refresh: "Atualizar",
+      // Campos do detalhe do projeto
+      location: "Localização",
+      description: "Descrição",
+      phone: "Telefone",
+      projectDetails: "Detalhes do projeto",
+      addLocation: "Adicionar localização…",
+      addPhone: "Adicionar telefone…",
+      addDescription: "Detalhes do projeto, briefing, referências…",
+      sessionSection: "Sessão",
+      notesPlaceholder: "Escreva uma nota…",
     },
     clients: {
       title: "Clientes",
@@ -3288,6 +3308,16 @@ export const translations = {
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
       refresh: "Actualizar",
+      // Campos del detalle del proyecto
+      location: "Ubicación",
+      description: "Descripción",
+      phone: "Teléfono",
+      projectDetails: "Detalles del proyecto",
+      addLocation: "Agregar ubicación…",
+      addPhone: "Agregar teléfono…",
+      addDescription: "Detalles del proyecto, briefing, referencias…",
+      sessionSection: "Sesión",
+      notesPlaceholder: "Escribe una nota…",
     },
     clients: {
       title: "Clientes",
