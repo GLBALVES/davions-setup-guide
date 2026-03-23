@@ -69,8 +69,7 @@ const INVOICE_STATUS_STYLES: Record<InvoiceStatus, { color: string; bg: string; 
   cancelled: { color: "text-muted-foreground", bg: "bg-muted/40 border-border/40",              icon: XCircle },
 };
 
-
-  id: string;
+export interface ProjectSheetData {
   photographer_id: string;
   title: string;
   client_name: string;
