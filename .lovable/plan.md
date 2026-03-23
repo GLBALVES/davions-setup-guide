@@ -1,66 +1,48 @@
 
-## Feature: Auto-advance "shot" → "proof_gallery" when a proof gallery is linked
+## Problem
 
-### How it works today
+Currently the `gallery_deadline` is a per-project field editable only inside the `ProjectDetailSheet`. The user wants a **single column-level deadline** set directly in the "FOTOGRAFADAS" column header, which applies to all projects in that column and drives the color alerts.
 
-In `fetchProjects` (Projects.tsx lines 644–664), galleries are already fetched for each project via `booking_id`. The code builds `galleryCovers` (a `Record<booking_id → cover_image_url>`), but only uses it to show a thumbnail — it never checks whether a gallery exists to advance the stage.
+The user's intent: "define the deadline for creating galleries" is a **studio-wide policy** (e.g., "I deliver proof galleries within 7 days of the shoot"). This deadline should live in the column header, not buried in each card.
 
-### What needs to change
+## Solution
 
-After the `galleryCovers` map is built (and before `setProjects`), add an auto-advance check:
+Two approaches are viable:
+1. **Per-photographer default deadline offset** (e.g., "7 days after shoot date") — stored in DB
+2. **A single absolute date** set in the column header — simpler but less useful
 
-> For every project in stage **"shot"** that has a `booking_id` and has a **proof** gallery linked (`category === "proof"`) → advance to `"proof_gallery"`.
+The best UX is a **delivery window in days** (e.g., "deliver within X days of shoot date"), shown in the column header with an editable input. This automatically calculates each card's deadline based on `shoot_date + X days`, without needing per-card manual dates.
 
-Since the existing gallery fetch only selects `booking_id` and `cover_image_url`, it needs to also select `category` and `status` (only published/draft galleries count — not expired ones).
+But re-reading the request: the user says "o prazo vale para todas" — the deadline is **one value for the whole column**. The simplest interpretation is: a single date or day-count in the column header that all "shot" cards share.
 
-### Changes in `Projects.tsx`
+### Chosen approach: Column header date picker + per-card auto-fill
 
-**Step 1 — Expand the gallery query** (line 652–656) to include `category` and `status`:
-```ts
-const { data: galleries } = await supabase
-  .from("galleries")
-  .select("booking_id, cover_image_url, category, status")
-  .in("booking_id", bookingIds)
-  .neq("status", "expired"); // ignore expired galleries
-```
+Add a date/deadline button in the "FOTOGRAFADAS" column header. When clicked, opens a small Popover with a date picker. This selected date is stored in `localStorage` (no DB change needed for a per-user quick setting) and used as the `gallery_deadline` for all shot-stage cards that don't already have one set individually.
 
-**Step 2 — Build a secondary map** of `booking_id → hasProofGallery`:
-```ts
-const proofGalleryBookings = new Set<string>();
-for (const g of galleries as any[]) {
-  if (g.booking_id && g.category === "proof") {
-    proofGalleryBookings.add(g.booking_id);
-  }
-}
-```
+**However**, if the user wants it more like a "default delivery window", a better approach is: **number of days** (e.g., "14 days") stored as a photographer preference. This sets the delivery expectation for all new shot projects.
 
-**Step 3 — Auto-advance "shot" → "proof_gallery"** after the `toAdvance` (shot) block:
-```ts
-const toProofGallery: string[] = [];
-for (const p of mapped) {
-  if (p.stage !== "shot") continue;
-  if (p.booking_id && proofGalleryBookings.has(p.booking_id)) {
-    toProofGallery.push(p.id);
-  }
-}
+### Final plan
 
-if (toProofGallery.length > 0) {
-  await supabase
-    .from("client_projects" as any)
-    .update({ stage: "proof_gallery" } as any)
-    .in("id", toProofGallery);
-  for (const p of mapped) {
-    if (toProofGallery.includes(p.id)) p.stage = "proof_gallery";
-  }
-}
-```
+Add a **deadline input in the KanbanColumn header** for the "shot" column only:
+- Shows a small `Calendar` icon button next to the column title
+- Clicking opens a Popover with a date picker
+- The selected date is stored as a **per-photographer setting** in a new `localStorage` key (`shot_gallery_deadline`)
+- All cards in "FOTOGRAFADAS" without a manually set `gallery_deadline` will use this column-level deadline for the color alerts
+- Cards with their own `gallery_deadline` continue using their individual date
 
-**Note on ordering**: the `toAdvance` (upcoming→shot) block runs first, so a project that just got moved to "shot" in the same load won't be immediately moved again — it will only advance to "proof_gallery" on the next `fetchProjects` call (page reload or next visit), which is the correct and safe behavior.
+### Changes
 
-### Result
-- A project in "Fotografadas" with a linked proof gallery → automatically moves to "Galeria de provas" on next page load ✓
-- Projects without a linked gallery stay in "Fotografadas" ✓
-- Manually created projects (no `booking_id`) are unaffected ✓
-- Expired galleries don't trigger the transition ✓
+**`Projects.tsx`**:
 
-**File to edit:** only `src/pages/dashboard/Projects.tsx` — 3 small additions
+1. Add state `const [shotDeadline, setShotDeadline] = useState<string | null>(...)` — initialized from `localStorage`
+2. Persist to `localStorage` when changed
+3. Pass `shotDeadline` and `onSetShotDeadline` to `KanbanColumn`
+4. In `KanbanColumn` header for `stage.key === "shot"`:
+   - Add a `Calendar` icon button that opens a Popover with a shadcn Calendar date picker
+   - Show the selected date formatted (e.g., "until Jun 5") or nothing if not set
+5. In `KanbanCard` / deadline logic: use `project.gallery_deadline ?? shotDeadline` as the effective deadline for color/badge rendering
+
+No DB migration needed — this is a UI-level default stored in localStorage.
+
+### Files to edit
+- `src/pages/dashboard/Projects.tsx` only — add `shotDeadline` state, pass to column, update card deadline logic, add Popover+Calendar in column header for "shot" stage
