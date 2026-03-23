@@ -1,0 +1,1 @@
+ALTER TABLE public.client_projects ADD COLUMN IF NOT EXISTS shoot_time text DEFAULT NULL;

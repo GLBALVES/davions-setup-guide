@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
@@ -57,6 +58,7 @@ export interface ProjectSheetData {
   stage: Stage;
   notes: string | null;
   shoot_date: string | null;
+  shoot_time: string | null;
   color: string | null;
   position: number;
   created_at: string;
@@ -283,16 +285,21 @@ export function ProjectDetailSheet({
                 </div>
               )}
 
-              {/* Shoot date */}
+              {/* Shoot date + time */}
               <div className="flex flex-col gap-1">
-                <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date</Label>
-                <div className="flex items-center gap-2">
+                <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Shoot date & time</Label>
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="date"
                     defaultValue={project.shoot_date ?? ""}
                     key={project.id + "-date"}
                     onBlur={(e) => save({ shoot_date: e.target.value || null })}
-                    className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors w-full"
+                    className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors"
+                  />
+                  <TimePickerInput
+                    value={project.shoot_time ?? "09:00"}
+                    onChange={(v) => save({ shoot_time: v })}
+                    className="shrink-0"
                   />
                   {shootDateFormatted && (
                     <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
