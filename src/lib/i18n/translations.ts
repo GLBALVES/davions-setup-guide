@@ -253,6 +253,27 @@ export const translations = {
       failedToUpdate: "Failed to update",
       failedToCreate: "Failed to create",
       dragHandle: "Drag",
+      // Deadline system
+      deadlineOverdue: "Overdue",
+      deadlineHoursLeft: (h: number) => `${h}h left`,
+      deadlineDaysLeft: (d: number) => `${d}d left`,
+      galleryExpired: "Expired",
+      galleryExpiresHours: (h: number) => `${h}h to expire`,
+      galleryExpiresDays: (d: number) => `${d}d to expire`,
+      galleryPrefix: "Gallery:",
+      sessionPassed: "Session passed",
+      sessionInHours: (h: number) => `${h}h to session`,
+      sessionInDays: (d: number) => `${d}d to session`,
+      // Column deadline popovers
+      shotDeadlineTitle: "Proof gallery deadline",
+      shotDeadlineDesc: "Days after session date to publish the proof gallery",
+      postProdDeadlineTitle: "Post-production deadline",
+      postProdDeadlineDesc: "Days after session date to complete post-production",
+      daysAfterSession: "days after session",
+      deadlineExample: (date: string) => `e.g.: session today → due ${date}`,
+      removeDeadline: "Remove deadline",
+      deadlineTooltipShot: "Proof gallery publication deadline",
+      deadlineTooltipPostProd: "Post-production delivery deadline",
     },
     // ── Clients page ──
     clients: {
@@ -1756,6 +1777,27 @@ export const translations = {
       failedToUpdate: "Falha ao atualizar",
       failedToCreate: "Falha ao criar",
       dragHandle: "Arrastar",
+      // Sistema de prazos
+      deadlineOverdue: "Prazo vencido",
+      deadlineHoursLeft: (h: number) => `${h}h restantes`,
+      deadlineDaysLeft: (d: number) => `${d}d restantes`,
+      galleryExpired: "Expirada",
+      galleryExpiresHours: (h: number) => `${h}h p/ expirar`,
+      galleryExpiresDays: (d: number) => `${d}d p/ expirar`,
+      galleryPrefix: "Galeria:",
+      sessionPassed: "Sessão passou",
+      sessionInHours: (h: number) => `${h}h para a sessão`,
+      sessionInDays: (d: number) => `${d}d para a sessão`,
+      // Popovers de prazo da coluna
+      shotDeadlineTitle: "Prazo para galeria de prova",
+      shotDeadlineDesc: "Número de dias após a data da sessão para publicar a galeria de provas",
+      postProdDeadlineTitle: "Prazo para entrega da pós-produção",
+      postProdDeadlineDesc: "Número de dias após a data da sessão para concluir a pós-produção",
+      daysAfterSession: "dias após a sessão",
+      deadlineExample: (date: string) => `Ex.: sessão hoje → prazo em ${date}`,
+      removeDeadline: "Remover prazo",
+      deadlineTooltipShot: "Prazo para publicação da galeria de prova",
+      deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
     },
     clients: {
       title: "Clientes",
@@ -3222,6 +3264,27 @@ export const translations = {
       failedToUpdate: "Error al actualizar",
       failedToCreate: "Error al crear",
       dragHandle: "Arrastrar",
+      // Sistema de plazos
+      deadlineOverdue: "Plazo vencido",
+      deadlineHoursLeft: (h: number) => `${h}h restantes`,
+      deadlineDaysLeft: (d: number) => `${d}d restantes`,
+      galleryExpired: "Expirada",
+      galleryExpiresHours: (h: number) => `${h}h p/ expirar`,
+      galleryExpiresDays: (d: number) => `${d}d p/ expirar`,
+      galleryPrefix: "Galería:",
+      sessionPassed: "Sesión pasó",
+      sessionInHours: (h: number) => `${h}h para la sesión`,
+      sessionInDays: (d: number) => `${d}d para la sesión`,
+      // Popovers de plazo de columna
+      shotDeadlineTitle: "Plazo para galería de prueba",
+      shotDeadlineDesc: "Días después de la sesión para publicar la galería de pruebas",
+      postProdDeadlineTitle: "Plazo para entrega de posproducción",
+      postProdDeadlineDesc: "Días después de la sesión para completar la posproducción",
+      daysAfterSession: "días después de la sesión",
+      deadlineExample: (date: string) => `Ej.: sesión hoy → plazo el ${date}`,
+      removeDeadline: "Eliminar plazo",
+      deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
+      deadlineTooltipPostProd: "Plazo para entrega de posproducción",
     },
     clients: {
       title: "Clientes",
@@ -4523,6 +4586,7 @@ export const translations = {
   },
 } as const;
 
-// Recursively widen all literal string types to `string`
-type DeepWriteable<T> = { [K in keyof T]: T[K] extends string ? string : DeepWriteable<T[K]> };
+// Recursively widen all literal string types to `string`, preserving function signatures
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DeepWriteable<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? T[K] : T[K] extends string ? string : DeepWriteable<T[K]> };
 export type Translations = DeepWriteable<typeof translations.en>;

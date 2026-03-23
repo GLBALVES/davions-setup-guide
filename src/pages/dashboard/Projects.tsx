@@ -210,11 +210,11 @@ function KanbanCard({
     if (!upcomingSessionStatus || !project.shoot_date) return null;
     const d = new Date(project.shoot_date);
     const now = new Date();
-    if (isPast(d)) return "Sessão passou";
+    if (isPast(d)) return p_t.sessionPassed;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h para a sessão`;
+    if (h < 24) return p_t.sessionInHours(h);
     const days = differenceInDays(d, now);
-    return `${days}d para a sessão`;
+    return p_t.sessionInDays(days);
   })();
 
   // Border: expiry urgency takes priority for gallery stages, else deadline urgency, else upcoming session
@@ -231,11 +231,11 @@ function KanbanCard({
     if (!effectiveDeadline) return null;
     const d = parseISO(effectiveDeadline);
     const now = new Date();
-    if (isPast(d)) return "Prazo vencido";
+    if (isPast(d)) return p_t.deadlineOverdue;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h restantes`;
+    if (h < 24) return p_t.deadlineHoursLeft(h);
     const days = differenceInDays(d, now);
-    return `${days}d restantes`;
+    return p_t.deadlineDaysLeft(days);
   })();
 
   // Human-readable gallery expiry label
@@ -243,11 +243,11 @@ function KanbanCard({
     if (!project.gallery_expires_at || !galleryExpiryStatus) return null;
     const d = parseISO(project.gallery_expires_at);
     const now = new Date();
-    if (isPast(d)) return "Expirada";
+    if (isPast(d)) return p_t.galleryExpired;
     const h = differenceInHours(d, now);
-    if (h < 24) return `${h}h p/ expirar`;
+    if (h < 24) return p_t.galleryExpiresHours(h);
     const days = differenceInDays(d, now);
-    return `${days}d p/ expirar`;
+    return p_t.galleryExpiresDays(days);
   })();
 
   return (
@@ -339,7 +339,7 @@ function KanbanCard({
                 ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
                 : <Clock className="h-2.5 w-2.5 shrink-0" />
               }
-              <span>Galeria: {galleryExpiryLabel}</span>
+              <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
             </div>
           )}
           {project.session_title && (
@@ -402,11 +402,13 @@ function KanbanColumn({
   };
 
   // Example date: today + shotDeadlineDays
+  const { lang } = useLanguage();
+  const dateLocale = lang === "pt" ? "pt-BR" : lang === "es" ? "es-MX" : "en-US";
   const exampleDate = shotDeadlineDays != null
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + shotDeadlineDays);
-        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+        return d.toLocaleDateString(dateLocale, { day: "2-digit", month: "short" });
       })()
     : null;
 
@@ -415,7 +417,7 @@ function KanbanColumn({
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + postProdDeadlineDays);
-        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+        return d.toLocaleDateString(dateLocale, { day: "2-digit", month: "short" });
       })()
     : null;
 
@@ -436,57 +438,61 @@ function KanbanColumn({
           {stage.key === "shot" && (
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
-                <button
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                 <button
+                   className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
                     shotDeadlineDays != null
-                      ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
-                      : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
-                  }`}
-                  title="Prazo para publicação da galeria de prova"
-                >
-                  <Timer className="h-3 w-3 shrink-0" />
-                  {shotDeadlineDays != null && <span>{shotDeadlineDays}d</span>}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
-                <div>
-                  <p className="text-xs font-semibold">Prazo para galeria de prova</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    Número de dias após a data da sessão para publicar a galeria de provas
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={inputVal}
-                    onChange={(e) => setInputVal(e.target.value)}
-                    onBlur={() => handleDaysCommit(inputVal)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleDaysCommit(inputVal);
-                        setPopoverOpen(false);
-                      }
-                    }}
-                    placeholder="ex: 7"
-                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
-                </div>
-                {shotDeadlineDays != null && exampleDate && (
-                  <p className="text-[11px] text-muted-foreground italic">
-                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{exampleDate}</span>
-                  </p>
-                )}
-                {shotDeadlineDays != null && (
-                  <button
-                    onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); setPopoverOpen(false); }}
-                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
-                  >
-                    Remover prazo
-                  </button>
-                )}
+                       ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
+                       : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                   }`}
+                   title={t.projects.deadlineTooltipShot}
+                 >
+                   <Timer className="h-3 w-3 shrink-0" />
+                   {shotDeadlineDays != null && <span>{shotDeadlineDays}d</span>}
+                 </button>
+               </PopoverTrigger>
+               <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                 <div>
+                   <p className="text-xs font-semibold">{t.projects.shotDeadlineTitle}</p>
+                   <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                     {t.projects.shotDeadlineDesc}
+                   </p>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <input
+                     type="number"
+                     min={1}
+                     max={365}
+                     value={inputVal}
+                     onChange={(e) => setInputVal(e.target.value)}
+                     onBlur={() => handleDaysCommit(inputVal)}
+                     onKeyDown={(e) => {
+                       if (e.key === "Enter") {
+                         handleDaysCommit(inputVal);
+                         setPopoverOpen(false);
+                       }
+                     }}
+                     placeholder="ex: 7"
+                     className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                 </div>
+                 {shotDeadlineDays != null && exampleDate && (
+                   <p className="text-[11px] text-muted-foreground italic">
+                     {t.projects.deadlineExample(exampleDate).split(exampleDate).map((part, i, arr) =>
+                       i < arr.length - 1
+                         ? <>{part}<span className="font-medium not-italic text-foreground">{exampleDate}</span></>
+                         : part
+                     )}
+                   </p>
+                 )}
+                 {shotDeadlineDays != null && (
+                   <button
+                     onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); setPopoverOpen(false); }}
+                     className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                   >
+                     {t.projects.removeDeadline}
+                   </button>
+                 )}
               </PopoverContent>
             </Popover>
           )}
@@ -494,53 +500,57 @@ function KanbanColumn({
           {stage.key === "post_production" && (
             <Popover open={ppPopoverOpen} onOpenChange={setPpPopoverOpen}>
               <PopoverTrigger asChild>
-                <button
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${postProdDeadlineDays != null ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"}`}
-                  title="Prazo para entrega da pós-produção"
-                >
-                  <Timer className="h-3 w-3 shrink-0" />
-                  {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
-                <div>
-                  <p className="text-xs font-semibold">Prazo para entrega da pós-produção</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    Número de dias após a data da sessão para concluir a pós-produção
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={ppInputVal}
-                    onChange={(e) => setPpInputVal(e.target.value)}
-                    onBlur={() => handlePpDaysCommit(ppInputVal)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handlePpDaysCommit(ppInputVal);
-                        setPpPopoverOpen(false);
-                      }
-                    }}
-                    placeholder="ex: 30"
-                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
-                </div>
-                {postProdDeadlineDays != null && ppExampleDate && (
-                  <p className="text-[11px] text-muted-foreground italic">
-                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{ppExampleDate}</span>
-                  </p>
-                )}
-                {postProdDeadlineDays != null && (
-                  <button
-                    onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
-                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
-                  >
-                    Remover prazo
-                  </button>
-                )}
+                 <button
+                   className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${postProdDeadlineDays != null ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"}`}
+                   title={t.projects.deadlineTooltipPostProd}
+                 >
+                   <Timer className="h-3 w-3 shrink-0" />
+                   {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
+                 </button>
+               </PopoverTrigger>
+               <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                 <div>
+                   <p className="text-xs font-semibold">{t.projects.postProdDeadlineTitle}</p>
+                   <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                     {t.projects.postProdDeadlineDesc}
+                   </p>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <input
+                     type="number"
+                     min={1}
+                     max={365}
+                     value={ppInputVal}
+                     onChange={(e) => setPpInputVal(e.target.value)}
+                     onBlur={() => handlePpDaysCommit(ppInputVal)}
+                     onKeyDown={(e) => {
+                       if (e.key === "Enter") {
+                         handlePpDaysCommit(ppInputVal);
+                         setPpPopoverOpen(false);
+                       }
+                     }}
+                     placeholder="ex: 30"
+                     className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                 </div>
+                 {postProdDeadlineDays != null && ppExampleDate && (
+                   <p className="text-[11px] text-muted-foreground italic">
+                     {t.projects.deadlineExample(ppExampleDate).split(ppExampleDate).map((part, i, arr) =>
+                       i < arr.length - 1
+                         ? <>{part}<span className="font-medium not-italic text-foreground">{ppExampleDate}</span></>
+                         : part
+                     )}
+                   </p>
+                 )}
+                 {postProdDeadlineDays != null && (
+                   <button
+                     onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
+                     className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                   >
+                     {t.projects.removeDeadline}
+                   </button>
+                 )}
               </PopoverContent>
             </Popover>
           )}
