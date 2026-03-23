@@ -126,7 +126,6 @@ function KanbanCard({
   onArchive,
   shotDeadlineDays,
   postProdDeadlineDays,
-  onSetDeadline,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
