@@ -1,48 +1,86 @@
 
-## Problem
+## Current State
 
-Currently the `gallery_deadline` is a per-project field editable only inside the `ProjectDetailSheet`. The user wants a **single column-level deadline** set directly in the "FOTOGRAFADAS" column header, which applies to all projects in that column and drives the color alerts.
+The "shot" column header has a small bare number input (`[ __ ] d`) with no context. The user wants:
+1. A clear icon (clock or hourglass) that signals "deadline"
+2. Clicking it opens a focused popover/panel with:
+   - Clear title: "Prazo para publicação da galeria de prova"
+   - The numeric days input, nicely labeled
+   - A summary of what it means (e.g., "7 dias após a sessão = prazo calculado automaticamente")
+   - A clear/reset button
 
-The user's intent: "define the deadline for creating galleries" is a **studio-wide policy** (e.g., "I deliver proof galleries within 7 days of the shoot"). This deadline should live in the column header, not buried in each card.
+## Plan
 
-## Solution
-
-Two approaches are viable:
-1. **Per-photographer default deadline offset** (e.g., "7 days after shoot date") — stored in DB
-2. **A single absolute date** set in the column header — simpler but less useful
-
-The best UX is a **delivery window in days** (e.g., "deliver within X days of shoot date"), shown in the column header with an editable input. This automatically calculates each card's deadline based on `shoot_date + X days`, without needing per-card manual dates.
-
-But re-reading the request: the user says "o prazo vale para todas" — the deadline is **one value for the whole column**. The simplest interpretation is: a single date or day-count in the column header that all "shot" cards share.
-
-### Chosen approach: Column header date picker + per-card auto-fill
-
-Add a date/deadline button in the "FOTOGRAFADAS" column header. When clicked, opens a small Popover with a date picker. This selected date is stored in `localStorage` (no DB change needed for a per-user quick setting) and used as the `gallery_deadline` for all shot-stage cards that don't already have one set individually.
-
-**However**, if the user wants it more like a "default delivery window", a better approach is: **number of days** (e.g., "14 days") stored as a photographer preference. This sets the delivery expectation for all new shot projects.
-
-### Final plan
-
-Add a **deadline input in the KanbanColumn header** for the "shot" column only:
-- Shows a small `Calendar` icon button next to the column title
-- Clicking opens a Popover with a date picker
-- The selected date is stored as a **per-photographer setting** in a new `localStorage` key (`shot_gallery_deadline`)
-- All cards in "FOTOGRAFADAS" without a manually set `gallery_deadline` will use this column-level deadline for the color alerts
-- Cards with their own `gallery_deadline` continue using their individual date
+**File to edit:** `src/pages/dashboard/Projects.tsx` only — modify the `KanbanColumn` header section for the "shot" stage.
 
 ### Changes
 
-**`Projects.tsx`**:
+**1. Replace bare input with an icon button + Popover**
 
-1. Add state `const [shotDeadline, setShotDeadline] = useState<string | null>(...)` — initialized from `localStorage`
-2. Persist to `localStorage` when changed
-3. Pass `shotDeadline` and `onSetShotDeadline` to `KanbanColumn`
-4. In `KanbanColumn` header for `stage.key === "shot"`:
-   - Add a `Calendar` icon button that opens a Popover with a shadcn Calendar date picker
-   - Show the selected date formatted (e.g., "until Jun 5") or nothing if not set
-5. In `KanbanCard` / deadline logic: use `project.gallery_deadline ?? shotDeadline` as the effective deadline for color/badge rendering
+In the `KanbanColumn` header (lines 314–330), replace the raw `<input>` with:
 
-No DB migration needed — this is a UI-level default stored in localStorage.
+```tsx
+{stage.key === "shot" && (
+  <Popover>
+    <PopoverTrigger asChild>
+      <button
+        className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors
+          ${shotDeadlineDays != null
+            ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
+            : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+          }`}
+        title="Prazo para publicação da galeria de prova"
+      >
+        <Timer className="h-3 w-3 shrink-0" />
+        {shotDeadlineDays != null && (
+          <span>{shotDeadlineDays}d</span>
+        )}
+      </button>
+    </PopoverTrigger>
+    <PopoverContent side="bottom" align="end" className="w-64 p-4">
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-xs font-semibold">Prazo para galeria de prova</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Dias após a data da sessão para publicar a galeria de provas
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="number" min={1} max={365}
+            value={inputVal}
+            onChange={...}
+            onBlur={handleDaysBlur}
+            onKeyDown={...}
+            placeholder="ex: 7"
+            className="w-16 h-8 text-center text-sm border rounded-sm ..."
+          />
+          <span className="text-sm text-muted-foreground">dias</span>
+        </div>
+        {shotDeadlineDays != null && (
+          <p className="text-[11px] text-muted-foreground italic">
+            Ex.: sessão em 1 Jun → prazo em {calculated example}
+          </p>
+        )}
+        {shotDeadlineDays != null && (
+          <button onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); }}
+            className="text-[11px] text-destructive/70 hover:text-destructive">
+            Remover prazo
+          </button>
+        )}
+      </div>
+    </PopoverContent>
+  </Popover>
+)}
+```
 
-### Files to edit
-- `src/pages/dashboard/Projects.tsx` only — add `shotDeadline` state, pass to column, update card deadline logic, add Popover+Calendar in column header for "shot" stage
+**2. Import `Timer` icon** from lucide-react (already has Clock/AlertTriangle; add `Timer` which is clearer than hourglass for "countdown deadline").
+
+**3. The Popover state** — the current bare input is inline in the column. We move the `inputVal` state + `handleDaysBlur` inside the Popover, keeping same logic.
+
+**4. Visual result:**
+- When no deadline set: a subtle `⏱` icon, muted, barely visible — clean
+- When deadline is set: a small colored chip `⏱ 7d` in purple (matching the shot column color) — immediately visible and informative
+- Click → focused popover with title, description, number input and remove option
+
+**Scope:** Only `src/pages/dashboard/Projects.tsx` — lines 292–330 (the `KanbanColumn` header section for "shot").
