@@ -1978,7 +1978,7 @@ export const translations = {
       // Rodapé
       restore: "Restaurar",
       archive: "Arquivar",
-      archived: "Arquivado",
+      archivedLabel: "Arquivado",
       deleteProject: "Excluir",
       deleteProjectTitle: "Excluir projeto?",
       deleteProjectDesc: (title: string) => `Isso excluirá permanentemente "${title}". Esta ação não pode ser desfeita.`,
