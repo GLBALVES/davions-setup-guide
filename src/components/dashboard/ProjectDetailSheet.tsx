@@ -60,7 +60,16 @@ interface ProjectInvoice {
   updated_at: string;
 }
 
-export interface ProjectSheetData {
+// Static style configs (labels translated inline in components)
+const INVOICE_STATUS_STYLES: Record<InvoiceStatus, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
+  pending:   { color: "text-amber-600",        bg: "bg-amber-500/10 border-amber-500/20",       icon: Clock },
+  paid:      { color: "text-emerald-600",      bg: "bg-emerald-500/10 border-emerald-500/20",   icon: CheckCircle2 },
+  partial:   { color: "text-blue-600",         bg: "bg-blue-500/10 border-blue-500/20",         icon: CreditCard },
+  overdue:   { color: "text-destructive",      bg: "bg-destructive/10 border-destructive/20",   icon: AlertTriangle },
+  cancelled: { color: "text-muted-foreground", bg: "bg-muted/40 border-border/40",              icon: XCircle },
+};
+
+
   id: string;
   photographer_id: string;
   title: string;
