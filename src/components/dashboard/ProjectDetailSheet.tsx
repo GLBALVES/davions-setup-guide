@@ -57,6 +57,7 @@ export interface ProjectSheetData {
   stage: Stage;
   notes: string | null;
   shoot_date: string | null;
+  shoot_time: string | null;
   color: string | null;
   position: number;
   created_at: string;
