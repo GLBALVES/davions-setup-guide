@@ -70,6 +70,7 @@ const INVOICE_STATUS_STYLES: Record<InvoiceStatus, { color: string; bg: string; 
 };
 
 export interface ProjectSheetData {
+  id: string;
   photographer_id: string;
   title: string;
   client_name: string;
