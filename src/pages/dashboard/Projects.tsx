@@ -135,7 +135,6 @@ function KanbanCard({
   onArchive: (id: string) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
-  onSetDeadline?: (projectId: string, deadline: string | null) => void;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -147,9 +146,6 @@ function KanbanCard({
     transition,
     opacity: isDragging ? 0.35 : 1,
   };
-  const [deadlineOpen, setDeadlineOpen] = useState(false);
-  const showDeadlineRow = project.stage === "shot" || project.stage === "post_production";
-  const deadlineStageLabel = project.stage === "shot" ? "Galeria" : "Entrega";
 
   // Compute effective deadline for "shot" stage
   const shotEffectiveDeadline = (() => {
