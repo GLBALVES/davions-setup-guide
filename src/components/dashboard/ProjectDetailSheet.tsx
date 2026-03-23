@@ -30,16 +30,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
-
-const STAGES: { key: Stage; label: string }[] = [
-  { key: "upcoming",        label: "Próximas sessões" },
-  { key: "shot",            label: "Fotografadas" },
-  { key: "proof_gallery",   label: "Galeria de provas" },
-  { key: "post_production", label: "Pós produção" },
-  { key: "final_gallery",   label: "Galeria final" },
-];
 
 const STAGE_COLORS: Record<Stage, string> = {
   upcoming:        "bg-muted/60 text-muted-foreground border-border",
@@ -66,14 +59,6 @@ interface ProjectInvoice {
   created_at: string;
   updated_at: string;
 }
-
-const INVOICE_STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string; bg: string; icon: typeof CheckCircle2 }> = {
-  pending:   { label: "Pendente",  color: "text-amber-600",     bg: "bg-amber-500/10 border-amber-500/20",   icon: Clock },
-  paid:      { label: "Pago",      color: "text-emerald-600",   bg: "bg-emerald-500/10 border-emerald-500/20", icon: CheckCircle2 },
-  partial:   { label: "Parcial",   color: "text-blue-600",      bg: "bg-blue-500/10 border-blue-500/20",     icon: CreditCard },
-  overdue:   { label: "Vencido",   color: "text-destructive",   bg: "bg-destructive/10 border-destructive/20", icon: AlertTriangle },
-  cancelled: { label: "Cancelado", color: "text-muted-foreground", bg: "bg-muted/40 border-border/40",       icon: XCircle },
-};
 
 export interface ProjectSheetData {
   id: string;
