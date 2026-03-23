@@ -853,6 +853,11 @@ export function ProjectDetailSheet({
 
                 <Separator />
 
+                {/* Documents */}
+                <DocumentsSection project={project} photographerId={photographerId} />
+
+                <Separator />
+
                 {/* Notes */}
                 <div>
                   <SectionLabel>Notas</SectionLabel>
