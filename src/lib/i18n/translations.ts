@@ -360,7 +360,7 @@ export const translations = {
       // Footer actions
       restore: "Restore",
       archive: "Archive",
-      archived: "Archived",
+      archivedLabel: "Archived",
       deleteProject: "Delete",
       deleteProjectTitle: "Delete project?",
       deleteProjectDesc: (title: string) => `This will permanently delete "${title}". This action cannot be undone.`,
