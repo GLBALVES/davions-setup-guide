@@ -311,7 +311,17 @@ function KanbanCard({
             <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground min-w-0">
               <span className="flex items-center gap-1 shrink-0">
                 <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
-                <span>{format(new Date(project.shoot_date), "MMM d, h:mm a")}</span>
+                <span>
+                  {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                  {project.shoot_time && (
+                    <>{" "}{(() => {
+                      const [h, m] = project.shoot_time.split(":").map(Number);
+                      const period = h < 12 ? "AM" : "PM";
+                      const h12 = h % 12 === 0 ? 12 : h % 12;
+                      return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+                    })()}</>
+                  )}
+                </span>
               </span>
               {effectiveDeadline && deadlineLabel && (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
