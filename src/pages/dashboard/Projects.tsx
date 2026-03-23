@@ -924,6 +924,14 @@ const Projects = () => {
     } catch { /* ignore */ }
   };
 
+  const handleSetDeadline = async (projectId: string, deadline: string | null) => {
+    await supabase
+      .from("client_projects" as any)
+      .update({ gallery_deadline: deadline } as any)
+      .eq("id", projectId);
+    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
@@ -1361,6 +1369,7 @@ const Projects = () => {
                         onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
                         postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
                         onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
+                        onSetDeadline={handleSetDeadline}
                       />
                     ))}
                   </div>
