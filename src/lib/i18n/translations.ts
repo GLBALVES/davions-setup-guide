@@ -4586,6 +4586,7 @@ export const translations = {
   },
 } as const;
 
-// Recursively widen all literal string types to `string`
-type DeepWriteable<T> = { [K in keyof T]: T[K] extends string ? string : DeepWriteable<T[K]> };
+// Recursively widen all literal string types to `string`, preserving function signatures
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DeepWriteable<T> = { [K in keyof T]: T[K] extends (...args: any[]) => any ? T[K] : T[K] extends string ? string : DeepWriteable<T[K]> };
 export type Translations = DeepWriteable<typeof translations.en>;
