@@ -904,6 +904,7 @@ const Projects = () => {
   const p_t = t.projects;
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ClientProject | null>(null);
   const [defaultStage, setDefaultStage] = useState<Stage>("upcoming");
