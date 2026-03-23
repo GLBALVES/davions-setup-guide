@@ -22,7 +22,9 @@ import {
   Trash2, Archive, ArchiveRestore, Camera,
   Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Phone, Mail, User, FileText,
   Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
+  Paperclip, Download, File, Image, FileText as FileTextIcon, Loader2, UploadCloud,
 } from "lucide-react";
+import { useRef } from "react";
 import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
