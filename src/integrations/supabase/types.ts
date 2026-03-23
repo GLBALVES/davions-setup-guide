@@ -1628,6 +1628,60 @@ export type Database = {
           },
         ]
       }
+      project_documents: {
+        Row: {
+          category: string
+          created_at: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          name: string
+          photographer_id: string
+          project_id: string
+          storage_path: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          name?: string
+          photographer_id: string
+          project_id: string
+          storage_path?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          project_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_documents_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_invoices: {
         Row: {
           amount: number

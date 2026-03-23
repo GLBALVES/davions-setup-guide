@@ -22,7 +22,9 @@ import {
   Trash2, Archive, ArchiveRestore, Camera,
   Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Phone, Mail, User, FileText,
   Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
+  Paperclip, Download, File, Image, FileText as FileTextIcon, Loader2, UploadCloud,
 } from "lucide-react";
+import { useRef } from "react";
 import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -436,6 +438,240 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   );
 }
 
+// ── Document category config ──
+type DocCategory = "contract" | "invoice" | "reference" | "other";
+
+const DOC_CATEGORY_CONFIG: Record<DocCategory, { label: string; color: string }> = {
+  contract:  { label: "Contrato",   color: "text-purple-600 bg-purple-500/10 border-purple-500/20" },
+  invoice:   { label: "Nota/Fatura", color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/20" },
+  reference: { label: "Referência", color: "text-blue-600 bg-blue-500/10 border-blue-500/20" },
+  other:     { label: "Outro",      color: "text-muted-foreground bg-muted/40 border-border/40" },
+};
+
+interface ProjectDocument {
+  id: string;
+  project_id: string;
+  photographer_id: string;
+  name: string;
+  file_url: string;
+  storage_path: string;
+  file_type: string;
+  file_size: number;
+  category: DocCategory;
+  created_at: string;
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileIcon(fileType: string) {
+  if (fileType.startsWith("image/")) return <Image className="h-4 w-4 text-blue-500 shrink-0" />;
+  if (fileType === "application/pdf") return <FileTextIcon className="h-4 w-4 text-red-500 shrink-0" />;
+  return <File className="h-4 w-4 text-muted-foreground shrink-0" />;
+}
+
+function DocumentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<DocCategory>("other");
+  const [dragOver, setDragOver] = useState(false);
+
+  const qKey = ["project-documents", project.id];
+
+  const { data: documents = [] } = useQuery<ProjectDocument[]>({
+    queryKey: qKey,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_documents" as any)
+        .select("*")
+        .eq("project_id", project.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ProjectDocument[];
+    },
+    enabled: !!project.id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (doc: ProjectDocument) => {
+      // Remove from storage
+      await supabase.storage.from("project-documents").remove([doc.storage_path]);
+      // Remove from DB
+      const { error } = await supabase.from("project_documents" as any).delete().eq("id", doc.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success("Documento removido");
+    },
+    onError: () => toast.error("Erro ao remover documento"),
+  });
+
+  const handleUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = `${photographerId}/${project.id}/${Date.now()}_${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("project-documents")
+          .upload(storagePath, file, { upsert: false });
+
+        if (uploadError) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+
+        const { data: urlData } = supabase.storage.from("project-documents").getPublicUrl(storagePath);
+
+        const { error: dbError } = await supabase.from("project_documents" as any).insert({
+          project_id:      project.id,
+          photographer_id: photographerId,
+          name:            file.name,
+          file_url:        urlData.publicUrl,
+          storage_path:    storagePath,
+          file_type:       file.type || "application/octet-stream",
+          file_size:       file.size,
+          category:        selectedCategory,
+        } as any);
+
+        if (dbError) toast.error(`Erro ao registrar ${file.name}`);
+      }
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success(files.length === 1 ? "Documento adicionado" : `${files.length} documentos adicionados`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Documentos</SectionLabel>
+        {/* Category selector + upload button */}
+        <div className="flex items-center gap-1.5">
+          <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as DocCategory)}>
+            <SelectTrigger className="h-6 text-[10px] w-28 px-2 border-border/50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(DOC_CATEGORY_CONFIG) as DocCategory[]).map((k) => (
+                <SelectItem key={k} value={k} className="text-xs">{DOC_CATEGORY_CONFIG[k].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          >
+            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+            Anexar
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt,.csv"
+            onChange={(e) => handleUpload(e.target.files)}
+          />
+        </div>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        className={cn(
+          "flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed py-4 cursor-pointer transition-colors",
+          dragOver ? "border-primary/50 bg-primary/5" : "border-border/50 hover:border-border hover:bg-muted/20",
+          documents.length > 0 && "py-2.5",
+        )}
+      >
+        {uploading ? (
+          <><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /><p className="text-[11px] text-muted-foreground">Enviando…</p></>
+        ) : documents.length === 0 ? (
+          <>
+            <UploadCloud className="h-6 w-6 text-muted-foreground/40" />
+            <p className="text-[11px] text-muted-foreground/60">Arraste arquivos aqui ou clique para anexar</p>
+            <p className="text-[10px] text-muted-foreground/40">PDF, Word, Excel, imagens</p>
+          </>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
+            <Paperclip className="h-3 w-3" /> Clique ou arraste para adicionar mais
+          </div>
+        )}
+      </div>
+
+      {/* Document list */}
+      {documents.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {documents.map((doc) => {
+            const catCfg = DOC_CATEGORY_CONFIG[doc.category] ?? DOC_CATEGORY_CONFIG.other;
+            return (
+              <div key={doc.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group">
+                {getFileIcon(doc.file_type)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-sm border font-medium", catCfg.color)}>
+                      {catCfg.label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/60">{formatBytes(doc.file_size)}</span>
+                    <span className="text-[10px] text-muted-foreground/40">{format(new Date(doc.created_at), "d MMM")}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={doc.name}
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-1 rounded-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Baixar"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="p-1 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Remover">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remover documento?</AlertDialogTitle>
+                        <AlertDialogDescription>"{doc.name}" será removido permanentemente.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMutation.mutate(doc)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ProjectDetailSheet({
   project, open, onOpenChange, onUpdate, onDelete, onArchive, onUnarchive,
   photographerId, sessionTypes, onRefetchSessionTypes,
@@ -614,6 +850,11 @@ export function ProjectDetailSheet({
 
                 {/* Payments */}
                 <PaymentsSection project={project} photographerId={photographerId} />
+
+                <Separator />
+
+                {/* Documents */}
+                <DocumentsSection project={project} photographerId={photographerId} />
 
                 <Separator />
 
