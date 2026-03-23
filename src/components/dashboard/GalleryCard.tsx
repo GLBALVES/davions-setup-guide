@@ -176,6 +176,44 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const isPublished = gallery.status === "published";
   const isUnassigned = !gallery.booking_id;
 
+  // Expiry urgency for published galleries approaching expiration
+  const expiryUrgency: "critical" | "warning" | "soon" | null = (() => {
+    if (!gallery.expires_at || isExpired || !isPublished) return null;
+    const msLeft = new Date(gallery.expires_at).getTime() - Date.now();
+    const daysLeft = msLeft / (1000 * 60 * 60 * 24);
+    if (daysLeft <= 1) return "critical";
+    if (daysLeft <= 3) return "warning";
+    if (daysLeft <= 7) return "soon";
+    return null;
+  })();
+
+  const expiryBorderClass = isExpired
+    ? "border-destructive/50 hover:border-destructive/70"
+    : expiryUrgency === "critical"
+    ? "border-destructive/60 hover:border-destructive/80"
+    : expiryUrgency === "warning"
+    ? "border-orange-500/50 hover:border-orange-500/70"
+    : expiryUrgency === "soon"
+    ? "border-yellow-500/40 hover:border-yellow-500/60"
+    : isDraft
+    ? "border-border border-dashed hover:border-foreground/30"
+    : "border-border hover:border-foreground/30";
+
+  const expiryLabelClass = expiryUrgency === "critical"
+    ? "bg-destructive text-destructive-foreground"
+    : expiryUrgency === "warning"
+    ? "bg-orange-500 text-white"
+    : "bg-yellow-500 text-white";
+
+  const expiryLabel = (() => {
+    if (!gallery.expires_at || isExpired || !expiryUrgency) return null;
+    const msLeft = new Date(gallery.expires_at).getTime() - Date.now();
+    const h = Math.floor(msLeft / (1000 * 60 * 60));
+    if (h < 24) return `${h}h`;
+    const d = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+    return `${d}d`;
+  })();
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
