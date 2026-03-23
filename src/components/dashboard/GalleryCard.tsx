@@ -353,6 +353,12 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
               Expired
             </div>
           )}
+          {!isExpired && expiryUrgency && expiryLabel && (
+            <div className={`absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light ${expiryLabelClass}`}>
+              <Clock className="h-2.5 w-2.5" />
+              Expira em {expiryLabel}
+            </div>
+          )}
           {isDraft && !isExpired && (
             <div className="absolute top-2 left-2 flex items-center gap-1 bg-muted/90 text-muted-foreground px-2 py-0.5 text-[9px] tracking-[0.15em] uppercase font-light border border-border">
               <Clock className="h-2.5 w-2.5" />
