@@ -438,57 +438,61 @@ function KanbanColumn({
           {stage.key === "shot" && (
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
-                <button
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                 <button
+                   className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
                     shotDeadlineDays != null
-                      ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
-                      : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
-                  }`}
-                  title="Prazo para publicação da galeria de prova"
-                >
-                  <Timer className="h-3 w-3 shrink-0" />
-                  {shotDeadlineDays != null && <span>{shotDeadlineDays}d</span>}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
-                <div>
-                  <p className="text-xs font-semibold">Prazo para galeria de prova</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    Número de dias após a data da sessão para publicar a galeria de provas
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={inputVal}
-                    onChange={(e) => setInputVal(e.target.value)}
-                    onBlur={() => handleDaysCommit(inputVal)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleDaysCommit(inputVal);
-                        setPopoverOpen(false);
-                      }
-                    }}
-                    placeholder="ex: 7"
-                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
-                </div>
-                {shotDeadlineDays != null && exampleDate && (
-                  <p className="text-[11px] text-muted-foreground italic">
-                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{exampleDate}</span>
-                  </p>
-                )}
-                {shotDeadlineDays != null && (
-                  <button
-                    onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); setPopoverOpen(false); }}
-                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
-                  >
-                    Remover prazo
-                  </button>
-                )}
+                       ? "text-purple-500 bg-purple-500/10 hover:bg-purple-500/20"
+                       : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                   }`}
+                   title={t.projects.deadlineTooltipShot}
+                 >
+                   <Timer className="h-3 w-3 shrink-0" />
+                   {shotDeadlineDays != null && <span>{shotDeadlineDays}d</span>}
+                 </button>
+               </PopoverTrigger>
+               <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                 <div>
+                   <p className="text-xs font-semibold">{t.projects.shotDeadlineTitle}</p>
+                   <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                     {t.projects.shotDeadlineDesc}
+                   </p>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <input
+                     type="number"
+                     min={1}
+                     max={365}
+                     value={inputVal}
+                     onChange={(e) => setInputVal(e.target.value)}
+                     onBlur={() => handleDaysCommit(inputVal)}
+                     onKeyDown={(e) => {
+                       if (e.key === "Enter") {
+                         handleDaysCommit(inputVal);
+                         setPopoverOpen(false);
+                       }
+                     }}
+                     placeholder="ex: 7"
+                     className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                 </div>
+                 {shotDeadlineDays != null && exampleDate && (
+                   <p className="text-[11px] text-muted-foreground italic">
+                     {t.projects.deadlineExample(exampleDate).split(exampleDate).map((part, i, arr) =>
+                       i < arr.length - 1
+                         ? <>{part}<span className="font-medium not-italic text-foreground">{exampleDate}</span></>
+                         : part
+                     )}
+                   </p>
+                 )}
+                 {shotDeadlineDays != null && (
+                   <button
+                     onClick={() => { onSetShotDeadlineDays?.(null); setInputVal(""); setPopoverOpen(false); }}
+                     className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                   >
+                     {t.projects.removeDeadline}
+                   </button>
+                 )}
               </PopoverContent>
             </Popover>
           )}
