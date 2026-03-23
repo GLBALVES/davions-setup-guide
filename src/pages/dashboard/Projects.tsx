@@ -500,53 +500,57 @@ function KanbanColumn({
           {stage.key === "post_production" && (
             <Popover open={ppPopoverOpen} onOpenChange={setPpPopoverOpen}>
               <PopoverTrigger asChild>
-                <button
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${postProdDeadlineDays != null ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"}`}
-                  title="Prazo para entrega da pós-produção"
-                >
-                  <Timer className="h-3 w-3 shrink-0" />
-                  {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
-                <div>
-                  <p className="text-xs font-semibold">Prazo para entrega da pós-produção</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                    Número de dias após a data da sessão para concluir a pós-produção
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={ppInputVal}
-                    onChange={(e) => setPpInputVal(e.target.value)}
-                    onBlur={() => handlePpDaysCommit(ppInputVal)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handlePpDaysCommit(ppInputVal);
-                        setPpPopoverOpen(false);
-                      }
-                    }}
-                    placeholder="ex: 30"
-                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
-                </div>
-                {postProdDeadlineDays != null && ppExampleDate && (
-                  <p className="text-[11px] text-muted-foreground italic">
-                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{ppExampleDate}</span>
-                  </p>
-                )}
-                {postProdDeadlineDays != null && (
-                  <button
-                    onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
-                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
-                  >
-                    Remover prazo
-                  </button>
-                )}
+                 <button
+                   className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${postProdDeadlineDays != null ? "text-blue-500 bg-blue-500/10 hover:bg-blue-500/20" : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"}`}
+                   title={t.projects.deadlineTooltipPostProd}
+                 >
+                   <Timer className="h-3 w-3 shrink-0" />
+                   {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
+                 </button>
+               </PopoverTrigger>
+               <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                 <div>
+                   <p className="text-xs font-semibold">{t.projects.postProdDeadlineTitle}</p>
+                   <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                     {t.projects.postProdDeadlineDesc}
+                   </p>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <input
+                     type="number"
+                     min={1}
+                     max={365}
+                     value={ppInputVal}
+                     onChange={(e) => setPpInputVal(e.target.value)}
+                     onBlur={() => handlePpDaysCommit(ppInputVal)}
+                     onKeyDown={(e) => {
+                       if (e.key === "Enter") {
+                         handlePpDaysCommit(ppInputVal);
+                         setPpPopoverOpen(false);
+                       }
+                     }}
+                     placeholder="ex: 30"
+                     className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                   />
+                   <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                 </div>
+                 {postProdDeadlineDays != null && ppExampleDate && (
+                   <p className="text-[11px] text-muted-foreground italic">
+                     {t.projects.deadlineExample(ppExampleDate).split(ppExampleDate).map((part, i, arr) =>
+                       i < arr.length - 1
+                         ? <>{part}<span className="font-medium not-italic text-foreground">{ppExampleDate}</span></>
+                         : part
+                     )}
+                   </p>
+                 )}
+                 {postProdDeadlineDays != null && (
+                   <button
+                     onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
+                     className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                   >
+                     {t.projects.removeDeadline}
+                   </button>
+                 )}
               </PopoverContent>
             </Popover>
           )}
