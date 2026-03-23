@@ -1383,7 +1383,7 @@ const Projects = () => {
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
               {STAGES.filter((s) => s.key !== "archived").map((s) => {
                 const count = projectsByStage(s.key).length;
-                const stageLabel = s.label;
+                const stageLabel = ({ upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery, post_production: p_t.post_production, final_gallery: p_t.final_gallery } as Record<string,string>)[s.key] ?? s.label;
                 return (
                   <div
                     key={s.key}
