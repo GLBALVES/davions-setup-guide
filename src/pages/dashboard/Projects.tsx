@@ -183,7 +183,20 @@ function KanbanCard({
 
   const effectiveDeadline = shotEffectiveDeadline ?? postProdEffectiveDeadline;
   const deadlineStatus = effectiveDeadline ? getDeadlineStatus(effectiveDeadline) : null;
-  const borderClass = deadlineStatus ? DEADLINE_BORDER[deadlineStatus] : "border-border hover:border-foreground/30";
+
+  // Gallery expiry urgency for proof_gallery / final_gallery stages
+  const galleryExpiryStatus = (() => {
+    if (project.stage !== "proof_gallery" && project.stage !== "final_gallery") return null;
+    if (!project.gallery_expires_at) return null;
+    return getDeadlineStatus(project.gallery_expires_at);
+  })();
+
+  // Border: expiry urgency takes priority for gallery stages, else deadline urgency
+  const borderClass = galleryExpiryStatus
+    ? DEADLINE_BORDER[galleryExpiryStatus]
+    : deadlineStatus
+    ? DEADLINE_BORDER[deadlineStatus]
+    : "border-border hover:border-foreground/30";
 
   // Human-readable deadline label
   const deadlineLabel = (() => {
@@ -197,7 +210,17 @@ function KanbanCard({
     return `${days}d restantes`;
   })();
 
-  const deadlineStagLabel = project.stage === "shot" ? "Galeria:" : "Entrega:";
+  // Human-readable gallery expiry label
+  const galleryExpiryLabel = (() => {
+    if (!project.gallery_expires_at || !galleryExpiryStatus) return null;
+    const d = parseISO(project.gallery_expires_at);
+    const now = new Date();
+    if (isPast(d)) return "Expirada";
+    const h = differenceInHours(d, now);
+    if (h < 24) return `${h}h p/ expirar`;
+    const days = differenceInDays(d, now);
+    return `${days}d p/ expirar`;
+  })();
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
@@ -270,6 +293,16 @@ function KanbanCard({
                   <span>{deadlineLabel}</span>
                 </span>
               )}
+            </div>
+          )}
+          {/* Gallery expiry indicator for proof_gallery / final_gallery */}
+          {galleryExpiryLabel && galleryExpiryStatus && (
+            <div className={`flex items-center gap-0.5 text-[10px] font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
+              {galleryExpiryStatus === "overdue"
+                ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                : <Clock className="h-2.5 w-2.5 shrink-0" />
+              }
+              <span>Galeria: {galleryExpiryLabel}</span>
             </div>
           )}
           {project.session_title && (
