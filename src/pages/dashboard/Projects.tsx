@@ -260,6 +260,8 @@ function KanbanColumn({
   onDelete,
   onArchive,
   onAddCard,
+  shotDeadline,
+  onSetShotDeadline,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -268,29 +270,80 @@ function KanbanColumn({
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
   onAddCard: (stage: Stage) => void;
+  shotDeadline?: string | null;
+  onSetShotDeadline?: (date: string | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
+
+  const deadlineDate = shotDeadline ? new Date(shotDeadline) : undefined;
+  const deadlineLabel = (() => {
+    if (!shotDeadline) return null;
+    try {
+      return format(new Date(shotDeadline), "dd/MM/yy");
+    } catch { return null; }
+  })();
 
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
       {/* header */}
       <div className="flex items-center justify-between mb-2 px-0.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span
             className="h-2 w-2 rounded-full shrink-0"
             style={{ background: stage.color }}
           />
-          <span className="text-[10px] tracking-[0.25em] uppercase font-medium">{stage.label}</span>
-          <span className="text-[10px] text-muted-foreground/60">{projects.length}</span>
+          <span className="text-[10px] tracking-[0.25em] uppercase font-medium truncate">{stage.label}</span>
+          <span className="text-[10px] text-muted-foreground/60 shrink-0">{projects.length}</span>
         </div>
-        <button
-          className="text-muted-foreground/40 hover:text-foreground transition-colors"
-          onClick={() => onAddCard(stage.key)}
-          aria-label={stage.label}
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Deadline picker — only for "shot" column */}
+          {stage.key === "shot" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 text-[10px] rounded px-1 py-0.5 transition-colors ${
+                    deadlineLabel
+                      ? "text-purple-500 hover:text-purple-600"
+                      : "text-muted-foreground/40 hover:text-muted-foreground"
+                  }`}
+                  title="Prazo para galeria de provas"
+                >
+                  <CalendarIcon className="h-3 w-3 shrink-0" />
+                  {deadlineLabel && <span>{deadlineLabel}</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="flex flex-col">
+                  <Calendar
+                    mode="single"
+                    selected={deadlineDate}
+                    onSelect={(d) => onSetShotDeadline?.(d ? d.toISOString() : null)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                  {shotDeadline && (
+                    <div className="border-t px-3 pb-3">
+                      <button
+                        className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => onSetShotDeadline?.(null)}
+                      >
+                        Remover prazo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <button
+            className="text-muted-foreground/40 hover:text-foreground transition-colors"
+            onClick={() => onAddCard(stage.key)}
+            aria-label={stage.label}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* drop zone */}
@@ -302,7 +355,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadline={shotDeadline} />
           ))}
         </SortableContext>
 
