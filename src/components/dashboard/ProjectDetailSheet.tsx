@@ -15,12 +15,14 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
-  Pencil, Check, X, Clock, AlertTriangle,
+  Pencil, Check, X, Clock, AlertTriangle, CalendarIcon, Timer,
 } from "lucide-react";
-import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
+import { format, differenceInDays, differenceInHours, isPast, parseISO, addDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -300,35 +302,85 @@ export function ProjectDetailSheet({
                 </div>
               </div>
 
-              {/* Gallery deadline — only relevant when stage is "shot" */}
-              {project.stage === "shot" && (
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] tracking-widest uppercase text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-2.5 w-2.5" /> Prazo para galeria
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      defaultValue={project.gallery_deadline ?? ""}
-                      key={project.id + "-gallery-deadline"}
-                      onBlur={(e) => save({ gallery_deadline: e.target.value || null } as any)}
-                      className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors w-full"
-                    />
-                    {project.gallery_deadline && (() => {
-                      const d = parseISO(project.gallery_deadline);
-                      const now = new Date();
-                      if (isPast(d)) return <span className="text-[10px] text-destructive shrink-0 flex items-center gap-0.5"><AlertTriangle className="h-2.5 w-2.5" />Vencido</span>;
-                      const days = differenceInDays(d, now);
-                      if (days <= 1) {
-                        const h = differenceInHours(d, now);
-                        return <span className="text-[10px] text-orange-500 shrink-0">{h}h restantes</span>;
-                      }
-                      const color = days <= 3 ? "text-yellow-500" : "text-emerald-500";
-                      return <span className={cn("text-[10px] shrink-0", color)}>{days}d restantes</span>;
-                    })()}
+              {/* Gallery / delivery deadline — for shot and post_production */}
+              {(project.stage === "shot" || project.stage === "post_production") && (() => {
+                const label = project.stage === "shot"
+                  ? "Prazo para galeria de prova"
+                  : "Prazo para entrega final";
+                const deadline = project.gallery_deadline ? parseISO(project.gallery_deadline) : undefined;
+                const now = new Date();
+
+                const urgencyBadge = (() => {
+                  if (!deadline) return null;
+                  if (isPast(deadline)) return (
+                    <span className="flex items-center gap-0.5 text-[10px] text-destructive font-medium shrink-0">
+                      <AlertTriangle className="h-2.5 w-2.5" /> Vencido
+                    </span>
+                  );
+                  const h = differenceInHours(deadline, now);
+                  if (h < 24) return (
+                    <span className="text-[10px] text-destructive font-medium shrink-0">{h}h restantes</span>
+                  );
+                  const d = differenceInDays(deadline, now);
+                  const color = d <= 3 ? "text-orange-500" : d <= 7 ? "text-yellow-600" : "text-emerald-500";
+                  return <span className={cn("text-[10px] font-medium shrink-0", color)}>{d}d restantes</span>;
+                })();
+
+                return (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-[10px] tracking-widest uppercase text-muted-foreground flex items-center gap-1">
+                      <Timer className="h-2.5 w-2.5" /> {label}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex items-center gap-1.5 h-7 px-2 rounded-md border text-sm transition-colors w-full text-left",
+                              deadline
+                                ? isPast(deadline)
+                                  ? "border-destructive/50 text-destructive"
+                                  : "border-input text-foreground hover:border-foreground/40"
+                                : "border-input text-muted-foreground/60 hover:border-foreground/40"
+                            )}
+                          >
+                            <CalendarIcon className="h-3 w-3 shrink-0" />
+                            <span className="flex-1 text-xs">
+                              {deadline ? format(deadline, "d MMM yyyy") : "Definir prazo…"}
+                            </span>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start" side="bottom">
+                          <Calendar
+                            mode="single"
+                            selected={deadline}
+                            onSelect={(d) => save({ gallery_deadline: d ? format(d, "yyyy-MM-dd") : null } as any)}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                          {deadline && (
+                            <div className="px-3 pb-3">
+                              <button
+                                onClick={() => save({ gallery_deadline: null } as any)}
+                                className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
+                              >
+                                Remover prazo
+                              </button>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                      {urgencyBadge}
+                    </div>
+                    {deadline && !isPast(deadline) && project.shoot_date && (
+                      <p className="text-[10px] text-muted-foreground/60 italic">
+                        {differenceInDays(deadline, parseISO(project.shoot_date))}d após a sessão
+                      </p>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <Separator />
