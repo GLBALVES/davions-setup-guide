@@ -31,7 +31,8 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Copy, MessageCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
