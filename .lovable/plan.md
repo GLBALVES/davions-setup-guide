@@ -1,61 +1,47 @@
 
+## Root Cause Analysis
 
-## Enriching the ProjectDetailSheet — Inspired by Reference
+The console errors show two problems:
 
-The reference image shows a full project management view with: Project Details sidebar (Client, Project Type, Date, Location, Description), Payments section, Documents, Sessions, and Notes. We'll adapt what's realistic given our data model.
+1. **`Cross-Origin Request Blocked` to `https://davions.com/~api/analytics`** — This is NOT code from the application. The URL `~api/analytics` is specific to **Cloudflare Web Analytics** (formerly called Browser Insights). It is injected automatically by Cloudflare when the `davions.com` domain has Web Analytics enabled in the Cloudflare dashboard. When a visitor accesses the photographer's custom domain (`davions.giombelli.com.br`), the app bundle (served via davions.com's CDN) includes the Cloudflare analytics beacon script, which then tries to report back to `davions.com/~api/analytics`. Since the page origin is `davions.giombelli.com.br`, the browser blocks it as cross-origin.
 
-### What we can add (we have the data)
+2. **`Cookie "__cf_bm" has been rejected for invalid domain`** — Cloudflare's bot-management cookie (`__cf_bm`) is set for `davions.com` but the visitor's current origin is `davions.giombelli.com.br`, so the browser rejects the cookie as invalid for that domain. This is a side-effect of the same Cloudflare configuration.
 
-1. **Two-column layout** — Left: session/booking details. Right: Project Details summary (read-only style like reference)
-2. **Location field** — new DB column on `client_projects` (the session table already has `location`)
-3. **Description field** — new DB column on `client_projects`  
-4. **Client phone** — new DB column on `client_projects`
-5. **Linked booking/session info** — already fetched via `booking_id` join; show session title, price, duration
-6. **Notes section** — already exists, keep as-is but style like the reference (with placeholder "Write a note...")
-7. **Stage badge next to title** — move stage to header area as a colored badge (like reference)
+### What is NOT causing the error
+- No code in the app makes a request to `~api/analytics` or `davions.com` for analytics
+- The Supabase `trackPageview` function is clean and posts to Supabase only
+- There are no `gtag`, `fbq`, or custom analytics injection scripts in the codebase
 
-### What we won't add (no data available yet)
-- Payments/invoices (no invoicing table linked to projects)
-- Documents section (no document storage per project)
-- Conversations (no chat per project)
+### The actual source
+Cloudflare Web Analytics injects a JS beacon (`<script src='https://static.cloudflare.com/beacon.min.js' ...>`) at the **network edge** (directly into the HTML response). This happens transparently outside the application code — the Lovable CDN / Cloudflare processes the HTML and injects it. It is not visible in the source code.
 
-These can be future features.
+### Fix options
 
-### Plan
+**Option A — Disable Cloudflare Web Analytics for the davions.com zone** (correct long-term fix)
+- Go to Cloudflare dashboard → davions.com zone → Analytics & Logs → Web Analytics → disable the automatic injection
+- This stops the beacon from being injected entirely
+- **Cannot be done via code** — requires Cloudflare dashboard access
 
-**1. Database migration** — Add 3 new columns to `client_projects`:
-```sql
-ALTER TABLE public.client_projects 
-  ADD COLUMN IF NOT EXISTS location text DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS description text DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS client_phone text DEFAULT NULL;
-```
+**Option B — CSP/meta tag to block the beacon from loading on custom domains** (partial mitigation)
+- Add a `Content-Security-Policy` meta tag in the `<head>` when running on a custom domain that blocks `davions.com` connections
+- This would suppress the errors but is complex and may have side effects
 
-**2. ProjectDetailSheet.tsx** — Major redesign:
+**Option C — No code change needed; document the fix**
+The correct action is entirely in the Cloudflare dashboard:
+1. Log in to Cloudflare → select `davions.com` zone
+2. Go to **Analytics & Logs → Web Analytics**
+3. Find the site and **disable "Automatic setup"** (inject via Workers/edge) OR disable Web Analytics entirely for this zone
+4. Alternatively, in the beacon settings, restrict it to only fire on the `davions.com` hostname (not custom domains)
 
-- **Header**: Project title (large, editable) + Stage badge inline (colored chip, clickable to change)
-- **Two-column layout** (on `sm:` screens):
-  - **Left column**: 
-    - Session info section (linked booking session name, type, date/time, location)
-    - Gallery deadline (existing)
-    - Notes (existing, restyled)
-  - **Right column** "Project Details" panel:
-    - Client name (editable, linked style like reference)
-    - Client email
-    - Client phone (new)
-    - Project Type (session type selector)
-    - Project Date (shoot date + time)
-    - Location (new, editable)
-    - Description (new, editable)
-- **Footer**: Archive/Delete actions + metadata timestamps
+### Why the errors are functionally harmless
+- The photographer's site still loads and functions correctly
+- The CORS error means Cloudflare analytics simply fails silently — no user-facing breakage
+- The cookie rejection is a cosmetic browser warning
 
-**3. Projects.tsx** — Update `ClientProject` interface and `fetchProjects` to include new fields. Update `ProjectSheetData` export.
+### Recommendation
+This is a **Cloudflare dashboard configuration issue**, not a code bug. The fix is:
 
-**4. Translations** — Add keys for Location, Description, Phone in all 3 languages.
+1. Go to Cloudflare → davions.com → Web Analytics → disable automatic injection
+2. If analytics are still desired, use manual Google Analytics (via the `google_analytics_id` field already in the photographer_site settings) injected only for the photographer's own domain — which the code already supports
 
-### Files to edit
-- `src/components/dashboard/ProjectDetailSheet.tsx` — full redesign
-- `src/pages/dashboard/Projects.tsx` — interface + fetch updates
-- `src/lib/i18n/translations.ts` — new translation keys
-- New migration SQL for the 3 columns
-
+The application code is correct. No file changes are needed.
