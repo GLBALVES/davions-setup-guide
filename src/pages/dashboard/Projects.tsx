@@ -315,6 +315,8 @@ function KanbanColumn({
   const { t } = useLanguage();
   const [inputVal, setInputVal] = useState(shotDeadlineDays != null ? String(shotDeadlineDays) : "");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [ppInputVal, setPpInputVal] = useState(postProdDeadlineDays != null ? String(postProdDeadlineDays) : "");
+  const [ppPopoverOpen, setPpPopoverOpen] = useState(false);
 
   const handleDaysCommit = (val: string) => {
     const n = parseInt(val, 10);
@@ -322,11 +324,26 @@ function KanbanColumn({
     else { onSetShotDeadlineDays?.(null); setInputVal(""); }
   };
 
+  const handlePpDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetPostProdDeadlineDays?.(n);
+    else { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); }
+  };
+
   // Example date: today + shotDeadlineDays
   const exampleDate = shotDeadlineDays != null
     ? (() => {
         const d = new Date();
         d.setDate(d.getDate() + shotDeadlineDays);
+        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+      })()
+    : null;
+
+  // Example date: today + postProdDeadlineDays
+  const ppExampleDate = postProdDeadlineDays != null
+    ? (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + postProdDeadlineDays);
         return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
       })()
     : null;
@@ -402,6 +419,60 @@ function KanbanColumn({
               </PopoverContent>
             </Popover>
           )}
+          {/* Deadline popover — only for "post_production" column */}
+          {stage.key === "post_production" && (
+            <Popover open={ppPopoverOpen} onOpenChange={setPpPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className={}
+                  title="Prazo para entrega da pós-produção"
+                >
+                  <Timer className="h-3 w-3 shrink-0" />
+                  {postProdDeadlineDays != null && <span>{postProdDeadlineDays}d</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                <div>
+                  <p className="text-xs font-semibold">Prazo para entrega da pós-produção</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    Número de dias após a data da sessão para concluir a pós-produção
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={ppInputVal}
+                    onChange={(e) => setPpInputVal(e.target.value)}
+                    onBlur={() => handlePpDaysCommit(ppInputVal)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handlePpDaysCommit(ppInputVal);
+                        setPpPopoverOpen(false);
+                      }
+                    }}
+                    placeholder="ex: 30"
+                    className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-sm text-muted-foreground">dias após a sessão</span>
+                </div>
+                {postProdDeadlineDays != null && ppExampleDate && (
+                  <p className="text-[11px] text-muted-foreground italic">
+                    Ex.: sessão hoje → prazo em <span className="font-medium not-italic text-foreground">{ppExampleDate}</span>
+                  </p>
+                )}
+                {postProdDeadlineDays != null && (
+                  <button
+                    onClick={() => { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); setPpPopoverOpen(false); }}
+                    className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                  >
+                    Remover prazo
+                  </button>
+                )}
+              </PopoverContent>
+            </Popover>
+          )}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
             onClick={() => onAddCard(stage.key)}
@@ -421,7 +492,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} />
           ))}
         </SortableContext>
 
