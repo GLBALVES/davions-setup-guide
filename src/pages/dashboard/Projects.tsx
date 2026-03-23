@@ -166,6 +166,7 @@ function KanbanCard({
   // Compute effective deadline for "post_production" stage
   const postProdEffectiveDeadline = (() => {
     if (project.stage !== "post_production") return null;
+    if (project.gallery_deadline) return project.gallery_deadline;
     if (postProdDeadlineDays != null && project.shoot_date) {
       try {
         const shoot = new Date(project.shoot_date);
