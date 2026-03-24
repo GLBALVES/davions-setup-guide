@@ -605,6 +605,178 @@ function SslAlertHistoryPanel() {
 }
 
 
+// ── SSL Email Bounces Panel ──────────────────────────────────────────────────
+
+type SslEmailBounceRow = {
+  id: string;
+  email: string;
+  event: string;
+  domain: string | null;
+  message_id: string | null;
+  reason: string | null;
+  brevo_event_at: string | null;
+  created_at: string;
+};
+
+function SslBouncesPanel() {
+  const WEBHOOK_URL = `https://pjcegphrngpedujeatrl.supabase.co/functions/v1/brevo-webhook`;
+
+  const {
+    data: bounces,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery<SslEmailBounceRow[]>({
+    queryKey: ["ssl-email-bounces"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssl_email_bounces" as never)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as SslEmailBounceRow[];
+    },
+    refetchInterval: 60_000,
+  });
+
+  const hasBounces = bounces && bounces.length > 0;
+
+  return (
+    <div className={cn(
+      "border rounded-lg p-5 space-y-4 transition-colors",
+      hasBounces ? "border-destructive/40 bg-destructive/[0.03]" : "border-border"
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <MailWarning size={13} className={cn(hasBounces ? "text-destructive" : "text-muted-foreground")} />
+          <p className={cn(
+            "text-[10px] tracking-[0.3em] uppercase font-light",
+            hasBounces ? "text-destructive" : "text-muted-foreground"
+          )}>
+            Bounce de E-mail SSL
+          </p>
+          {hasBounces && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-light border border-destructive/20">
+              <AlertTriangle size={8} />
+              {bounces.length} hard bounce{bounces.length > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+        >
+          {isFetching ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
+          Atualizar
+        </button>
+      </div>
+
+      {hasBounces && (
+        <div className="flex items-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <AlertTriangle size={12} className="text-destructive mt-0.5 shrink-0" />
+          <div className="space-y-1 text-xs font-light">
+            <p className="text-destructive font-normal">Hard bounce detectado pelo Brevo</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Um ou mais e-mails de alerta SSL não foram entregues. Verifique se o endereço destinatário 
+              (<span className="font-mono text-foreground">team@davions.com</span>) está válido e se o domínio remetente 
+              (<span className="font-mono text-foreground">noreply@davions.com</span>) tem SPF/DKIM configurados no Brevo.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <p className="text-xs font-light text-muted-foreground">
+        Registros de hard bounce recebidos via webhook do Brevo para e-mails de alerta SSL. Configure o webhook no Brevo apontando para a URL abaixo.
+      </p>
+
+      {/* Webhook URL */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">URL do Webhook Brevo</p>
+        <div className="relative">
+          <pre className="bg-muted rounded-md px-4 py-3 pr-10 text-xs font-mono overflow-x-auto leading-relaxed text-foreground">
+            {WEBHOOK_URL}
+          </pre>
+          <CopyButton text={WEBHOOK_URL} />
+        </div>
+        <p className="text-[11px] font-light text-muted-foreground leading-relaxed">
+          No Brevo: <strong className="text-foreground font-normal">Transactional → Settings → Webhooks</strong> → Add a webhook → selecione evento <code className="font-mono bg-muted px-1 rounded text-[10px]">hard_bounce</code> → cole a URL acima.
+        </p>
+      </div>
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="h-10 bg-muted rounded-md animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !hasBounces && (
+        <div className="flex flex-col items-center justify-center py-6 gap-2 text-center border border-dashed border-border rounded-md">
+          <CheckCircle size={18} className="text-emerald-500/60" />
+          <p className="text-xs font-light text-muted-foreground">
+            Nenhum hard bounce registrado — entregas normais.
+          </p>
+        </div>
+      )}
+
+      {hasBounces && (
+        <div className="border border-destructive/20 rounded-md overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">E-mail</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Evento</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light hidden sm:table-cell">Motivo</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Detectado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bounces.map((row) => {
+                let detectedFmt = "—";
+                let detectedRelative = "";
+                try {
+                  const d = new Date(row.brevo_event_at ?? row.created_at);
+                  detectedFmt = format(d, "dd/MM/yyyy HH:mm", { locale: ptBR });
+                  detectedRelative = formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
+                } catch { /* noop */ }
+
+                return (
+                  <tr key={row.id} className="border-b border-border/60 last:border-0 hover:bg-destructive/5 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <div className="flex items-center gap-2">
+                        <X size={10} className="text-destructive shrink-0" />
+                        <span className="font-mono text-foreground">{row.email}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-4">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-light border border-destructive/20">
+                        {row.event}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-4 text-muted-foreground font-light hidden sm:table-cell max-w-[200px] truncate">
+                      {row.reason ?? "—"}
+                    </td>
+                    <td className="py-2.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={10} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground font-light" title={detectedFmt}>
+                          {detectedRelative || detectedFmt}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SslRenewalPanel() {
   const [renewing, setRenewing] = useState<Record<string, boolean>>({});
