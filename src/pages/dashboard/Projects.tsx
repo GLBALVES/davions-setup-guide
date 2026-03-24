@@ -385,6 +385,24 @@ function KanbanCard({
             </div>
           )}
         </div>
+
+        {/* Deadline progress bar */}
+        {(() => {
+          const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
+          const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const startAnchor = project.shoot_date ?? project.created_at;
+          if (!status || !deadline) return null;
+          const progress = getDeadlineProgress(startAnchor, deadline);
+          const barColor = DEADLINE_BAR[status] ?? "bg-border";
+          return (
+            <div className="mt-1 h-1 w-full rounded-full bg-muted/50 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
