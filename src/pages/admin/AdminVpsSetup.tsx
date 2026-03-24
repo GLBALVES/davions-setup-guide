@@ -446,6 +446,200 @@ function EnvDetector({ detected, onSelect }: { detected: EnvType; onSelect: (v: 
   );
 }
 
+// ── SSL Renewal Panel ────────────────────────────────────────────────────────
+const VPS_BASE = "https://davions.giombelli.com.br";
+
+type VpsCert = { domain: string; expiresAt?: string | null };
+
+function SslRenewalPanel() {
+  const [renewing, setRenewing] = useState<Record<string, boolean>>({});
+  const [results, setResults] = useState<Record<string, "ok" | "error">>({});
+
+  const {
+    data: certs,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<VpsCert[]>({
+    queryKey: ["vps-certs-renewal"],
+    queryFn: async () => {
+      const res = await fetch(`${VPS_BASE}/api/certs`);
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const json = await res.json();
+      if (!Array.isArray(json)) throw new Error("Unexpected response format");
+      return json.map((item: unknown) => {
+        if (typeof item === "string") return { domain: item, expiresAt: null };
+        if (typeof item === "object" && item !== null) {
+          const obj = item as Record<string, unknown>;
+          const expiry = obj.expiresAt ?? obj.expires_at ?? obj.not_after ?? null;
+          return {
+            domain: String(obj.domain ?? obj.name ?? obj.subject ?? "unknown"),
+            expiresAt: expiry != null ? String(expiry) : null,
+          };
+        }
+        return { domain: "unknown", expiresAt: null };
+      });
+    },
+    retry: 1,
+  });
+
+  const renewCert = async (domain: string) => {
+    setRenewing((r) => ({ ...r, [domain]: true }));
+    setResults((r) => { const n = { ...r }; delete n[domain]; return n; });
+    try {
+      const res = await fetch(`${VPS_BASE}/api/renew-cert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setResults((r) => ({ ...r, [domain]: "ok" }));
+      toast.success(`Renovação iniciada para ${domain}`);
+      setTimeout(() => refetch(), 3000);
+    } catch (e) {
+      setResults((r) => ({ ...r, [domain]: "error" }));
+      toast.error(`Falha ao renovar ${domain}: ${e instanceof Error ? e.message : "Erro desconhecido"}`);
+    } finally {
+      setRenewing((r) => ({ ...r, [domain]: false }));
+    }
+  };
+
+  const renewAll = async () => {
+    if (!certs?.length) return;
+    for (const cert of certs) {
+      await renewCert(cert.domain);
+    }
+  };
+
+  const isExpiringSoon = (expiresAt: string | null | undefined) => {
+    if (!expiresAt) return false;
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    return diff < 1000 * 60 * 60 * 24 * 30; // within 30 days
+  };
+
+  return (
+    <div className="border border-border rounded-lg p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={13} className="text-muted-foreground" />
+          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-light">
+            Renovação de Certificados SSL
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {certs && certs.length > 0 && (
+            <button
+              onClick={renewAll}
+              disabled={isFetching || Object.values(renewing).some(Boolean)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-light text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw size={11} />
+              Renovar todos
+            </button>
+          )}
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+          >
+            {isFetching ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <p className="text-xs font-light text-muted-foreground">
+        Force a renovação de certificados SSL diretamente da VPS. Útil para certificados próximos da expiração ou com problemas de emissão.
+      </p>
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-10 bg-muted rounded-md animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {isError && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <AlertTriangle size={12} className="text-destructive mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-xs font-light text-destructive">Erro ao buscar certificados da VPS</p>
+            <p className="text-[11px] font-mono text-muted-foreground">
+              {error instanceof Error ? error.message : "Erro desconhecido"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {certs && certs.length === 0 && (
+        <p className="text-xs font-light text-muted-foreground text-center py-4">
+          Nenhum certificado encontrado na VPS.
+        </p>
+      )}
+
+      {certs && certs.length > 0 && (
+        <div className="divide-y divide-border border border-border rounded-md overflow-hidden">
+          {certs.map((cert) => {
+            const expiring = isExpiringSoon(cert.expiresAt);
+            const status = results[cert.domain];
+            return (
+              <div
+                key={cert.domain}
+                className="flex items-center justify-between px-4 py-2.5 gap-4"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {status === "ok" ? (
+                    <CheckCircle size={12} className="text-foreground shrink-0" />
+                  ) : status === "error" ? (
+                    <ShieldAlert size={12} className="text-destructive shrink-0" />
+                  ) : expiring ? (
+                    <AlertTriangle size={12} className="text-muted-foreground shrink-0" />
+                  ) : (
+                    <ShieldCheck size={12} className="text-muted-foreground shrink-0" />
+                  )}
+                  <span className="text-xs font-mono text-foreground truncate">{cert.domain}</span>
+                  {expiring && !status && (
+                    <span className="text-[9px] tracking-[0.15em] uppercase font-light text-destructive border border-destructive/30 rounded px-1.5 py-0.5 shrink-0">
+                      Expirando
+                    </span>
+                  )}
+                  {status === "ok" && (
+                    <span className="text-[9px] tracking-[0.15em] uppercase font-light text-foreground border border-foreground/30 rounded px-1.5 py-0.5 shrink-0">
+                      Renovado
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {cert.expiresAt && (
+                    <span className="text-[10px] font-light text-muted-foreground hidden sm:block">
+                      {new Date(cert.expiresAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => renewCert(cert.domain)}
+                    disabled={!!renewing[cert.domain]}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-md border border-border text-[11px] font-light text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+                  >
+                    {renewing[cert.domain] ? (
+                      <Loader2 size={10} className="animate-spin" />
+                    ) : (
+                      <RefreshCw size={10} />
+                    )}
+                    Renovar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminVpsSetup() {
   const [domain, setDomain] = useState("davions.nevoxholding.com");
   const [loading, setLoading] = useState(false);
