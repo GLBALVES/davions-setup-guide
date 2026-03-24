@@ -537,10 +537,44 @@ function ExpiryBadge({ expiresAt, loading }: { expiresAt: string | null | undefi
   );
 }
 
+const VPS_RENEW_URL = "https://davions.giombelli.com.br/api/renew-cert";
+
+type RenewStatus = "idle" | "loading" | "success" | "error";
+
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
   const [certExpiry, setCertExpiry] = useState<Record<string, string | null>>({});
   const [loadingExpiry, setLoadingExpiry] = useState<Record<string, boolean>>({});
   const [statusFilter, setStatusFilter] = useState<"all" | "expiring" | "expired">("all");
+  const [renewStatus, setRenewStatus] = useState<Record<string, RenewStatus>>({});
+
+  const renewCert = useCallback(async (domain: string) => {
+    setRenewStatus((prev) => ({ ...prev, [domain]: "loading" }));
+    try {
+      const res = await fetch(VPS_RENEW_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRenewStatus((prev) => ({ ...prev, [domain]: "success" }));
+      // Auto-reset after 4 s and refresh expiry for this domain
+      setTimeout(() => {
+        setRenewStatus((prev) => ({ ...prev, [domain]: "idle" }));
+        setCertExpiry((prev) => { const next = { ...prev }; delete next[domain]; return next; });
+        setLoadingExpiry((prev) => ({ ...prev, [domain]: true }));
+        const baseUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/check-ssl-cert`;
+        fetch(`${baseUrl}?domain=${encodeURIComponent(domain)}`)
+          .then((r) => r.json())
+          .then((j) => setCertExpiry((prev) => ({ ...prev, [domain]: j.expiresAt ?? null })))
+          .catch(() => setCertExpiry((prev) => ({ ...prev, [domain]: null })))
+          .finally(() => setLoadingExpiry((prev) => ({ ...prev, [domain]: false })));
+      }, 4000);
+    } catch (e) {
+      console.error("renew-cert error:", e);
+      setRenewStatus((prev) => ({ ...prev, [domain]: "error" }));
+      setTimeout(() => setRenewStatus((prev) => ({ ...prev, [domain]: "idle" })), 4000);
+    }
+  }, []);
 
   const {
     data: certs,
