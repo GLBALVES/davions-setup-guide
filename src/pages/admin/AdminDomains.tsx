@@ -540,6 +540,7 @@ function ExpiryBadge({ expiresAt, loading }: { expiresAt: string | null | undefi
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
   const [certExpiry, setCertExpiry] = useState<Record<string, string | null>>({});
   const [loadingExpiry, setLoadingExpiry] = useState<Record<string, boolean>>({});
+  const [statusFilter, setStatusFilter] = useState<"all" | "expiring" | "expired">("all");
 
   const {
     data: certs,
