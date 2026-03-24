@@ -1106,6 +1106,9 @@ export default function AdminVpsSetup() {
         {/* SSL Alert History */}
         <SslAlertHistoryPanel />
 
+        {/* SSL Email Bounces */}
+        <SslBouncesPanel />
+
         {/* Environment Auto-Detection */}
         <EnvDetector detected={detectedEnv} onSelect={setDetectedEnv} />
 
