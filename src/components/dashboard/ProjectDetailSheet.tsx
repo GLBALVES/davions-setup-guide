@@ -23,7 +23,11 @@ import {
   Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Mail, User, FileText,
   Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
   Paperclip, Download, File, Image, FileText as FileTextIcon, Loader2, UploadCloud,
+  MessageCircle, Send, ExternalLink, AtSign,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useRef } from "react";
 import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
