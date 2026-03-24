@@ -485,6 +485,150 @@ function ChainDiagnostic({ domain, photographerId }: { domain: string; photograp
   );
 }
 
+// ── VPS Certificates tab ─────────────────────────────────────────────────────
+type VpsCert = {
+  domain: string;
+  not_after?: string;
+  issued_at?: string;
+};
+
+function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
+  const {
+    data: certs,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<VpsCert[]>({
+    queryKey: ["vps-certs"],
+    queryFn: async () => {
+      const res = await fetch("https://davions.giombelli.com.br/api/certs");
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const json = await res.json();
+      // Normalise: handle array-of-strings or array-of-objects
+      if (!Array.isArray(json)) throw new Error("Unexpected response format");
+      return json.map((item: unknown) => {
+        if (typeof item === "string") return { domain: item };
+        if (typeof item === "object" && item !== null) {
+          const obj = item as Record<string, unknown>;
+          return {
+            domain: String(obj.domain ?? obj.name ?? obj.subject ?? "unknown"),
+            not_after: obj.not_after != null ? String(obj.not_after) : undefined,
+            issued_at: obj.issued_at != null ? String(obj.issued_at) : undefined,
+          } as VpsCert;
+        }
+        return { domain: "unknown" };
+      });
+    },
+    retry: 1,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="border border-border rounded-md overflow-hidden">
+        <div className="p-6 space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-8 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="border border-destructive/30 rounded-md p-6 flex items-start gap-3">
+        <XCircle size={14} className="shrink-0 text-destructive mt-0.5" />
+        <div className="flex-1 space-y-1">
+          <p className="text-xs font-light text-foreground">Falha ao buscar certificados da VPS</p>
+          <p className="text-[11px] font-mono text-muted-foreground">
+            {error instanceof Error ? error.message : "Erro desconhecido"}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-xs text-muted-foreground shrink-0"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          <RefreshCw size={11} className={cn(isFetching && "animate-spin")} />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  if (!certs || certs.length === 0) {
+    return (
+      <div className="border border-border rounded-md p-12 text-center">
+        <ShieldAlert size={24} className="mx-auto mb-3 text-muted-foreground/40" />
+        <p className="text-xs text-muted-foreground">Nenhum certificado encontrado na VPS.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-border rounded-md overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Domínio</TableHead>
+            <TableHead>SSL</TableHead>
+            <TableHead>Fotógrafo</TableHead>
+            <TableHead>Cadastrado em</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {certs.map((cert) => {
+            const photographer = photographers.find(
+              (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
+            );
+            const dateStr = cert.not_after || cert.issued_at;
+            return (
+              <TableRow key={cert.domain}>
+                <TableCell className="py-3">
+                  <span className="font-mono text-xs">{cert.domain}</span>
+                </TableCell>
+                <TableCell className="py-3">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-light tracking-wide border border-emerald-500/20">
+                    <CheckCircle2 size={10} />
+                    SSL Ativo
+                  </span>
+                </TableCell>
+                <TableCell className="py-3">
+                  {photographer ? (
+                    <div>
+                      <p className="text-xs font-light">
+                        {photographer.business_name || photographer.full_name || "—"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{photographer.email}</p>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-light text-destructive">Não cadastrado</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-3 text-xs text-muted-foreground">
+                  {dateStr
+                    ? (() => {
+                        try {
+                          return format(new Date(dateStr), "dd/MM/yyyy");
+                        } catch {
+                          return dateStr;
+                        }
+                      })()
+                    : "—"}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function AdminDomains() {
   const [expanded, setExpanded] = useState<string | null>(null);
