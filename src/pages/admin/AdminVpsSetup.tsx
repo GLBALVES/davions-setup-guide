@@ -773,6 +773,9 @@ export default function AdminVpsSetup() {
           )}
         </div>
 
+        {/* SSL Renewal */}
+        <SslRenewalPanel />
+
         {/* Environment Auto-Detection */}
         <EnvDetector detected={detectedEnv} onSelect={setDetectedEnv} />
 
