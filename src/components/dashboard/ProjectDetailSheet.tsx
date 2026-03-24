@@ -943,7 +943,7 @@ export function ProjectDetailSheet({
                 <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[project.stage])}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[200]">
                   {STAGES.map((s) => (
                     <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
                   ))}
