@@ -18,6 +18,7 @@ import {
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
   ShieldCheck, Wifi, RefreshCw, XCircle, Info, ChevronDown, ChevronRight, BookOpen, Eye,
+  Mail, MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
