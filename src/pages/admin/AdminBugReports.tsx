@@ -37,6 +37,8 @@ function isVideo(url: string) {
   return /\.(mp4|webm|mov|ogg|avi|mkv)(\?|$)/i.test(url);
 }
 
+type LightboxItem = { url: string; type: "image" | "video" };
+
 export default function AdminBugReports() {
   const [reports, setReports] = useState<BugReport[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -44,6 +46,7 @@ export default function AdminBugReports() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [savingNotes, setSavingNotes] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
 
   useEffect(() => {
     setFetching(true);
