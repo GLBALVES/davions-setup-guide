@@ -203,6 +203,33 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.id,
   });
 
+  // ── Fetch booking payment info ───────────────────────────────────────────
+  interface BookingPaymentInfo {
+    id: string;
+    client_name: string;
+    payment_status: string;
+    extras_total: number;
+    booked_date: string | null;
+    created_at: string;
+    sessions: { title: string; price?: number } | null;
+    session_availability: { start_time: string; end_time: string; date: string } | null;
+  }
+
+  const { data: bookingPayment } = useQuery<BookingPaymentInfo | null>({
+    queryKey: ["project-booking-payment", project.booking_id],
+    queryFn: async () => {
+      if (!project.booking_id) return null;
+      const { data, error } = await (supabase as any)
+        .from("bookings")
+        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price ), session_availability ( start_time, end_time, date )")
+        .eq("id", project.booking_id)
+        .single();
+      if (error) return null;
+      return data as BookingPaymentInfo;
+    },
+    enabled: !!project.booking_id,
+  });
+
   const addMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("project_invoices" as any).insert({
@@ -267,7 +294,37 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         </button>
       </div>
 
-      {/* Summary bar */}
+      {/* ── Booking payment card ───────────────────────────────────────── */}
+      {bookingPayment && (() => {
+        const ps = bookingPayment.payment_status;
+        const isFullPaid    = ps === "paid";
+        const isDepositPaid = ps === "deposit_paid";
+        const sessionDate   = bookingPayment.session_availability?.date;
+        const sessionTitle  = (bookingPayment.sessions as any)?.title ?? project.session_type ?? "—";
+        const cfgBg  = isFullPaid ? "bg-emerald-500/10 border-emerald-500/20"
+                     : isDepositPaid ? "bg-amber-500/10 border-amber-500/20"
+                     : "bg-muted/30 border-border/50";
+        const cfgColor = isFullPaid ? "text-emerald-600" : isDepositPaid ? "text-amber-600" : "text-muted-foreground";
+        const label    = isFullPaid ? tp.bookingPaymentFull : isDepositPaid ? tp.bookingPaymentDeposit : tp.bookingPaymentPending;
+        const Icon     = isFullPaid ? CheckCircle2 : isDepositPaid ? CreditCard : Clock;
+        return (
+          <div className={cn("rounded-md border px-3 py-2 flex items-center gap-2.5", cfgBg)}>
+            <Icon className={cn("h-4 w-4 shrink-0", cfgColor)} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate leading-tight">{sessionTitle}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {tp.bookingPaymentSection}
+                {sessionDate && <> · {format(parseISO(sessionDate), "d MMM yyyy")}</>}
+              </p>
+            </div>
+            <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfgBg, cfgColor)}>
+              {label}
+            </span>
+          </div>
+        );
+      })()}
+
+
       {invoices.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {[
