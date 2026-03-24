@@ -589,7 +589,7 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
             const photographer = photographers.find(
               (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
             );
-            const dateStr = cert.not_after || cert.issued_at;
+            const dateStr = cert.expiresAt;
             return (
               <TableRow key={cert.domain}>
                 <TableCell className="py-3">
