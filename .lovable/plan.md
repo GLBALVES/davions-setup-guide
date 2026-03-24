@@ -1,58 +1,51 @@
 
-## Goal
+## Problem
 
-Add a **"VPS Certificates"** tab to the existing `/admin/domains` page. This tab will:
+The VPS `/api/certs` response returns `"expiresAt": null` for every domain — the API simply doesn't expose expiry dates. The badge component works correctly; it just has no data to display.
 
-1. Fetch `https://davions.giombelli.com.br/api/certs` to get issued SSL certificates from the VPS
-2. Cross-reference each domain with the `photographers` table (`custom_domain` column) to show the linked photographer name
-3. Display a table: **Domínio** | **SSL** | **Fotógrafo** | **Cadastrado em**
-4. Show a green "SSL Ativo" badge for each cert
-5. Show photographer name if found, or "Não cadastrado" in red if not
-6. Refresh button + loading state + error handling
+## Solution
 
----
+Proxy certificate expiry lookups through a new edge function that queries the public `crt.sh` certificate transparency API. For each cert in the table with a null `expiresAt`, fetch the real SSL expiry date and display it.
 
-## Approach
-
-### Tab system
-Wrap the existing page content in a simple tab toggle (two buttons: "Domínios Registrados" / "Certificados VPS"). No new library needed — use `useState` for the active tab.
-
-### API response assumption
-`/api/certs` likely returns an array of objects. Common Caddy cert API shape:
-```json
-[
-  { "domain": "example.com", "not_after": "2025-06-01T..." },
-  ...
-]
+### Flow
+```text
+Browser (VpsCertsTab)
+  → load certs from VPS API (gets domains, expiresAt=null for all)
+  → for each domain, call edge function `check-ssl-cert?domain=X`
+      → edge function fetches crt.sh JSON for that domain
+      → finds the most recent active cert's not_after date
+      → returns { domain, expiresAt }
+  → merge results into state
+  → ExpiryBadge shows real colored badge
 ```
-The component will handle both array-of-strings and array-of-objects, extracting the domain name defensively.
 
-### Cross-reference
-The `photographers` query is already loaded on this page (line 494–505). Pass it down to the certs tab and use `.find(p => p.custom_domain === cert.domain)` to resolve names.
+### crt.sh API
 
-### Error handling
-If the fetch fails (CORS, network, non-200), show an error card with the message and a retry button.
+```
+GET https://crt.sh/?q=davions.giombelli.com.br&output=json
+Returns: [{ "not_after": "2025-12-01T00:00:00", "common_name": "...", ... }, ...]
+```
+
+Filter to the entry with the highest `not_after` that hasn't expired yet.
 
 ---
 
-## Files to Edit
+## Files to Change
 
-### `src/pages/admin/AdminDomains.tsx`
+### 1. New: `supabase/functions/check-ssl-cert/index.ts`
 
-1. **Add tab state** at the top of `AdminDomains` (line ~488):
-   ```ts
-   const [activeTab, setActiveTab] = useState<"domains" | "certs">("domains");
-   ```
+- Accepts `?domain=<domain>` query param
+- Fetches `https://crt.sh/?q=<domain>&output=json`
+- Finds the cert with the latest `not_after` (that's not expired)
+- Returns `{ domain, expiresAt: "2025-12-01T..." }` or `{ domain, expiresAt: null }`
+- CORS headers included
 
-2. **Add `VpsCertsTab` component** (before `AdminDomains`, after `ChainDiagnostic`):
-   - `useQuery` with `queryKey: ["vps-certs"]` fetching `https://davions.giombelli.com.br/api/certs`
-   - Accepts `photographers` prop for cross-reference
-   - Renders table with 4 columns
-   - Refresh button uses `refetch()`
-   - Loading skeleton, error state
+### 2. Edit: `src/pages/admin/AdminDomains.tsx` — `VpsCertsTab` component
 
-3. **Wrap existing table in tab conditional** — surround the existing table block (line ~567–757) with `{activeTab === "domains" && (...)}` and add `{activeTab === "certs" && <VpsCertsTab photographers={photographers} />}`
+- After loading certs from VPS, trigger a secondary lookup for each domain's expiry via the edge function
+- Store results in a `Record<string, string | null>` state (`certExpiry`)
+- `ExpiryBadge` reads from `certExpiry[cert.domain] ?? cert.expiresAt`
+- Show a small `Loader2` spinner inline in the "Dias para vencer" cell while the secondary lookup is in flight
+- Lookup is triggered once per cert load (not on every render), using `useEffect` watching the certs array
 
-4. **Add tab bar** in the header area (after the title row, before the stale-pending alert), with two pill-style buttons matching the existing design language (text-xs, font-light, tracking-wide).
-
-No new files, no new dependencies.
+No new dependencies. No DB changes.
