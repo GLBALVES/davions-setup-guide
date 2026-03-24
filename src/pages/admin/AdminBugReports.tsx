@@ -4,7 +4,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { BugReportThread } from "@/components/admin/BugReportThread";
 import {
   Bug, ChevronDown, ExternalLink, Loader2,
-  CheckCircle2, Clock, AlertCircle, XCircle, Video,
+  CheckCircle2, Clock, AlertCircle, XCircle, Video, Maximize2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
