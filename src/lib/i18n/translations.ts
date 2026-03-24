@@ -329,7 +329,6 @@ export const translations = {
       bookingPaymentFull: "Paid in full",
       bookingPaymentDeposit: "Deposit paid",
       bookingPaymentPending: "Awaiting payment",
-      descriptionPlaceholder: "e.g. Photo session",
       // Documents section
       documentsSection: "Documents",
       contractsSubsection: "Contracts",
