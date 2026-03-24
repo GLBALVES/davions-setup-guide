@@ -488,8 +488,7 @@ function ChainDiagnostic({ domain, photographerId }: { domain: string; photograp
 // ── VPS Certificates tab ─────────────────────────────────────────────────────
 type VpsCert = {
   domain: string;
-  not_after?: string;
-  issued_at?: string;
+  expiresAt?: string | null;
 };
 
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
@@ -506,19 +505,24 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
       const res = await fetch("https://davions.giombelli.com.br/api/certs");
       if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
       const json = await res.json();
-      // Normalise: handle array-of-strings or array-of-objects
       if (!Array.isArray(json)) throw new Error("Unexpected response format");
       return json.map((item: unknown) => {
-        if (typeof item === "string") return { domain: item };
+        if (typeof item === "string") return { domain: item, expiresAt: null };
         if (typeof item === "object" && item !== null) {
           const obj = item as Record<string, unknown>;
+          // Support both camelCase (expiresAt) and snake_case (not_after / issued_at)
+          const expiry =
+            obj.expiresAt ??
+            obj.expires_at ??
+            obj.not_after ??
+            obj.issued_at ??
+            null;
           return {
             domain: String(obj.domain ?? obj.name ?? obj.subject ?? "unknown"),
-            not_after: obj.not_after != null ? String(obj.not_after) : undefined,
-            issued_at: obj.issued_at != null ? String(obj.issued_at) : undefined,
+            expiresAt: expiry != null ? String(expiry) : null,
           } as VpsCert;
         }
-        return { domain: "unknown" };
+        return { domain: "unknown", expiresAt: null };
       });
     },
     retry: 1,
