@@ -1298,18 +1298,9 @@ const WebsiteSettings = () => {
 
                       {/* Current domain display or empty state */}
                       {customDomain ? (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-3 p-4 border border-border bg-card">
-                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <p className="text-sm font-mono font-light flex-1 truncate">{customDomain}</p>
-                            <button type="button" onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy domain URL">
-                              {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                            </button>
-                            <a href={`https://${customDomain}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          </div>
-                          {(() => {
+                         <div className="flex flex-col gap-3">
+                           <StoreSharePanel url={`https://${customDomain}`} />
+                           {(() => {
                             const DAVIONS_VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
                             const parts = customDomain.split(".");
                             const lastTwo = parts.slice(-2).join(".");
