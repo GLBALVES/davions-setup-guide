@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
   ShieldCheck,
   Link2,
   Code2,
+  ShieldAlert,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -483,8 +485,153 @@ function ChainDiagnostic({ domain, photographerId }: { domain: string; photograp
   );
 }
 
+// ── VPS Certificates tab ─────────────────────────────────────────────────────
+type VpsCert = {
+  domain: string;
+  not_after?: string;
+  issued_at?: string;
+};
+
+function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
+  const {
+    data: certs,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<VpsCert[]>({
+    queryKey: ["vps-certs"],
+    queryFn: async () => {
+      const res = await fetch("https://davions.giombelli.com.br/api/certs");
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const json = await res.json();
+      // Normalise: handle array-of-strings or array-of-objects
+      if (!Array.isArray(json)) throw new Error("Unexpected response format");
+      return json.map((item: unknown) => {
+        if (typeof item === "string") return { domain: item };
+        if (typeof item === "object" && item !== null) {
+          const obj = item as Record<string, unknown>;
+          return {
+            domain: String(obj.domain ?? obj.name ?? obj.subject ?? "unknown"),
+            not_after: obj.not_after != null ? String(obj.not_after) : undefined,
+            issued_at: obj.issued_at != null ? String(obj.issued_at) : undefined,
+          } as VpsCert;
+        }
+        return { domain: "unknown" };
+      });
+    },
+    retry: 1,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="border border-border rounded-md overflow-hidden">
+        <div className="p-6 space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-8 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="border border-destructive/30 rounded-md p-6 flex items-start gap-3">
+        <XCircle size={14} className="shrink-0 text-destructive mt-0.5" />
+        <div className="flex-1 space-y-1">
+          <p className="text-xs font-light text-foreground">Falha ao buscar certificados da VPS</p>
+          <p className="text-[11px] font-mono text-muted-foreground">
+            {error instanceof Error ? error.message : "Erro desconhecido"}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-xs text-muted-foreground shrink-0"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          <RefreshCw size={11} className={cn(isFetching && "animate-spin")} />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  if (!certs || certs.length === 0) {
+    return (
+      <div className="border border-border rounded-md p-12 text-center">
+        <ShieldAlert size={24} className="mx-auto mb-3 text-muted-foreground/40" />
+        <p className="text-xs text-muted-foreground">Nenhum certificado encontrado na VPS.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-border rounded-md overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Domínio</TableHead>
+            <TableHead>SSL</TableHead>
+            <TableHead>Fotógrafo</TableHead>
+            <TableHead>Cadastrado em</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {certs.map((cert) => {
+            const photographer = photographers.find(
+              (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
+            );
+            const dateStr = cert.not_after || cert.issued_at;
+            return (
+              <TableRow key={cert.domain}>
+                <TableCell className="py-3">
+                  <span className="font-mono text-xs">{cert.domain}</span>
+                </TableCell>
+                <TableCell className="py-3">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-light tracking-wide border border-emerald-500/20">
+                    <CheckCircle2 size={10} />
+                    SSL Ativo
+                  </span>
+                </TableCell>
+                <TableCell className="py-3">
+                  {photographer ? (
+                    <div>
+                      <p className="text-xs font-light">
+                        {photographer.business_name || photographer.full_name || "—"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{photographer.email}</p>
+                    </div>
+                  ) : (
+                    <span className="text-xs font-light text-destructive">Não cadastrado</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-3 text-xs text-muted-foreground">
+                  {dateStr
+                    ? (() => {
+                        try {
+                          return format(new Date(dateStr), "dd/MM/yyyy");
+                        } catch {
+                          return dateStr;
+                        }
+                      })()
+                    : "—"}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function AdminDomains() {
+  const [activeTab, setActiveTab] = useState<"domains" | "certs">("domains");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [diagOpen, setDiagOpen] = useState<string | null>(null);
   const [statuses, setStatuses] = useState<Record<string, RowStatus>>({});
@@ -568,7 +715,7 @@ export default function AdminDomains() {
     <AdminLayout>
       <div className="p-8 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <Globe size={16} className="text-muted-foreground" />
           <div>
             <h1 className="text-sm font-light tracking-widest uppercase">Custom Domains</h1>
@@ -579,20 +726,48 @@ export default function AdminDomains() {
           <Badge variant="secondary" className="ml-auto text-xs">
             {photographers.length} {photographers.length === 1 ? "domain" : "domains"}
           </Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 text-xs text-muted-foreground"
-            onClick={checkAll}
-            disabled={isRefreshing || isLoading || photographers.length === 0}
-          >
-            <RefreshCw size={11} className={cn(isRefreshing && "animate-spin")} />
-            Refresh Status
-          </Button>
+          {activeTab === "domains" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 text-xs text-muted-foreground"
+              onClick={checkAll}
+              disabled={isRefreshing || isLoading || photographers.length === 0}
+            >
+              <RefreshCw size={11} className={cn(isRefreshing && "animate-spin")} />
+              Refresh Status
+            </Button>
+          )}
         </div>
 
-        {/* Stale-pending alert */}
-        {stalePendingDomains.length > 0 && (
+        {/* Tab bar */}
+        <div className="flex items-center gap-0 border border-border rounded-md overflow-hidden w-fit mb-6">
+          <button
+            onClick={() => setActiveTab("domains")}
+            className={cn(
+              "px-4 py-2 text-xs font-light tracking-widest uppercase transition-colors",
+              activeTab === "domains"
+                ? "bg-foreground text-background"
+                : "bg-background text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Domínios Registrados
+          </button>
+          <button
+            onClick={() => setActiveTab("certs")}
+            className={cn(
+              "px-4 py-2 text-xs font-light tracking-widest uppercase transition-colors border-l border-border",
+              activeTab === "certs"
+                ? "bg-foreground text-background"
+                : "bg-background text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Certificados VPS
+          </button>
+        </div>
+
+        {/* Stale-pending alert (only on domains tab) */}
+        {activeTab === "domains" && stalePendingDomains.length > 0 && (
           <div className="mb-6 border border-border rounded-md px-4 py-3 flex items-start gap-3">
             <AlertTriangle size={13} className="mt-0.5 shrink-0 text-muted-foreground" />
             <div className="space-y-1 flex-1 min-w-0">
@@ -622,138 +797,145 @@ export default function AdminDomains() {
           </div>
         )}
 
-        {/* Table */}
-        <div className="border border-border rounded-md overflow-hidden">
-          {isLoading ? (
-            <div className="p-12 text-center text-xs text-muted-foreground">Loading…</div>
-          ) : photographers.length === 0 ? (
-            <div className="p-12 text-center">
-              <Globe size={24} className="mx-auto mb-3 text-muted-foreground/40" />
-              <p className="text-xs text-muted-foreground">No custom domains configured yet.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8" />
-                  <TableHead>Studio</TableHead>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>DNS Records</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Store Slug</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {photographers.map((p) => {
-                  const { isSubdomain } = getDomainInfo(p.custom_domain);
-                  const studioName = p.business_name || p.full_name || "—";
-                  const isOpen = expanded === p.id;
-                  const isDiagOpen = diagOpen === p.id;
-                  const domainStatus: RowStatus = statuses[p.id] ?? "idle";
-                  const dns = dnsDetails[p.id];
+        {/* Domains tab content */}
+        {activeTab === "domains" && (
+          <div className="border border-border rounded-md overflow-hidden">
+            {isLoading ? (
+              <div className="p-12 text-center text-xs text-muted-foreground">Loading…</div>
+            ) : photographers.length === 0 ? (
+              <div className="p-12 text-center">
+                <Globe size={24} className="mx-auto mb-3 text-muted-foreground/40" />
+                <p className="text-xs text-muted-foreground">No custom domains configured yet.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-8" />
+                    <TableHead>Studio</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>DNS Records</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Store Slug</TableHead>
+                    <TableHead>Added</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {photographers.map((p) => {
+                    const { isSubdomain } = getDomainInfo(p.custom_domain);
+                    const studioName = p.business_name || p.full_name || "—";
+                    const isOpen = expanded === p.id;
+                    const isDiagOpen = diagOpen === p.id;
+                    const domainStatus: RowStatus = statuses[p.id] ?? "idle";
+                    const dns = dnsDetails[p.id];
 
-                  return (
-                    <>
-                      <TableRow
-                        key={p.id}
-                        className={cn("cursor-pointer", (isOpen || isDiagOpen) && "bg-muted/30")}
-                        onClick={() => toggleExpand(p.id)}
-                      >
-                        <TableCell className="py-3 pl-4 pr-0">
-                          {isOpen
-                            ? <ChevronDown size={12} className="text-muted-foreground" />
-                            : <ChevronRight size={12} className="text-muted-foreground" />}
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="text-xs font-light">{studioName}</div>
-                          <div className="text-[10px] text-muted-foreground mt-0.5">{p.email}</div>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <span className="font-mono text-xs">{p.custom_domain}</span>
-                        </TableCell>
-                        <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
-                          <StatusBadge
-                            status={domainStatus}
-                            onCheck={() => checkDomain(p.custom_domain, p.id)}
-                          />
-                        </TableCell>
-                        <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
-                          <DnsPropagationCell dns={dns} />
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <Badge variant="outline" className="text-[10px] font-light">
-                            {isSubdomain ? "Subdomain" : "Root Domain"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {p.store_slug ?? "—"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 text-xs text-muted-foreground">
-                          {format(new Date(p.created_at), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={cn("h-7 gap-1.5 text-[10px] px-2", isDiagOpen && "bg-muted")}
-                              title="Run full-chain diagnostic"
-                              onClick={() => toggleDiag(p.id)}
-                            >
-                              <Stethoscope size={11} />
-                              Diagnose
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              title="Copy domain"
-                              onClick={() => navigator.clipboard.writeText(p.custom_domain)}
-                            >
-                              <Copy size={12} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              title="Open domain"
-                              onClick={() => window.open(`https://${p.custom_domain}`, "_blank")}
-                            >
-                              <ExternalLink size={12} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                    return (
+                      <>
+                        <TableRow
+                          key={p.id}
+                          className={cn("cursor-pointer", (isOpen || isDiagOpen) && "bg-muted/30")}
+                          onClick={() => toggleExpand(p.id)}
+                        >
+                          <TableCell className="py-3 pl-4 pr-0">
+                            {isOpen
+                              ? <ChevronDown size={12} className="text-muted-foreground" />
+                              : <ChevronRight size={12} className="text-muted-foreground" />}
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <div className="text-xs font-light">{studioName}</div>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">{p.email}</div>
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <span className="font-mono text-xs">{p.custom_domain}</span>
+                          </TableCell>
+                          <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                            <StatusBadge
+                              status={domainStatus}
+                              onCheck={() => checkDomain(p.custom_domain, p.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                            <DnsPropagationCell dns={dns} />
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <Badge variant="outline" className="text-[10px] font-light">
+                              {isSubdomain ? "Subdomain" : "Root Domain"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <span className="text-xs font-mono text-muted-foreground">
+                              {p.store_slug ?? "—"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-3 text-xs text-muted-foreground">
+                            {format(new Date(p.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn("h-7 gap-1.5 text-[10px] px-2", isDiagOpen && "bg-muted")}
+                                title="Run full-chain diagnostic"
+                                onClick={() => toggleDiag(p.id)}
+                              >
+                                <Stethoscope size={11} />
+                                Diagnose
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                title="Copy domain"
+                                onClick={() => navigator.clipboard.writeText(p.custom_domain)}
+                              >
+                                <Copy size={12} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                title="Open domain"
+                                onClick={() => window.open(`https://${p.custom_domain}`, "_blank")}
+                              >
+                                <ExternalLink size={12} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
 
-                      {/* DNS expansion */}
-                      {isOpen && (
-                        <tr key={`${p.id}-dns`}>
-                          <td colSpan={9} className="p-0">
-                            <DnsExpansion domain={p.custom_domain} dns={dns} />
-                          </td>
-                        </tr>
-                      )}
+                        {/* DNS expansion */}
+                        {isOpen && (
+                          <tr key={`${p.id}-dns`}>
+                            <td colSpan={9} className="p-0">
+                              <DnsExpansion domain={p.custom_domain} dns={dns} />
+                            </td>
+                          </tr>
+                        )}
 
-                      {/* Chain diagnostic */}
-                      {isDiagOpen && (
-                        <tr key={`${p.id}-diag`}>
-                          <td colSpan={9} className="p-0">
-                            <ChainDiagnostic domain={p.custom_domain} photographerId={p.id} />
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                        {/* Chain diagnostic */}
+                        {isDiagOpen && (
+                          <tr key={`${p.id}-diag`}>
+                            <td colSpan={9} className="p-0">
+                              <ChainDiagnostic domain={p.custom_domain} photographerId={p.id} />
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        )}
+
+        {/* VPS Certs tab content */}
+        {activeTab === "certs" && (
+          <VpsCertsTab photographers={photographers} />
+        )}
       </div>
     </AdminLayout>
   );
