@@ -605,7 +605,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
                 className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors group"
               >
                 <FileTextIcon className="h-4 w-4 text-purple-500 shrink-0" />
-                <span className="flex-1 text-xs font-medium truncate">{c.name || tp.contractEditor?.untitledContract || "Untitled Contract"}</span>
+                <span className="flex-1 text-xs font-medium truncate">{c.name || "Untitled Contract"}</span>
                 <span className="text-[10px] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity">{tp.openInEditor}</span>
               </a>
             ))}
