@@ -493,6 +493,36 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
   const qKey = ["project-documents", project.id];
 
+  // Fetch contracts
+  const { data: contracts = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["project-contracts-list", photographerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contracts")
+        .select("id, name")
+        .eq("photographer_id", photographerId)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!photographerId,
+  });
+
+  // Fetch briefings
+  const { data: briefings = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["project-briefings-list", photographerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("briefings")
+        .select("id, name")
+        .eq("photographer_id", photographerId)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!photographerId,
+  });
+
   const { data: documents = [] } = useQuery<ProjectDocument[]>({
     queryKey: qKey,
     queryFn: async () => {
