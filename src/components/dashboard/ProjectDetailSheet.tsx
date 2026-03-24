@@ -1070,7 +1070,7 @@ export function ProjectDetailSheet({
       <DialogContent className="sm:max-w-3xl w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "88vh" }}>
 
         {/* Header */}
-        <DialogHeader className="p-5 pb-3 shrink-0 border-b border-border/50">
+        <DialogHeader className="p-5 pb-3 pr-14 shrink-0 border-b border-border/50">
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
               <input
