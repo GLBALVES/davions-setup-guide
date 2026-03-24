@@ -1279,17 +1279,9 @@ const WebsiteSettings = () => {
                          </p>
                        )}
                      </FieldRow>
-                     {storeSlug && (
-                       <div className="flex items-center gap-2">
-                         <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">https://davions.com/store/{storeSlug}</p>
-                         <button type="button" onClick={() => copyUrl(`https://davions.com/store/${storeSlug}`, setSlugCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy URL">
-                           {slugCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                         </button>
-                         <a href={`https://davions.com/store/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
-                           <ExternalLink className="h-3.5 w-3.5" />
-                         </a>
-                       </div>
-                     )}
+                      {storeSlug && (
+                        <StoreSharePanel url={`https://davions.com/store/${storeSlug}`} />
+                      )}
                     <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
                       {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveStoreUrl}
                     </Button>
