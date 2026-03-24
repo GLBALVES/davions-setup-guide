@@ -1,51 +1,37 @@
 
-## Problem
+## Add Status Filter to VPS Certs Table
 
-The VPS `/api/certs` response returns `"expiresAt": null` for every domain — the API simply doesn't expose expiry dates. The badge component works correctly; it just has no data to display.
+### Current State
+`VpsCertsTab` renders all certs in a single table with no filtering. The component already has `resolvedExpiry` and `days` computed per row.
 
-## Solution
+### Plan
 
-Proxy certificate expiry lookups through a new edge function that queries the public `crt.sh` certificate transparency API. For each cert in the table with a null `expiresAt`, fetch the real SSL expiry date and display it.
+**File: `src/pages/admin/AdminDomains.tsx`** — `VpsCertsTab` only
 
-### Flow
-```text
-Browser (VpsCertsTab)
-  → load certs from VPS API (gets domains, expiresAt=null for all)
-  → for each domain, call edge function `check-ssl-cert?domain=X`
-      → edge function fetches crt.sh JSON for that domain
-      → finds the most recent active cert's not_after date
-      → returns { domain, expiresAt }
-  → merge results into state
-  → ExpiryBadge shows real colored badge
+1. Add `statusFilter` state: `"all" | "expiring" | "expired"`, defaulting to `"all"`.
+
+2. Define filter logic (derived, no extra state):
+   - `"all"` → show all certs
+   - `"expiring"` → `days !== null && days > 0 && days <= 30`
+   - `"expired"` → `days !== null && days <= 0`
+
+3. Compute `filteredCerts` from `certs` using the resolved expiry data.
+
+4. Add a filter bar between the header row and the `<Table>`, using three pill/tab buttons:
+   - **Todos** — shows count of all certs
+   - **Expirando** — yellow tint, shows count of certs with `days <= 30 && days > 0`
+   - **Expirados** — red tint, shows count of certs with `days <= 0`
+
+5. Update the counter text in the header to reflect the filtered count (e.g. "3 de 5 certificados").
+
+6. Render `filteredCerts` in the `<TableBody>` instead of `certs`.
+
+7. If filter results in zero rows, show an inline empty state inside the table body ("Nenhum certificado nesta categoria.").
+
+### UI Shape
 ```
-
-### crt.sh API
-
+[ Todos (5) ]  [ Expirando (2) ]  [ Expirados (1) ]
 ```
-GET https://crt.sh/?q=davions.giombelli.com.br&output=json
-Returns: [{ "not_after": "2025-12-01T00:00:00", "common_name": "...", ... }, ...]
-```
+Pills styled with the existing badge color classes already used in `ExpiryBadge` (yellow/red/neutral).
 
-Filter to the entry with the highest `not_after` that hasn't expired yet.
-
----
-
-## Files to Change
-
-### 1. New: `supabase/functions/check-ssl-cert/index.ts`
-
-- Accepts `?domain=<domain>` query param
-- Fetches `https://crt.sh/?q=<domain>&output=json`
-- Finds the cert with the latest `not_after` (that's not expired)
-- Returns `{ domain, expiresAt: "2025-12-01T..." }` or `{ domain, expiresAt: null }`
-- CORS headers included
-
-### 2. Edit: `src/pages/admin/AdminDomains.tsx` — `VpsCertsTab` component
-
-- After loading certs from VPS, trigger a secondary lookup for each domain's expiry via the edge function
-- Store results in a `Record<string, string | null>` state (`certExpiry`)
-- `ExpiryBadge` reads from `certExpiry[cert.domain] ?? cert.expiresAt`
-- Show a small `Loader2` spinner inline in the "Dias para vencer" cell while the secondary lookup is in flight
-- Lookup is triggered once per cert load (not on every render), using `useEffect` watching the certs array
-
-No new dependencies. No DB changes.
+No new imports needed (already has `useState`, `cn`, `Badge`, etc.). No DB or edge function changes.
