@@ -410,7 +410,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.24.0", "", { "os": "win32", "cpu": "x64" }, "sha512-fbMkAF7fufku0N2dE5TBXcNlg0pt0cJue4xBRE2Qc5Vqikxr4VCgKj/ht6SMdFcOacVA9rqF70APJ8RN/4vMJw=="],
 
-    "@stripe/connect-js": ["@stripe/connect-js@3.3.34", "", {}, "sha512-yVvlRbAPE1QqIGp+1lJmUtAm4LNlZh7FZPifsYqsuJ6EuDj4kMFkLo12wzEgWNVfNivSUALFSYn5ndEbwc7URg=="],
+    "@stripe/connect-js": ["@stripe/connect-js@3.3.34", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@stripe/connect-js/-/connect-js-3.3.34.tgz", {}, "sha512-yVvlRbAPE1QqIGp+1lJmUtAm4LNlZh7FZPifsYqsuJ6EuDj4kMFkLo12wzEgWNVfNivSUALFSYn5ndEbwc7URg=="],
 
     "@stripe/react-connect-js": ["@stripe/react-connect-js@3.3.33", "", { "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-va0ahsZCCBS18F6ro/l+i/BYIFeIm0iQQCYsGO47m0MWcl469a5vaDgLvS0q8woxt9V8DDBu6HfCXognyRq4uA=="],
 

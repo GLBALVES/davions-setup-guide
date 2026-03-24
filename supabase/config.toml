@@ -42,3 +42,6 @@ verify_jwt = false
 [functions.validate-domain]
 verify_jwt = false
 
+[functions.check-ssl-cert]
+verify_jwt = false
+
