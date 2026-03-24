@@ -1,44 +1,58 @@
 
 ## Goal
-Add a QR code + sharing panel (like the reference image) to both the **Store URL** section and the **Custom Domain** section in `WebsiteSettings.tsx`.
 
-Each panel will show:
-- The URL in a monospaced box
-- A QR code for the URL
-- **Copy link** button
-- **Share via WhatsApp** button (green)
-- **Share via Email** button (blue)
+Add a **"VPS Certificates"** tab to the existing `/admin/domains` page. This tab will:
+
+1. Fetch `https://davions.giombelli.com.br/api/certs` to get issued SSL certificates from the VPS
+2. Cross-reference each domain with the `photographers` table (`custom_domain` column) to show the linked photographer name
+3. Display a table: **Domínio** | **SSL** | **Fotógrafo** | **Cadastrado em**
+4. Show a green "SSL Ativo" badge for each cert
+5. Show photographer name if found, or "Não cadastrado" in red if not
+6. Refresh button + loading state + error handling
 
 ---
 
 ## Approach
 
-### QR Code
-No QR library is installed. Use the free public QR API `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=<url>` — renders as a plain `<img>` tag with no dependency, no install needed, works offline-gracefully (shows broken image only if no internet, which is fine for a dashboard).
+### Tab system
+Wrap the existing page content in a simple tab toggle (two buttons: "Domínios Registrados" / "Certificados VPS"). No new library needed — use `useState` for the active tab.
 
-### New Component: `StoreSharePanel`
-A small reusable component placed inside `WebsiteSettings.tsx` that receives `url` and `label` props and renders the sharing card. This keeps both sections DRY.
-
+### API response assumption
+`/api/certs` likely returns an array of objects. Common Caddy cert API shape:
+```json
+[
+  { "domain": "example.com", "not_after": "2025-06-01T..." },
+  ...
+]
 ```
-StoreSharePanel({ url, label })
-├── URL display box (monospaced, truncated)
-├── QR code (160×160 from qrserver.com)
-├── [ Copy link ]         ← icon + text, border
-├── [ Share via WhatsApp ]  ← green bg
-└── [ Share via Email ]     ← blue bg
-```
+The component will handle both array-of-strings and array-of-objects, extracting the domain name defensively.
 
-### Placement
-- **Store URL section** (line ~1209): replace the current minimal `<div>` that shows the URL + copy + external link icons with the new `StoreSharePanel`
-- **Custom Domain section** (line ~1236): add `StoreSharePanel` below the domain display row (before the DNS records)
+### Cross-reference
+The `photographers` query is already loaded on this page (line 494–505). Pass it down to the certs tab and use `.find(p => p.custom_domain === cert.domain)` to resolve names.
+
+### Error handling
+If the fetch fails (CORS, network, non-200), show an error card with the message and a retry button.
 
 ---
 
 ## Files to Edit
 
-### `src/pages/dashboard/WebsiteSettings.tsx`
-1. Add `StoreSharePanel` component (above `WebsiteSettings` function, after `Divider`)
-2. Replace lines 1209–1218 (Store URL display) with `<StoreSharePanel url={`https://davions.com/store/${storeSlug}`} />`
-3. Add `<StoreSharePanel url={`https://${customDomain}`} />` inside the custom domain `{customDomain ? (...)` block, right after the domain display row (line ~1246), before the DNS records
+### `src/pages/admin/AdminDomains.tsx`
 
-No new npm packages needed — uses free public QR image API.
+1. **Add tab state** at the top of `AdminDomains` (line ~488):
+   ```ts
+   const [activeTab, setActiveTab] = useState<"domains" | "certs">("domains");
+   ```
+
+2. **Add `VpsCertsTab` component** (before `AdminDomains`, after `ChainDiagnostic`):
+   - `useQuery` with `queryKey: ["vps-certs"]` fetching `https://davions.giombelli.com.br/api/certs`
+   - Accepts `photographers` prop for cross-reference
+   - Renders table with 4 columns
+   - Refresh button uses `refetch()`
+   - Loading skeleton, error state
+
+3. **Wrap existing table in tab conditional** — surround the existing table block (line ~567–757) with `{activeTab === "domains" && (...)}` and add `{activeTab === "certs" && <VpsCertsTab photographers={photographers} />}`
+
+4. **Add tab bar** in the header area (after the title row, before the stale-pending alert), with two pill-style buttons matching the existing design language (text-xs, font-light, tracking-wide).
+
+No new files, no new dependencies.
