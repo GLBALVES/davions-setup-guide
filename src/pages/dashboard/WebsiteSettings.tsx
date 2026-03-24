@@ -18,6 +18,7 @@ import {
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
   Layout, FileText, Link2, Phone, Image, CheckCircle2, Clock, WifiOff, Trash2,
   ShieldCheck, Wifi, RefreshCw, XCircle, Info, ChevronDown, ChevronRight, BookOpen, Eye,
+  Mail, MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -350,6 +351,78 @@ const Divider = forwardRef<HTMLDivElement>((_, ref) => (
   <div ref={ref} className="border-t border-border" />
 ));
 Divider.displayName = "Divider";
+
+// ── Share Panel ───────────────────────────────────────────────────────────────
+const StoreSharePanel = ({ url }: { url: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=ffffff&color=000000&margin=8&data=${encodeURIComponent(url)}`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(url)}`;
+  const emailHref = `mailto:?subject=Check%20this%20out&body=${encodeURIComponent(url)}`;
+
+  return (
+    <div className="border border-border bg-card p-4 flex flex-col gap-4">
+      {/* URL row */}
+      <div className="flex items-center gap-2 border border-border bg-background px-3 py-2">
+        <p className="text-[11px] font-mono text-muted-foreground truncate flex-1 select-all">{url}</p>
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </div>
+
+      {/* QR + buttons */}
+      <div className="flex gap-4 items-start">
+        {/* QR code */}
+        <div className="shrink-0 border border-border p-1.5 bg-white">
+          <img
+            src={qrSrc}
+            alt="QR Code"
+            width={88}
+            height={88}
+            className="block"
+            loading="lazy"
+          />
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-2 border border-border bg-background hover:bg-muted/40 transition-colors px-3 py-2 text-[11px] tracking-wider uppercase font-light text-foreground w-full"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-primary shrink-0" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
+            {copied ? "Copied!" : "Copy link"}
+          </button>
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 text-[11px] tracking-wider uppercase font-light transition-colors w-full"
+            style={{ background: "hsl(142 71% 45%)", color: "#fff" }}
+          >
+            <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+            Share via WhatsApp
+          </a>
+          <a
+            href={emailHref}
+            className="flex items-center gap-2 px-3 py-2 text-[11px] tracking-wider uppercase font-light transition-colors w-full"
+            style={{ background: "hsl(217 91% 60%)", color: "#fff" }}
+          >
+            <Mail className="h-3.5 w-3.5 shrink-0" />
+            Share via Email
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FieldRow = forwardRef<HTMLDivElement, { label: string; children: React.ReactNode }>(
   ({ label, children }, ref) => (
@@ -1206,17 +1279,9 @@ const WebsiteSettings = () => {
                          </p>
                        )}
                      </FieldRow>
-                     {storeSlug && (
-                       <div className="flex items-center gap-2">
-                         <p className="text-[11px] text-muted-foreground font-mono truncate flex-1">https://davions.com/store/{storeSlug}</p>
-                         <button type="button" onClick={() => copyUrl(`https://davions.com/store/${storeSlug}`, setSlugCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy URL">
-                           {slugCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                         </button>
-                         <a href={`https://davions.com/store/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
-                           <ExternalLink className="h-3.5 w-3.5" />
-                         </a>
-                       </div>
-                     )}
+                      {storeSlug && (
+                        <StoreSharePanel url={`https://davions.com/store/${storeSlug}`} />
+                      )}
                     <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
                       {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveStoreUrl}
                     </Button>
@@ -1233,18 +1298,9 @@ const WebsiteSettings = () => {
 
                       {/* Current domain display or empty state */}
                       {customDomain ? (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-3 p-4 border border-border bg-card">
-                            <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <p className="text-sm font-mono font-light flex-1 truncate">{customDomain}</p>
-                            <button type="button" onClick={() => copyUrl(`https://${customDomain}`, setDomainCopied)} className="text-muted-foreground hover:text-foreground transition-colors p-1" title="Copy domain URL">
-                              {domainCopied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-                            </button>
-                            <a href={`https://${customDomain}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-1">
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          </div>
-                          {(() => {
+                         <div className="flex flex-col gap-3">
+                           <StoreSharePanel url={`https://${customDomain}`} />
+                           {(() => {
                             const DAVIONS_VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
                             const parts = customDomain.split(".");
                             const lastTwo = parts.slice(-2).join(".");
