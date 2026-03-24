@@ -176,7 +176,7 @@ serve(async (req) => {
         JSON.stringify({
           ok: true,
           skipped: true,
-          checked: certs.length,
+          checked: resolved.length,
           message: "Nenhuma mudança de status detectada. E-mail não enviado.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
