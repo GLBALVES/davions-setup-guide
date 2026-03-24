@@ -2273,6 +2273,30 @@ export type Database = {
           },
         ]
       }
+      ssl_alert_state: {
+        Row: {
+          bucket: string
+          domain: string
+          expires_at: string | null
+          notified_at: string
+          updated_at: string
+        }
+        Insert: {
+          bucket: string
+          domain: string
+          expires_at?: string | null
+          notified_at?: string
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          domain?: string
+          expires_at?: string | null
+          notified_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       studio_members: {
         Row: {
           email: string
