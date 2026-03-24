@@ -83,6 +83,36 @@ export default function AdminBugReports() {
 
   return (
     <AdminLayout>
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+            onClick={() => setLightbox(null)}
+          >
+            <X size={18} />
+          </button>
+          {lightbox.type === "video" ? (
+            <video
+              src={lightbox.url}
+              controls
+              autoPlay
+              className="max-w-[90vw] max-h-[85vh] rounded-lg border border-border shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightbox.url}
+              alt="attachment expanded"
+              className="max-w-[90vw] max-h-[85vh] rounded-lg border border-border shadow-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      )}
       <div className="px-8 py-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
