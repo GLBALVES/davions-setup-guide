@@ -540,6 +540,7 @@ function ExpiryBadge({ expiresAt, loading }: { expiresAt: string | null | undefi
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
   const [certExpiry, setCertExpiry] = useState<Record<string, string | null>>({});
   const [loadingExpiry, setLoadingExpiry] = useState<Record<string, boolean>>({});
+  const [statusFilter, setStatusFilter] = useState<"all" | "expiring" | "expired">("all");
 
   const {
     data: certs,
@@ -658,12 +659,33 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
     );
   }
 
+  // Compute counts for filter pills (based on resolved expiry, skipping still-loading)
+  const expiringCount = (certs ?? []).filter((c) => {
+    const d = getDaysUntilExpiry(certExpiry[c.domain] !== undefined ? certExpiry[c.domain] : c.expiresAt ?? null);
+    return d !== null && d > 0 && d <= 30;
+  }).length;
+  const expiredCount = (certs ?? []).filter((c) => {
+    const d = getDaysUntilExpiry(certExpiry[c.domain] !== undefined ? certExpiry[c.domain] : c.expiresAt ?? null);
+    return d !== null && d <= 0;
+  }).length;
+
+  const filteredCerts = (certs ?? []).filter((cert) => {
+    if (statusFilter === "all") return true;
+    const resolvedExpiry = certExpiry[cert.domain] !== undefined ? certExpiry[cert.domain] : cert.expiresAt ?? null;
+    const days = getDaysUntilExpiry(resolvedExpiry);
+    if (statusFilter === "expiring") return days !== null && days > 0 && days <= 30;
+    if (statusFilter === "expired") return days !== null && days <= 0;
+    return true;
+  });
+
   return (
     <div className="border border-border rounded-md overflow-hidden">
       {/* Tab header with refresh */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">
-          {certs.length} certificado{certs.length !== 1 ? "s" : ""} emitido{certs.length !== 1 ? "s" : ""}
+          {statusFilter === "all"
+            ? `${certs.length} certificado${certs.length !== 1 ? "s" : ""} emitido${certs.length !== 1 ? "s" : ""}`
+            : `${filteredCerts.length} de ${certs.length} certificado${certs.length !== 1 ? "s" : ""}`}
         </p>
         <Button
           variant="ghost"
@@ -676,6 +698,58 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
           Atualizar
         </Button>
       </div>
+
+      {/* Status filter pills */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-background">
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-light tracking-wide border transition-colors",
+            statusFilter === "all"
+              ? "bg-foreground text-background border-foreground"
+              : "bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+          )}
+        >
+          Todos
+          <span className={cn(
+            "inline-flex items-center justify-center rounded-full w-4 h-4 text-[9px] font-medium",
+            statusFilter === "all" ? "bg-background/20 text-background" : "bg-muted text-muted-foreground"
+          )}>{certs.length}</span>
+        </button>
+        <button
+          onClick={() => setStatusFilter("expiring")}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-light tracking-wide border transition-colors",
+            statusFilter === "expiring"
+              ? "bg-yellow-500 text-white border-yellow-500"
+              : "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 hover:border-yellow-500/60"
+          )}
+        >
+          <AlertTriangle size={9} />
+          Expirando
+          <span className={cn(
+            "inline-flex items-center justify-center rounded-full w-4 h-4 text-[9px] font-medium",
+            statusFilter === "expiring" ? "bg-white/20 text-white" : "bg-yellow-500/20 text-yellow-700"
+          )}>{expiringCount}</span>
+        </button>
+        <button
+          onClick={() => setStatusFilter("expired")}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-light tracking-wide border transition-colors",
+            statusFilter === "expired"
+              ? "bg-destructive text-destructive-foreground border-destructive"
+              : "bg-destructive/10 text-destructive border-destructive/30 hover:border-destructive/60"
+          )}
+        >
+          <XCircle size={9} />
+          Expirados
+          <span className={cn(
+            "inline-flex items-center justify-center rounded-full w-4 h-4 text-[9px] font-medium",
+            statusFilter === "expired" ? "bg-white/20 text-destructive-foreground" : "bg-destructive/20 text-destructive"
+          )}>{expiredCount}</span>
+        </button>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -687,58 +761,66 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {certs.map((cert) => {
-            const photographer = photographers.find(
-              (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
-            );
-            // Prefer real expiry from crt.sh lookup; fall back to VPS API value
-            const resolvedExpiry = certExpiry[cert.domain] !== undefined
-              ? certExpiry[cert.domain]
-              : cert.expiresAt ?? null;
-            const isLoadingThisDomain = loadingExpiry[cert.domain] ?? false;
-            const days = getDaysUntilExpiry(resolvedExpiry);
-            return (
-              <TableRow key={cert.domain} className={cn(!isLoadingThisDomain && days !== null && days <= 7 && "bg-destructive/5")}>
-                <TableCell className="py-3">
-                  <span className="font-mono text-xs">{cert.domain}</span>
-                </TableCell>
-                <TableCell className="py-3">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-light tracking-wide border border-emerald-500/20">
-                    <CheckCircle2 size={10} />
-                    SSL Ativo
-                  </span>
-                </TableCell>
-                <TableCell className="py-3">
-                  <ExpiryBadge expiresAt={resolvedExpiry} loading={isLoadingThisDomain} />
-                </TableCell>
-                <TableCell className="py-3">
-                  {photographer ? (
-                    <div>
-                      <p className="text-xs font-light">
-                        {photographer.business_name || photographer.full_name || "—"}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{photographer.email}</p>
-                    </div>
-                  ) : (
-                    <span className="text-xs font-light text-destructive">Não cadastrado</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-3 text-xs text-muted-foreground">
-                  {isLoadingThisDomain ? (
-                    <Loader2 size={11} className="animate-spin text-muted-foreground" />
-                  ) : resolvedExpiry ? (
-                    (() => {
-                      try {
-                        return format(new Date(resolvedExpiry), "dd/MM/yyyy");
-                      } catch {
-                        return resolvedExpiry;
-                      }
-                    })()
-                  ) : "—"}
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {filteredCerts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="py-10 text-center">
+                <p className="text-xs text-muted-foreground">Nenhum certificado nesta categoria.</p>
+              </TableCell>
+            </TableRow>
+          ) : (
+            filteredCerts.map((cert) => {
+              const photographer = photographers.find(
+                (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
+              );
+              // Prefer real expiry from crt.sh lookup; fall back to VPS API value
+              const resolvedExpiry = certExpiry[cert.domain] !== undefined
+                ? certExpiry[cert.domain]
+                : cert.expiresAt ?? null;
+              const isLoadingThisDomain = loadingExpiry[cert.domain] ?? false;
+              const days = getDaysUntilExpiry(resolvedExpiry);
+              return (
+                <TableRow key={cert.domain} className={cn(!isLoadingThisDomain && days !== null && days <= 7 && "bg-destructive/5")}>
+                  <TableCell className="py-3">
+                    <span className="font-mono text-xs">{cert.domain}</span>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-light tracking-wide border border-emerald-500/20">
+                      <CheckCircle2 size={10} />
+                      SSL Ativo
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <ExpiryBadge expiresAt={resolvedExpiry} loading={isLoadingThisDomain} />
+                  </TableCell>
+                  <TableCell className="py-3">
+                    {photographer ? (
+                      <div>
+                        <p className="text-xs font-light">
+                          {photographer.business_name || photographer.full_name || "—"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">{photographer.email}</p>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-light text-destructive">Não cadastrado</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-3 text-xs text-muted-foreground">
+                    {isLoadingThisDomain ? (
+                      <Loader2 size={11} className="animate-spin text-muted-foreground" />
+                    ) : resolvedExpiry ? (
+                      (() => {
+                        try {
+                          return format(new Date(resolvedExpiry), "dd/MM/yyyy");
+                        } catch {
+                          return resolvedExpiry;
+                        }
+                      })()
+                    ) : "—"}
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
         </TableBody>
       </Table>
     </div>
