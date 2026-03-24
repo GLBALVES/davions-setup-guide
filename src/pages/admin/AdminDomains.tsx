@@ -631,6 +631,7 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
 
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function AdminDomains() {
+  const [activeTab, setActiveTab] = useState<"domains" | "certs">("domains");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [diagOpen, setDiagOpen] = useState<string | null>(null);
   const [statuses, setStatuses] = useState<Record<string, RowStatus>>({});
