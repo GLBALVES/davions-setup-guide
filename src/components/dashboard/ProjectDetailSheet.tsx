@@ -203,6 +203,33 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.id,
   });
 
+  // ── Fetch booking payment info ───────────────────────────────────────────
+  interface BookingPaymentInfo {
+    id: string;
+    client_name: string;
+    payment_status: string;
+    extras_total: number;
+    booked_date: string | null;
+    created_at: string;
+    sessions: { title: string; price?: number } | null;
+    session_availability: { start_time: string; end_time: string; date: string } | null;
+  }
+
+  const { data: bookingPayment } = useQuery<BookingPaymentInfo | null>({
+    queryKey: ["project-booking-payment", project.booking_id],
+    queryFn: async () => {
+      if (!project.booking_id) return null;
+      const { data, error } = await (supabase as any)
+        .from("bookings")
+        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price ), session_availability ( start_time, end_time, date )")
+        .eq("id", project.booking_id)
+        .single();
+      if (error) return null;
+      return data as BookingPaymentInfo;
+    },
+    enabled: !!project.booking_id,
+  });
+
   const addMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("project_invoices" as any).insert({
