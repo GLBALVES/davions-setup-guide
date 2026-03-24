@@ -491,7 +491,56 @@ type VpsCert = {
   expiresAt?: string | null;
 };
 
+const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+
+function getDaysUntilExpiry(expiresAt: string | null): number | null {
+  if (!expiresAt) return null;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function ExpiryBadge({ expiresAt, loading }: { expiresAt: string | null | undefined; loading?: boolean }) {
+  if (loading) {
+    return <Loader2 size={11} className="animate-spin text-muted-foreground" />;
+  }
+  const days = getDaysUntilExpiry(expiresAt ?? null);
+  if (days === null) return <span className="text-[10px] text-muted-foreground/40">—</span>;
+  if (days < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium border border-destructive/20">
+        <XCircle size={9} />
+        Expirado
+      </span>
+    );
+  }
+  if (days <= 7) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium border border-destructive/20">
+        <AlertTriangle size={9} />
+        {days}d
+      </span>
+    );
+  }
+  if (days <= 30) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 text-[10px] font-medium border border-yellow-500/20">
+        <AlertTriangle size={9} />
+        {days}d
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-medium border border-emerald-500/20">
+      <CheckCircle2 size={9} />
+      {days}d
+    </span>
+  );
+}
+
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
+  const [certExpiry, setCertExpiry] = useState<Record<string, string | null>>({});
+  const [loadingExpiry, setLoadingExpiry] = useState<Record<string, boolean>>({});
+
   const {
     data: certs,
     isLoading,
@@ -510,7 +559,6 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
         if (typeof item === "string") return { domain: item, expiresAt: null };
         if (typeof item === "object" && item !== null) {
           const obj = item as Record<string, unknown>;
-          // Support both camelCase (expiresAt) and snake_case (not_after / issued_at)
           const expiry =
             obj.expiresAt ??
             obj.expires_at ??
@@ -527,6 +575,43 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
     },
     retry: 1,
   });
+
+  // Secondary lookup: fetch real expiry from crt.sh via edge function for each cert
+  useEffect(() => {
+    if (!certs || certs.length === 0) return;
+
+    // Only look up domains where expiresAt is null
+    const domainsToFetch = certs.filter((c) => !c.expiresAt && c.domain !== "unknown");
+    if (domainsToFetch.length === 0) return;
+
+    // Mark all as loading
+    setLoadingExpiry((prev) => {
+      const next = { ...prev };
+      domainsToFetch.forEach((c) => { next[c.domain] = true; });
+      return next;
+    });
+
+    const baseUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/check-ssl-cert`;
+
+    domainsToFetch.forEach(async (cert) => {
+      try {
+        const res = await fetch(`${baseUrl}?domain=${encodeURIComponent(cert.domain)}`);
+        const json = await res.json();
+        setCertExpiry((prev) => ({ ...prev, [cert.domain]: json.expiresAt ?? null }));
+      } catch {
+        setCertExpiry((prev) => ({ ...prev, [cert.domain]: null }));
+      } finally {
+        setLoadingExpiry((prev) => ({ ...prev, [cert.domain]: false }));
+      }
+    });
+  }, [certs]);
+
+  // Reset expiry cache when certs are refetched
+  const handleRefetch = useCallback(() => {
+    setCertExpiry({});
+    setLoadingExpiry({});
+    refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -554,7 +639,7 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
           variant="ghost"
           size="sm"
           className="h-7 gap-1.5 text-xs text-muted-foreground shrink-0"
-          onClick={() => refetch()}
+          onClick={handleRefetch}
           disabled={isFetching}
         >
           <RefreshCw size={11} className={cn(isFetching && "animate-spin")} />
@@ -573,47 +658,6 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
     );
   }
 
-  function getDaysUntilExpiry(expiresAt: string | null): number | null {
-    if (!expiresAt) return null;
-    const diff = new Date(expiresAt).getTime() - Date.now();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-  }
-
-  function ExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
-    const days = getDaysUntilExpiry(expiresAt);
-    if (days === null) return <span className="text-[10px] text-muted-foreground/40">—</span>;
-    if (days < 0) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium border border-destructive/20">
-          <XCircle size={9} />
-          Expirado
-        </span>
-      );
-    }
-    if (days <= 7) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-medium border border-destructive/20">
-          <AlertTriangle size={9} />
-          {days}d
-        </span>
-      );
-    }
-    if (days <= 30) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 text-[10px] font-medium border border-yellow-500/20">
-          <AlertTriangle size={9} />
-          {days}d
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-medium border border-emerald-500/20">
-        <CheckCircle2 size={9} />
-        {days}d
-      </span>
-    );
-  }
-
   return (
     <div className="border border-border rounded-md overflow-hidden">
       {/* Tab header with refresh */}
@@ -625,7 +669,7 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
           variant="ghost"
           size="sm"
           className="h-7 gap-1.5 text-xs text-muted-foreground"
-          onClick={() => refetch()}
+          onClick={handleRefetch}
           disabled={isFetching}
         >
           <RefreshCw size={11} className={cn(isFetching && "animate-spin")} />
@@ -647,9 +691,14 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
             const photographer = photographers.find(
               (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
             );
-            const days = getDaysUntilExpiry(cert.expiresAt);
+            // Prefer real expiry from crt.sh lookup; fall back to VPS API value
+            const resolvedExpiry = certExpiry[cert.domain] !== undefined
+              ? certExpiry[cert.domain]
+              : cert.expiresAt ?? null;
+            const isLoadingThisDomain = loadingExpiry[cert.domain] ?? false;
+            const days = getDaysUntilExpiry(resolvedExpiry);
             return (
-              <TableRow key={cert.domain} className={cn(days !== null && days <= 7 && "bg-destructive/5")}>
+              <TableRow key={cert.domain} className={cn(!isLoadingThisDomain && days !== null && days <= 7 && "bg-destructive/5")}>
                 <TableCell className="py-3">
                   <span className="font-mono text-xs">{cert.domain}</span>
                 </TableCell>
@@ -660,7 +709,7 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
                   </span>
                 </TableCell>
                 <TableCell className="py-3">
-                  <ExpiryBadge expiresAt={cert.expiresAt} />
+                  <ExpiryBadge expiresAt={resolvedExpiry} loading={isLoadingThisDomain} />
                 </TableCell>
                 <TableCell className="py-3">
                   {photographer ? (
@@ -675,15 +724,17 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
                   )}
                 </TableCell>
                 <TableCell className="py-3 text-xs text-muted-foreground">
-                  {cert.expiresAt
-                    ? (() => {
-                        try {
-                          return format(new Date(cert.expiresAt), "dd/MM/yyyy");
-                        } catch {
-                          return cert.expiresAt;
-                        }
-                      })()
-                    : "—"}
+                  {isLoadingThisDomain ? (
+                    <Loader2 size={11} className="animate-spin text-muted-foreground" />
+                  ) : resolvedExpiry ? (
+                    (() => {
+                      try {
+                        return format(new Date(resolvedExpiry), "dd/MM/yyyy");
+                      } catch {
+                        return resolvedExpiry;
+                      }
+                    })()
+                  ) : "—"}
                 </TableCell>
               </TableRow>
             );
