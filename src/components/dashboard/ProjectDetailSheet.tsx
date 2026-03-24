@@ -23,7 +23,11 @@ import {
   Pencil, Check, X, AlertTriangle, CalendarIcon, Timer, MapPin, Mail, User, FileText,
   Plus, CreditCard, CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp, DollarSign,
   Paperclip, Download, File, Image, FileText as FileTextIcon, Loader2, UploadCloud,
+  MessageCircle, Send, ExternalLink, AtSign,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useRef } from "react";
 import { format, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -820,6 +824,150 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   );
 }
 
+// ── Client Communications section ──
+function ClientCommsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const { t } = useLanguage();
+  const tp = t.projects;
+  const [activeTab, setActiveTab] = useState<"chat" | "emails">("chat");
+  const [newTicketSubject, setNewTicketSubject] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const { data: tickets = [], refetch: refetchTickets } = useQuery<{
+    id: string; subject: string; status: string; updated_at: string;
+    message_count?: number;
+  }[]>({
+    queryKey: ["client-comms-tickets", project.client_email, photographerId],
+    queryFn: async () => {
+      if (!project.client_email) return [];
+      const { data, error } = await (supabase as any)
+        .from("support_tickets")
+        .select("id, subject, status, updated_at, ai_mode")
+        .eq("photographer_id", photographerId)
+        .eq("client_email", project.client_email)
+        .order("updated_at", { ascending: false });
+      if (error) return [];
+      return (data ?? []) as any[];
+    },
+    enabled: !!project.client_email && !!photographerId,
+  });
+
+  const createTicket = async () => {
+    if (!project.client_email || !newTicketSubject.trim()) return;
+    setCreating(true);
+    const { error } = await (supabase as any).from("support_tickets").insert({
+      photographer_id: photographerId,
+      client_name: project.client_name,
+      client_email: project.client_email,
+      subject: newTicketSubject.trim(),
+    });
+    if (error) { toast.error(tp.commsTicketFailed); }
+    else {
+      toast.success(tp.commsTicketCreated);
+      setNewTicketSubject("");
+      refetchTickets();
+    }
+    setCreating(false);
+  };
+
+  const statusColors: Record<string, string> = {
+    open:   "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    closed: "bg-muted/40 text-muted-foreground border-border/40",
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SectionLabel>{tp.commsSection}</SectionLabel>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "chat" | "emails")}>
+        <TabsList className="w-full h-8">
+          <TabsTrigger value="chat" className="flex-1 text-xs gap-1.5">
+            <MessageCircle className="h-3 w-3" /> {tp.commsChat}
+            {tickets.length > 0 && (
+              <Badge variant="secondary" className="h-4 text-[9px] px-1 ml-0.5">{tickets.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="emails" className="flex-1 text-xs gap-1.5">
+            <AtSign className="h-3 w-3" /> {tp.commsEmails}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── Chat tab ── */}
+        <TabsContent value="chat" className="mt-3 flex flex-col gap-2">
+          {!project.client_email ? (
+            <p className="text-xs text-muted-foreground text-center py-4 italic">{tp.addEmailPlaceholder}</p>
+          ) : tickets.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-3 italic">{tp.commsNoTickets}</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group">
+                  <MessageCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate leading-tight">{ticket.subject}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                      {format(new Date(ticket.updated_at), "d MMM yyyy · HH:mm")}
+                    </p>
+                  </div>
+                  <span className={cn("text-[9px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", statusColors[ticket.status] ?? statusColors.open)}>
+                    {ticket.status}
+                  </span>
+                  <a
+                    href="/dashboard/chat"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title={tp.commsOpenTicket}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New ticket form */}
+          <div className="flex gap-2 mt-1">
+            <Input
+              placeholder={tp.commsNewTicket + "…"}
+              value={newTicketSubject}
+              onChange={(e) => setNewTicketSubject(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && createTicket()}
+              className="h-7 text-xs flex-1"
+              disabled={!project.client_email}
+            />
+            <Button
+              size="sm" className="h-7 text-xs px-2 gap-1"
+              onClick={createTicket}
+              disabled={creating || !newTicketSubject.trim() || !project.client_email}
+            >
+              {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* ── Emails tab ── */}
+        <TabsContent value="emails" className="mt-3">
+          {!project.client_email ? (
+            <p className="text-xs text-muted-foreground text-center py-4 italic">{tp.addEmailPlaceholder}</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-muted-foreground text-center py-3 italic">{tp.commsNoEmails}</p>
+              {project.client_email && (
+                <a
+                  href={`mailto:${project.client_email}`}
+                  className="flex items-center justify-center gap-1.5 text-xs text-primary hover:underline py-1"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {project.client_email}
+                </a>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+
 export function ProjectDetailSheet({
   project, open, onOpenChange, onUpdate, onDelete, onArchive, onUnarchive,
   photographerId, sessionTypes, onRefetchSessionTypes,
@@ -1014,6 +1162,11 @@ export function ProjectDetailSheet({
 
                 {/* Documents */}
                 <DocumentsSection project={project} photographerId={photographerId} />
+
+                <Separator />
+
+                {/* Communications */}
+                <ClientCommsSection project={project} photographerId={photographerId} />
 
                 <Separator />
 
