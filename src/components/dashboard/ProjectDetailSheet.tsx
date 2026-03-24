@@ -294,7 +294,37 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         </button>
       </div>
 
-      {/* Summary bar */}
+      {/* ── Booking payment card ───────────────────────────────────────── */}
+      {bookingPayment && (() => {
+        const ps = bookingPayment.payment_status;
+        const isFullPaid    = ps === "paid";
+        const isDepositPaid = ps === "deposit_paid";
+        const sessionDate   = bookingPayment.session_availability?.date;
+        const sessionTitle  = (bookingPayment.sessions as any)?.title ?? project.session_type ?? "—";
+        const cfgBg  = isFullPaid ? "bg-emerald-500/10 border-emerald-500/20"
+                     : isDepositPaid ? "bg-amber-500/10 border-amber-500/20"
+                     : "bg-muted/30 border-border/50";
+        const cfgColor = isFullPaid ? "text-emerald-600" : isDepositPaid ? "text-amber-600" : "text-muted-foreground";
+        const label    = isFullPaid ? tp.bookingPaymentFull : isDepositPaid ? tp.bookingPaymentDeposit : tp.bookingPaymentPending;
+        const Icon     = isFullPaid ? CheckCircle2 : isDepositPaid ? CreditCard : Clock;
+        return (
+          <div className={cn("rounded-md border px-3 py-2 flex items-center gap-2.5", cfgBg)}>
+            <Icon className={cn("h-4 w-4 shrink-0", cfgColor)} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate leading-tight">{sessionTitle}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {tp.bookingPaymentSection}
+                {sessionDate && <> · {format(parseISO(sessionDate), "d MMM yyyy")}</>}
+              </p>
+            </div>
+            <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfgBg, cfgColor)}>
+              {label}
+            </span>
+          </div>
+        );
+      })()}
+
+
       {invoices.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {[
