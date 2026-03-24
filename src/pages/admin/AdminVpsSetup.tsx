@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search, Terminal, Package, Cpu, ChevronRight, RefreshCw, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search, Terminal, Package, Cpu, ChevronRight, RefreshCw, ShieldCheck, ShieldAlert, Bell, Clock } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { format, formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
