@@ -108,6 +108,28 @@ function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "ur
   return "ok";
 }
 
+/** Returns 0–100: percentage of time elapsed from startDate → deadline */
+function getDeadlineProgress(startDate: string | null | undefined, deadline: string | null | undefined): number {
+  if (!startDate || !deadline) return 0;
+  try {
+    const start = new Date(startDate);
+    const end = parseISO(deadline);
+    const now = new Date();
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+    const total = end.getTime() - start.getTime();
+    if (total <= 0) return 100;
+    const elapsed = now.getTime() - start.getTime();
+    return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+  } catch { return 0; }
+}
+
+const DEADLINE_BAR: Record<string, string> = {
+  overdue: "bg-destructive",
+  urgent:  "bg-orange-500",
+  warning: "bg-yellow-400",
+  ok:      "bg-emerald-500",
+};
+
 const DEADLINE_BORDER: Record<string, string> = {
   overdue: "border-destructive shadow-[0_0_0_1px_hsl(var(--destructive))]",
   urgent:  "border-orange-500 shadow-[0_0_0_1px_theme(colors.orange.500)]",
@@ -363,6 +385,24 @@ function KanbanCard({
             </div>
           )}
         </div>
+
+        {/* Deadline progress bar */}
+        {(() => {
+          const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
+          const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const startAnchor = project.shoot_date ?? project.created_at;
+          if (!status || !deadline) return null;
+          const progress = getDeadlineProgress(startAnchor, deadline);
+          const barColor = DEADLINE_BAR[status] ?? "bg-border";
+          return (
+            <div className="mt-1 h-1 w-full rounded-full bg-muted/50 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
