@@ -453,6 +453,159 @@ const VPS_BASE = "https://davions.giombelli.com.br";
 
 type VpsCert = { domain: string; expiresAt?: string | null };
 
+type SslAlertStateRow = {
+  domain: string;
+  bucket: string;
+  expires_at: string | null;
+  notified_at: string;
+  updated_at: string;
+};
+
+function BucketBadge({ bucket }: { bucket: string }) {
+  if (bucket === "critical") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-light border border-destructive/20">
+        <AlertTriangle size={8} />
+        Crítico
+      </span>
+    );
+  }
+  if (bucket === "warning") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 text-[10px] font-light border border-yellow-500/20">
+        <AlertTriangle size={8} />
+        Atenção
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-light border border-emerald-500/20">
+      <CheckCircle size={8} />
+      OK
+    </span>
+  );
+}
+
+function SslAlertHistoryPanel() {
+  const {
+    data: rows,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery<SslAlertStateRow[]>({
+    queryKey: ["ssl-alert-state"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssl_alert_state" as never)
+        .select("*")
+        .order("notified_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as SslAlertStateRow[];
+    },
+    refetchInterval: 60_000,
+  });
+
+  return (
+    <div className="border border-border rounded-lg p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bell size={13} className="text-muted-foreground" />
+          <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-light">
+            Histórico de Alertas SSL
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
+        >
+          {isFetching ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
+          Atualizar
+        </button>
+      </div>
+
+      <p className="text-xs font-light text-muted-foreground">
+        Domínios que dispararam ou receberam um alerta SSL. O e-mail só é enviado quando o status muda — esta tabela é o estado persistido para evitar spam.
+      </p>
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-10 bg-muted rounded-md animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && (!rows || rows.length === 0) && (
+        <div className="flex flex-col items-center justify-center py-8 gap-2 text-center border border-dashed border-border rounded-md">
+          <CheckCircle size={20} className="text-emerald-500/60" />
+          <p className="text-xs font-light text-muted-foreground">
+            Nenhum alerta registrado — todos os certificados estão saudáveis.
+          </p>
+        </div>
+      )}
+
+      {rows && rows.length > 0 && (
+        <div className="border border-border rounded-md overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Domínio</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Status</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Vencimento</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light">Último alerta</th>
+                <th className="text-left py-2 px-4 text-[10px] tracking-[0.12em] uppercase text-muted-foreground font-light hidden sm:table-cell">Atualizado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                let notifiedFmt = "—";
+                let notifiedRelative = "";
+                let updatedFmt = "—";
+                try {
+                  const d = new Date(row.notified_at);
+                  notifiedFmt = format(d, "dd/MM/yyyy HH:mm", { locale: ptBR });
+                  notifiedRelative = formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
+                } catch { /* noop */ }
+                try {
+                  updatedFmt = format(new Date(row.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR });
+                } catch { /* noop */ }
+                let expiresFmt = "—";
+                try {
+                  if (row.expires_at) expiresFmt = format(new Date(row.expires_at), "dd/MM/yyyy", { locale: ptBR });
+                } catch { /* noop */ }
+
+                return (
+                  <tr key={row.domain} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <span className="font-mono text-foreground">{row.domain}</span>
+                    </td>
+                    <td className="py-2.5 px-4">
+                      <BucketBadge bucket={row.bucket} />
+                    </td>
+                    <td className="py-2.5 px-4 text-muted-foreground font-light">{expiresFmt}</td>
+                    <td className="py-2.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={10} className="text-muted-foreground shrink-0" />
+                        <span className="text-muted-foreground font-light" title={notifiedFmt}>
+                          {notifiedRelative || notifiedFmt}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-4 text-muted-foreground font-light hidden sm:table-cell">{updatedFmt}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 function SslRenewalPanel() {
   const [renewing, setRenewing] = useState<Record<string, boolean>>({});
   const [results, setResults] = useState<Record<string, "ok" | "error">>({});
