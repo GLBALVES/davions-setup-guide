@@ -91,26 +91,40 @@ serve(async (req) => {
       );
     }
 
-    // ── 1. Fetch cert list from VPS ────────────────────────────────────────
-    const certsRes = await fetch(VPS_CERTS_URL);
-    if (!certsRes.ok) {
-      return new Response(
-        JSON.stringify({ error: `VPS API returned ${certsRes.status}` }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    // ── 0. Test mode: ?force_test=true injects a fake cert expiring in 20 days ──
+    const url = new URL(req.url);
+    const forceTest = url.searchParams.get("force_test") === "true";
+
+    let resolved: { domain: string; expiresAt: string | null; days: number | null; bucket: "critical" | "warning" | "ok" }[];
+
+    if (forceTest) {
+      const fakeExpiry = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString();
+      resolved = [
+        { domain: "test-cert.davions.com", expiresAt: fakeExpiry, days: 20, bucket: "warning" },
+      ];
+      console.log("TEST MODE: using fake cert with 20 days remaining");
+    } else {
+      // ── 1. Fetch cert list from VPS ────────────────────────────────────────
+      const certsRes = await fetch(VPS_CERTS_URL);
+      if (!certsRes.ok) {
+        return new Response(
+          JSON.stringify({ error: `VPS API returned ${certsRes.status}` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const raw = await certsRes.json();
+      const certs = normalizeCerts(Array.isArray(raw) ? raw : []);
+
+      // ── 2. Resolve real expiry via crt.sh for each domain ─────────────────
+      resolved = await Promise.all(
+        certs.map(async (cert) => {
+          const expiresAt = await resolveExpiry(cert.domain, SUPABASE_URL, ANON_KEY);
+          const days = daysUntil(expiresAt);
+          const bucket = getBucket(days);
+          return { domain: cert.domain, expiresAt, days, bucket } as const;
+        })
       );
     }
-    const raw = await certsRes.json();
-    const certs = normalizeCerts(Array.isArray(raw) ? raw : []);
-
-    // ── 2. Resolve real expiry via crt.sh for each domain ─────────────────
-    const resolved = await Promise.all(
-      certs.map(async (cert) => {
-        const expiresAt = await resolveExpiry(cert.domain, SUPABASE_URL, ANON_KEY);
-        const days = daysUntil(expiresAt);
-        const bucket = getBucket(days);
-        return { domain: cert.domain, expiresAt, days, bucket } as const;
-      })
-    );
 
     // ── 3. Load previous snapshot from DB ─────────────────────────────────
     const snapshotRes = await fetch(
@@ -162,7 +176,7 @@ serve(async (req) => {
         JSON.stringify({
           ok: true,
           skipped: true,
-          checked: certs.length,
+          checked: resolved.length,
           message: "Nenhuma mudança de status detectada. E-mail não enviado.",
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -261,7 +275,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        checked: certs.length,
+        checked: resolved.length,
         newAlerts: newAlerts.length,
         resolved: resolved_domains.length,
         domains: newAlerts.map((c) => c.domain),
