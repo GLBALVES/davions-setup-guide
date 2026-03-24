@@ -931,6 +931,9 @@ export default function AdminVpsSetup() {
         {/* SSL Renewal */}
         <SslRenewalPanel />
 
+        {/* SSL Alert History */}
+        <SslAlertHistoryPanel />
+
         {/* Environment Auto-Detection */}
         <EnvDetector detected={detectedEnv} onSelect={setDetectedEnv} />
 
