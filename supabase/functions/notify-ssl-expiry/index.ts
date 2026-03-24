@@ -275,7 +275,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        checked: certs.length,
+        checked: resolved.length,
         newAlerts: newAlerts.length,
         resolved: resolved_domains.length,
         domains: newAlerts.map((c) => c.domain),
