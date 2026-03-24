@@ -1165,6 +1165,11 @@ export function ProjectDetailSheet({
 
                 <Separator />
 
+                {/* Communications */}
+                <ClientCommsSection project={project} photographerId={photographerId} />
+
+                <Separator />
+
                 {/* Notes */}
                 <div>
                   <SectionLabel>{tp.notes}</SectionLabel>
