@@ -327,6 +327,11 @@ export const translations = {
       invoiceStatusCancelled: "Cancelled",
       // Documents section
       documentsSection: "Documents",
+      contractsSubsection: "Contracts",
+      briefingsSubsection: "Briefings",
+      openInEditor: "Open in editor",
+      noContracts: "No contracts created yet",
+      noBriefings: "No briefings created yet",
       attach: "Attach",
       docRemoved: "Document removed",
       errorRemovingDoc: "Error removing document",
