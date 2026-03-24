@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search, Terminal, Package, Cpu, ChevronRight, RefreshCw, ShieldCheck, ShieldAlert, Bell, Clock } from "lucide-react";
+import { Copy, Check, Server, CheckCircle, AlertTriangle, Wifi, WifiOff, Loader2, Search, Terminal, Package, Cpu, ChevronRight, RefreshCw, ShieldCheck, ShieldAlert, Bell, Clock, MailWarning, X } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
