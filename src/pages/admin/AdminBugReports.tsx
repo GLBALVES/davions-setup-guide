@@ -4,7 +4,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { BugReportThread } from "@/components/admin/BugReportThread";
 import {
   Bug, ChevronDown, ExternalLink, Loader2,
-  CheckCircle2, Clock, AlertCircle, XCircle, Video,
+  CheckCircle2, Clock, AlertCircle, XCircle, Video, Maximize2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,8 @@ function isVideo(url: string) {
   return /\.(mp4|webm|mov|ogg|avi|mkv)(\?|$)/i.test(url);
 }
 
+type LightboxItem = { url: string; type: "image" | "video" };
+
 export default function AdminBugReports() {
   const [reports, setReports] = useState<BugReport[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -44,6 +46,7 @@ export default function AdminBugReports() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [savingNotes, setSavingNotes] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [lightbox, setLightbox] = useState<LightboxItem | null>(null);
 
   useEffect(() => {
     setFetching(true);
@@ -80,6 +83,36 @@ export default function AdminBugReports() {
 
   return (
     <AdminLayout>
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-sm"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+            onClick={() => setLightbox(null)}
+          >
+            <X size={18} />
+          </button>
+          {lightbox.type === "video" ? (
+            <video
+              src={lightbox.url}
+              controls
+              autoPlay
+              className="max-w-[90vw] max-h-[85vh] rounded-lg border border-border shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightbox.url}
+              alt="attachment expanded"
+              className="max-w-[90vw] max-h-[85vh] rounded-lg border border-border shadow-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      )}
       <div className="px-8 py-8 max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -167,26 +200,34 @@ export default function AdminBugReports() {
                                     controls
                                     className="w-full max-h-32 object-contain bg-black"
                                   />
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="absolute top-1 right-1 bg-background/80 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <ExternalLink size={11} />
-                                  </a>
+                                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={() => setLightbox({ url, type: "video" })}
+                                      className="bg-background/80 rounded p-0.5 hover:bg-background transition-colors"
+                                    >
+                                      <Maximize2 size={11} />
+                                    </button>
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="bg-background/80 rounded p-0.5 hover:bg-background transition-colors"
+                                    >
+                                      <ExternalLink size={11} />
+                                    </a>
+                                  </div>
                                   <div className="flex items-center gap-1 px-2 py-1">
                                     <Video size={10} className="text-muted-foreground shrink-0" />
                                     <span className="text-[9px] text-muted-foreground truncate">Video {i + 1}</span>
                                   </div>
                                 </div>
                               ) : (
-                                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative">
+                                <div key={i} className="group relative cursor-pointer" onClick={() => setLightbox({ url, type: "image" })}>
                                   <img src={url} alt={`attachment ${i + 1}`} className="w-32 h-20 object-cover rounded border border-border group-hover:border-foreground/30 transition-colors" />
-                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-background/60 rounded">
-                                    <ExternalLink size={14} />
+                                  <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/60 rounded">
+                                    <Maximize2 size={14} />
                                   </div>
-                                </a>
+                                </div>
                               )
                             )}
                           </div>
