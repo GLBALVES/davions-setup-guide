@@ -2297,6 +2297,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ssl_email_bounces: {
+        Row: {
+          brevo_event_at: string | null
+          created_at: string
+          domain: string | null
+          email: string
+          event: string
+          id: string
+          message_id: string | null
+          raw_payload: Json | null
+          reason: string | null
+        }
+        Insert: {
+          brevo_event_at?: string | null
+          created_at?: string
+          domain?: string | null
+          email: string
+          event: string
+          id?: string
+          message_id?: string | null
+          raw_payload?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          brevo_event_at?: string | null
+          created_at?: string
+          domain?: string | null
+          email?: string
+          event?: string
+          id?: string
+          message_id?: string | null
+          raw_payload?: Json | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       studio_members: {
         Row: {
           email: string
