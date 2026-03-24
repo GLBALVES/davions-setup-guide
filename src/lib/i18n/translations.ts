@@ -325,6 +325,11 @@ export const translations = {
       invoiceStatusPartial: "Partial",
       invoiceStatusOverdue: "Overdue",
       invoiceStatusCancelled: "Cancelled",
+      bookingPaymentSection: "Booking Payment",
+      bookingPaymentFull: "Paid in full",
+      bookingPaymentDeposit: "Deposit paid",
+      bookingPaymentPending: "Awaiting payment",
+      descriptionPlaceholder: "e.g. Photo session",
       // Documents section
       documentsSection: "Documents",
       contractsSubsection: "Contracts",
