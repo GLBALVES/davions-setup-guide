@@ -588,124 +588,177 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <SectionLabel>{tp.documentsSection}</SectionLabel>
-        <div className="flex items-center gap-1.5">
-          <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as DocCategory)}>
-            <SelectTrigger className="h-6 text-[10px] w-28 px-2 border-border/50">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(DOC_CATEGORY_COLORS) as DocCategory[]).map((k) => (
-                <SelectItem key={k} value={k} className="text-xs">{docCategoryLabels[k]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-          >
-            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-            {tp.attach}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt,.csv"
-            onChange={(e) => handleUpload(e.target.files)}
-          />
-        </div>
-      </div>
-
-      {/* Drop zone */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
-        onClick={() => !uploading && fileInputRef.current?.click()}
-        className={cn(
-          "flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed py-4 cursor-pointer transition-colors",
-          dragOver ? "border-primary/50 bg-primary/5" : "border-border/50 hover:border-border hover:bg-muted/20",
-          documents.length > 0 && "py-2.5",
-        )}
-      >
-        {uploading ? (
-          <><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /><p className="text-[11px] text-muted-foreground">{tp.uploading}</p></>
-        ) : documents.length === 0 ? (
-          <>
-            <UploadCloud className="h-6 w-6 text-muted-foreground/40" />
-            <p className="text-[11px] text-muted-foreground/60">{tp.dragFilesHere}</p>
-            <p className="text-[10px] text-muted-foreground/40">{tp.supportedFormats}</p>
-          </>
+    <div className="flex flex-col gap-4">
+      {/* ── Contracts sub-section ────────────────────────────────────────── */}
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{tp.contractsSubsection}</p>
+        {contracts.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noContracts}</p>
         ) : (
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
-            <Paperclip className="h-3 w-3" /> {tp.clickOrDragMore}
+          <div className="flex flex-col gap-1">
+            {contracts.map((c) => (
+              <a
+                key={c.id}
+                href={`/dashboard/contracts/${c.id}/edit`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors group"
+              >
+                <FileTextIcon className="h-4 w-4 text-purple-500 shrink-0" />
+                <span className="flex-1 text-xs font-medium truncate">{c.name || tp.contractEditor?.untitledContract || "Untitled Contract"}</span>
+                <span className="text-[10px] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity">{tp.openInEditor}</span>
+              </a>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Document list */}
-      {documents.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          {documents.map((doc) => {
-            const catColor = DOC_CATEGORY_COLORS[doc.category] ?? DOC_CATEGORY_COLORS.other;
-            return (
-              <div key={doc.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group">
-                {getFileIcon(doc.file_type)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-sm border font-medium", catColor)}>
-                      {docCategoryLabels[doc.category] ?? doc.category}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground/60">{formatBytes(doc.file_size)}</span>
-                    <span className="text-[10px] text-muted-foreground/40">{format(new Date(doc.created_at), "d MMM")}</span>
+      {/* ── Briefings sub-section ────────────────────────────────────────── */}
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{tp.briefingsSubsection}</p>
+        {briefings.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noBriefings}</p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {briefings.map((b) => (
+              <a
+                key={b.id}
+                href={`/dashboard/sessions`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors group"
+              >
+                <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="flex-1 text-xs font-medium truncate">{b.name || "Untitled Briefing"}</span>
+                <span className="text-[10px] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity">{tp.openInEditor}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Separator className="opacity-50" />
+
+      {/* ── Attached files ────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <SectionLabel>{tp.documentsSection}</SectionLabel>
+          <div className="flex items-center gap-1.5">
+            <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as DocCategory)}>
+              <SelectTrigger className="h-6 text-[10px] w-28 px-2 border-border/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(DOC_CATEGORY_COLORS) as DocCategory[]).map((k) => (
+                  <SelectItem key={k} value={k} className="text-xs">{docCategoryLabels[k]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+              {tp.attach}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.txt,.csv"
+              onChange={(e) => handleUpload(e.target.files)}
+            />
+          </div>
+        </div>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleUpload(e.dataTransfer.files); }}
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          className={cn(
+            "flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed py-4 cursor-pointer transition-colors",
+            dragOver ? "border-primary/50 bg-primary/5" : "border-border/50 hover:border-border hover:bg-muted/20",
+            documents.length > 0 && "py-2.5",
+          )}
+        >
+          {uploading ? (
+            <><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /><p className="text-[11px] text-muted-foreground">{tp.uploading}</p></>
+          ) : documents.length === 0 ? (
+            <>
+              <UploadCloud className="h-6 w-6 text-muted-foreground/40" />
+              <p className="text-[11px] text-muted-foreground/60">{tp.dragFilesHere}</p>
+              <p className="text-[10px] text-muted-foreground/40">{tp.supportedFormats}</p>
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
+              <Paperclip className="h-3 w-3" /> {tp.clickOrDragMore}
+            </div>
+          )}
+        </div>
+
+        {/* Document list */}
+        {documents.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {documents.map((doc) => {
+              const catColor = DOC_CATEGORY_COLORS[doc.category] ?? DOC_CATEGORY_COLORS.other;
+              return (
+                <div key={doc.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group">
+                  {getFileIcon(doc.file_type)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate leading-tight">{doc.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={cn("text-[9px] px-1.5 py-0.5 rounded-sm border font-medium", catColor)}>
+                        {docCategoryLabels[doc.category] ?? doc.category}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/60">{formatBytes(doc.file_size)}</span>
+                      <span className="text-[10px] text-muted-foreground/40">{format(new Date(doc.created_at), "d MMM")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={doc.name}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1 rounded-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title={tp.download}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="p-1 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title={tp.removeDocument}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{tp.removeDocument}</AlertDialogTitle>
+                          <AlertDialogDescription>{tp.removeDocumentConfirm(doc.name)}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{tp.chargeCancel}</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate(doc)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {tp.remove}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download={doc.name}
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1 rounded-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                    title={tp.download}
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </a>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="p-1 rounded-sm hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title={tp.removeDocument}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{tp.removeDocument}</AlertDialogTitle>
-                        <AlertDialogDescription>{tp.removeDocumentConfirm(doc.name)}</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{tp.chargeCancel}</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteMutation.mutate(doc)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          {tp.remove}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
