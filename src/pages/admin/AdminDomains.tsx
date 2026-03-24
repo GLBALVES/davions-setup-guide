@@ -537,10 +537,44 @@ function ExpiryBadge({ expiresAt, loading }: { expiresAt: string | null | undefi
   );
 }
 
+const VPS_RENEW_URL = "https://davions.giombelli.com.br/api/renew-cert";
+
+type RenewStatus = "idle" | "loading" | "success" | "error";
+
 function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
   const [certExpiry, setCertExpiry] = useState<Record<string, string | null>>({});
   const [loadingExpiry, setLoadingExpiry] = useState<Record<string, boolean>>({});
   const [statusFilter, setStatusFilter] = useState<"all" | "expiring" | "expired">("all");
+  const [renewStatus, setRenewStatus] = useState<Record<string, RenewStatus>>({});
+
+  const renewCert = useCallback(async (domain: string) => {
+    setRenewStatus((prev) => ({ ...prev, [domain]: "loading" }));
+    try {
+      const res = await fetch(VPS_RENEW_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRenewStatus((prev) => ({ ...prev, [domain]: "success" }));
+      // Auto-reset after 4 s and refresh expiry for this domain
+      setTimeout(() => {
+        setRenewStatus((prev) => ({ ...prev, [domain]: "idle" }));
+        setCertExpiry((prev) => { const next = { ...prev }; delete next[domain]; return next; });
+        setLoadingExpiry((prev) => ({ ...prev, [domain]: true }));
+        const baseUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/check-ssl-cert`;
+        fetch(`${baseUrl}?domain=${encodeURIComponent(domain)}`)
+          .then((r) => r.json())
+          .then((j) => setCertExpiry((prev) => ({ ...prev, [domain]: j.expiresAt ?? null })))
+          .catch(() => setCertExpiry((prev) => ({ ...prev, [domain]: null })))
+          .finally(() => setLoadingExpiry((prev) => ({ ...prev, [domain]: false })));
+      }, 4000);
+    } catch (e) {
+      console.error("renew-cert error:", e);
+      setRenewStatus((prev) => ({ ...prev, [domain]: "error" }));
+      setTimeout(() => setRenewStatus((prev) => ({ ...prev, [domain]: "idle" })), 4000);
+    }
+  }, []);
 
   const {
     data: certs,
@@ -758,12 +792,13 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
             <TableHead>Dias para vencer</TableHead>
             <TableHead>Fotógrafo</TableHead>
             <TableHead>Vencimento</TableHead>
+            <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredCerts.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="py-10 text-center">
+              <TableCell colSpan={6} className="py-10 text-center">
                 <p className="text-xs text-muted-foreground">Nenhum certificado nesta categoria.</p>
               </TableCell>
             </TableRow>
@@ -772,12 +807,12 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
               const photographer = photographers.find(
                 (p) => p.custom_domain?.toLowerCase() === cert.domain.toLowerCase()
               );
-              // Prefer real expiry from crt.sh lookup; fall back to VPS API value
               const resolvedExpiry = certExpiry[cert.domain] !== undefined
                 ? certExpiry[cert.domain]
                 : cert.expiresAt ?? null;
               const isLoadingThisDomain = loadingExpiry[cert.domain] ?? false;
               const days = getDaysUntilExpiry(resolvedExpiry);
+              const rStatus = renewStatus[cert.domain] ?? "idle";
               return (
                 <TableRow key={cert.domain} className={cn(!isLoadingThisDomain && days !== null && days <= 7 && "bg-destructive/5")}>
                   <TableCell className="py-3">
@@ -816,6 +851,32 @@ function VpsCertsTab({ photographers }: { photographers: Photographer[] }) {
                         }
                       })()
                     ) : "—"}
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <button
+                      onClick={() => renewCert(cert.domain)}
+                      disabled={rStatus === "loading" || rStatus === "success"}
+                      title={rStatus === "success" ? "Renovação solicitada" : rStatus === "error" ? "Falha — clique para tentar de novo" : `Renovar SSL para ${cert.domain}`}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-light tracking-wide border transition-colors disabled:cursor-not-allowed",
+                        rStatus === "success"
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          : rStatus === "error"
+                          ? "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20"
+                          : "bg-muted text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+                      )}
+                    >
+                      {rStatus === "loading" ? (
+                        <Loader2 size={10} className="animate-spin" />
+                      ) : rStatus === "success" ? (
+                        <Check size={10} />
+                      ) : rStatus === "error" ? (
+                        <XCircle size={10} />
+                      ) : (
+                        <RefreshCw size={10} />
+                      )}
+                      {rStatus === "loading" ? "Renovando…" : rStatus === "success" ? "Solicitado" : rStatus === "error" ? "Falhou" : "Renovar"}
+                    </button>
                   </TableCell>
                 </TableRow>
               );
