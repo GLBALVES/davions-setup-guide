@@ -1950,6 +1950,11 @@ export const translations = {
       invoiceStatusCancelled: "Cancelado",
       // Seção de documentos
       documentsSection: "Documentos",
+      contractsSubsection: "Contratos",
+      briefingsSubsection: "Questionários",
+      openInEditor: "Abrir no editor",
+      noContracts: "Nenhum contrato criado ainda",
+      noBriefings: "Nenhum questionário criado ainda",
       attach: "Anexar",
       docRemoved: "Documento removido",
       errorRemovingDoc: "Erro ao remover documento",
