@@ -481,19 +481,43 @@ function KanbanCard({
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
           const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
           // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
-          // so the progress bar spans the full "project lifecycle" window, not just the delivery window.
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
             ? (project.shoot_date ?? project.created_at)
             : project.created_at;
           if (!status || !deadline) return null;
           const progress = getDeadlineProgress(startAnchor, deadline);
           const barColor = DEADLINE_BAR[status] ?? "bg-border";
+          // Label text (days/hours left)
+          const label = (() => {
+            if (!deadline) return null;
+            const d = parseISO(deadline);
+            const now = new Date();
+            if (isPast(d)) return null;
+            const h = differenceInHours(d, now);
+            if (h < 24) return `${h}h`;
+            return `${differenceInDays(d, now)}d`;
+          })();
+          const labelColorClass = DEADLINE_BADGE[status] ?? "text-muted-foreground";
+          // Clamp so the label doesn't overflow: min 0, max ~92% to leave room for text
+          const clampedPct = Math.min(Math.max(progress, 0), 93);
           return (
-            <div className="mt-1 h-1 w-full rounded-full bg-muted/50 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                style={{ width: `${progress}%` }}
-              />
+            <div className="mt-1 relative w-full">
+              {/* track */}
+              <div className="h-1 w-full rounded-full bg-muted/50 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              {/* floating label at bar tip */}
+              {label && (
+                <span
+                  className={`absolute -top-4 text-[9px] font-semibold leading-none pointer-events-none transition-all duration-500 ${labelColorClass}`}
+                  style={{ left: `${clampedPct}%`, transform: "translateX(-50%)" }}
+                >
+                  {label}
+                </span>
+              )}
             </div>
           );
         })()}
