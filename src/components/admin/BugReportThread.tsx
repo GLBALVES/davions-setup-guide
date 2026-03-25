@@ -195,7 +195,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
             </div>
           ))
         )}
-        <div ref={bottomRef} />
+        
       </div>
 
       <div className="flex gap-2 items-end">
