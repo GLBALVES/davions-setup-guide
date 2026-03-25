@@ -170,6 +170,8 @@ function KanbanCard({
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
+  const [draftDeadlineDate, setDraftDeadlineDate] = useState<string | null>(null);
+  const [draftDeadlineTime, setDraftDeadlineTime] = useState<string>("09:00");
   const deadlineAnchorRef = useRef<HTMLButtonElement>(null);
   const [expiryPopoverOpen, setExpiryPopoverOpen] = useState(false);
   const expiryAnchorRef = useRef<HTMLButtonElement>(null);
@@ -376,7 +378,7 @@ function KanbanCard({
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
+                  onClick={(e) => { e.stopPropagation(); setDraftDeadlineDate(deadlineDateStr); setDraftDeadlineTime(deadlineTimeStr); setDeadlinePopoverOpen(true); }}
                   className="group/deadline flex items-center gap-1 shrink-0 hover:text-foreground transition-colors"
                 >
                   <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
@@ -513,29 +515,36 @@ function KanbanCard({
           >
             <Calendar
               mode="single"
-              selected={pickerDeadline}
-              onSelect={(d) => saveDeadline(d ? format(d, "yyyy-MM-dd") : null, deadlineTimeStr)}
+              selected={draftDeadlineDate ? parseISO(`${draftDeadlineDate}T${draftDeadlineTime ?? "09:00"}:00`) : undefined}
+              onSelect={(d) => setDraftDeadlineDate(d ? format(d, "yyyy-MM-dd") : null)}
               initialFocus
               className="p-3 pointer-events-auto"
             />
-            {deadlineDateStr && (
-              <div className="px-3 pb-3 flex flex-col gap-2">
-                <div className="flex items-center gap-2 border border-border rounded-sm p-2">
-                  <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <TimePickerInput
-                    value={deadlineTimeStr}
-                    onChange={(t) => saveDeadline(deadlineDateStr, t)}
-                    minuteStep={15}
-                  />
-                </div>
+            <div className="px-3 pb-3 flex flex-col gap-2">
+              <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+                <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                <TimePickerInput
+                  value={draftDeadlineTime ?? "09:00"}
+                  onChange={(t) => setDraftDeadlineTime(t)}
+                  minuteStep={15}
+                />
+              </div>
+              <button
+                disabled={!draftDeadlineDate}
+                onClick={() => { saveDeadline(draftDeadlineDate, draftDeadlineTime ?? "09:00"); setDeadlinePopoverOpen(false); }}
+                className="w-full text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors py-1.5 rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {p_t.applyDeadline ?? "Apply"}
+              </button>
+              {draftDeadlineDate && (
                 <button
                   onClick={() => { if (onSetDeadline) onSetDeadline(project.id, null); setDeadlinePopoverOpen(false); }}
                   className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
                 >
                   {p_t.removeDeadline ?? "Remove deadline"}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>,
         document.body
