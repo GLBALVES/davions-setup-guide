@@ -4,6 +4,7 @@ import {
   Server, Network, Layers, Cpu, Wrench, PlusCircle, AlertTriangle,
   ChevronRight, Copy, Check, Terminal,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 type SectionId = "overview" | "architecture" | "services" | "smart-proxy" | "traefik" | "new-app" | "troubleshooting";
@@ -106,30 +107,30 @@ export default function AdminVpsDocsContent() {
   };
 
   return (
-    <div className="flex gap-0 -mx-8 -mt-8 min-h-[calc(100vh-200px)] bg-[#0a0c10] text-white rounded-lg overflow-hidden border border-white/8">
-      {/* Left nav */}
-      <aside className="w-48 shrink-0 border-r border-white/8 flex flex-col py-5">
-        <p className="text-[9px] tracking-[0.35em] uppercase text-white/30 px-5 mb-3 font-light">Seções</p>
-        <nav className="flex flex-col gap-0.5 px-3">
+    <div className="-mx-8 -mt-8 min-h-[calc(100vh-200px)] bg-[#0a0c10] text-white rounded-lg overflow-hidden border border-white/8 flex flex-col">
+      {/* Sticky horizontal nav */}
+      <div className="sticky top-0 z-20 bg-[#0a0c10]/95 backdrop-blur-sm border-b border-white/8">
+        <nav className="flex gap-0 overflow-x-auto px-6 pt-4">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => scrollTo(id)}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-[11px] font-light tracking-wide transition-colors duration-150 text-left",
-                active === id ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                "flex items-center gap-1.5 px-3 pb-3 text-[11px] font-light tracking-wide transition-colors duration-150 whitespace-nowrap border-b-2 -mb-px",
+                active === id
+                  ? "border-white/60 text-white"
+                  : "border-transparent text-white/40 hover:text-white/70"
               )}
             >
-              <Icon size={12} className="shrink-0" />
+              <Icon size={11} className="shrink-0" />
               {label}
-              {active === id && <ChevronRight size={10} className="ml-auto text-white/30" />}
             </button>
           ))}
         </nav>
-      </aside>
+      </div>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto px-10 py-8">
+      <main className="flex-1 overflow-y-auto px-10 py-8 max-w-4xl w-full mx-auto">
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-1">
             <Terminal size={12} className="text-white/30" />
