@@ -155,6 +155,7 @@ function KanbanCard({
   shotDeadlineDays,
   postProdDeadlineDays,
   onSetDeadline,
+  onSetGalleryExpiry,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -164,9 +165,12 @@ function KanbanCard({
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
+  onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
   const deadlineAnchorRef = useRef<HTMLButtonElement>(null);
+  const [expiryPopoverOpen, setExpiryPopoverOpen] = useState(false);
+  const expiryAnchorRef = useRef<HTMLButtonElement>(null);
   const { t } = useLanguage();
   const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
