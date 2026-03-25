@@ -1116,6 +1116,77 @@ const SessionForm = () => {
                       Session Details
                     </p>
 
+                    {/* Session model selector */}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-xs tracking-wider uppercase font-light">Modelo</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(["standard", "campaign"] as const).map((model) => (
+                          <button
+                            key={model}
+                            type="button"
+                            onClick={() => setSessionModel(model)}
+                            className={`flex flex-col gap-1 border px-4 py-3 text-left transition-colors ${
+                              sessionModel === model
+                                ? "border-foreground bg-foreground/5"
+                                : "border-border hover:border-foreground/50"
+                            }`}
+                          >
+                            <span className="text-xs font-medium">
+                              {model === "standard" ? "Sessão padrão" : "Campanha"}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground leading-snug">
+                              {model === "standard"
+                                ? "Pacotes disponíveis o ano todo"
+                                : "Mini sessões de temporada com datas específicas"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Campaign dates picker */}
+                    {sessionModel === "campaign" && (
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs tracking-wider uppercase font-light">
+                          Dias da campanha
+                          {campaignDates && campaignDates.length > 0 && (
+                            <span className="normal-case tracking-normal text-muted-foreground font-light ml-2">
+                              ({campaignDates.length} dia{campaignDates.length !== 1 ? "s" : ""} selecionado{campaignDates.length !== 1 ? "s" : ""})
+                            </span>
+                          )}
+                        </Label>
+                        <div className="border border-border">
+                          <Calendar
+                            mode="multiple"
+                            selected={campaignDates}
+                            onSelect={setCampaignDates}
+                            className="p-3 pointer-events-auto"
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          />
+                        </div>
+                        {campaignDates && campaignDates.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => (
+                              <span
+                                key={d.toISOString()}
+                                className="flex items-center gap-1 text-[10px] px-2 py-0.5 bg-muted border border-border rounded-sm"
+                              >
+                                {format(d, "dd MMM yyyy")}
+                                <button
+                                  type="button"
+                                  onClick={() => setCampaignDates((prev) => prev?.filter((x) => x.toISOString() !== d.toISOString()))}
+                                  className="text-muted-foreground hover:text-destructive ml-0.5"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">Clique nos dias do calendário para selecionar as datas desta campanha.</p>
+                      </div>
+                    )}
+
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="title" className="text-xs tracking-wider uppercase font-light">
                         Title *
