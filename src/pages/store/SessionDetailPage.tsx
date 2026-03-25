@@ -529,68 +529,119 @@ const SessionDetailPage = () => {
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
       {step === "product" && (
         <>
-          {/* Full-bleed hero slider */}
-          <div className="relative w-full h-[60vh] min-h-[380px] overflow-hidden">
-            {/* Slides */}
-            {slides.length > 0 ? (
-              slides.map((src, i) => (
-                <img
-                  key={src}
-                  src={src}
-                  alt={session.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
-                  style={{ opacity: i === sliderIndex ? 1 : 0 }}
-                />
-              ))
-            ) : (
-              <div className="absolute inset-0 bg-foreground" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
-            {/* Back button */}
-            <button
-              onClick={() => navigate(backPath)}
-              className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            {/* Slider controls */}
-            {slides.length > 1 && (
-              <>
-                <button
-                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderPrev(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderNext(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                {/* Dots */}
-                <div className="absolute bottom-20 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
-                  {slides.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); setSliderIndex(i); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
-                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === sliderIndex ? "bg-white scale-125" : "bg-white/40"}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+          {/* ── Hero: alternates between full-bleed single photo and photo grid ── */}
+          {(() => {
+            // Build "frames": odd indices = grid mosaic, even = single hero photo
+            // Each frame lasts 5s. Single slides cycle through all photos; grid shows a rotating batch.
+            const totalFrames = slides.length <= 1 ? 1 : slides.length + Math.floor(slides.length / 3);
 
-            <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center">
-              {photographer?.full_name && (
-                <p className="text-white/50 text-[9px] tracking-[0.45em] uppercase mb-2">{photographer.full_name}</p>
-              )}
-              <h1 className="text-white text-3xl md:text-5xl font-extralight tracking-[0.08em] mb-3" style={{ lineHeight: 1.1 }}>{session.title}</h1>
-              {session.tagline && (
-                <p className="text-white/70 text-base md:text-lg font-light max-w-xl mx-auto italic">{session.tagline}</p>
-              )}
-            </div>
-          </div>
+            // Which kind of frame is this index?
+            // Strategy: every 3rd frame (index 0,3,6…) is a grid; others are single photos
+            const isGridFrame = (idx: number) => slides.length >= 3 && idx % 4 === 0;
+            const singlePhotoForFrame = (idx: number) => {
+              // count how many single-photo frames came before this one
+              let count = 0;
+              for (let i = 0; i < idx; i++) if (!isGridFrame(i)) count++;
+              return slides[count % slides.length];
+            };
+            const gridPhotosForFrame = (idx: number) => {
+              // rotate the grid batch based on how many grid frames preceded
+              let gridCount = 0;
+              for (let i = 0; i < idx; i++) if (isGridFrame(i)) gridCount++;
+              const start = (gridCount * 6) % slides.length;
+              const pool = [...slides, ...slides]; // wrap-around
+              return pool.slice(start, start + 9);
+            };
+
+            const currentIsGrid = isGridFrame(sliderIndex % totalFrames);
+            const currentSingleSrc = singlePhotoForFrame(sliderIndex % totalFrames);
+            const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
+
+            return (
+              <div className="relative w-full overflow-hidden bg-black" style={{ height: "90vh", minHeight: 500 }}>
+
+                {/* ── Single full-bleed photo frame ── */}
+                <div
+                  className="absolute inset-0 transition-opacity duration-1000"
+                  style={{ opacity: currentIsGrid ? 0 : 1 }}
+                >
+                  {currentSingleSrc && (
+                    <img
+                      src={currentSingleSrc}
+                      alt={session.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  {/* vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
+                </div>
+
+                {/* ── Grid mosaic frame ── */}
+                <div
+                  className="absolute inset-0 transition-opacity duration-1000"
+                  style={{ opacity: currentIsGrid ? 1 : 0 }}
+                >
+                  {/* Mosaic: left grid + right hero */}
+                  <div className="flex h-full">
+                    {/* Left mosaic grid */}
+                    <div className="flex-1 grid grid-cols-3 gap-[2px]" style={{ gridTemplateRows: "repeat(3, 1fr)" }}>
+                      {currentGridPhotos.slice(0, 9).map((src, gi) => (
+                        <div key={gi} className="overflow-hidden bg-black/50">
+                          <img src={src} alt="" className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity" />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Right large hero — show the first photo */}
+                    <div className="w-1/2 overflow-hidden">
+                      <img
+                        src={currentGridPhotos[0] ?? slides[0]}
+                        alt={session.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+                </div>
+
+                {/* Overlay text */}
+                <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center z-10 pointer-events-none">
+                  {photographer?.full_name && (
+                    <p className="text-white/50 text-[9px] tracking-[0.45em] uppercase mb-2">{photographer.full_name}</p>
+                  )}
+                  <h1 className="text-white text-3xl md:text-5xl font-extralight tracking-[0.08em] mb-3" style={{ lineHeight: 1.1 }}>{session.title}</h1>
+                  {session.tagline && (
+                    <p className="text-white/70 text-base md:text-lg font-light max-w-xl mx-auto italic">{session.tagline}</p>
+                  )}
+                </div>
+
+                {/* Back button */}
+                <button
+                  onClick={() => navigate(backPath)}
+                  className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-20"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+
+                {/* Slide dots */}
+                {slides.length > 1 && (
+                  <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                    {Array.from({ length: Math.min(slides.length, 8) }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
+                          setSliderIndex(i);
+                          sliderTimerRef.current = setInterval(sliderNext, 5000);
+                        }}
+                        className={`rounded-full transition-all duration-300 ${i === (sliderIndex % Math.min(slides.length, 8)) ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
 
           {/* Product details */}
           <div className="max-w-4xl mx-auto px-6 py-14">
