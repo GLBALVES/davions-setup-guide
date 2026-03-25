@@ -48,7 +48,7 @@ const StorePage = () => {
           .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url")
           .eq("photographer_id", photoData.id)
           .eq("status", "active")
-          .order("created_at", { ascending: true }),
+          .order("sort_order", { ascending: true }),
         supabase
           .from("galleries")
           .select("id, slug, title, category, cover_image_url")
