@@ -1184,12 +1184,13 @@ const Projects = () => {
   };
 
   const handleSetDeadline = async (projectId: string, deadline: string | null) => {
+    // Optimistic update — card refreshes immediately before DB confirms
+    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
     const { error } = await supabase
       .from("client_projects" as any)
       .update({ gallery_deadline: deadline } as any)
       .eq("id", projectId);
-    if (error) { toast.error("Erro ao salvar prazo: " + error.message); return; }
-    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
+    if (error) { toast.error("Erro ao salvar prazo: " + error.message); }
   };
 
   const handleSetGalleryExpiry = async (projectId: string, expiresAt: string | null) => {
