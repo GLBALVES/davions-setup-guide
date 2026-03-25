@@ -278,10 +278,6 @@ export const translations = {
       removeDeadline: "Remove deadline",
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
-      bulkDeadlineTitle: (stage: string) => `Set deadline for all in "${stage}"`,
-      bulkDeadlineDesc: "Applies the chosen date to all projects currently in this column.",
-      bulkDeadlineClear: "Clear deadlines for all",
-      bulkDeadlineApplied: (n: number) => `Deadline applied to ${n} project${n !== 1 ? "s" : ""}`,
       refresh: "Refresh",
       // Project detail fields
       location: "Location",
@@ -1927,10 +1923,6 @@ export const translations = {
       removeDeadline: "Remover prazo",
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
-      bulkDeadlineTitle: (stage: string) => `Definir prazo para todos em "${stage}"`,
-      bulkDeadlineDesc: "Aplica a data escolhida a todos os projetos desta coluna.",
-      bulkDeadlineClear: "Limpar prazos de todos",
-      bulkDeadlineApplied: (n: number) => `Prazo aplicado a ${n} projeto${n !== 1 ? "s" : ""}`,
       refresh: "Atualizar",
       // Campos do detalhe do projeto
       location: "Localização",
@@ -3538,10 +3530,6 @@ export const translations = {
       removeDeadline: "Eliminar plazo",
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
-      bulkDeadlineTitle: (stage: string) => `Establecer plazo para todos en "${stage}"`,
-      bulkDeadlineDesc: "Aplica la fecha elegida a todos los proyectos de esta columna.",
-      bulkDeadlineClear: "Borrar plazos de todos",
-      bulkDeadlineApplied: (n: number) => `Plazo aplicado a ${n} proyecto${n !== 1 ? "s" : ""}`,
       refresh: "Actualizar",
       // Campos del detalle del proyecto
       location: "Ubicación",
