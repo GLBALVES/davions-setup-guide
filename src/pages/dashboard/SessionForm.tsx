@@ -486,6 +486,37 @@ const SessionForm = () => {
   };
 
   // ────────────────────────────────────────────
+  // Portfolio photo upload
+  // ────────────────────────────────────────────
+
+  const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !user) return;
+    const remaining = 5 - portfolioPhotos.length;
+    if (remaining <= 0) return;
+    const toUpload = files.slice(0, remaining);
+    setUploadingPortfolio(true);
+    const newUrls: string[] = [];
+    for (const file of toUpload) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("session-covers").upload(path, file, { upsert: true });
+      if (!error) {
+        const { data } = supabase.storage.from("session-covers").getPublicUrl(path);
+        newUrls.push(data.publicUrl);
+      }
+    }
+    setPortfolioPhotos((prev) => [...prev, ...newUrls].slice(0, 5));
+    setUploadingPortfolio(false);
+    // reset input
+    e.target.value = "";
+  };
+
+  const handleRemovePortfolioPhoto = (idx: number) => {
+    setPortfolioPhotos((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // ────────────────────────────────────────────
   // Cover upload
   // ────────────────────────────────────────────
 
