@@ -170,6 +170,8 @@ function KanbanCard({
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
+  const [draftDeadlineDate, setDraftDeadlineDate] = useState<string | null>(null);
+  const [draftDeadlineTime, setDraftDeadlineTime] = useState<string>("09:00");
   const deadlineAnchorRef = useRef<HTMLButtonElement>(null);
   const [expiryPopoverOpen, setExpiryPopoverOpen] = useState(false);
   const expiryAnchorRef = useRef<HTMLButtonElement>(null);
