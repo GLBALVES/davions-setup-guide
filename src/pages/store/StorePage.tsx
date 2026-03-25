@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
 const StorePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const previewTemplate = searchParams.get("preview");
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -95,6 +96,7 @@ const StorePage = () => {
       sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={`/store/${slug}/blog`}
+      previewTemplate={previewTemplate}
     />
   );
 };

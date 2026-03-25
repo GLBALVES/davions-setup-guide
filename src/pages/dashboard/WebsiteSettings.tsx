@@ -23,6 +23,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
+import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
@@ -511,6 +512,9 @@ const WebsiteSettings = () => {
   const [slugCopied, setSlugCopied] = useState(false);
   const [savingSlug, setSavingSlug] = useState(false);
 
+  // Template preview modal
+  const [previewModalTemplate, setPreviewModalTemplate] = useState<string | null>(null);
+
   // Custom Domain
   const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
   const [customDomain, setCustomDomain] = useState("");
@@ -822,6 +826,7 @@ const WebsiteSettings = () => {
   };
 
   return (
+    <>
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
@@ -1179,6 +1184,7 @@ const WebsiteSettings = () => {
                           description={tmpl.description}
                           selected={siteTemplate === tmpl.value}
                           onClick={() => setSiteTemplate(tmpl.value)}
+                          onPreview={storeSlug ? () => setPreviewModalTemplate(tmpl.value) : undefined}
                         />
                       ))}
                     </div>
@@ -1459,6 +1465,20 @@ const WebsiteSettings = () => {
         </div>
       </div>
     </SidebarProvider>
+
+    {/* Template preview modal */}
+    {storeSlug && previewModalTemplate && (
+      <TemplatePreviewModal
+        open={!!previewModalTemplate}
+        onClose={() => setPreviewModalTemplate(null)}
+        templateId={previewModalTemplate}
+        templateLabel={TEMPLATES.find((t) => t.value === previewModalTemplate)?.label ?? previewModalTemplate}
+        storeSlug={storeSlug}
+        onApply={(tid) => { setSiteTemplate(tid); setPreviewModalTemplate(null); }}
+        isCurrentTemplate={siteTemplate === previewModalTemplate}
+      />
+    )}
+    </>
   );
 };
 
