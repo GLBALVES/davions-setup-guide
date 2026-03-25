@@ -162,8 +162,7 @@ export default function AdminBugReports() {
                 <div key={report.id} data-report-id={report.id} className={cn("border border-border rounded-md overflow-hidden transition-all duration-150", isOpen && "border-foreground/20")}>
                   <button
                     className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors duration-150"
-                    onClick={(e) => {
-                      (e.currentTarget as HTMLButtonElement).blur();
+                    onClick={() => {
                       setExpanded(isOpen ? null : report.id);
                     }}
                   >
