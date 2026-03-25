@@ -381,9 +381,23 @@ function KanbanCard({
                   )}
                 </span>
               </span>
-              {/* Gallery stages: show expiry info inline */}
-              {(project.stage === "proof_gallery" || project.stage === "final_gallery") ? (
-                galleryExpiryLabel && galleryExpiryStatus ? (
+              {/* Gallery stages: show expiry info inline (editable) */}
+              {isGalleryStage ? (
+                onSetGalleryExpiry ? (
+                  <button
+                    ref={expiryAnchorRef}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
+                    className={`group/expiry flex items-center gap-0.5 shrink-0 font-medium ${galleryExpiryStatus ? DEADLINE_BADGE[galleryExpiryStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
+                  >
+                    {galleryExpiryStatus === "overdue"
+                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      : <Clock className="h-2.5 w-2.5 shrink-0" />
+                    }
+                    <span>{galleryExpiryLabel ? `${p_t.galleryPrefix} ${galleryExpiryLabel}` : (p_t.setDeadline ?? "Set expiry")}</span>
+                    <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/expiry:opacity-60 transition-opacity ml-0.5" />
+                  </button>
+                ) : (galleryExpiryLabel && galleryExpiryStatus ? (
                   <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
                     {galleryExpiryStatus === "overdue"
                       ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -391,7 +405,7 @@ function KanbanCard({
                     }
                     <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
                   </span>
-                ) : null
+                ) : null)
               ) : showDeadlineEditor ? (
                 <button
                   ref={deadlineAnchorRef}
