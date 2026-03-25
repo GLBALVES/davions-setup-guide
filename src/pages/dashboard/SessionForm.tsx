@@ -206,6 +206,10 @@ const SessionForm = () => {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
 
+  // ── Session model ──
+  const [sessionModel, setSessionModel] = useState<"standard" | "campaign">("standard");
+  const [campaignDates, setCampaignDates] = useState<Date[] | undefined>(undefined);
+
   // ── Contract ──
   interface ContractTemplate { id: string; name: string; body: string; }
   const [contractTemplates, setContractTemplates] = useState<ContractTemplate[]>([]);
