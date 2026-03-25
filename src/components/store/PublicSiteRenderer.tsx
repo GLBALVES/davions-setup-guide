@@ -1293,7 +1293,7 @@ export default function PublicSiteRenderer(props: Props) {
   const seoDescription = site?.seo_description || subheadline || undefined;
 
   const derived = deriveCommon(props);
-  const template = site?.site_template || "editorial";
+  const template = props.previewTemplate || site?.site_template || "editorial";
 
   // Inject photographer's custom favicon into <head>
   useEffect(() => {
