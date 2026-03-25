@@ -163,15 +163,8 @@ export default function AdminBugReports() {
                   <button
                     className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors duration-150"
                     onClick={(e) => {
-                      const btn = e.currentTarget as HTMLButtonElement;
-                      const card = btn.closest("[data-report-id]") as HTMLElement | null;
-                      btn.blur();
+                      (e.currentTarget as HTMLButtonElement).blur();
                       setExpanded(isOpen ? null : report.id);
-                      if (!isOpen && card) {
-                        setTimeout(() => {
-                          card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-                        }, 10);
-                      }
                     }}
                   >
                     <Icon size={13} className={cn("shrink-0", cfg.class.split(" ")[1])} />
