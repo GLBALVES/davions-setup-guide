@@ -372,7 +372,7 @@ const SessionDetailPage = () => {
 
   useEffect(() => {
     if (portfolioImages.length <= 1 || step !== "product") return;
-    sliderTimerRef.current = setInterval(sliderNext, 4000);
+    sliderTimerRef.current = setInterval(sliderNext, 5000);
     return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
   }, [portfolioImages.length, sliderNext, step]);
 
