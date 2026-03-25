@@ -115,6 +115,8 @@ export const translations = {
       oldest: "Oldest",
       priceUp: "Price ↑",
       priceDown: "Price ↓",
+      manual: "Manual",
+      manualHint: "Drag the ⠿ handle to reorder your sessions",
       loading: "Loading…",
       noSessionsYet: "No sessions yet",
       noResults: "No results for",
