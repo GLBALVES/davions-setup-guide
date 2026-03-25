@@ -155,6 +155,7 @@ function KanbanCard({
   shotDeadlineDays,
   postProdDeadlineDays,
   onSetDeadline,
+  onSetGalleryExpiry,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -164,9 +165,12 @@ function KanbanCard({
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
+  onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
   const deadlineAnchorRef = useRef<HTMLButtonElement>(null);
+  const [expiryPopoverOpen, setExpiryPopoverOpen] = useState(false);
+  const expiryAnchorRef = useRef<HTMLButtonElement>(null);
   const { t } = useLanguage();
   const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -295,6 +299,16 @@ function KanbanCard({
 
   const showDeadlineEditor = (project.stage === "shot" || project.stage === "post_production") && !!onSetDeadline;
 
+  // Gallery expiry popover values
+  const rawExpiry = project.gallery_expires_at ?? null;
+  const expiryDateStr = rawExpiry ? rawExpiry.substring(0, 10) : null;
+  const pickerExpiry = expiryDateStr ? parseISO(`${expiryDateStr}T00:00:00`) : undefined;
+  const saveExpiry = (dateStr: string | null) => {
+    if (!onSetGalleryExpiry) return;
+    onSetGalleryExpiry(project.id, dateStr ? `${dateStr}T00:00:00` : null);
+  };
+  const isGalleryStage = project.stage === "proof_gallery" || project.stage === "final_gallery";
+
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
@@ -367,9 +381,23 @@ function KanbanCard({
                   )}
                 </span>
               </span>
-              {/* Gallery stages: show expiry info inline */}
-              {(project.stage === "proof_gallery" || project.stage === "final_gallery") ? (
-                galleryExpiryLabel && galleryExpiryStatus ? (
+              {/* Gallery stages: show expiry info inline (editable) */}
+              {isGalleryStage ? (
+                onSetGalleryExpiry ? (
+                  <button
+                    ref={expiryAnchorRef}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
+                    className={`group/expiry flex items-center gap-0.5 shrink-0 font-medium ${galleryExpiryStatus ? DEADLINE_BADGE[galleryExpiryStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
+                  >
+                    {galleryExpiryStatus === "overdue"
+                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      : <Clock className="h-2.5 w-2.5 shrink-0" />
+                    }
+                    <span>{galleryExpiryLabel ? `${p_t.galleryPrefix} ${galleryExpiryLabel}` : (p_t.setDeadline ?? "Set expiry")}</span>
+                    <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/expiry:opacity-60 transition-opacity ml-0.5" />
+                  </button>
+                ) : (galleryExpiryLabel && galleryExpiryStatus ? (
                   <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
                     {galleryExpiryStatus === "overdue"
                       ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -377,7 +405,7 @@ function KanbanCard({
                     }
                     <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
                   </span>
-                ) : null
+                ) : null)
               ) : showDeadlineEditor ? (
                 <button
                   ref={deadlineAnchorRef}
@@ -476,6 +504,38 @@ function KanbanCard({
           </div>
         </div>
       )}
+
+      {/* Gallery expiry popover */}
+      {isGalleryStage && expiryPopoverOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(false); }}
+        >
+          <div
+            className="absolute z-50 bg-popover border border-border rounded-md shadow-md p-0 w-auto"
+            style={{ top: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().bottom + 4 : 0, left: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().left : 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Calendar
+              mode="single"
+              selected={pickerExpiry}
+              onSelect={(d) => { saveExpiry(d ? format(d, "yyyy-MM-dd") : null); setExpiryPopoverOpen(false); }}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+            {expiryDateStr && (
+              <div className="px-3 pb-3">
+                <button
+                  onClick={() => { saveExpiry(null); setExpiryPopoverOpen(false); }}
+                  className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
+                >
+                  {p_t.removeDeadline ?? "Remove expiry"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -494,6 +554,7 @@ function KanbanColumn({
   postProdDeadlineDays,
   onSetPostProdDeadlineDays,
   onSetDeadline,
+  onSetGalleryExpiry,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -507,6 +568,7 @@ function KanbanColumn({
   postProdDeadlineDays?: number | null;
   onSetPostProdDeadlineDays?: (days: number | null) => void;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
+  onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
@@ -699,7 +761,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
           ))}
         </SortableContext>
 
@@ -1082,6 +1144,17 @@ const Projects = () => {
       .eq("id", projectId);
     if (error) { toast.error("Erro ao salvar prazo: " + error.message); return; }
     setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
+  };
+
+  const handleSetGalleryExpiry = async (projectId: string, expiresAt: string | null) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project?.booking_id) { toast.error("Galeria não vinculada a um agendamento."); return; }
+    const { error } = await supabase
+      .from("galleries" as any)
+      .update({ expires_at: expiresAt } as any)
+      .eq("booking_id", project.booking_id);
+    if (error) { toast.error("Erro ao salvar expiração: " + error.message); return; }
+    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_expires_at: expiresAt } : p));
   };
 
   const sensors = useSensors(
@@ -1562,6 +1635,7 @@ const Projects = () => {
                         postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
                         onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
                         onSetDeadline={handleSetDeadline}
+                        onSetGalleryExpiry={(s.key === "proof_gallery" || s.key === "final_gallery") ? handleSetGalleryExpiry : undefined}
                       />
                     ))}
                   </div>
