@@ -531,7 +531,14 @@ const SessionForm = () => {
       briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
       tagline: tagline.trim() || null,
     };
-    const payloadWithType = { ...payload, session_type_id: sessionTypeId };
+    const payloadWithType = {
+      ...payload,
+      session_type_id: sessionTypeId,
+      session_model: sessionModel,
+      campaign_dates: sessionModel === "campaign" && campaignDates && campaignDates.length > 0
+        ? campaignDates.map((d) => format(d, "yyyy-MM-dd"))
+        : null,
+    };
 
     if (isEdit && sessionId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
