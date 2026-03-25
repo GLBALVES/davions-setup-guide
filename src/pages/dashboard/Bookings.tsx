@@ -551,15 +551,6 @@ const Bookings = () => {
                   );
                 };
 
-                if (!hasMultipleGroups) {
-                  return (
-                    <div className="border border-border rounded-sm overflow-hidden">
-                      {tableHeader}
-                      {filteredBookings.map((b, i) => renderRow(b, i, filteredBookings))}
-                    </div>
-                  );
-                }
-
                 return (
                   <div className="flex flex-col gap-6">
                     {Array.from(groups.entries()).map(([cat, list]) => (
