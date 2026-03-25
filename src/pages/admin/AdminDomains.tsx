@@ -1078,6 +1078,7 @@ export default function AdminDomains() {
                     <TableHead>DNS Records</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Store Slug</TableHead>
+                    <TableHead>Package Name</TableHead>
                     <TableHead>Added</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
