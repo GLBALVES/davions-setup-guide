@@ -903,7 +903,7 @@ export default function AdminDomains() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("photographers")
-        .select("id, email, full_name, business_name, custom_domain, store_slug, created_at")
+        .select("id, email, full_name, business_name, custom_domain, store_slug, package_name, created_at")
         .not("custom_domain", "is", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
