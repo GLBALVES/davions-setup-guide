@@ -145,7 +145,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
     <div className="flex flex-col gap-3">
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Conversation Thread</p>
 
-      <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+      <div ref={scrollContainerRef} className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
         {loading ? (
           <div className="flex justify-center py-4">
             <Loader2 size={14} className="animate-spin text-muted-foreground" />
