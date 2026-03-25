@@ -1927,6 +1927,10 @@ export const translations = {
       removeDeadline: "Remover prazo",
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
+      bulkDeadlineTitle: (stage: string) => `Definir prazo para todos em "${stage}"`,
+      bulkDeadlineDesc: "Aplica a data escolhida a todos os projetos desta coluna.",
+      bulkDeadlineClear: "Limpar prazos de todos",
+      bulkDeadlineApplied: (n: number) => `Prazo aplicado a ${n} projeto${n !== 1 ? "s" : ""}`,
       refresh: "Atualizar",
       // Campos do detalhe do projeto
       location: "Localização",
