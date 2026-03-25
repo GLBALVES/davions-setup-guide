@@ -575,6 +575,7 @@ const SessionForm = () => {
       campaign_dates: sessionModel === "campaign" && campaignDates && campaignDates.length > 0
         ? campaignDates.map((d) => format(d, "yyyy-MM-dd"))
         : null,
+      portfolio_photos: portfolioPhotos.length > 0 ? portfolioPhotos : null,
     };
 
     if (isEdit && sessionId) {
