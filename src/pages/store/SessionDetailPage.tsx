@@ -518,6 +518,8 @@ const SessionDetailPage = () => {
 
   const heroImage = session.cover_image_url || photographer?.hero_image_url || null;
   const initials = getInitials(photographer?.full_name);
+  // Slider images: portfolio images already includes cover; fall back to heroImage if empty
+  const slides = portfolioImages.length > 0 ? portfolioImages : (heroImage ? [heroImage] : []);
 
   // ────────────────────────────────────────────
   // Render
@@ -529,20 +531,58 @@ const SessionDetailPage = () => {
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
       {step === "product" && (
         <>
-          {/* Full-bleed hero */}
+          {/* Full-bleed hero slider */}
           <div className="relative w-full h-[60vh] min-h-[380px] overflow-hidden">
-            {heroImage ? (
-              <img src={heroImage} alt={session.title} className="w-full h-full object-cover" />
+            {/* Slides */}
+            {slides.length > 0 ? (
+              slides.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={session.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: i === sliderIndex ? 1 : 0 }}
+                />
+              ))
             ) : (
-              <div className="w-full h-full bg-foreground" />
+              <div className="absolute inset-0 bg-foreground" />
             )}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
+            {/* Back button */}
             <button
               onClick={() => navigate(backPath)}
               className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
+            {/* Slider controls */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderPrev(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderNext(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                {/* Dots */}
+                <div className="absolute bottom-20 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); setSliderIndex(i); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === sliderIndex ? "bg-white scale-125" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center">
               {photographer?.full_name && (
                 <p className="text-white/50 text-[9px] tracking-[0.45em] uppercase mb-2">{photographer.full_name}</p>
