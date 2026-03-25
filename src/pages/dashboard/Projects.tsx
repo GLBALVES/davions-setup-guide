@@ -582,6 +582,8 @@ function KanbanColumn({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [ppInputVal, setPpInputVal] = useState(postProdDeadlineDays != null ? String(postProdDeadlineDays) : "");
   const [ppPopoverOpen, setPpPopoverOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkDate, setBulkDate] = useState<Date | undefined>(undefined);
 
   const handleDaysCommit = (val: string) => {
     const n = parseInt(val, 10);
