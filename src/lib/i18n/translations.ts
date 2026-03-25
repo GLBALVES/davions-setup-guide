@@ -278,6 +278,10 @@ export const translations = {
       removeDeadline: "Remove deadline",
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
+      bulkDeadlineTitle: (stage: string) => `Set deadline for all in "${stage}"`,
+      bulkDeadlineDesc: "Applies the chosen date to all projects currently in this column.",
+      bulkDeadlineClear: "Clear deadlines for all",
+      bulkDeadlineApplied: (n: number) => `Deadline applied to ${n} project${n !== 1 ? "s" : ""}`,
       refresh: "Refresh",
       // Project detail fields
       location: "Location",
