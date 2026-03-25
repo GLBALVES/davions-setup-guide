@@ -4,6 +4,7 @@ import {
   Server, Network, Layers, Cpu, Wrench, PlusCircle, AlertTriangle,
   ChevronRight, Copy, Check, Terminal,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 type SectionId = "overview" | "architecture" | "services" | "smart-proxy" | "traefik" | "new-app" | "troubleshooting";
