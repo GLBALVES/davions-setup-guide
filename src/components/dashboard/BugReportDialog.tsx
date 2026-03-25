@@ -54,6 +54,23 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
   const [loadingReports, setLoadingReports] = useState(false);
   const [expandedReport, setExpandedReport] = useState<string | null>(null);
 
+  // Unread admin replies
+  const [unreadReportIds, setUnreadReportIds] = useState<Set<string>>(new Set());
+  const seenKey = user ? `bug_seen_${user.id}` : null;
+
+  const getSeenMap = (): Record<string, string> => {
+    if (!seenKey) return {};
+    try { return JSON.parse(localStorage.getItem(seenKey) || "{}"); } catch { return {}; }
+  };
+
+  const markReportSeen = (reportId: string, lastMsgAt: string) => {
+    if (!seenKey) return;
+    const map = getSeenMap();
+    map[reportId] = lastMsgAt;
+    localStorage.setItem(seenKey, JSON.stringify(map));
+    setUnreadReportIds((prev) => { const n = new Set(prev); n.delete(reportId); return n; });
+  };
+
   const fetchMyReports = async () => {
     if (!user) return;
     setLoadingReports(true);
@@ -64,7 +81,60 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
       .order("created_at", { ascending: false });
     setMyReports(data || []);
     setLoadingReports(false);
+
+    // Check for unread admin messages for each report
+    if (data && data.length > 0) {
+      const ids = data.map((r: BugReport) => r.id);
+      const { data: msgs } = await (supabase as any)
+        .from("bug_report_messages")
+        .select("bug_report_id, created_at, is_admin")
+        .in("bug_report_id", ids)
+        .eq("is_admin", true)
+        .order("created_at", { ascending: false });
+
+      if (msgs) {
+        const seenMap = getSeenMap();
+        const unread = new Set<string>();
+        const latestByReport: Record<string, string> = {};
+        for (const msg of msgs) {
+          if (!latestByReport[msg.bug_report_id]) {
+            latestByReport[msg.bug_report_id] = msg.created_at;
+          }
+        }
+        for (const [reportId, latestAt] of Object.entries(latestByReport)) {
+          const seenAt = seenMap[reportId];
+          if (!seenAt || seenAt < latestAt) unread.add(reportId);
+        }
+        setUnreadReportIds(unread);
+      }
+    }
   };
+
+  // Realtime: listen for new admin messages while dialog is open
+  useEffect(() => {
+    if (!open || !user) return;
+    const channel: RealtimeChannel = (supabase as any)
+      .channel(`bug-msgs-user-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bug_report_messages", filter: `is_admin=eq.true` },
+        (payload: any) => {
+          const reportId = payload.new?.bug_report_id;
+          const createdAt = payload.new?.created_at;
+          if (!reportId || !createdAt) return;
+          // Only mark unread if it's not the currently expanded report
+          setExpandedReport((expanded) => {
+            if (expanded !== reportId) {
+              setUnreadReportIds((prev) => new Set([...prev, reportId]));
+            } else {
+              // auto-mark seen if already open
+              markReportSeen(reportId, createdAt);
+            }
+            return expanded;
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [open, user]);
 
   useEffect(() => {
     if (open) fetchMyReports();
