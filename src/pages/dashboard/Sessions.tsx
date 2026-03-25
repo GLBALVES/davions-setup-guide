@@ -773,6 +773,7 @@ function SessionRow({
   dragHandleProps,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
@@ -780,10 +781,11 @@ function SessionRow({
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail } = useSessionActions(session, storeSlug);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
