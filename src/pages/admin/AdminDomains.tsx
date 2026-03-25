@@ -1130,6 +1130,16 @@ export default function AdminDomains() {
                               {p.store_slug ?? "—"}
                             </span>
                           </TableCell>
+                          <TableCell className="py-3">
+                            {p.package_name ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-mono text-muted-foreground">{p.package_name}</span>
+                                <CopyButton value={p.package_name} />
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/40">—</span>
+                            )}
+                          </TableCell>
                           <TableCell className="py-3 text-xs text-muted-foreground">
                             {format(new Date(p.created_at), "MMM d, yyyy")}
                           </TableCell>
