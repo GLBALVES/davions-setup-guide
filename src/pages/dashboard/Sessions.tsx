@@ -46,6 +46,8 @@ interface Session {
   status: string;
   created_at: string;
   sort_order: number;
+  session_model?: string | null;
+  campaign_dates?: string[] | null;
 }
 
 const Sessions = () => {
