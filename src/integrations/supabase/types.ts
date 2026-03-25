@@ -2056,6 +2056,7 @@ export type Database = {
           booking_window_days: number
           break_after_minutes: number
           briefing_id: string | null
+          campaign_dates: string[] | null
           confirmation_email_body: string
           contract_text: string | null
           cover_image_url: string | null
@@ -2071,6 +2072,7 @@ export type Database = {
           photographer_id: string
           price: number
           reminder_days: number[]
+          session_model: string
           session_type_id: string | null
           slug: string | null
           sort_order: number
@@ -2087,6 +2089,7 @@ export type Database = {
           booking_window_days?: number
           break_after_minutes?: number
           briefing_id?: string | null
+          campaign_dates?: string[] | null
           confirmation_email_body?: string
           contract_text?: string | null
           cover_image_url?: string | null
@@ -2102,6 +2105,7 @@ export type Database = {
           photographer_id: string
           price?: number
           reminder_days?: number[]
+          session_model?: string
           session_type_id?: string | null
           slug?: string | null
           sort_order?: number
@@ -2118,6 +2122,7 @@ export type Database = {
           booking_window_days?: number
           break_after_minutes?: number
           briefing_id?: string | null
+          campaign_dates?: string[] | null
           confirmation_email_body?: string
           contract_text?: string | null
           cover_image_url?: string | null
@@ -2133,6 +2138,7 @@ export type Database = {
           photographer_id?: string
           price?: number
           reminder_days?: number[]
+          session_model?: string
           session_type_id?: string | null
           slug?: string | null
           sort_order?: number
