@@ -6,6 +6,8 @@ import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "
 const StorePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const previewTemplate = searchParams.get("preview");
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
