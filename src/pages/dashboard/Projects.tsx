@@ -387,6 +387,7 @@ function KanbanCard({
                   <button
                     ref={expiryAnchorRef}
                     type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
                     className={`group/expiry flex items-center gap-0.5 shrink-0 font-medium ${galleryExpiryStatus ? DEADLINE_BADGE[galleryExpiryStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                   >
@@ -410,6 +411,7 @@ function KanbanCard({
                 <button
                   ref={deadlineAnchorRef}
                   type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
                   className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                 >
