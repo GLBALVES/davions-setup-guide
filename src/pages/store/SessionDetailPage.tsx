@@ -558,7 +558,7 @@ const SessionDetailPage = () => {
             const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
 
             return (
-              <div className="relative w-full overflow-hidden bg-black" style={{ height: "90vh", minHeight: 500 }}>
+              <div className="relative w-full overflow-hidden bg-black" style={{ height: "100vh", minHeight: 500 }}>
 
                 {/* ── Single full-bleed photo frame ── */}
                 <div
