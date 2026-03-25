@@ -1147,6 +1147,62 @@ const SessionForm = () => {
                     />
                   </section>
 
+                  {/* Portfolio Photos */}
+                  <section className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                        Fotos do Portfólio
+                        <span className="ml-2 text-muted-foreground/50">({portfolioPhotos.length}/5)</span>
+                      </Label>
+                      {portfolioPhotos.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => portfolioInputRef.current?.click()}
+                          disabled={uploadingPortfolio}
+                          className="flex items-center gap-1.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors border border-border px-2.5 py-1 rounded-sm hover:border-foreground/40"
+                        >
+                          {uploadingPortfolio ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                          Adicionar
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {portfolioPhotos.map((url, idx) => (
+                        <div key={idx} className="relative aspect-square group overflow-hidden border border-border rounded-sm">
+                          <img src={url} alt={`Portfolio ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePortfolioPhoto(idx)}
+                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {portfolioPhotos.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => portfolioInputRef.current?.click()}
+                          disabled={uploadingPortfolio}
+                          className="aspect-square border border-dashed border-border rounded-sm flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:border-muted-foreground/40 transition-colors"
+                        >
+                          {uploadingPortfolio ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50">
+                      Até 5 fotos exibidas na página pública da sessão para mostrar seu trabalho.
+                    </p>
+                    <input
+                      ref={portfolioInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handlePortfolioUpload}
+                    />
+                  </section>
+
                   {/* Basic Info */}
                   <section className="flex flex-col gap-4">
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
