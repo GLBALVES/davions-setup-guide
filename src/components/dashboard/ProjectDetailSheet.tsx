@@ -1150,14 +1150,28 @@ export function ProjectDetailSheet({
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.dateTime}</Label>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
-                          onBlur={(e) => save({ shoot_date: e.target.value || null })}
-                          className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors" />
-                        <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => save({ shoot_time: v })} className="shrink-0" />
-                        {project.shoot_date && (
-                          <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
-                            {isOverdue ? tp.overdue : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+                        {(project.stage === "shot" || project.stage === "post_production" || project.stage === "proof_gallery" || project.stage === "final_gallery") ? (
+                          <span className="text-xs text-muted-foreground">
+                            {project.shoot_date ? format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy") : "—"}
+                            {project.shoot_time && (() => {
+                              const [h, m] = (project.shoot_time).split(":").map(Number);
+                              const p = h < 12 ? "AM" : "PM";
+                              const h12 = h % 12 === 0 ? 12 : h % 12;
+                              return ` · ${h12}:${String(m).padStart(2,"0")} ${p}`;
+                            })()}
                           </span>
+                        ) : (
+                          <>
+                            <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
+                              onBlur={(e) => save({ shoot_date: e.target.value || null })}
+                              className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors" />
+                            <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => save({ shoot_time: v })} className="shrink-0" />
+                            {project.shoot_date && (
+                              <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
+                                {isOverdue ? tp.overdue : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
