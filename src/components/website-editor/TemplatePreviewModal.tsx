@@ -1,4 +1,4 @@
-import { X, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -59,12 +59,6 @@ export function TemplatePreviewModal({
               </Button>
             )}
 
-            <button
-              onClick={onClose}
-              className="ml-1 p-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
 
