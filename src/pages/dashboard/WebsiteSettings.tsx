@@ -826,6 +826,7 @@ const WebsiteSettings = () => {
   };
 
   return (
+    <>
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar onSignOut={signOut} userEmail={user?.email} />
