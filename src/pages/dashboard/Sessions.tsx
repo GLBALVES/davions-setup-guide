@@ -550,7 +550,12 @@ function SessionCard({
             </button>
           )}
 
-          <div className="absolute top-2 right-2 group/badge">
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 group/badge">
+            {session.session_model === "campaign" && (
+              <Badge variant="secondary" className="text-[9px] tracking-wider uppercase font-light bg-primary/10 text-primary border-primary/20">
+                Campanha
+              </Badge>
+            )}
             <button
               onClick={(e) => handleToggleStatus(e, onStatusChange)}
               disabled={toggling}
