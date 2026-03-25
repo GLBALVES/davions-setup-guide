@@ -176,6 +176,7 @@ const App = () => {
                  <Route path="/admin/help-assistant" element={<ProtectedRoute><AdminHelpAssistant /></ProtectedRoute>} />
                  <Route path="/admin/domains" element={<ProtectedRoute><AdminDomains /></ProtectedRoute>} />
                  <Route path="/admin/vps-setup" element={<ProtectedRoute><AdminVpsSetup /></ProtectedRoute>} />
+                 <Route path="/admin/vps-docs" element={<ProtectedRoute><AdminVpsDocs /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
