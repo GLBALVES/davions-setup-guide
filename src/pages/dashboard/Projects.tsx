@@ -411,13 +411,14 @@ function KanbanCard({
                   ref={deadlineAnchorRef}
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
-                  className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
+                  className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                 >
                   {deadlineStatus === "overdue"
                     ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
                     : <Timer className="h-2.5 w-2.5 shrink-0" />
                   }
                   <span>{deadlineLabel ?? p_t.setDeadline ?? "Set deadline"}</span>
+                  <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/deadline:opacity-60 transition-opacity ml-0.5" />
                 </button>
               ) : (effectiveDeadline && deadlineLabel ? (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
