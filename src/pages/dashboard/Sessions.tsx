@@ -11,9 +11,27 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List, GripVertical } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Session {
   id: string;
@@ -27,6 +45,7 @@ interface Session {
   cover_image_url: string | null;
   status: string;
   created_at: string;
+  sort_order: number;
 }
 
 const Sessions = () => {
@@ -40,14 +59,19 @@ const Sessions = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc">("newest");
+  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc" | "manual">("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const fetchSessions = async () => {
     if (!photographerId) return;
     setLoading(true);
     const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
-      supabase.from("sessions").select("*").eq("photographer_id", photographerId).order("created_at", { ascending: false }),
+      supabase.from("sessions").select("*").eq("photographer_id", photographerId).order("sort_order", { ascending: true }),
       supabase.from("photographers").select("store_slug").eq("id", photographerId).single(),
     ]);
     setSessions(sessionsData ?? []);
@@ -74,17 +98,44 @@ const Sessions = () => {
           (sess.location ?? "").toLowerCase().includes(q)
       );
     }
-    list = [...list].sort((a, b) => {
-      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      if (sort === "az") return a.title.localeCompare(b.title);
-      if (sort === "za") return b.title.localeCompare(a.title);
-      if (sort === "price_asc") return a.price - b.price;
-      if (sort === "price_desc") return b.price - a.price;
-      return 0;
-    });
+    if (sort !== "manual") {
+      list = [...list].sort((a, b) => {
+        if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        if (sort === "az") return a.title.localeCompare(b.title);
+        if (sort === "za") return b.title.localeCompare(a.title);
+        if (sort === "price_asc") return a.price - b.price;
+        if (sort === "price_desc") return b.price - a.price;
+        return 0;
+      });
+    }
     return list;
   }, [sessions, filter, search, sort]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIdx = filteredSessions.findIndex((s) => s.id === active.id);
+    const newIdx = filteredSessions.findIndex((s) => s.id === over.id);
+    const reordered = arrayMove(filteredSessions, oldIdx, newIdx).map((s, i) => ({
+      ...s,
+      sort_order: i,
+    }));
+
+    // Optimistic update — merge back into full sessions list preserving unfiltered items
+    setSessions((prev) => {
+      const map = new Map(reordered.map((s) => [s.id, s]));
+      return prev.map((s) => map.get(s.id) ?? s);
+    });
+
+    // Persist to DB
+    await Promise.all(
+      reordered.map((s) =>
+        supabase.from("sessions").update({ sort_order: s.sort_order }).eq("id", s.id)
+      )
+    );
+  };
 
   const SORT_OPTIONS: { key: typeof sort; label: string; icon: React.ReactNode }[] = [
     { key: "newest", label: s.newest, icon: <ArrowUpDown className="h-3 w-3" /> },
@@ -93,6 +144,7 @@ const Sessions = () => {
     { key: "za", label: "Z–A", icon: <ArrowUpAZ className="h-3 w-3" /> },
     { key: "price_asc", label: s.priceUp, icon: <DollarSign className="h-3 w-3" /> },
     { key: "price_desc", label: s.priceDown, icon: <DollarSign className="h-3 w-3" /> },
+    { key: "manual", label: s.manual ?? "Manual", icon: <GripVertical className="h-3 w-3" /> },
   ];
 
   const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
@@ -100,6 +152,8 @@ const Sessions = () => {
     { key: "active", label: s.published },
     { key: "draft", label: s.unpublished },
   ];
+
+  const isManual = sort === "manual";
 
   return (
     <SidebarProvider>
@@ -196,6 +250,12 @@ const Sessions = () => {
                     </button>
                   </div>
                 </div>
+
+                {isManual && (
+                  <p className="text-[10px] text-muted-foreground/60 tracking-wide">
+                    {s.manualHint ?? "Drag the ⠿ handle to reorder your sessions"}
+                  </p>
+                )}
               </div>
 
               {loading ? (
@@ -224,46 +284,57 @@ const Sessions = () => {
                   )}
                 </div>
               ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredSessions.map((session) => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      storeSlug={storeSlug}
-                      onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
-                      onStatusChange={(id, status) =>
-                        setSessions((prev) =>
-                          prev.map((s) => (s.id === id ? { ...s, status } : s))
-                        )
-                      }
-                    />
-                  ))}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={filteredSessions.map((s) => s.id)} strategy={rectSortingStrategy}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredSessions.map((session) => (
+                        <SortableSessionCard
+                          key={session.id}
+                          session={session}
+                          storeSlug={storeSlug}
+                          isManual={isManual}
+                          onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
+                          onStatusChange={(id, status) =>
+                            setSessions((prev) =>
+                              prev.map((s) => (s.id === id ? { ...s, status } : s))
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               ) : (
                 /* List view */
-                <div className="flex flex-col border border-border divide-y divide-border">
-                  {/* List header */}
-                  <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-4 py-2 bg-muted/40">
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Session</span>
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Price</span>
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden sm:block">Duration</span>
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden md:block">Status</span>
-                    <span className="w-20" />
-                  </div>
-                  {filteredSessions.map((session) => (
-                    <SessionRow
-                      key={session.id}
-                      session={session}
-                      storeSlug={storeSlug}
-                      onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
-                      onStatusChange={(id, status) =>
-                        setSessions((prev) =>
-                          prev.map((s) => (s.id === id ? { ...s, status } : s))
-                        )
-                      }
-                    />
-                  ))}
-                </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={filteredSessions.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col border border-border divide-y divide-border">
+                      {/* List header */}
+                      <div className={`grid gap-4 px-4 py-2 bg-muted/40 ${isManual ? "grid-cols-[auto_2fr_1fr_1fr_1fr_auto]" : "grid-cols-[2fr_1fr_1fr_1fr_auto]"}`}>
+                        {isManual && <span className="w-4" />}
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Session</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Price</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden sm:block">Duration</span>
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light hidden md:block">Status</span>
+                        <span className="w-20" />
+                      </div>
+                      {filteredSessions.map((session) => (
+                        <SortableSessionRow
+                          key={session.id}
+                          session={session}
+                          storeSlug={storeSlug}
+                          isManual={isManual}
+                          onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
+                          onStatusChange={(id, status) =>
+                            setSessions((prev) =>
+                              prev.map((s) => (s.id === id ? { ...s, status } : s))
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </main>
@@ -338,16 +409,101 @@ function useSessionActions(session: Session, storeSlug: string | null) {
   return { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, s };
 }
 
-/* ─────────────────────────── Grid card ─────────────────────────── */
+/* ─────────────────────────── Sortable Grid Card ─────────────────────────── */
 
-function SessionCard({
+function SortableSessionCard({
   session,
   storeSlug,
+  isManual,
   onClick,
   onStatusChange,
 }: {
   session: Session;
   storeSlug: string | null;
+  isManual: boolean;
+  onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: session.id,
+    disabled: !isManual,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <SessionCard
+        session={session}
+        storeSlug={storeSlug}
+        isManual={isManual}
+        dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
+        onClick={onClick}
+        onStatusChange={onStatusChange}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────── Sortable List Row ─────────────────────────── */
+
+function SortableSessionRow({
+  session,
+  storeSlug,
+  isManual,
+  onClick,
+  onStatusChange,
+}: {
+  session: Session;
+  storeSlug: string | null;
+  isManual: boolean;
+  onClick: () => void;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: session.id,
+    disabled: !isManual,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <SessionRow
+        session={session}
+        storeSlug={storeSlug}
+        isManual={isManual}
+        dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
+        onClick={onClick}
+        onStatusChange={onStatusChange}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────── Grid card ─────────────────────────── */
+
+function SessionCard({
+  session,
+  storeSlug,
+  isManual,
+  dragHandleProps,
+  onClick,
+  onStatusChange,
+}: {
+  session: Session;
+  storeSlug: string | null;
+  isManual: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
 }) {
@@ -366,7 +522,7 @@ function SessionCard({
         onClick={onClick}
         className="group cursor-pointer text-left border border-border hover:border-foreground/20 transition-colors bg-card overflow-hidden flex flex-col"
       >
-        {/* Cover image — flattened height */}
+        {/* Cover image */}
         <div className="h-32 bg-muted relative overflow-hidden">
           {session.cover_image_url ? (
             <img
@@ -379,6 +535,19 @@ function SessionCard({
               <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
             </div>
           )}
+
+          {/* Drag handle — top-left, only in manual mode */}
+          {isManual && (
+            <button
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-2 left-2 p-1 bg-background/80 backdrop-blur-sm rounded-sm text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </button>
+          )}
+
           <div className="absolute top-2 right-2 group/badge">
             <button
               onClick={(e) => handleToggleStatus(e, onStatusChange)}
@@ -508,11 +677,15 @@ function SessionCard({
 function SessionRow({
   session,
   storeSlug,
+  isManual,
+  dragHandleProps,
   onClick,
   onStatusChange,
 }: {
   session: Session;
   storeSlug: string | null;
+  isManual: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
 }) {
@@ -529,8 +702,20 @@ function SessionRow({
     <TooltipProvider>
       <div
         onClick={onClick}
-        className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-4 py-3 items-center hover:bg-muted/30 cursor-pointer transition-colors group"
+        className={`grid gap-4 px-4 py-3 items-center hover:bg-muted/30 cursor-pointer transition-colors group ${isManual ? "grid-cols-[auto_2fr_1fr_1fr_1fr_auto]" : "grid-cols-[2fr_1fr_1fr_1fr_auto]"}`}
       >
+        {/* Drag handle — list mode */}
+        {isManual && (
+          <button
+            {...dragHandleProps}
+            onClick={(e) => e.stopPropagation()}
+            className="p-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        )}
+
         {/* Title + thumbnail */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="shrink-0 w-10 h-10 bg-muted overflow-hidden">
