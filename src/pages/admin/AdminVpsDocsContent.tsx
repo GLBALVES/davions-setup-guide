@@ -118,7 +118,10 @@ export default function AdminVpsDocsContent() {
     const el = document.getElementById(`docs-${id}`);
     const container = document.getElementById("vps-docs-scroll");
     if (el && container) {
-      container.scrollTo({ top: el.offsetTop - 16, behavior: "smooth" });
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const offset = elRect.top - containerRect.top + container.scrollTop - 16;
+      container.scrollTo({ top: offset, behavior: "smooth" });
     }
   };
 
