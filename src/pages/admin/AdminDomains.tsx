@@ -44,6 +44,7 @@ type Photographer = {
   business_name: string | null;
   custom_domain: string;
   store_slug: string | null;
+  package_name: string | null;
   created_at: string;
 };
 
@@ -902,7 +903,7 @@ export default function AdminDomains() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("photographers")
-        .select("id, email, full_name, business_name, custom_domain, store_slug, created_at")
+        .select("id, email, full_name, business_name, custom_domain, store_slug, package_name, created_at")
         .not("custom_domain", "is", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -1077,6 +1078,7 @@ export default function AdminDomains() {
                     <TableHead>DNS Records</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Store Slug</TableHead>
+                    <TableHead>Package Name</TableHead>
                     <TableHead>Added</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -1128,6 +1130,16 @@ export default function AdminDomains() {
                               {p.store_slug ?? "—"}
                             </span>
                           </TableCell>
+                          <TableCell className="py-3">
+                            {p.package_name ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-mono text-muted-foreground">{p.package_name}</span>
+                                <CopyButton value={p.package_name} />
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/40">—</span>
+                            )}
+                          </TableCell>
                           <TableCell className="py-3 text-xs text-muted-foreground">
                             {format(new Date(p.created_at), "MMM d, yyyy")}
                           </TableCell>
@@ -1168,7 +1180,7 @@ export default function AdminDomains() {
                         {/* DNS expansion */}
                         {isOpen && (
                           <tr key={`${p.id}-dns`}>
-                            <td colSpan={9} className="p-0">
+                            <td colSpan={10} className="p-0">
                               <DnsExpansion domain={p.custom_domain} dns={dns} />
                             </td>
                           </tr>
@@ -1177,7 +1189,7 @@ export default function AdminDomains() {
                         {/* Chain diagnostic */}
                         {isDiagOpen && (
                           <tr key={`${p.id}-diag`}>
-                            <td colSpan={9} className="p-0">
+                            <td colSpan={10} className="p-0">
                               <ChainDiagnostic domain={p.custom_domain} photographerId={p.id} />
                             </td>
                           </tr>
