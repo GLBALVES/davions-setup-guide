@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, ArrowRight, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
