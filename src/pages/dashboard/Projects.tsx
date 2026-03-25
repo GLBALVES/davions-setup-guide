@@ -480,7 +480,11 @@ function KanbanCard({
         {(() => {
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
           const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
-          const startAnchor = project.shoot_date ?? project.created_at;
+          // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
+          // so the progress bar spans the full "project lifecycle" window, not just the delivery window.
+          const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
+            ? (project.shoot_date ?? project.created_at)
+            : project.created_at;
           if (!status || !deadline) return null;
           const progress = getDeadlineProgress(startAnchor, deadline);
           const barColor = DEADLINE_BAR[status] ?? "bg-border";
