@@ -23,6 +23,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
+import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
