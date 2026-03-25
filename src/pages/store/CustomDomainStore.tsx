@@ -66,7 +66,10 @@ const CustomDomainStore = () => {
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);
-      setSessions(sessionData ?? []);
+      setSessions((sessionData ?? []).map((s: any) => ({
+        ...s,
+        category: s.session_types?.name ?? null,
+      })));
       setGalleries(galleryData ?? []);
       setLoading(false);
     };
