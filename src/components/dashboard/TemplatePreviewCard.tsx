@@ -179,6 +179,7 @@ interface TemplatePreviewCardProps {
   description: string;
   selected: boolean;
   onClick: () => void;
+  onPreview?: () => void;
 }
 
 export function TemplatePreviewCard({
@@ -187,13 +188,13 @@ export function TemplatePreviewCard({
   description,
   selected,
   onClick,
+  onPreview,
 }: TemplatePreviewCardProps) {
   const [hovered, setHovered] = useState(false);
   const Mockup = MOCKUPS[value] ?? EditorialMockup;
 
   return (
-    <button
-      onClick={onClick}
+    <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={`flex flex-col gap-0 border text-left transition-all duration-200 overflow-hidden ${
@@ -202,28 +203,62 @@ export function TemplatePreviewCard({
           : "border-border hover:border-foreground/40"
       }`}
     >
-      {/* Mockup area */}
-      <div
-        className={`w-full aspect-[200/130] relative overflow-hidden bg-background transition-all duration-300 ${
-          hovered ? "scale-[1.02]" : "scale-100"
-        }`}
-        style={{ transformOrigin: "center center" }}
+      {/* Mockup area — clickable to select */}
+      <button
+        onClick={onClick}
+        className="w-full text-left focus:outline-none"
       >
-        <Mockup hovered={hovered} />
+        <div
+          className={`w-full aspect-[200/130] relative overflow-hidden bg-background transition-all duration-300 ${
+            hovered ? "scale-[1.02]" : "scale-100"
+          }`}
+          style={{ transformOrigin: "center center" }}
+        >
+          <Mockup hovered={hovered} />
 
-        {/* Selected badge */}
-        {selected && (
-          <div className="absolute top-2 right-2 bg-foreground text-background rounded-full p-0.5">
-            <Check className="h-2.5 w-2.5" />
-          </div>
-        )}
-      </div>
+          {/* Selected badge */}
+          {selected && (
+            <div className="absolute top-2 right-2 bg-foreground text-background rounded-full p-0.5">
+              <Check className="h-2.5 w-2.5" />
+            </div>
+          )}
 
-      {/* Label + description */}
+          {/* Preview overlay on hover */}
+          {onPreview && hovered && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px]">
+              <button
+                onClick={(e) => { e.stopPropagation(); onPreview(); }}
+                className="flex items-center gap-1.5 border border-foreground bg-background px-3 py-1.5 text-[10px] tracking-widest uppercase font-light text-foreground hover:bg-foreground hover:text-background transition-colors"
+              >
+                Preview
+              </button>
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Label + description + actions */}
       <div className={`px-3 py-2.5 border-t transition-colors duration-200 ${selected ? "border-foreground/20 bg-foreground/[0.03]" : "border-border"}`}>
-        <p className="text-[10px] tracking-[0.25em] uppercase font-light">{label}</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="text-[10px] tracking-[0.25em] uppercase font-light truncate">{label}</p>
+            {selected && (
+              <span className="shrink-0 text-[9px] tracking-widest uppercase bg-foreground text-background px-1.5 py-0.5 font-light">
+                Current
+              </span>
+            )}
+          </div>
+          {onPreview && (
+            <button
+              onClick={onPreview}
+              className="shrink-0 text-[9px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors font-light"
+            >
+              Preview
+            </button>
+          )}
+        </div>
         <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
       </div>
-    </button>
+    </div>
   );
 }
