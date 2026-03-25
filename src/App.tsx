@@ -67,8 +67,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
-import AdminVpsSetup from "./pages/admin/AdminVpsSetup";
-import AdminVpsDocs from "./pages/admin/AdminVpsDocs";
+import AdminVps from "./pages/admin/AdminVps";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
@@ -175,8 +174,9 @@ const App = () => {
                  <Route path="/admin/bugs" element={<ProtectedRoute><AdminBugReports /></ProtectedRoute>} />
                  <Route path="/admin/help-assistant" element={<ProtectedRoute><AdminHelpAssistant /></ProtectedRoute>} />
                  <Route path="/admin/domains" element={<ProtectedRoute><AdminDomains /></ProtectedRoute>} />
-                 <Route path="/admin/vps-setup" element={<ProtectedRoute><AdminVpsSetup /></ProtectedRoute>} />
-                 <Route path="/admin/vps-docs" element={<ProtectedRoute><AdminVpsDocs /></ProtectedRoute>} />
+                 <Route path="/admin/vps-setup" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
+                 <Route path="/admin/vps-docs" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
+                 <Route path="/admin/vps" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
