@@ -469,10 +469,13 @@ const SessionForm = () => {
     // Load briefing
     if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
     // Load session model & campaign dates
-    const sAny4 = s as unknown as { session_model?: string; campaign_dates?: string[] | null };
+    const sAny4 = s as unknown as { session_model?: string; campaign_dates?: string[] | null; portfolio_photos?: string[] | null };
     setSessionModel((sAny4.session_model === "campaign" ? "campaign" : "standard") as "standard" | "campaign");
     if (sAny4.campaign_dates && sAny4.campaign_dates.length > 0) {
       setCampaignDates(sAny4.campaign_dates.map((d) => parseISO(d)));
+    }
+    if (sAny4.portfolio_photos && sAny4.portfolio_photos.length > 0) {
+      setPortfolioPhotos(sAny4.portfolio_photos);
     }
     // Sync to editor once loaded
     if (editor && bodyHtml) {
