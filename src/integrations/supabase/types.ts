@@ -788,6 +788,7 @@ export type Database = {
           photographer_id: string
           price_per_photo: number
           slug: string | null
+          sort_order: number
           status: string
           title: string
           updated_at: string
@@ -807,6 +808,7 @@ export type Database = {
           photographer_id: string
           price_per_photo?: number
           slug?: string | null
+          sort_order?: number
           status?: string
           title?: string
           updated_at?: string
@@ -826,6 +828,7 @@ export type Database = {
           photographer_id?: string
           price_per_photo?: number
           slug?: string | null
+          sort_order?: number
           status?: string
           title?: string
           updated_at?: string
