@@ -428,44 +428,6 @@ function KanbanCard({
                 </span>
               )}
 
-              {/* Right side: deadline/expiry status badge */}
-              {isGalleryStage ? (
-                galleryExpiryLabel && galleryExpiryStatus ? (
-                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
-                    {galleryExpiryStatus === "overdue"
-                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                      : <Clock className="h-2.5 w-2.5 shrink-0" />
-                    }
-                    <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
-                  </span>
-                ) : null
-              ) : showDeadlineEditor ? (
-                deadlineStatus ? (
-                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[deadlineStatus]}`}>
-                    {deadlineStatus === "overdue"
-                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                      : <Timer className="h-2.5 w-2.5 shrink-0" />
-                    }
-                    <span>{deadlineLabel}</span>
-                  </span>
-                ) : null
-              ) : (effectiveDeadline && deadlineLabel ? (
-                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
-                  {deadlineStatus === "overdue"
-                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                    : <Timer className="h-2.5 w-2.5 shrink-0" />
-                  }
-                  <span>{deadlineLabel}</span>
-                </span>
-              ) : (upcomingSessionStatus && upcomingSessionLabel ? (
-                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
-                  {upcomingSessionStatus === "overdue"
-                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                    : <Clock className="h-2.5 w-2.5 shrink-0" />
-                  }
-                  <span>{upcomingSessionLabel}</span>
-                </span>
-              ) : null))}
             </div>
           )}
           {project.session_title && (
@@ -512,9 +474,13 @@ function KanbanCard({
               {/* floating label at bar tip */}
               {label && (
                 <span
-                  className={`absolute -top-4 text-[9px] font-semibold leading-none pointer-events-none transition-all duration-500 ${labelColorClass}`}
+                  className={`absolute -top-[18px] flex items-center gap-0.5 text-[9px] font-semibold leading-none pointer-events-none transition-all duration-500 ${labelColorClass}`}
                   style={{ left: `${clampedPct}%`, transform: "translateX(-50%)" }}
                 >
+                  {status === "overdue"
+                    ? <AlertTriangle className="h-2 w-2 shrink-0" />
+                    : <Clock className="h-2 w-2 shrink-0" />
+                  }
                   {label}
                 </span>
               )}
