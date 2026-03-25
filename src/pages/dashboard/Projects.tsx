@@ -515,29 +515,36 @@ function KanbanCard({
           >
             <Calendar
               mode="single"
-              selected={pickerDeadline}
-              onSelect={(d) => saveDeadline(d ? format(d, "yyyy-MM-dd") : null, deadlineTimeStr)}
+              selected={draftDeadlineDate ? parseISO(`${draftDeadlineDate}T${draftDeadlineTime ?? "09:00"}:00`) : undefined}
+              onSelect={(d) => setDraftDeadlineDate(d ? format(d, "yyyy-MM-dd") : null)}
               initialFocus
               className="p-3 pointer-events-auto"
             />
-            {deadlineDateStr && (
-              <div className="px-3 pb-3 flex flex-col gap-2">
-                <div className="flex items-center gap-2 border border-border rounded-sm p-2">
-                  <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <TimePickerInput
-                    value={deadlineTimeStr}
-                    onChange={(t) => saveDeadline(deadlineDateStr, t)}
-                    minuteStep={15}
-                  />
-                </div>
+            <div className="px-3 pb-3 flex flex-col gap-2">
+              <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+                <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                <TimePickerInput
+                  value={draftDeadlineTime ?? "09:00"}
+                  onChange={(t) => setDraftDeadlineTime(t)}
+                  minuteStep={15}
+                />
+              </div>
+              <button
+                disabled={!draftDeadlineDate}
+                onClick={() => { saveDeadline(draftDeadlineDate, draftDeadlineTime ?? "09:00"); setDeadlinePopoverOpen(false); }}
+                className="w-full text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors py-1.5 rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {p_t.applyDeadline ?? "Apply"}
+              </button>
+              {draftDeadlineDate && (
                 <button
                   onClick={() => { if (onSetDeadline) onSetDeadline(project.id, null); setDeadlinePopoverOpen(false); }}
                   className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
                 >
                   {p_t.removeDeadline ?? "Remove deadline"}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>,
         document.body
