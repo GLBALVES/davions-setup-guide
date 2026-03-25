@@ -361,6 +361,26 @@ const SessionDetailPage = () => {
   }, [sessionSlug]);
 
   // ────────────────────────────────────────────
+  // Slider auto-play
+  // ────────────────────────────────────────────
+
+  const sliderNext = useCallback(() => {
+    setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
+  }, [portfolioImages.length]);
+
+  const sliderPrev = useCallback(() => {
+    setSliderIndex((i) => (portfolioImages.length > 1 ? (i - 1 + portfolioImages.length) % portfolioImages.length : 0));
+  }, [portfolioImages.length]);
+
+  useEffect(() => {
+    if (portfolioImages.length <= 1 || step !== "product") return;
+    sliderTimerRef.current = setInterval(sliderNext, 4000);
+    return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
+  }, [portfolioImages.length, sliderNext, step]);
+
+
+
+  // ────────────────────────────────────────────
   // Extras helpers
   // ────────────────────────────────────────────
 
