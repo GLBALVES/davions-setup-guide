@@ -1508,6 +1508,8 @@ const WebsiteSettings = () => {
                   </div>
 
                 </div>
+                  </TabsContent>
+                </Tabs>
               )}
             </div>
           </main>
