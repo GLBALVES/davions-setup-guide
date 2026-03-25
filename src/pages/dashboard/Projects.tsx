@@ -428,44 +428,6 @@ function KanbanCard({
                 </span>
               )}
 
-              {/* Right side: deadline/expiry status badge */}
-              {isGalleryStage ? (
-                galleryExpiryLabel && galleryExpiryStatus ? (
-                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
-                    {galleryExpiryStatus === "overdue"
-                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                      : <Clock className="h-2.5 w-2.5 shrink-0" />
-                    }
-                    <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
-                  </span>
-                ) : null
-              ) : showDeadlineEditor ? (
-                deadlineStatus ? (
-                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[deadlineStatus]}`}>
-                    {deadlineStatus === "overdue"
-                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                      : <Timer className="h-2.5 w-2.5 shrink-0" />
-                    }
-                    <span>{deadlineLabel}</span>
-                  </span>
-                ) : null
-              ) : (effectiveDeadline && deadlineLabel ? (
-                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
-                  {deadlineStatus === "overdue"
-                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                    : <Timer className="h-2.5 w-2.5 shrink-0" />
-                  }
-                  <span>{deadlineLabel}</span>
-                </span>
-              ) : (upcomingSessionStatus && upcomingSessionLabel ? (
-                <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
-                  {upcomingSessionStatus === "overdue"
-                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                    : <Clock className="h-2.5 w-2.5 shrink-0" />
-                  }
-                  <span>{upcomingSessionLabel}</span>
-                </span>
-              ) : null))}
             </div>
           )}
           {project.session_title && (
