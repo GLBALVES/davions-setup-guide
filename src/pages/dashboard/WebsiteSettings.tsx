@@ -1183,6 +1183,7 @@ const WebsiteSettings = () => {
                           description={tmpl.description}
                           selected={siteTemplate === tmpl.value}
                           onClick={() => setSiteTemplate(tmpl.value)}
+                          onPreview={storeSlug ? () => setPreviewModalTemplate(tmpl.value) : undefined}
                         />
                       ))}
                     </div>
