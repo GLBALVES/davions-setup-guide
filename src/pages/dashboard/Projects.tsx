@@ -514,12 +514,13 @@ function KanbanCard({
               className="p-3 pointer-events-auto"
             />
             <div className="px-3 pb-3 flex flex-col gap-2">
-              <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+              <div className="flex items-center gap-2 border border-border rounded-sm p-2 relative z-[10001]">
                 <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
                 <TimePickerInput
                   value={draftDeadlineTime ?? "09:00"}
                   onChange={(t) => setDraftDeadlineTime(t)}
                   minuteStep={15}
+                  selectZIndex={10002}
                 />
               </div>
               <button
