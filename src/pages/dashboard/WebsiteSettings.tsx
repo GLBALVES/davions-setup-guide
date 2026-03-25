@@ -512,6 +512,9 @@ const WebsiteSettings = () => {
   const [slugCopied, setSlugCopied] = useState(false);
   const [savingSlug, setSavingSlug] = useState(false);
 
+  // Template preview modal
+  const [previewModalTemplate, setPreviewModalTemplate] = useState<string | null>(null);
+
   // Custom Domain
   const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
   const [customDomain, setCustomDomain] = useState("");
