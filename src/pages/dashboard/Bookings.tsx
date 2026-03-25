@@ -581,8 +581,10 @@ const Bookings = () => {
                   </div>
                 );
               })()}
-
-      {/* Confirm / Cancel dialog */}
+            </div>
+          </main>
+        </div>
+      </div>
       <AlertDialog
         open={confirmDialog.open}
         onOpenChange={(open) =>
