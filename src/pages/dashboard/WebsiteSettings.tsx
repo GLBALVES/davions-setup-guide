@@ -1464,6 +1464,19 @@ const WebsiteSettings = () => {
         </div>
       </div>
     </SidebarProvider>
+
+    {/* Template preview modal */}
+    {storeSlug && previewModalTemplate && (
+      <TemplatePreviewModal
+        open={!!previewModalTemplate}
+        onClose={() => setPreviewModalTemplate(null)}
+        templateId={previewModalTemplate}
+        templateLabel={TEMPLATES.find((t) => t.value === previewModalTemplate)?.label ?? previewModalTemplate}
+        storeSlug={storeSlug}
+        onApply={(tid) => { setSiteTemplate(tid); setPreviewModalTemplate(null); }}
+        isCurrentTemplate={siteTemplate === previewModalTemplate}
+      />
+    )}
   );
 };
 
