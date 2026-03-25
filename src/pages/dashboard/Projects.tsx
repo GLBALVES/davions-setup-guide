@@ -1422,7 +1422,14 @@ const Projects = () => {
   }, [photographerId]);
 
   const projectsByStage = (stage: Stage) =>
-    projects.filter((p) => p.stage === stage).sort((a, b) => a.position - b.position);
+    projects.filter((p) => p.stage === stage).sort((a, b) => {
+      const da = a.gallery_deadline;
+      const db = b.gallery_deadline;
+      if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+      if (da) return -1; // deadline first, nulls last
+      if (db) return 1;
+      return a.position - b.position; // fallback to manual order
+    });
 
   const activeProject = projects.find((p) => p.id === activeId) ?? null;
 
