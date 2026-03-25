@@ -435,16 +435,15 @@ function KanbanCard({
         })()}
       </div>
 
-      {/* Deadline popover — rendered outside the clickable card to avoid propagation issues */}
-      {showDeadlineEditor && (
-        <Popover open={deadlinePopoverOpen} onOpenChange={setDeadlinePopoverOpen}>
-          <PopoverTrigger asChild>
-            <span className="hidden" />
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-auto p-0"
-            align="start"
-            side="bottom"
+      {/* Deadline popover — anchored to a ref button, rendered outside clickable card */}
+      {showDeadlineEditor && deadlinePopoverOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(false); }}
+        >
+          <div
+            className="absolute z-50 bg-popover border border-border rounded-md shadow-md p-0 w-auto"
+            style={{ top: deadlineAnchorRef.current ? deadlineAnchorRef.current.getBoundingClientRect().bottom + 4 : 0, left: deadlineAnchorRef.current ? deadlineAnchorRef.current.getBoundingClientRect().left : 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             <Calendar
@@ -472,8 +471,8 @@ function KanbanCard({
                 </button>
               </div>
             )}
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
       )}
     </div>
   );
