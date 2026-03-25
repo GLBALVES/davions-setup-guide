@@ -3528,7 +3528,6 @@ export const translations = {
       daysAfterSession: "días después de la sesión",
       deadlineExample: (date: string) => `Ej.: sesión hoy → plazo el ${date}`,
       removeDeadline: "Eliminar plazo",
-      setDeadline: "Definir plazo",
       deadlineTooltipShot: "Plazo para publicación de la galería de prueba",
       deadlineTooltipPostProd: "Plazo para entrega de posproducción",
       refresh: "Actualizar",
