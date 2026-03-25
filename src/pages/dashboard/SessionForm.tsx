@@ -212,6 +212,8 @@ const SessionForm = () => {
   // ── Session model ──
   const [sessionModel, setSessionModel] = useState<"standard" | "campaign">("standard");
   const [campaignDates, setCampaignDates] = useState<Date[] | undefined>(undefined);
+  /** For campaign sessions: the time slots to apply to ALL campaign dates */
+  const [campaignSlots, setCampaignSlots] = useState<Array<{ start: string; end: string }>>([]);
 
   // ── Contract ──
   interface ContractTemplate { id: string; name: string; body: string; }
@@ -375,10 +377,8 @@ const SessionForm = () => {
     const [availRes, configRes] = await Promise.all([
       supabase
         .from("session_availability")
-        .select("id, day_of_week, start_time, end_time")
+        .select("id, day_of_week, date, start_time, end_time")
         .eq("session_id", sid)
-        .not("day_of_week", "is", null)
-        .order("day_of_week", { ascending: true })
         .order("start_time", { ascending: true }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
@@ -388,14 +388,26 @@ const SessionForm = () => {
     ]);
 
     if (availRes.data) {
-      setSlots(
-        availRes.data.map((a: { id: string; day_of_week: number; start_time: string; end_time: string }) => ({
-          id: a.id,
-          day_of_week: a.day_of_week,
-          start_time: a.start_time,
-          end_time: a.end_time,
-        }))
-      );
+      // Separate weekly slots (day_of_week not null) from campaign slots (date not null)
+      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string };
+      const rows = availRes.data as AvailRow[];
+      const weeklyRows = rows.filter((r) => r.day_of_week !== null);
+      const campaignRows = rows.filter((r) => r.day_of_week === null);
+
+      setSlots(weeklyRows.map((a) => ({
+        id: a.id,
+        day_of_week: a.day_of_week as number,
+        start_time: a.start_time,
+        end_time: a.end_time,
+      })));
+
+      // For campaigns: deduplicate by start_time (same slot repeated per date)
+      const uniqueCampaignSlots = campaignRows.reduce<Array<{ start: string; end: string }>>((acc, r) => {
+        const st = r.start_time.slice(0, 5);
+        if (!acc.some((x) => x.start === st)) acc.push({ start: st, end: r.end_time.slice(0, 5) });
+        return acc;
+      }, []);
+      setCampaignSlots(uniqueCampaignSlots);
     }
 
     if (configRes.data && configRes.data.length > 0) {
@@ -617,16 +629,34 @@ const SessionForm = () => {
     // Delete all existing availability for this session, then re-insert
     await supabase.from("session_availability").delete().eq("session_id", sessionId);
 
-    if (slots.length > 0) {
-      await supabase.from("session_availability").insert(
-        slots.map((s) => ({
+    if (sessionModel === "campaign") {
+      // For campaigns: expand each selected time slot across all campaign dates
+      const dates = campaignDates ?? [];
+      const inserts = dates.flatMap((date) =>
+        campaignSlots.map((sl) => ({
           session_id: sessionId,
           photographer_id: user.id,
-          day_of_week: s.day_of_week,
-          start_time: s.start_time,
-          end_time: s.end_time,
+          day_of_week: null,
+          date: format(date, "yyyy-MM-dd"),
+          start_time: sl.start,
+          end_time: sl.end,
         }))
       );
+      if (inserts.length > 0) {
+        await supabase.from("session_availability").insert(inserts);
+      }
+    } else {
+      if (slots.length > 0) {
+        await supabase.from("session_availability").insert(
+          slots.map((s) => ({
+            session_id: sessionId,
+            photographer_id: user.id,
+            day_of_week: s.day_of_week,
+            start_time: s.start_time,
+            end_time: s.end_time,
+          }))
+        );
+      }
     }
 
     // Save global config as a single row with day_of_week = -1 (sentinel)
@@ -1561,21 +1591,33 @@ const SessionForm = () => {
               {/* ── STEP 2: Availability ── */}
               {step === 2 && (
                 <>
-                  {/* Weekly Availability */}
                   <section className="flex flex-col gap-4">
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                         <span className="inline-block w-4 h-px bg-border" />
-                        Weekly Availability
+                        {sessionModel === "campaign" ? "Campaign Availability" : "Weekly Availability"}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                        Define your working hours and buffer once — they apply to all days.
+                        {sessionModel === "campaign"
+                          ? `Define the time slots for your ${campaignDates?.length ?? 0} campaign date${(campaignDates?.length ?? 0) !== 1 ? "s" : ""}. The same slots will apply to all selected dates.`
+                          : "Define your working hours and buffer once — they apply to all days."}
                       </p>
                     </div>
 
+                    {/* Campaign: show selected dates as pills */}
+                    {sessionModel === "campaign" && campaignDates && campaignDates.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 px-1">
+                        {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => (
+                          <span key={d.toISOString()} className="px-2 py-0.5 border border-border text-[10px] tracking-wide text-muted-foreground">
+                            {format(d, "MMM d")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Global business hours + buffer config */}
                     {(() => {
-                      const hasSlots = slots.length > 0;
+                      const hasSlots = sessionModel === "campaign" ? campaignSlots.length > 0 : slots.length > 0;
                       return (
                         <div className="border border-border bg-muted/5 px-4 py-3 flex flex-col gap-3">
                           <div className="flex items-center gap-3 flex-wrap">
@@ -1649,8 +1691,77 @@ const SessionForm = () => {
                       );
                     })()}
 
-                    {/* Day rows */}
-                    {(() => {
+                    {/* Campaign: single flat slot picker */}
+                    {sessionModel === "campaign" && (() => {
+                      const availableSlots = generateAvailableSlots();
+                      const hasBusinessHours = !!globalConfig.hours_start && !!globalConfig.hours_end;
+                      return (
+                        <div className="border border-border">
+                          <div className="px-4 py-3 bg-muted/5 border-b border-border">
+                            <span className="text-[10px] tracking-wider uppercase font-light">
+                              Select slots for all campaign days
+                            </span>
+                            {campaignSlots.length > 0 && (
+                              <span className="ml-2 text-[10px] text-muted-foreground">
+                                — {campaignSlots.length} slot{campaignSlots.length !== 1 ? "s" : ""} selected × {campaignDates?.length ?? 0} days = {campaignSlots.length * (campaignDates?.length ?? 0)} total
+                              </span>
+                            )}
+                          </div>
+                          <div className="px-4 py-4">
+                            {!hasBusinessHours ? (
+                              <p className="text-[11px] text-muted-foreground/50 italic">
+                                Set business hours above to see available slots.
+                              </p>
+                            ) : availableSlots.length === 0 ? (
+                              <p className="text-[11px] text-muted-foreground/50 italic">
+                                No slots fit within the business hours. Try adjusting the duration or hours.
+                              </p>
+                            ) : (
+                              <div className="flex flex-wrap gap-2">
+                                {availableSlots.map(({ start, end }) => {
+                                  const selected = campaignSlots.some((s) => s.start === start);
+                                  return (
+                                    <button
+                                      key={start}
+                                      type="button"
+                                      onClick={() => {
+                                        setCampaignSlots((prev) =>
+                                          selected
+                                            ? prev.filter((s) => s.start !== start)
+                                            : [...prev, { start, end }]
+                                        );
+                                      }}
+                                      className={cn(
+                                        "flex items-center gap-1.5 px-3 py-1.5 border text-[11px] tracking-wide transition-colors",
+                                        selected
+                                          ? "bg-foreground text-background border-foreground"
+                                          : "bg-background text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+                                      )}
+                                    >
+                                      <Clock className="h-3 w-3 shrink-0" />
+                                      {formatTime12(start)}
+                                      <span className={cn("opacity-60", selected && "opacity-80")}>→ {formatTime12(end)}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {campaignSlots.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setCampaignSlots([])}
+                                className="mt-3 text-[9px] text-muted-foreground/50 hover:text-muted-foreground transition-colors tracking-widest uppercase"
+                              >
+                                clear all
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Standard: day rows */}
+                    {sessionModel === "standard" && (() => {
                       const availableSlots = generateAvailableSlots();
                       const hasBusinessHours = !!globalConfig.hours_start && !!globalConfig.hours_end;
 
