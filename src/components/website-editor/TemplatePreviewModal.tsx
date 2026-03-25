@@ -1,6 +1,13 @@
 import { ExternalLink, X } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import PublicSiteRenderer, {
+  type SiteConfig,
+  type Photographer,
+  type Session,
+  type Gallery,
+} from "@/components/store/PublicSiteRenderer";
 
 interface TemplatePreviewModalProps {
   open: boolean;
@@ -10,6 +17,11 @@ interface TemplatePreviewModalProps {
   storeSlug: string;
   onApply: (templateId: string) => void;
   isCurrentTemplate: boolean;
+  // Optional: pass existing site data to avoid relying on iframe
+  siteData?: Partial<SiteConfig> | null;
+  photographer?: Photographer | null;
+  sessions?: Session[];
+  galleries?: Gallery[];
 }
 
 export function TemplatePreviewModal({
@@ -20,8 +32,18 @@ export function TemplatePreviewModal({
   storeSlug,
   onApply,
   isCurrentTemplate,
+  siteData,
+  photographer,
+  sessions = [],
+  galleries = [],
 }: TemplatePreviewModalProps) {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const previewUrl = `/store/${storeSlug}?preview=${templateId}`;
+
+  // If we have inline data, render PublicSiteRenderer directly inside a scrollable div
+  const hasInlineData = !!siteData && !!photographer;
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={(v) => !v && onClose()}>
@@ -78,13 +100,42 @@ export function TemplatePreviewModal({
             </div>
           </div>
 
-          {/* iframe — fills remaining height */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <iframe
-              src={previewUrl}
-              className="w-full h-full border-none block"
-              title={`Preview of ${templateLabel} template`}
-            />
+          {/* Preview area */}
+          <div className="flex-1 min-h-0 overflow-auto bg-background">
+            {hasInlineData ? (
+              <PublicSiteRenderer
+                photographer={photographer!}
+                site={siteData as SiteConfig}
+                sessions={sessions}
+                galleries={galleries}
+                scrolled={scrolled}
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                seoUrl={`/store/${storeSlug}`}
+                sessionHref={(s) => `/store/${storeSlug}/${s.slug ?? s.id}`}
+                galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
+                blogHref={`/store/${storeSlug}/blog`}
+                previewTemplate={templateId}
+              />
+            ) : (
+              <iframe
+                src={previewUrl}
+                className="w-full h-full border-none block"
+                style={{ minHeight: "calc(90vh - 48px)" }}
+                title={`Preview of ${templateLabel} template`}
+                onLoad={(e) => {
+                  // Try to access scroll events from iframe
+                  try {
+                    const iframeWindow = (e.target as HTMLIFrameElement).contentWindow;
+                    if (iframeWindow) {
+                      iframeWindow.addEventListener("scroll", () => {
+                        setScrolled(iframeWindow.scrollY > 40);
+                      });
+                    }
+                  } catch { /* cross-origin — ignore */ }
+                }}
+              />
+            )}
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

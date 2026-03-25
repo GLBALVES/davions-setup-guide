@@ -899,7 +899,7 @@ const WebsiteSettings = () => {
                             description={tmpl.description}
                             selected={siteTemplate === tmpl.value}
                             onClick={() => setSiteTemplate(tmpl.value)}
-                            onPreview={storeSlug ? () => setPreviewModalTemplate(tmpl.value) : undefined}
+                            onPreview={() => setPreviewModalTemplate(tmpl.value)}
                           />
                         ))}
                       </div>
@@ -1498,7 +1498,7 @@ const WebsiteSettings = () => {
     </SidebarProvider>
 
     {/* Template preview modal */}
-    {storeSlug && previewModalTemplate && (
+    {previewModalTemplate && (
       <TemplatePreviewModal
         open={!!previewModalTemplate}
         onClose={() => setPreviewModalTemplate(null)}
@@ -1507,6 +1507,46 @@ const WebsiteSettings = () => {
         storeSlug={storeSlug}
         onApply={(tid) => { setSiteTemplate(tid); setPreviewModalTemplate(null); }}
         isCurrentTemplate={siteTemplate === previewModalTemplate}
+        siteData={{
+          logo_url: logoUrl || null,
+          tagline: tagline || null,
+          accent_color: accentColor,
+          site_headline: siteHeadline || null,
+          site_subheadline: siteSubheadline || null,
+          cta_text: ctaText,
+          cta_link: ctaLink || null,
+          about_title: aboutTitle,
+          about_image_url: aboutImageUrl || null,
+          site_hero_image_url: heroImageUrl || null,
+          instagram_url: instagramUrl || null,
+          facebook_url: facebookUrl || null,
+          pinterest_url: pinterestUrl || null,
+          tiktok_url: tiktokUrl || null,
+          youtube_url: youtubeUrl || null,
+          whatsapp: whatsapp || null,
+          linkedin_url: linkedinUrl || null,
+          show_store: showStore,
+          show_blog: showBlog,
+          show_booking: showBooking,
+          show_about: showAbout,
+          show_contact: showContact,
+          quote_text: quoteText || null,
+          quote_author: quoteAuthor || null,
+          experience_title: experienceTitle || null,
+          experience_text: experienceText || null,
+          seo_title: seoTitle || null,
+          seo_description: seoDescription || null,
+          og_image_url: ogImageUrl || null,
+          favicon_url: faviconUrl || null,
+        } as any}
+        photographer={{
+          id: user?.id ?? "",
+          full_name: fullName || null,
+          email: user?.email ?? "",
+          store_slug: storeSlug || null,
+          bio: bio || null,
+          business_name: null,
+        }}
       />
     )}
     </>
