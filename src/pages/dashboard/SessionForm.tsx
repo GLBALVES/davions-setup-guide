@@ -377,10 +377,8 @@ const SessionForm = () => {
     const [availRes, configRes] = await Promise.all([
       supabase
         .from("session_availability")
-        .select("id, day_of_week, start_time, end_time")
+        .select("id, day_of_week, date, start_time, end_time")
         .eq("session_id", sid)
-        .not("day_of_week", "is", null)
-        .order("day_of_week", { ascending: true })
         .order("start_time", { ascending: true }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
@@ -390,14 +388,26 @@ const SessionForm = () => {
     ]);
 
     if (availRes.data) {
-      setSlots(
-        availRes.data.map((a: { id: string; day_of_week: number; start_time: string; end_time: string }) => ({
-          id: a.id,
-          day_of_week: a.day_of_week,
-          start_time: a.start_time,
-          end_time: a.end_time,
-        }))
-      );
+      // Separate weekly slots (day_of_week not null) from campaign slots (date not null)
+      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string };
+      const rows = availRes.data as AvailRow[];
+      const weeklyRows = rows.filter((r) => r.day_of_week !== null);
+      const campaignRows = rows.filter((r) => r.day_of_week === null);
+
+      setSlots(weeklyRows.map((a) => ({
+        id: a.id,
+        day_of_week: a.day_of_week as number,
+        start_time: a.start_time,
+        end_time: a.end_time,
+      })));
+
+      // For campaigns: deduplicate by start_time (same slot repeated per date)
+      const uniqueCampaignSlots = campaignRows.reduce<Array<{ start: string; end: string }>>((acc, r) => {
+        const st = r.start_time.slice(0, 5);
+        if (!acc.some((x) => x.start === st)) acc.push({ start: st, end: r.end_time.slice(0, 5) });
+        return acc;
+      }, []);
+      setCampaignSlots(uniqueCampaignSlots);
     }
 
     if (configRes.data && configRes.data.length > 0) {
