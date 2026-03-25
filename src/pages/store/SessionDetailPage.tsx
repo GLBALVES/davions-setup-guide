@@ -273,6 +273,19 @@ const SessionDetailPage = () => {
         .eq("session_id", s.id);
       setExtras((extrasData ?? []) as SessionExtra[]);
 
+      // Portfolio images for the hero slider
+      const { data: portfolioData } = await supabase
+        .from("session_portfolio_photos")
+        .select("photo_url")
+        .eq("session_id", s.id)
+        .order("sort_order");
+      const portfolioUrls = (portfolioData ?? []).map((p: any) => p.photo_url as string).filter(Boolean);
+      const allSlides = [
+        ...(s.cover_image_url ? [s.cover_image_url] : []),
+        ...portfolioUrls,
+      ];
+      setPortfolioImages(allSlides);
+
       const { data: availData } = await supabase
         .from("session_availability")
         .select("id, day_of_week, start_time")
