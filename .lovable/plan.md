@@ -1,43 +1,32 @@
 
+## Root Cause
 
-## What needs to change
+The deadline button in Shot/Post-production cards is not responding to clicks because it sits inside a **DnD Sortable context** (`useSortable`). The `PointerSensor` captures all `pointerdown` events on the card element — including those on child buttons — intercepting them before the click handler fires.
 
-The deadline button for `shot` and `post_production` stages (lines 409–421) currently:
-- Shows a timer icon + deadline label as a button
-- Has `hover:opacity-80` but **no pencil/edit icon visible on hover**
-- Only says "Set deadline" when empty — no visual cue when a deadline already exists
+The gallery expiry button likely has the same issue (or appears to work by luck due to event order differences).
 
-### Goal
-- When hovering, show a small `Pencil` icon to the right of the label
-- The entire row (icon + label + pencil on hover) is clickable and opens the calendar popover
-- Consistent with the gallery expiry button which already has `group-hover/expiry:opacity-60` for the pencil
+The fix is well-established for dnd-kit: add `onPointerDown={(e) => e.stopPropagation()}` to any interactive child button inside a sortable card to prevent the DnD sensor from swallowing the event.
 
 ---
 
-## Technical plan
+## What needs to change
 
 **File:** `src/pages/dashboard/Projects.tsx`
 
-**Single change** — replace lines 409–421 (the deadline button for shot/post_production) to add:
-1. A `group/deadline` class on the button
-2. The `Pencil` icon after the label with `opacity-0 group-hover/deadline:opacity-60 transition-opacity` — mirrors the gallery expiry pencil already working at line 398
+**Two buttons** need `onPointerDown` protection:
 
+1. **Deadline button** (Shot / Post-production) — line ~410
+2. **Gallery expiry button** (Proof / Final gallery) — line ~387
+
+Add to each:
 ```tsx
-) : showDeadlineEditor ? (
-  <button
-    ref={deadlineAnchorRef}
-    type="button"
-    onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
-    className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
-  >
-    {deadlineStatus === "overdue"
-      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-      : <Timer className="h-2.5 w-2.5 shrink-0" />
-    }
-    <span>{deadlineLabel ?? p_t.setDeadline ?? "Set deadline"}</span>
-    <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/deadline:opacity-60 transition-opacity ml-0.5" />
-  </button>
+onPointerDown={(e) => e.stopPropagation()}
 ```
 
-That's the entire change — one button gets `group/deadline` class and the `Pencil` icon appended at the end.
+This is the only change needed. The pencil icon and popover logic are already correct.
 
+---
+
+## Technical detail
+
+dnd-kit's `PointerSensor` listens to `pointerdown` on the draggable node. Because the draggable node is the outer card `div`, any `pointerdown` inside it is captured by the sensor — blocking child button clicks. Stopping propagation on `pointerdown` in the child button prevents the sensor from seeing the event, allowing the click to fire normally.
