@@ -96,6 +96,7 @@ const StorePage = () => {
       sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={`/store/${slug}/blog`}
+      previewTemplate={previewTemplate}
     />
   );
 };
