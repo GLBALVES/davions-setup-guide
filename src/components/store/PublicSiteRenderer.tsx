@@ -198,6 +198,8 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** Override the saved site_template for live preview (from ?preview= URL param) */
+  previewTemplate?: string | null;
   /** When true (editor mode), text nodes become contentEditable */
   editMode?: boolean;
   /** Callback when an inline text field is edited */
