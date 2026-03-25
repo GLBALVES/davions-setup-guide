@@ -1799,6 +1799,8 @@ export const translations = {
       titleAZ: "Título A → Z",
       titleZA: "Título Z → A",
       mostPhotos: "Mais fotos",
+      manualOrder: "Manual",
+      manualOrderHint: "Arraste o ⠿ para reordenar suas galerias",
       result: "resultado",
       results: "resultados",
       clearFilters: "Limpar filtros",
