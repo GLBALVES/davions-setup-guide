@@ -352,7 +352,70 @@ function KanbanCard({
                   )}
                 </span>
               </span>
-              {effectiveDeadline && deadlineLabel && (
+              {(project.stage === "shot" || project.stage === "post_production") && onSetDeadline ? (
+                (() => {
+                  // Parse existing deadline which may be "yyyy-MM-dd" or "yyyy-MM-dd HH:mm"
+                  const rawDeadline = project.gallery_deadline ?? null;
+                  const deadlineDateStr = rawDeadline ? rawDeadline.substring(0, 10) : null;
+                  const deadlineTimeStr = rawDeadline && rawDeadline.length > 10 ? rawDeadline.substring(11, 16) : "09:00";
+                  const pickerDeadline = deadlineDateStr ? parseISO(`${deadlineDateStr}T${deadlineTimeStr}:00`) : undefined;
+
+                  const saveDeadline = (dateStr: string | null, timeStr: string) => {
+                    const val = dateStr ? `${dateStr} ${timeStr}` : null;
+                    onSetDeadline(project.id, val);
+                  };
+
+                  return (
+                    <Popover open={deadlinePopoverOpen} onOpenChange={setDeadlinePopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
+                          className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
+                        >
+                          {deadlineStatus === "overdue"
+                            ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                            : <Timer className="h-2.5 w-2.5 shrink-0" />
+                          }
+                          <span>{deadlineLabel ?? p_t.setDeadline ?? "Set deadline"}</span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0"
+                        align="start"
+                        side="bottom"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Calendar
+                          mode="single"
+                          selected={pickerDeadline}
+                          onSelect={(d) => saveDeadline(d ? format(d, "yyyy-MM-dd") : null, deadlineTimeStr)}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                        {deadlineDateStr && (
+                          <div className="px-3 pb-3 flex flex-col gap-2">
+                            <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+                              <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <TimePickerInput
+                                value={deadlineTimeStr}
+                                onChange={(t) => saveDeadline(deadlineDateStr, t)}
+                                minuteStep={15}
+                              />
+                            </div>
+                            <button
+                              onClick={() => { onSetDeadline(project.id, null); setDeadlinePopoverOpen(false); }}
+                              className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
+                            >
+                              {p_t.removeDeadline ?? "Remove deadline"}
+                            </button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  );
+                })()
+              ) : (effectiveDeadline && deadlineLabel && (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
                   {deadlineStatus === "overdue"
                     ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -360,7 +423,7 @@ function KanbanCard({
                   }
                   <span>{deadlineLabel}</span>
                 </span>
-              )}
+              ))}
               {upcomingSessionStatus && upcomingSessionLabel && !effectiveDeadline && (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
                   {upcomingSessionStatus === "overdue"
