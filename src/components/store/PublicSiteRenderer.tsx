@@ -156,6 +156,8 @@ export interface Session {
   num_photos: number;
   location: string | null;
   cover_image_url: string | null;
+  /** Session type name, e.g. "Newborn", "Wedding" — null means uncategorized */
+  category?: string | null;
 }
 
 export interface Gallery {
@@ -865,118 +867,95 @@ function buildBlockMap(
     : null;
 
   // ── Sessions ──────────────────────────────────────────────────────────────
-  let sessionsBlock: React.ReactNode = null;
-  if (showBlock("sessions") && showStore) {
+  // Group sessions by category when more than one category is present
+  const sessionCategories = Array.from(new Set(sessions.map((s) => s.category ?? "").filter(Boolean)));
+  const hasCategoryGroups = sessionCategories.length > 1;
+
+  // Returns session cards as JSX for the given list + variant
+  const renderSessionCards = (list: Session[], variant: string) => {
     if (variant === "editorial") {
-      sessionsBlock = (
-        <main key="sessions" data-block-key="sessions" id="sessions">
-          {sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-3">
-              <Camera className="h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm font-light text-muted-foreground">No sessions available yet.</p>
-            </div>
-          ) : (
-            <>
-              <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
-                <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Available Sessions</p>
-              </div>
-              {sessions.map((session, i) => {
-                const isEven = i % 2 === 0;
-                return (
-                  <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                    className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300">
-                    <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
-                      <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
-                        {session.cover_image_url
-                          ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                          : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
-                        }
-                      </div>
-                      <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
-                        <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
-                        <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
-                        {session.tagline && <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>}
-                        {session.description && <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>}
-                        <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
-                          <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
-                          {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
-                        </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
-                          <span className="text-2xl font-light">{formatPrice(session.price)}</span>
-                          <span className="flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
-                            View details <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </>
-          )}
-        </main>
-      );
-    } else if (variant === "grid") {
-      sessionsBlock = sessions.length > 0 ? (
-        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
-          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Sessions</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {sessions.map((session) => (
-              <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                className="group relative aspect-square overflow-hidden bg-muted">
+      return list.map((session, i) => {
+        const isEven = i % 2 === 0;
+        return (
+          <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+            className="group w-full text-left border-t border-border hover:bg-muted/20 transition-colors duration-300">
+            <div className={`max-w-6xl mx-auto flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
+              <div className="w-full md:w-1/2 aspect-[16/9] md:aspect-auto md:min-h-[380px] relative overflow-hidden bg-muted">
                 {session.cover_image_url
-                  ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
+                  ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
                 }
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
-                  <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
-                  {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
-                    <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
-                  </div>
+              </div>
+              <div className={`w-full md:w-1/2 flex flex-col justify-center p-8 md:p-12 lg:p-16 gap-4 ${isEven ? "md:pl-14" : "md:pr-14"}`}>
+                <div className="w-8 h-px" style={{ backgroundColor: accentColor }} />
+                <h2 className="text-2xl md:text-3xl font-light tracking-wide">{session.title}</h2>
+                {session.tagline && <p className="text-base font-light text-muted-foreground italic">{session.tagline}</p>}
+                {session.description && <p className="text-sm font-light text-muted-foreground leading-relaxed line-clamp-3">{session.description}</p>}
+                <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} min</span>
+                  <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
+                  {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
                 </div>
-                <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
-                  {formatPrice(session.price)}
+                <div className="flex items-center justify-between pt-4 border-t border-border mt-2">
+                  <span className="text-2xl font-light">{formatPrice(session.price)}</span>
+                  <span className="flex items-center gap-1.5 text-[10px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
+                    View details <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
                 </div>
-              </button>
-            ))}
+              </div>
+            </div>
+          </button>
+        );
+      });
+    } else if (variant === "grid") {
+      return list.map((session) => (
+        <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+          className="group relative aspect-square overflow-hidden bg-muted">
+          {session.cover_image_url
+            ? <img src={session.cover_image_url} alt={session.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            : <div className="absolute inset-0 flex items-center justify-center bg-muted"><ImageIcon className="h-10 w-10 text-muted-foreground/20" /></div>
+          }
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
+            <h2 className="text-white text-sm font-light tracking-wide mb-1">{session.title}</h2>
+            {session.tagline && <p className="text-white/60 text-[10px] mb-1 italic line-clamp-1">{session.tagline}</p>}
+            <div className="flex items-center justify-between">
+              <span className="text-white/70 text-[10px]">{formatPrice(session.price)}</span>
+              <span className="text-[9px] tracking-widest uppercase text-white/60">{session.duration_minutes}min</span>
+            </div>
           </div>
-        </main>
-      ) : null;
+          <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 text-white text-[9px] tracking-wider">
+            {formatPrice(session.price)}
+          </div>
+        </button>
+      ));
     } else if (variant === "magazine") {
-      const [featured, ...rest] = sessions;
-      sessionsBlock = sessions.length > 0 ? (
-        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
-            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">Sessions</p>
-          </div>
-          {featured && (
-            <button onClick={() => window.location.assign(sessionHref(featured))}
+      const [feat, ...rest] = list;
+      return (
+        <>
+          {feat && (
+            <button onClick={() => window.location.assign(sessionHref(feat))}
               className="group w-full mb-6 grid grid-cols-1 md:grid-cols-2 border border-border hover:border-foreground/30 transition-all duration-300 overflow-hidden bg-card text-left">
               <div className="aspect-[4/3] md:aspect-auto md:min-h-[320px] bg-muted relative overflow-hidden">
-                {featured.cover_image_url
-                  ? <img src={featured.cover_image_url} alt={featured.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                {feat.cover_image_url
+                  ? <img src={feat.cover_image_url} alt={feat.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   : <div className="absolute inset-0 flex items-center justify-center"><ImageIcon className="h-12 w-12 text-muted-foreground/20" /></div>
                 }
               </div>
               <div className="p-8 md:p-10 flex flex-col justify-between">
                 <div>
                   <p className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground mb-3">Featured</p>
-                  <h2 className="text-2xl font-light tracking-wide mb-2">{featured.title}</h2>
-                  {featured.tagline && <p className="text-sm font-light text-muted-foreground italic mb-3">{featured.tagline}</p>}
-                  {featured.description && <p className="text-sm text-muted-foreground leading-relaxed mb-6">{featured.description}</p>}
+                  <h2 className="text-2xl font-light tracking-wide mb-2">{feat.title}</h2>
+                  {feat.tagline && <p className="text-sm font-light text-muted-foreground italic mb-3">{feat.tagline}</p>}
+                  {feat.description && <p className="text-sm text-muted-foreground leading-relaxed mb-6">{feat.description}</p>}
                 </div>
                 <div>
                   <div className="flex flex-wrap gap-4 text-[10px] text-muted-foreground mb-6">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{featured.duration_minutes}min</span>
-                    <span className="flex items-center gap-1"><Camera className="h-3 w-3" />{featured.num_photos} photos</span>
-                    {featured.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{featured.location}</span>}
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{feat.duration_minutes}min</span>
+                    <span className="flex items-center gap-1"><Camera className="h-3 w-3" />{feat.num_photos} photos</span>
+                    {feat.location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{feat.location}</span>}
                   </div>
                   <div className="flex items-center justify-between border-t border-border pt-4">
-                    <span className="text-2xl font-light">{formatPrice(featured.price)}</span>
+                    <span className="text-2xl font-light">{formatPrice(feat.price)}</span>
                     <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">View details →</span>
                   </div>
                 </div>
@@ -1006,32 +985,201 @@ function buildBlockMap(
               ))}
             </div>
           )}
+        </>
+      );
+    } else {
+      // clean
+      return list.map((session, i) => (
+        <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
+          className={`group text-left py-8 flex flex-col gap-3 ${i > 0 ? "border-t border-border" : ""} hover:pl-2 transition-all duration-300`}>
+          <div className="flex items-start justify-between gap-4">
+            <h2 className="text-xl font-light tracking-wide">{session.title}</h2>
+            <span className="text-xl font-light shrink-0">{formatPrice(session.price)}</span>
+          </div>
+          {session.tagline && <p className="text-sm font-light text-muted-foreground italic">{session.tagline}</p>}
+          {session.description && <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>}
+          <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
+            <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} minutes</span>
+            <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
+            {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
+          </div>
+          <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">View details →</span>
+        </button>
+      ));
+    }
+  };
+
+  // Builds the full sessions block, with optional category grouping
+  const buildSessionsBlock = (sessionsForBlock: Session[], blockVariant: string, wrapperClass: string, labelText: string): React.ReactNode => {
+    if (!hasCategoryGroups) {
+      // No grouping needed — render as before
+      if (blockVariant === "editorial") {
+        return (
+          <>
+            <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{labelText}</p>
+            </div>
+            {renderSessionCards(sessionsForBlock, blockVariant)}
+          </>
+        );
+      } else if (blockVariant === "grid") {
+        return (
+          <div className={wrapperClass}>
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">{labelText}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {renderSessionCards(sessionsForBlock, blockVariant)}
+            </div>
+          </div>
+        );
+      } else if (blockVariant === "magazine") {
+        return (
+          <div className={wrapperClass}>
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{labelText}</p>
+            </div>
+            {renderSessionCards(sessionsForBlock, blockVariant)}
+          </div>
+        );
+      } else {
+        return (
+          <div className={wrapperClass}>
+            <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">{labelText}</p>
+            <div className="flex flex-col gap-0">
+              {renderSessionCards(sessionsForBlock, blockVariant)}
+            </div>
+          </div>
+        );
+      }
+    }
+
+    // ── Category groups ──────────────────────────────────────────────────────
+    // All categories present in the filtered set
+    const cats = Array.from(new Set(sessionsForBlock.map((s) => s.category ?? "").filter(Boolean)));
+    const uncategorized = sessionsForBlock.filter((s) => !s.category);
+
+    const renderGroup = (cat: string, list: Session[]) => {
+      const catLabel = cat;
+      if (blockVariant === "editorial") {
+        return (
+          <div key={cat} className="mb-4">
+            <div className="max-w-6xl mx-auto px-6 pt-10 pb-3 flex items-center gap-4">
+              <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{catLabel}</p>
+            </div>
+            {renderSessionCards(list, blockVariant)}
+          </div>
+        );
+      } else if (blockVariant === "grid") {
+        return (
+          <div key={cat} className="mb-10">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-5 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{catLabel}</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {renderSessionCards(list, blockVariant)}
+            </div>
+          </div>
+        );
+      } else if (blockVariant === "magazine") {
+        return (
+          <div key={cat} className="mb-12">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{catLabel}</p>
+            </div>
+            {renderSessionCards(list, blockVariant)}
+          </div>
+        );
+      } else {
+        return (
+          <div key={cat} className="mb-12">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-5 h-px" style={{ backgroundColor: accentColor }} />
+              <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground/70">{catLabel}</p>
+            </div>
+            <div className="flex flex-col gap-0">
+              {renderSessionCards(list, blockVariant)}
+            </div>
+          </div>
+        );
+      }
+    };
+
+    const groupContent = (
+      <>
+        {cats.map((cat) => renderGroup(cat, sessionsForBlock.filter((s) => s.category === cat)))}
+        {uncategorized.length > 0 && renderGroup("Other", uncategorized)}
+      </>
+    );
+
+    if (blockVariant === "editorial") {
+      return (
+        <>
+          <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{labelText}</p>
+          </div>
+          {groupContent}
+        </>
+      );
+    } else if (blockVariant === "grid") {
+      return (
+        <div className={wrapperClass}>
+          <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-10 pl-2">{labelText}</p>
+          {groupContent}
+        </div>
+      );
+    } else if (blockVariant === "magazine") {
+      return (
+        <div className={wrapperClass}>
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
+            <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground">{labelText}</p>
+          </div>
+          {groupContent}
+        </div>
+      );
+    } else {
+      return (
+        <div className={wrapperClass}>
+          <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">{labelText}</p>
+          {groupContent}
+        </div>
+      );
+    }
+  };
+
+  let sessionsBlock: React.ReactNode = null;
+  if (showBlock("sessions") && showStore) {
+    if (variant === "editorial") {
+      sessionsBlock = (
+        <main key="sessions" data-block-key="sessions" id="sessions">
+          {sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <Camera className="h-10 w-10 text-muted-foreground/30" />
+              <p className="text-sm font-light text-muted-foreground">No sessions available yet.</p>
+            </div>
+          ) : buildSessionsBlock(sessions, "editorial", "", "Available Sessions")}
+        </main>
+      );
+    } else if (variant === "grid") {
+      sessionsBlock = sessions.length > 0 ? (
+        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
+          {buildSessionsBlock(sessions, "grid", "max-w-7xl mx-auto px-4 py-12", "Sessions")}
+        </main>
+      ) : null;
+    } else if (variant === "magazine") {
+      sessionsBlock = sessions.length > 0 ? (
+        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
+          {buildSessionsBlock(sessions, "magazine", "max-w-6xl mx-auto px-6 py-16", "Sessions")}
         </main>
       ) : null;
     } else {
       // clean
       sessionsBlock = sessions.length > 0 ? (
         <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
-          <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Available Sessions</p>
-          <div className="flex flex-col gap-0">
-            {sessions.map((session, i) => (
-              <button key={session.id} onClick={() => window.location.assign(sessionHref(session))}
-                className={`group text-left py-8 flex flex-col gap-3 ${i > 0 ? "border-t border-border" : ""} hover:pl-2 transition-all duration-300`}>
-                <div className="flex items-start justify-between gap-4">
-                  <h2 className="text-xl font-light tracking-wide">{session.title}</h2>
-                  <span className="text-xl font-light shrink-0">{formatPrice(session.price)}</span>
-                </div>
-                {session.tagline && <p className="text-sm font-light text-muted-foreground italic">{session.tagline}</p>}
-                {session.description && <p className="text-sm text-muted-foreground leading-relaxed">{session.description}</p>}
-                <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground/70">
-                  <span className="flex items-center gap-1.5"><Clock className="h-3 w-3" />{session.duration_minutes} minutes</span>
-                  <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{session.num_photos} photos</span>
-                  {session.location && <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{session.location}</span>}
-                </div>
-                <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground group-hover:text-foreground transition-colors mt-1">View details →</span>
-              </button>
-            ))}
-          </div>
+          {buildSessionsBlock(sessions, "clean", "max-w-2xl mx-auto px-6 py-20", "Available Sessions")}
         </main>
       ) : null;
     }
