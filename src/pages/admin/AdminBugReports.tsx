@@ -195,6 +195,7 @@ export default function AdminBugReports() {
             <p className="text-sm">No reports found</p>
           </div>
         ) : filterStatus !== "all" ? (
+          /* Filtered: flat list */
           <div className="flex flex-col gap-2">
             {filtered.map((report) => {
               const cfg = STATUS_CONFIG[report.status] || STATUS_CONFIG.open;
