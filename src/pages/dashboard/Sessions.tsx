@@ -349,12 +349,18 @@ const Sessions = () => {
 
 /* ─────────────────────────── shared action helpers ─────────────────────────── */
 
-function useSessionActions(session: Session, storeSlug: string | null) {
+function useSessionActions(
+  session: Session,
+  storeSlug: string | null,
+  onDelete?: (id: string) => void
+) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { photographerId } = useAuth();
   const s = t.sessions;
   const [toggling, setToggling] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const bookingUrl = storeSlug
     ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
@@ -409,7 +415,70 @@ function useSessionActions(session: Session, storeSlug: string | null) {
     window.open(`mailto:?subject=${encodeURIComponent(session.title)}&body=${encodeURIComponent(bookingUrl)}`, "_blank");
   };
 
-  return { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, s };
+  const openDeleteDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      // Check for linked bookings or sales
+      const { data: linkedBookings } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("session_id", session.id)
+        .limit(1);
+
+      const hasLinks = linkedBookings && linkedBookings.length > 0;
+
+      if (hasLinks) {
+        // Has linked records → just deactivate
+        const { error } = await supabase
+          .from("sessions")
+          .update({ status: "draft" })
+          .eq("id", session.id)
+          .eq("photographer_id", photographerId ?? "");
+        if (error) throw error;
+        onDelete?.(session.id);
+        toast({
+          title: "Session deactivated",
+          description: "This session has linked bookings and was deactivated instead of deleted.",
+        });
+      } else {
+        // No links → safe to delete (cascade availability + day configs)
+        const { error } = await supabase
+          .from("sessions")
+          .delete()
+          .eq("id", session.id)
+          .eq("photographer_id", photographerId ?? "");
+        if (error) throw error;
+        onDelete?.(session.id);
+        toast({ title: "Session deleted" });
+      }
+    } catch {
+      toast({ title: "Failed to delete session", variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  return {
+    toggling,
+    bookingUrl,
+    handleToggleStatus,
+    handlePreview,
+    handleCopyLink,
+    handleShareWhatsApp,
+    handleShareEmail,
+    openDeleteDialog,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deleteLoading,
+    handleConfirmDelete,
+    s,
+  };
 }
 
 /* ─────────────────────────── Sortable Grid Card ─────────────────────────── */
