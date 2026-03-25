@@ -48,7 +48,7 @@ interface Booking {
   created_at: string;
   session_id: string;
   availability_id: string;
-  sessions?: { title: string; briefing_id?: string | null } | null;
+  sessions?: { title: string; briefing_id?: string | null; session_type_id?: string | null; session_types?: { name: string } | null } | null;
   session_availability?: { start_time: string; end_time: string; date: string | null } | null;
 }
 
