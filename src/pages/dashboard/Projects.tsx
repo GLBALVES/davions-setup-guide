@@ -1633,6 +1633,7 @@ const Projects = () => {
                         postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
                         onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
                         onSetDeadline={handleSetDeadline}
+                        onSetGalleryExpiry={(s.key === "proof_gallery" || s.key === "final_gallery") ? handleSetGalleryExpiry : undefined}
                       />
                     ))}
                   </div>
