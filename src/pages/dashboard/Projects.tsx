@@ -369,39 +369,73 @@ function KanbanCard({
         <div className="flex flex-col gap-1">
           {project.shoot_date && (
             <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground min-w-0">
-              <span className="flex items-center gap-1 shrink-0">
-                <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
-                <span>
-                  {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
-                  {project.shoot_time && (
-                    <>{" "}{(() => {
-                      const [h, m] = project.shoot_time.split(":").map(Number);
-                      const period = h < 12 ? "AM" : "PM";
-                      const h12 = h % 12 === 0 ? 12 : h % 12;
-                      return `${h12}:${String(m).padStart(2,"0")} ${period}`;
-                    })()}</>
-                  )}
+              {/* Shoot date — clickable to open deadline editor on shot/post-production */}
+              {showDeadlineEditor ? (
+                <button
+                  ref={deadlineAnchorRef}
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
+                  className="group/deadline flex items-center gap-1 shrink-0 hover:text-foreground transition-colors"
+                >
+                  <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
+                  <span>
+                    {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {project.shoot_time && (
+                      <>{" "}{(() => {
+                        const [h, m] = project.shoot_time.split(":").map(Number);
+                        const period = h < 12 ? "AM" : "PM";
+                        const h12 = h % 12 === 0 ? 12 : h % 12;
+                        return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+                      })()}</>
+                    )}
+                  </span>
+                  <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/deadline:opacity-60 transition-opacity" />
+                </button>
+              ) : isGalleryStage && onSetGalleryExpiry ? (
+                <button
+                  ref={expiryAnchorRef}
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
+                  className="group/expiry flex items-center gap-1 shrink-0 hover:text-foreground transition-colors"
+                >
+                  <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
+                  <span>
+                    {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {project.shoot_time && (
+                      <>{" "}{(() => {
+                        const [h, m] = project.shoot_time.split(":").map(Number);
+                        const period = h < 12 ? "AM" : "PM";
+                        const h12 = h % 12 === 0 ? 12 : h % 12;
+                        return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+                      })()}</>
+                    )}
+                  </span>
+                  <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/expiry:opacity-60 transition-opacity" />
+                </button>
+              ) : (
+                <span className="flex items-center gap-1 shrink-0">
+                  <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
+                  <span>
+                    {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {project.shoot_time && (
+                      <>{" "}{(() => {
+                        const [h, m] = project.shoot_time.split(":").map(Number);
+                        const period = h < 12 ? "AM" : "PM";
+                        const h12 = h % 12 === 0 ? 12 : h % 12;
+                        return `${h12}:${String(m).padStart(2,"0")} ${period}`;
+                      })()}</>
+                    )}
+                  </span>
                 </span>
-              </span>
-              {/* Gallery stages: show expiry info inline (editable) */}
+              )}
+
+              {/* Right side: deadline/expiry status badge */}
               {isGalleryStage ? (
-                onSetGalleryExpiry ? (
-                  <button
-                    ref={expiryAnchorRef}
-                    type="button"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
-                    className={`group/expiry flex items-center gap-0.5 shrink-0 font-medium ${galleryExpiryStatus ? DEADLINE_BADGE[galleryExpiryStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
-                  >
-                    {galleryExpiryStatus === "overdue"
-                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                      : <Clock className="h-2.5 w-2.5 shrink-0" />
-                    }
-                    <span>{galleryExpiryLabel ? `${p_t.galleryPrefix} ${galleryExpiryLabel}` : (p_t.setDeadline ?? "Set expiry")}</span>
-                    <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/expiry:opacity-60 transition-opacity ml-0.5" />
-                  </button>
-                ) : (galleryExpiryLabel && galleryExpiryStatus ? (
+                galleryExpiryLabel && galleryExpiryStatus ? (
                   <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
                     {galleryExpiryStatus === "overdue"
                       ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -409,23 +443,17 @@ function KanbanCard({
                     }
                     <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
                   </span>
-                ) : null)
+                ) : null
               ) : showDeadlineEditor ? (
-                <button
-                  ref={deadlineAnchorRef}
-                  type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
-                  className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
-                >
-                  {deadlineStatus === "overdue"
-                    ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                    : <Timer className="h-2.5 w-2.5 shrink-0" />
-                  }
-                  <span>{deadlineLabel ?? p_t.setDeadline ?? "Set deadline"}</span>
-                  <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/deadline:opacity-60 transition-opacity ml-0.5" />
-                </button>
+                deadlineStatus ? (
+                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[deadlineStatus]}`}>
+                    {deadlineStatus === "overdue"
+                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      : <Timer className="h-2.5 w-2.5 shrink-0" />
+                    }
+                    <span>{deadlineLabel}</span>
+                  </span>
+                ) : null
               ) : (effectiveDeadline && deadlineLabel ? (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
                   {deadlineStatus === "overdue"
