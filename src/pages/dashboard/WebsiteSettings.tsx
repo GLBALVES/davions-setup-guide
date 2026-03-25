@@ -1221,26 +1221,6 @@ const WebsiteSettings = () => {
 
                   <Divider />
 
-                  {/* ── 6. Template ── */}
-                  <section className="flex flex-col gap-5">
-                    <SectionHeading title={ws.templateTitle} description={ws.templateDesc} />
-                    <div className="grid grid-cols-2 gap-3">
-                      {TEMPLATES.map((tmpl) => (
-                        <TemplatePreviewCard
-                          key={tmpl.value}
-                          value={tmpl.value}
-                          label={tmpl.label}
-                          description={tmpl.description}
-                          selected={siteTemplate === tmpl.value}
-                          onClick={() => setSiteTemplate(tmpl.value)}
-                          onPreview={storeSlug ? () => setPreviewModalTemplate(tmpl.value) : undefined}
-                        />
-                      ))}
-                    </div>
-                  </section>
-
-                  <Divider />
-
                   {/* ── 7. SEO ── */}
                   <section className="flex flex-col gap-5">
                     <SectionHeading title={ws.seoTitle} description={ws.seoDesc} />
