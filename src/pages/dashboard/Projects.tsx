@@ -154,6 +154,7 @@ function KanbanCard({
   onArchive,
   shotDeadlineDays,
   postProdDeadlineDays,
+  onSetDeadline,
 }: {
   project: ClientProject;
   onView: (p: ClientProject) => void;
@@ -162,7 +163,9 @@ function KanbanCard({
   onArchive: (id: string) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
+  onSetDeadline?: (projectId: string, deadline: string | null) => void;
 }) {
+  const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
   const { t } = useLanguage();
   const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
