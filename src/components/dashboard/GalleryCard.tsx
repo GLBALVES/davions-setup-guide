@@ -495,6 +495,60 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           </div>
         )}
 
+        {/* Expiry progress bar — card mode only */}
+        {!compact && gallery.expires_at && !isExpired && (() => {
+          const created = gallery.created_at;
+          const expires = gallery.expires_at!;
+          const total = new Date(expires).getTime() - new Date(created).getTime();
+          const elapsed = Date.now() - new Date(created).getTime();
+          const progress = total > 0 ? Math.min(Math.max((elapsed / total) * 100, 0), 100) : 0;
+
+          const barColor = expiryUrgency === "critical"
+            ? "bg-destructive"
+            : expiryUrgency === "warning"
+            ? "bg-orange-500"
+            : expiryUrgency === "soon"
+            ? "bg-yellow-500"
+            : "bg-emerald-500";
+
+          const labelColor = expiryUrgency === "critical"
+            ? "text-destructive"
+            : expiryUrgency === "warning"
+            ? "text-orange-500"
+            : expiryUrgency === "soon"
+            ? "text-yellow-600"
+            : "text-emerald-600";
+
+          const label = (() => {
+            const d = parseISO(expires);
+            if (isPast(d)) return null;
+            const h = differenceInHours(d, new Date());
+            if (h < 24) return `${h}h left`;
+            return `${differenceInDays(d, new Date())}d left`;
+          })();
+
+          const clampedPct = Math.min(Math.max(progress, 0), 93);
+
+          return (
+            <div className="mt-1 relative w-full">
+              <div className="h-1 w-full bg-muted/50 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${barColor}`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              {label && (
+                <span
+                  className={`absolute -top-4 text-[9px] font-semibold leading-none pointer-events-none transition-all duration-500 ${labelColor}`}
+                  style={{ left: `${clampedPct}%`, transform: "translateX(-50%)" }}
+                >
+                  {label}
+                </span>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Actions row — only in card mode */}
         {!compact && (
           <div className="flex items-center justify-end pt-0.5">
