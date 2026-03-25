@@ -78,7 +78,9 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
   }, [bugReportId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const sendMessage = async () => {
