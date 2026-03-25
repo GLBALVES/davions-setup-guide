@@ -1922,6 +1922,7 @@ export const translations = {
       daysAfterSession: "dias após a sessão",
       deadlineExample: (date: string) => `Ex.: sessão hoje → prazo em ${date}`,
       removeDeadline: "Remover prazo",
+      applyDeadline: "Aplicar",
       deadlineTooltipShot: "Prazo para publicação da galeria de prova",
       deadlineTooltipPostProd: "Prazo para entrega da pós-produção",
       refresh: "Atualizar",
