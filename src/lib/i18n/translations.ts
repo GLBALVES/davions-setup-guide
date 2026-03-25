@@ -1762,6 +1762,8 @@ export const translations = {
       oldest: "Mais antigas",
       priceUp: "Preço ↑",
       priceDown: "Preço ↓",
+      manual: "Manual",
+      manualHint: "Arraste o ⠿ para reordenar suas sessões",
       loading: "Carregando…",
       noSessionsYet: "Nenhuma sessão ainda",
       noResults: "Nenhum resultado para",
