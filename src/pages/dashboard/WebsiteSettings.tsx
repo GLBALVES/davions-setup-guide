@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 
