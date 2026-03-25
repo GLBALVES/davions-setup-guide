@@ -166,6 +166,9 @@ const SessionForm = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+  const portfolioInputRef = useRef<HTMLInputElement>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
 
   // ── Form fields ──
