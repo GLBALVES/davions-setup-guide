@@ -535,12 +535,14 @@ function SortableSessionRow({
   isManual,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: session.id,
@@ -562,6 +564,7 @@ function SortableSessionRow({
         dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
     </div>
   );
