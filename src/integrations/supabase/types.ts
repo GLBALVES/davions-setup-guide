@@ -2070,6 +2070,7 @@ export type Database = {
           reminder_days: number[]
           session_type_id: string | null
           slug: string | null
+          sort_order: number
           status: string
           tagline: string | null
           tax_rate: number
@@ -2100,6 +2101,7 @@ export type Database = {
           reminder_days?: number[]
           session_type_id?: string | null
           slug?: string | null
+          sort_order?: number
           status?: string
           tagline?: string | null
           tax_rate?: number
@@ -2130,6 +2132,7 @@ export type Database = {
           reminder_days?: number[]
           session_type_id?: string | null
           slug?: string | null
+          sort_order?: number
           status?: string
           tagline?: string | null
           tax_rate?: number
