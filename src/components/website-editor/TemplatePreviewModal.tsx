@@ -1,4 +1,4 @@
-import { X, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
