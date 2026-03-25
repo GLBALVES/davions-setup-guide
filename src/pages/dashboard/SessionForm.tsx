@@ -619,16 +619,34 @@ const SessionForm = () => {
     // Delete all existing availability for this session, then re-insert
     await supabase.from("session_availability").delete().eq("session_id", sessionId);
 
-    if (slots.length > 0) {
-      await supabase.from("session_availability").insert(
-        slots.map((s) => ({
+    if (sessionModel === "campaign") {
+      // For campaigns: expand each selected time slot across all campaign dates
+      const dates = campaignDates ?? [];
+      const inserts = dates.flatMap((date) =>
+        campaignSlots.map((sl) => ({
           session_id: sessionId,
           photographer_id: user.id,
-          day_of_week: s.day_of_week,
-          start_time: s.start_time,
-          end_time: s.end_time,
+          day_of_week: null,
+          date: format(date, "yyyy-MM-dd"),
+          start_time: sl.start,
+          end_time: sl.end,
         }))
       );
+      if (inserts.length > 0) {
+        await supabase.from("session_availability").insert(inserts);
+      }
+    } else {
+      if (slots.length > 0) {
+        await supabase.from("session_availability").insert(
+          slots.map((s) => ({
+            session_id: sessionId,
+            photographer_id: user.id,
+            day_of_week: s.day_of_week,
+            start_time: s.start_time,
+            end_time: s.end_time,
+          }))
+        );
+      }
     }
 
     // Save global config as a single row with day_of_week = -1 (sentinel)
