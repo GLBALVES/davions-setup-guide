@@ -48,7 +48,7 @@ interface Booking {
   created_at: string;
   session_id: string;
   availability_id: string;
-  sessions?: { title: string; briefing_id?: string | null } | null;
+  sessions?: { title: string; briefing_id?: string | null; session_type_id?: string | null; session_types?: { name: string } | null } | null;
   session_availability?: { start_time: string; end_time: string; date: string | null } | null;
 }
 
@@ -189,7 +189,7 @@ const Bookings = () => {
         .from("bookings")
         .select(`
           *,
-          sessions ( title, briefing_id ),
+          sessions ( title, briefing_id, session_type_id, session_types ( name ) ),
           session_availability ( start_time, end_time, date )
         `)
         .eq("photographer_id", photographerId ?? user!.id)
@@ -406,9 +406,17 @@ const Bookings = () => {
                     </p>
                   </div>
                 </div>
-              ) : (
-                <div className="border border-border rounded-sm overflow-hidden">
-                  {/* Table header */}
+              ) : (() => {
+                // Group by session type name
+                const groups = new Map<string, Booking[]>();
+                for (const b of filteredBookings) {
+                  const cat = b.sessions?.session_types?.name ?? "";
+                  if (!groups.has(cat)) groups.set(cat, []);
+                  groups.get(cat)!.push(b);
+                }
+                const hasMultipleGroups = groups.size > 1;
+
+                const tableHeader = (
                   <div className="hidden md:grid grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 px-5 py-3 bg-muted/30 border-b border-border">
                     {[bk.client, bk.session, bk.dateTime, bk.payment, bk.status, bk.actions].map((h) => (
                       <span key={h} className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-medium">
@@ -416,143 +424,167 @@ const Bookings = () => {
                       </span>
                     ))}
                   </div>
+                );
 
-                  {filteredBookings.map((booking, idx) => {
-                    const avail = booking.session_availability;
-                    const dateLabel = avail?.date
-                      ? formatDate(avail.date)
-                      : booking.booked_date
-                      ? formatDate(booking.booked_date)
+                const renderRow = (booking: Booking, idx: number, list: Booking[]) => {
+                  const avail = booking.session_availability;
+                  const dateLabel = avail?.date
+                    ? formatDate(avail.date)
+                    : booking.booked_date
+                    ? formatDate(booking.booked_date)
+                    : null;
+                  const timeLabel =
+                    avail?.start_time && avail?.end_time
+                      ? `${formatTime(avail.start_time)} – ${formatTime(avail.end_time)}`
                       : null;
-                    const timeLabel =
-                      avail?.start_time && avail?.end_time
-                        ? `${formatTime(avail.start_time)} – ${formatTime(avail.end_time)}`
-                        : null;
-                    const statusMeta = STATUS_META[booking.status] ?? STATUS_META["pending"];
-                    const paymentMeta = PAYMENT_META[booking.payment_status] ?? PAYMENT_META["pending"];
-                    const hasBriefing = Boolean(booking.sessions?.briefing_id);
+                  const statusMeta = STATUS_META[booking.status] ?? STATUS_META["pending"];
+                  const paymentMeta = PAYMENT_META[booking.payment_status] ?? PAYMENT_META["pending"];
+                  const hasBriefing = Boolean(booking.sessions?.briefing_id);
 
-                    return (
-                      <div
-                        key={booking.id}
-                        className={`group flex flex-col md:grid md:grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 gap-y-2 px-5 py-4 items-center transition-colors hover:bg-muted/20 ${
-                          idx < filteredBookings.length - 1 ? "border-b border-border" : ""
-                        }`}
-                      >
-                        {/* Client */}
-                        <div className="flex flex-col gap-0.5 min-w-0 w-full">
-                          <span className="text-sm font-light truncate text-foreground leading-snug">
-                            {booking.client_name}
-                          </span>
-                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
-                            <Mail className="h-2.5 w-2.5 shrink-0 opacity-60" />
-                            {booking.client_email}
-                          </span>
-                        </div>
-
-                        {/* Session */}
-                        <div className="min-w-0 w-full">
-                          <span className="text-xs font-light text-muted-foreground truncate block leading-snug">
-                            {booking.sessions?.title ?? "—"}
-                          </span>
-                        </div>
-
-                        {/* Date & Time */}
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          {dateLabel ? (
-                            <>
-                              <span className="flex items-center gap-1.5 text-xs text-foreground font-light whitespace-nowrap">
-                                <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
-                                {dateLabel}
-                              </span>
-                              {timeLabel && (
-                                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
-                                  <Clock className="h-2.5 w-2.5 shrink-0" />
-                                  {timeLabel}
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-[11px] text-muted-foreground/40">—</span>
-                          )}
-                        </div>
-
-                        {/* Payment */}
-                        <div className="flex items-center gap-1.5">
-                          <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${paymentMeta.dot}`} />
-                          <span className="text-xs font-light text-foreground whitespace-nowrap">
-                            {paymentMeta.label}
-                          </span>
-                        </div>
-
-                        {/* Status badge */}
-                        <div>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] tracking-wider uppercase font-light whitespace-nowrap ${statusMeta.className}`}>
-                            {statusMeta.label}
-                          </span>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2.5">
-                          {booking.status !== "confirmed" && booking.status !== "cancelled" && (
-                            <button
-                              onClick={() =>
-                                setConfirmDialog({ open: true, bookingId: booking.id, action: "confirm" })
-                              }
-                              title="Confirm booking"
-                              className="text-muted-foreground hover:text-emerald-600 transition-colors"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </button>
-                          )}
-                          {booking.status !== "cancelled" && (
-                            <button
-                              onClick={() =>
-                                setConfirmDialog({ open: true, bookingId: booking.id, action: "cancel" })
-                              }
-                              title="Cancel booking"
-                              className="text-muted-foreground hover:text-destructive transition-colors"
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </button>
-                          )}
-                          {booking.status === "confirmed" && (
-                            <button
-                              onClick={() => setGalleryDialog({ open: true, bookingId: booking.id })}
-                              title="Create Proof Gallery"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              <Images className="h-4 w-4" />
-                            </button>
-                          )}
-                          {hasBriefing && (
-                            <button
-                              onClick={() => setBriefingDialog({
-                                open: true,
-                                bookingId: booking.id,
-                                briefingId: booking.sessions!.briefing_id!,
-                              })}
-                              title="View briefing responses"
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              <ClipboardList className="h-4 w-4" />
-                            </button>
-                          )}
-                          {booking.status === "cancelled" && !hasBriefing && (
-                            <span className="text-[10px] text-muted-foreground/30">—</span>
-                          )}
-                        </div>
+                  return (
+                    <div
+                      key={booking.id}
+                      className={`group flex flex-col md:grid md:grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 gap-y-2 px-5 py-4 items-center transition-colors hover:bg-muted/20 ${
+                        idx < list.length - 1 ? "border-b border-border" : ""
+                      }`}
+                    >
+                      {/* Client */}
+                      <div className="flex flex-col gap-0.5 min-w-0 w-full">
+                        <span className="text-sm font-light truncate text-foreground leading-snug">
+                          {booking.client_name}
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                          <Mail className="h-2.5 w-2.5 shrink-0 opacity-60" />
+                          {booking.client_email}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+
+                      {/* Session */}
+                      <div className="min-w-0 w-full">
+                        <span className="text-xs font-light text-muted-foreground truncate block leading-snug">
+                          {booking.sessions?.title ?? "—"}
+                        </span>
+                      </div>
+
+                      {/* Date & Time */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        {dateLabel ? (
+                          <>
+                            <span className="flex items-center gap-1.5 text-xs text-foreground font-light whitespace-nowrap">
+                              <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                              {dateLabel}
+                            </span>
+                            {timeLabel && (
+                              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                                <Clock className="h-2.5 w-2.5 shrink-0" />
+                                {timeLabel}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground/40">—</span>
+                        )}
+                      </div>
+
+                      {/* Payment */}
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${paymentMeta.dot}`} />
+                        <span className="text-xs font-light text-foreground whitespace-nowrap">
+                          {paymentMeta.label}
+                        </span>
+                      </div>
+
+                      {/* Status badge */}
+                      <div>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] tracking-wider uppercase font-light whitespace-nowrap ${statusMeta.className}`}>
+                          {statusMeta.label}
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2.5">
+                        {booking.status !== "confirmed" && booking.status !== "cancelled" && (
+                          <button
+                            onClick={() => setConfirmDialog({ open: true, bookingId: booking.id, action: "confirm" })}
+                            title="Confirm booking"
+                            className="text-muted-foreground hover:text-emerald-600 transition-colors"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </button>
+                        )}
+                        {booking.status !== "cancelled" && (
+                          <button
+                            onClick={() => setConfirmDialog({ open: true, bookingId: booking.id, action: "cancel" })}
+                            title="Cancel booking"
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </button>
+                        )}
+                        {booking.status === "confirmed" && (
+                          <button
+                            onClick={() => setGalleryDialog({ open: true, bookingId: booking.id })}
+                            title="Create Proof Gallery"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Images className="h-4 w-4" />
+                          </button>
+                        )}
+                        {hasBriefing && (
+                          <button
+                            onClick={() => setBriefingDialog({
+                              open: true,
+                              bookingId: booking.id,
+                              briefingId: booking.sessions!.briefing_id!,
+                            })}
+                            title="View briefing responses"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <ClipboardList className="h-4 w-4" />
+                          </button>
+                        )}
+                        {booking.status === "cancelled" && !hasBriefing && (
+                          <span className="text-[10px] text-muted-foreground/30">—</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                };
+
+                if (!hasMultipleGroups) {
+                  return (
+                    <div className="border border-border rounded-sm overflow-hidden">
+                      {tableHeader}
+                      {filteredBookings.map((b, i) => renderRow(b, i, filteredBookings))}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col gap-6">
+                    {Array.from(groups.entries()).map(([cat, list]) => (
+                      <div key={cat || "__none__"} className="border border-border rounded-sm overflow-hidden">
+                        {/* Category header */}
+                        <div className="px-5 py-2.5 bg-muted/50 border-b border-border flex items-center gap-3">
+                          <div className="w-4 h-px bg-border" />
+                          <span className="text-[9px] tracking-[0.35em] uppercase text-muted-foreground font-medium">
+                            {cat || "Uncategorized"}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/50 tabular-nums">
+                            {list.length}
+                          </span>
+                        </div>
+                        {tableHeader}
+                        {list.map((b, i) => renderRow(b, i, list))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </main>
         </div>
       </div>
-
-      {/* Confirm / Cancel dialog */}
       <AlertDialog
         open={confirmDialog.open}
         onOpenChange={(open) =>
