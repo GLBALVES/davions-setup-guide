@@ -197,6 +197,9 @@ const SessionDetailPage = () => {
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<BookingStep>("product");
 
