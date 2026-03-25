@@ -1140,6 +1140,27 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </div>
           </div>
         )}
+        {/* Admin button */}
+        {isAdmin && !collapsed && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="flex items-center gap-2 w-full px-2 py-1.5 mb-1 text-[10px] tracking-widest uppercase font-light rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors border border-border/50 hover:border-border"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+            <span>Admin Panel</span>
+          </button>
+        )}
+        {isAdmin && collapsed && (
+          <div className="flex justify-center mb-1">
+            <button
+              onClick={() => navigate("/admin")}
+              title="Admin Panel"
+              className="h-7 w-7 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors border border-border/50 hover:border-border"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
