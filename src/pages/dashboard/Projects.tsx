@@ -1147,10 +1147,12 @@ const Projects = () => {
   };
 
   const handleSetGalleryExpiry = async (projectId: string, expiresAt: string | null) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project?.booking_id) { toast.error("Galeria não vinculada a um agendamento."); return; }
     const { error } = await supabase
       .from("galleries" as any)
       .update({ expires_at: expiresAt } as any)
-      .eq("booking_id", projectId);
+      .eq("booking_id", project.booking_id);
     if (error) { toast.error("Erro ao salvar expiração: " + error.message); return; }
     setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_expires_at: expiresAt } : p));
   };
