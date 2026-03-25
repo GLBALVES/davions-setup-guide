@@ -78,8 +78,19 @@ export default function AdminBugReports() {
     setSavingNotes(null);
   };
 
-  const filtered = filterStatus === "all" ? reports : reports.filter((r) => r.status === filterStatus);
+  const STATUS_ORDER = ["open", "in_progress", "fixed", "wont_fix"];
+  const filtered = (filterStatus === "all" ? reports : reports.filter((r) => r.status === filterStatus))
+    .slice()
+    .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
   const counts = STATUSES.reduce((acc, s) => { acc[s] = reports.filter((r) => r.status === s).length; return acc; }, {} as Record<string, number>);
+  const totalCount = reports.length;
+
+  // Group filtered reports by status for grouped view
+  const grouped = STATUS_ORDER.reduce<Record<string, BugReport[]>>((acc, s) => {
+    const items = filtered.filter((r) => r.status === s);
+    if (items.length > 0) acc[s] = items;
+    return acc;
+  }, {});
 
   return (
     <AdminLayout>
@@ -120,8 +131,23 @@ export default function AdminBugReports() {
           <p className="text-2xl font-light mt-1">Bug Reports</p>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        {/* Stats + filter cards */}
+        <div className="grid grid-cols-5 gap-3 mb-5">
+          {/* All */}
+          <button
+            onClick={() => setFilterStatus("all")}
+            className={cn(
+              "border rounded-md px-4 py-3 text-left transition-all duration-150",
+              filterStatus === "all" ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/30"
+            )}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Bug size={12} className="shrink-0 text-muted-foreground" />
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-light">All</span>
+            </div>
+            <p className="text-2xl font-light tabular-nums">{totalCount}</p>
+          </button>
+
           {STATUSES.map((s) => {
             const cfg = STATUS_CONFIG[s];
             const Icon = cfg.icon;
@@ -144,6 +170,22 @@ export default function AdminBugReports() {
           })}
         </div>
 
+        {/* Active filter label */}
+        {filterStatus !== "all" && (
+          <div className="flex items-center gap-2 mb-4">
+            {(() => { const cfg = STATUS_CONFIG[filterStatus]; const Icon = cfg.icon; return (
+              <div className={cn("flex items-center gap-1.5 px-3 py-1 border rounded-full text-[10px] tracking-widest uppercase font-light", cfg.class)}>
+                <Icon size={10} />
+                {cfg.label}
+                <button onClick={() => setFilterStatus("all")} className="ml-1 opacity-60 hover:opacity-100 transition-opacity">
+                  <X size={10} />
+                </button>
+              </div>
+            ); })()}
+            <span className="text-[10px] text-muted-foreground">{filtered.length} report{filtered.length !== 1 ? "s" : ""}</span>
+          </div>
+        )}
+
         {/* List */}
         {fetching ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-muted-foreground" size={18} /></div>
@@ -152,7 +194,7 @@ export default function AdminBugReports() {
             <Bug size={24} className="opacity-30" />
             <p className="text-sm">No reports found</p>
           </div>
-        ) : (
+        ) : filterStatus !== "all" ? (
           <div className="flex flex-col gap-2">
             {filtered.map((report) => {
               const cfg = STATUS_CONFIG[report.status] || STATUS_CONFIG.open;
