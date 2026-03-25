@@ -367,7 +367,18 @@ function KanbanCard({
                   )}
                 </span>
               </span>
-              {showDeadlineEditor ? (
+              {/* Gallery stages: show expiry info inline */}
+              {(project.stage === "proof_gallery" || project.stage === "final_gallery") ? (
+                galleryExpiryLabel && galleryExpiryStatus ? (
+                  <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
+                    {galleryExpiryStatus === "overdue"
+                      ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      : <Clock className="h-2.5 w-2.5 shrink-0" />
+                    }
+                    <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
+                  </span>
+                ) : null
+              ) : showDeadlineEditor ? (
                 <button
                   ref={deadlineAnchorRef}
                   type="button"
@@ -380,7 +391,7 @@ function KanbanCard({
                   }
                   <span>{deadlineLabel ?? p_t.setDeadline ?? "Set deadline"}</span>
                 </button>
-              ) : (effectiveDeadline && deadlineLabel && (
+              ) : (effectiveDeadline && deadlineLabel ? (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : ""}`}>
                   {deadlineStatus === "overdue"
                     ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -388,8 +399,7 @@ function KanbanCard({
                   }
                   <span>{deadlineLabel}</span>
                 </span>
-              ))}
-              {upcomingSessionStatus && upcomingSessionLabel && !effectiveDeadline && (
+              ) : (upcomingSessionStatus && upcomingSessionLabel ? (
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
                   {upcomingSessionStatus === "overdue"
                     ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
@@ -397,17 +407,7 @@ function KanbanCard({
                   }
                   <span>{upcomingSessionLabel}</span>
                 </span>
-              )}
-            </div>
-          )}
-          {/* Gallery expiry indicator for proof_gallery / final_gallery */}
-          {galleryExpiryLabel && galleryExpiryStatus && (
-            <div className={`flex items-center gap-0.5 text-[10px] font-medium ${DEADLINE_BADGE[galleryExpiryStatus]}`}>
-              {galleryExpiryStatus === "overdue"
-                ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                : <Clock className="h-2.5 w-2.5 shrink-0" />
-              }
-              <span>{p_t.galleryPrefix} {galleryExpiryLabel}</span>
+              ) : null))}
             </div>
           )}
           {project.session_title && (
