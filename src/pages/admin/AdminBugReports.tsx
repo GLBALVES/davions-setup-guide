@@ -162,7 +162,7 @@ export default function AdminBugReports() {
                 <div key={report.id} className={cn("border border-border rounded-md overflow-hidden transition-all duration-150", isOpen && "border-foreground/20")}>
                   <button
                     className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors duration-150"
-                    onClick={() => setExpanded(isOpen ? null : report.id)}
+                    onClick={(e) => { setExpanded(isOpen ? null : report.id); (e.currentTarget as HTMLButtonElement).blur(); }}
                   >
                     <Icon size={13} className={cn("shrink-0", cfg.class.split(" ")[1])} />
                     <div className="flex-1 min-w-0">
