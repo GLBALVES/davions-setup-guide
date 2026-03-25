@@ -52,7 +52,7 @@ const CustomDomainStore = () => {
           .maybeSingle(),
         supabase
           .from("sessions")
-          .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url")
+          .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url, session_type_id, session_types ( name )")
           .eq("photographer_id", photoData.id)
           .eq("status", "active")
           .order("sort_order", { ascending: true }),
