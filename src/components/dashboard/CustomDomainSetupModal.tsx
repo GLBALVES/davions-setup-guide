@@ -527,11 +527,31 @@ export function CustomDomainSetupModal({ open, onOpenChange, initialDomain = "",
     onOpenChange(v);
   };
 
+  /** Converts a domain to a reverse-DNS package name.
+   * booking.mystudio.com  →  com.mystudio.photo
+   * mystudio.com.br       →  com.br.mystudio.photo
+   */
+  const buildPackageName = (d: string): string => {
+    const COMPOUND_TLDS = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
+    const parts = d.toLowerCase().split(".");
+    const lastTwo = parts.slice(-2).join(".");
+    const rootCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
+    // Root parts reversed (e.g. ["com","mystudio"] → "com.mystudio")
+    const rootParts = parts.slice(-rootCount);
+    const tld = rootParts.slice(0, -1).join(".");         // e.g. "com"
+    const sld = rootParts[rootParts.length - 1];          // e.g. "mystudio"
+    const tldReversed = tld.split(".").reverse().join("."); // stays "com" for single TLD
+    return `${tldReversed}.${sld}.photo`;
+  };
+
   const saveDomain = async () => {
     if (!user || !domain) return;
     setSaving(true);
+    const trimmed = domain.trim();
+    const packageName = buildPackageName(trimmed);
     const { error } = await supabase.from("photographers").update({
-      custom_domain: domain.trim() || null,
+      custom_domain: trimmed || null,
+      package_name: trimmed ? packageName : null,
     } as any).eq("id", user.id);
     if (error) {
       toast({ title: "Failed to save domain", description: error.message, variant: "destructive" });
@@ -539,7 +559,7 @@ export function CustomDomainSetupModal({ open, onOpenChange, initialDomain = "",
       return;
     }
     toast({ title: "Domain saved" });
-    onSaved?.(domain.trim());
+    onSaved?.(trimmed);
     setSaving(false);
   };
 

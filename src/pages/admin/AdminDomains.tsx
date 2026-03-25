@@ -44,6 +44,7 @@ type Photographer = {
   business_name: string | null;
   custom_domain: string;
   store_slug: string | null;
+  package_name: string | null;
   created_at: string;
 };
 
