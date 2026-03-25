@@ -27,7 +27,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   // track IDs already shown to avoid duplicates from realtime + fetch
   const seenIds = useRef<Set<string>>(new Set());
 
