@@ -27,7 +27,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   // track IDs already shown to avoid duplicates from realtime + fetch
   const seenIds = useRef<Set<string>>(new Set());
 
@@ -78,7 +78,9 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
   }, [bugReportId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const sendMessage = async () => {
@@ -143,7 +145,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
     <div className="flex flex-col gap-3">
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Conversation Thread</p>
 
-      <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+      <div ref={scrollContainerRef} className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
         {loading ? (
           <div className="flex justify-center py-4">
             <Loader2 size={14} className="animate-spin text-muted-foreground" />
@@ -193,7 +195,7 @@ export function BugReportThread({ bugReportId }: BugReportThreadProps) {
             </div>
           ))
         )}
-        <div ref={bottomRef} />
+        
       </div>
 
       <div className="flex gap-2 items-end">
