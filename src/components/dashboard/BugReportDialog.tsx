@@ -224,10 +224,13 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
         <Tabs defaultValue="new">
           <TabsList className="w-full mb-2">
             <TabsTrigger value="new" className="flex-1 text-xs uppercase tracking-widest">New Report</TabsTrigger>
-            <TabsTrigger value="my" className="flex-1 text-xs uppercase tracking-widest">
+            <TabsTrigger value="my" className="flex-1 text-xs uppercase tracking-widest relative">
               My Reports
               {myReports.length > 0 && (
                 <span className="ml-1.5 bg-muted text-muted-foreground text-[10px] rounded-full px-1.5 py-0.5">{myReports.length}</span>
+              )}
+              {unreadReportIds.size > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
           </TabsList>
@@ -353,17 +356,28 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                 {myReports.map((report) => {
                   const scfg = STATUS_LABELS[report.status] || STATUS_LABELS.open;
                   const isExpanded = expandedReport === report.id;
+                  const hasUnread = unreadReportIds.has(report.id);
                   return (
                     <div key={report.id} className={cn("border border-border rounded-md overflow-hidden", isExpanded && "border-foreground/20")}>
                       <button
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
-                        onClick={() => setExpandedReport(isExpanded ? null : report.id)}
+                        onClick={() => {
+                          const next = isExpanded ? null : report.id;
+                          setExpandedReport(next);
+                          if (next && hasUnread) markReportSeen(report.id, new Date().toISOString());
+                        }}
                       >
-                        <MessageSquare size={12} className="shrink-0 text-muted-foreground" />
+                        <div className="relative shrink-0">
+                          <MessageSquare size={12} className="text-muted-foreground" />
+                          {hasUnread && (
+                            <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-destructive" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-light truncate">{report.title}</p>
+                          <p className={cn("text-sm truncate", hasUnread ? "font-medium" : "font-light")}>{report.title}</p>
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                             {new Date(report.created_at).toLocaleDateString()}
+                            {hasUnread && <span className="ml-2 text-destructive">• New reply</span>}
                           </p>
                         </div>
                         <Badge variant="outline" className={cn("text-[10px] tracking-widest uppercase font-light shrink-0", scfg.class)}>
