@@ -299,6 +299,16 @@ function KanbanCard({
 
   const showDeadlineEditor = (project.stage === "shot" || project.stage === "post_production") && !!onSetDeadline;
 
+  // Gallery expiry popover values
+  const rawExpiry = project.gallery_expires_at ?? null;
+  const expiryDateStr = rawExpiry ? rawExpiry.substring(0, 10) : null;
+  const pickerExpiry = expiryDateStr ? parseISO(`${expiryDateStr}T00:00:00`) : undefined;
+  const saveExpiry = (dateStr: string | null) => {
+    if (!onSetGalleryExpiry) return;
+    onSetGalleryExpiry(project.id, dateStr ? `${dateStr}T00:00:00` : null);
+  };
+  const isGalleryStage = project.stage === "proof_gallery" || project.stage === "final_gallery";
+
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
