@@ -166,6 +166,7 @@ function KanbanCard({
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
 }) {
   const [deadlinePopoverOpen, setDeadlinePopoverOpen] = useState(false);
+  const deadlineAnchorRef = useRef<HTMLButtonElement>(null);
   const { t } = useLanguage();
   const p_t = t.projects;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
