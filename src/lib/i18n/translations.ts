@@ -276,7 +276,6 @@ export const translations = {
       daysAfterSession: "days after session",
       deadlineExample: (date: string) => `e.g.: session today → due ${date}`,
       removeDeadline: "Remove deadline",
-      setDeadline: "Set deadline",
       deadlineTooltipShot: "Proof gallery publication deadline",
       deadlineTooltipPostProd: "Post-production delivery deadline",
       refresh: "Refresh",
