@@ -35,6 +35,7 @@ import {
   DragOverlay,
   closestCorners,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragStartEvent,
@@ -388,6 +389,7 @@ function KanbanCard({
                     ref={expiryAnchorRef}
                     type="button"
                     onPointerDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(true); }}
                     className={`group/expiry flex items-center gap-0.5 shrink-0 font-medium ${galleryExpiryStatus ? DEADLINE_BADGE[galleryExpiryStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                   >
@@ -412,6 +414,7 @@ function KanbanCard({
                   ref={deadlineAnchorRef}
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
                   className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                 >
@@ -1161,7 +1164,8 @@ const Projects = () => {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } })
   );
 
   const fetchSessionTypes = async () => {
