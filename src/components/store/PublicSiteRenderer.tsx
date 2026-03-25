@@ -156,6 +156,8 @@ export interface Session {
   num_photos: number;
   location: string | null;
   cover_image_url: string | null;
+  /** Session type name, e.g. "Newborn", "Wedding" — null means uncategorized */
+  category?: string | null;
 }
 
 export interface Gallery {
