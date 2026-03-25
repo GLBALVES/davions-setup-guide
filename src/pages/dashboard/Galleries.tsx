@@ -23,6 +23,7 @@ import {
   LayoutGrid,
   List,
   UserX,
+  GripVertical,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +37,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Gallery {
   id: string;
@@ -44,6 +63,7 @@ interface Gallery {
   category: string;
   status: string;
   created_at: string;
+  sort_order: number;
   photo_count: number;
   cover_image_url?: string | null;
   expires_at?: string | null;
@@ -54,7 +74,7 @@ interface Gallery {
 }
 
 type StatusFilter = "all" | "draft" | "published" | "expired" | "unassigned";
-type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc";
+type SortOption = "newest" | "oldest" | "title_asc" | "title_desc" | "photos_desc" | "manual";
 type ViewMode = "grid" | "list";
 
 const Galleries = () => {
@@ -74,6 +94,11 @@ const Galleries = () => {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   const STATUS_FILTERS: { value: StatusFilter; label: string; icon: React.ElementType }[] = [
     { value: "all", label: g.all, icon: SlidersHorizontal },
     { value: "draft", label: g.draft, icon: Clock4 },
@@ -88,6 +113,7 @@ const Galleries = () => {
     { value: "title_asc", label: g.titleAZ },
     { value: "title_desc", label: g.titleZA },
     { value: "photos_desc", label: g.mostPhotos },
+    { value: "manual", label: g.manualOrder ?? "Manual" },
   ];
 
   const fetchGalleries = async () => {
@@ -96,11 +122,11 @@ const Galleries = () => {
     const { data: galleriesData } = await supabase
       .from("galleries")
       .select(`
-        id, title, slug, category, status, created_at, cover_image_url, expires_at, booking_id,
+        id, title, slug, category, status, created_at, sort_order, cover_image_url, expires_at, booking_id,
         bookings ( client_name, client_email, sessions ( title ) )
       `)
       .eq("photographer_id", photographerId)
-      .order("created_at", { ascending: false });
+      .order("sort_order", { ascending: true });
 
     if (galleriesData) {
       const { data: photoCounts } = await supabase
@@ -114,16 +140,17 @@ const Galleries = () => {
       });
 
       setGalleries(
-        (galleriesData as any[]).map((g) => ({
-          ...g,
-          category: g.category ?? "proof",
-          photo_count: countMap[g.id] || 0,
-          cover_image_url: g.cover_image_url ?? null,
-          expires_at: g.expires_at ?? null,
-          booking_id: g.booking_id ?? null,
-          client_name: g.bookings?.client_name ?? null,
-          client_email: g.bookings?.client_email ?? null,
-          session_title: (g.bookings as any)?.sessions?.title ?? null,
+        (galleriesData as any[]).map((gal) => ({
+          ...gal,
+          category: gal.category ?? "proof",
+          sort_order: gal.sort_order ?? 0,
+          photo_count: countMap[gal.id] || 0,
+          cover_image_url: gal.cover_image_url ?? null,
+          expires_at: gal.expires_at ?? null,
+          booking_id: gal.booking_id ?? null,
+          client_name: gal.bookings?.client_name ?? null,
+          client_email: gal.bookings?.client_email ?? null,
+          session_title: (gal.bookings as any)?.sessions?.title ?? null,
         }))
       );
     }
@@ -146,59 +173,87 @@ const Galleries = () => {
 
   // Derived — apply category tab, search, status filter, sort
   const filtered = useMemo(() => {
-    let list = type ? galleries.filter((g) => g.category === type) : galleries;
+    let list = type ? galleries.filter((gal) => gal.category === type) : galleries;
 
     // Search
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
-        (g) =>
-          g.title.toLowerCase().includes(q) ||
-          (g.client_name?.toLowerCase().includes(q) ?? false) ||
-          (g.session_title?.toLowerCase().includes(q) ?? false) ||
-          (g.client_email?.toLowerCase().includes(q) ?? false)
+        (gal) =>
+          gal.title.toLowerCase().includes(q) ||
+          (gal.client_name?.toLowerCase().includes(q) ?? false) ||
+          (gal.session_title?.toLowerCase().includes(q) ?? false) ||
+          (gal.client_email?.toLowerCase().includes(q) ?? false)
       );
     }
 
     // Status
     if (statusFilter !== "all") {
-      list = list.filter((g) => {
-        const isExpired = g.expires_at ? new Date(g.expires_at) < new Date() : false;
+      list = list.filter((gal) => {
+        const isExpired = gal.expires_at ? new Date(gal.expires_at) < new Date() : false;
         if (statusFilter === "expired") return isExpired;
-        if (statusFilter === "unassigned") return !g.booking_id;
-        if (statusFilter === "draft") return g.status === "draft" && !isExpired;
-        if (statusFilter === "published") return g.status === "published" && !isExpired;
+        if (statusFilter === "unassigned") return !gal.booking_id;
+        if (statusFilter === "draft") return gal.status === "draft" && !isExpired;
+        if (statusFilter === "published") return gal.status === "published" && !isExpired;
         return true;
       });
     }
 
-    // Sort
-    list = [...list].sort((a, b) => {
-      if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      if (sortBy === "title_asc") return a.title.localeCompare(b.title);
-      if (sortBy === "title_desc") return b.title.localeCompare(a.title);
-      if (sortBy === "photos_desc") return b.photo_count - a.photo_count;
-      return 0;
-    });
+    // Sort (manual uses existing sort_order already applied in fetch)
+    if (sortBy !== "manual") {
+      list = [...list].sort((a, b) => {
+        if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        if (sortBy === "title_asc") return a.title.localeCompare(b.title);
+        if (sortBy === "title_desc") return b.title.localeCompare(a.title);
+        if (sortBy === "photos_desc") return b.photo_count - a.photo_count;
+        return 0;
+      });
+    }
 
     return list;
   }, [galleries, type, query, statusFilter, sortBy]);
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIdx = filtered.findIndex((gal) => gal.id === active.id);
+    const newIdx = filtered.findIndex((gal) => gal.id === over.id);
+    const reordered = arrayMove(filtered, oldIdx, newIdx).map((gal, i) => ({
+      ...gal,
+      sort_order: i,
+    }));
+
+    // Optimistic update — merge back into full galleries list
+    setGalleries((prev) => {
+      const map = new Map(reordered.map((gal) => [gal.id, gal]));
+      return prev.map((gal) => map.get(gal.id) ?? gal);
+    });
+
+    // Persist to DB
+    await Promise.all(
+      reordered.map((gal) =>
+        supabase.from("galleries").update({ sort_order: gal.sort_order }).eq("id", gal.id)
+      )
+    );
+  };
+
   const heading = type === "proof" ? g.proofGalleries : type === "final" ? g.finalGalleries : g.title;
   const defaultCategory = type ?? "proof";
+  const isManual = sortBy === "manual";
   const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || sortBy !== "newest";
 
   // Count per status chip, always from the full category-scoped list (ignoring active filter/search)
   const statusCounts = useMemo(() => {
-    const base = type ? galleries.filter((g) => g.category === type) : galleries;
+    const base = type ? galleries.filter((gal) => gal.category === type) : galleries;
     const now = new Date();
     return {
       all: base.length,
-      draft: base.filter((g) => g.status === "draft" && !(g.expires_at && new Date(g.expires_at) < now)).length,
-      published: base.filter((g) => g.status === "published" && !(g.expires_at && new Date(g.expires_at) < now)).length,
-      expired: base.filter((g) => g.expires_at && new Date(g.expires_at) < now).length,
-      unassigned: base.filter((g) => !g.booking_id).length,
+      draft: base.filter((gal) => gal.status === "draft" && !(gal.expires_at && new Date(gal.expires_at) < now)).length,
+      published: base.filter((gal) => gal.status === "published" && !(gal.expires_at && new Date(gal.expires_at) < now)).length,
+      expired: base.filter((gal) => gal.expires_at && new Date(gal.expires_at) < now).length,
+      unassigned: base.filter((gal) => !gal.booking_id).length,
     };
   }, [galleries, type]);
 
@@ -271,7 +326,7 @@ const Galleries = () => {
                           sortBy !== "newest" && "border-foreground/40 text-foreground"
                         )}
                       >
-                        <ArrowUpDown className="h-3 w-3" />
+                        {isManual ? <GripVertical className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3" />}
                         {SORT_OPTIONS.find((s) => s.value === sortBy)?.label ?? g.sortBy}
                       </Button>
                     </DropdownMenuTrigger>
@@ -287,6 +342,7 @@ const Galleries = () => {
                             value={opt.value}
                             className="text-xs font-light cursor-pointer"
                           >
+                            {opt.value === "manual" && <GripVertical className="h-3 w-3 mr-1.5 inline" />}
                             {opt.label}
                           </DropdownMenuRadioItem>
                         ))}
@@ -378,6 +434,13 @@ const Galleries = () => {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Manual hint */}
+                {isManual && (
+                  <p className="text-[10px] text-muted-foreground/60 tracking-wide">
+                    {g.manualOrderHint ?? "Drag the ⠿ handle to reorder your galleries"}
+                  </p>
+                )}
               </div>
 
               <GalleryGrid
@@ -387,6 +450,9 @@ const Galleries = () => {
                 onDelete={fetchGalleries}
                 onAssigned={fetchGalleries}
                 viewMode={viewMode}
+                isManual={isManual}
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
               />
             </div>
           </main>
@@ -404,6 +470,69 @@ const Galleries = () => {
   );
 };
 
+/* ─────────────────────────── Sortable wrapper ─────────────────────────── */
+
+function SortableGalleryItem({
+  gallery,
+  isManual,
+  viewMode,
+  onEdit,
+  onDelete,
+  onAssigned,
+}: {
+  gallery: Gallery;
+  isManual: boolean;
+  viewMode: ViewMode;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAssigned: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: gallery.id,
+    disabled: !isManual,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={viewMode === "list" ? "flex items-stretch gap-2" : "relative"}>
+      {/* Drag handle */}
+      {isManual && (
+        <button
+          {...attributes}
+          {...listeners}
+          className={cn(
+            "shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors",
+            viewMode === "list"
+              ? "w-5 self-stretch"
+              : "absolute top-2 left-2 z-10 p-1 bg-background/80 backdrop-blur-sm rounded-sm"
+          )}
+          title="Drag to reorder"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+      )}
+      <div className={viewMode === "list" && isManual ? "flex-1 min-w-0" : "w-full"}>
+        <GalleryCard
+          gallery={gallery}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAssigned={onAssigned}
+          compact={viewMode === "list"}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── Grid/List container ─────────────────────────── */
+
 function GalleryGrid({
   galleries,
   loading,
@@ -411,6 +540,9 @@ function GalleryGrid({
   onDelete,
   onAssigned,
   viewMode,
+  isManual,
+  sensors,
+  onDragEnd,
 }: {
   galleries: Gallery[];
   loading: boolean;
@@ -418,12 +550,14 @@ function GalleryGrid({
   onDelete: () => void;
   onAssigned: () => void;
   viewMode: ViewMode;
+  isManual: boolean;
+  sensors: ReturnType<typeof useSensors>;
+  onDragEnd: (event: DragEndEvent) => void;
 }) {
   const { t } = useLanguage();
   const g = t.galleries;
-  if (loading) {
-    return <GalleriesSkeleton />;
-  }
+
+  if (loading) return <GalleriesSkeleton />;
 
   if (galleries.length === 0) {
     return (
@@ -440,35 +574,32 @@ function GalleryGrid({
   }
 
   return (
-    <motion.div
-      layout
-      className={
-        viewMode === "grid"
-          ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-          : "flex flex-col gap-2"
-      }
-    >
-      <AnimatePresence mode="popLayout">
-        {galleries.map((gallery) => (
-          <motion.div
-            key={gallery.id}
-            layout
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.18 }}
-          >
-            <GalleryCard
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext
+        items={galleries.map((gal) => gal.id)}
+        strategy={viewMode === "grid" ? rectSortingStrategy : verticalListSortingStrategy}
+      >
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "flex flex-col gap-2"
+          }
+        >
+          {galleries.map((gallery) => (
+            <SortableGalleryItem
+              key={gallery.id}
               gallery={gallery}
+              isManual={isManual}
+              viewMode={viewMode}
               onEdit={() => onEdit(gallery)}
               onDelete={onDelete}
               onAssigned={onAssigned}
-              compact={viewMode === "list"}
             />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </motion.div>
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }
 
