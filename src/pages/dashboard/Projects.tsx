@@ -434,6 +434,47 @@ function KanbanCard({
           );
         })()}
       </div>
+
+      {/* Deadline popover — rendered outside the clickable card to avoid propagation issues */}
+      {showDeadlineEditor && (
+        <Popover open={deadlinePopoverOpen} onOpenChange={setDeadlinePopoverOpen}>
+          <PopoverTrigger asChild>
+            <span className="hidden" />
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-0"
+            align="start"
+            side="bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Calendar
+              mode="single"
+              selected={pickerDeadline}
+              onSelect={(d) => saveDeadline(d ? format(d, "yyyy-MM-dd") : null, deadlineTimeStr)}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+            {deadlineDateStr && (
+              <div className="px-3 pb-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+                  <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <TimePickerInput
+                    value={deadlineTimeStr}
+                    onChange={(t) => saveDeadline(deadlineDateStr, t)}
+                    minuteStep={15}
+                  />
+                </div>
+                <button
+                  onClick={() => { if (onSetDeadline) onSetDeadline(project.id, null); setDeadlinePopoverOpen(false); }}
+                  className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
+                >
+                  {p_t.removeDeadline ?? "Remove deadline"}
+                </button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }
