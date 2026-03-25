@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   addMinutes,
   isSameDay,
 } from "date-fns";
-import { ArrowLeft, ArrowRight, Camera, Check, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
 import { cn, formatTime12 } from "@/lib/utils";
 
 // ────────────────────────────────────────────
@@ -197,6 +197,9 @@ const SessionDetailPage = () => {
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<BookingStep>("product");
 
@@ -269,6 +272,19 @@ const SessionDetailPage = () => {
         .select("id, description, price, quantity")
         .eq("session_id", s.id);
       setExtras((extrasData ?? []) as SessionExtra[]);
+
+      // Portfolio images for the hero slider
+      const { data: portfolioData } = await (supabase as any)
+        .from("session_portfolio_photos")
+        .select("photo_url")
+        .eq("session_id", s.id)
+        .order("sort_order");
+      const portfolioUrls = ((portfolioData ?? []) as any[]).map((p: any) => p.photo_url as string).filter(Boolean);
+      const allSlides = [
+        ...(s.cover_image_url ? [s.cover_image_url] : []),
+        ...portfolioUrls,
+      ];
+      setPortfolioImages(allSlides);
 
       const { data: availData } = await supabase
         .from("session_availability")
@@ -343,6 +359,26 @@ const SessionDetailPage = () => {
     };
     load();
   }, [sessionSlug]);
+
+  // ────────────────────────────────────────────
+  // Slider auto-play
+  // ────────────────────────────────────────────
+
+  const sliderNext = useCallback(() => {
+    setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
+  }, [portfolioImages.length]);
+
+  const sliderPrev = useCallback(() => {
+    setSliderIndex((i) => (portfolioImages.length > 1 ? (i - 1 + portfolioImages.length) % portfolioImages.length : 0));
+  }, [portfolioImages.length]);
+
+  useEffect(() => {
+    if (portfolioImages.length <= 1 || step !== "product") return;
+    sliderTimerRef.current = setInterval(sliderNext, 4000);
+    return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
+  }, [portfolioImages.length, sliderNext, step]);
+
+
 
   // ────────────────────────────────────────────
   // Extras helpers
@@ -482,6 +518,8 @@ const SessionDetailPage = () => {
 
   const heroImage = session.cover_image_url || photographer?.hero_image_url || null;
   const initials = getInitials(photographer?.full_name);
+  // Slider images: portfolio images already includes cover; fall back to heroImage if empty
+  const slides = portfolioImages.length > 0 ? portfolioImages : (heroImage ? [heroImage] : []);
 
   // ────────────────────────────────────────────
   // Render
@@ -493,20 +531,58 @@ const SessionDetailPage = () => {
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
       {step === "product" && (
         <>
-          {/* Full-bleed hero */}
+          {/* Full-bleed hero slider */}
           <div className="relative w-full h-[60vh] min-h-[380px] overflow-hidden">
-            {heroImage ? (
-              <img src={heroImage} alt={session.title} className="w-full h-full object-cover" />
+            {/* Slides */}
+            {slides.length > 0 ? (
+              slides.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt={session.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: i === sliderIndex ? 1 : 0 }}
+                />
+              ))
             ) : (
-              <div className="w-full h-full bg-foreground" />
+              <div className="absolute inset-0 bg-foreground" />
             )}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
+            {/* Back button */}
             <button
               onClick={() => navigate(backPath)}
               className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
+            {/* Slider controls */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderPrev(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); sliderNext(); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                {/* Dots */}
+                <div className="absolute bottom-20 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                  {slides.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); setSliderIndex(i); sliderTimerRef.current = setInterval(sliderNext, 4000); }}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === sliderIndex ? "bg-white scale-125" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center">
               {photographer?.full_name && (
                 <p className="text-white/50 text-[9px] tracking-[0.45em] uppercase mb-2">{photographer.full_name}</p>
