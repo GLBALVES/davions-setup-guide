@@ -14,6 +14,7 @@ interface TimePickerInputProps {
   className?: string;
   disabled?: boolean;
   minuteStep?: number; // defaults to 15
+  selectZIndex?: number; // z-index for SelectContent portals (useful when inside high-z portals)
 }
 
 function to24h(hour12: number, minute: number, period: "AM" | "PM"): string {
