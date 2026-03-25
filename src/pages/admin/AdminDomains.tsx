@@ -1189,7 +1189,7 @@ export default function AdminDomains() {
                         {/* Chain diagnostic */}
                         {isDiagOpen && (
                           <tr key={`${p.id}-diag`}>
-                            <td colSpan={9} className="p-0">
+                            <td colSpan={10} className="p-0">
                               <ChainDiagnostic domain={p.custom_domain} photographerId={p.id} />
                             </td>
                           </tr>
