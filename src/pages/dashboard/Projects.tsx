@@ -297,7 +297,7 @@ function KanbanCard({
 
   const saveDeadline = (dateStr: string | null, timeStr: string) => {
     if (!onSetDeadline) return;
-    const val = dateStr ? `${dateStr} ${timeStr}` : null;
+    const val = dateStr ? `${dateStr}T${timeStr}` : null;
     onSetDeadline(project.id, val);
   };
 
