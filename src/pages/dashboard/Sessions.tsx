@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List, GripVertical } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List, GripVertical, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 import {
@@ -301,6 +302,7 @@ const Sessions = () => {
                               prev.map((s) => (s.id === id ? { ...s, status } : s))
                             )
                           }
+                          onDelete={(id) => setSessions((prev) => prev.filter((s) => s.id !== id))}
                         />
                       ))}
                     </div>
@@ -332,6 +334,7 @@ const Sessions = () => {
                               prev.map((s) => (s.id === id ? { ...s, status } : s))
                             )
                           }
+                          onDelete={(id) => setSessions((prev) => prev.filter((s) => s.id !== id))}
                         />
                       ))}
                     </div>
@@ -348,12 +351,18 @@ const Sessions = () => {
 
 /* ─────────────────────────── shared action helpers ─────────────────────────── */
 
-function useSessionActions(session: Session, storeSlug: string | null) {
+function useSessionActions(
+  session: Session,
+  storeSlug: string | null,
+  onDelete?: (id: string) => void
+) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { photographerId } = useAuth();
   const s = t.sessions;
   const [toggling, setToggling] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const bookingUrl = storeSlug
     ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
@@ -408,7 +417,70 @@ function useSessionActions(session: Session, storeSlug: string | null) {
     window.open(`mailto:?subject=${encodeURIComponent(session.title)}&body=${encodeURIComponent(bookingUrl)}`, "_blank");
   };
 
-  return { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, s };
+  const openDeleteDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      // Check for linked bookings or sales
+      const { data: linkedBookings } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("session_id", session.id)
+        .limit(1);
+
+      const hasLinks = linkedBookings && linkedBookings.length > 0;
+
+      if (hasLinks) {
+        // Has linked records → just deactivate
+        const { error } = await supabase
+          .from("sessions")
+          .update({ status: "draft" })
+          .eq("id", session.id)
+          .eq("photographer_id", photographerId ?? "");
+        if (error) throw error;
+        onDelete?.(session.id);
+        toast({
+          title: "Session deactivated",
+          description: "This session has linked bookings and was deactivated instead of deleted.",
+        });
+      } else {
+        // No links → safe to delete (cascade availability + day configs)
+        const { error } = await supabase
+          .from("sessions")
+          .delete()
+          .eq("id", session.id)
+          .eq("photographer_id", photographerId ?? "");
+        if (error) throw error;
+        onDelete?.(session.id);
+        toast({ title: "Session deleted" });
+      }
+    } catch {
+      toast({ title: "Failed to delete session", variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  return {
+    toggling,
+    bookingUrl,
+    handleToggleStatus,
+    handlePreview,
+    handleCopyLink,
+    handleShareWhatsApp,
+    handleShareEmail,
+    openDeleteDialog,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deleteLoading,
+    handleConfirmDelete,
+    s,
+  };
 }
 
 /* ─────────────────────────── Sortable Grid Card ─────────────────────────── */
@@ -419,12 +491,14 @@ function SortableSessionCard({
   isManual,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: session.id,
@@ -447,6 +521,7 @@ function SortableSessionCard({
         dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
     </div>
   );
@@ -460,12 +535,14 @@ function SortableSessionRow({
   isManual,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: session.id,
@@ -487,6 +564,7 @@ function SortableSessionRow({
         dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
     </div>
   );
@@ -501,6 +579,7 @@ function SessionCard({
   dragHandleProps,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
@@ -508,10 +587,11 @@ function SessionCard({
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail } = useSessionActions(session, storeSlug);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -676,10 +756,44 @@ function SessionCard({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Delete */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={openDeleteDialog}
+                    className="transition-colors text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Delete session</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{session.title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              If this session has linked bookings, it will be deactivated instead of deleted to preserve your sales history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Processing…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
@@ -693,6 +807,7 @@ function SessionRow({
   dragHandleProps,
   onClick,
   onStatusChange,
+  onDelete,
 }: {
   session: Session;
   storeSlug: string | null;
@@ -700,10 +815,11 @@ function SessionRow({
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail } = useSessionActions(session, storeSlug);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -838,8 +954,42 @@ function SessionRow({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Delete */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={openDeleteDialog}
+                className="p-1.5 transition-colors text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Delete session</TooltipContent>
+          </Tooltip>
         </div>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{session.title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              If this session has linked bookings, it will be deactivated instead of deleted to preserve your sales history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Processing…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
