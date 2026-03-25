@@ -1146,6 +1146,15 @@ const Projects = () => {
     setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
   };
 
+  const handleSetGalleryExpiry = async (projectId: string, expiresAt: string | null) => {
+    const { error } = await supabase
+      .from("galleries" as any)
+      .update({ expires_at: expiresAt } as any)
+      .eq("booking_id", projectId);
+    if (error) { toast.error("Erro ao salvar expiração: " + error.message); return; }
+    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_expires_at: expiresAt } : p));
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
