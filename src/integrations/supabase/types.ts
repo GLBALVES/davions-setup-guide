@@ -2070,6 +2070,7 @@ export type Database = {
           location: string | null
           num_photos: number
           photographer_id: string
+          portfolio_photos: string[] | null
           price: number
           reminder_days: number[]
           session_model: string
@@ -2103,6 +2104,7 @@ export type Database = {
           location?: string | null
           num_photos?: number
           photographer_id: string
+          portfolio_photos?: string[] | null
           price?: number
           reminder_days?: number[]
           session_model?: string
@@ -2136,6 +2138,7 @@ export type Database = {
           location?: string | null
           num_photos?: number
           photographer_id?: string
+          portfolio_photos?: string[] | null
           price?: number
           reminder_days?: number[]
           session_model?: string

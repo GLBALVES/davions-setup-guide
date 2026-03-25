@@ -166,6 +166,9 @@ const SessionForm = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+  const portfolioInputRef = useRef<HTMLInputElement>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
 
   // ── Form fields ──
@@ -466,10 +469,13 @@ const SessionForm = () => {
     // Load briefing
     if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
     // Load session model & campaign dates
-    const sAny4 = s as unknown as { session_model?: string; campaign_dates?: string[] | null };
+    const sAny4 = s as unknown as { session_model?: string; campaign_dates?: string[] | null; portfolio_photos?: string[] | null };
     setSessionModel((sAny4.session_model === "campaign" ? "campaign" : "standard") as "standard" | "campaign");
     if (sAny4.campaign_dates && sAny4.campaign_dates.length > 0) {
       setCampaignDates(sAny4.campaign_dates.map((d) => parseISO(d)));
+    }
+    if (sAny4.portfolio_photos && sAny4.portfolio_photos.length > 0) {
+      setPortfolioPhotos(sAny4.portfolio_photos);
     }
     // Sync to editor once loaded
     if (editor && bodyHtml) {
@@ -477,6 +483,37 @@ const SessionForm = () => {
     }
 
     setLoading(false);
+  };
+
+  // ────────────────────────────────────────────
+  // Portfolio photo upload
+  // ────────────────────────────────────────────
+
+  const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !user) return;
+    const remaining = 5 - portfolioPhotos.length;
+    if (remaining <= 0) return;
+    const toUpload = files.slice(0, remaining);
+    setUploadingPortfolio(true);
+    const newUrls: string[] = [];
+    for (const file of toUpload) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("session-covers").upload(path, file, { upsert: true });
+      if (!error) {
+        const { data } = supabase.storage.from("session-covers").getPublicUrl(path);
+        newUrls.push(data.publicUrl);
+      }
+    }
+    setPortfolioPhotos((prev) => [...prev, ...newUrls].slice(0, 5));
+    setUploadingPortfolio(false);
+    // reset input
+    e.target.value = "";
+  };
+
+  const handleRemovePortfolioPhoto = (idx: number) => {
+    setPortfolioPhotos((prev) => prev.filter((_, i) => i !== idx));
   };
 
   // ────────────────────────────────────────────
@@ -538,6 +575,7 @@ const SessionForm = () => {
       campaign_dates: sessionModel === "campaign" && campaignDates && campaignDates.length > 0
         ? campaignDates.map((d) => format(d, "yyyy-MM-dd"))
         : null,
+      portfolio_photos: portfolioPhotos.length > 0 ? portfolioPhotos : null,
     };
 
     if (isEdit && sessionId) {
@@ -1106,6 +1144,62 @@ const SessionForm = () => {
                       accept="image/*"
                       className="hidden"
                       onChange={handleCoverUpload}
+                    />
+                  </section>
+
+                  {/* Portfolio Photos */}
+                  <section className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                        Fotos do Portfólio
+                        <span className="ml-2 text-muted-foreground/50">({portfolioPhotos.length}/5)</span>
+                      </Label>
+                      {portfolioPhotos.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => portfolioInputRef.current?.click()}
+                          disabled={uploadingPortfolio}
+                          className="flex items-center gap-1.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors border border-border px-2.5 py-1 rounded-sm hover:border-foreground/40"
+                        >
+                          {uploadingPortfolio ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                          Adicionar
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {portfolioPhotos.map((url, idx) => (
+                        <div key={idx} className="relative aspect-square group overflow-hidden border border-border rounded-sm">
+                          <img src={url} alt={`Portfolio ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePortfolioPhoto(idx)}
+                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {portfolioPhotos.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => portfolioInputRef.current?.click()}
+                          disabled={uploadingPortfolio}
+                          className="aspect-square border border-dashed border-border rounded-sm flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:border-muted-foreground/40 transition-colors"
+                        >
+                          {uploadingPortfolio ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50">
+                      Até 5 fotos exibidas na página pública da sessão para mostrar seu trabalho.
+                    </p>
+                    <input
+                      ref={portfolioInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handlePortfolioUpload}
                     />
                   </section>
 
