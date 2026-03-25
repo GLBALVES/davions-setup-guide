@@ -1539,6 +1539,7 @@ export type Database = {
           full_name: string | null
           hero_image_url: string | null
           id: string
+          package_name: string | null
           store_slug: string | null
           stripe_account_id: string | null
           stripe_connected_at: string | null
@@ -1559,6 +1560,7 @@ export type Database = {
           full_name?: string | null
           hero_image_url?: string | null
           id: string
+          package_name?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null
@@ -1579,6 +1581,7 @@ export type Database = {
           full_name?: string | null
           hero_image_url?: string | null
           id?: string
+          package_name?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null
