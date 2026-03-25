@@ -189,7 +189,7 @@ const Bookings = () => {
         .from("bookings")
         .select(`
           *,
-          sessions ( title, briefing_id ),
+          sessions ( title, briefing_id, session_type_id, session_types ( name ) ),
           session_availability ( start_time, end_time, date )
         `)
         .eq("photographer_id", photographerId ?? user!.id)
