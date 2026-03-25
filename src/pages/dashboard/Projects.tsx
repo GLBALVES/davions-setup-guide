@@ -414,6 +414,7 @@ function KanbanCard({
                   ref={deadlineAnchorRef}
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
                   className={`group/deadline flex items-center gap-0.5 shrink-0 font-medium ${deadlineStatus ? DEADLINE_BADGE[deadlineStatus] : "text-muted-foreground/50"} hover:opacity-80 transition-opacity`}
                 >
