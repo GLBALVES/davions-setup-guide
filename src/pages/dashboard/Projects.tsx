@@ -504,6 +504,38 @@ function KanbanCard({
           </div>
         </div>
       )}
+
+      {/* Gallery expiry popover */}
+      {isGalleryStage && expiryPopoverOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(false); }}
+        >
+          <div
+            className="absolute z-50 bg-popover border border-border rounded-md shadow-md p-0 w-auto"
+            style={{ top: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().bottom + 4 : 0, left: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().left : 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Calendar
+              mode="single"
+              selected={pickerExpiry}
+              onSelect={(d) => { saveExpiry(d ? format(d, "yyyy-MM-dd") : null); setExpiryPopoverOpen(false); }}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+            {expiryDateStr && (
+              <div className="px-3 pb-3">
+                <button
+                  onClick={() => { saveExpiry(null); setExpiryPopoverOpen(false); }}
+                  className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm"
+                >
+                  {p_t.removeDeadline ?? "Remove expiry"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
