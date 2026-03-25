@@ -465,6 +465,12 @@ const SessionForm = () => {
     if (existingContract) setSelectedContractId("existing");
     // Load briefing
     if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
+    // Load session model & campaign dates
+    const sAny4 = s as unknown as { session_model?: string; campaign_dates?: string[] | null };
+    setSessionModel((sAny4.session_model === "campaign" ? "campaign" : "standard") as "standard" | "campaign");
+    if (sAny4.campaign_dates && sAny4.campaign_dates.length > 0) {
+      setCampaignDates(sAny4.campaign_dates.map((d) => parseISO(d)));
+    }
     // Sync to editor once loaded
     if (editor && bodyHtml) {
       editor.commands.setContent(bodyHtml);
