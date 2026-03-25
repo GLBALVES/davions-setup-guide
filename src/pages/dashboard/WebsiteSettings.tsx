@@ -1478,6 +1478,7 @@ const WebsiteSettings = () => {
         isCurrentTemplate={siteTemplate === previewModalTemplate}
       />
     )}
+    </>
   );
 };
 
