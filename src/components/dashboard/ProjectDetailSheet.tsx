@@ -1007,7 +1007,13 @@ export function ProjectDetailSheet({
   const renderDeadlineSection = () => {
     if (project.stage !== "shot" && project.stage !== "post_production") return null;
     const label = project.stage === "shot" ? tp.deadlineProofGallery : tp.deadlineFinalDelivery;
-    const deadline = project.gallery_deadline ? parseISO(project.gallery_deadline) : undefined;
+
+    // gallery_deadline may be stored as "yyyy-MM-dd" or "yyyy-MM-dd HH:mm"
+    const rawDeadline = project.gallery_deadline ?? null;
+    const deadlineDateStr = rawDeadline ? rawDeadline.substring(0, 10) : null;
+    const deadlineTimeStr = rawDeadline && rawDeadline.length > 10 ? rawDeadline.substring(11, 16) : "09:00";
+    const deadline = deadlineDateStr ? parseISO(`${deadlineDateStr}T${deadlineTimeStr}:00`) : undefined;
+
     const now = new Date();
     const urgencyBadge = (() => {
       if (!deadline) return null;
@@ -1022,6 +1028,12 @@ export function ProjectDetailSheet({
       const color = d <= 3 ? "text-orange-500" : d <= 7 ? "text-yellow-600" : "text-emerald-500";
       return <span className={cn("text-[10px] font-medium shrink-0", color)}>{tp.daysRemaining(d)}</span>;
     })();
+
+    const saveDeadline = (dateStr: string | null, timeStr: string) => {
+      const val = dateStr ? `${dateStr} ${timeStr}` : null;
+      save({ gallery_deadline: val } as any);
+    };
+
     return (
       <div className="flex flex-col gap-1.5">
         <Label className="text-[10px] tracking-widest uppercase text-muted-foreground flex items-center gap-1">
@@ -1035,15 +1047,27 @@ export function ProjectDetailSheet({
                 deadline ? isPast(deadline) ? "border-destructive/50 text-destructive" : "border-input text-foreground hover:border-foreground/40" : "border-input text-muted-foreground/60 hover:border-foreground/40"
               )}>
                 <CalendarIcon className="h-3 w-3 shrink-0" />
-                <span className="text-xs">{deadline ? format(deadline, "d MMM yyyy") : tp.setDeadline}</span>
+                <span className="text-xs">
+                  {deadline
+                    ? `${format(deadline, "d MMM yyyy")} · ${format(deadline, "h:mm aa")}`
+                    : tp.setDeadline}
+                </span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start" side="bottom">
               <Calendar mode="single" selected={deadline}
-                onSelect={(d) => save({ gallery_deadline: d ? format(d, "yyyy-MM-dd") : null } as any)}
+                onSelect={(d) => saveDeadline(d ? format(d, "yyyy-MM-dd") : null, deadlineTimeStr)}
                 initialFocus className={cn("p-3 pointer-events-auto")} />
-              {deadline && (
-                <div className="px-3 pb-3">
+              {deadlineDateStr && (
+                <div className="px-3 pb-3 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 border border-border rounded-sm p-2">
+                    <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <TimePickerInput
+                      value={deadlineTimeStr}
+                      onChange={(t) => saveDeadline(deadlineDateStr, t)}
+                      minuteStep={15}
+                    />
+                  </div>
                   <button onClick={() => save({ gallery_deadline: null } as any)}
                     className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors py-1 border border-dashed border-destructive/20 rounded-sm">
                     {tp.removeDeadline2}
