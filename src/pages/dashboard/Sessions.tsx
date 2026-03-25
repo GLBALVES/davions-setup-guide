@@ -595,6 +595,11 @@ function SessionCard({
                 {session.location}
               </span>
             )}
+            {session.session_model === "campaign" && session.campaign_dates && session.campaign_dates.length > 0 && (
+              <span className="flex items-center gap-1 text-primary">
+                <span className="font-medium">{session.campaign_dates.length}d</span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-2">
