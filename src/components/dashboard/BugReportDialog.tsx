@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bug, X, Upload, ImageIcon, Loader2, CheckCircle2, Video, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,23 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
   const [loadingReports, setLoadingReports] = useState(false);
   const [expandedReport, setExpandedReport] = useState<string | null>(null);
 
+  // Unread admin replies
+  const [unreadReportIds, setUnreadReportIds] = useState<Set<string>>(new Set());
+  const seenKey = user ? `bug_seen_${user.id}` : null;
+
+  const getSeenMap = (): Record<string, string> => {
+    if (!seenKey) return {};
+    try { return JSON.parse(localStorage.getItem(seenKey) || "{}"); } catch { return {}; }
+  };
+
+  const markReportSeen = (reportId: string, lastMsgAt: string) => {
+    if (!seenKey) return;
+    const map = getSeenMap();
+    map[reportId] = lastMsgAt;
+    localStorage.setItem(seenKey, JSON.stringify(map));
+    setUnreadReportIds((prev) => { const n = new Set(prev); n.delete(reportId); return n; });
+  };
+
   const fetchMyReports = async () => {
     if (!user) return;
     setLoadingReports(true);
@@ -63,7 +81,60 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
       .order("created_at", { ascending: false });
     setMyReports(data || []);
     setLoadingReports(false);
+
+    // Check for unread admin messages for each report
+    if (data && data.length > 0) {
+      const ids = data.map((r: BugReport) => r.id);
+      const { data: msgs } = await (supabase as any)
+        .from("bug_report_messages")
+        .select("bug_report_id, created_at, is_admin")
+        .in("bug_report_id", ids)
+        .eq("is_admin", true)
+        .order("created_at", { ascending: false });
+
+      if (msgs) {
+        const seenMap = getSeenMap();
+        const unread = new Set<string>();
+        const latestByReport: Record<string, string> = {};
+        for (const msg of msgs) {
+          if (!latestByReport[msg.bug_report_id]) {
+            latestByReport[msg.bug_report_id] = msg.created_at;
+          }
+        }
+        for (const [reportId, latestAt] of Object.entries(latestByReport)) {
+          const seenAt = seenMap[reportId];
+          if (!seenAt || seenAt < latestAt) unread.add(reportId);
+        }
+        setUnreadReportIds(unread);
+      }
+    }
   };
+
+  // Realtime: listen for new admin messages while dialog is open
+  useEffect(() => {
+    if (!open || !user) return;
+    const channel: RealtimeChannel = (supabase as any)
+      .channel(`bug-msgs-user-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bug_report_messages", filter: `is_admin=eq.true` },
+        (payload: any) => {
+          const reportId = payload.new?.bug_report_id;
+          const createdAt = payload.new?.created_at;
+          if (!reportId || !createdAt) return;
+          // Only mark unread if it's not the currently expanded report
+          setExpandedReport((expanded) => {
+            if (expanded !== reportId) {
+              setUnreadReportIds((prev) => new Set([...prev, reportId]));
+            } else {
+              // auto-mark seen if already open
+              markReportSeen(reportId, createdAt);
+            }
+            return expanded;
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [open, user]);
 
   useEffect(() => {
     if (open) fetchMyReports();
@@ -153,10 +224,13 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
         <Tabs defaultValue="new">
           <TabsList className="w-full mb-2">
             <TabsTrigger value="new" className="flex-1 text-xs uppercase tracking-widest">New Report</TabsTrigger>
-            <TabsTrigger value="my" className="flex-1 text-xs uppercase tracking-widest">
+            <TabsTrigger value="my" className="flex-1 text-xs uppercase tracking-widest relative">
               My Reports
               {myReports.length > 0 && (
                 <span className="ml-1.5 bg-muted text-muted-foreground text-[10px] rounded-full px-1.5 py-0.5">{myReports.length}</span>
+              )}
+              {unreadReportIds.size > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
               )}
             </TabsTrigger>
           </TabsList>
@@ -282,17 +356,28 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                 {myReports.map((report) => {
                   const scfg = STATUS_LABELS[report.status] || STATUS_LABELS.open;
                   const isExpanded = expandedReport === report.id;
+                  const hasUnread = unreadReportIds.has(report.id);
                   return (
                     <div key={report.id} className={cn("border border-border rounded-md overflow-hidden", isExpanded && "border-foreground/20")}>
                       <button
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
-                        onClick={() => setExpandedReport(isExpanded ? null : report.id)}
+                        onClick={() => {
+                          const next = isExpanded ? null : report.id;
+                          setExpandedReport(next);
+                          if (next && hasUnread) markReportSeen(report.id, new Date().toISOString());
+                        }}
                       >
-                        <MessageSquare size={12} className="shrink-0 text-muted-foreground" />
+                        <div className="relative shrink-0">
+                          <MessageSquare size={12} className="text-muted-foreground" />
+                          {hasUnread && (
+                            <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-destructive" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-light truncate">{report.title}</p>
+                          <p className={cn("text-sm truncate", hasUnread ? "font-medium" : "font-light")}>{report.title}</p>
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                             {new Date(report.created_at).toLocaleDateString()}
+                            {hasUnread && <span className="ml-2 text-destructive">• New reply</span>}
                           </p>
                         </div>
                         <Badge variant="outline" className={cn("text-[10px] tracking-widest uppercase font-light shrink-0", scfg.class)}>
