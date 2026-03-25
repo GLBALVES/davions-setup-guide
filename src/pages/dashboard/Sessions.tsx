@@ -46,6 +46,8 @@ interface Session {
   status: string;
   created_at: string;
   sort_order: number;
+  session_model?: string | null;
+  campaign_dates?: string[] | null;
 }
 
 const Sessions = () => {
@@ -548,7 +550,12 @@ function SessionCard({
             </button>
           )}
 
-          <div className="absolute top-2 right-2 group/badge">
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 group/badge">
+            {session.session_model === "campaign" && (
+              <Badge variant="secondary" className="text-[9px] tracking-wider uppercase font-light bg-primary/10 text-primary border-primary/20">
+                Campanha
+              </Badge>
+            )}
             <button
               onClick={(e) => handleToggleStatus(e, onStatusChange)}
               disabled={toggling}
@@ -586,6 +593,11 @@ function SessionCard({
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 {session.location}
+              </span>
+            )}
+            {session.session_model === "campaign" && session.campaign_dates && session.campaign_dates.length > 0 && (
+              <span className="flex items-center gap-1 text-primary">
+                <span className="font-medium">{session.campaign_dates.length}d</span>
               </span>
             )}
           </div>
