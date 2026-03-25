@@ -472,14 +472,14 @@ function KanbanCard({
         })()}
       </div>
 
-      {/* Deadline popover — anchored to a ref button, rendered outside clickable card */}
-      {showDeadlineEditor && deadlinePopoverOpen && (
+      {/* Deadline popover — portalled to body to escape dnd-kit transform context */}
+      {showDeadlineEditor && deadlinePopoverOpen && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[9999]"
           onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(false); }}
         >
           <div
-            className="absolute z-50 bg-popover border border-border rounded-md shadow-md p-0 w-auto"
+            className="absolute z-[10000] bg-popover border border-border rounded-md shadow-md p-0 w-auto"
             style={{ top: deadlineAnchorRef.current ? deadlineAnchorRef.current.getBoundingClientRect().bottom + 4 : 0, left: deadlineAnchorRef.current ? deadlineAnchorRef.current.getBoundingClientRect().left : 0 }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -509,17 +509,18 @@ function KanbanCard({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Gallery expiry popover */}
-      {isGalleryStage && expiryPopoverOpen && (
+      {/* Gallery expiry popover — portalled to body to escape dnd-kit transform context */}
+      {isGalleryStage && expiryPopoverOpen && ReactDOM.createPortal(
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[9999]"
           onClick={(e) => { e.stopPropagation(); setExpiryPopoverOpen(false); }}
         >
           <div
-            className="absolute z-50 bg-popover border border-border rounded-md shadow-md p-0 w-auto"
+            className="absolute z-[10000] bg-popover border border-border rounded-md shadow-md p-0 w-auto"
             style={{ top: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().bottom + 4 : 0, left: expiryAnchorRef.current ? expiryAnchorRef.current.getBoundingClientRect().left : 0 }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -541,7 +542,8 @@ function KanbanCard({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
