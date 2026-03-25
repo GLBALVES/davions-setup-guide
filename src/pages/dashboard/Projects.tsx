@@ -597,6 +597,32 @@ function KanbanColumn({
     else { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); }
   };
 
+  const isBulkStage = ["shot", "post_production", "proof_gallery", "final_gallery"].includes(stage.key);
+  const isGalleryBulk = stage.key === "proof_gallery" || stage.key === "final_gallery";
+
+  const handleBulkApply = (date: Date | undefined) => {
+    if (!date) return;
+    const iso = date.toISOString().split("T")[0];
+    if (isGalleryBulk) {
+      projects.forEach((p) => onSetGalleryExpiry?.(p.id, iso));
+    } else {
+      projects.forEach((p) => onSetDeadline?.(p.id, iso));
+    }
+    setBulkDate(date);
+    setBulkOpen(false);
+    import("sonner").then(({ toast }) => toast.success(t.projects.bulkDeadlineApplied(projects.length)));
+  };
+
+  const handleBulkClear = () => {
+    if (isGalleryBulk) {
+      projects.forEach((p) => onSetGalleryExpiry?.(p.id, null));
+    } else {
+      projects.forEach((p) => onSetDeadline?.(p.id, null));
+    }
+    setBulkDate(undefined);
+    setBulkOpen(false);
+  };
+
   // Example date: today + shotDeadlineDays
   const { lang } = useLanguage();
   const dateLocale = lang === "pt" ? "pt-BR" : lang === "es" ? "es-MX" : "en-US";
