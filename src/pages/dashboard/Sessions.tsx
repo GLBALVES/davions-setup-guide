@@ -334,6 +334,7 @@ const Sessions = () => {
                               prev.map((s) => (s.id === id ? { ...s, status } : s))
                             )
                           }
+                          onDelete={(id) => setSessions((prev) => prev.filter((s) => s.id !== id))}
                         />
                       ))}
                     </div>
