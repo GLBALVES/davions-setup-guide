@@ -554,6 +554,7 @@ function KanbanColumn({
   postProdDeadlineDays,
   onSetPostProdDeadlineDays,
   onSetDeadline,
+  onSetGalleryExpiry,
 }: {
   stage: { key: Stage; label: string; color: string };
   projects: ClientProject[];
@@ -567,6 +568,7 @@ function KanbanColumn({
   postProdDeadlineDays?: number | null;
   onSetPostProdDeadlineDays?: (days: number | null) => void;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
+  onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { t } = useLanguage();
