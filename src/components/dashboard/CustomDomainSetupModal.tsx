@@ -536,12 +536,17 @@ export function CustomDomainSetupModal({ open, onOpenChange, initialDomain = "",
     const parts = d.toLowerCase().split(".");
     const lastTwo = parts.slice(-2).join(".");
     const rootCount = COMPOUND_TLDS.includes(lastTwo) ? 3 : 2;
-    // Root parts reversed (e.g. ["com","mystudio"] → "com.mystudio")
     const rootParts = parts.slice(-rootCount);
-    const tld = rootParts.slice(0, -1).join(".");         // e.g. "com"
-    const sld = rootParts[rootParts.length - 1];          // e.g. "mystudio"
-    const tldReversed = tld.split(".").reverse().join("."); // stays "com" for single TLD
-    return `${tldReversed}.${sld}.photo`;
+    if (rootCount === 3) {
+      // Compound TLD: e.g. ["mystudio","com","br"] → "com.br.mystudio.photo"
+      const tld = rootParts.slice(1).join(".");
+      const sld = rootParts[0];
+      return `${tld}.${sld}.photo`;
+    }
+    // Simple: e.g. ["mystudio","com"] → "com.mystudio.photo"
+    const tld = rootParts[1];
+    const sld = rootParts[0];
+    return `${tld}.${sld}.photo`;
   };
 
   const saveDomain = async () => {
