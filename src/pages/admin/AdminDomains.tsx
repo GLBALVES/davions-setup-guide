@@ -1180,7 +1180,7 @@ export default function AdminDomains() {
                         {/* DNS expansion */}
                         {isOpen && (
                           <tr key={`${p.id}-dns`}>
-                            <td colSpan={9} className="p-0">
+                            <td colSpan={10} className="p-0">
                               <DnsExpansion domain={p.custom_domain} dns={dns} />
                             </td>
                           </tr>
