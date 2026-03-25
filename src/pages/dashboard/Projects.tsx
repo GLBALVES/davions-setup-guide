@@ -378,7 +378,7 @@ function KanbanCard({
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); setDeadlinePopoverOpen(true); }}
+                  onClick={(e) => { e.stopPropagation(); setDraftDeadlineDate(deadlineDateStr); setDraftDeadlineTime(deadlineTimeStr); setDeadlinePopoverOpen(true); }}
                   className="group/deadline flex items-center gap-1 shrink-0 hover:text-foreground transition-colors"
                 >
                   <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
