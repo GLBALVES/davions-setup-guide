@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bug, X, Upload, ImageIcon, Loader2, CheckCircle2, Video, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
