@@ -776,6 +776,51 @@ function KanbanColumn({
               </PopoverContent>
             </Popover>
           )}
+          {/* Bulk deadline picker — for shot, post_production, proof_gallery, final_gallery */}
+          {isBulkStage && projects.length > 0 && (
+            <Popover open={bulkOpen} onOpenChange={setBulkOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                    bulkDate
+                      ? "text-primary bg-primary/10 hover:bg-primary/20"
+                      : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                  }`}
+                  title={t.projects.bulkDeadlineTitle(
+                    ({ shot: t.projects.shot, post_production: t.projects.post_production, proof_gallery: t.projects.proof_gallery, final_gallery: t.projects.final_gallery } as Record<string,string>)[stage.key] ?? stage.label
+                  )}
+                >
+                  <CalendarIcon className="h-3 w-3 shrink-0" />
+                  {bulkDate && <span>{format(bulkDate, "d MMM")}</span>}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-auto p-0" onClick={(e) => e.stopPropagation()}>
+                <div className="p-3 border-b">
+                  <p className="text-xs font-semibold">{t.projects.bulkDeadlineTitle(
+                    ({ shot: t.projects.shot, post_production: t.projects.post_production, proof_gallery: t.projects.proof_gallery, final_gallery: t.projects.final_gallery } as Record<string,string>)[stage.key] ?? stage.label
+                  )}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{t.projects.bulkDeadlineDesc}</p>
+                </div>
+                <Calendar
+                  mode="single"
+                  selected={bulkDate}
+                  onSelect={handleBulkApply}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+                {bulkDate && (
+                  <div className="p-2 border-t">
+                    <button
+                      onClick={handleBulkClear}
+                      className="w-full text-[11px] text-destructive/70 hover:text-destructive transition-colors text-left px-1"
+                    >
+                      {t.projects.bulkDeadlineClear}
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          )}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
             onClick={() => onAddCard(stage.key)}
