@@ -38,7 +38,7 @@ export function TemplatePreviewModal({
             <span className="text-[10px] text-muted-foreground font-light">Preview</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pr-8">
             <Button
               variant="outline"
               size="sm"
