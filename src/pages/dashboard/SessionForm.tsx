@@ -212,6 +212,8 @@ const SessionForm = () => {
   // ── Session model ──
   const [sessionModel, setSessionModel] = useState<"standard" | "campaign">("standard");
   const [campaignDates, setCampaignDates] = useState<Date[] | undefined>(undefined);
+  /** For campaign sessions: the time slots to apply to ALL campaign dates */
+  const [campaignSlots, setCampaignSlots] = useState<Array<{ start: string; end: string }>>([]);
 
   // ── Contract ──
   interface ContractTemplate { id: string; name: string; body: string; }
