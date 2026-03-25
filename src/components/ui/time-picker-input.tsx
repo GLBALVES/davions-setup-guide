@@ -38,6 +38,7 @@ export function TimePickerInput({
   className,
   disabled = false,
   minuteStep = 15,
+  selectZIndex,
 }: TimePickerInputProps) {
   const { hour12, minute, period } = parse24h(value || "09:00");
 
@@ -59,6 +60,8 @@ export function TimePickerInput({
     onChange(to24h(hour12, minute, p));
   };
 
+  const contentStyle = selectZIndex ? { zIndex: selectZIndex } : undefined;
+
   return (
     <div className={cn("flex items-center gap-1", className)}>
       {/* Hour */}
@@ -66,7 +69,7 @@ export function TimePickerInput({
         <SelectTrigger className="w-14 h-8 text-xs px-2 rounded-none">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent style={contentStyle}>
           {hours.map((h) => (
             <SelectItem key={h} value={String(h)} className="text-xs">
               {h}
@@ -82,7 +85,7 @@ export function TimePickerInput({
         <SelectTrigger className="w-14 h-8 text-xs px-2 rounded-none">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent style={contentStyle}>
           {minutes.map((m) => (
             <SelectItem key={m} value={String(m)} className="text-xs">
               {String(m).padStart(2, "0")}
