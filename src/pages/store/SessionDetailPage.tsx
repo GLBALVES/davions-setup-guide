@@ -209,6 +209,8 @@ const SessionDetailPage = () => {
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
+  const [campaignSlots, setCampaignSlots] = useState<CampaignSlotDef[]>([]);
+  const [isCampaign, setIsCampaign] = useState(false);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [sliderIndex, setSliderIndex] = useState(0);
