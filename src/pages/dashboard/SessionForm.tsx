@@ -780,7 +780,7 @@ const SessionForm = () => {
         session_id: sessionId,
         photographer_id: user.id,
         description: e.description.trim(),
-        quantity: parseInt(e.quantity) || 1,
+        quantity: parseInt(e.quantity) || 99,
         price: Math.round(parseFloat(e.price || "0") * 100),
       }));
       const { error } = await supabase
@@ -2277,11 +2277,12 @@ const SessionForm = () => {
                               <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Máx. por reserva</Label>
                               <input
                                 type="number" min="1" step="1"
-                                value={extra.quantity}
-                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))}
-                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                value={extra.quantity === "99" ? "" : extra.quantity}
+                                placeholder="∞"
+                                onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, quantity: e.target.value === "" ? "99" : e.target.value } : x))}
+                                className="h-8 text-sm border border-input bg-background rounded-md px-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                               />
-                              <p className="text-[9px] text-muted-foreground">Deixe em 1 para sem limite (até 99)</p>
+                              <p className="text-[9px] text-muted-foreground">Deixe em branco para sem limite</p>
                             </div>
                             <div className="flex flex-col gap-1.5">
                               <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price</Label>
@@ -2303,7 +2304,7 @@ const SessionForm = () => {
 
                     <button
                       type="button"
-                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "1", price: "", _local: true }])}
+                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "99", price: "", _local: true }])}
                       className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
                     >
                       <Plus className="h-3.5 w-3.5" />
