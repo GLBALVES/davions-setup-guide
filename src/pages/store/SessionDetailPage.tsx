@@ -684,9 +684,12 @@ const SessionDetailPage = () => {
 
             // The actual visual index inside loopFrames
             const visualIdx = sliderIndex + loopOffset;
-            // Full-width slides (100%) — no peek
+            // Peek layout: center slide ~70%, adjacent slides visible on sides
+            const slidePercent = 70;
+            const peekPercent = (100 - slidePercent) / 2;
             const containerWidth = sliderContainerRef.current?.offsetWidth || window.innerWidth;
-            const translatePx = -(visualIdx * containerWidth) + dragOffset;
+            const slideW = containerWidth * slidePercent / 100;
+            const translatePx = -(visualIdx * slideW) + (containerWidth * peekPercent / 100) + dragOffset;
             const isAnimating = dragOffset === 0 && !isLoopJumping.current;
 
             // Handle loop jump when transition ends
@@ -731,20 +734,13 @@ const SessionDetailPage = () => {
                   }}
                 >
                   {loopFrames.map((frame, i) => {
+                    const isActive = i === visualIdx;
                     return (
-                    <div key={i} className="relative h-full overflow-hidden" style={{ width: containerWidth, flexShrink: 0 }}>
+                    <div key={i} className="relative h-full overflow-hidden transition-all duration-300" style={{ width: slideW, flexShrink: 0, opacity: isActive ? 1 : 0.4, filter: isActive ? "none" : "brightness(0.5)" }}>
                       {frame.type === "single" ? (
                         <>
-                          {frame.src && (
-                            <>
-                              {/* Blurred background fill */}
-                              <img src={frame.src} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" draggable={false} aria-hidden />
-                              {/* Sharp centered image */}
-                              <img src={frame.src} alt={session.title} className="relative w-full h-full object-contain z-[1]" draggable={false} />
-                            </>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75 z-[2]" />
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
+                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
+                          {isActive && <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />}
                         </>
                       ) : (
                         <>
