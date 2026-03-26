@@ -566,7 +566,7 @@ const SessionDetailPage = () => {
             const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
 
             return (
-              <div className="relative w-full overflow-hidden bg-black" style={{ height: "100vh", minHeight: 500 }}>
+              <div className="relative w-full overflow-hidden bg-black" style={{ height: "70vh", minHeight: 420 }}>
 
                 {/* ── Single full-bleed photo frame ── */}
                 <div
@@ -584,28 +584,51 @@ const SessionDetailPage = () => {
                   <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
                 </div>
 
-                {/* ── Grid mosaic frame ── */}
+                {/* ── Masonry mosaic frame ── */}
                 <div
                   className="absolute inset-0 transition-opacity duration-1000"
                   style={{ opacity: currentIsGrid ? 1 : 0 }}
                 >
-                  {/* Mosaic: left grid + right hero */}
-                  <div className="flex h-full">
-                    {/* Left mosaic grid */}
-                    <div className="flex-1 grid grid-cols-3 gap-[2px]" style={{ gridTemplateRows: "repeat(3, 1fr)" }}>
-                      {currentGridPhotos.slice(0, 9).map((src, gi) => (
-                        <div key={gi} className="overflow-hidden bg-black/50">
-                          <img src={src} alt="" className="w-full h-full object-cover opacity-95 hover:opacity-100 transition-opacity" />
-                        </div>
-                      ))}
+                  {/* True masonry: 4 columns of varying heights */}
+                  <div className="flex h-full gap-[2px]">
+                    {/* Col 1: tall + short */}
+                    <div className="flex flex-col gap-[2px] flex-1">
+                      <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
+                        <img src={currentGridPhotos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
                     </div>
-                    {/* Right large hero — show the first photo */}
-                    <div className="w-1/2 overflow-hidden">
-                      <img
-                        src={currentGridPhotos[0] ?? slides[0]}
-                        alt={session.title}
-                        className="w-full h-full object-cover"
-                      />
+                    {/* Col 2: short + tall */}
+                    <div className="flex flex-col gap-[2px] flex-1">
+                      <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
+                        <img src={currentGridPhotos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    {/* Col 3: medium + medium */}
+                    <div className="flex flex-col gap-[2px] flex-1">
+                      <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
+                        <img src={currentGridPhotos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                    {/* Col 4: 3 stacked equal */}
+                    <div className="flex flex-col gap-[2px] flex-1">
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[7] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="overflow-hidden flex-1">
+                        <img src={currentGridPhotos[8] ?? slides[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
                     </div>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
