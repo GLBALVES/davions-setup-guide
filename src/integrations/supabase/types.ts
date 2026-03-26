@@ -1836,8 +1836,10 @@ export type Database = {
           end_time: string
           id: string
           is_booked: boolean
+          location_override: string | null
           photographer_id: string
           session_id: string
+          spots: number
           start_time: string
         }
         Insert: {
@@ -1847,8 +1849,10 @@ export type Database = {
           end_time: string
           id?: string
           is_booked?: boolean
+          location_override?: string | null
           photographer_id: string
           session_id: string
+          spots?: number
           start_time: string
         }
         Update: {
@@ -1858,8 +1862,10 @@ export type Database = {
           end_time?: string
           id?: string
           is_booked?: boolean
+          location_override?: string | null
           photographer_id?: string
           session_id?: string
+          spots?: number
           start_time?: string
         }
         Relationships: [
