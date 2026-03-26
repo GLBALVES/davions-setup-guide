@@ -676,10 +676,30 @@ const SessionDetailPage = () => {
               }
             });
 
-            const activeIdx = sliderIndex % totalFrames;
-            // translateX: each slide is 100% wide; drag offset is added live
-            const translateX = -(activeIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
-            const isAnimating = dragOffset === 0;
+            // For infinite loop: clone last frame at start and first frame at end
+            const loopFrames = frames.length > 1
+              ? [frames[frames.length - 1], ...frames, frames[0]]
+              : frames;
+            const loopOffset = frames.length > 1 ? 1 : 0; // offset for the prepended clone
+
+            // The actual visual index inside loopFrames
+            const visualIdx = sliderIndex + loopOffset;
+            const translateX = -(visualIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
+            const isAnimating = dragOffset === 0 && !isLoopJumping.current;
+
+            // Handle loop jump when transition ends
+            const handleTransitionEnd = () => {
+              if (frames.length <= 1) return;
+              if (sliderIndex >= totalFrames) {
+                isLoopJumping.current = true;
+                setSliderIndex(0);
+                requestAnimationFrame(() => { isLoopJumping.current = false; });
+              } else if (sliderIndex < 0) {
+                isLoopJumping.current = true;
+                setSliderIndex(totalFrames - 1);
+                requestAnimationFrame(() => { isLoopJumping.current = false; });
+              }
+            };
 
             return (
               <div
