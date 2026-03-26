@@ -743,7 +743,7 @@ const SessionDetailPage = () => {
                     <div key={i} className="relative h-full transition-opacity duration-300" style={{ width: slideW, flexShrink: 0, opacity: isActive ? 1 : 0.5 }}>
                       {frame.type === "single" ? (
                         <>
-                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
+                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-contain" draggable={false} />}
                           <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
                         </>
                       ) : (
