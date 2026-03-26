@@ -452,6 +452,13 @@ const SessionDetailPage = () => {
   // ────────────────────────────────────────────
   // Slider auto-play
   // ────────────────────────────────────────────
+  // Slider with real drag/swipe movement (translateX)
+  // ────────────────────────────────────────────
+
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
 
   const sliderNext = useCallback(() => {
     setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
@@ -467,26 +474,28 @@ const SessionDetailPage = () => {
     return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
   }, [portfolioImages.length, sliderNext, step]);
 
-  // Swipe / drag support for the hero slider
-  const dragStartX = useRef<number | null>(null);
-  const isDragging = useRef(false);
-
   const handleDragStart = useCallback((clientX: number) => {
     dragStartX.current = clientX;
     isDragging.current = false;
+    if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
   }, []);
 
   const handleDragMove = useCallback((clientX: number) => {
     if (dragStartX.current === null) return;
-    if (Math.abs(clientX - dragStartX.current) > 5) isDragging.current = true;
+    const delta = clientX - dragStartX.current;
+    if (Math.abs(delta) > 5) isDragging.current = true;
+    setDragOffset(delta);
   }, []);
 
   const handleDragEnd = useCallback((clientX: number) => {
     if (dragStartX.current === null) return;
     const delta = clientX - dragStartX.current;
     dragStartX.current = null;
-    if (!isDragging.current || Math.abs(delta) < 40) return;
-    if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
+    setDragOffset(0);
+    if (!isDragging.current || Math.abs(delta) < 40) {
+      sliderTimerRef.current = setInterval(sliderNext, 5000);
+      return;
+    }
     if (delta < 0) sliderNext(); else sliderPrev();
     sliderTimerRef.current = setInterval(sliderNext, 5000);
   }, [sliderNext, sliderPrev]);
@@ -644,116 +653,110 @@ const SessionDetailPage = () => {
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
       {step === "product" && (
         <>
-          {/* ── Hero: alternates between full-bleed single photo and photo grid ── */}
+          {/* ── Hero slider: real drag/swipe with translateX ── */}
           {(() => {
-            // Build "frames": odd indices = grid mosaic, even = single hero photo
-            // Each frame lasts 5s. Single slides cycle through all photos; grid shows a rotating batch.
+            // Build frames: every 4th is a masonry grid, rest are single photos
+            const isGridFrame = (idx: number) => slides.length >= 3 && idx % 4 === 0;
             const totalFrames = slides.length <= 1 ? 1 : slides.length + Math.floor(slides.length / 3);
 
-            // Which kind of frame is this index?
-            // Strategy: every 3rd frame (index 0,3,6…) is a grid; others are single photos
-            const isGridFrame = (idx: number) => slides.length >= 3 && idx % 4 === 0;
-            const singlePhotoForFrame = (idx: number) => {
-              // count how many single-photo frames came before this one
-              let count = 0;
-              for (let i = 0; i < idx; i++) if (!isGridFrame(i)) count++;
-              return slides[count % slides.length];
-            };
-            const gridPhotosForFrame = (idx: number) => {
-              // rotate the grid batch based on how many grid frames preceded
-              let gridCount = 0;
-              for (let i = 0; i < idx; i++) if (isGridFrame(i)) gridCount++;
-              const start = (gridCount * 6) % slides.length;
-              const pool = [...slides, ...slides]; // wrap-around
-              return pool.slice(start, start + 9);
-            };
+            // Build all frame descriptors for the strip
+            const frames = Array.from({ length: totalFrames }, (_, idx) => {
+              const frameIdx = idx % totalFrames;
+              if (isGridFrame(frameIdx)) {
+                let gridCount = 0;
+                for (let i = 0; i < frameIdx; i++) if (isGridFrame(i)) gridCount++;
+                const start = (gridCount * 6) % slides.length;
+                const pool = [...slides, ...slides];
+                return { type: "grid" as const, photos: pool.slice(start, start + 9) };
+              } else {
+                let count = 0;
+                for (let i = 0; i < frameIdx; i++) if (!isGridFrame(i)) count++;
+                return { type: "single" as const, src: slides[count % slides.length] };
+              }
+            });
 
-            const currentIsGrid = isGridFrame(sliderIndex % totalFrames);
-            const currentSingleSrc = singlePhotoForFrame(sliderIndex % totalFrames);
-            const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
+            const activeIdx = sliderIndex % totalFrames;
+            // translateX: each slide is 100% wide; drag offset is added live
+            const translateX = -(activeIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
+            const isAnimating = dragOffset === 0;
 
             return (
               <div
+                ref={sliderContainerRef}
                 className="relative w-full overflow-hidden bg-black select-none"
-                style={{ height: "70vh", minHeight: 420, cursor: "grab" }}
-                /* Touch */
+                style={{ height: "70vh", minHeight: 420, cursor: isDragging.current ? "grabbing" : "grab" }}
                 onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-                onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                onTouchMove={(e) => { e.preventDefault(); handleDragMove(e.touches[0].clientX); }}
                 onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
-                /* Mouse */
                 onMouseDown={(e) => handleDragStart(e.clientX)}
-                onMouseMove={(e) => handleDragMove(e.clientX)}
+                onMouseMove={(e) => { if (dragStartX.current !== null) handleDragMove(e.clientX); }}
                 onMouseUp={(e) => handleDragEnd(e.clientX)}
                 onMouseLeave={(e) => handleDragEnd(e.clientX)}
               >
-
-                {/* ── Single full-bleed photo frame ── */}
+                {/* Slides strip */}
                 <div
-                  className="absolute inset-0 transition-opacity duration-1000"
-                  style={{ opacity: currentIsGrid ? 0 : 1 }}
+                  className="flex h-full"
+                  style={{
+                    width: `${frames.length * 100}%`,
+                    transform: `translateX(${translateX / frames.length}%)`,
+                    transition: isAnimating ? "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
+                    willChange: "transform",
+                  }}
                 >
-                  {currentSingleSrc && (
-                    <img
-                      src={currentSingleSrc}
-                      alt={session.title}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  {/* vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
+                  {frames.map((frame, i) => (
+                    <div key={i} className="relative h-full" style={{ width: `${100 / frames.length}%`, flexShrink: 0 }}>
+                      {frame.type === "single" ? (
+                        <>
+                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex h-full gap-[2px]">
+                            <div className="flex flex-col gap-[2px] flex-1">
+                              <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
+                                <img src={frame.photos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-[2px] flex-1">
+                              <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
+                                <img src={frame.photos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-[2px] flex-1">
+                              <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
+                                <img src={frame.photos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-[2px] flex-1">
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[7] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                              <div className="overflow-hidden flex-1">
+                                <img src={frame.photos[8] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+                        </>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                {/* ── Masonry mosaic frame ── */}
-                <div
-                  className="absolute inset-0 transition-opacity duration-1000"
-                  style={{ opacity: currentIsGrid ? 1 : 0 }}
-                >
-                  {/* True masonry: 4 columns of varying heights */}
-                  <div className="flex h-full gap-[2px]">
-                    {/* Col 1: tall + short */}
-                    <div className="flex flex-col gap-[2px] flex-1">
-                      <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
-                        <img src={currentGridPhotos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    </div>
-                    {/* Col 2: short + tall */}
-                    <div className="flex flex-col gap-[2px] flex-1">
-                      <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
-                        <img src={currentGridPhotos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    </div>
-                    {/* Col 3: medium + medium */}
-                    <div className="flex flex-col gap-[2px] flex-1">
-                      <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
-                        <img src={currentGridPhotos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    </div>
-                    {/* Col 4: 3 stacked equal */}
-                    <div className="flex flex-col gap-[2px] flex-1">
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[7] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="overflow-hidden flex-1">
-                        <img src={currentGridPhotos[8] ?? slides[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
-                </div>
-
-                {/* Overlay text */}
+                {/* Overlay text — always on top */}
                 <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center z-10 pointer-events-none">
                   <div className="flex justify-center mb-4">
                     <div className="h-16 w-16 rounded-full border border-white/50 bg-black/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
@@ -784,7 +787,7 @@ const SessionDetailPage = () => {
                 {/* Slide dots */}
                 {slides.length > 1 && (
                   <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
-                    {Array.from({ length: Math.min(slides.length, 8) }).map((_, i) => (
+                    {Array.from({ length: Math.min(totalFrames, 8) }).map((_, i) => (
                       <button
                         key={i}
                         onClick={() => {
@@ -792,7 +795,7 @@ const SessionDetailPage = () => {
                           setSliderIndex(i);
                           sliderTimerRef.current = setInterval(sliderNext, 5000);
                         }}
-                        className={`rounded-full transition-all duration-300 ${i === (sliderIndex % Math.min(slides.length, 8)) ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
+                        className={`rounded-full transition-all duration-300 ${i === activeIdx ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
                       />
                     ))}
                   </div>
