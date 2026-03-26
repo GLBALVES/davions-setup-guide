@@ -651,18 +651,23 @@ const SessionForm = () => {
     if (sessionModel === "campaign") {
       // For campaigns: expand each selected time slot across all campaign dates
       const dates = campaignDates ?? [];
-      const inserts = dates.flatMap((date) =>
-        campaignSlots.map((sl) => ({
+      const spotsNum = Math.max(1, parseInt(campaignSpots) || 1);
+      const inserts = dates.flatMap((date) => {
+        const dateKey = format(date, "yyyy-MM-dd");
+        const locationOverride = campaignDateLocations[dateKey] || null;
+        return campaignSlots.map((sl) => ({
           session_id: sessionId,
           photographer_id: user.id,
           day_of_week: null,
-          date: format(date, "yyyy-MM-dd"),
+          date: dateKey,
           start_time: sl.start,
           end_time: sl.end,
-        }))
-      );
+          spots: spotsNum,
+          location_override: locationOverride,
+        }));
+      });
       if (inserts.length > 0) {
-        await supabase.from("session_availability").insert(inserts);
+        await supabase.from("session_availability").insert(inserts as never);
       }
     } else {
       if (slots.length > 0) {
