@@ -467,6 +467,30 @@ const SessionDetailPage = () => {
     return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
   }, [portfolioImages.length, sliderNext, step]);
 
+  // Swipe / drag support for the hero slider
+  const dragStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+
+  const handleDragStart = useCallback((clientX: number) => {
+    dragStartX.current = clientX;
+    isDragging.current = false;
+  }, []);
+
+  const handleDragMove = useCallback((clientX: number) => {
+    if (dragStartX.current === null) return;
+    if (Math.abs(clientX - dragStartX.current) > 5) isDragging.current = true;
+  }, []);
+
+  const handleDragEnd = useCallback((clientX: number) => {
+    if (dragStartX.current === null) return;
+    const delta = clientX - dragStartX.current;
+    dragStartX.current = null;
+    if (!isDragging.current || Math.abs(delta) < 40) return;
+    if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
+    if (delta < 0) sliderNext(); else sliderPrev();
+    sliderTimerRef.current = setInterval(sliderNext, 5000);
+  }, [sliderNext, sliderPrev]);
+
 
 
   // ────────────────────────────────────────────
@@ -649,7 +673,19 @@ const SessionDetailPage = () => {
             const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
 
             return (
-              <div className="relative w-full overflow-hidden bg-black" style={{ height: "70vh", minHeight: 420 }}>
+              <div
+                className="relative w-full overflow-hidden bg-black select-none"
+                style={{ height: "70vh", minHeight: 420, cursor: "grab" }}
+                /* Touch */
+                onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+                /* Mouse */
+                onMouseDown={(e) => handleDragStart(e.clientX)}
+                onMouseMove={(e) => handleDragMove(e.clientX)}
+                onMouseUp={(e) => handleDragEnd(e.clientX)}
+                onMouseLeave={(e) => handleDragEnd(e.clientX)}
+              >
 
                 {/* ── Single full-bleed photo frame ── */}
                 <div
