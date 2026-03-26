@@ -932,13 +932,13 @@ export const translations = {
       unlimited: "Unlimited",
       noTiersYet: "No tiers yet — add one above.",
       // Step 5
-      extras: "Extras",
+      extras: "Add-ons",
       extrasDesc: "Optional add-ons clients can purchase at booking.",
-      addExtra: "Add Extra",
+      addExtra: "Add Item",
       itemDescription: "Item Description",
       qty: "Qty",
       price: "Price ($)",
-      noExtrasYet: "No extras yet — add one above.",
+      noExtrasYet: "No add-ons yet — add one above.",
       // Step 6
       confirmationEmail: "Confirmation Email",
       confirmationEmailDesc: "This email will be sent to the client after a successful booking.",
