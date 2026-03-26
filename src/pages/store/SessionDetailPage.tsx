@@ -53,6 +53,7 @@ interface SessionDetail {
 interface PhotographerInfo {
   full_name: string | null;
   hero_image_url: string | null;
+  logo_url?: string | null;
 }
 
 interface WeeklySlotDef {
