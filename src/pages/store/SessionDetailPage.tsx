@@ -807,24 +807,6 @@ const SessionDetailPage = () => {
                 </button>
 
                 {/* Slide dots */}
-                {slides.length > 1 && (
-                  <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
-                    {Array.from({ length: Math.min(totalFrames, 8) }).map((_, i) => {
-                      const dotActive = ((sliderIndex % totalFrames) + totalFrames) % totalFrames;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
-                            setSliderIndex(i);
-                            sliderTimerRef.current = setInterval(sliderNext, 5000);
-                          }}
-                          className={`rounded-full transition-all duration-300 ${i === dotActive ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           })()}
