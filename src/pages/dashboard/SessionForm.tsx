@@ -984,13 +984,13 @@ const SessionForm = () => {
   const StepIndicator = () => (
     <div className="flex items-center gap-0 mb-8">
       {[
-        { n: 1 as const, label: "Details" },
-        { n: 2 as const, label: "Availability" },
-        { n: 3 as const, label: "Payment" },
-        { n: 4 as const, label: "Add-ons" },
-        { n: 5 as const, label: "Extras" },
-        { n: 6 as const, label: "Confirmation" },
-        { n: 7 as const, label: "Rules" },
+        { n: 1 as const, label: t.sessionForm.stepDetails },
+        { n: 2 as const, label: t.sessionForm.stepAvailability },
+        { n: 3 as const, label: t.sessionForm.stepPayment },
+        { n: 4 as const, label: t.sessionForm.stepAddons },
+        { n: 5 as const, label: t.sessionForm.stepExtras },
+        { n: 6 as const, label: t.sessionForm.stepConfirmation },
+        { n: 7 as const, label: t.sessionForm.stepRules },
       ].map(({ n, label }, i) => (
         <>
           {i > 0 && <div key={`line-${n}`} className="flex-1 h-px bg-border mx-3 min-w-4" />}
