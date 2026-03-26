@@ -673,7 +673,19 @@ const SessionDetailPage = () => {
             const currentGridPhotos = gridPhotosForFrame(sliderIndex % totalFrames);
 
             return (
-              <div className="relative w-full overflow-hidden bg-black" style={{ height: "70vh", minHeight: 420 }}>
+              <div
+                className="relative w-full overflow-hidden bg-black select-none"
+                style={{ height: "70vh", minHeight: 420, cursor: "grab" }}
+                /* Touch */
+                onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+                /* Mouse */
+                onMouseDown={(e) => handleDragStart(e.clientX)}
+                onMouseMove={(e) => handleDragMove(e.clientX)}
+                onMouseUp={(e) => handleDragEnd(e.clientX)}
+                onMouseLeave={(e) => handleDragEnd(e.clientX)}
+              >
 
                 {/* ── Single full-bleed photo frame ── */}
                 <div
