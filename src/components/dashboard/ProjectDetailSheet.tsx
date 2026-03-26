@@ -828,9 +828,16 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 function ClientCommsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
   const { t } = useLanguage();
   const tp = t.projects;
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"chat" | "emails">("chat");
   const [newTicketSubject, setNewTicketSubject] = useState("");
   const [creating, setCreating] = useState(false);
+
+  // Email compose state
+  const [showCompose, setShowCompose] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [sending, setSending] = useState(false);
 
   const { data: tickets = [], refetch: refetchTickets } = useQuery<{
     id: string; subject: string; status: string; updated_at: string;
@@ -851,6 +858,23 @@ function ClientCommsSection({ project, photographerId }: { project: ProjectSheet
     enabled: !!project.client_email && !!photographerId,
   });
 
+  // Sent emails query
+  const { data: sentEmails = [] } = useQuery<{
+    id: string; subject: string; created_at: string; status: string;
+  }[]>({
+    queryKey: ["project-emails", project.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("project_emails")
+        .select("id, subject, created_at, status")
+        .eq("project_id", project.id)
+        .order("created_at", { ascending: false });
+      if (error) return [];
+      return (data ?? []) as any[];
+    },
+    enabled: !!project.id,
+  });
+
   const createTicket = async () => {
     if (!project.client_email || !newTicketSubject.trim()) return;
     setCreating(true);
@@ -867,6 +891,34 @@ function ClientCommsSection({ project, photographerId }: { project: ProjectSheet
       refetchTickets();
     }
     setCreating(false);
+  };
+
+  const sendEmail = async () => {
+    if (!emailSubject.trim()) {
+      toast.error(tp.commsEmailNoSubject);
+      return;
+    }
+    setSending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("send-client-email", {
+        body: {
+          projectId: project.id,
+          clientEmail: project.client_email,
+          subject: emailSubject.trim(),
+          body: emailBody.trim(),
+        },
+      });
+      if (res.error) throw res.error;
+      toast.success(tp.commsEmailSentSuccess);
+      setEmailSubject("");
+      setEmailBody("");
+      setShowCompose(false);
+      queryClient.invalidateQueries({ queryKey: ["project-emails", project.id] });
+    } catch {
+      toast.error(tp.commsEmailSentError);
+    }
+    setSending(false);
   };
 
   const statusColors: Record<string, string> = {
@@ -888,6 +940,9 @@ function ClientCommsSection({ project, photographerId }: { project: ProjectSheet
           </TabsTrigger>
           <TabsTrigger value="emails" className="flex-1 text-xs gap-1.5">
             <AtSign className="h-3 w-3" /> {tp.commsEmails}
+            {sentEmails.length > 0 && (
+              <Badge variant="secondary" className="h-4 text-[9px] px-1 ml-0.5">{sentEmails.length}</Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -944,22 +999,84 @@ function ClientCommsSection({ project, photographerId }: { project: ProjectSheet
         </TabsContent>
 
         {/* ── Emails tab ── */}
-        <TabsContent value="emails" className="mt-3">
+        <TabsContent value="emails" className="mt-3 flex flex-col gap-2">
           {!project.client_email ? (
             <p className="text-xs text-muted-foreground text-center py-4 italic">{tp.addEmailPlaceholder}</p>
           ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-muted-foreground text-center py-3 italic">{tp.commsNoEmails}</p>
-              {project.client_email && (
-                <a
-                  href={`mailto:${project.client_email}`}
-                  className="flex items-center justify-center gap-1.5 text-xs text-primary hover:underline py-1"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  {project.client_email}
-                </a>
+            <>
+              {/* Sent emails list */}
+              {sentEmails.length > 0 && (
+                <div className="flex flex-col gap-1.5 mb-2">
+                  {sentEmails.map((email) => (
+                    <div key={email.id} className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2">
+                      <Send className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate leading-tight">{email.subject}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                          {format(new Date(email.created_at), "d MMM yyyy · HH:mm")}
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-sm border bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shrink-0">
+                        {tp.commsEmailSent}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
+
+              {sentEmails.length === 0 && !showCompose && (
+                <p className="text-xs text-muted-foreground text-center py-3 italic">{tp.commsNoEmails}</p>
+              )}
+
+              {/* Compose form */}
+              {showCompose ? (
+                <div className="flex flex-col gap-2 border border-border rounded-md p-3 bg-muted/10">
+                  <Input
+                    placeholder={tp.commsEmailSubject}
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    className="h-7 text-xs"
+                  />
+                  <Textarea
+                    placeholder={tp.commsEmailBody}
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    rows={4}
+                    className="text-xs resize-none min-h-[80px]"
+                  />
+                  <div className="flex items-center gap-2 justify-end">
+                    <Button
+                      variant="ghost" size="sm"
+                      className="h-7 text-xs px-3"
+                      onClick={() => { setShowCompose(false); setEmailSubject(""); setEmailBody(""); }}
+                      disabled={sending}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {tp.cancel}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs px-3 gap-1.5"
+                      onClick={sendEmail}
+                      disabled={sending || !emailSubject.trim()}
+                    >
+                      {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                      {sending ? tp.commsEmailSending : tp.commsEmailSendBtn}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline" size="sm"
+                  className="h-7 text-xs gap-1.5 w-full"
+                  onClick={() => setShowCompose(true)}
+                  disabled={!project.client_email}
+                >
+                  <Mail className="h-3 w-3" />
+                  {tp.commsComposeEmail}
+                </Button>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
