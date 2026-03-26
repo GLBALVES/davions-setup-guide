@@ -925,121 +925,204 @@ const SessionDetailPage = () => {
           {/* ── Step 1: slots ── */}
           {step === "slots" && (
             <>
-              <div className="bg-background rounded-sm shadow-sm overflow-hidden">
-                {generatedSlots.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <p className="text-sm font-light text-muted-foreground">No available slots at this time.</p>
+              {/* ══ CAMPAIGN LAYOUT: vertical date list ══ */}
+              {isCampaign ? (() => {
+                // Group campaign slots by date
+                const dateGroups = new Map<string, (typeof campaignSlots[0])[]>();
+                for (const slot of campaignSlots) {
+                  if (!dateGroups.has(slot.date)) dateGroups.set(slot.date, []);
+                  dateGroups.get(slot.date)!.push(slot);
+                }
+                const sortedDates = [...dateGroups.keys()].sort();
 
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
-                    <div className="sm:flex-1 p-4">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateSelect}
-                        disabled={isDayDisabled}
-                        fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
-                        toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
-                        className="pointer-events-auto w-full"
-                        classNames={{
-                          months: "w-full",
-                          month: "w-full space-y-3",
-                          caption: "flex justify-center pt-1 relative items-center mb-2",
-                          caption_label: "text-xs font-light tracking-[0.25em] uppercase text-foreground",
-                          nav: "space-x-1 flex items-center",
-                          nav_button: "h-7 w-7 bg-transparent p-0 opacity-40 hover:opacity-100 border border-border flex items-center justify-center transition-opacity",
-                          nav_button_previous: "absolute left-1",
-                          nav_button_next: "absolute right-1",
-                          table: "w-full border-collapse",
-                          head_row: "flex w-full",
-                          head_cell: "text-muted-foreground/60 flex-1 font-normal text-[0.7rem] text-center pb-1",
-                          row: "flex w-full mt-1",
-                          cell: "flex-1 h-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                          day: cn(
-                            "h-9 w-full p-0 font-normal aria-selected:opacity-100 transition-colors text-xs",
-                            "hover:bg-accent hover:text-accent-foreground rounded-none"
-                          ),
-                          day_selected: "bg-foreground text-background hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background rounded-none font-normal",
-                          day_today: "bg-accent/60 text-accent-foreground rounded-none",
-                          day_disabled: "text-muted-foreground/25 pointer-events-none",
-                          day_outside: "text-muted-foreground/25 opacity-40",
-                        }}
-                        components={{
-                          DayContent: ({ date }) => {
-                            const key = format(date, "yyyy-MM-dd");
-                            const hasAvailable = availableDateKeys.has(key);
-                            const hasAny = allSlotDateKeys.has(key);
-                            return (
-                              <div className="flex flex-col items-center justify-center h-full gap-[2px]">
-                                <span>{date.getDate()}</span>
-                                {hasAny && (
-                                  <span className={cn(
-                                    "h-[3px] w-[3px] rounded-full",
-                                    hasAvailable ? "bg-current opacity-60" : "bg-muted-foreground/30"
-                                  )} />
-                                )}
-                              </div>
-                            );
-                          },
-                        }}
-                      />
-                    </div>
-                    <div className="sm:w-48 p-4 flex flex-col gap-3">
-                      {!selectedDate ? (
-                        <div className="flex-1 flex items-center justify-center py-8 sm:py-0">
-                          <p className="text-xs text-muted-foreground/60 text-center">
-                            Select a date<br />to see times
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">
-                            {format(selectedDate, "EEE, MMM d")}
-                          </p>
-                          {slotsForSelectedDate.length === 0 ? (
-                            <p className="text-xs text-muted-foreground">No slots for this day.</p>
-                          ) : (
-                            <div className="flex flex-col gap-2">
-                              {slotsForSelectedDate.map((slot, i) => (
+                return (
+                  <div className="flex flex-col gap-3">
+                    {sortedDates.length === 0 ? (
+                      <div className="bg-background rounded-sm shadow-sm p-8 text-center">
+                        <p className="text-sm font-light text-muted-foreground">No available dates for this campaign.</p>
+                      </div>
+                    ) : sortedDates.map((dateKey) => {
+                      const slots = dateGroups.get(dateKey)!;
+                      const dateObj = new Date(dateKey + "T00:00:00");
+                      const locationOverride = slots[0]?.location_override;
+                      const allSlotsGenerated = generatedSlots.filter((g) => format(g.date, "yyyy-MM-dd") === dateKey);
+
+                      return (
+                        <div key={dateKey} className="bg-background rounded-sm shadow-sm overflow-hidden">
+                          {/* Date header */}
+                          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-sm font-light tracking-wide">{format(dateObj, "EEEE, MMMM d")}</p>
+                              {locationOverride && (
+                                <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="h-2.5 w-2.5" />
+                                  {locationOverride}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {/* Time slots */}
+                          <div className="p-4 flex flex-wrap gap-2">
+                            {allSlotsGenerated.map((slot) => {
+                              const isSelected = selectedSlot?.availabilityId === slot.availabilityId;
+                              const full = slot.disabled && slot.disabledReason === "full";
+                              const spotsLeft = slot.spotsLeft ?? 0;
+                              const totalSpots = slot.totalSpots ?? 1;
+
+                              return (
                                 <button
-                                  key={i}
+                                  key={slot.availabilityId}
                                   disabled={slot.disabled}
                                   onClick={() => !slot.disabled && setSelectedSlot(slot)}
-                                  title={
-                                    slot.disabledReason === "booked"
-                                      ? "Already booked"
-                                      : slot.disabledReason === "blocked"
-                                      ? "Unavailable"
-                                      : undefined
-                                  }
                                   className={cn(
-                                    "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left relative",
+                                    "flex flex-col items-start px-3 py-2 border text-xs transition-colors min-w-[100px]",
                                     slot.disabled
-                                      ? "border-border/40 text-muted-foreground/40 cursor-not-allowed bg-muted/30 line-through"
-                                      : selectedSlot &&
-                                        selectedSlot.availabilityId === slot.availabilityId &&
-                                        isSameDay(selectedSlot.date, slot.date)
+                                      ? "border-border/30 text-muted-foreground/40 cursor-not-allowed bg-muted/20"
+                                      : isSelected
                                       ? "border-foreground bg-foreground text-background"
-                                      : "border-border hover:border-foreground/40 text-foreground"
+                                      : "border-border hover:border-foreground/50 text-foreground"
                                   )}
                                 >
-                                  <span>{formatTime12(slot.start_time)}</span>
-                                  {slot.disabled && (
-                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
-                                      {slot.disabledReason === "booked" ? "booked" : "unavail."}
+                                  <span className={cn("font-light tracking-wide", slot.disabled && "line-through")}>
+                                    {formatTime12(slot.start_time)}
+                                  </span>
+                                  {full ? (
+                                    <span className="text-[9px] tracking-widest uppercase text-muted-foreground/50 mt-0.5">Esgotado</span>
+                                  ) : totalSpots > 1 ? (
+                                    <span className={cn(
+                                      "text-[9px] mt-0.5",
+                                      isSelected ? "text-background/70" : "text-muted-foreground",
+                                      spotsLeft <= 2 && !isSelected && "text-amber-600"
+                                    )}>
+                                      {spotsLeft} vaga{spotsLeft !== 1 ? "s" : ""}
                                     </span>
-                                  )}
+                                  ) : null}
                                 </button>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
+                );
+              })() : (
+                /* ══ STANDARD LAYOUT: calendar ══ */
+                <div className="bg-background rounded-sm shadow-sm overflow-hidden">
+                  {generatedSlots.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <p className="text-sm font-light text-muted-foreground">No available slots at this time.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
+                      <div className="sm:flex-1 p-4">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={handleDateSelect}
+                          disabled={isDayDisabled}
+                          fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
+                          toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
+                          className="pointer-events-auto w-full"
+                          classNames={{
+                            months: "w-full",
+                            month: "w-full space-y-3",
+                            caption: "flex justify-center pt-1 relative items-center mb-2",
+                            caption_label: "text-xs font-light tracking-[0.25em] uppercase text-foreground",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: "h-7 w-7 bg-transparent p-0 opacity-40 hover:opacity-100 border border-border flex items-center justify-center transition-opacity",
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse",
+                            head_row: "flex w-full",
+                            head_cell: "text-muted-foreground/60 flex-1 font-normal text-[0.7rem] text-center pb-1",
+                            row: "flex w-full mt-1",
+                            cell: "flex-1 h-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                            day: cn(
+                              "h-9 w-full p-0 font-normal aria-selected:opacity-100 transition-colors text-xs",
+                              "hover:bg-accent hover:text-accent-foreground rounded-none"
+                            ),
+                            day_selected: "bg-foreground text-background hover:bg-foreground hover:text-background focus:bg-foreground focus:text-background rounded-none font-normal",
+                            day_today: "bg-accent/60 text-accent-foreground rounded-none",
+                            day_disabled: "text-muted-foreground/25 pointer-events-none",
+                            day_outside: "text-muted-foreground/25 opacity-40",
+                          }}
+                          components={{
+                            DayContent: ({ date }) => {
+                              const key = format(date, "yyyy-MM-dd");
+                              const hasAvailable = availableDateKeys.has(key);
+                              const hasAny = allSlotDateKeys.has(key);
+                              return (
+                                <div className="flex flex-col items-center justify-center h-full gap-[2px]">
+                                  <span>{date.getDate()}</span>
+                                  {hasAny && (
+                                    <span className={cn(
+                                      "h-[3px] w-[3px] rounded-full",
+                                      hasAvailable ? "bg-current opacity-60" : "bg-muted-foreground/30"
+                                    )} />
+                                  )}
+                                </div>
+                              );
+                            },
+                          }}
+                        />
+                      </div>
+                      <div className="sm:w-48 p-4 flex flex-col gap-3">
+                        {!selectedDate ? (
+                          <div className="flex-1 flex items-center justify-center py-8 sm:py-0">
+                            <p className="text-xs text-muted-foreground/60 text-center">
+                              Select a date<br />to see times
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground font-light">
+                              {format(selectedDate, "EEE, MMM d")}
+                            </p>
+                            {slotsForSelectedDate.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">No slots for this day.</p>
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                {slotsForSelectedDate.map((slot, i) => (
+                                  <button
+                                    key={i}
+                                    disabled={slot.disabled}
+                                    onClick={() => !slot.disabled && setSelectedSlot(slot)}
+                                    title={
+                                      slot.disabledReason === "booked"
+                                        ? "Already booked"
+                                        : slot.disabledReason === "blocked"
+                                        ? "Unavailable"
+                                        : undefined
+                                    }
+                                    className={cn(
+                                      "w-full px-3 py-2 text-xs border transition-colors tracking-wider text-left relative",
+                                      slot.disabled
+                                        ? "border-border/40 text-muted-foreground/40 cursor-not-allowed bg-muted/30 line-through"
+                                        : selectedSlot &&
+                                          selectedSlot.availabilityId === slot.availabilityId &&
+                                          isSameDay(selectedSlot.date, slot.date)
+                                        ? "border-foreground bg-foreground text-background"
+                                        : "border-border hover:border-foreground/40 text-foreground"
+                                    )}
+                                  >
+                                    <span>{formatTime12(slot.start_time)}</span>
+                                    {slot.disabled && (
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] tracking-widest uppercase text-muted-foreground/40 font-light">
+                                        {slot.disabledReason === "booked" ? "booked" : "unavail."}
+                                      </span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <Button
                 onClick={() => setStep("form")}
                 disabled={!selectedSlot || selectedSlot.disabled}
