@@ -780,7 +780,7 @@ const SessionForm = () => {
         session_id: sessionId,
         photographer_id: user.id,
         description: e.description.trim(),
-        quantity: parseInt(e.quantity) || 1,
+        quantity: parseInt(e.quantity) || 99,
         price: Math.round(parseFloat(e.price || "0") * 100),
       }));
       const { error } = await supabase
