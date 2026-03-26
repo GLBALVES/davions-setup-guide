@@ -717,15 +717,16 @@ const SessionDetailPage = () => {
                 {/* Slides strip */}
                 <div
                   className="flex h-full"
+                  onTransitionEnd={handleTransitionEnd}
                   style={{
-                    width: `${frames.length * 100}%`,
-                    transform: `translateX(${translateX / frames.length}%)`,
+                    width: `${loopFrames.length * 100}%`,
+                    transform: `translateX(${translateX / loopFrames.length}%)`,
                     transition: isAnimating ? "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
                     willChange: "transform",
                   }}
                 >
-                  {frames.map((frame, i) => (
-                    <div key={i} className="relative h-full" style={{ width: `${100 / frames.length}%`, flexShrink: 0 }}>
+                  {loopFrames.map((frame, i) => (
+                    <div key={i} className="relative h-full" style={{ width: `${100 / loopFrames.length}%`, flexShrink: 0 }}>
                       {frame.type === "single" ? (
                         <>
                           {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
