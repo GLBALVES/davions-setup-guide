@@ -923,7 +923,7 @@ export const translations = {
       allowTip: "Allow Tip",
       allowTipDesc: "Clients can add a gratuity at checkout.",
       // Step 4
-      additionalPhotos: "Additional Photos",
+      additionalPhotos: "Extra Photos",
       additionalPhotosDesc: "Configure tiered pricing for extra photos. Higher quantities can have a lower price per photo.",
       addTier: "Add Tier",
       minPhotos: "Min Photos",
