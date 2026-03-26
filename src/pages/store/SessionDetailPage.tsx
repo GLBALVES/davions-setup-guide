@@ -684,14 +684,9 @@ const SessionDetailPage = () => {
 
             // The actual visual index inside loopFrames
             const visualIdx = sliderIndex + loopOffset;
-            // Each slide = 80% of container; 10% peek on each side
-            const slidePercent = 80;
-            const peekPercent = (100 - slidePercent) / 2;
+            // Full-width slides (100%) — no peek
             const containerWidth = sliderContainerRef.current?.offsetWidth || window.innerWidth;
-            const dragPercent = (dragOffset / containerWidth) * slidePercent;
-            // translateX positions the strip so active slide is centered with peek
-            const stripSlideWidth = slidePercent / loopFrames.length; // not used for transform
-            const translatePx = -(visualIdx * (containerWidth * slidePercent / 100)) + (containerWidth * peekPercent / 100) + dragOffset;
+            const translatePx = -(visualIdx * containerWidth) + dragOffset;
             const isAnimating = dragOffset === 0 && !isLoopJumping.current;
 
             // Handle loop jump when transition ends
@@ -712,8 +707,6 @@ const SessionDetailPage = () => {
               }
             };
 
-            const slideW = containerWidth * slidePercent / 100;
-
             return (
               <div
                 ref={sliderContainerRef}
@@ -729,7 +722,7 @@ const SessionDetailPage = () => {
               >
                 {/* Slides strip */}
                 <div
-                  className="flex h-full items-center"
+                  className="flex h-full"
                   onTransitionEnd={handleTransitionEnd}
                   style={{
                     transform: `translateX(${translatePx}px)`,
@@ -738,12 +731,19 @@ const SessionDetailPage = () => {
                   }}
                 >
                   {loopFrames.map((frame, i) => {
-                    const isActive = i === visualIdx;
                     return (
-                    <div key={i} className="relative h-full transition-opacity duration-300 overflow-hidden" style={{ width: slideW, flexShrink: 0, opacity: isActive ? 1 : 0.5 }}>
+                    <div key={i} className="relative h-full overflow-hidden" style={{ width: containerWidth, flexShrink: 0 }}>
                       {frame.type === "single" ? (
                         <>
-                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
+                          {frame.src && (
+                            <>
+                              {/* Blurred background fill */}
+                              <img src={frame.src} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" draggable={false} aria-hidden />
+                              {/* Sharp centered image */}
+                              <img src={frame.src} alt={session.title} className="relative w-full h-full object-contain z-[1]" draggable={false} />
+                            </>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75 z-[2]" />
                           <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
                         </>
                       ) : (
