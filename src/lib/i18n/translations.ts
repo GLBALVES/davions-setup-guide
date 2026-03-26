@@ -2542,7 +2542,7 @@ export const translations = {
       dueAtSession: "devido na sessão",
       allowTip: "Permitir Gorjeta",
       allowTipDesc: "Os clientes podem adicionar uma gorjeta no checkout.",
-      additionalPhotos: "Fotos Adicionais",
+      additionalPhotos: "Fotos Extras",
       additionalPhotosDesc: "Configure preços em camadas para fotos extras. Quantidades maiores podem ter um preço menor por foto.",
       addTier: "Adicionar Faixa",
       minPhotos: "Mín de Fotos",
