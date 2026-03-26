@@ -789,7 +789,8 @@ const SessionDetailPage = () => {
                         </>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Overlay text — always on top */}
