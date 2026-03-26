@@ -693,11 +693,15 @@ const SessionDetailPage = () => {
               if (sliderIndex >= totalFrames) {
                 isLoopJumping.current = true;
                 setSliderIndex(0);
-                requestAnimationFrame(() => { isLoopJumping.current = false; });
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => { isLoopJumping.current = false; });
+                });
               } else if (sliderIndex < 0) {
                 isLoopJumping.current = true;
                 setSliderIndex(totalFrames - 1);
-                requestAnimationFrame(() => { isLoopJumping.current = false; });
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => { isLoopJumping.current = false; });
+                });
               }
             };
 
