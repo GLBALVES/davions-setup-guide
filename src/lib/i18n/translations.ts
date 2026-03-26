@@ -396,6 +396,14 @@ export const translations = {
       commsTicketFailed: "Failed to create conversation",
       commsEmailSent: "Sent",
       commsEmailReceived: "Received",
+      commsComposeEmail: "Compose Email",
+      commsEmailSubject: "Subject",
+      commsEmailBody: "Message",
+      commsEmailSending: "Sending…",
+      commsEmailSendBtn: "Send Email",
+      commsEmailSentSuccess: "Email sent successfully",
+      commsEmailSentError: "Failed to send email",
+      commsEmailNoSubject: "Please enter a subject",
     },
     // ── Clients page ──
     clients: {
