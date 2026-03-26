@@ -101,7 +101,9 @@ const Sessions = () => {
           (sess.location ?? "").toLowerCase().includes(q)
       );
     }
-    if (sort !== "manual") {
+    if (sort === "manual") {
+      list = [...list].sort((a, b) => a.sort_order - b.sort_order);
+    } else {
       list = [...list].sort((a, b) => {
         if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
