@@ -455,18 +455,19 @@ const SessionDetailPage = () => {
   // Slider with real drag/swipe movement (translateX)
   // ────────────────────────────────────────────
 
-  const [dragOffset, setDragOffset] = useState(0);
-  const dragStartX = useRef<number | null>(null);
-  const isDragging = useRef(false);
-  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
+   const [dragOffset, setDragOffset] = useState(0);
+   const dragStartX = useRef<number | null>(null);
+   const isDragging = useRef(false);
+   const sliderContainerRef = useRef<HTMLDivElement | null>(null);
+   const isLoopJumping = useRef(false);
 
-  const sliderNext = useCallback(() => {
-    setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
-  }, [portfolioImages.length]);
+   const sliderNext = useCallback(() => {
+     setSliderIndex((i) => i + 1);
+   }, []);
 
-  const sliderPrev = useCallback(() => {
-    setSliderIndex((i) => (portfolioImages.length > 1 ? (i - 1 + portfolioImages.length) % portfolioImages.length : 0));
-  }, [portfolioImages.length]);
+   const sliderPrev = useCallback(() => {
+     setSliderIndex((i) => i - 1);
+   }, []);
 
   useEffect(() => {
     if (portfolioImages.length <= 1 || step !== "product") return;
@@ -675,10 +676,30 @@ const SessionDetailPage = () => {
               }
             });
 
-            const activeIdx = sliderIndex % totalFrames;
-            // translateX: each slide is 100% wide; drag offset is added live
-            const translateX = -(activeIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
-            const isAnimating = dragOffset === 0;
+            // For infinite loop: clone last frame at start and first frame at end
+            const loopFrames = frames.length > 1
+              ? [frames[frames.length - 1], ...frames, frames[0]]
+              : frames;
+            const loopOffset = frames.length > 1 ? 1 : 0; // offset for the prepended clone
+
+            // The actual visual index inside loopFrames
+            const visualIdx = sliderIndex + loopOffset;
+            const translateX = -(visualIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
+            const isAnimating = dragOffset === 0 && !isLoopJumping.current;
+
+            // Handle loop jump when transition ends
+            const handleTransitionEnd = () => {
+              if (frames.length <= 1) return;
+              if (sliderIndex >= totalFrames) {
+                isLoopJumping.current = true;
+                setSliderIndex(0);
+                requestAnimationFrame(() => { isLoopJumping.current = false; });
+              } else if (sliderIndex < 0) {
+                isLoopJumping.current = true;
+                setSliderIndex(totalFrames - 1);
+                requestAnimationFrame(() => { isLoopJumping.current = false; });
+              }
+            };
 
             return (
               <div
@@ -696,15 +717,16 @@ const SessionDetailPage = () => {
                 {/* Slides strip */}
                 <div
                   className="flex h-full"
+                  onTransitionEnd={handleTransitionEnd}
                   style={{
-                    width: `${frames.length * 100}%`,
-                    transform: `translateX(${translateX / frames.length}%)`,
+                    width: `${loopFrames.length * 100}%`,
+                    transform: `translateX(${translateX / loopFrames.length}%)`,
                     transition: isAnimating ? "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
                     willChange: "transform",
                   }}
                 >
-                  {frames.map((frame, i) => (
-                    <div key={i} className="relative h-full" style={{ width: `${100 / frames.length}%`, flexShrink: 0 }}>
+                  {loopFrames.map((frame, i) => (
+                    <div key={i} className="relative h-full" style={{ width: `${100 / loopFrames.length}%`, flexShrink: 0 }}>
                       {frame.type === "single" ? (
                         <>
                           {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
@@ -787,17 +809,20 @@ const SessionDetailPage = () => {
                 {/* Slide dots */}
                 {slides.length > 1 && (
                   <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
-                    {Array.from({ length: Math.min(totalFrames, 8) }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
-                          setSliderIndex(i);
-                          sliderTimerRef.current = setInterval(sliderNext, 5000);
-                        }}
-                        className={`rounded-full transition-all duration-300 ${i === activeIdx ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
-                      />
-                    ))}
+                    {Array.from({ length: Math.min(totalFrames, 8) }).map((_, i) => {
+                      const dotActive = ((sliderIndex % totalFrames) + totalFrames) % totalFrames;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
+                            setSliderIndex(i);
+                            sliderTimerRef.current = setInterval(sliderNext, 5000);
+                          }}
+                          className={`rounded-full transition-all duration-300 ${i === dotActive ? "bg-white w-4 h-1.5" : "bg-white/40 w-1.5 h-1.5"}`}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </div>
