@@ -684,7 +684,14 @@ const SessionDetailPage = () => {
 
             // The actual visual index inside loopFrames
             const visualIdx = sliderIndex + loopOffset;
-            const translateX = -(visualIdx * 100) + (dragOffset / (sliderContainerRef.current?.offsetWidth || window.innerWidth)) * 100;
+            // Each slide = 80% of container; 10% peek on each side
+            const slidePercent = 80;
+            const peekPercent = (100 - slidePercent) / 2;
+            const containerWidth = sliderContainerRef.current?.offsetWidth || window.innerWidth;
+            const dragPercent = (dragOffset / containerWidth) * slidePercent;
+            // translateX positions the strip so active slide is centered with peek
+            const stripSlideWidth = slidePercent / loopFrames.length; // not used for transform
+            const translatePx = -(visualIdx * (containerWidth * slidePercent / 100)) + (containerWidth * peekPercent / 100) + dragOffset;
             const isAnimating = dragOffset === 0 && !isLoopJumping.current;
 
             // Handle loop jump when transition ends
@@ -705,6 +712,8 @@ const SessionDetailPage = () => {
               }
             };
 
+            const slideW = containerWidth * slidePercent / 100;
+
             return (
               <div
                 ref={sliderContainerRef}
@@ -720,17 +729,18 @@ const SessionDetailPage = () => {
               >
                 {/* Slides strip */}
                 <div
-                  className="flex h-full"
+                  className="flex h-full items-center"
                   onTransitionEnd={handleTransitionEnd}
                   style={{
-                    width: `${loopFrames.length * 100}%`,
-                    transform: `translateX(${translateX / loopFrames.length}%)`,
+                    transform: `translateX(${translatePx}px)`,
                     transition: isAnimating ? "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
                     willChange: "transform",
                   }}
                 >
-                  {loopFrames.map((frame, i) => (
-                    <div key={i} className="relative h-full" style={{ width: `${100 / loopFrames.length}%`, flexShrink: 0 }}>
+                  {loopFrames.map((frame, i) => {
+                    const isActive = i === visualIdx;
+                    return (
+                    <div key={i} className="relative h-full transition-opacity duration-300" style={{ width: slideW, flexShrink: 0, opacity: isActive ? 1 : 0.5 }}>
                       {frame.type === "single" ? (
                         <>
                           {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
