@@ -381,7 +381,7 @@ const SessionForm = () => {
     const [availRes, configRes] = await Promise.all([
       supabase
         .from("session_availability")
-        .select("id, day_of_week, date, start_time, end_time")
+        .select("id, day_of_week, date, start_time, end_time, spots, location_override")
         .eq("session_id", sid)
         .order("start_time", { ascending: true }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -393,7 +393,7 @@ const SessionForm = () => {
 
     if (availRes.data) {
       // Separate weekly slots (day_of_week not null) from campaign slots (date not null)
-      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string };
+      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string; spots?: number; location_override?: string | null };
       const rows = availRes.data as AvailRow[];
       const weeklyRows = rows.filter((r) => r.day_of_week !== null);
       const campaignRows = rows.filter((r) => r.day_of_week === null);
@@ -412,6 +412,21 @@ const SessionForm = () => {
         return acc;
       }, []);
       setCampaignSlots(uniqueCampaignSlots);
+
+      // Restore spots (use first campaign row's value)
+      const firstCampaignRow = campaignRows[0];
+      if (firstCampaignRow?.spots != null && firstCampaignRow.spots > 1) {
+        setCampaignSpots(String(firstCampaignRow.spots));
+      }
+
+      // Restore location overrides per date
+      const locMap: Record<string, string> = {};
+      for (const r of campaignRows) {
+        if (r.date && r.location_override) {
+          locMap[r.date] = r.location_override;
+        }
+      }
+      if (Object.keys(locMap).length > 0) setCampaignDateLocations(locMap);
     }
 
     if (configRes.data && configRes.data.length > 0) {
