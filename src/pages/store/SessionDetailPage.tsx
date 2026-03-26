@@ -260,13 +260,20 @@ const SessionDetailPage = () => {
       const s = sessionData as unknown as SessionDetail;
       setSession(s);
 
-      const { data: photographerData } = await supabase
-        .from("photographers")
-        .select("full_name, hero_image_url")
-        .eq("id", s.photographer_id)
-        .single();
+      const [{ data: photographerData }, { data: siteData }] = await Promise.all([
+        supabase
+          .from("photographers")
+          .select("full_name, hero_image_url")
+          .eq("id", s.photographer_id)
+          .single(),
+        supabase
+          .from("photographer_site")
+          .select("logo_url")
+          .eq("photographer_id", s.photographer_id)
+          .maybeSingle(),
+      ]);
       if (photographerData) {
-        setPhotographer(photographerData as PhotographerInfo);
+        setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
 
       const { data: extrasData } = await supabase
