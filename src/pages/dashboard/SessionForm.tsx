@@ -1628,14 +1628,46 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-                    {/* Campaign: show selected dates as pills */}
+                    {/* Campaign: date cards with optional location per date + spots */}
                     {sessionModel === "campaign" && campaignDates && campaignDates.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 px-1">
-                        {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => (
-                          <span key={d.toISOString()} className="px-2 py-0.5 border border-border text-[10px] tracking-wide text-muted-foreground">
-                            {format(d, "MMM d")}
-                          </span>
-                        ))}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Datas da campanha</p>
+                        </div>
+                        {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => {
+                          const dateKey = format(d, "yyyy-MM-dd");
+                          return (
+                            <div key={d.toISOString()} className="border border-border px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
+                              <span className="text-[11px] font-light tracking-wide shrink-0 w-24 text-foreground">
+                                {format(d, "EEE, MMM d")}
+                              </span>
+                              <Input
+                                type="text"
+                                value={campaignDateLocations[dateKey] ?? ""}
+                                onChange={(e) =>
+                                  setCampaignDateLocations((prev) => ({
+                                    ...prev,
+                                    [dateKey]: e.target.value,
+                                  }))
+                                }
+                                placeholder="Local específico (opcional)"
+                                className="h-7 text-xs flex-1"
+                              />
+                            </div>
+                          );
+                        })}
+                        {/* Spots per slot */}
+                        <div className="flex items-center gap-3 border border-border px-3 py-2.5">
+                          <span className="text-[9px] tracking-widest uppercase text-muted-foreground shrink-0">Vagas por horário</span>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={campaignSpots}
+                            onChange={(e) => setCampaignSpots(e.target.value)}
+                            className="h-7 text-xs w-20"
+                          />
+                          <span className="text-[10px] text-muted-foreground">vagas disponíveis por horário em cada data</span>
+                        </div>
                       </div>
                     )}
 
