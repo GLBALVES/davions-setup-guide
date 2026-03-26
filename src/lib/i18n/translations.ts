@@ -4150,7 +4150,7 @@ export const translations = {
       dueAtSession: "a pagar en la sesión",
       allowTip: "Permitir Propina",
       allowTipDesc: "Los clientes pueden agregar una propina al pagar.",
-      additionalPhotos: "Fotos Adicionales",
+      additionalPhotos: "Fotos Extra",
       additionalPhotosDesc: "Configura precios escalonados para fotos extra. Las cantidades mayores pueden tener un precio menor por foto.",
       addTier: "Agregar Nivel",
       minPhotos: "Mín de Fotos",
