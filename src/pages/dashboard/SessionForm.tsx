@@ -2188,10 +2188,10 @@ const SessionForm = () => {
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                         <span className="inline-block w-4 h-px bg-border" />
-                        Additional Photos
+                        {t.sessionForm.stepAddons}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                        Configure tiered pricing for extra photos. Higher quantities can have a lower price per photo.
+                        {t.sessionForm.additionalPhotosDesc}
                       </p>
                     </div>
 
@@ -2293,10 +2293,10 @@ const SessionForm = () => {
                     <div>
                       <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3">
                         <span className="inline-block w-4 h-px bg-border" />
-                        Extras
+                        {t.sessionForm.stepExtras}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 ml-7">
-                        Optional add-ons clients can select when booking this session.
+                        {t.sessionForm.extrasDesc}
                       </p>
                     </div>
 
