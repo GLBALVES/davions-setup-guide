@@ -214,6 +214,10 @@ const SessionForm = () => {
   const [campaignDates, setCampaignDates] = useState<Date[] | undefined>(undefined);
   /** For campaign sessions: the time slots to apply to ALL campaign dates */
   const [campaignSlots, setCampaignSlots] = useState<Array<{ start: string; end: string }>>([]);
+  /** Location override per date key (yyyy-MM-dd → location string) */
+  const [campaignDateLocations, setCampaignDateLocations] = useState<Record<string, string>>({});
+  /** Number of spots available per slot (applied to all campaign slots) */
+  const [campaignSpots, setCampaignSpots] = useState("1");
 
   // ── Contract ──
   interface ContractTemplate { id: string; name: string; body: string; }
