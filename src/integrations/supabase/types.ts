@@ -1688,6 +1688,47 @@ export type Database = {
           },
         ]
       }
+      project_emails: {
+        Row: {
+          body: string
+          client_email: string
+          created_at: string
+          id: string
+          photographer_id: string
+          project_id: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          body?: string
+          client_email: string
+          created_at?: string
+          id?: string
+          photographer_id: string
+          project_id: string
+          status?: string
+          subject?: string
+        }
+        Update: {
+          body?: string
+          client_email?: string
+          created_at?: string
+          id?: string
+          photographer_id?: string
+          project_id?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_emails_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_invoices: {
         Row: {
           amount: number
