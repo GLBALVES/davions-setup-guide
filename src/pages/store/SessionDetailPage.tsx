@@ -62,6 +62,15 @@ interface WeeklySlotDef {
   start_time: string;
 }
 
+interface CampaignSlotDef {
+  id: string;
+  date: string; // yyyy-MM-dd
+  start_time: string;
+  end_time: string;
+  spots: number;
+  location_override: string | null;
+}
+
 interface BlockedTime {
   date: string;
   start_time: string;
@@ -76,7 +85,9 @@ interface GeneratedSlot {
   end_time: string;
   label: string;
   disabled?: boolean;
-  disabledReason?: "booked" | "blocked";
+  disabledReason?: "booked" | "blocked" | "full";
+  spotsLeft?: number;
+  totalSpots?: number;
 }
 
 interface SessionExtra {
