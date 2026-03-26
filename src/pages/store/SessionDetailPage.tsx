@@ -750,14 +750,14 @@ const SessionDetailPage = () => {
           <ArrowLeft className="h-4 w-4" />
         </button>
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-4 text-center">
-          {photographer?.logo_url ? (
-            <img src={photographer.logo_url} alt="" className="h-10 object-contain" style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }} />
-          ) : (
-            <div className="h-16 w-16 rounded-full border-2 border-white/80 bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white text-lg font-light tracking-widest">{initials}</span>
-            </div>
-          )}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <div className="h-16 w-16 rounded-full border border-white/50 bg-black/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+            {photographer?.logo_url ? (
+              <img src={photographer.logo_url} alt="" className="h-10 w-10 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+            ) : (
+              <span className="text-white text-base font-light tracking-widest">{initials}</span>
+            )}
+          </div>
           <div className="flex flex-col items-center gap-1">
             {photographer?.full_name && (
               <p className="text-white/60 text-[10px] tracking-[0.35em] uppercase">
