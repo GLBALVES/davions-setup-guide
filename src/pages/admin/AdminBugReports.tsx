@@ -355,7 +355,7 @@ export default function AdminBugReports() {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-light truncate">{report.title}</p>
                               <p className="text-[10px] text-muted-foreground/60 mt-0.5 truncate">
-                                {report.reporter_email} · {report.route} · {new Date(report.created_at).toLocaleDateString()}
+                                {report.reporter_email} · {report.route} · {new Date(report.created_at).toLocaleDateString()} · {new Date(report.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                               </p>
                             </div>
                             <ChevronDown size={14} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", isOpen && "rotate-180")} />
