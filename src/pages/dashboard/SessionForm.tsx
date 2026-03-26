@@ -987,8 +987,8 @@ const SessionForm = () => {
         { n: 1 as const, label: "Details" },
         { n: 2 as const, label: "Availability" },
         { n: 3 as const, label: "Payment" },
-        { n: 4 as const, label: "Add-ons" },
-        { n: 5 as const, label: "Extras" },
+        { n: 4 as const, label: t.sessions?.stepAddons ?? "Extra Photos" },
+        { n: 5 as const, label: t.sessions?.stepExtras ?? "Add-ons" },
         { n: 6 as const, label: "Confirmation" },
         { n: 7 as const, label: "Rules" },
       ].map(({ n, label }, i) => (
