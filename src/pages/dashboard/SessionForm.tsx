@@ -2304,7 +2304,7 @@ const SessionForm = () => {
 
                     <button
                       type="button"
-                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "1", price: "", _local: true }])}
+                      onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "99", price: "", _local: true }])}
                       className="flex items-center gap-2 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border p-3 w-full justify-center"
                     >
                       <Plus className="h-3.5 w-3.5" />
