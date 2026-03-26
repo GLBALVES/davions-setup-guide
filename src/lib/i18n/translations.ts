@@ -860,8 +860,8 @@ export const translations = {
       stepDetails: "Details",
       stepAvailability: "Availability",
       stepPayment: "Payment",
-      stepAddons: "Add-ons",
-      stepExtras: "Extras",
+      stepAddons: "Extra Photos",
+      stepExtras: "Add-ons",
       stepConfirmation: "Confirmation",
       stepRules: "Rules",
       // Step 1
