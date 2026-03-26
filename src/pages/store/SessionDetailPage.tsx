@@ -452,6 +452,13 @@ const SessionDetailPage = () => {
   // ────────────────────────────────────────────
   // Slider auto-play
   // ────────────────────────────────────────────
+  // Slider with real drag/swipe movement (translateX)
+  // ────────────────────────────────────────────
+
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
 
   const sliderNext = useCallback(() => {
     setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
@@ -467,26 +474,28 @@ const SessionDetailPage = () => {
     return () => { if (sliderTimerRef.current) clearInterval(sliderTimerRef.current); };
   }, [portfolioImages.length, sliderNext, step]);
 
-  // Swipe / drag support for the hero slider
-  const dragStartX = useRef<number | null>(null);
-  const isDragging = useRef(false);
-
   const handleDragStart = useCallback((clientX: number) => {
     dragStartX.current = clientX;
     isDragging.current = false;
+    if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
   }, []);
 
   const handleDragMove = useCallback((clientX: number) => {
     if (dragStartX.current === null) return;
-    if (Math.abs(clientX - dragStartX.current) > 5) isDragging.current = true;
+    const delta = clientX - dragStartX.current;
+    if (Math.abs(delta) > 5) isDragging.current = true;
+    setDragOffset(delta);
   }, []);
 
   const handleDragEnd = useCallback((clientX: number) => {
     if (dragStartX.current === null) return;
     const delta = clientX - dragStartX.current;
     dragStartX.current = null;
-    if (!isDragging.current || Math.abs(delta) < 40) return;
-    if (sliderTimerRef.current) clearInterval(sliderTimerRef.current);
+    setDragOffset(0);
+    if (!isDragging.current || Math.abs(delta) < 40) {
+      sliderTimerRef.current = setInterval(sliderNext, 5000);
+      return;
+    }
     if (delta < 0) sliderNext(); else sliderPrev();
     sliderTimerRef.current = setInterval(sliderNext, 5000);
   }, [sliderNext, sliderPrev]);
