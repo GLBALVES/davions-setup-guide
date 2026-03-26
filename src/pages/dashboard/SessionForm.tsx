@@ -214,6 +214,10 @@ const SessionForm = () => {
   const [campaignDates, setCampaignDates] = useState<Date[] | undefined>(undefined);
   /** For campaign sessions: the time slots to apply to ALL campaign dates */
   const [campaignSlots, setCampaignSlots] = useState<Array<{ start: string; end: string }>>([]);
+  /** Location override per date key (yyyy-MM-dd → location string) */
+  const [campaignDateLocations, setCampaignDateLocations] = useState<Record<string, string>>({});
+  /** Number of spots available per slot (applied to all campaign slots) */
+  const [campaignSpots, setCampaignSpots] = useState("1");
 
   // ── Contract ──
   interface ContractTemplate { id: string; name: string; body: string; }
@@ -377,7 +381,7 @@ const SessionForm = () => {
     const [availRes, configRes] = await Promise.all([
       supabase
         .from("session_availability")
-        .select("id, day_of_week, date, start_time, end_time")
+        .select("id, day_of_week, date, start_time, end_time, spots, location_override")
         .eq("session_id", sid)
         .order("start_time", { ascending: true }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -389,7 +393,7 @@ const SessionForm = () => {
 
     if (availRes.data) {
       // Separate weekly slots (day_of_week not null) from campaign slots (date not null)
-      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string };
+      type AvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string; spots?: number; location_override?: string | null };
       const rows = availRes.data as AvailRow[];
       const weeklyRows = rows.filter((r) => r.day_of_week !== null);
       const campaignRows = rows.filter((r) => r.day_of_week === null);
@@ -408,6 +412,21 @@ const SessionForm = () => {
         return acc;
       }, []);
       setCampaignSlots(uniqueCampaignSlots);
+
+      // Restore spots (use first campaign row's value)
+      const firstCampaignRow = campaignRows[0];
+      if (firstCampaignRow?.spots != null && firstCampaignRow.spots > 1) {
+        setCampaignSpots(String(firstCampaignRow.spots));
+      }
+
+      // Restore location overrides per date
+      const locMap: Record<string, string> = {};
+      for (const r of campaignRows) {
+        if (r.date && r.location_override) {
+          locMap[r.date] = r.location_override;
+        }
+      }
+      if (Object.keys(locMap).length > 0) setCampaignDateLocations(locMap);
     }
 
     if (configRes.data && configRes.data.length > 0) {
@@ -632,18 +651,23 @@ const SessionForm = () => {
     if (sessionModel === "campaign") {
       // For campaigns: expand each selected time slot across all campaign dates
       const dates = campaignDates ?? [];
-      const inserts = dates.flatMap((date) =>
-        campaignSlots.map((sl) => ({
+      const spotsNum = Math.max(1, parseInt(campaignSpots) || 1);
+      const inserts = dates.flatMap((date) => {
+        const dateKey = format(date, "yyyy-MM-dd");
+        const locationOverride = campaignDateLocations[dateKey] || null;
+        return campaignSlots.map((sl) => ({
           session_id: sessionId,
           photographer_id: user.id,
           day_of_week: null,
-          date: format(date, "yyyy-MM-dd"),
+          date: dateKey,
           start_time: sl.start,
           end_time: sl.end,
-        }))
-      );
+          spots: spotsNum,
+          location_override: locationOverride,
+        }));
+      });
       if (inserts.length > 0) {
-        await supabase.from("session_availability").insert(inserts);
+        await supabase.from("session_availability").insert(inserts as never);
       }
     } else {
       if (slots.length > 0) {
@@ -1604,14 +1628,46 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-                    {/* Campaign: show selected dates as pills */}
+                    {/* Campaign: date cards with optional location per date + spots */}
                     {sessionModel === "campaign" && campaignDates && campaignDates.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 px-1">
-                        {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => (
-                          <span key={d.toISOString()} className="px-2 py-0.5 border border-border text-[10px] tracking-wide text-muted-foreground">
-                            {format(d, "MMM d")}
-                          </span>
-                        ))}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[9px] tracking-widest uppercase text-muted-foreground">Datas da campanha</p>
+                        </div>
+                        {[...campaignDates].sort((a, b) => a.getTime() - b.getTime()).map((d) => {
+                          const dateKey = format(d, "yyyy-MM-dd");
+                          return (
+                            <div key={d.toISOString()} className="border border-border px-3 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2">
+                              <span className="text-[11px] font-light tracking-wide shrink-0 w-24 text-foreground">
+                                {format(d, "EEE, MMM d")}
+                              </span>
+                              <Input
+                                type="text"
+                                value={campaignDateLocations[dateKey] ?? ""}
+                                onChange={(e) =>
+                                  setCampaignDateLocations((prev) => ({
+                                    ...prev,
+                                    [dateKey]: e.target.value,
+                                  }))
+                                }
+                                placeholder="Local específico (opcional)"
+                                className="h-7 text-xs flex-1"
+                              />
+                            </div>
+                          );
+                        })}
+                        {/* Spots per slot */}
+                        <div className="flex items-center gap-3 border border-border px-3 py-2.5">
+                          <span className="text-[9px] tracking-widest uppercase text-muted-foreground shrink-0">Vagas por horário</span>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={campaignSpots}
+                            onChange={(e) => setCampaignSpots(e.target.value)}
+                            className="h-7 text-xs w-20"
+                          />
+                          <span className="text-[10px] text-muted-foreground">vagas disponíveis por horário em cada data</span>
+                        </div>
                       </div>
                     )}
 
