@@ -455,18 +455,19 @@ const SessionDetailPage = () => {
   // Slider with real drag/swipe movement (translateX)
   // ────────────────────────────────────────────
 
-  const [dragOffset, setDragOffset] = useState(0);
-  const dragStartX = useRef<number | null>(null);
-  const isDragging = useRef(false);
-  const sliderContainerRef = useRef<HTMLDivElement | null>(null);
+   const [dragOffset, setDragOffset] = useState(0);
+   const dragStartX = useRef<number | null>(null);
+   const isDragging = useRef(false);
+   const sliderContainerRef = useRef<HTMLDivElement | null>(null);
+   const isLoopJumping = useRef(false);
 
-  const sliderNext = useCallback(() => {
-    setSliderIndex((i) => (portfolioImages.length > 1 ? (i + 1) % portfolioImages.length : 0));
-  }, [portfolioImages.length]);
+   const sliderNext = useCallback(() => {
+     setSliderIndex((i) => i + 1);
+   }, []);
 
-  const sliderPrev = useCallback(() => {
-    setSliderIndex((i) => (portfolioImages.length > 1 ? (i - 1 + portfolioImages.length) % portfolioImages.length : 0));
-  }, [portfolioImages.length]);
+   const sliderPrev = useCallback(() => {
+     setSliderIndex((i) => i - 1);
+   }, []);
 
   useEffect(() => {
     if (portfolioImages.length <= 1 || step !== "product") return;
