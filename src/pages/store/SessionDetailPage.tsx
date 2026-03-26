@@ -305,15 +305,85 @@ const SessionDetailPage = () => {
       ];
       setPortfolioImages(allSlides);
 
+      // Fetch ALL availability (weekly + campaign)
       const { data: availData } = await supabase
         .from("session_availability")
-        .select("id, day_of_week, start_time")
-        .eq("session_id", s.id)
-        .not("day_of_week", "is", null);
+        .select("id, day_of_week, date, start_time, end_time, spots, location_override")
+        .eq("session_id", s.id);
 
-      const defs: WeeklySlotDef[] = (availData ?? []).map((a) => ({
+      type FullAvailRow = { id: string; day_of_week: number | null; date: string | null; start_time: string; end_time: string; spots?: number; location_override?: string | null };
+      const allAvail = (availData ?? []) as FullAvailRow[];
+
+      const weeklyRows = allAvail.filter((r) => r.day_of_week !== null);
+      const campaignRows = allAvail.filter((r) => r.day_of_week === null && r.date !== null);
+
+      const isSessionCampaign = campaignRows.length > 0;
+      setIsCampaign(isSessionCampaign);
+
+      if (isSessionCampaign) {
+        // Campaign mode: load all campaign slots with their spots info
+        const today = format(startOfToday(), "yyyy-MM-dd");
+        const allAvailIds = campaignRows.map((r) => r.id);
+
+        // Fetch booking counts grouped by availability_id + booked_date
+        const { data: bookingsData } = await supabase
+          .from("bookings")
+          .select("availability_id, booked_date")
+          .in("availability_id", allAvailIds)
+          .eq("status", "confirmed");
+
+        // Build booking count map: key = `${availId}_${date}` → count
+        const bookingCountMap = new Map<string, number>();
+        for (const b of bookingsData ?? []) {
+          if (!b.booked_date) continue;
+          const key = `${b.availability_id}_${b.booked_date}`;
+          bookingCountMap.set(key, (bookingCountMap.get(key) ?? 0) + 1);
+        }
+
+        const campaignSlotsData: CampaignSlotDef[] = campaignRows
+          .filter((r) => r.date! >= today) // only future dates
+          .map((r) => {
+            const spots = r.spots ?? 1;
+            const bookedCount = bookingCountMap.get(`${r.id}_${r.date}`) ?? 0;
+            return {
+              id: r.id,
+              date: r.date!,
+              start_time: r.start_time.slice(0, 5),
+              end_time: r.end_time.slice(0, 5),
+              spots,
+              location_override: r.location_override ?? null,
+              _bookedCount: bookedCount,
+            } as CampaignSlotDef & { _bookedCount: number };
+          });
+
+        setCampaignSlots(campaignSlotsData);
+
+        // Also build GeneratedSlot list for campaign (so selectedSlot works uniformly)
+        const generated: GeneratedSlot[] = campaignSlotsData.map((r) => {
+          const rWithCount = r as CampaignSlotDef & { _bookedCount: number };
+          const spotsLeft = r.spots - rWithCount._bookedCount;
+          const full = spotsLeft <= 0;
+          const dateObj = new Date(r.date + "T00:00:00");
+          return {
+            availabilityId: r.id,
+            date: dateObj,
+            start_time: r.start_time,
+            end_time: r.end_time,
+            label: format(dateObj, "EEEE, MMMM d"),
+            disabled: full,
+            disabledReason: full ? "full" : undefined,
+            spotsLeft: full ? 0 : spotsLeft,
+            totalSpots: r.spots,
+          };
+        });
+        setGeneratedSlots(generated);
+        setLoading(false);
+        return;
+      }
+
+      const defs: WeeklySlotDef[] = weeklyRows.map((a) => ({
         id: a.id,
-        day_of_week: (a as unknown as { day_of_week: number }).day_of_week,
+        day_of_week: a.day_of_week as number,
         start_time: a.start_time,
       }));
 
