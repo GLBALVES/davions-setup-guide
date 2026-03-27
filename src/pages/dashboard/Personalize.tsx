@@ -511,6 +511,9 @@ const Personalize = () => {
       business_phone: businessPhone.trim() || null,
       business_address: businessAddress.trim() || null,
       business_city: businessCity.trim() || null,
+      business_neighborhood: businessNeighborhood.trim() || null,
+      business_state: businessState.trim() || null,
+      business_zip: businessZip.trim() || null,
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null
