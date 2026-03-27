@@ -298,6 +298,7 @@ const GalleryView = () => {
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+  const [bookingExtras, setBookingExtras] = useState<BookingExtra[]>([]);
   const prevFavCountRef = useRef(0);
 
   // Renewal state
