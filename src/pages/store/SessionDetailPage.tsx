@@ -732,24 +732,31 @@ const SessionDetailPage = () => {
         <>
           {/* ── Hero slider: full-width crossfade ── */}
           {(() => {
-            // Build frames: every 4th is a masonry grid, rest are single photos
-            const isGridFrame = (idx: number) => slides.length >= 3 && idx % 4 === 0;
-            const totalFrames = slides.length <= 1 ? 1 : slides.length + Math.floor(slides.length / 3);
+            // Build frames: Cover → Grid Masonry → Portfolio 1…N → (loop)
+            const coverImg = session.cover_image_url || heroImage;
+            const portfolioOnly = portfolioImages.filter(p => p !== coverImg);
+            const allImages = coverImg ? [coverImg, ...portfolioOnly] : portfolioOnly;
 
-            const frames = Array.from({ length: totalFrames }, (_, idx) => {
-              const frameIdx = idx % totalFrames;
-              if (isGridFrame(frameIdx)) {
-                let gridCount = 0;
-                for (let i = 0; i < frameIdx; i++) if (isGridFrame(i)) gridCount++;
-                const start = (gridCount * 6) % slides.length;
-                const pool = [...slides, ...slides];
-                return { type: "grid" as const, photos: pool.slice(start, start + 9) };
-              } else {
-                let count = 0;
-                for (let i = 0; i < frameIdx; i++) if (!isGridFrame(i)) count++;
-                return { type: "single" as const, src: slides[count % slides.length] };
+            const frames: Array<{ type: "single"; src: string } | { type: "grid"; photos: string[] }> = [];
+
+            if (allImages.length === 0) {
+              // nothing
+            } else if (allImages.length < 3) {
+              // Not enough for masonry, just show singles
+              for (const src of allImages) frames.push({ type: "single", src });
+            } else {
+              // Cover
+              if (coverImg) frames.push({ type: "single", src: coverImg });
+              // Grid masonry with all images
+              const masonryPool = [...allImages, ...allImages];
+              frames.push({ type: "grid", photos: masonryPool.slice(0, 9) });
+              // Portfolio images (excluding cover)
+              for (const src of portfolioOnly) {
+                frames.push({ type: "single", src });
               }
-            });
+            }
+
+            const totalFrames = frames.length || 1;
 
             // For infinite loop: clone last frame at start and first frame at end
             const loopFrames = totalFrames > 1
