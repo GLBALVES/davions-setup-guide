@@ -289,7 +289,7 @@ const Personalize = () => {
       (supabase as any).from("gallery_settings").
       select("key, value").eq("photographer_id", photographerId),
       (supabase as any).from("photographers").
-      select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id").
+      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_tax_id").
       eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
