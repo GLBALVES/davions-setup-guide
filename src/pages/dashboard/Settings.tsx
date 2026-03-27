@@ -134,6 +134,7 @@ const Settings = () => {
     toast({ title: t.notif.saved });
   };
 
+  const fetchSessionTypes = useCallback(async () => {
     if (!photographerId) return;
     const { data } = await supabase
       .from("session_types")
