@@ -1,57 +1,58 @@
 
 
-## Plano: Web Push Notifications Completo
+## Plano: Implementação Completa Web Push
 
-### O que existe hoje
-- Sino de notificações in-app com Realtime (funciona)
-- `new Notification()` direta — só funciona com aba aberta
-- **Não existe**: Service Worker, VAPID keys, tabela `push_subscriptions`, Edge Function `send-push`
+Nada do Web Push existe ainda — vou criar tudo do zero.
 
-### O que será implementado
+### 1. Secrets VAPID (primeiro passo obrigatório)
+- Adicionar `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` como secrets do projeto
+- Vou gerar os valores e pedir para você colá-los
 
-**1. Gerar VAPID Keys automaticamente no backend**
-- Nova Edge Function `generate-vapid-keys` que gera o par de chaves usando a Web Crypto API (curva P-256)
-- Salva a chave privada na tabela `app_settings` (nova) e retorna a pública
-- Alternativa mais simples: gerar as chaves via script e armazenar como secrets (`VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`)
+### 2. Migration: tabela `push_subscriptions`
+```sql
+CREATE TABLE push_subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  photographer_id uuid NOT NULL REFERENCES photographers(id) ON DELETE CASCADE,
+  endpoint text NOT NULL,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (photographer_id, endpoint)
+);
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+-- Políticas: fotógrafo CRUD nas próprias subscriptions
+```
 
-**2. Service Worker (`public/sw.js`)**
-- Escuta evento `push` → exibe notificação nativa do SO
-- Escuta `notificationclick` → abre/foca o dashboard
-- Funciona mesmo com aba fechada (desde que o browser esteja aberto)
+### 3. Service Worker (`public/sw.js`)
+- Escuta `push` → exibe notificação nativa do SO
+- Escuta `notificationclick` → abre/foca dashboard
+- Funciona em background (aba fechada, browser aberto)
 
-**3. Tabela `push_subscriptions`**
-- Colunas: `id`, `photographer_id`, `endpoint`, `p256dh`, `auth`, `created_at`
-- RLS: fotógrafo pode CRUD nas próprias subscriptions
-- Unique constraint em `(photographer_id, endpoint)` para evitar duplicatas
+### 4. Registro no cliente
+- `src/main.tsx`: registrar Service Worker
+- `src/lib/notifications-api.ts`: nova função `subscribeToPush()` que faz `pushManager.subscribe()` e salva no banco
+- `NotificationBell.tsx`: chamar `subscribeToPush()` ao conceder permissão
 
-**4. Registro no cliente**
-- Em `src/main.tsx`: registrar o Service Worker
-- Em `NotificationBell.tsx`: ao conceder permissão, chamar `pushManager.subscribe()` com a VAPID public key e salvar a subscription no banco
-- Nova função `savePushSubscription()` em `notifications-api.ts`
-
-**5. Edge Function `send-push`**
+### 5. Edge Function `send-push`
 - Recebe `photographer_id`, `title`, `body`, `url`
-- Busca todas as subscriptions do fotógrafo
-- Envia via protocolo Web Push (RFC 8291) usando `web-push` para Deno
-- Remove subscriptions expiradas (status 410)
+- Busca subscriptions do fotógrafo no banco
+- Envia via Web Push protocol (RFC 8291) com VAPID auth
+- Remove subscriptions expiradas (HTTP 410)
 
-**6. Integração nos eventos**
-- No `session-booking-webhook`, após inserir na tabela `notifications`, invocar `send-push` via fetch interno
-- Mesma lógica para futuros triggers (chat, bug reports)
+### 6. Integração nos eventos
+- `session-booking-webhook`: após inserir notificação, chamar `send-push`
+- Mesmo padrão para futuros triggers
 
-### Sobre as VAPID Keys
-As VAPID keys são credenciais que identificam o servidor que envia push notifications. Vou gerá-las automaticamente via script e armazená-las como secrets no backend — **você não precisa configurar nada manualmente**.
-
-### Arquivos criados/editados
+### Arquivos
 
 | Ação | Arquivo |
 |------|---------|
 | Criar | `public/sw.js` |
 | Criar | `supabase/functions/send-push/index.ts` |
-| Criar | Migration: tabela `push_subscriptions` |
-| Editar | `src/main.tsx` (registrar SW) |
-| Editar | `src/lib/notifications-api.ts` (savePushSubscription) |
-| Editar | `src/components/dashboard/NotificationBell.tsx` (subscribe ao push) |
-| Editar | `supabase/functions/session-booking-webhook/index.ts` (chamar send-push) |
-| Secrets | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (gerados automaticamente) |
+| Migration | tabela `push_subscriptions` |
+| Editar | `src/main.tsx` |
+| Editar | `src/lib/notifications-api.ts` |
+| Editar | `src/components/dashboard/NotificationBell.tsx` |
+| Editar | `supabase/functions/session-booking-webhook/index.ts` |
+| Secrets | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` |
 
