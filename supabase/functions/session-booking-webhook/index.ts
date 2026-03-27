@@ -244,6 +244,16 @@ serve(async (req) => {
         .update({ status: "failed", payment_status: "failed" })
         .eq("id", booking.id);
 
+      // In-app notification for payment failure
+      await supabase.from("notifications").insert({
+        photographer_id: booking.photographer_id,
+        type: "error",
+        event: "payment_failed",
+        title: `Payment Failed — ${booking.client_name}`,
+        body: `Payment for booking could not be processed.`,
+        metadata: { booking_id: booking.id },
+      });
+
       // Send failure notification email to client if RESEND_API_KEY is available
       try {
         const resendKey = Deno.env.get("RESEND_API_KEY");
