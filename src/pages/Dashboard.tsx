@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { PushBanner } from "@/components/dashboard/PushBanner";
 import {
   CalendarDays, Clock, Users, FolderKanban, Image,
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
