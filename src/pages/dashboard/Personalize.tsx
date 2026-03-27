@@ -499,6 +499,8 @@ const Personalize = () => {
   const handleSaveBusiness = async () => {
     setSavingBusiness(true);
     const { error } = await (supabase as any).from("photographers").update({
+      full_name: fullName.trim() || null,
+      bio: bio.trim() || null,
       business_name: businessName.trim() || null,
       business_phone: businessPhone.trim() || null,
       business_address: businessAddress.trim() || null,
@@ -990,6 +992,28 @@ const Personalize = () => {
 
                   {/* ── BUSINESS TAB ── */}
                   <TabsContent value="business" className="mt-0 flex flex-col gap-8">
+                    {/* Profile section */}
+                    <section className="flex flex-col gap-5">
+                      <SectionHeading
+                      title={t.personalize.profileInfo}
+                      description={t.personalize.profileInfoDesc} />
+                    
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.fullName}>
+                          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                        <FieldRow label={t.personalize.emailLabel}>
+                          <Input value={user?.email ?? ""} disabled className="h-9 text-sm font-light bg-muted/40 cursor-not-allowed" />
+                        </FieldRow>
+                      </div>
+                      <FieldRow label={t.personalize.bioLabel}>
+                        <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t.personalize.bioPlaceholder} className="text-sm font-light min-h-[80px] resize-y" />
+                      </FieldRow>
+                    </section>
+
+                    <Divider />
+
+                    {/* Business info section */}
                     <section className="flex flex-col gap-5">
                       <SectionHeading
                       title={t.personalize.businessInfo}
@@ -1020,7 +1044,6 @@ const Personalize = () => {
                           value={businessCurrency}
                           onChange={(e) => setBusinessCurrency(e.target.value)}
                           className="h-9 px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-                          
                             {[
                           { code: "USD", label: "USD — US Dollar" },
                           { code: "EUR", label: "EUR — Euro" },
@@ -1028,7 +1051,16 @@ const Personalize = () => {
                           { code: "CAD", label: "CAD — Canadian Dollar" },
                           { code: "AUD", label: "AUD — Australian Dollar" },
                           { code: "BRL", label: "BRL — Brazilian Real" },
-                          { code: "MXN", label: "MXN — Mexican Peso" }].
+                          { code: "MXN", label: "MXN — Mexican Peso" },
+                          { code: "ARS", label: "ARS — Argentine Peso" },
+                          { code: "CLP", label: "CLP — Chilean Peso" },
+                          { code: "COP", label: "COP — Colombian Peso" },
+                          { code: "PEN", label: "PEN — Peruvian Sol" },
+                          { code: "JPY", label: "JPY — Japanese Yen" },
+                          { code: "CHF", label: "CHF — Swiss Franc" },
+                          { code: "NZD", label: "NZD — New Zealand Dollar" },
+                          { code: "ZAR", label: "ZAR — South African Rand" },
+                          { code: "INR", label: "INR — Indian Rupee" }].
                           map((c) =>
                           <option key={c.code} value={c.code}>{c.label}</option>
                           )}
