@@ -206,6 +206,13 @@ interface PhotoTier {
   price_per_photo: number;
 }
 
+interface BookingExtra {
+  id: string;
+  description: string;
+  price: number;
+  quantity: number;
+}
+
 // Find matching tier for a given extra photo count.
 // Tiers represent "up to X extras" thresholds: min_photos is the max qty for that tier.
 // e.g. tier(10, $10) + tier(20, $9) + tier(30, $8) means:
@@ -291,6 +298,7 @@ const GalleryView = () => {
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [bookingInfo, setBookingInfo] = useState<BookingSessionInfo | null>(null);
   const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+  const [bookingExtras, setBookingExtras] = useState<BookingExtra[]>([]);
   const prevFavCountRef = useRef(0);
 
   // Renewal state
@@ -475,8 +483,16 @@ const GalleryView = () => {
                 .select("id, min_photos, max_photos, price_per_photo")
                 .eq("session_id", sessionId)
                 .order("min_photos", { ascending: true });
-              if (tiersData && tiersData.length > 0) {
+               if (tiersData && tiersData.length > 0) {
                 setPhotoTiers(tiersData as PhotoTier[]);
+              }
+              // Fetch session extras (add-ons)
+              const { data: extrasData } = await supabase
+                .from("session_extras")
+                .select("id, description, price, quantity")
+                .eq("session_id", sessionId);
+              if (extrasData && extrasData.length > 0) {
+                setBookingExtras(extrasData as BookingExtra[]);
               }
             }
           }
@@ -1085,14 +1101,21 @@ const GalleryView = () => {
                         <span className="text-xs tabular-nums text-foreground">{formatCurrency(inlineSummary.bi.session_price)}</span>
                       </div>
 
-                      {/* Extra Photos (booking add-ons) */}
+                      {/* Booking add-ons */}
                       {inlineSummary.bi.extras_total > 0 && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground font-light">Addons</span>
-                            <span className="text-[10px] text-muted-foreground/50 font-light">Selected add-ons at booking</span>
-                          </div>
-                          <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs text-muted-foreground font-light">Addons</span>
+                          {bookingExtras.length > 0 ? bookingExtras.map((ext) => (
+                            <div key={ext.id} className="flex items-center justify-between pl-2">
+                              <span className="text-[10px] text-muted-foreground/70 font-light">{ext.description} {ext.quantity > 1 ? `×${ext.quantity}` : ''}</span>
+                              <span className="text-[10px] tabular-nums text-foreground">{formatCurrency(ext.price * ext.quantity)}</span>
+                            </div>
+                          )) : (
+                            <div className="flex items-center justify-between pl-2">
+                              <span className="text-[10px] text-muted-foreground/50 font-light">Selected at booking</span>
+                              <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -1843,9 +1866,17 @@ const GalleryView = () => {
 
                     {/* Extras */}
                     {bi.extras_total > 0 && (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-light">Addons</span>
-                        <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light">Addons</span>
+                          <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
+                        </div>
+                        {bookingExtras.length > 0 && bookingExtras.map((ext) => (
+                          <div key={ext.id} className="flex items-center justify-between text-[10px] pl-2">
+                            <span className="text-muted-foreground/70 font-light">{ext.description} {ext.quantity > 1 ? `×${ext.quantity}` : ''}</span>
+                            <span className="tabular-nums text-muted-foreground">{formatCurrency(ext.price * ext.quantity)}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
 
