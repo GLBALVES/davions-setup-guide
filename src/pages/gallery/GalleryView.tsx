@@ -1101,14 +1101,21 @@ const GalleryView = () => {
                         <span className="text-xs tabular-nums text-foreground">{formatCurrency(inlineSummary.bi.session_price)}</span>
                       </div>
 
-                      {/* Extra Photos (booking add-ons) */}
+                      {/* Booking add-ons */}
                       {inlineSummary.bi.extras_total > 0 && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground font-light">Addons</span>
-                            <span className="text-[10px] text-muted-foreground/50 font-light">Selected add-ons at booking</span>
-                          </div>
-                          <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs text-muted-foreground font-light">Addons</span>
+                          {bookingExtras.length > 0 ? bookingExtras.map((ext) => (
+                            <div key={ext.id} className="flex items-center justify-between pl-2">
+                              <span className="text-[10px] text-muted-foreground/70 font-light">{ext.description} {ext.quantity > 1 ? `×${ext.quantity}` : ''}</span>
+                              <span className="text-[10px] tabular-nums text-foreground">{formatCurrency(ext.price * ext.quantity)}</span>
+                            </div>
+                          )) : (
+                            <div className="flex items-center justify-between pl-2">
+                              <span className="text-[10px] text-muted-foreground/50 font-light">Selected at booking</span>
+                              <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
