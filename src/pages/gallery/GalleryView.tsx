@@ -1933,7 +1933,7 @@ const GalleryView = () => {
                               {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} × {formatCurrency(effectivePPP)} each
                               {activeTier && (
                                 <span className="ml-1 opacity-70">
-                                  (tier: {activeTier.min_photos}{activeTier.max_photos ? `–${activeTier.max_photos}` : "+"} photos)
+                                  (up to {activeTier.min_photos} photos tier)
                                 </span>
                               )}
                             </p>
