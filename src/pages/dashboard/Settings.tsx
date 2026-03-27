@@ -499,6 +499,7 @@ const Settings = () => {
                     {[
                       { value: "profile", label: t.settings.profile },
                       { value: "payments", label: t.settings.payments },
+                      { value: "notifications", label: t.notif.title },
                       { value: "security", label: t.settings.security },
                     ].map((tab) => (
                       <TabsTrigger
