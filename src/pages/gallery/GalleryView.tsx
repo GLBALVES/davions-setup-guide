@@ -1089,7 +1089,7 @@ const GalleryView = () => {
                       {inlineSummary.bi.extras_total > 0 && (
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground font-light">Extra Photos</span>
+                            <span className="text-xs text-muted-foreground font-light">Addons</span>
                             <span className="text-[10px] text-muted-foreground/50 font-light">Selected add-ons at booking</span>
                           </div>
                           <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
