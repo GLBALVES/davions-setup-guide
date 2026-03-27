@@ -1,82 +1,46 @@
 
-## Análise
 
-O vídeo referenciado (book.usesession.com) mostra 3 funcionalidades que não existem no sistema:
+## Plano: Slider com swipe + preenchimento lateral masonry
 
-**1. Localização por data de campanha** — cada data da campanha pode ter um local diferente (ex: "HOUSTON" em 27/mar, "BRENHAM, TX" em 28/mar). Atualmente só existe um campo `location` global na sessão.
+### Comportamento desejado
+- Slider com **transição swipe** (translateX), não crossfade
+- Foto principal centralizada, altura 100% do container, sem corte
+- Laterais preenchidas com **mini-grid masonry** usando outras fotos do portfólio
+- Loop infinito mantido
 
-**2. Vagas por horário (spots per slot)** — cada horário exibe quantas vagas restam ("Choose from 2 available spots", "SOLD OUT"). Atualmente um horário é tratado como único por booking.
+### Mudanças técnicas
 
-**3. Layout de listagem por datas para campanha** — na página pública, a referência exibe as datas em formato lista/accordion vertical com o local e horários embaixo de cada data, em vez do calendário padrão. Isso é muito mais direto para campanhas com poucas datas fixas.
+**Arquivo: `src/pages/store/SessionDetailPage.tsx`**
 
----
+1. **Trocar crossfade por swipe horizontal**
+   - Slides lado a lado com `translateX` baseado no índice ativo
+   - Arrastar move o container com offset em tempo real
+   - Ao soltar, anima para o slide mais próximo
 
-## O que é viável implementar
+2. **Slide de foto individual — layout em 3 colunas**
+   - Coluna esquerda: mini masonry grid (2-3 fotos do portfólio) com `object-cover`, preenchendo a lateral
+   - Centro: foto principal com `object-contain`, `height: 100%`, largura natural
+   - Coluna direita: mini masonry grid (2-3 fotos diferentes) com `object-cover`
+   - As fotos laterais são selecionadas do array `slides` excluindo a foto atual
+   - Se a foto principal já preenche a tela toda, as laterais ficam ocultas (largura 0)
 
-**Totalmente viável:**
-- Layout de datas listadas para campanhas na página pública
-- Localização por data de campanha
+3. **Cálculo dinâmico da largura lateral**
+   - Usar `onLoad` da imagem principal para obter aspect ratio real
+   - Calcular: `imgWidth = containerHeight * aspectRatio`
+   - Se `imgWidth >= containerWidth`: sem laterais
+   - Senão: cada lateral = `(containerWidth - imgWidth) / 2`
 
-**Viável com migração de banco:**
-- Vagas por horário (spots) — requer nova coluna `spots` na tabela `session_availability`
+4. **Slides masonry (já existentes)**: mantidos como estão, ocupando tela cheia
 
----
-
-## Plano de Implementação
-
-### 1. Migração de banco de dados
-- Adicionar coluna `spots INTEGER DEFAULT 1` na tabela `session_availability` — controla quantas reservas simultâneas o horário aceita.
-- Adicionar coluna `location_override TEXT` na tabela `session_availability` — permite sobrescrever a localização por slot/data de campanha. Na prática, para campanhas, todos os slots de uma mesma data compartilham o mesmo `location_override`.
-
-### 2. Cadastro da sessão (SessionForm.tsx) — Step 1 e Step 2
-
-**Step 1 — Campanha:**
-- Ao selecionar datas da campanha, exibir para cada data um campo de localização opcional ("Local específico desta data"). Guardado no estado como `Record<string, string>` (dateKey → location).
-
-**Step 2 — Disponibilidade:**
-- No bloco de slots da campanha, adicionar campo "Vagas por horário" (padrão: 1). Único valor aplicado a todos os slots da campanha.
-- Na lógica `handleSaveAvailability`, ao inserir os registros de campanha, salvar o `spots` e o `location_override` de cada data.
-
-### 3. Página pública de sessão (SessionDetailPage.tsx)
-
-**Detecção do tipo de sessão:**
-- Ao carregar, detectar se é campanha (registros `session_availability` com `date != null`).
-- Agrupar os slots por data.
-
-**Layout condicional na seleção de horários:**
-- Se for **campanha**: substituir o calendário por uma listagem vertical de datas. Cada data mostra:
-  - Nome do dia e data formatada
-  - Local da data (se `location_override` estiver definido)
-  - Badges dos horários disponíveis com contagem de vagas ("2 vagas disponíveis" / "Esgotado")
-- Se for **sessão padrão**: manter o calendário atual.
-
-**Contagem de vagas:**
-- Na query de bookings, contar por `availability_id + booked_date` e comparar com `spots`. Se `count >= spots`, o slot está desabilitado como "Esgotado" em vez de "booked".
-
-### 4. Arquivos afetados
+### Resultado visual
 ```text
-supabase/migrations/     → nova migração SQL
-src/pages/dashboard/SessionForm.tsx  → campos de location por data + spots
-src/pages/store/SessionDetailPage.tsx → layout de lista para campanhas + vagas
+┌──────────┬────────────────────┬──────────┐
+│ masonry  │                    │ masonry  │
+│ grid     │   FOTO PRINCIPAL   │ grid     │
+│ (fotos   │   (height 100%)    │ (fotos   │
+│  extras) │   (sem corte)      │  extras) │
+│          │                    │          │
+└──────────┴────────────────────┴──────────┘
+           ◄──── swipe ────►
 ```
 
-### Detalhes técnicos
-
-**Migração SQL:**
-```sql
-ALTER TABLE session_availability ADD COLUMN IF NOT EXISTS spots INTEGER DEFAULT 1;
-ALTER TABLE session_availability ADD COLUMN IF NOT EXISTS location_override TEXT;
-```
-
-**Estado adicionado em SessionForm:**
-- `campaignDateLocations: Record<string, string>` — mapa dateKey → localização específica
-- `campaignSpots: string` — número de vagas por horário (aplicado a todos)
-
-**Lógica de vagas na página pública:**
-- Query de bookings: `SELECT availability_id, booked_date, COUNT(*) as cnt GROUP BY availability_id, booked_date`
-- Um slot é marcado como esgotado quando `cnt >= spots`
-
-**UI na página pública (campanha):**
-- Lista vertical substituindo o calendário no step "slots"
-- Cada data em card expandível com horários como botões
-- Badge de vagas: "X vagas" (verde/cinza) ou "Esgotado" (tachado)
