@@ -720,7 +720,7 @@ export const translations = {
       businessName: "Business Name",
       phone: "Phone",
       streetAddress: "Street Address",
-      neighborhood: "Province",
+      neighborhood: "Neighborhood",
       city: "City",
       state: "State",
       zipCode: "Zip Code",
