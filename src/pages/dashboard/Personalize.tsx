@@ -1040,8 +1040,19 @@ const Personalize = () => {
                         <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 Main St, Suite 4" className="h-9 text-sm font-light" />
                       </FieldRow>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.neighborhood}>
+                          <Input value={businessNeighborhood} onChange={(e) => setBusinessNeighborhood(e.target.value)} placeholder="Brooklyn" className="h-9 text-sm font-light" />
+                        </FieldRow>
                         <FieldRow label={t.personalize.city}>
                           <Input value={businessCity} onChange={(e) => setBusinessCity(e.target.value)} placeholder="New York" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <FieldRow label={t.personalize.state}>
+                          <Input value={businessState} onChange={(e) => setBusinessState(e.target.value)} placeholder="NY" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                        <FieldRow label={t.personalize.zipCode}>
+                          <Input value={businessZip} onChange={(e) => setBusinessZip(e.target.value)} placeholder="10001" className="h-9 text-sm font-light" />
                         </FieldRow>
                         <FieldRow label={t.personalize.country}>
                           <Input value={businessCountry} onChange={(e) => setBusinessCountry(e.target.value)} placeholder="United States" className="h-9 text-sm font-light" />
