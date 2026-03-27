@@ -11,6 +11,7 @@ import {
   fetchUnreadCount,
   markAsRead,
   markAllAsRead,
+  subscribeToPush,
   type NotificationRow,
 } from "@/lib/notifications-api";
 import { formatDistanceToNow } from "date-fns";
@@ -93,7 +94,12 @@ export function NotificationBell() {
 
   const requestBrowserPermission = async () => {
     if ("Notification" in window && Notification.permission === "default") {
-      await Notification.requestPermission();
+      const result = await Notification.requestPermission();
+      if (result === "granted" && photographerId) {
+        subscribeToPush(photographerId);
+      }
+    } else if ("Notification" in window && Notification.permission === "granted" && photographerId) {
+      subscribeToPush(photographerId);
     }
   };
 
