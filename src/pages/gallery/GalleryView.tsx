@@ -1042,6 +1042,12 @@ const GalleryView = () => {
                     <Heart className="h-3.5 w-3.5 fill-rose-500" />
                     <span className="text-xs font-medium">{favCount}</span>
                   </span>
+                  {inlineSummary && inlineSummary.extraPhotos > 0 && (
+                    <>
+                      <span className="text-rose-300 text-xs">·</span>
+                      <span className="text-[10px] text-rose-600 font-medium">{inlineSummary.extraPhotos} extra</span>
+                    </>
+                  )}
                   {pricePerPhoto > 0 && (
                     <>
                       <span className="text-rose-300 text-xs">·</span>
@@ -1927,7 +1933,7 @@ const GalleryView = () => {
                               {extraPhotos} photo{extraPhotos !== 1 ? "s" : ""} × {formatCurrency(effectivePPP)} each
                               {activeTier && (
                                 <span className="ml-1 opacity-70">
-                                  (tier: {activeTier.min_photos}{activeTier.max_photos ? `–${activeTier.max_photos}` : "+"} photos)
+                                  (up to {activeTier.min_photos} photos tier)
                                 </span>
                               )}
                             </p>
