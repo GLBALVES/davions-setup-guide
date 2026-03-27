@@ -1613,8 +1613,11 @@ export type Database = {
           business_country: string | null
           business_currency: string | null
           business_name: string | null
+          business_neighborhood: string | null
           business_phone: string | null
+          business_state: string | null
           business_tax_id: string | null
+          business_zip: string | null
           created_at: string
           custom_domain: string | null
           email: string
@@ -1634,8 +1637,11 @@ export type Database = {
           business_country?: string | null
           business_currency?: string | null
           business_name?: string | null
+          business_neighborhood?: string | null
           business_phone?: string | null
+          business_state?: string | null
           business_tax_id?: string | null
+          business_zip?: string | null
           created_at?: string
           custom_domain?: string | null
           email: string
@@ -1655,8 +1661,11 @@ export type Database = {
           business_country?: string | null
           business_currency?: string | null
           business_name?: string | null
+          business_neighborhood?: string | null
           business_phone?: string | null
+          business_state?: string | null
           business_tax_id?: string | null
+          business_zip?: string | null
           created_at?: string
           custom_domain?: string | null
           email?: string

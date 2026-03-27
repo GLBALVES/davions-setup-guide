@@ -184,6 +184,9 @@ const Personalize = () => {
   const [businessPhone, setBusinessPhone] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessCity, setBusinessCity] = useState("");
+  const [businessNeighborhood, setBusinessNeighborhood] = useState("");
+  const [businessState, setBusinessState] = useState("");
+  const [businessZip, setBusinessZip] = useState("");
   const [businessCountry, setBusinessCountry] = useState("");
   const [businessCurrency, setBusinessCurrency] = useState("USD");
   const [businessTaxId, setBusinessTaxId] = useState("");
@@ -286,7 +289,7 @@ const Personalize = () => {
       (supabase as any).from("gallery_settings").
       select("key, value").eq("photographer_id", photographerId),
       (supabase as any).from("photographers").
-      select("business_name, business_phone, business_address, business_city, business_country, business_currency, business_tax_id").
+      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_tax_id").
       eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
@@ -366,6 +369,9 @@ const Personalize = () => {
         setBusinessPhone(b.business_phone ?? "");
         setBusinessAddress(b.business_address ?? "");
         setBusinessCity(b.business_city ?? "");
+        setBusinessNeighborhood(b.business_neighborhood ?? "");
+        setBusinessState(b.business_state ?? "");
+        setBusinessZip(b.business_zip ?? "");
         setBusinessCountry(b.business_country ?? "");
         setBusinessCurrency(b.business_currency ?? "USD");
         setBusinessTaxId(b.business_tax_id ?? "");
@@ -505,6 +511,9 @@ const Personalize = () => {
       business_phone: businessPhone.trim() || null,
       business_address: businessAddress.trim() || null,
       business_city: businessCity.trim() || null,
+      business_neighborhood: businessNeighborhood.trim() || null,
+      business_state: businessState.trim() || null,
+      business_zip: businessZip.trim() || null,
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null
@@ -1031,8 +1040,19 @@ const Personalize = () => {
                         <Input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 Main St, Suite 4" className="h-9 text-sm font-light" />
                       </FieldRow>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FieldRow label={t.personalize.neighborhood}>
+                          <Input value={businessNeighborhood} onChange={(e) => setBusinessNeighborhood(e.target.value)} placeholder="Brooklyn" className="h-9 text-sm font-light" />
+                        </FieldRow>
                         <FieldRow label={t.personalize.city}>
                           <Input value={businessCity} onChange={(e) => setBusinessCity(e.target.value)} placeholder="New York" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <FieldRow label={t.personalize.state}>
+                          <Input value={businessState} onChange={(e) => setBusinessState(e.target.value)} placeholder="NY" className="h-9 text-sm font-light" />
+                        </FieldRow>
+                        <FieldRow label={t.personalize.zipCode}>
+                          <Input value={businessZip} onChange={(e) => setBusinessZip(e.target.value)} placeholder="10001" className="h-9 text-sm font-light" />
                         </FieldRow>
                         <FieldRow label={t.personalize.country}>
                           <Input value={businessCountry} onChange={(e) => setBusinessCountry(e.target.value)} placeholder="United States" className="h-9 text-sm font-light" />
