@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bug, HelpCircle, Sparkles } from "lucide-react";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
