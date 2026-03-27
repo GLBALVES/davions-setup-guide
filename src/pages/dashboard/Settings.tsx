@@ -105,8 +105,35 @@ const Settings = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreference[]>([]);
 
-  const fetchSessionTypes = useCallback(async () => {
+  const loadNotifPrefs = useCallback(async () => {
+    if (!photographerId) return;
+    const prefs = await fetchNotificationPreferences(photographerId);
+    setNotifPrefs(prefs);
+  }, [photographerId]);
+
+  useEffect(() => { loadNotifPrefs(); }, [loadNotifPrefs]);
+
+  const getNotifPref = (event: string) => {
+    return notifPrefs.find((p) => p.event === event) || { in_app: true, email: true, browser_push: false };
+  };
+
+  const toggleNotifPref = async (event: string, channel: "in_app" | "email" | "browser_push", value: boolean) => {
+    if (!photographerId) return;
+    const existing = getNotifPref(event);
+    await upsertNotificationPreference({
+      photographer_id: photographerId,
+      event,
+      in_app: channel === "in_app" ? value : existing.in_app,
+      email: channel === "email" ? value : existing.email,
+      browser_push: channel === "browser_push" ? value : existing.browser_push,
+    });
+    await loadNotifPrefs();
+    toast({ title: t.notif.saved });
+  };
+
     if (!photographerId) return;
     const { data } = await supabase
       .from("session_types")
