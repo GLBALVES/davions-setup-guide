@@ -83,6 +83,27 @@ serve(async (req) => {
           body: `Payment for ${sess?.title ?? "session"} was processed.`,
           metadata: { booking_id: bookingId },
         });
+
+        // Send Web Push notification
+        try {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+          await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              photographer_id: bk.photographer_id,
+              title: `New Booking — ${bk.client_name}`,
+              body: `${sess?.title ?? "Session"} confirmed. ${payLabel}.`,
+              url: "/dashboard/bookings",
+            }),
+          });
+        } catch (pushErr) {
+          console.error("Push notification failed:", pushErr);
+        }
       }
     }
 
