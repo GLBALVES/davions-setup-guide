@@ -275,6 +275,24 @@ serve(async (req) => {
         metadata: { booking_id: booking.id },
       });
 
+      // Send Web Push for payment failure
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({
+            photographer_id: booking.photographer_id,
+            title: `Payment Failed — ${booking.client_name}`,
+            body: `Payment for booking could not be processed.`,
+            url: "/dashboard/bookings",
+          }),
+        });
+      } catch (pushErr) {
+        console.error("Push notification failed:", pushErr);
+      }
+
       // Send failure notification email to client if RESEND_API_KEY is available
       try {
         const resendKey = Deno.env.get("RESEND_API_KEY");
