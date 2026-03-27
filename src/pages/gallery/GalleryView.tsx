@@ -1844,7 +1844,7 @@ const GalleryView = () => {
                     {/* Extras */}
                     {bi.extras_total > 0 && (
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-light">Add-ons / Extras</span>
+                        <span className="text-muted-foreground font-light">Addons</span>
                         <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
                       </div>
                     )}
