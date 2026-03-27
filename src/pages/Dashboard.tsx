@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { PushBanner } from "@/components/dashboard/PushBanner";
 import {
   CalendarDays, Clock, Users, FolderKanban, Image,
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
@@ -225,6 +226,7 @@ const Dashboard = () => {
 
               {/* ── Onboarding checklist (auto-hides when complete) ── */}
               <OnboardingChecklist />
+              <PushBanner />
 
               {loading ? (
                 <div className="flex items-center justify-center py-24">
