@@ -93,6 +93,9 @@ export const translations = {
       crmProjects: "CRM & projects",
       workflowsLabel: "Workflows",
       tasksAutomation: "Tasks & automation",
+      pushBannerTitle: "Stay in the loop",
+      pushBannerDesc: "Enable push notifications to get instant alerts for new bookings, payments and messages.",
+      pushBannerEnable: "Enable",
       // Stages
       lead: "Lead",
       briefing: "Briefing",
