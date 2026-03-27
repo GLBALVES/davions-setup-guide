@@ -483,8 +483,16 @@ const GalleryView = () => {
                 .select("id, min_photos, max_photos, price_per_photo")
                 .eq("session_id", sessionId)
                 .order("min_photos", { ascending: true });
-              if (tiersData && tiersData.length > 0) {
+               if (tiersData && tiersData.length > 0) {
                 setPhotoTiers(tiersData as PhotoTier[]);
+              }
+              // Fetch session extras (add-ons)
+              const { data: extrasData } = await supabase
+                .from("session_extras")
+                .select("id, description, price, quantity")
+                .eq("session_id", sessionId);
+              if (extrasData && extrasData.length > 0) {
+                setBookingExtras(extrasData as BookingExtra[]);
               }
             }
           }
