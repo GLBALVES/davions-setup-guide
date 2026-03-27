@@ -1089,7 +1089,7 @@ const GalleryView = () => {
                       {inlineSummary.bi.extras_total > 0 && (
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-muted-foreground font-light">Extra Photos</span>
+                            <span className="text-xs text-muted-foreground font-light">Addons</span>
                             <span className="text-[10px] text-muted-foreground/50 font-light">Selected add-ons at booking</span>
                           </div>
                           <span className="text-xs tabular-nums text-foreground font-medium">{formatCurrency(inlineSummary.bi.extras_total)}</span>
@@ -1128,7 +1128,7 @@ const GalleryView = () => {
                   {/* ── EXTRA PHOTOS BLOCK ── */}
                   {inlineSummary && pricePerPhoto > 0 && (
                     <div className="px-5 py-4 flex flex-col gap-2.5">
-                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">Extra Photos</p>
+                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">Addons</p>
 
                       {/* Included */}
                       {inlineSummary.includedPhotos > 0 && (
@@ -1171,7 +1171,7 @@ const GalleryView = () => {
                       {inlineSummary.extraPhotos > 0 ? (
                         <div className="flex items-center justify-between rounded-md bg-rose-50 dark:bg-rose-950/30 px-3 py-2.5 -mx-0.5 border border-rose-200 dark:border-rose-900">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] tracking-[0.18em] uppercase text-rose-700 dark:text-rose-400 font-semibold">Extra Photos</span>
+                            <span className="text-[10px] tracking-[0.18em] uppercase text-rose-700 dark:text-rose-400 font-semibold">Addons</span>
                             <span className="text-[10px] text-rose-500/80 font-light">
                               {inlineSummary.extraPhotos} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} / photo
                             </span>
@@ -1214,7 +1214,7 @@ const GalleryView = () => {
                       )}
                       {inlineSummary.extraPhotoCost > 0 && (
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground font-light">Extra photos ({inlineSummary.extraPhotos})</span>
+                          <span className="text-xs text-muted-foreground font-light">Addons ({inlineSummary.extraPhotos})</span>
                           <span className="text-xs tabular-nums text-rose-700 dark:text-rose-400 font-semibold">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
                         </div>
                       )}
@@ -1844,7 +1844,7 @@ const GalleryView = () => {
                     {/* Extras */}
                     {bi.extras_total > 0 && (
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-light">Add-ons / Extras</span>
+                        <span className="text-muted-foreground font-light">Addons</span>
                         <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
                       </div>
                     )}
@@ -1898,7 +1898,7 @@ const GalleryView = () => {
                         {/* Tiered pricing table */}
                         {photoTiers.length > 0 && (
                           <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2.5 border-b border-border mb-1">
-                            <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1.5">Extra photo pricing tiers</p>
+                            <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1.5">Addon pricing tiers</p>
                             {photoTiers.map((t) => (
                               <div key={t.id} className={`flex items-center justify-between text-[11px] ${activeTier?.id === t.id && extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
                                 <span>Up to {t.min_photos} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
@@ -1926,7 +1926,7 @@ const GalleryView = () => {
                         {extraPhotos > 0 ? (
                           <div className="flex flex-col gap-1 bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2.5 mt-0.5 border-t border-rose-100 dark:border-rose-900">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold text-rose-700 dark:text-rose-400">Extra photos ({extraPhotos})</span>
+                              <span className="font-semibold text-rose-700 dark:text-rose-400">Addons ({extraPhotos})</span>
                               <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
                             </div>
                             <p className="text-[10px] text-rose-500/80 font-light">
