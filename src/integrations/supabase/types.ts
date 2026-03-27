@@ -1260,6 +1260,88 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          browser_push: boolean
+          email: boolean
+          event: string
+          id: string
+          in_app: boolean
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          browser_push?: boolean
+          email?: boolean
+          event: string
+          id?: string
+          in_app?: boolean
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          browser_push?: boolean
+          email?: boolean
+          event?: string
+          id?: string
+          in_app?: boolean
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          event: string
+          id: string
+          metadata: Json | null
+          photographer_id: string
+          read: boolean
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          event?: string
+          id?: string
+          metadata?: Json | null
+          photographer_id: string
+          read?: boolean
+          title?: string
+          type?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          event?: string
+          id?: string
+          metadata?: Json | null
+          photographer_id?: string
+          read?: boolean
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_seo_settings: {
         Row: {
           canonical_url: string | null

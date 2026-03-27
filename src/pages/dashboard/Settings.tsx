@@ -19,6 +19,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { Switch } from "@/components/ui/switch";
+import {
+  fetchNotificationPreferences,
+  upsertNotificationPreference,
+  NOTIFICATION_EVENTS,
+  type NotificationPreference,
+} from "@/lib/notifications-api";
 import {
   loadConnectAndInitialize,
   StripeConnectInstance,
@@ -98,6 +105,34 @@ const Settings = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreference[]>([]);
+
+  const loadNotifPrefs = useCallback(async () => {
+    if (!photographerId) return;
+    const prefs = await fetchNotificationPreferences(photographerId);
+    setNotifPrefs(prefs);
+  }, [photographerId]);
+
+  useEffect(() => { loadNotifPrefs(); }, [loadNotifPrefs]);
+
+  const getNotifPref = (event: string) => {
+    return notifPrefs.find((p) => p.event === event) || { in_app: true, email: true, browser_push: false };
+  };
+
+  const toggleNotifPref = async (event: string, channel: "in_app" | "email" | "browser_push", value: boolean) => {
+    if (!photographerId) return;
+    const existing = getNotifPref(event);
+    await upsertNotificationPreference({
+      photographer_id: photographerId,
+      event,
+      in_app: channel === "in_app" ? value : existing.in_app,
+      email: channel === "email" ? value : existing.email,
+      browser_push: channel === "browser_push" ? value : existing.browser_push,
+    });
+    await loadNotifPrefs();
+    toast({ title: t.notif.saved });
+  };
 
   const fetchSessionTypes = useCallback(async () => {
     if (!photographerId) return;
@@ -499,6 +534,7 @@ const Settings = () => {
                     {[
                       { value: "profile", label: t.settings.profile },
                       { value: "payments", label: t.settings.payments },
+                      { value: "notifications", label: t.notif.title },
                       { value: "security", label: t.settings.security },
                     ].map((tab) => (
                       <TabsTrigger
@@ -768,6 +804,50 @@ const Settings = () => {
                         </div>
                       </div>
                     )}
+                  </TabsContent>
+
+                  {/* ── NOTIFICATIONS TAB ── */}
+                  <TabsContent value="notifications" className="mt-0 flex flex-col gap-6">
+                    <section>
+                      <h2 className="text-sm font-semibold tracking-wide uppercase mb-1">{t.notif.prefTitle}</h2>
+                      <p className="text-xs text-muted-foreground mb-6">{t.notif.prefDesc}</p>
+
+                      <div className="border border-border rounded-lg overflow-hidden">
+                        {/* Header */}
+                        <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-muted/50 text-[10px] tracking-widest uppercase font-medium text-muted-foreground">
+                          <span>Event</span>
+                          <span className="text-center">{t.notif.inApp}</span>
+                          <span className="text-center">{t.notif.email}</span>
+                          <span className="text-center">{t.notif.browserPush}</span>
+                        </div>
+
+                        {/* Rows */}
+                        {NOTIFICATION_EVENTS.map((event) => {
+                          const pref = getNotifPref(event);
+                          const labelMap: Record<string, string> = {
+                            new_booking: t.notif.eventNewBooking,
+                            payment_received: t.notif.eventPaymentReceived,
+                            payment_failed: t.notif.eventPaymentFailed,
+                            new_chat_message: t.notif.eventNewChat,
+                            new_bug_report: t.notif.eventNewBug,
+                          };
+                          return (
+                            <div key={event} className="grid grid-cols-4 gap-4 px-4 py-3 border-t border-border items-center">
+                              <span className="text-sm">{labelMap[event] || event}</span>
+                              <div className="flex justify-center">
+                                <Switch checked={pref.in_app} onCheckedChange={(v) => toggleNotifPref(event, "in_app", v)} />
+                              </div>
+                              <div className="flex justify-center">
+                                <Switch checked={pref.email} onCheckedChange={(v) => toggleNotifPref(event, "email", v)} />
+                              </div>
+                              <div className="flex justify-center">
+                                <Switch checked={pref.browser_push} onCheckedChange={(v) => toggleNotifPref(event, "browser_push", v)} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
                   </TabsContent>
 
                   {/* ── SECURITY TAB ── */}

@@ -49,6 +49,43 @@ serve(async (req) => {
         .eq("id", bookingId);
     }
 
+    // Insert in-app notification for the photographer
+    if (bookingId) {
+      const { data: bk } = await supabase
+        .from("bookings")
+        .select("client_name, photographer_id, session_id")
+        .eq("id", bookingId)
+        .single();
+
+      if (bk) {
+        const { data: sess } = await supabase
+          .from("sessions")
+          .select("title")
+          .eq("id", bk.session_id)
+          .single();
+
+        const payLabel = wasDeposit ? "Deposit paid" : "Full payment";
+
+        await supabase.from("notifications").insert({
+          photographer_id: bk.photographer_id,
+          type: "success",
+          event: "new_booking",
+          title: `New Booking — ${bk.client_name}`,
+          body: `${sess?.title ?? "Session"} confirmed. ${payLabel}.`,
+          metadata: { booking_id: bookingId, session_id: bk.session_id },
+        });
+
+        await supabase.from("notifications").insert({
+          photographer_id: bk.photographer_id,
+          type: "success",
+          event: "payment_received",
+          title: `${payLabel} — ${bk.client_name}`,
+          body: `Payment for ${sess?.title ?? "session"} was processed.`,
+          metadata: { booking_id: bookingId },
+        });
+      }
+    }
+
     if (slotId) {
       await supabase
         .from("session_availability")
@@ -206,6 +243,16 @@ serve(async (req) => {
         .from("bookings")
         .update({ status: "failed", payment_status: "failed" })
         .eq("id", booking.id);
+
+      // In-app notification for payment failure
+      await supabase.from("notifications").insert({
+        photographer_id: booking.photographer_id,
+        type: "error",
+        event: "payment_failed",
+        title: `Payment Failed — ${booking.client_name}`,
+        body: `Payment for booking could not be processed.`,
+        metadata: { booking_id: booking.id },
+      });
 
       // Send failure notification email to client if RESEND_API_KEY is available
       try {
