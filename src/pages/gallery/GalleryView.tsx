@@ -1926,7 +1926,7 @@ const GalleryView = () => {
                         {extraPhotos > 0 ? (
                           <div className="flex flex-col gap-1 bg-rose-50 dark:bg-rose-950/20 -mx-4 px-4 py-2.5 mt-0.5 border-t border-rose-100 dark:border-rose-900">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="font-semibold text-rose-700 dark:text-rose-400">Extra photos ({extraPhotos})</span>
+                              <span className="font-semibold text-rose-700 dark:text-rose-400">Addons ({extraPhotos})</span>
                               <span className="tabular-nums font-semibold text-rose-700 dark:text-rose-400">{formatCurrency(extraPhotoCost)}</span>
                             </div>
                             <p className="text-[10px] text-rose-500/80 font-light">
