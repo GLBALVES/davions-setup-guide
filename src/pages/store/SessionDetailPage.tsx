@@ -722,7 +722,23 @@ const SessionDetailPage = () => {
                     >
                       {frame.type === "single" ? (
                         <>
-                          {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
+                          {frame.src && (
+                            <>
+                              <img
+                                src={frame.src}
+                                alt=""
+                                aria-hidden="true"
+                                className="absolute inset-0 h-full w-full object-cover scale-110 blur-xl opacity-70"
+                                draggable={false}
+                              />
+                              <img
+                                src={frame.src}
+                                alt={session.title}
+                                className="relative z-[1] h-full w-full object-contain"
+                                draggable={false}
+                              />
+                            </>
+                          )}
                           <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
                         </>
                       ) : (
