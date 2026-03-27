@@ -530,8 +530,8 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           const clampedPct = Math.min(Math.max(progress, 0), 93);
 
           return (
-            <div className="mt-1 relative w-full">
-              <div className="h-1 w-full bg-muted/50 overflow-hidden">
+            <div className="mt-1 w-full flex flex-col gap-0.5">
+              <div className="h-1 w-full bg-muted/50 overflow-hidden relative">
                 <div
                   className={`h-full transition-all duration-500 ${barColor}`}
                   style={{ width: `${progress}%` }}
@@ -539,8 +539,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
               </div>
               {label && (
                 <span
-                  className={`absolute -top-4 text-[9px] font-semibold leading-none pointer-events-none transition-all duration-500 ${labelColor}`}
-                  style={{ left: `${clampedPct}%`, transform: "translateX(-50%)" }}
+                  className={`text-[9px] font-semibold leading-none pointer-events-none ${labelColor} text-right`}
                 >
                   {label}
                 </span>
