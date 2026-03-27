@@ -206,13 +206,20 @@ interface PhotoTier {
   price_per_photo: number;
 }
 
-// Find matching tier for a given extra photo count
+// Find matching tier for a given extra photo count.
+// Tiers represent "up to X extras" thresholds: min_photos is the max qty for that tier.
+// e.g. tier(10, $10) + tier(20, $9) + tier(30, $8) means:
+//   9 extras → tier 10 → 9×$10=$90
+//   18 extras → tier 20 → 18×$9=$162
+//   30 extras → tier 30 → 30×$8=$240
 function calcTieredCost(extraPhotos: number, tiers: PhotoTier[]): { cost: number; tier: PhotoTier | null } {
   if (extraPhotos <= 0 || tiers.length === 0) return { cost: 0, tier: null };
+  // Sort ascending by the threshold (min_photos acts as "up to" value)
   const sorted = [...tiers].sort((a, b) => a.min_photos - b.min_photos);
-  const match = sorted.find((t) => extraPhotos >= t.min_photos && (t.max_photos == null || extraPhotos <= t.max_photos));
+  // Find the smallest tier whose threshold covers the extra count
+  const match = sorted.find((t) => extraPhotos <= t.min_photos);
   if (!match) {
-    // If beyond all tiers, use the last one (largest min)
+    // Beyond all tiers — use the largest tier's price
     const last = sorted[sorted.length - 1];
     return { cost: last.price_per_photo * extraPhotos, tier: last };
   }
