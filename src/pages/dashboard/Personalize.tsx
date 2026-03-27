@@ -184,6 +184,9 @@ const Personalize = () => {
   const [businessPhone, setBusinessPhone] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessCity, setBusinessCity] = useState("");
+  const [businessNeighborhood, setBusinessNeighborhood] = useState("");
+  const [businessState, setBusinessState] = useState("");
+  const [businessZip, setBusinessZip] = useState("");
   const [businessCountry, setBusinessCountry] = useState("");
   const [businessCurrency, setBusinessCurrency] = useState("USD");
   const [businessTaxId, setBusinessTaxId] = useState("");
