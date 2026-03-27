@@ -1128,7 +1128,7 @@ const GalleryView = () => {
                   {/* ── EXTRA PHOTOS BLOCK ── */}
                   {inlineSummary && pricePerPhoto > 0 && (
                     <div className="px-5 py-4 flex flex-col gap-2.5">
-                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">Extra Photos</p>
+                      <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60 font-light -mb-1">Addons</p>
 
                       {/* Included */}
                       {inlineSummary.includedPhotos > 0 && (
