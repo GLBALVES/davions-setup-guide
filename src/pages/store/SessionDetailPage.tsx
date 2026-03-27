@@ -654,13 +654,12 @@ const SessionDetailPage = () => {
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
       {step === "product" && (
         <>
-          {/* ── Hero slider: real drag/swipe with translateX ── */}
+          {/* ── Hero slider: full-width crossfade ── */}
           {(() => {
             // Build frames: every 4th is a masonry grid, rest are single photos
             const isGridFrame = (idx: number) => slides.length >= 3 && idx % 4 === 0;
             const totalFrames = slides.length <= 1 ? 1 : slides.length + Math.floor(slides.length / 3);
 
-            // Build all frame descriptors for the strip
             const frames = Array.from({ length: totalFrames }, (_, idx) => {
               const frameIdx = idx % totalFrames;
               if (isGridFrame(frameIdx)) {
@@ -676,34 +675,17 @@ const SessionDetailPage = () => {
               }
             });
 
-            // For infinite loop: clone last frame at start and first frame at end
-            const loopFrames = frames.length > 1
-              ? [frames[frames.length - 1], ...frames, frames[0]]
-              : frames;
-            const loopOffset = frames.length > 1 ? 1 : 0; // offset for the prepended clone
+            // Normalize slider index for wrap-around
+            const normalizedIdx = totalFrames > 1
+              ? ((sliderIndex % totalFrames) + totalFrames) % totalFrames
+              : 0;
 
-            // The actual visual index inside loopFrames
-            const visualIdx = sliderIndex + loopOffset;
-            // Peek layout: center slide ~70%, adjacent slides visible on sides
-            const slidePercent = 70;
-            const peekPercent = (100 - slidePercent) / 2;
-            const containerWidth = sliderContainerRef.current?.offsetWidth || window.innerWidth;
-            const slideW = containerWidth * slidePercent / 100;
-            const translatePx = -(visualIdx * slideW) + (containerWidth * peekPercent / 100) + dragOffset;
-            const isAnimating = dragOffset === 0 && !isLoopJumping.current;
-
-            // Handle loop jump when transition ends
+            // Handle loop jump
             const handleTransitionEnd = () => {
               if (frames.length <= 1) return;
-              if (sliderIndex >= totalFrames) {
+              if (sliderIndex >= totalFrames || sliderIndex < 0) {
                 isLoopJumping.current = true;
-                setSliderIndex(0);
-                requestAnimationFrame(() => {
-                  requestAnimationFrame(() => { isLoopJumping.current = false; });
-                });
-              } else if (sliderIndex < 0) {
-                isLoopJumping.current = true;
-                setSliderIndex(totalFrames - 1);
+                setSliderIndex(normalizedIdx);
                 requestAnimationFrame(() => {
                   requestAnimationFrame(() => { isLoopJumping.current = false; });
                 });
@@ -723,29 +705,30 @@ const SessionDetailPage = () => {
                 onMouseUp={(e) => handleDragEnd(e.clientX)}
                 onMouseLeave={(e) => handleDragEnd(e.clientX)}
               >
-                {/* Slides strip */}
-                <div
-                  className="flex h-full"
-                  onTransitionEnd={handleTransitionEnd}
-                  style={{
-                    transform: `translateX(${translatePx}px)`,
-                    transition: isAnimating ? "transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
-                    willChange: "transform",
-                  }}
-                >
-                  {loopFrames.map((frame, i) => {
-                    const isActive = i === visualIdx;
-                    return (
-                    <div key={i} className="relative h-full overflow-hidden transition-all duration-300" style={{ width: slideW, flexShrink: 0, opacity: isActive ? 1 : 0.4, filter: isActive ? "none" : "brightness(0.5)" }}>
+                {/* Crossfade slides — all stacked absolutely */}
+                {frames.map((frame, i) => {
+                  const isActive = i === normalizedIdx;
+                  return (
+                    <div
+                      key={i}
+                      className="absolute inset-0 w-full h-full"
+                      onTransitionEnd={isActive ? handleTransitionEnd : undefined}
+                      style={{
+                        opacity: isActive ? 1 : 0,
+                        transition: isLoopJumping.current ? "none" : "opacity 0.8s ease-in-out",
+                        zIndex: isActive ? 1 : 0,
+                        pointerEvents: isActive ? "auto" : "none",
+                      }}
+                    >
                       {frame.type === "single" ? (
                         <>
                           {frame.src && <img src={frame.src} alt={session.title} className="w-full h-full object-cover" draggable={false} />}
-                          {isActive && <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
                         </>
                       ) : (
                         <>
-                          <div className="flex h-full gap-[2px]">
-                            <div className="flex flex-col gap-[2px] flex-1">
+                          <div className="flex h-full gap-0">
+                            <div className="flex flex-col gap-0 flex-1">
                               <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
                                 <img src={frame.photos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
@@ -753,7 +736,7 @@ const SessionDetailPage = () => {
                                 <img src={frame.photos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
                             </div>
-                            <div className="flex flex-col gap-[2px] flex-1">
+                            <div className="flex flex-col gap-0 flex-1">
                               <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
                                 <img src={frame.photos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
@@ -761,7 +744,7 @@ const SessionDetailPage = () => {
                                 <img src={frame.photos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
                             </div>
-                            <div className="flex flex-col gap-[2px] flex-1">
+                            <div className="flex flex-col gap-0 flex-1">
                               <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
                                 <img src={frame.photos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
@@ -769,7 +752,7 @@ const SessionDetailPage = () => {
                                 <img src={frame.photos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
                             </div>
-                            <div className="flex flex-col gap-[2px] flex-1">
+                            <div className="flex flex-col gap-0 flex-1">
                               <div className="overflow-hidden flex-1">
                                 <img src={frame.photos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
                               </div>
@@ -785,9 +768,8 @@ const SessionDetailPage = () => {
                         </>
                       )}
                     </div>
-                    );
-                  })}
-                </div>
+                  );
+                })}
 
                 {/* Overlay text — always on top */}
                 <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center z-10 pointer-events-none">
@@ -816,8 +798,6 @@ const SessionDetailPage = () => {
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
-
-                {/* Slide dots */}
               </div>
             );
           })()}
