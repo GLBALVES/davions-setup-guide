@@ -226,6 +226,7 @@ const Dashboard = () => {
 
               {/* ── Onboarding checklist (auto-hides when complete) ── */}
               <OnboardingChecklist />
+              <PushBanner />
 
               {loading ? (
                 <div className="flex items-center justify-center py-24">
