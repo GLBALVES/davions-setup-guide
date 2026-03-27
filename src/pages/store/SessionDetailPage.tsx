@@ -705,87 +705,88 @@ const SessionDetailPage = () => {
                 onMouseUp={(e) => handleDragEnd(e.clientX)}
                 onMouseLeave={(e) => handleDragEnd(e.clientX)}
               >
-                {/* Crossfade slides — all stacked absolutely */}
-                {frames.map((frame, i) => {
-                  const isActive = i === normalizedIdx;
-                  return (
-                    <div
-                      key={i}
-                      className="absolute inset-0 w-full h-full"
-                      onTransitionEnd={isActive ? handleTransitionEnd : undefined}
-                      style={{
-                        opacity: isActive ? 1 : 0,
-                        transition: isLoopJumping.current ? "none" : "opacity 0.8s ease-in-out",
-                        zIndex: isActive ? 1 : 0,
-                        pointerEvents: isActive ? "auto" : "none",
-                      }}
-                    >
-                      {frame.type === "single" ? (
-                        <>
-                          {frame.src && (
-                            <>
-                              <img
-                                src={frame.src}
-                                alt=""
-                                aria-hidden="true"
-                                className="absolute inset-0 h-full w-full object-cover scale-110 blur-xl opacity-70"
-                                draggable={false}
-                              />
-                              <img
+                {/* Swipe slider — slides side by side with translateX */}
+                <div
+                  className="flex h-full"
+                  onTransitionEnd={handleTransitionEnd}
+                  style={{
+                    width: `${totalFrames * 100}%`,
+                    transform: `translateX(calc(${-normalizedIdx * (100 / totalFrames)}% + ${dragOffset}px))`,
+                    transition: isLoopJumping.current || dragStartX.current !== null ? "none" : "transform 0.5s ease-in-out",
+                  }}
+                >
+                  {frames.map((frame, i) => {
+                    // Get side-fill images for single frames (exclude current image)
+                    const getSidePhotos = (src: string) => {
+                      const pool = slides.filter(s => s !== src);
+                      if (pool.length === 0) return slides;
+                      // duplicate pool to always have enough
+                      return [...pool, ...pool, ...pool];
+                    };
+
+                    return (
+                      <div
+                        key={i}
+                        className="relative h-full shrink-0"
+                        style={{ width: `${100 / totalFrames}%` }}
+                      >
+                        {frame.type === "single" ? (
+                          <>
+                            {frame.src && (
+                              <SingleSlideWithMasonry
                                 src={frame.src}
                                 alt={session.title}
-                                className="relative z-[1] h-full w-full object-contain"
-                                draggable={false}
+                                sidePhotos={getSidePhotos(frame.src)}
                               />
-                            </>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/75" />
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex h-full gap-0">
-                            <div className="flex flex-col gap-0 flex-1">
-                              <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
-                                <img src={frame.photos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                            )}
+                            <div className="absolute inset-0 z-[2] bg-gradient-to-b from-black/25 via-transparent to-black/75 pointer-events-none" />
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex h-full gap-0">
+                              <div className="flex flex-col gap-0 flex-1">
+                                <div className="overflow-hidden" style={{ flex: "0 0 60%" }}>
+                                  <img src={frame.photos[0] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
                               </div>
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[3] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                              <div className="flex flex-col gap-0 flex-1">
+                                <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
+                                  <img src={frame.photos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-0 flex-1">
+                                <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
+                                  <img src={frame.photos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-0 flex-1">
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[7] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
+                                <div className="overflow-hidden flex-1">
+                                  <img src={frame.photos[8] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
+                                </div>
                               </div>
                             </div>
-                            <div className="flex flex-col gap-0 flex-1">
-                              <div className="overflow-hidden" style={{ flex: "0 0 40%" }}>
-                                <img src={frame.photos[1] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[4] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-0 flex-1">
-                              <div className="overflow-hidden" style={{ flex: "0 0 50%" }}>
-                                <img src={frame.photos[2] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[5] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-0 flex-1">
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[6] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[7] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                              <div className="overflow-hidden flex-1">
-                                <img src={frame.photos[8] ?? slides[0]} alt="" className="w-full h-full object-cover" draggable={false} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {/* Overlay text — always on top */}
                 <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-center z-10 pointer-events-none">
