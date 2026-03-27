@@ -11,6 +11,7 @@ import {
   fetchUnreadCount,
   markAsRead,
   markAllAsRead,
+  subscribeToPush,
   type NotificationRow,
 } from "@/lib/notifications-api";
 import { formatDistanceToNow } from "date-fns";

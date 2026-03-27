@@ -82,3 +82,61 @@ export async function upsertNotificationPreference(pref: Partial<NotificationPre
     .upsert(pref as any, { onConflict: "photographer_id,event" });
   if (error) throw error;
 }
+
+// --- Web Push subscription ---
+
+const VAPID_PUBLIC_KEY = "BJaDR3W1i0k65sD2hurhzlJDWPTfBvdVO1_SkAi-PoiQHACHkquieYjFh0TRr69JnS-qwa5Gr5SnzlMh60sy3lk";
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+function uint8ArrayToBase64url(arr: Uint8Array): string {
+  let bin = "";
+  for (const b of arr) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export async function subscribeToPush(photographerId: string): Promise<boolean> {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+
+    const key = subscription.getKey("p256dh");
+    const auth = subscription.getKey("auth");
+    if (!key || !auth) return false;
+
+    const { error } = await supabase.from("push_subscriptions").upsert(
+      {
+        photographer_id: photographerId,
+        endpoint: subscription.endpoint,
+        p256dh: uint8ArrayToBase64url(new Uint8Array(key)),
+        auth: uint8ArrayToBase64url(new Uint8Array(auth)),
+      } as any,
+      { onConflict: "photographer_id,endpoint" }
+    );
+
+    if (error) {
+      console.error("Failed to save push subscription:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Push subscription failed:", err);
+    return false;
+  }
+}
