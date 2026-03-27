@@ -751,17 +751,29 @@ const SessionDetailPage = () => {
               }
             });
 
-            // Normalize slider index for wrap-around
-            const normalizedIdx = totalFrames > 1
-              ? ((sliderIndex % totalFrames) + totalFrames) % totalFrames
-              : 0;
+            // For infinite loop: clone last frame at start and first frame at end
+            const loopFrames = totalFrames > 1
+              ? [frames[frames.length - 1], ...frames, frames[0]]
+              : frames;
+            const loopCount = loopFrames.length;
 
-            // Handle loop jump
+            // sliderIndex 0 = first real frame → offset 1 in loopFrames
+            const displayIdx = totalFrames > 1 ? sliderIndex + 1 : 0;
+
+            // Handle loop jump after transition ends
             const handleTransitionEnd = () => {
-              if (frames.length <= 1) return;
-              if (sliderIndex >= totalFrames || sliderIndex < 0) {
+              if (totalFrames <= 1) return;
+              if (sliderIndex >= totalFrames) {
+                // Past last → jump to first without animation
                 isLoopJumping.current = true;
-                setSliderIndex(normalizedIdx);
+                setSliderIndex(0);
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => { isLoopJumping.current = false; });
+                });
+              } else if (sliderIndex < 0) {
+                // Before first → jump to last without animation
+                isLoopJumping.current = true;
+                setSliderIndex(totalFrames - 1);
                 requestAnimationFrame(() => {
                   requestAnimationFrame(() => { isLoopJumping.current = false; });
                 });
@@ -781,22 +793,20 @@ const SessionDetailPage = () => {
                 onMouseUp={(e) => handleDragEnd(e.clientX)}
                 onMouseLeave={(e) => handleDragEnd(e.clientX)}
               >
-                {/* Swipe slider — slides side by side with translateX */}
+                {/* Swipe slider — slides side by side with translateX + clone edges for infinite loop */}
                 <div
                   className="flex h-full"
                   onTransitionEnd={handleTransitionEnd}
                   style={{
-                    width: `${totalFrames * 100}%`,
-                    transform: `translateX(calc(${-normalizedIdx * (100 / totalFrames)}% + ${dragOffset}px))`,
+                    width: `${loopCount * 100}%`,
+                    transform: `translateX(calc(${-displayIdx * (100 / loopCount)}% + ${dragOffset}px))`,
                     transition: isLoopJumping.current || dragStartX.current !== null ? "none" : "transform 0.5s ease-in-out",
                   }}
                 >
-                  {frames.map((frame, i) => {
-                    // Get side-fill images for single frames (exclude current image)
+                  {loopFrames.map((frame, i) => {
                     const getSidePhotos = (src: string) => {
                       const pool = slides.filter(s => s !== src);
                       if (pool.length === 0) return slides;
-                      // duplicate pool to always have enough
                       return [...pool, ...pool, ...pool];
                     };
 
@@ -804,7 +814,7 @@ const SessionDetailPage = () => {
                       <div
                         key={i}
                         className="relative h-full shrink-0"
-                        style={{ width: `${100 / totalFrames}%` }}
+                        style={{ width: `${100 / loopCount}%` }}
                       >
                         {frame.type === "single" ? (
                           <>
