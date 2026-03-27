@@ -3296,6 +3296,22 @@ export const translations = {
       footerPrivacy: "Política de Privacidade",
       footerTerms: "Termos de Serviço",
     },
+    notif: {
+      title: "Notificações",
+      empty: "Nenhuma notificação ainda",
+      markAllRead: "Marcar todas como lidas",
+      prefTitle: "Preferências de Notificação",
+      prefDesc: "Escolha quais eventos geram notificações",
+      eventNewBooking: "Novo Agendamento",
+      eventPaymentReceived: "Pagamento Recebido",
+      eventPaymentFailed: "Pagamento Falhou",
+      eventNewChat: "Nova Mensagem no Chat",
+      eventNewBug: "Novo Bug Report",
+      inApp: "No App",
+      email: "Email",
+      browserPush: "Push do Navegador",
+      saved: "Preferências salvas",
+    },
   },
 
   es: {
