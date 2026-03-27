@@ -709,6 +709,12 @@ export const translations = {
       briefingUpdated: "Briefing updated",
       briefingCreated: "Briefing created",
       // Business tab
+      profileInfo: "Profile",
+      profileInfoDesc: "Your personal details visible to clients.",
+      fullName: "Full Name",
+      emailLabel: "Email",
+      bioLabel: "Bio",
+      bioPlaceholder: "Tell clients about yourself, your style, and experience…",
       businessInfo: "Business Information",
       businessInfoDesc: "Details used on invoices, contracts, and client-facing documents.",
       businessName: "Business Name",
