@@ -1898,7 +1898,7 @@ const GalleryView = () => {
                         {/* Tiered pricing table */}
                         {photoTiers.length > 0 && (
                           <div className="flex flex-col gap-0.5 bg-muted/30 -mx-4 px-4 py-2.5 border-b border-border mb-1">
-                            <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1.5">Extra photo pricing tiers</p>
+                            <p className="text-[9px] tracking-[0.18em] uppercase text-muted-foreground/60 font-light mb-1.5">Addon pricing tiers</p>
                             {photoTiers.map((t) => (
                               <div key={t.id} className={`flex items-center justify-between text-[11px] ${activeTier?.id === t.id && extraPhotos > 0 ? "text-rose-700 dark:text-rose-400 font-semibold" : "text-muted-foreground font-light"}`}>
                                 <span>Up to {t.min_photos} extra photo{t.min_photos !== 1 ? "s" : ""}</span>
