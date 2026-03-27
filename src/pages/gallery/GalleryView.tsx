@@ -1866,9 +1866,17 @@ const GalleryView = () => {
 
                     {/* Extras */}
                     {bi.extras_total > 0 && (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground font-light">Addons</span>
-                        <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-light">Addons</span>
+                          <span className="tabular-nums">{formatCurrency(bi.extras_total)}</span>
+                        </div>
+                        {bookingExtras.length > 0 && bookingExtras.map((ext) => (
+                          <div key={ext.id} className="flex items-center justify-between text-[10px] pl-2">
+                            <span className="text-muted-foreground/70 font-light">{ext.description} {ext.quantity > 1 ? `×${ext.quantity}` : ''}</span>
+                            <span className="tabular-nums text-muted-foreground">{formatCurrency(ext.price * ext.quantity)}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
 
