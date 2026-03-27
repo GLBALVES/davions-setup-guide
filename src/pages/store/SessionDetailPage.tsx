@@ -803,12 +803,10 @@ const SessionDetailPage = () => {
                     transition: isLoopJumping.current || dragStartX.current !== null ? "none" : "transform 0.5s ease-in-out",
                   }}
                 >
-                  {frames.map((frame, i) => {
-                    // Get side-fill images for single frames (exclude current image)
+                  {loopFrames.map((frame, i) => {
                     const getSidePhotos = (src: string) => {
                       const pool = slides.filter(s => s !== src);
                       if (pool.length === 0) return slides;
-                      // duplicate pool to always have enough
                       return [...pool, ...pool, ...pool];
                     };
 
@@ -816,7 +814,7 @@ const SessionDetailPage = () => {
                       <div
                         key={i}
                         className="relative h-full shrink-0"
-                        style={{ width: `${100 / totalFrames}%` }}
+                        style={{ width: `${100 / loopCount}%` }}
                       >
                         {frame.type === "single" ? (
                           <>
