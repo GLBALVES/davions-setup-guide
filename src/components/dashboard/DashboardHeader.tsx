@@ -104,6 +104,8 @@ export function DashboardHeader() {
           ))}
         </div>
 
+        <NotificationBell />
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
