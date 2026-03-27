@@ -1152,7 +1152,7 @@ const GalleryView = () => {
                                 <span className="flex items-center gap-1.5">
                                   {isActive && <span className="h-1.5 w-1.5 rounded-full bg-rose-500 inline-block" />}
                                   {!isActive && <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/20 inline-block" />}
-                                  {t.min_photos}{t.max_photos ? `–${t.max_photos}` : "+"} extra photo{t.min_photos !== 1 ? "s" : ""}
+                                  Up to {t.min_photos} extra photo{t.min_photos !== 1 ? "s" : ""}
                                 </span>
                                 <span className="tabular-nums">{formatCurrency(t.price_per_photo)} / photo</span>
                               </div>
