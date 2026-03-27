@@ -19,6 +19,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import { Switch } from "@/components/ui/switch";
+import {
+  fetchNotificationPreferences,
+  upsertNotificationPreference,
+  NOTIFICATION_EVENTS,
+  type NotificationPreference,
+} from "@/lib/notifications-api";
 import {
   loadConnectAndInitialize,
   StripeConnectInstance,
