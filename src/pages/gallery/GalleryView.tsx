@@ -206,6 +206,13 @@ interface PhotoTier {
   price_per_photo: number;
 }
 
+interface BookingExtra {
+  id: string;
+  description: string;
+  price: number;
+  quantity: number;
+}
+
 // Find matching tier for a given extra photo count.
 // Tiers represent "up to X extras" thresholds: min_photos is the max qty for that tier.
 // e.g. tier(10, $10) + tier(20, $9) + tier(30, $8) means:
