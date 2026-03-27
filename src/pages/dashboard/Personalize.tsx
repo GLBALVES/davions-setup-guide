@@ -499,6 +499,8 @@ const Personalize = () => {
   const handleSaveBusiness = async () => {
     setSavingBusiness(true);
     const { error } = await (supabase as any).from("photographers").update({
+      full_name: fullName.trim() || null,
+      bio: bio.trim() || null,
       business_name: businessName.trim() || null,
       business_phone: businessPhone.trim() || null,
       business_address: businessAddress.trim() || null,
