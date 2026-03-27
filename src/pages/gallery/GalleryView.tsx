@@ -1171,7 +1171,7 @@ const GalleryView = () => {
                       {inlineSummary.extraPhotos > 0 ? (
                         <div className="flex items-center justify-between rounded-md bg-rose-50 dark:bg-rose-950/30 px-3 py-2.5 -mx-0.5 border border-rose-200 dark:border-rose-900">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] tracking-[0.18em] uppercase text-rose-700 dark:text-rose-400 font-semibold">Extra Photos</span>
+                            <span className="text-[10px] tracking-[0.18em] uppercase text-rose-700 dark:text-rose-400 font-semibold">Addons</span>
                             <span className="text-[10px] text-rose-500/80 font-light">
                               {inlineSummary.extraPhotos} × {formatCurrency(inlineSummary.effectivePricePerPhoto)} / photo
                             </span>
