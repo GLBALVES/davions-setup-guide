@@ -108,6 +108,82 @@ interface SelectedExtra {
 type BookingStep = "product" | "slots" | "form" | "addons" | "review";
 
 // ────────────────────────────────────────────
+// SingleSlideWithMasonry — shows main photo at full height,
+// fills lateral gaps with mini masonry grids from portfolio
+// ────────────────────────────────────────────
+
+const SingleSlideWithMasonry = ({
+  src,
+  alt,
+  sidePhotos,
+}: {
+  src: string;
+  alt: string;
+  sidePhotos: string[];
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [sideW, setSideW] = useState(0);
+
+  const handleImgLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const img = e.currentTarget;
+      const ratio = img.naturalWidth / img.naturalHeight;
+      const container = containerRef.current;
+      if (!container) return;
+      const cW = container.clientWidth;
+      const cH = container.clientHeight;
+      const imgDisplayW = cH * ratio;
+      if (imgDisplayW >= cW) {
+        setSideW(0);
+      } else {
+        setSideW(Math.ceil((cW - imgDisplayW) / 2));
+      }
+    },
+    [],
+  );
+
+  const leftPhotos = sidePhotos.slice(0, 3);
+  const rightPhotos = sidePhotos.slice(3, 6);
+
+  return (
+    <div ref={containerRef} className="relative flex h-full w-full overflow-hidden bg-black">
+      {/* Left masonry */}
+      {sideW > 0 && (
+        <div className="flex flex-col gap-0 shrink-0 h-full overflow-hidden" style={{ width: sideW }}>
+          {leftPhotos.map((p, j) => (
+            <div key={j} className="flex-1 overflow-hidden min-h-0">
+              <img src={p} alt="" className="w-full h-full object-cover" draggable={false} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main image — full height, no crop */}
+      <div className="flex-1 h-full flex items-center justify-center min-w-0">
+        <img
+          src={src}
+          alt={alt}
+          className="h-full object-contain"
+          draggable={false}
+          onLoad={handleImgLoad}
+        />
+      </div>
+
+      {/* Right masonry */}
+      {sideW > 0 && (
+        <div className="flex flex-col gap-0 shrink-0 h-full overflow-hidden" style={{ width: sideW }}>
+          {rightPhotos.map((p, j) => (
+            <div key={j} className="flex-1 overflow-hidden min-h-0">
+              <img src={p} alt="" className="w-full h-full object-cover" draggable={false} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────
 
