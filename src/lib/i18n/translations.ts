@@ -1662,6 +1662,23 @@ export const translations = {
       footerPrivacy: "Privacy Policy",
       footerTerms: "Terms of Service",
     },
+    // ── Notifications ──
+    notif: {
+      title: "Notifications",
+      empty: "No notifications yet",
+      markAllRead: "Mark all read",
+      prefTitle: "Notification Preferences",
+      prefDesc: "Choose which events trigger notifications",
+      eventNewBooking: "New Booking",
+      eventPaymentReceived: "Payment Received",
+      eventPaymentFailed: "Payment Failed",
+      eventNewChat: "New Chat Message",
+      eventNewBug: "New Bug Report",
+      inApp: "In-App",
+      email: "Email",
+      browserPush: "Browser Push",
+      saved: "Preferences saved",
+    },
   },
 
 
