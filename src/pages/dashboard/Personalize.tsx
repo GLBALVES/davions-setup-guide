@@ -369,6 +369,9 @@ const Personalize = () => {
         setBusinessPhone(b.business_phone ?? "");
         setBusinessAddress(b.business_address ?? "");
         setBusinessCity(b.business_city ?? "");
+        setBusinessNeighborhood(b.business_neighborhood ?? "");
+        setBusinessState(b.business_state ?? "");
+        setBusinessZip(b.business_zip ?? "");
         setBusinessCountry(b.business_country ?? "");
         setBusinessCurrency(b.business_currency ?? "USD");
         setBusinessTaxId(b.business_tax_id ?? "");
