@@ -1214,7 +1214,7 @@ const GalleryView = () => {
                       )}
                       {inlineSummary.extraPhotoCost > 0 && (
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground font-light">Extra photos</span>
+                          <span className="text-xs text-muted-foreground font-light">Extra photos ({inlineSummary.extraPhotos})</span>
                           <span className="text-xs tabular-nums text-rose-700 dark:text-rose-400 font-semibold">{formatCurrency(inlineSummary.extraPhotoCost)}</span>
                         </div>
                       )}
