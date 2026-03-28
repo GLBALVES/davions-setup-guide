@@ -807,10 +807,14 @@ const Settings = () => {
                   </TabsContent>
 
                   {/* ── NOTIFICATIONS TAB ── */}
-                  <TabsContent value="notifications" className="mt-0 flex flex-col gap-6">
+                  <TabsContent value="notifications" className="mt-0 flex flex-col gap-8">
+                    {/* Push status card */}
+                    <NotificationPushStatusCard photographerId={photographerId} n={t.notif} />
+
+                    {/* Channel preferences */}
                     <section>
                       <h2 className="text-sm font-semibold tracking-wide uppercase mb-1">{t.notif.prefTitle}</h2>
-                      <p className="text-xs text-muted-foreground mb-6">{t.notif.prefDesc}</p>
+                      <p className="text-xs text-muted-foreground mb-4">{t.notif.channelDesc}</p>
 
                       <div className="border border-border rounded-lg overflow-hidden">
                         {/* Header */}
