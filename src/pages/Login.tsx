@@ -10,6 +10,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+async function requestPushPermissionOnLogin() {
+  if (typeof window === "undefined") return;
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission !== "default") return;
+
+  try {
+    await Notification.requestPermission();
+  } catch {
+    // Ignore prompt errors and continue login flow.
+  }
+}
+
 const Login = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,6 +43,7 @@ const Login = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
     setLoading(true);
+    const pushPermissionRequest = requestPushPermissionOnLogin();
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
@@ -39,7 +52,9 @@ const Login = () => {
       if (error) {
         setServerError(a.invalidCredentials);
         setLoading(false);
+        return;
       }
+      await pushPermissionRequest;
       // On success: PublicOnlyRoute redirects automatically when AuthContext
       // updates via onAuthStateChange — no manual navigate() needed here.
     } catch {
