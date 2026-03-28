@@ -621,6 +621,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
   const { t } = useLanguage();
+  useFirstLoginPushPrompt();
   const [profile, setProfile] = useState<{ full_name: string | null; hero_image_url: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
