@@ -59,7 +59,7 @@ const Dashboard = () => {
   const { user, signOut, photographerId } = useAuth();
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
-  useFirstLoginPushPrompt();
+  
 
   const [loading, setLoading] = useState(true);
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);
