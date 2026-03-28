@@ -29,6 +29,24 @@ const eventIcons: Record<string, string> = {
   general: "🔔",
 };
 
+const FILTER_GROUPS = [
+  { key: "all", events: [] as string[] },
+  { key: "bookings", events: ["new_booking"] },
+  { key: "payments", events: ["payment_received", "payment_failed"] },
+  { key: "chat", events: ["new_chat_message"] },
+  { key: "bugs", events: ["new_bug_report"] },
+] as const;
+
+type FilterKey = (typeof FILTER_GROUPS)[number]["key"];
+
+const filterLabelKey: Record<FilterKey, string> = {
+  all: "filterAll",
+  bookings: "filterBookings",
+  payments: "filterPayments",
+  chat: "filterChat",
+  bugs: "filterBugs",
+};
+
 export function NotificationBell() {
   const { user } = useAuth();
   const { t, lang } = useLanguage();
@@ -37,6 +55,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const load = useCallback(async () => {
     if (!photographerId) return;

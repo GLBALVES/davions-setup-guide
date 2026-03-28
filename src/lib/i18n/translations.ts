@@ -5101,6 +5101,11 @@ export const translations = {
       pushUnblockInstructions: "Haz clic en el icono de candado/info en la barra de direcciones → Configuración del sitio → Notificaciones → Permitir. Luego haz clic en 'Verificar de nuevo' abajo.",
       pushRecheckPermission: "Verificar de nuevo",
       channelDesc: "Activa o desactiva los canales para cada tipo de evento.",
+      filterAll: "Todos",
+      filterBookings: "Reservas",
+      filterPayments: "Pagos",
+      filterChat: "Chat",
+      filterBugs: "Bugs",
     },
   },
 } as const;
