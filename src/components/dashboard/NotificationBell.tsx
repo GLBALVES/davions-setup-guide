@@ -37,7 +37,7 @@ const FILTER_GROUPS: { key: string; events: string[] }[] = [
   { key: "bugs", events: ["new_bug_report"] },
 ];
 
-type FilterKey = (typeof FILTER_GROUPS)[number]["key"];
+type FilterKey = string;
 
 const filterLabelKey: Record<FilterKey, string> = {
   all: "filterAll",
