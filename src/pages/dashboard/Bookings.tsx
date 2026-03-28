@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useFirstBookingPushPrompt } from "@/hooks/useFirstBookingPushPrompt";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
