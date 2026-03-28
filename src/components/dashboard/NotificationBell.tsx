@@ -16,7 +16,7 @@ import {
 } from "@/lib/notifications-api";
 import { formatDistanceToNow } from "date-fns";
 import { enUS, ptBR, es } from "date-fns/locale";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const dateFnsLocale = { en: enUS, pt: ptBR, es: es };
 
