@@ -35,6 +35,83 @@ import {
   ConnectComponentsProvider,
 } from "@stripe/react-connect-js";
 
+import { subscribeToPush } from "@/lib/notifications-api";
+import { toast as sonnerToast } from "sonner";
+
+function NotificationPushStatusCard({ photographerId, n }: { photographerId: string | null; n: any }) {
+  const [pushPermission, setPushPermission] = useState(
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
+  const [sending, setSending] = useState(false);
+
+  const handleEnablePush = async () => {
+    if (!photographerId) return;
+    const perm = await Notification.requestPermission();
+    setPushPermission(perm);
+    if (perm === "granted") {
+      await subscribeToPush(photographerId);
+      sonnerToast.success(n.pushGranted);
+    }
+  };
+
+  const handleTestPush = async () => {
+    if (!photographerId) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-push", {
+        body: {
+          photographer_id: photographerId,
+          title: "🔔 Test Notification",
+          body: "If you see this, push notifications are working!",
+          url: "/dashboard/settings",
+        },
+      });
+      if (error) throw error;
+      sonnerToast.success(n.testPushSent);
+    } catch {
+      sonnerToast.error(n.testPushFailed);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const isGranted = pushPermission === "granted";
+  const isDenied = pushPermission === "denied";
+
+  return (
+    <section className="border border-border rounded-lg p-5 flex flex-col gap-4">
+      <div className="flex items-center gap-3">
+        {isGranted ? (
+          <BellRing className="h-5 w-5 text-green-500" />
+        ) : isDenied ? (
+          <BellOff className="h-5 w-5 text-destructive" />
+        ) : (
+          <Bell className="h-5 w-5 text-muted-foreground" />
+        )}
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold">{n.pushStatus}</h3>
+          <p className="text-xs text-muted-foreground">
+            {isGranted ? n.pushGranted : isDenied ? n.pushDenied : n.pushDefault}
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        {!isGranted && !isDenied && (
+          <Button size="sm" variant="outline" onClick={handleEnablePush} className="gap-1.5 text-xs">
+            <Bell className="h-3.5 w-3.5" /> {n.enablePush}
+          </Button>
+        )}
+        {isGranted && (
+          <Button size="sm" variant="outline" onClick={handleTestPush} disabled={sending} className="gap-1.5 text-xs">
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            {n.testPush}
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
