@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useFirstBookingPushPrompt } from "@/hooks/useFirstBookingPushPrompt";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -218,6 +219,9 @@ const Bookings = () => {
   useEffect(() => {
     if (photographerId) fetchBookings();
   }, [photographerId]);
+
+  // Prompt push permission on first booking
+  useFirstBookingPushPrompt(photographerId, bookings.length, loading);
 
   const filteredBookings = useMemo(() => {
     let list = bookings.filter((b) => {
