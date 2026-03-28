@@ -148,7 +148,7 @@ export function NotificationBell() {
           )}
         </div>
         {/* Filter chips */}
-        <div className="flex items-center gap-1 px-3 py-2 border-b border-border overflow-x-auto">
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-border overflow-x-auto no-scrollbar">
           {FILTER_GROUPS.map((g) => {
             const groupUnread = g.events.length === 0
               ? items.filter((i) => !i.read).length
