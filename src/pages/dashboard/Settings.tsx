@@ -84,7 +84,7 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
     <section className="border border-border rounded-lg p-5 flex flex-col gap-4">
       <div className="flex items-center gap-3">
         {isGranted ? (
-          <BellRing className="h-5 w-5 text-green-500" />
+          <BellRing className="h-5 w-5 text-primary" />
         ) : isDenied ? (
           <BellOff className="h-5 w-5 text-destructive" />
         ) : (
