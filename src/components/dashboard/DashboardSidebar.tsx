@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useFirstLoginPushPrompt } from "@/hooks/useFirstLoginPushPrompt";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
