@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { PushBanner } from "@/components/dashboard/PushBanner";
-import { useFirstLoginPushPrompt } from "@/hooks/useFirstLoginPushPrompt";
+
 import {
   CalendarDays, Clock, Users, FolderKanban, Image,
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
@@ -59,7 +59,7 @@ const Dashboard = () => {
   const { user, signOut, photographerId } = useAuth();
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
-  useFirstLoginPushPrompt();
+  
 
   const [loading, setLoading] = useState(true);
   const [todayBookings, setTodayBookings] = useState<TodayBooking[]>([]);

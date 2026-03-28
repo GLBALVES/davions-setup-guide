@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useFirstLoginPushPrompt } from "@/hooks/useFirstLoginPushPrompt";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
@@ -620,6 +621,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   const { user } = useAuth();
   const { isOwner, can, loading: permsLoading } = useStudioPermissions();
   const { t } = useLanguage();
+  useFirstLoginPushPrompt();
   const [profile, setProfile] = useState<{ full_name: string | null; hero_image_url: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
