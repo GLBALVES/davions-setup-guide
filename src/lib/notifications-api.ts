@@ -120,14 +120,18 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
     const vapidPublicKey = await getVapidPublicKey();
 
-    const registration = await navigator.serviceWorker.ready;
+    // Ensure SW is registered and ready
+    let registration = await navigator.serviceWorker.getRegistration("/sw.js");
+    if (!registration) {
+      registration = await navigator.serviceWorker.register("/sw.js");
+    }
+    await navigator.serviceWorker.ready;
+
     let subscription = await registration.pushManager.getSubscription();
 
     // Always unsubscribe and re-subscribe to ensure VAPID key consistency
     if (subscription) {
-      try {
-        await subscription.unsubscribe();
-      } catch (_) { /* ignore */ }
+      try { await subscription.unsubscribe(); } catch (_) { /* ignore */ }
       subscription = null;
     }
 
@@ -141,12 +145,24 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
     const auth = subscription.getKey("auth");
     if (!key || !auth) return false;
 
+    const newEndpoint = subscription.endpoint;
+    const p256dh = uint8ArrayToBase64url(new Uint8Array(key));
+    const authKey = uint8ArrayToBase64url(new Uint8Array(auth));
+
+    // Remove old subscriptions for this photographer that have a different endpoint
+    // (prevents stale entries from accumulating)
+    await supabase
+      .from("push_subscriptions")
+      .delete()
+      .eq("photographer_id", photographerId)
+      .neq("endpoint", newEndpoint);
+
     const { error } = await supabase.from("push_subscriptions").upsert(
       {
         photographer_id: photographerId,
-        endpoint: subscription.endpoint,
-        p256dh: uint8ArrayToBase64url(new Uint8Array(key)),
-        auth: uint8ArrayToBase64url(new Uint8Array(auth)),
+        endpoint: newEndpoint,
+        p256dh,
+        auth: authKey,
       } as any,
       { onConflict: "photographer_id,endpoint" }
     );
@@ -155,7 +171,7 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
       console.error("Failed to save push subscription:", error);
       return false;
     }
-    console.log("[push] Subscription saved successfully");
+    console.log("[push] Subscription saved successfully, old subs cleaned");
     return true;
   } catch (err) {
     console.error("Push subscription failed:", err);
