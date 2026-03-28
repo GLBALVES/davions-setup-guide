@@ -1702,6 +1702,11 @@ export const translations = {
       pushUnblockInstructions: "Click the lock/info icon in the address bar → Site settings → Notifications → Allow. Then click 'Check again' below.",
       pushRecheckPermission: "Check again",
       channelDesc: "Toggle the channels for each event type.",
+      filterAll: "All",
+      filterBookings: "Bookings",
+      filterPayments: "Payments",
+      filterChat: "Chat",
+      filterBugs: "Bugs",
     },
   },
 
