@@ -113,6 +113,62 @@ serve(async (req) => {
         .eq("id", slotId);
     }
 
+    // Insert in-app notifications + send push
+    try {
+      const { data: bk } = await supabase
+        .from("bookings")
+        .select("client_name, photographer_id, session_id")
+        .eq("id", bookingId)
+        .single();
+
+      if (bk) {
+        const { data: sess } = await supabase
+          .from("sessions")
+          .select("title")
+          .eq("id", bk.session_id)
+          .single();
+
+        const payLabel = wasDeposit ? "Deposit paid" : "Full payment";
+
+        await supabase.from("notifications").insert({
+          photographer_id: bk.photographer_id,
+          type: "success",
+          event: "new_booking",
+          title: `New Booking — ${bk.client_name}`,
+          body: `${sess?.title ?? "Session"} confirmed. ${payLabel}.`,
+          metadata: { booking_id: bookingId, session_id: bk.session_id },
+        });
+
+        await supabase.from("notifications").insert({
+          photographer_id: bk.photographer_id,
+          type: "success",
+          event: "payment_received",
+          title: `${payLabel} — ${bk.client_name}`,
+          body: `Payment for ${sess?.title ?? "session"} was processed.`,
+          metadata: { booking_id: bookingId },
+        });
+
+        // Send Web Push
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+        await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            photographer_id: bk.photographer_id,
+            title: `New Booking — ${bk.client_name}`,
+            body: `${sess?.title ?? "Session"} confirmed. ${payLabel}.`,
+            url: "/dashboard/bookings",
+          }),
+        });
+      }
+    } catch (notifErr) {
+      console.error("Notification/push failed:", notifErr);
+    }
+
     // Send confirmation email if RESEND_API_KEY is available
     try {
       const resendKey = Deno.env.get("RESEND_API_KEY");
