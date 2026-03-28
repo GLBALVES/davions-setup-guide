@@ -1,28 +1,43 @@
 
 
-## Plano: Banner de ativação de Push Notifications no Dashboard
+## Plano: Solicitar push após primeiro login/signup
 
-### O que será feito
-Um banner discreto aparecerá no Dashboard (entre o onboarding checklist e os KPIs) incentivando o usuário a ativar notificações push. O banner só aparece quando `Notification.permission === "default"` (nunca perguntado). Ao clicar, dispara `Notification.requestPermission()` e inscreve o dispositivo. O banner pode ser dispensado e fica oculto via `localStorage`.
+### Abordagem
+Criar um hook `useFirstLoginPushPrompt` que detecta a **primeira vez** que o usuário autentica neste dispositivo e solicita permissão de push automaticamente. Usa `localStorage` para não repetir.
 
-### Arquivos modificados
+### Arquivos
 
-**1. `src/components/dashboard/PushBanner.tsx`** (novo)
-- Componente auto-contido que verifica `Notification.permission`
-- Verifica `localStorage("push-banner-dismissed")` para não mostrar novamente
-- Botão "Enable" chama `requestPermission()` → `subscribeToPush()`
-- Botão "×" fecha e salva dismissal no localStorage
-- Estilo: borda sutil, ícone Bell, texto curto, alinhado ao design system (luxury minimal)
-- Textos em 3 idiomas via `useLanguage()`
+**1. `src/hooks/useFirstLoginPushPrompt.ts`** (novo)
+- Observa `photographerId` do AuthContext (transição de `null` → valor = login concluído)
+- Verifica `localStorage("push-first-login-prompted")` para executar apenas uma vez por dispositivo
+- Verifica `Notification.permission === "default"` (só pede se nunca perguntou)
+- Aguarda ~2s após login (não interromper o carregamento inicial)
+- Chama `Notification.requestPermission()` → se granted, chama `subscribeToPush(photographerId)`
+- Salva flag no localStorage independente do resultado
 
-**2. `src/lib/i18n/translations.ts`**
-- Adicionar chaves `pushBanner.title`, `pushBanner.description`, `pushBanner.enable`, nos 3 idiomas
+**2. `src/pages/Dashboard.tsx`**
+- Importar e chamar `useFirstLoginPushPrompt()` no componente Dashboard (executa silenciosamente)
 
-**3. `src/pages/Dashboard.tsx`**
-- Importar e renderizar `<PushBanner />` logo após `<OnboardingChecklist />`
+### Lógica resumida
+```typescript
+useEffect(() => {
+  if (!photographerId) return;
+  if (localStorage.getItem("push-first-login-prompted")) return;
+  if (Notification.permission !== "default") return;
+
+  const timer = setTimeout(async () => {
+    localStorage.setItem("push-first-login-prompted", "1");
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") await subscribeToPush(photographerId);
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, [photographerId]);
+```
 
 ### Comportamento
-- Visível apenas quando permissão = "default" e não dispensado
-- Desaparece automaticamente após ativar ou dispensar
-- Não aparece em navegadores sem suporte a Notification API
+- Executa apenas 1 vez por dispositivo (localStorage flag separada do banner)
+- Delay de 2s para não competir com o carregamento da página
+- Se o usuário negar, o banner do dashboard NÃO aparece (permission já não é "default")
+- Se o usuário aceitar, a subscription é registrada automaticamente
 
