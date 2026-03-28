@@ -125,19 +125,14 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) requestBrowserPermission(); }}>
       <PopoverTrigger asChild>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 relative">
-              <Bell size={15} />
-              {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-none">
-                  {unread > 99 ? "99+" : unread}
-                </span>
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{n.title}</TooltipContent>
-        </Tooltip>
+        <button className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200 relative">
+          <Bell size={15} />
+          {unread > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-none">
+              {unread > 99 ? "99+" : unread}
+            </span>
+          )}
+        </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[360px] p-0" sideOffset={8}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
