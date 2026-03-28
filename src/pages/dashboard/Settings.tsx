@@ -97,19 +97,44 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
           </p>
         </div>
       </div>
-      <div className="flex gap-2">
-        {!isGranted && !isDenied && (
+      {/* Default state */}
+      {!isGranted && !isDenied && (
+        <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handleEnablePush} className="gap-1.5 text-xs">
             <Bell className="h-3.5 w-3.5" /> {n.enablePush}
           </Button>
-        )}
-        {isGranted && (
+        </div>
+      )}
+
+      {/* Granted state */}
+      {isGranted && (
+        <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={handleTestPush} disabled={sending} className="gap-1.5 text-xs">
             {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             {n.testPush}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Denied/Blocked state */}
+      {isDenied && (
+        <div className="flex flex-col gap-3">
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-destructive">{n.pushHowToUnblock}</p>
+            <p>{n.pushUnblockInstructions}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPushPermission(Notification.permission)}
+              className="gap-1.5 text-xs"
+            >
+              <Bell className="h-3.5 w-3.5" /> {n.pushRecheckPermission}
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
