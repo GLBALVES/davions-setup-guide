@@ -180,6 +180,34 @@ export function CreateBookingDialog({
 
       if (bookingError) throw bookingError;
 
+      // Find session title for notification
+      const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
+
+      // Insert in-app notification
+      await (supabase as any).from("notifications").insert({
+        photographer_id: user.id,
+        type: "success",
+        event: "new_booking",
+        title: `New Booking — ${clientName}`,
+        body: `${sessionTitle} confirmed for ${dateStr}.`,
+        metadata: { session_id: selectedSessionId },
+      });
+
+      // Send push notification
+      try {
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (authSession?.access_token) {
+          await supabase.functions.invoke("send-push", {
+            body: {
+              photographer_id: user.id,
+              title: `New Booking — ${clientName}`,
+              body: `${sessionTitle} confirmed for ${dateStr}.`,
+              url: "/dashboard/bookings",
+            },
+          });
+        }
+      } catch (_) { /* non-fatal */ }
+
       toast({ title: "Booking created successfully" });
       onCreated();
       onOpenChange(false);
