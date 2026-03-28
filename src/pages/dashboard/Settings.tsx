@@ -58,6 +58,8 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
     if (!photographerId) return;
     setSending(true);
     try {
+      // Ensure subscription exists with current VAPID key
+      await subscribeToPush(photographerId);
       const { error } = await supabase.functions.invoke("send-push", {
         body: {
           photographer_id: photographerId,
