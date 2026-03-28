@@ -220,6 +220,9 @@ const Bookings = () => {
     if (photographerId) fetchBookings();
   }, [photographerId]);
 
+  // Prompt push permission on first booking
+  useFirstBookingPushPrompt(photographerId, bookings.length, loading);
+
   const filteredBookings = useMemo(() => {
     let list = bookings.filter((b) => {
       if (filter === "pending") return b.status === "pending";
