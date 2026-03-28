@@ -85,7 +85,7 @@ export async function upsertNotificationPreference(pref: Partial<NotificationPre
 
 // --- Web Push subscription ---
 
-const VAPID_PUBLIC_KEY = "BKGpf8vz5gik1vuPiHijWckm_09G2naZIO_5ItrD1fY4-tsRQBHI-ohJOGTQoHBR-0ETcQSxTlLS8_3bvcqq0z0";
+const VAPID_PUBLIC_KEY = "BN3_n-KXYxH-hbt8s_pG96eN5OnwCLN3VyOv_JsGA0RXKsq2k3q9mrh3cTnpO54Y4vFtHLHAD4zHXY24Cf_qrq8";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
