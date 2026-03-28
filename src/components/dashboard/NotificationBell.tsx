@@ -29,13 +29,13 @@ const eventIcons: Record<string, string> = {
   general: "🔔",
 };
 
-const FILTER_GROUPS = [
-  { key: "all", events: [] as string[] },
+const FILTER_GROUPS: { key: string; events: string[] }[] = [
+  { key: "all", events: [] },
   { key: "bookings", events: ["new_booking"] },
   { key: "payments", events: ["payment_received", "payment_failed"] },
   { key: "chat", events: ["new_chat_message"] },
   { key: "bugs", events: ["new_bug_report"] },
-] as const;
+];
 
 type FilterKey = (typeof FILTER_GROUPS)[number]["key"];
 
