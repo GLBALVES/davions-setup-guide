@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { subscribeToPush } from "@/lib/notifications-api";
 
-const STORAGE_KEY = "push-first-booking-prompted";
+const STORAGE_KEY = "push-first-booking-prompted-v2";
 
 /**
  * Prompts the photographer for push permissions the first time they
