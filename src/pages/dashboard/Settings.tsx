@@ -71,7 +71,7 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
       } as any);
       if (notificationError) throw notificationError;
 
-      const { error } = await supabase.functions.invoke("send-push", {
+      const { data, error } = await supabase.functions.invoke("send-push", {
         body: {
           photographer_id: photographerId,
           title: "🔔 Test Notification",
@@ -80,7 +80,14 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
         },
       });
       if (error) throw error;
-      sonnerToast.success(n.testPushSent);
+      const result = data as { sent?: number; cleaned?: number; total?: number } | null;
+      if (result && result.sent && result.sent > 0) {
+        sonnerToast.success(`${n.testPushSent} (${result.sent}/${result.total})`);
+      } else if (result && result.total === 0) {
+        sonnerToast.info(n.testPushSent);
+      } else {
+        sonnerToast.warning(`${n.testPushSent} — ${result?.cleaned ?? 0} stale subs cleaned`);
+      }
     } catch {
       sonnerToast.error(n.testPushFailed);
     } finally {
