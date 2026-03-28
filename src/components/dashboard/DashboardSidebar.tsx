@@ -105,7 +105,7 @@ type MenuItem = {
   icon: React.ElementType;
   to?: string;
   end?: boolean;
-  badgeKey?: "pendingBookings" | "draftSessions";
+  badgeKey?: "pendingBookings" | "draftSessions" | "unlinkedGalleries" | "projectUpdates";
   /** permission key from PERMISSION_GROUPS; undefined = always visible */
   permKey?: string;
   /** Renders this item indented as a sub-item of the preceding top-level item */
@@ -139,12 +139,12 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: Camera,
       defaultOpen: true,
       items: [
-        { title: t.nav.projects, icon: Columns, to: "/dashboard/projects" },
+        { title: t.nav.projects, icon: Columns, to: "/dashboard/projects", badgeKey: "projectUpdates" },
         { title: t.nav.dashboard, icon: LayoutDashboard, to: "/dashboard", end: true },
         { title: t.nav.sessions, icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
         { title: t.nav.schedule, icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
         { title: t.nav.bookings, icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
-        { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
+        { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries", badgeKey: "unlinkedGalleries" },
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
@@ -239,12 +239,12 @@ const groups: MenuGroup[] = [
   {
     stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
-      { title: "Projects", icon: Columns, to: "/dashboard/projects" },
+      { title: "Projects", icon: Columns, to: "/dashboard/projects", badgeKey: "projectUpdates" },
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
       { title: "Bookings", icon: BookOpen, to: "/dashboard/bookings", badgeKey: "pendingBookings", permKey: "bookings", isSubItem: true, parentKey: "schedule" },
-      { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries" },
+      { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries", badgeKey: "unlinkedGalleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
       { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
