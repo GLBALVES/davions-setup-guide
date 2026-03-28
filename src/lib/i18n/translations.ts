@@ -3364,6 +3364,11 @@ export const translations = {
       pushUnblockInstructions: "Clique no ícone de cadeado/info na barra de endereço → Configurações do site → Notificações → Permitir. Depois clique em 'Verificar novamente' abaixo.",
       pushRecheckPermission: "Verificar novamente",
       channelDesc: "Ative ou desative os canais para cada tipo de evento.",
+      filterAll: "Todos",
+      filterBookings: "Agendamentos",
+      filterPayments: "Pagamentos",
+      filterChat: "Chat",
+      filterBugs: "Bugs",
     },
   },
 
