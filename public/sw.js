@@ -1,9 +1,14 @@
 // Service Worker for Web Push Notifications
 self.addEventListener("push", (event) => {
-  let data = { title: "Davions", body: "You have a new notification" };
+  let data = { title: "Davions", body: "You have a new notification", url: "/dashboard" };
+
   try {
-    data = event.data.json();
-  } catch (_) {}
+    if (event.data) {
+      data = { ...data, ...event.data.json() };
+    }
+  } catch (_) {
+    // Firefox/Windows may deliver payloadless push; keep fallback content.
+  }
 
   const options = {
     body: data.body || "",
@@ -11,6 +16,8 @@ self.addEventListener("push", (event) => {
     badge: "/placeholder.svg",
     data: { url: data.url || "/dashboard" },
     vibrate: [200, 100, 200],
+    tag: "davions-push",
+    renotify: true,
   };
 
   event.waitUntil(self.registration.showNotification(data.title || "Davions", options));
