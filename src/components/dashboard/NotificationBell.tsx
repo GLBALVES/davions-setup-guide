@@ -29,6 +29,24 @@ const eventIcons: Record<string, string> = {
   general: "🔔",
 };
 
+const FILTER_GROUPS: { key: string; events: string[] }[] = [
+  { key: "all", events: [] },
+  { key: "bookings", events: ["new_booking"] },
+  { key: "payments", events: ["payment_received", "payment_failed"] },
+  { key: "chat", events: ["new_chat_message"] },
+  { key: "bugs", events: ["new_bug_report"] },
+];
+
+type FilterKey = string;
+
+const filterLabelKey: Record<FilterKey, string> = {
+  all: "filterAll",
+  bookings: "filterBookings",
+  payments: "filterPayments",
+  chat: "filterChat",
+  bugs: "filterBugs",
+};
+
 export function NotificationBell() {
   const { user } = useAuth();
   const { t, lang } = useLanguage();
@@ -37,6 +55,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const load = useCallback(async () => {
     if (!photographerId) return;
@@ -129,39 +148,75 @@ export function NotificationBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[400px]">
-          {items.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">{n.empty}</div>
-          ) : (
-            <div className="divide-y divide-border">
-              {items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => !item.read && handleMarkRead(item.id)}
-                  className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-muted/50 transition-colors ${
-                    !item.read ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <span className="text-lg mt-0.5">{eventIcons[item.event] || eventIcons.general}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm leading-tight ${!item.read ? "font-medium" : "text-muted-foreground"}`}>
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{item.body}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {formatDistanceToNow(new Date(item.created_at), {
-                        addSuffix: true,
-                        locale: dateFnsLocale[lang] || enUS,
-                      })}
-                    </p>
-                  </div>
-                  {!item.read && (
-                    <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Filter chips */}
+        <div className="flex items-center gap-1 px-3 py-2 border-b border-border overflow-x-auto">
+          {FILTER_GROUPS.map((g) => {
+            const groupUnread = g.events.length === 0
+              ? items.filter((i) => !i.read).length
+              : items.filter((i) => !i.read && g.events.includes(i.event)).length;
+            const isActive = activeFilter === g.key;
+            return (
+              <button
+                key={g.key}
+                onClick={() => setActiveFilter(g.key)}
+                className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                  isActive
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {(n as any)[filterLabelKey[g.key]]}
+                {groupUnread > 0 && (
+                  <span className={`min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded-full text-[9px] font-bold leading-none ${
+                    isActive ? "bg-background text-foreground" : "bg-destructive text-destructive-foreground"
+                  }`}>
+                    {groupUnread > 99 ? "99+" : groupUnread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <ScrollArea className="max-h-[360px]">
+          {(() => {
+            const activeGroup = FILTER_GROUPS.find((g) => g.key === activeFilter)!;
+            const filtered = activeGroup.events.length === 0
+              ? items
+              : items.filter((i) => activeGroup.events.includes(i.event));
+            if (filtered.length === 0) {
+              return <div className="py-12 text-center text-sm text-muted-foreground">{n.empty}</div>;
+            }
+            return (
+              <div className="divide-y divide-border">
+                {filtered.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => !item.read && handleMarkRead(item.id)}
+                    className={`w-full text-left px-4 py-3 flex gap-3 hover:bg-muted/50 transition-colors ${
+                      !item.read ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <span className="text-lg mt-0.5">{eventIcons[item.event] || eventIcons.general}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm leading-tight ${!item.read ? "font-medium" : "text-muted-foreground"}`}>
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{item.body}</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {formatDistanceToNow(new Date(item.created_at), {
+                          addSuffix: true,
+                          locale: dateFnsLocale[lang] || enUS,
+                        })}
+                      </p>
+                    </div>
+                    {!item.read && (
+                      <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </ScrollArea>
       </PopoverContent>
     </Popover>
