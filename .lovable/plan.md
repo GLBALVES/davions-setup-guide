@@ -1,38 +1,36 @@
 
 
-## Plano: Melhorar Push Status Card e Preferências de Notificação
+## Plano: Agrupar notificações por tipo no sininho
 
-### Problema
-1. Quando push está **bloqueado** (denied), o card não mostra nenhum botão — o usuário fica sem ação.
-2. Não há instrução clara de como desbloquear no navegador.
-3. As preferências (toggles) parecem não ter feedback visual ao interagir.
+### O que muda
+Adicionar **filtros por grupo** no popover do sininho, permitindo ao usuário focar em um tipo de notificação por vez.
 
 ### Alterações
 
-**1. `src/pages/dashboard/Settings.tsx` — NotificationPushStatusCard**
-- Quando `denied`: mostrar um botão "Como desbloquear" que abre instruções (ex: "Vá em Configurações do site → Permissões → Notificações → Permitir") com link/guia visual.
-- Quando `default`: manter botão "Ativar Push" (já existe).
-- Quando `granted`: manter botão "Enviar Teste" (já existe) + adicionar indicador visual verde.
-- Adicionar um botão "Verificar novamente" no estado `denied` que re-checa `Notification.permission` (caso o usuário desbloqueie manualmente no navegador e volte à página).
+**1. `src/components/dashboard/NotificationBell.tsx`**
+- Adicionar uma barra de filtros horizontais abaixo do header do popover com chips: `All`, `Bookings`, `Payments`, `Chat`, `Bugs`
+- Cada chip filtra `items` pelo campo `event` correspondente
+- Estado local `activeFilter` (default: `"all"`)
+- Mostrar contagem de não-lidos por grupo em cada chip
+- Mapeamento: `new_booking` → Bookings, `payment_received`/`payment_failed` → Payments, `new_chat_message` → Chat, `new_bug_report` → Bugs
 
 **2. `src/lib/i18n/translations.ts`**
-- Adicionar traduções para: `pushHowToUnblock`, `pushUnblockInstructions`, `pushRecheckPermission` em EN/PT/ES.
+- Adicionar chaves `notif.filterAll`, `notif.filterBookings`, `notif.filterPayments`, `notif.filterChat`, `notif.filterBugs` em EN/PT/ES
 
-### Detalhes técnicos
+### Layout visual
 
 ```text
-Push Status Card states:
-
-┌─────────────────────────────────────────────┐
-│ 🔔 Push Status                              │
-│ ✅ Enabled  |  ⚠️ Pending  |  🚫 Blocked    │
-│                                             │
-│ [Enable Push]  or  [Send Test]  or          │
-│ [How to Unblock] [Check Again]              │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ Notifications          [Mark all ✓] │
+├─────────────────────────────────────┤
+│ [All 5] [Bookings 2] [Payments 1]  │
+│ [Chat 1] [Bugs 1]                  │
+├─────────────────────────────────────┤
+│ 📅 New booking from John...        │
+│ 📅 New booking from Maria...       │
+│ ...                                │
+└─────────────────────────────────────┘
 ```
 
-No estado `denied`, o card mostrará:
-- Texto explicativo de como desbloquear (Chrome/Firefox/Safari)
-- Botão "Verificar novamente" que executa `setPushPermission(Notification.permission)` para atualizar o estado sem recarregar a página
+Chips com badge de contagem não-lida, chip ativo com `bg-foreground text-background`, scroll horizontal em mobile.
 
