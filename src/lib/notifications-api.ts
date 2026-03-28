@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+let vapidPublicKeyCache: string | null = null;
+
 export type NotificationRow = {
   id: string;
   photographer_id: string;
@@ -85,7 +87,18 @@ export async function upsertNotificationPreference(pref: Partial<NotificationPre
 
 // --- Web Push subscription ---
 
-const VAPID_PUBLIC_KEY = "BN3_n-KXYxH-hbt8s_pG96eN5OnwCLN3VyOv_JsGA0RXKsq2k3q9mrh3cTnpO54Y4vFtHLHAD4zHXY24Cf_qrq8";
+async function getVapidPublicKey(): Promise<string> {
+  if (vapidPublicKeyCache) return vapidPublicKeyCache;
+
+  const { data, error } = await supabase.functions.invoke("get-push-public-key");
+  if (error) throw error;
+
+  const publicKey = (data as { publicKey?: string } | null)?.publicKey;
+  if (!publicKey) throw new Error("Missing VAPID public key");
+
+  vapidPublicKeyCache = publicKey;
+  return publicKey;
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -105,6 +118,7 @@ function uint8ArrayToBase64url(arr: Uint8Array): string {
 export async function subscribeToPush(photographerId: string): Promise<boolean> {
   try {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    const vapidPublicKey = await getVapidPublicKey();
 
     const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
@@ -117,7 +131,7 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
       subscription = null;
     }
 
-    const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+    const appServerKey = urlBase64ToUint8Array(vapidPublicKey);
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: appServerKey.buffer as ArrayBuffer,

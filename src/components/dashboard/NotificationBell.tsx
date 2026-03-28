@@ -48,10 +48,9 @@ const filterLabelKey: Record<FilterKey, string> = {
 };
 
 export function NotificationBell() {
-  const { user } = useAuth();
+  const { photographerId } = useAuth();
   const { t, lang } = useLanguage();
   const n = t.notif;
-  const photographerId = user?.id || "";
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [unread, setUnread] = useState(0);

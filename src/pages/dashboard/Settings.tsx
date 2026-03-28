@@ -60,6 +60,17 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
     try {
       // Ensure subscription exists with current VAPID key
       await subscribeToPush(photographerId);
+      const { error: notificationError } = await supabase.from("notifications").insert({
+        photographer_id: photographerId,
+        type: "info",
+        title: "🔔 Test Notification",
+        body: "If you see this in the bell, in-app notifications are working!",
+        event: "general",
+        metadata: { source: "settings_test" },
+        read: false,
+      } as any);
+      if (notificationError) throw notificationError;
+
       const { error } = await supabase.functions.invoke("send-push", {
         body: {
           photographer_id: photographerId,
