@@ -109,13 +109,19 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
     const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
 
-    if (!subscription) {
-      const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: appServerKey.buffer as ArrayBuffer,
-      });
+    // Always unsubscribe and re-subscribe to ensure VAPID key consistency
+    if (subscription) {
+      try {
+        await subscription.unsubscribe();
+      } catch (_) { /* ignore */ }
+      subscription = null;
     }
+
+    const appServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: appServerKey.buffer as ArrayBuffer,
+    });
 
     const key = subscription.getKey("p256dh");
     const auth = subscription.getKey("auth");
@@ -135,6 +141,7 @@ export async function subscribeToPush(photographerId: string): Promise<boolean> 
       console.error("Failed to save push subscription:", error);
       return false;
     }
+    console.log("[push] Subscription saved successfully");
     return true;
   } catch (err) {
     console.error("Push subscription failed:", err);

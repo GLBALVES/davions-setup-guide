@@ -69,7 +69,11 @@ export function NotificationBell() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    // Re-register push subscription on mount to keep VAPID key in sync
+    if (photographerId && "Notification" in window && Notification.permission === "granted") {
+      subscribeToPush(photographerId);
+    }
+  }, [load, photographerId]);
 
   // Realtime subscription
   useEffect(() => {
