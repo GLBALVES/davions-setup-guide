@@ -1717,7 +1717,7 @@ const SessionDetailPage = () => {
 
                 {/* Action buttons */}
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStep("addons")} className="text-xs tracking-wider uppercase font-light rounded-none">
+                  <Button variant="outline" onClick={() => setStep(extras.length > 0 ? "addons" : "form")} className="text-xs tracking-wider uppercase font-light rounded-none">
                     Back
                   </Button>
                   <Button
