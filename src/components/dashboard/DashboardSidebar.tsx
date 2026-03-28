@@ -105,7 +105,7 @@ type MenuItem = {
   icon: React.ElementType;
   to?: string;
   end?: boolean;
-  badgeKey?: "pendingBookings" | "draftSessions";
+  badgeKey?: "pendingBookings" | "draftSessions" | "unlinkedGalleries" | "projectUpdates";
   /** permission key from PERMISSION_GROUPS; undefined = always visible */
   permKey?: string;
   /** Renders this item indented as a sub-item of the preceding top-level item */
