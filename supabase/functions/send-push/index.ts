@@ -134,6 +134,8 @@ serve(async (req) => {
 
   try {
     const { photographer_id, title, body, url } = await req.json();
+    console.log("[send-push] Request received:", { photographer_id, title, body: body?.slice(0, 50) });
+
     if (!photographer_id || !title) {
       return new Response(JSON.stringify({ error: "photographer_id and title required" }), { status: 400, headers: corsHeaders });
     }
@@ -143,27 +145,40 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: subs } = await supabase
+    const { data: subs, error: subsError } = await supabase
       .from("push_subscriptions")
       .select("*")
       .eq("photographer_id", photographer_id);
 
+    console.log("[send-push] Subscriptions found:", subs?.length ?? 0, "error:", subsError?.message ?? "none");
+
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ sent: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ sent: 0, reason: "no_subscriptions" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const vapidPub = base64urlToUint8Array(Deno.env.get("VAPID_PUBLIC_KEY") ?? "");
-    const vapidPriv = base64urlToUint8Array(Deno.env.get("VAPID_PRIVATE_KEY") ?? "");
+    const vapidPubRaw = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
+    const vapidPrivRaw = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
+    console.log("[send-push] VAPID keys present:", { pub: vapidPubRaw.length > 0, priv: vapidPrivRaw.length > 0 });
+
+    const vapidPub = base64urlToUint8Array(vapidPubRaw);
+    const vapidPriv = base64urlToUint8Array(vapidPrivRaw);
     const payloadBytes = new TextEncoder().encode(JSON.stringify({ title, body: body || "", url: url || "/dashboard" }));
 
     let sent = 0;
     const expiredIds: string[] = [];
+    const errors: string[] = [];
 
     for (const sub of subs) {
       try {
+        console.log("[send-push] Processing subscription:", sub.id, "endpoint:", sub.endpoint.slice(0, 60));
+        
         const clientPub = base64urlToUint8Array(sub.p256dh);
         const clientAuth = base64urlToUint8Array(sub.auth);
+        console.log("[send-push] Client keys decoded - p256dh length:", clientPub.length, "auth length:", clientAuth.length);
+
         const { ciphertext, salt, serverPublicKey } = await encryptPayload(clientPub, clientAuth, payloadBytes);
+        console.log("[send-push] Payload encrypted, ciphertext length:", ciphertext.length);
+
         const vapidHeaders = await createVapidAuthHeader(sub.endpoint, vapidPub, vapidPriv);
 
         const res = await fetch(sub.endpoint, {
@@ -179,28 +194,39 @@ serve(async (req) => {
           body: ciphertext,
         });
 
+        console.log("[send-push] Push response:", res.status, res.statusText);
+
         if (res.status === 410 || res.status === 404) {
           expiredIds.push(sub.id);
+          console.log("[send-push] Subscription expired/gone:", sub.id);
         } else if (res.ok || res.status === 201) {
           sent++;
+          console.log("[send-push] Push sent successfully to:", sub.id);
         } else {
-          console.error(`Push failed ${res.status} for ${sub.endpoint}`);
+          const responseBody = await res.text();
+          console.error(`[send-push] Push failed ${res.status} for ${sub.endpoint}: ${responseBody}`);
+          errors.push(`${res.status}: ${responseBody.slice(0, 200)}`);
         }
       } catch (e) {
-        console.error("Push error:", e);
+        console.error("[send-push] Push error for sub", sub.id, ":", e);
+        errors.push(String(e));
       }
     }
 
     // Clean up expired subscriptions
     if (expiredIds.length > 0) {
       await supabase.from("push_subscriptions").delete().in("id", expiredIds);
+      console.log("[send-push] Cleaned up expired subs:", expiredIds.length);
     }
 
-    return new Response(JSON.stringify({ sent, expired: expiredIds.length }), {
+    const result = { sent, expired: expiredIds.length, errors: errors.length > 0 ? errors : undefined };
+    console.log("[send-push] Final result:", JSON.stringify(result));
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("send-push error:", err);
+    console.error("[send-push] Top-level error:", err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: corsHeaders });
   }
 });

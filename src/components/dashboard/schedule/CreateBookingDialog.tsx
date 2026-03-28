@@ -184,7 +184,7 @@ export function CreateBookingDialog({
       const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
 
       // Insert in-app notification
-      await (supabase as any).from("notifications").insert({
+      const { error: notifError } = await (supabase as any).from("notifications").insert({
         photographer_id: user.id,
         type: "success",
         event: "new_booking",
@@ -192,21 +192,21 @@ export function CreateBookingDialog({
         body: `${sessionTitle} confirmed for ${dateStr}.`,
         metadata: { session_id: selectedSessionId },
       });
+      if (notifError) console.error("Failed to insert notification:", notifError);
 
       // Send push notification
       try {
-        const { data: { session: authSession } } = await supabase.auth.getSession();
-        if (authSession?.access_token) {
-          await supabase.functions.invoke("send-push", {
-            body: {
-              photographer_id: user.id,
-              title: `New Booking — ${clientName}`,
-              body: `${sessionTitle} confirmed for ${dateStr}.`,
-              url: "/dashboard/bookings",
-            },
-          });
-        }
-      } catch (_) { /* non-fatal */ }
+        const { data: pushData, error: pushError } = await supabase.functions.invoke("send-push", {
+          body: {
+            photographer_id: user.id,
+            title: `New Booking — ${clientName}`,
+            body: `${sessionTitle} confirmed for ${dateStr}.`,
+            url: "/dashboard/bookings",
+          },
+        });
+        if (pushError) console.error("Push invoke error:", pushError);
+        else console.log("Push result:", pushData);
+      } catch (e) { console.error("Push notification failed:", e); }
 
       toast({ title: "Booking created successfully" });
       onCreated();
