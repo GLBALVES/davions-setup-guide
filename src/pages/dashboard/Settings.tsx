@@ -58,6 +58,8 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
     if (!photographerId) return;
     setSending(true);
     try {
+      // Ensure subscription exists with current VAPID key
+      await subscribeToPush(photographerId);
       const { error } = await supabase.functions.invoke("send-push", {
         body: {
           photographer_id: photographerId,
@@ -82,7 +84,7 @@ function NotificationPushStatusCard({ photographerId, n }: { photographerId: str
     <section className="border border-border rounded-lg p-5 flex flex-col gap-4">
       <div className="flex items-center gap-3">
         {isGranted ? (
-          <BellRing className="h-5 w-5 text-green-500" />
+          <BellRing className="h-5 w-5 text-primary" />
         ) : isDenied ? (
           <BellOff className="h-5 w-5 text-destructive" />
         ) : (

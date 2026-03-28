@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToPush } from "@/lib/notifications-api";
 
-const STORAGE_KEY = "push-first-login-prompted";
+const STORAGE_KEY = "push-first-login-prompted-v2";
 
 export function useFirstLoginPushPrompt() {
   const { photographerId } = useAuth();
