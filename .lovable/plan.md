@@ -1,43 +1,38 @@
 
 
-## Plano: Solicitar push após primeiro login/signup
+## Plano: Melhorar Push Status Card e Preferências de Notificação
 
-### Abordagem
-Criar um hook `useFirstLoginPushPrompt` que detecta a **primeira vez** que o usuário autentica neste dispositivo e solicita permissão de push automaticamente. Usa `localStorage` para não repetir.
+### Problema
+1. Quando push está **bloqueado** (denied), o card não mostra nenhum botão — o usuário fica sem ação.
+2. Não há instrução clara de como desbloquear no navegador.
+3. As preferências (toggles) parecem não ter feedback visual ao interagir.
 
-### Arquivos
+### Alterações
 
-**1. `src/hooks/useFirstLoginPushPrompt.ts`** (novo)
-- Observa `photographerId` do AuthContext (transição de `null` → valor = login concluído)
-- Verifica `localStorage("push-first-login-prompted")` para executar apenas uma vez por dispositivo
-- Verifica `Notification.permission === "default"` (só pede se nunca perguntou)
-- Aguarda ~2s após login (não interromper o carregamento inicial)
-- Chama `Notification.requestPermission()` → se granted, chama `subscribeToPush(photographerId)`
-- Salva flag no localStorage independente do resultado
+**1. `src/pages/dashboard/Settings.tsx` — NotificationPushStatusCard**
+- Quando `denied`: mostrar um botão "Como desbloquear" que abre instruções (ex: "Vá em Configurações do site → Permissões → Notificações → Permitir") com link/guia visual.
+- Quando `default`: manter botão "Ativar Push" (já existe).
+- Quando `granted`: manter botão "Enviar Teste" (já existe) + adicionar indicador visual verde.
+- Adicionar um botão "Verificar novamente" no estado `denied` que re-checa `Notification.permission` (caso o usuário desbloqueie manualmente no navegador e volte à página).
 
-**2. `src/pages/Dashboard.tsx`**
-- Importar e chamar `useFirstLoginPushPrompt()` no componente Dashboard (executa silenciosamente)
+**2. `src/lib/i18n/translations.ts`**
+- Adicionar traduções para: `pushHowToUnblock`, `pushUnblockInstructions`, `pushRecheckPermission` em EN/PT/ES.
 
-### Lógica resumida
-```typescript
-useEffect(() => {
-  if (!photographerId) return;
-  if (localStorage.getItem("push-first-login-prompted")) return;
-  if (Notification.permission !== "default") return;
+### Detalhes técnicos
 
-  const timer = setTimeout(async () => {
-    localStorage.setItem("push-first-login-prompted", "1");
-    const perm = await Notification.requestPermission();
-    if (perm === "granted") await subscribeToPush(photographerId);
-  }, 2000);
+```text
+Push Status Card states:
 
-  return () => clearTimeout(timer);
-}, [photographerId]);
+┌─────────────────────────────────────────────┐
+│ 🔔 Push Status                              │
+│ ✅ Enabled  |  ⚠️ Pending  |  🚫 Blocked    │
+│                                             │
+│ [Enable Push]  or  [Send Test]  or          │
+│ [How to Unblock] [Check Again]              │
+└─────────────────────────────────────────────┘
 ```
 
-### Comportamento
-- Executa apenas 1 vez por dispositivo (localStorage flag separada do banner)
-- Delay de 2s para não competir com o carregamento da página
-- Se o usuário negar, o banner do dashboard NÃO aparece (permission já não é "default")
-- Se o usuário aceitar, a subscription é registrada automaticamente
+No estado `denied`, o card mostrará:
+- Texto explicativo de como desbloquear (Chrome/Firefox/Safari)
+- Botão "Verificar novamente" que executa `setPushPermission(Notification.permission)` para atualizar o estado sem recarregar a página
 
