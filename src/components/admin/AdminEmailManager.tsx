@@ -218,6 +218,7 @@ const tabsDef = [
   { id: "enviados", labelKey: "tabs.enviados", Icon: Send },
   { id: "favoritos", labelKey: "tabs.favoritos", Icon: Star },
   { id: "remetente", labelKey: "tabs.remetente", Icon: Users },
+  { id: "documentos", labelKey: "tabs.documentos", Icon: FileText },
   { id: "pastas", labelKey: "tabs.pastas", Icon: FolderOpen },
   { id: "spam", labelKey: "tabs.spam", Icon: ShieldOff },
   { id: "compor", labelKey: "tabs.compor", Icon: PenLine },
