@@ -179,12 +179,13 @@ export function useAdminEmailData() {
   }, [userId]);
 
   const persistTemplateUpsert = useCallback(async (template: Template) => {
+    if (!userId) return;
     await supabase.from("email_templates").upsert({
-      id: template.id, nome: template.nome, categoria: template.categoria, assunto: template.assunto,
+      id: template.id, user_id: userId, nome: template.nome, categoria: template.categoria, assunto: template.assunto,
       corpo: template.corpo, tom: template.tom, criado_por_ia: template.criadoPorIA,
       criado_em: template.criadoEm.toISOString(), usos: template.usos,
     });
-  }, []);
+  }, [userId]);
 
   const persistTemplateDelete = useCallback(async (id: string) => {
     await supabase.from("email_templates").delete().eq("id", id);
