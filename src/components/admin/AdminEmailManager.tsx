@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next";
 import "@/i18n/email-i18n";
 import {
-  Mail, Bell, Settings, PenSquare, Search, Inbox, Star, Users,
+  Mail, Bell, Settings, PenSquare, Search, Inbox, Star, Users, RefreshCw,
   FolderOpen, Sparkles, BarChart2, Trash2, Reply, Forward,
   ClipboardList, Archive, ChevronLeft, ChevronRight, Send,
   AlertTriangle, ShieldOff, CheckCircle, SendHorizonal, X, Loader2,
