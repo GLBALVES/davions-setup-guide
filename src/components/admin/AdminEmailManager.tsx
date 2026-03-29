@@ -719,7 +719,7 @@ const AdminEmailManager: React.FC = () => {
       } else {
         const imported = result?.imported || 0;
         if (imported > 0) {
-          const { data: emailsRes } = await supabase.from("email_emails").select("*");
+          const { data: emailsRes } = await supabase.from("email_emails").select("*").order("created_at", { ascending: false });
           if (emailsRes) {
             const mapRow = (row: any) => {
               const base = { id: row.id, assunto: row.assunto, preview: row.preview, corpo: row.corpo, hora: row.hora, data: row.data, lido: row.lido, favorito: row.favorito, prioridade: row.prioridade, tags: row.tags || [], pasta: row.pasta, contaId: row.conta_id || "" };

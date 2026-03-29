@@ -99,10 +99,10 @@ Deno.serve(async (req) => {
     const authLoginRes = await sendCommand("AUTH LOGIN");
     if (!authLoginRes.startsWith("334")) throw new Error("AUTH LOGIN failed: " + authLoginRes);
 
-    const userRes = await sendCommand(btoa(conta.smtp_usuario));
+    const userRes = await sendCommand(btoa(smtpUser));
     if (!userRes.startsWith("334")) throw new Error("AUTH user failed: " + userRes);
 
-    const passRes = await sendCommand(btoa(conta.smtp_senha));
+    const passRes = await sendCommand(btoa(smtpPass));
     if (!passRes.startsWith("235")) throw new Error("AUTH password failed: " + passRes);
 
     // MAIL FROM
