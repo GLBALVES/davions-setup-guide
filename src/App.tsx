@@ -68,6 +68,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
 import AdminVps from "./pages/admin/AdminVps";
+import AdminEmail from "./pages/admin/AdminEmail";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
