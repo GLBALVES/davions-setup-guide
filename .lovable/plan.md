@@ -1,14 +1,24 @@
 
 
-## Corrigir badge "Entregue" saindo do card de enviados
+## Mostrar De/Para no painel de detalhe do email
 
 ### Problema
-O `EmailListItem` tem altura fixa `h-[72px]` (linha 140). Quando o `extraBadge` (badge "Entregue"/"Aguardando") é renderizado na linha 155-156, o conteúdo excede a altura fixa e o badge fica visualmente fora do card.
+O `renderRightPanel` (linha 966-973) só mostra o remetente. Para emails enviados, não aparece para quem foi enviado. O usuário precisa ver os dois endereços.
 
 ### Correção
 **Arquivo:** `src/components/admin/AdminEmailManager.tsx`
 
-**Linha 140:** Trocar `h-[72px]` por `min-h-[72px]` para permitir que o card cresça quando tiver badge extra, ou alternativamente aumentar a altura fixa para `h-[88px]` para acomodar o badge.
+**Linhas 966-973** — Expandir o bloco de informações do email para:
+- Mostrar "De: remetente \<emailRemetente\>" sempre
+- Se o email for do tipo `"enviado"`, mostrar também "Para: destinatario \<emailDestinatario\>" abaixo
 
-A melhor abordagem é usar `min-h-[72px]` — cards sem badge mantêm o tamanho padrão, cards com badge crescem naturalmente. Adicionar também `overflow-hidden` como segurança.
+O campo `emailDestinatario` já existe no tipo `EmailEnviado` (linha 63) e já é preenchido na linha 723.
+
+Layout esperado:
+```text
+[Avatar] De: Partners <partners@davions.com>  19:14
+         Para: João <joao@email.com>
+```
+
+Uma alteração pequena no bloco de renderização do header dentro de `renderRightPanel`.
 
