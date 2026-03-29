@@ -1,36 +1,47 @@
 
 
-## Adicionar busca nas abas Enviados, Favoritos e Por Remetente
+## Duas alterações na página `/admin/email`
 
-### Problema
-A barra de busca (filtro por texto) só existe na aba "Entrada" (recebidos). As abas Enviados, Favoritos e Por Remetente não têm nenhum campo de busca.
+### 1. Adicionar botões "Arquivar" e "Denunciar como Spam" na aba Entrada
 
-### Correção
 **Arquivo:** `src/components/admin/AdminEmailManager.tsx`
 
-#### 1. Criar listas filtradas para cada aba
-Reutilizar o state `filtroTexto` que já existe. Adicionar `useMemo` para:
-- `filteredEnviados` — filtra `enviados` por `destinatario`, `assunto`, `preview`
-- `filteredFavoritos` — filtra `favoritoEmails` por `remetente`, `assunto`, `preview`
-- `filteredRemetenteGroups` — filtra `remetenteGroups` por endereço/nome do remetente
+**Handlers (após linha ~800):**
+- `handleArquivar`: muda `tipo` do email selecionado para `"arquivo"`, persiste com `persistEmailUpdate`, limpa seleção, toast de confirmação
+- `handleDenunciarSpam`: muda `tipo` para `"spam"` com `motivoSpam: "manual"`, persiste, limpa seleção, toast
 
-#### 2. Adicionar barra de busca nas 3 abas
-Extrair o bloco de busca (input + ícone Search + botão limpar) em um mini-componente ou duplicar o padrão já usado em `renderEntrada` (linhas 1051-1056) dentro de:
-- `renderEnviados` (linha 1087)
-- `renderFavoritos` (linha 1099)
-- `renderPorRemetente` (linha 1117)
+**UI — `renderEntradaActions` (linha 1040-1057):**
+Adicionar dois botões antes do botão de excluir:
+- `<Archive>` Arquivar → chama `handleArquivar`
+- `<ShieldOff>` Spam → chama `handleDenunciarSpam`
 
-Cada aba terá o mesmo input visual conectado ao `filtroTexto`/`filtroTextoInput` existente (state compartilhado entre abas).
+**i18n:** Adicionar chaves `emailActions.archive` e `emailActions.reportSpam` nos 3 arquivos de locale (`email-en.json`, `email-es.json`, `email-pt.json`).
 
-#### 3. Usar listas filtradas no render
-- `renderEnviados`: trocar `enviados.map(...)` por `filteredEnviados.map(...)`
-- `renderFavoritos`: trocar `favoritoEmails.map(...)` por `filteredFavoritos.map(...)`
-- `renderPorRemetente`: trocar `remetenteGroups.map(...)` por `filteredRemetenteGroups.map(...)`
+### 2. Layout fullscreen sem sidebar para `/admin/email`
 
-### Resultado esperado
+**Arquivo:** `src/pages/admin/AdminEmail.tsx`
+
+Deixar de usar `<AdminLayout>` (que inclui a `AdminSidebar`). Renderizar diretamente:
+- Um header mínimo com um `<ChevronLeft>` + texto "Voltar" que navega para `/admin`
+- O `<AdminEmailManager />` ocupando o restante da tela (`flex-1`)
+
+Layout:
 ```text
-Qualquer aba → campo de busca no topo da lista
-Digitar texto → filtra cards em tempo real
-Limpar → volta a lista completa
+┌─────────────────────────────────┐
+│ ← Voltar    (header fino h-12) │
+├─────────────────────────────────┤
+│                                 │
+│    AdminEmailManager (flex-1)   │
+│                                 │
+└─────────────────────────────────┘
 ```
+
+**Arquivo:** `src/components/admin/AdminLayout.tsx` — sem alterações.
+
+### Arquivos modificados
+- `src/pages/admin/AdminEmail.tsx`
+- `src/components/admin/AdminEmailManager.tsx`
+- `src/i18n/locales/email-en.json`
+- `src/i18n/locales/email-es.json`
+- `src/i18n/locales/email-pt.json`
 
