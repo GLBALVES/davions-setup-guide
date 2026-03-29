@@ -98,6 +98,10 @@ import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+
+const RESTRICTED_ADMINS: Record<string, string[]> = {
+  "me@palomaschell.com": ["Marketing", "AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
+};
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
