@@ -68,6 +68,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
 import AdminVps from "./pages/admin/AdminVps";
+import AdminEmail from "./pages/admin/AdminEmail";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
@@ -177,6 +178,7 @@ const App = () => {
                  <Route path="/admin/vps-setup" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/vps-docs" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/vps" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
+                 <Route path="/admin/email" element={<ProtectedRoute><AdminEmail /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
