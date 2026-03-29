@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next";
 import "@/i18n/email-i18n";
 import {
-  Mail, Bell, Settings, PenSquare, Search, Inbox, Star, Users,
+  Mail, Bell, Settings, PenSquare, Search, Inbox, Star, Users, RefreshCw,
   FolderOpen, Sparkles, BarChart2, Trash2, Reply, Forward,
   ClipboardList, Archive, ChevronLeft, ChevronRight, Send,
   AlertTriangle, ShieldOff, CheckCircle, SendHorizonal, X, Loader2,
@@ -1481,6 +1481,14 @@ const AdminEmailManager: React.FC = () => {
               />
             )}
           </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => window.location.reload()}>
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Refresh</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8"><Globe className="w-4 h-4" /></Button>
