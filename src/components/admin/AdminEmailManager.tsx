@@ -456,6 +456,7 @@ const AdminEmailManager: React.FC = () => {
   const [modalAberto, setModalAberto] = useState(false);
   const [modalMinimizado, setModalMinimizado] = useState(false);
   const [modoModal, setModoModal] = useState<"responder" | "encaminhar" | "novo">("responder");
+  const [syncing, setSyncing] = useState(false);
   const [modalInitial, setModalInitial] = useState({ para: [] as string[], assunto: "", corpo: "", autoAI: false });
   const [modalKey, setModalKey] = useState(0);
   const [insightsPeriodo, setInsightsPeriodo] = useState<"semana" | "mes" | "trimestre">("mes");
