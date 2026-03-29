@@ -137,7 +137,7 @@ const EmailListItem = React.memo<EmailListItemProps>(({ email, isSelected, lido,
   const visibleTags = showTags && email.tags.length > 0 ? email.tags.slice(0, 2) : [];
   const extraTagCount = showTags && email.tags.length > 2 ? email.tags.length - 2 : 0;
   return (
-    <button onClick={() => onSelect(email.id)} className={`w-full text-left px-3 py-2.5 border-b border-border transition-colors duration-150 h-[72px] ${isSelected ? "bg-secondary" : "hover:bg-secondary/50"}`}>
+    <button onClick={() => onSelect(email.id)} className={`w-full text-left px-3 py-2.5 border-b border-border transition-colors duration-150 min-h-[72px] ${isSelected ? "bg-secondary" : "hover:bg-secondary/50"}`}>
       <div className="flex items-center justify-between mb-0.5">
         <div className="flex items-center gap-1.5 min-w-0">
           {conta && <span className="w-4 h-4 rounded text-[8px] font-bold flex items-center justify-center text-white shrink-0" style={{ backgroundColor: conta.cor }}>{conta.nome[0]}</span>}
