@@ -1106,11 +1106,19 @@ const AdminEmailManager: React.FC = () => {
 
   /* ═══ Tab: Enviados ═══ */
   const renderEnviados = () => {
-    const sel = enviados.find(e => e.id === selectedEmailId) || null;
+    const sel = filteredEnviados.find(e => e.id === selectedEmailId) || null;
     return (<div className="flex h-full relative">
-      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}><ScrollArea className="flex-1">
-        {enviados.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-1"><Send className="w-8 h-8" /><p className="text-xs">{t('emailList.noSent')}</p></div>)
-          : enviados.map(email => renderEmailListItem(email, { nameField: email.destinatario, showAccountBadge: contaAtiva === "todas", extraBadge: <span className={`text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium flex items-center gap-1 ${email.status === "entregue" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{email.status === "entregue" ? <><CheckCircle className="w-2.5 h-2.5" /> {t('emailList.delivered')}</> : <><Clock className="w-2.5 h-2.5" /> {t('emailList.waiting')}</>}</span> }))}
+      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
+        <div className="p-2 border-b border-border flex gap-1.5 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
+            {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+          </div>
+        </div>
+        <ScrollArea className="flex-1">
+        {filteredEnviados.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-1"><Send className="w-8 h-8" /><p className="text-xs">{t('emailList.noSent')}</p></div>)
+          : filteredEnviados.map(email => renderEmailListItem(email, { nameField: email.destinatario, showAccountBadge: contaAtiva === "todas", extraBadge: <span className={`text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium flex items-center gap-1 ${email.status === "entregue" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{email.status === "entregue" ? <><CheckCircle className="w-2.5 h-2.5" /> {t('emailList.delivered')}</> : <><Clock className="w-2.5 h-2.5" /> {t('emailList.waiting')}</>}</span> }))}
       </ScrollArea></div>
       {sel ? renderRightPanel(sel, { actions: (<><Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={handleEncaminhar}><Forward className="w-3.5 h-3.5" /> {t('emailActions.forward')}</Button>{renderMoverDropdown()}<Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => handleExcluir(sel.id)}><Trash2 className="w-3.5 h-3.5" /> {t('common.delete')}</Button></>) }) : (!isCompact || !mobileShowPanel) && renderEmptyPanel()}
     </div>);
