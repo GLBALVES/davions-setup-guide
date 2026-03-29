@@ -80,7 +80,7 @@ export function useAdminEmailData() {
 
         const [contasRes, emailsRes, pastasRes, assinaturasRes, templatesRes, gruposRes, contatosRes, regrasRes, prefsRes, bloqRes] = await Promise.all([
           supabase.from("email_contas").select("*"),
-          supabase.from("email_emails").select("*"),
+          supabase.from("email_emails").select("*").order("created_at", { ascending: false }),
           supabase.from("email_pastas").select("*"),
           supabase.from("email_assinaturas").select("*"),
           supabase.from("email_templates").select("*"),
