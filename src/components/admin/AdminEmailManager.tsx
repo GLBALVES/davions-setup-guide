@@ -1569,7 +1569,7 @@ const AdminEmailManager: React.FC = () => {
   };
 
   const tabContentMap: Record<string, () => React.ReactNode> = {
-    entrada: renderEntrada, enviados: renderEnviados, favoritos: renderFavoritos, remetente: renderPorRemetente, pastas: renderPastas, spam: renderSpam, compor: renderCompor, insights: renderInsights, config: renderConfig, arquivo: renderArquivo,
+    entrada: renderEntrada, enviados: renderEnviados, favoritos: renderFavoritos, remetente: renderPorRemetente, documentos: renderDocumentos, pastas: renderPastas, spam: renderSpam, compor: renderCompor, insights: renderInsights, config: renderConfig, arquivo: renderArquivo,
   };
 
   /* ═══════════ RETURN ═══════════ */

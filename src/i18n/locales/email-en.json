@@ -9,7 +9,8 @@
     "compor": "Compose AI",
     "insights": "Insights",
     "config": "Settings",
-    "arquivo": "Archive"
+    "arquivo": "Archive",
+    "documentos": "Documents"
   },
   "header": {
     "title": "Email Manager",
