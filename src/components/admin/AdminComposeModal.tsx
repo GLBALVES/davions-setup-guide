@@ -59,7 +59,7 @@ export interface ComposeModalProps {
   onClose: () => void;
   onMinimize: () => void;
   onExpand: () => void;
-  onSend: () => void;
+  onSend: (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => void;
   onSaveDraft: () => void;
   assinaturas?: ComposeAssinatura[];
   onSelecionarAssinatura?: (conteudo: string) => void;
