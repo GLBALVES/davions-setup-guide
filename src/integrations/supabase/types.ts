@@ -774,6 +774,410 @@ export type Database = {
           },
         ]
       }
+      email_assinaturas: {
+        Row: {
+          conta_ids: string[]
+          conteudo: string
+          created_at: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          conta_ids?: string[]
+          conteudo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Update: {
+          conta_ids?: string[]
+          conteudo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_bloqueados: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_contas: {
+        Row: {
+          assinatura: string
+          cor: string
+          created_at: string
+          email: string
+          id: string
+          imap_ativo: boolean
+          imap_porta: number
+          imap_seguranca: string
+          imap_senha: string
+          imap_servidor: string
+          imap_usuario: string
+          nome: string
+          padrao: boolean
+          provedor: string
+          smtp_ativo: boolean
+          smtp_porta: number
+          smtp_seguranca: string
+          smtp_senha: string
+          smtp_servidor: string
+          smtp_usuario: string
+          user_id: string
+        }
+        Insert: {
+          assinatura?: string
+          cor?: string
+          created_at?: string
+          email?: string
+          id?: string
+          imap_ativo?: boolean
+          imap_porta?: number
+          imap_seguranca?: string
+          imap_senha?: string
+          imap_servidor?: string
+          imap_usuario?: string
+          nome?: string
+          padrao?: boolean
+          provedor?: string
+          smtp_ativo?: boolean
+          smtp_porta?: number
+          smtp_seguranca?: string
+          smtp_senha?: string
+          smtp_servidor?: string
+          smtp_usuario?: string
+          user_id?: string
+        }
+        Update: {
+          assinatura?: string
+          cor?: string
+          created_at?: string
+          email?: string
+          id?: string
+          imap_ativo?: boolean
+          imap_porta?: number
+          imap_seguranca?: string
+          imap_senha?: string
+          imap_servidor?: string
+          imap_usuario?: string
+          nome?: string
+          padrao?: boolean
+          provedor?: string
+          smtp_ativo?: boolean
+          smtp_porta?: number
+          smtp_seguranca?: string
+          smtp_senha?: string
+          smtp_servidor?: string
+          smtp_usuario?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_emails: {
+        Row: {
+          assunto: string
+          conta_id: string | null
+          corpo: string
+          created_at: string
+          data: string
+          destinatario: string | null
+          email_destinatario: string | null
+          email_remetente: string
+          favorito: boolean
+          hora: string
+          id: string
+          lido: boolean
+          motivo_spam: string | null
+          pasta: string | null
+          preview: string
+          prioridade: string
+          remetente: string
+          status: string | null
+          tags: string[]
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          assunto?: string
+          conta_id?: string | null
+          corpo?: string
+          created_at?: string
+          data?: string
+          destinatario?: string | null
+          email_destinatario?: string | null
+          email_remetente?: string
+          favorito?: boolean
+          hora?: string
+          id?: string
+          lido?: boolean
+          motivo_spam?: string | null
+          pasta?: string | null
+          preview?: string
+          prioridade?: string
+          remetente?: string
+          status?: string | null
+          tags?: string[]
+          tipo?: string
+          user_id?: string
+        }
+        Update: {
+          assunto?: string
+          conta_id?: string | null
+          corpo?: string
+          created_at?: string
+          data?: string
+          destinatario?: string | null
+          email_destinatario?: string | null
+          email_remetente?: string
+          favorito?: boolean
+          hora?: string
+          id?: string
+          lido?: boolean
+          motivo_spam?: string | null
+          pasta?: string | null
+          preview?: string
+          prioridade?: string
+          remetente?: string
+          status?: string | null
+          tags?: string[]
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_grupo_contatos: {
+        Row: {
+          created_at: string
+          email: string
+          grupo_id: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          grupo_id: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          grupo_id?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_grupo_contatos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "email_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_grupos: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_pastas: {
+        Row: {
+          cor: string
+          created_at: string
+          email_ids: string[]
+          icone: string
+          id: string
+          nome: string
+          regras: Json
+          user_id: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          email_ids?: string[]
+          icone?: string
+          id?: string
+          nome?: string
+          regras?: Json
+          user_id?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          email_ids?: string[]
+          icone?: string
+          id?: string
+          nome?: string
+          regras?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_preferencias: {
+        Row: {
+          created_at: string
+          emails_por_pagina: number
+          id: string
+          idioma_ia: string
+          marcar_ao_abrir: boolean
+          mostrar_preview: boolean
+          notificacoes: boolean
+          resposta_auto_apenas_conhecidos: boolean
+          resposta_auto_assunto: string
+          resposta_auto_ate: string
+          resposta_auto_ativa: boolean
+          resposta_auto_de: string
+          resposta_auto_mensagem: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emails_por_pagina?: number
+          id?: string
+          idioma_ia?: string
+          marcar_ao_abrir?: boolean
+          mostrar_preview?: boolean
+          notificacoes?: boolean
+          resposta_auto_apenas_conhecidos?: boolean
+          resposta_auto_assunto?: string
+          resposta_auto_ate?: string
+          resposta_auto_ativa?: boolean
+          resposta_auto_de?: string
+          resposta_auto_mensagem?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          emails_por_pagina?: number
+          id?: string
+          idioma_ia?: string
+          marcar_ao_abrir?: boolean
+          mostrar_preview?: boolean
+          notificacoes?: boolean
+          resposta_auto_apenas_conhecidos?: boolean
+          resposta_auto_assunto?: string
+          resposta_auto_ate?: string
+          resposta_auto_ativa?: boolean
+          resposta_auto_de?: string
+          resposta_auto_mensagem?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_regras_segmentacao: {
+        Row: {
+          created_at: string
+          entao_tipo: string
+          entao_valor: string
+          id: string
+          se_tipo: string
+          se_valor: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entao_tipo?: string
+          entao_valor?: string
+          id?: string
+          se_tipo?: string
+          se_valor?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          entao_tipo?: string
+          entao_valor?: string
+          id?: string
+          se_tipo?: string
+          se_valor?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          assunto: string
+          categoria: string
+          corpo: string
+          created_at: string
+          criado_em: string
+          criado_por_ia: boolean
+          id: string
+          nome: string
+          tom: string
+          user_id: string
+          usos: number
+        }
+        Insert: {
+          assunto?: string
+          categoria?: string
+          corpo?: string
+          created_at?: string
+          criado_em?: string
+          criado_por_ia?: boolean
+          id?: string
+          nome?: string
+          tom?: string
+          user_id?: string
+          usos?: number
+        }
+        Update: {
+          assunto?: string
+          categoria?: string
+          corpo?: string
+          created_at?: string
+          criado_em?: string
+          criado_por_ia?: boolean
+          id?: string
+          nome?: string
+          tom?: string
+          user_id?: string
+          usos?: number
+        }
+        Relationships: []
+      }
       galleries: {
         Row: {
           access_code: string | null
