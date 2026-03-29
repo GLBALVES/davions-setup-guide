@@ -534,10 +534,14 @@ const AdminEmailManager: React.FC = () => {
   const isEmailLido = useCallback((email: EmailType): boolean => email.lido || emailsLidos.has(email.id), [emailsLidos]);
   const filterByAccount = useCallback(<T extends EmailType>(list: T[]): T[] => contaAtiva === "todas" ? list : list.filter(e => e.contaId === contaAtiva), [contaAtiva]);
 
-  const recebidos = useMemo(() => filterByAccount(emails.filter(e => e.tipo === "recebido") as EmailRecebido[]), [emails, filterByAccount]);
-  const enviados = useMemo(() => filterByAccount(emails.filter(e => e.tipo === "enviado") as EmailEnviado[]), [emails, filterByAccount]);
-  const spamEmails = useMemo(() => filterByAccount(emails.filter(e => e.tipo === "spam") as EmailSpam[]), [emails, filterByAccount]);
-  const arquivoEmails = useMemo(() => filterByAccount(emails.filter(e => e.tipo === "arquivo") as EmailArquivo[]), [emails, filterByAccount]);
+  const sortDesc = useCallback(<T extends EmailType>(list: T[]): T[] => list.sort((a, b) => {
+    const da = `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`);
+    return da !== 0 ? da : 0;
+  }), []);
+  const recebidos = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "recebido") as EmailRecebido[])), [emails, filterByAccount, sortDesc]);
+  const enviados = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "enviado") as EmailEnviado[])), [emails, filterByAccount, sortDesc]);
+  const spamEmails = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "spam") as EmailSpam[])), [emails, filterByAccount, sortDesc]);
+  const arquivoEmails = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "arquivo") as EmailArquivo[])), [emails, filterByAccount, sortDesc]);
   const unreadCount = useMemo(() => recebidos.filter(e => !isEmailLido(e)).length, [recebidos, isEmailLido]);
   const selectedEmail = useMemo(() => emails.find(e => e.id === selectedEmailId) || null, [emails, selectedEmailId]);
   const contaAtivaObj = useMemo(() => contas.find(c => c.id === contaAtiva), [contas, contaAtiva]);
