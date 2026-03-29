@@ -1374,7 +1374,7 @@ const AdminEmailManager: React.FC = () => {
       {/* ═══ TABS ═══ */}
       <div className="flex items-center border-b border-border shrink-0">
         <button onClick={() => scrollTabs(-1)} className="px-1 text-muted-foreground hover:text-foreground shrink-0"><ChevronLeft className="w-4 h-4" /></button>
-        <div ref={tabsRef} className="flex overflow-x-auto scrollbar-hide gap-0 flex-1" style={{ scrollBehavior: "smooth" }}>
+        <div ref={tabsRef} className="flex overflow-x-auto no-scrollbar gap-0 flex-1" style={{ scrollBehavior: "smooth" }}>
           {tabs.map(tab => {
             const TabIcon = tab.Icon;
             return (
