@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { chamarIA } from "@/lib/email-ai-helper";
 import ComposeModal from "@/components/admin/AdminComposeModal";
 import { useAdminEmailData } from "@/hooks/use-admin-email-data";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Types ─── */
 type Prioridade = "urgente" | "alta" | "normal" | "baixa";
