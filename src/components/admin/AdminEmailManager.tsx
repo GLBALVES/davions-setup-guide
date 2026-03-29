@@ -809,7 +809,7 @@ const AdminEmailManager: React.FC = () => {
 
   const handleDenunciarSpam = useCallback(() => {
     if (!selectedEmailId) return;
-    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "spam" as const, motivo_spam: "manual" } : e));
+    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "spam" as const, motivoSpam: "manual" } as EmailSpam : e));
     persistEmailUpdate(selectedEmailId, { tipo: "spam", motivo_spam: "manual" });
     setSelectedEmailId(null);
     toast({ title: t('toast.markedAsSpam'), duration: 3000 });
