@@ -1,34 +1,24 @@
 
 
-## Ocultar grupos do sidebar para me@palomaschell.com
+## Corrigir IDs incompatíveis (text vs uuid) nas tabelas de email
 
 ### Problema
-A usuária `me@palomaschell.com` é admin e vê todos os grupos do sidebar, incluindo os desabilitados. Precisa-se ocultar os grupos: Marketing, IA, Financeiro, CRM, Workflows, Configurações e Meus Recursos.
+Todas as 10 tabelas `email_*` têm `id uuid` no banco, mas o código gera IDs baseados em texto como `c${Date.now()}`, `p${Date.now()}`, `sig${Date.now()}`. Isso causa erro 400: `"invalid input syntax for type uuid"`. A conta é salva no state local mas falha no banco, e por isso a tela de configuração não aparece corretamente.
 
 ### Solução
-Adicionar uma lista de `stableKeys` restritos para este email específico no `DashboardSidebar.tsx`. Após determinar `isAdmin` e carregar o email do usuário, filtrar os grupos cujo `stableKey` esteja na lista restrita.
+Substituir todas as gerações de ID por `crypto.randomUUID()` em dois arquivos:
 
-### Alteração
+**1. `src/components/admin/AdminEmailManager.tsx`**
+- Linha 771: `c${Date.now()}` → `crypto.randomUUID()`  (contas)
+- Linha 729: `p${Date.now()}` → `crypto.randomUUID()`  (pastas)
+- Linha 799: `sig${Date.now()}` → `crypto.randomUUID()` (assinaturas)
+- Qualquer outro ponto onde IDs de templates, grupos, regras ou campanhas sejam gerados com prefixo + timestamp
 
-**Arquivo: `src/components/dashboard/DashboardSidebar.tsx`**
+**2. `src/hooks/use-admin-email-data.ts`**
+- Verificar que `persistPreferencias` usa `userId` (que é uuid) como `id` — OK
+- Verificar que `persistContaUpsert` não inclui `user_id` no payload — precisa adicionar `user_id` nos inserts/upserts de todas as tabelas que possuem essa coluna
 
-1. Definir uma constante com os grupos ocultos para este usuário:
-```typescript
-const RESTRICTED_ADMINS: Record<string, string[]> = {
-  "me@palomaschell.com": ["Marketing", "AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
-};
-```
-
-2. Nos dois pontos onde se filtra `group.disabled && !isAdmin`, adicionar verificação extra:
-```typescript
-// Antes:
-if (group.disabled && !isAdmin) return null;
-
-// Depois:
-const restricted = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
-if (group.disabled && !isAdmin) return null;
-if (restricted.includes(group.stableKey)) return null;
-```
-
-Isso oculta os grupos especificados para esta conta sem afetar outros admins.
+### Detalhes técnicos
+- `crypto.randomUUID()` é suportado nativamente em navegadores modernos e gera UUIDs v4 válidos
+- Os upserts no hook precisam incluir `user_id` no payload para que as políticas RLS de INSERT funcionem (a coluna `user_id` tem default `auth.uid()`, mas o PostgREST pode não aplicar defaults se o campo não é enviado)
 
