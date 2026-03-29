@@ -160,11 +160,12 @@ export function useAdminEmailData() {
   }, []);
 
   const persistPastaUpsert = useCallback(async (pasta: Pasta) => {
+    if (!userId) return;
     await supabase.from("email_pastas").upsert({
-      id: pasta.id, nome: pasta.nome, icone: pasta.icone, cor: pasta.cor,
+      id: pasta.id, user_id: userId, nome: pasta.nome, icone: pasta.icone, cor: pasta.cor,
       regras: pasta.regras as any, email_ids: pasta.emailIds,
     });
-  }, []);
+  }, [userId]);
 
   const persistPastaDelete = useCallback(async (id: string) => {
     await supabase.from("email_pastas").delete().eq("id", id);
