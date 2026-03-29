@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { chamarIA } from "@/lib/email-ai-helper";
 import ComposeModal from "@/components/admin/AdminComposeModal";
 import { useAdminEmailData } from "@/hooks/use-admin-email-data";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Types ─── */
 type Prioridade = "urgente" | "alta" | "normal" | "baixa";
@@ -455,6 +456,7 @@ const AdminEmailManager: React.FC = () => {
   const [modalAberto, setModalAberto] = useState(false);
   const [modalMinimizado, setModalMinimizado] = useState(false);
   const [modoModal, setModoModal] = useState<"responder" | "encaminhar" | "novo">("responder");
+  const [syncing, setSyncing] = useState(false);
   const [modalInitial, setModalInitial] = useState({ para: [] as string[], assunto: "", corpo: "", autoAI: false });
   const [modalKey, setModalKey] = useState(0);
   const [insightsPeriodo, setInsightsPeriodo] = useState<"semana" | "mes" | "trimestre">("mes");
@@ -648,6 +650,10 @@ const AdminEmailManager: React.FC = () => {
   const handleEnviarFromModal = useCallback(async (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => {
     const conta = contas.find(c => c.id === data.contaId) || contas[0];
     if (!conta) { toast({ title: "Nenhuma conta configurada", variant: "destructive" }); return; }
+    if (!conta.smtp.servidor || !conta.smtp.usuario || !conta.smtp.senha) {
+      toast({ title: "SMTP não configurado", description: "Preencha usuário e senha SMTP nas configurações da conta.", variant: "destructive" });
+      return;
+    }
     const now = new Date();
     const novoEmail = {
       id: crypto.randomUUID(),
@@ -667,15 +673,67 @@ const AdminEmailManager: React.FC = () => {
       tags: [] as string[],
       pasta: null,
       contaId: data.contaId,
-      status: "entregue" as const,
+      status: "aguardando" as const,
     };
     setEmails(prev => [novoEmail, ...prev]);
     await persistEmailInsert(novoEmail);
     setModalAberto(false);
     setModalMinimizado(false);
-    toast({ title: t('toast.emailSent'), duration: 3000 });
-  }, [contas, toast, t, setEmails, persistEmailInsert]);
+    toast({ title: "Enviando email...", duration: 3000 });
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke("admin-send-email", {
+        body: { contaId: data.contaId, para: data.para, cc: data.cc, cco: data.cco, assunto: data.assunto, corpo: data.corpo },
+      });
+      if (error || result?.error) {
+        const errMsg = result?.error || error?.message || "Falha ao enviar";
+        setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
+        await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+        toast({ title: "Erro ao enviar email", description: errMsg, variant: "destructive" });
+      } else {
+        setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "entregue" as const } : e));
+        await persistEmailUpdate(novoEmail.id, { status: "entregue" });
+        toast({ title: t('toast.emailSent'), duration: 3000 });
+      }
+    } catch (err: any) {
+      setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
+      await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+      toast({ title: "Erro ao enviar email", description: err.message, variant: "destructive" });
+    }
+  }, [contas, toast, t, setEmails, persistEmailInsert, persistEmailUpdate]);
   const handleCloseModal = useCallback(() => { setModalAberto(false); setModalMinimizado(false); }, []);
+
+  const handleSyncEmails = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("admin-sync-email", {
+        body: { contaId: contaAtiva !== "todas" ? contaAtiva : undefined },
+      });
+      if (error || result?.error) {
+        toast({ title: "Erro ao sincronizar", description: result?.error || error?.message, variant: "destructive" });
+      } else {
+        const imported = result?.imported || 0;
+        if (imported > 0) {
+          const { data: emailsRes } = await supabase.from("email_emails").select("*");
+          if (emailsRes) {
+            const mapRow = (row: any) => {
+              const base = { id: row.id, assunto: row.assunto, preview: row.preview, corpo: row.corpo, hora: row.hora, data: row.data, lido: row.lido, favorito: row.favorito, prioridade: row.prioridade, tags: row.tags || [], pasta: row.pasta, contaId: row.conta_id || "" };
+              if (row.tipo === "enviado") return { ...base, tipo: "enviado" as const, remetente: row.remetente, emailRemetente: row.email_remetente, destinatario: row.destinatario || "", emailDestinatario: row.email_destinatario || "", status: row.status || "entregue" };
+              if (row.tipo === "spam") return { ...base, tipo: "spam" as const, remetente: row.remetente, emailRemetente: row.email_remetente, motivoSpam: row.motivo_spam || "" };
+              if (row.tipo === "arquivo") return { ...base, tipo: "arquivo" as const, remetente: row.remetente, emailRemetente: row.email_remetente };
+              return { ...base, tipo: "recebido" as const, remetente: row.remetente, emailRemetente: row.email_remetente };
+            };
+            setEmails(emailsRes.map(mapRow));
+          }
+        }
+        toast({ title: "Sincronização concluída", description: `${imported} novo(s) email(s) importado(s)${result?.errors?.length ? `. Erros: ${result.errors.join("; ")}` : ""}`, duration: 5000 });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  }, [contaAtiva, toast, setEmails]);
 
   const handleMoverParaPasta = useCallback((pastaId: string) => {
     if (!selectedEmailId) return;
@@ -971,12 +1029,15 @@ const AdminEmailManager: React.FC = () => {
     return (
       <div className="flex h-full relative">
         <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
-          <div className="p-2 border-b border-border">
-            <div className="relative">
+          <div className="p-2 border-b border-border flex gap-1.5 items-center">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
               {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
             </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSyncEmails} disabled={syncing} title="Sincronizar emails">
+              {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+            </Button>
           </div>
           <div className="flex gap-1 px-2 py-1.5 border-b border-border flex-wrap">
             <button onClick={() => setPrioridadeFiltro("todos")} className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${prioridadeFiltro === "todos" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>{t('common.all')}</button>
