@@ -1,17 +1,32 @@
 
 
-## Mover seletor de provedor para fora das abas do modal
+## Problema
 
-### Problema
-O seletor de provedor (Gmail, Outlook, Hostinger, etc.) está dentro da aba "Geral" do modal. Quando o usuário clica em "Servidor" na lista de contas, o modal abre direto na aba "Servidor" — e o seletor de provedor fica escondido na outra aba. Por isso parece que os presets não existem.
+O botão "Enviar" no ComposeModal chama `onSend` que no `AdminEmailManager` é `handleEnviarFromModal` — que apenas fecha o modal e mostra um toast. Não faz nada:
 
-### Solução
-Mover o campo **Provedor** para o topo do modal, acima das abas, visível em ambas as views (Geral e Servidor). Assim, ao abrir o modal em qualquer aba, o usuário sempre vê e pode trocar o provedor, que preenche automaticamente os campos IMAP/SMTP.
+1. Não salva o email na tabela `email_emails` com `tipo: "enviado"`
+2. Não adiciona ao state local `emails`
+3. Não envia de fato via SMTP (não há edge function para isso)
 
-### Alteração
-Arquivo: `src/components/admin/AdminEmailManager.tsx`
+## Solução
 
-1. Remover o bloco do `Select` de provedor de dentro da seção `contaModalTab === "geral"` (linhas ~1502-1527)
-2. Colocar esse mesmo bloco logo após o `DialogDescription` e antes dos botões de aba (Geral/Servidor), para que fique sempre visível
-3. Manter toda a lógica de presets igual — ao selecionar um provedor, IMAP/SMTP são preenchidos automaticamente
+### 1. Alterar ComposeModal para passar os dados do email ao enviar
+
+Mudar `onSend: () => void` para `onSend: (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => void`. No clique do botão Enviar, chamar `onSend` passando os valores atuais dos campos.
+
+### 2. Alterar `handleEnviarFromModal` no AdminEmailManager
+
+Receber os dados do email e:
+- Criar um objeto `EmailEnviado` com `tipo: "enviado"`, `status: "entregue"`, dados do remetente (da conta ativa), destinatário, assunto, corpo, data/hora atual
+- Adicionar ao state local `setEmails(prev => [novoEmail, ...prev])`
+- Chamar `persistEmailInsert(novoEmail)` para salvar no banco
+- Fechar o modal e mostrar o toast
+
+### 3. Envio real via SMTP (futuro)
+
+O envio real via SMTP requer uma edge function que se conecte ao servidor SMTP configurado na conta. Por ora, o email será salvo como "enviado" no sistema. Posso criar essa edge function depois se necessário.
+
+### Arquivos alterados
+- `src/components/admin/AdminComposeModal.tsx` — tipar e passar dados no `onSend`
+- `src/components/admin/AdminEmailManager.tsx` — receber dados, persistir e adicionar ao state
 
