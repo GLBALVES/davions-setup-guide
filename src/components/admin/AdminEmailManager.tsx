@@ -759,27 +759,37 @@ const AdminEmailManager: React.FC = () => {
   const handleSalvarConta = useCallback(() => {
     if (!formConta.nome.trim() || !formConta.email.trim()) return;
     const contaData = { nome: formConta.nome, email: formConta.email, cor: formConta.cor, assinatura: formConta.assinatura, padrao: formConta.padrao, provedor: formConta.provedor, imap: { ...formConta.imap }, smtp: { ...formConta.smtp } };
+    const isNew = !contaSendoEditada;
+    let savedConta: Conta;
     if (contaSendoEditada) {
-      const updated = { ...contaSendoEditada, ...contaData };
+      savedConta = { ...contaSendoEditada, ...contaData };
       setContas(prev => {
-        let list = prev.map(c => c.id === contaSendoEditada.id ? updated : c);
+        let list = prev.map(c => c.id === contaSendoEditada.id ? savedConta : c);
         if (formConta.padrao) list = list.map(c => ({ ...c, padrao: c.id === contaSendoEditada.id }));
         return list;
       });
-      persistContaUpsert(updated);
+      persistContaUpsert(savedConta);
     } else {
       const newId = crypto.randomUUID();
-      const nova = { id: newId, ...contaData };
+      savedConta = { id: newId, ...contaData };
       setContas(prev => {
-        let list = [...prev, nova];
+        let list = [...prev, savedConta];
         if (formConta.padrao) list = list.map(c => ({ ...c, padrao: c.id === newId }));
         return list;
       });
-      persistContaUpsert(nova);
+      persistContaUpsert(savedConta);
     }
-    setModalContaAberto(false); setContaSendoEditada(null);
-    setActiveTab("config");
     toast({ title: t('toast.accountSaved'), duration: 3000 });
+    if (isNew) {
+      // After creating, stay in modal and switch to Server tab
+      setContaSendoEditada(savedConta);
+      setContaModalTab("servidor");
+      abasInicializadas.current.add("config");
+      setActiveTab("config");
+    } else {
+      setModalContaAberto(false); setContaSendoEditada(null);
+      setActiveTab("config");
+    }
   }, [formConta, contaSendoEditada, toast, persistContaUpsert, t]);
 
   const handleExcluirConta = useCallback((id: string) => {
@@ -1208,14 +1218,20 @@ const AdminEmailManager: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.cor }} />
                   <div>
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-wrap gap-1">
                       <span className="text-xs font-medium">{c.nome}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{c.email}</span>
-                      {c.padrao && <span className="ml-2 text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium bg-primary text-primary-foreground">{t('settings.defaultAccount')}</span>}
+                      <span className="text-xs text-muted-foreground">{c.email}</span>
+                      {c.padrao && <span className="text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium bg-primary text-primary-foreground">{t('settings.defaultAccount')}</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${c.imap.ativo ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>IMAP {c.imap.ativo ? "✓" : "✗"}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${c.smtp.ativo ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>SMTP {c.smtp.ativo ? "✓" : "✗"}</span>
+                      <span className="text-[9px] text-muted-foreground">{c.provedor}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => { setContaSendoEditada(c); setFormConta({ nome: c.nome, email: c.email, cor: c.cor, assinatura: c.assinatura, padrao: c.padrao, provedor: c.provedor, imap: { ...c.imap }, smtp: { ...c.smtp } }); setContaModalTab("servidor"); setTestResult(null); setModalContaAberto(true); }}><Wifi className="w-3 h-3" /> {t('accounts.server') || 'Servidor'}</Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setContaSendoEditada(c); setFormConta({ nome: c.nome, email: c.email, cor: c.cor, assinatura: c.assinatura, padrao: c.padrao, provedor: c.provedor, imap: { ...c.imap }, smtp: { ...c.smtp } }); setContaModalTab("geral"); setTestResult(null); setModalContaAberto(true); }}><Pencil className="w-3.5 h-3.5" /></Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExcluirConta(c.id)} disabled={contas.length <= 1}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
@@ -1489,8 +1505,8 @@ const AdminEmailManager: React.FC = () => {
                     if (preset) {
                       setFormConta(prev => ({
                         ...prev, provedor: v,
-                        imap: { ...prev.imap, ...preset.imap },
-                        smtp: { ...prev.smtp, ...preset.smtp },
+                        imap: { ...prev.imap, ...preset.imap, ativo: true },
+                        smtp: { ...prev.smtp, ...preset.smtp, ativo: true },
                       }));
                     } else {
                       setFormConta(prev => ({ ...prev, provedor: v }));
