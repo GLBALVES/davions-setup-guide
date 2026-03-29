@@ -965,10 +965,18 @@ const AdminEmailManager: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 mt-2">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-medium shrink-0">{ini}</div>
-            <div>
-              <span className="text-xs font-medium">{email.remetente}</span>
-              <span className="text-xs text-muted-foreground ml-1.5">&lt;{email.emailRemetente}&gt;</span>
-              <span className="text-xs text-muted-foreground ml-2">{email.hora}</span>
+            <div className="flex flex-col">
+              <div>
+                <span className="text-xs font-medium">De: {email.remetente}</span>
+                <span className="text-xs text-muted-foreground ml-1.5">&lt;{email.emailRemetente}&gt;</span>
+                <span className="text-xs text-muted-foreground ml-2">{email.hora}</span>
+              </div>
+              {email.tipo === "enviado" && (email as any).emailDestinatario && (
+                <div>
+                  <span className="text-xs font-medium">Para: {(email as any).destinatario || (email as any).emailDestinatario}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">&lt;{(email as any).emailDestinatario}&gt;</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
