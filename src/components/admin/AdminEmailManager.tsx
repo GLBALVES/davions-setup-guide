@@ -798,6 +798,22 @@ const AdminEmailManager: React.FC = () => {
     setSelectedEmailId(null);
     toast({ title: t('toast.restoredToInbox'), duration: 3000 });
   }, [selectedEmailId, toast, persistEmailUpdate, t]);
+
+  const handleArquivar = useCallback(() => {
+    if (!selectedEmailId) return;
+    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "arquivo" as const } : e));
+    persistEmailUpdate(selectedEmailId, { tipo: "arquivo" });
+    setSelectedEmailId(null);
+    toast({ title: t('toast.emailArchived'), duration: 3000 });
+  }, [selectedEmailId, toast, persistEmailUpdate, t]);
+
+  const handleDenunciarSpam = useCallback(() => {
+    if (!selectedEmailId) return;
+    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "spam" as const, motivo_spam: "manual" } : e));
+    persistEmailUpdate(selectedEmailId, { tipo: "spam", motivo_spam: "manual" });
+    setSelectedEmailId(null);
+    toast({ title: t('toast.markedAsSpam'), duration: 3000 });
+  }, [selectedEmailId, toast, persistEmailUpdate, t]);
   const handleExcluirDefinitivo = useCallback((emailId: string) => { setEmails(prev => prev.filter(e => e.id !== emailId)); persistEmailDelete(emailId); if (selectedEmailId === emailId) setSelectedEmailId(null); toast({ title: t('toast.permanentlyDeleted'), duration: 3000 }); }, [selectedEmailId, toast, persistEmailDelete, t]);
 
   const handleAcoesIA = useCallback(async () => {
