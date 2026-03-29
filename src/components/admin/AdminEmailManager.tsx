@@ -655,10 +655,7 @@ const AdminEmailManager: React.FC = () => {
   const handleEnviarFromModal = useCallback(async (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => {
     const conta = contas.find(c => c.id === data.contaId) || contas[0];
     if (!conta) { toast({ title: "Nenhuma conta configurada", variant: "destructive" }); return; }
-    if (!conta.smtp.servidor || !conta.smtp.usuario || !conta.smtp.senha) {
-      toast({ title: "SMTP não configurado", description: "Preencha usuário e senha SMTP nas configurações da conta.", variant: "destructive" });
-      return;
-    }
+    // Let the server handle SMTP validation with fallback to IMAP credentials
     const now = new Date();
     const novoEmail = {
       id: crypto.randomUUID(),
