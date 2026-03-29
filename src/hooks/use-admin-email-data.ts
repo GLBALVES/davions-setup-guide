@@ -241,6 +241,17 @@ export function useAdminEmailData() {
     await supabase.from("email_bloqueados").insert({ email, user_id: userId });
   }, [userId]);
 
+  const persistDocumentSave = useCallback(async (docId: string, fileUrl: string) => {
+    await supabase.from("email_documents").update({ saved: true, file_url: fileUrl }).eq("id", docId);
+    setDocuments(prev => prev.map(d => d.id === docId ? { ...d, saved: true, fileUrl } : d));
+  }, []);
+
+  const persistAutoSaveToggle = useCallback(async (val: boolean) => {
+    if (!userId) return;
+    await supabase.from("email_document_settings").upsert({ user_id: userId, auto_save: val });
+    setDocAutoSave(val);
+  }, [userId]);
+
   return {
     loading, userId,
     contas, setContas,
@@ -253,6 +264,7 @@ export function useAdminEmailData() {
     preferencias, setPreferencias,
     respostaAutomatica, setRespostaAutomatica,
     bloqueados, setBloqueados,
+    documents, setDocuments, docAutoSave,
     persistEmailUpdate, persistEmailInsert, persistEmailDelete,
     persistContaUpsert, persistContaDelete,
     persistPastaUpsert, persistPastaDelete,
@@ -262,5 +274,6 @@ export function useAdminEmailData() {
     persistRegraUpsert, persistRegraDelete,
     persistPreferencias,
     persistBloqueado,
+    persistDocumentSave, persistAutoSaveToggle,
   };
 }
