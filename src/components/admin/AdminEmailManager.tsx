@@ -768,7 +768,7 @@ const AdminEmailManager: React.FC = () => {
       });
       persistContaUpsert(updated);
     } else {
-      const newId = `c${Date.now()}`;
+      const newId = crypto.randomUUID();
       const nova = { id: newId, ...contaData };
       setContas(prev => {
         let list = [...prev, nova];
