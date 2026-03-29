@@ -1,13 +1,20 @@
 
 
-## Adicionar ícone de refresh ao lado do sino
+## Problema
 
-### Alteração
-Arquivo: `src/components/dashboard/DashboardHeader.tsx`
+O botão de refresh foi adicionado ao `DashboardHeader.tsx`, mas a página `/admin/email` usa o `AdminLayout`, que não inclui esse header. Por isso o botão não aparece ali.
 
-Adicionar um botão com ícone `RefreshCw` (lucide-react) logo após o `<NotificationBell />` (linha 107), com tooltip "Refresh". Ao clicar, recarrega a página (`window.location.reload()`).
+## Solução
 
-- Importar `RefreshCw` de `lucide-react`
-- Estilo idêntico aos outros botões do header (h-8 w-8, mesmas classes)
-- Envolver em `Tooltip` como os demais
+Adicionar um header ao `AdminLayout` com o botão de refresh (e opcionalmente o sino de notificações), similar ao `DashboardHeader`.
+
+### Alteração no arquivo `src/components/admin/AdminLayout.tsx`
+
+1. Importar `RefreshCw` de `lucide-react` e `Tooltip`/`TooltipTrigger`/`TooltipContent`
+2. Adicionar um `<header>` dentro do `<main>` com:
+   - Botão de refresh com `window.location.reload()`
+   - Mesmo estilo visual do DashboardHeader (`h-14 border-b`)
+3. O conteúdo (`children`) fica abaixo do header
+
+Resultado: o botão de refresh aparecerá no topo de todas as páginas admin, incluindo `/admin/email`.
 
