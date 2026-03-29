@@ -645,7 +645,36 @@ const AdminEmailManager: React.FC = () => {
   const handleResponder = useCallback(() => openComposeModal("responder"), [openComposeModal]);
   const handleEncaminhar = useCallback(() => { if (selectedEmail) openComposeModal("encaminhar"); }, [openComposeModal, selectedEmail]);
   const handleRespostaIA = useCallback(() => openComposeModal("responder", { autoAI: true }), [openComposeModal]);
-  const handleEnviarFromModal = useCallback(() => { setModalAberto(false); setModalMinimizado(false); toast({ title: t('toast.emailSent'), duration: 3000 }); }, [toast, t]);
+  const handleEnviarFromModal = useCallback(async (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => {
+    const conta = contas.find(c => c.id === data.contaId) || contas[0];
+    if (!conta) { toast({ title: "Nenhuma conta configurada", variant: "destructive" }); return; }
+    const now = new Date();
+    const novoEmail = {
+      id: crypto.randomUUID(),
+      tipo: "enviado" as const,
+      remetente: conta.nome,
+      emailRemetente: conta.email,
+      destinatario: data.para.join(", "),
+      emailDestinatario: data.para.join(", "),
+      assunto: data.assunto,
+      preview: data.corpo.replace(/<[^>]*>/g, "").slice(0, 100),
+      corpo: data.corpo,
+      hora: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+      data: now.toISOString().slice(0, 10),
+      lido: true,
+      favorito: false,
+      prioridade: "normal" as const,
+      tags: [] as string[],
+      pasta: null,
+      contaId: data.contaId,
+      status: "entregue" as const,
+    };
+    setEmails(prev => [novoEmail, ...prev]);
+    await persistEmailInsert(novoEmail);
+    setModalAberto(false);
+    setModalMinimizado(false);
+    toast({ title: t('toast.emailSent'), duration: 3000 });
+  }, [contas, toast, t, setEmails, persistEmailInsert]);
   const handleCloseModal = useCallback(() => { setModalAberto(false); setModalMinimizado(false); }, []);
 
   const handleMoverParaPasta = useCallback((pastaId: string) => {
