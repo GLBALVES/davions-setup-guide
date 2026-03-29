@@ -1484,7 +1484,7 @@ const AdminEmailManager: React.FC = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleSyncEmails} disabled={syncing}>
-                <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
+                <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Refresh</TooltipContent>
