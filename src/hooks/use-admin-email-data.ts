@@ -192,12 +192,13 @@ export function useAdminEmailData() {
   }, []);
 
   const persistGrupoUpsert = useCallback(async (grupo: Grupo) => {
-    await supabase.from("email_grupos").upsert({ id: grupo.id, nome: grupo.nome });
+    if (!userId) return;
+    await supabase.from("email_grupos").upsert({ id: grupo.id, user_id: userId, nome: grupo.nome });
     await supabase.from("email_grupo_contatos").delete().eq("grupo_id", grupo.id);
     if (grupo.contatos.length > 0) {
-      await supabase.from("email_grupo_contatos").insert(grupo.contatos.map(c => ({ grupo_id: grupo.id, nome: c.nome, email: c.email })));
+      await supabase.from("email_grupo_contatos").insert(grupo.contatos.map(c => ({ grupo_id: grupo.id, user_id: userId, nome: c.nome, email: c.email })));
     }
-  }, []);
+  }, [userId]);
 
   const persistGrupoDelete = useCallback(async (id: string) => {
     await supabase.from("email_grupos").delete().eq("id", id);
