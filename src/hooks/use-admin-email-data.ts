@@ -143,15 +143,16 @@ export function useAdminEmailData() {
   }, []);
 
   const persistContaUpsert = useCallback(async (conta: Conta) => {
+    if (!userId) return;
     await supabase.from("email_contas").upsert({
-      id: conta.id, nome: conta.nome, email: conta.email, cor: conta.cor, assinatura: conta.assinatura,
+      id: conta.id, user_id: userId, nome: conta.nome, email: conta.email, cor: conta.cor, assinatura: conta.assinatura,
       padrao: conta.padrao, provedor: conta.provedor,
       imap_ativo: conta.imap.ativo, imap_servidor: conta.imap.servidor, imap_porta: conta.imap.porta,
       imap_seguranca: conta.imap.seguranca, imap_usuario: conta.imap.usuario, imap_senha: conta.imap.senha,
       smtp_ativo: conta.smtp.ativo, smtp_servidor: conta.smtp.servidor, smtp_porta: conta.smtp.porta,
       smtp_seguranca: conta.smtp.seguranca, smtp_usuario: conta.smtp.usuario, smtp_senha: conta.smtp.senha,
     });
-  }, []);
+  }, [userId]);
 
   const persistContaDelete = useCallback(async (id: string) => {
     await supabase.from("email_contas").delete().eq("id", id);
