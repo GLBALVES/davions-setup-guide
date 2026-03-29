@@ -127,8 +127,9 @@ export function useAdminEmailData() {
   }, []);
 
   const persistEmailInsert = useCallback(async (email: EmailType) => {
+    if (!userId) return;
     const row: any = {
-      id: email.id, tipo: email.tipo, remetente: email.remetente, email_remetente: email.emailRemetente,
+      id: email.id, user_id: userId, tipo: email.tipo, remetente: email.remetente, email_remetente: email.emailRemetente,
       assunto: email.assunto, preview: email.preview, corpo: email.corpo, hora: email.hora, data: email.data,
       lido: email.lido, favorito: email.favorito, prioridade: email.prioridade, tags: email.tags,
       pasta: email.pasta, conta_id: email.contaId,
@@ -136,7 +137,7 @@ export function useAdminEmailData() {
     if (email.tipo === "enviado") { row.destinatario = email.destinatario; row.email_destinatario = email.emailDestinatario; row.status = email.status; }
     if (email.tipo === "spam") { row.motivo_spam = (email as EmailSpam).motivoSpam; }
     await supabase.from("email_emails").insert(row);
-  }, []);
+  }, [userId]);
 
   const persistEmailDelete = useCallback(async (id: string) => {
     await supabase.from("email_emails").delete().eq("id", id);
