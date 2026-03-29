@@ -1489,6 +1489,33 @@ const AdminEmailManager: React.FC = () => {
       <Dialog open={modalContaAberto} onOpenChange={setModalContaAberto}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
           <DialogHeader><DialogTitle>{contaSendoEditada ? t('accounts.editAccount') : t('accounts.addAccount')}</DialogTitle></DialogHeader>
+          {/* Provider selector — always visible */}
+          <div className="space-y-1 pb-3 border-b border-border">
+            <Label className="text-xs">{t('accounts.provider') || 'Provedor'}</Label>
+            <Select value={formConta.provedor} onValueChange={(v: Conta["provedor"]) => {
+              const preset = provedorPresets[v];
+              if (preset) {
+                setFormConta(prev => ({
+                  ...prev, provedor: v,
+                  imap: { ...prev.imap, ...preset.imap, ativo: true },
+                  smtp: { ...prev.smtp, ...preset.smtp, ativo: true },
+                }));
+              } else {
+                setFormConta(prev => ({ ...prev, provedor: v }));
+              }
+            }}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gmail">Gmail</SelectItem>
+                <SelectItem value="outlook">Outlook</SelectItem>
+                <SelectItem value="hotmail">Hotmail</SelectItem>
+                <SelectItem value="yahoo">Yahoo</SelectItem>
+                <SelectItem value="icloud">iCloud</SelectItem>
+                <SelectItem value="hostinger">Hostinger</SelectItem>
+                <SelectItem value="custom">{t('accounts.custom') || 'Personalizado'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {/* Tab switcher */}
           <div className="flex gap-1 border-b border-border pb-1">
             <button onClick={() => setContaModalTab("geral")} className={`px-3 py-1.5 text-xs font-medium rounded-t transition-colors ${contaModalTab === "geral" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{t('accounts.general') || 'Geral'}</button>
@@ -1499,32 +1526,6 @@ const AdminEmailManager: React.FC = () => {
               <div className="space-y-4 py-2">
                 <div><Label className="text-xs">{t('accounts.accountName')}</Label><Input value={formConta.nome} onChange={e => setFormConta(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
                 <div><Label className="text-xs">{t('accounts.emailAddress')}</Label><Input value={formConta.email} onChange={e => setFormConta(prev => ({ ...prev, email: e.target.value }))} className="h-8 text-xs mt-1" /></div>
-                <div>
-                  <Label className="text-xs">{t('accounts.provider') || 'Provedor'}</Label>
-                  <Select value={formConta.provedor} onValueChange={(v: Conta["provedor"]) => {
-                    const preset = provedorPresets[v];
-                    if (preset) {
-                      setFormConta(prev => ({
-                        ...prev, provedor: v,
-                        imap: { ...prev.imap, ...preset.imap, ativo: true },
-                        smtp: { ...prev.smtp, ...preset.smtp, ativo: true },
-                      }));
-                    } else {
-                      setFormConta(prev => ({ ...prev, provedor: v }));
-                    }
-                  }}>
-                    <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gmail">Gmail</SelectItem>
-                      <SelectItem value="outlook">Outlook</SelectItem>
-                      <SelectItem value="hotmail">Hotmail</SelectItem>
-                      <SelectItem value="yahoo">Yahoo</SelectItem>
-                      <SelectItem value="icloud">iCloud</SelectItem>
-                      <SelectItem value="hostinger">Hostinger</SelectItem>
-                      <SelectItem value="custom">{t('accounts.custom') || 'Personalizado'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div><Label className="text-xs">{t('common.color')}</Label><div className="flex gap-2 mt-1">{["#378ADD", "#1D9E75", "#D85A30", "#9333EA", "#EAB308", "#6B7280"].map(c => (<button key={c} onClick={() => setFormConta(prev => ({ ...prev, cor: c }))} className={`w-7 h-7 rounded-full ${formConta.cor === c ? "ring-2 ring-primary ring-offset-2" : ""}`} style={{ backgroundColor: c }} />))}</div></div>
                 <div><Label className="text-xs">{t('accounts.signature')}</Label><Textarea value={formConta.assinatura} onChange={e => setFormConta(prev => ({ ...prev, assinatura: e.target.value }))} className="text-xs min-h-[80px] mt-1" /></div>
                 <div className="flex items-center gap-2"><Switch checked={formConta.padrao} onCheckedChange={v => setFormConta(prev => ({ ...prev, padrao: v }))} /><Label className="text-xs">{t('accounts.setAsDefault')}</Label></div>
