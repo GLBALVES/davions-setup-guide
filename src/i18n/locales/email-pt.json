@@ -398,6 +398,17 @@
     "ruleSaved": "Regra salva",
     "ruleDeleted": "Regra excluída"
   },
+  "documents": {
+    "autoSave": "Salvar automaticamente",
+    "autoSaveDesc": "Salvar documentos recebidos automaticamente por remetente",
+    "searchDocs": "Buscar documentos...",
+    "noDocuments": "Nenhum documento encontrado",
+    "save": "Salvar",
+    "saved": "Salvo",
+    "download": "Baixar",
+    "savedSuccess": "Documento salvo",
+    "savePrompt": "Deseja salvar este documento?"
+  },
   "languages": {
     "portuguese": "Português",
     "english": "Inglês",
