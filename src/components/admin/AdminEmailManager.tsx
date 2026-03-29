@@ -655,10 +655,7 @@ const AdminEmailManager: React.FC = () => {
   const handleEnviarFromModal = useCallback(async (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => {
     const conta = contas.find(c => c.id === data.contaId) || contas[0];
     if (!conta) { toast({ title: "Nenhuma conta configurada", variant: "destructive" }); return; }
-    if (!conta.smtp.servidor || !conta.smtp.usuario || !conta.smtp.senha) {
-      toast({ title: "SMTP não configurado", description: "Preencha usuário e senha SMTP nas configurações da conta.", variant: "destructive" });
-      return;
-    }
+    // Let the server handle SMTP validation with fallback to IMAP credentials
     const now = new Date();
     const novoEmail = {
       id: crypto.randomUUID(),
@@ -693,7 +690,7 @@ const AdminEmailManager: React.FC = () => {
       if (error || result?.error) {
         const errMsg = result?.error || error?.message || "Falha ao enviar";
         setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
-        await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+        await persistEmailUpdate(novoEmail.id, { status: "erro" });
         toast({ title: "Erro ao enviar email", description: errMsg, variant: "destructive" });
       } else {
         setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "entregue" as const } : e));
@@ -977,7 +974,13 @@ const AdminEmailManager: React.FC = () => {
         </div>
         <div className="flex items-center gap-1 px-4 py-2 border-b border-border shrink-0 flex-wrap">{actions}</div>
         <ScrollArea className="flex-1">
-          <div className="px-4 py-3.5 pb-6">{email.corpo.split("\n").map((line, i) => (<p key={i} className="text-[13px] leading-[1.8] text-secondary-foreground min-h-[1.4em]">{line || "\u00A0"}</p>))}</div>
+          <div className="px-4 py-3.5 pb-6">
+            {email.corpo && email.corpo.trim().startsWith("<") ? (
+              <div className="text-[13px] leading-[1.8] text-secondary-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: email.corpo }} />
+            ) : (
+              email.corpo.split("\n").map((line, i) => (<p key={i} className="text-[13px] leading-[1.8] text-secondary-foreground min-h-[1.4em]">{line || "\u00A0"}</p>))
+            )}
+          </div>
         </ScrollArea>
         {showAiPanel && (
           <div className="shrink-0 bg-secondary border-t border-border px-4 py-2.5" style={{ borderTopWidth: "0.5px" }}>
