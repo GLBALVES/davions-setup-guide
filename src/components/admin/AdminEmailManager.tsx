@@ -759,27 +759,37 @@ const AdminEmailManager: React.FC = () => {
   const handleSalvarConta = useCallback(() => {
     if (!formConta.nome.trim() || !formConta.email.trim()) return;
     const contaData = { nome: formConta.nome, email: formConta.email, cor: formConta.cor, assinatura: formConta.assinatura, padrao: formConta.padrao, provedor: formConta.provedor, imap: { ...formConta.imap }, smtp: { ...formConta.smtp } };
+    const isNew = !contaSendoEditada;
+    let savedConta: Conta;
     if (contaSendoEditada) {
-      const updated = { ...contaSendoEditada, ...contaData };
+      savedConta = { ...contaSendoEditada, ...contaData };
       setContas(prev => {
-        let list = prev.map(c => c.id === contaSendoEditada.id ? updated : c);
+        let list = prev.map(c => c.id === contaSendoEditada.id ? savedConta : c);
         if (formConta.padrao) list = list.map(c => ({ ...c, padrao: c.id === contaSendoEditada.id }));
         return list;
       });
-      persistContaUpsert(updated);
+      persistContaUpsert(savedConta);
     } else {
       const newId = crypto.randomUUID();
-      const nova = { id: newId, ...contaData };
+      savedConta = { id: newId, ...contaData };
       setContas(prev => {
-        let list = [...prev, nova];
+        let list = [...prev, savedConta];
         if (formConta.padrao) list = list.map(c => ({ ...c, padrao: c.id === newId }));
         return list;
       });
-      persistContaUpsert(nova);
+      persistContaUpsert(savedConta);
     }
-    setModalContaAberto(false); setContaSendoEditada(null);
-    setActiveTab("config");
     toast({ title: t('toast.accountSaved'), duration: 3000 });
+    if (isNew) {
+      // After creating, stay in modal and switch to Server tab
+      setContaSendoEditada(savedConta);
+      setContaModalTab("servidor");
+      abasInicializadas.current.add("config");
+      setActiveTab("config");
+    } else {
+      setModalContaAberto(false); setContaSendoEditada(null);
+      setActiveTab("config");
+    }
   }, [formConta, contaSendoEditada, toast, persistContaUpsert, t]);
 
   const handleExcluirConta = useCallback((id: string) => {
