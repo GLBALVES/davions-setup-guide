@@ -402,6 +402,7 @@ const AdminEmailManager: React.FC = () => {
     preferencias, setPreferencias,
     respostaAutomatica, setRespostaAutomatica,
     bloqueados, setBloqueados,
+    documents, setDocuments, docAutoSave,
     persistEmailUpdate, persistEmailInsert, persistEmailDelete,
     persistContaUpsert, persistContaDelete,
     persistPastaUpsert, persistPastaDelete,
@@ -411,6 +412,7 @@ const AdminEmailManager: React.FC = () => {
     persistRegraUpsert, persistRegraDelete,
     persistPreferencias,
     persistBloqueado,
+    persistDocumentSave, persistAutoSaveToggle,
   } = useAdminEmailData();
 
   /* ─── Sync i18n language from saved preferences ─── */
