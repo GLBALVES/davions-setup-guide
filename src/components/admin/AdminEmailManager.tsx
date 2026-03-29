@@ -1520,6 +1520,7 @@ const AdminEmailManager: React.FC = () => {
                       <SelectItem value="hotmail">Hotmail</SelectItem>
                       <SelectItem value="yahoo">Yahoo</SelectItem>
                       <SelectItem value="icloud">iCloud</SelectItem>
+                      <SelectItem value="hostinger">Hostinger</SelectItem>
                       <SelectItem value="custom">{t('accounts.custom') || 'Personalizado'}</SelectItem>
                     </SelectContent>
                   </Select>
