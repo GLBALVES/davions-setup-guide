@@ -392,6 +392,7 @@
     "emailRestored": "Email restored",
     "senderBlocked": "Sender blocked",
     "markedNotSpam": "Marked as not spam",
+    "markedAsSpam": "Marked as spam",
     "emailSent": "Email sent",
     "ruleSaved": "Rule saved",
     "ruleDeleted": "Rule deleted"
