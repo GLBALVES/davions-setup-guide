@@ -690,7 +690,7 @@ const AdminEmailManager: React.FC = () => {
       if (error || result?.error) {
         const errMsg = result?.error || error?.message || "Falha ao enviar";
         setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
-        await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+        await persistEmailUpdate(novoEmail.id, { status: "erro" });
         toast({ title: "Erro ao enviar email", description: errMsg, variant: "destructive" });
       } else {
         setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "entregue" as const } : e));

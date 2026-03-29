@@ -103,13 +103,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Fetch last 30 messages
+        // Fetch last 30 messages — get ENVELOPE for metadata, BODY.PEEK[] for full raw message
         const startMsg = Math.max(1, totalMessages - 29);
-
-        // Fetch ENVELOPE and BODY together for efficiency
         const fetchRes = await sendCommand("A3", `FETCH ${startMsg}:${totalMessages} (UID ENVELOPE BODY.PEEK[])`);
 
-        // Parse individual message blocks
         interface ParsedMsg {
           uid: string;
           subject: string;
@@ -141,7 +138,7 @@ Deno.serve(async (req) => {
             subject = envMatch[2] || "(sem assunto)";
           }
 
-          // Decode MIME encoded subject (=?UTF-8?B?...?= or =?UTF-8?Q?...?=)
+          // Decode MIME encoded subject
           subject = decodeMimeHeader(subject);
 
           // Extract from address from ENVELOPE
@@ -155,17 +152,17 @@ Deno.serve(async (req) => {
             fromEmail = `${mailbox}@${host}`;
           }
 
-          // Extract BODY content - look for the literal marker {NNN}
-          let bodyContent = "";
+          // Extract raw email from BODY[] literal
+          let rawEmail = "";
           const bodyLiteralMatch = block.match(/BODY\[\] \{(\d+)\}\r\n/);
           if (bodyLiteralMatch) {
             const startIdx = block.indexOf(bodyLiteralMatch[0]) + bodyLiteralMatch[0].length;
             const literalLen = parseInt(bodyLiteralMatch[1]);
-            bodyContent = block.substring(startIdx, startIdx + literalLen);
+            rawEmail = block.substring(startIdx, startIdx + literalLen);
           }
 
-          // Parse the full email body (handle multipart, base64, QP, etc.)
-          const parsedBody = parseEmailBody(bodyContent);
+          // Parse the full raw email to extract readable body
+          const parsedBody = parseRawEmail(rawEmail);
 
           messages.push({ uid, subject, from: fromName, fromEmail, date, body: parsedBody });
         }
@@ -194,11 +191,16 @@ Deno.serve(async (req) => {
 
           if (existingSet.has(key)) continue;
 
-          // Use the original email timestamp for hora (HH:MM in 24h for storage)
+          // Store hora as HH:MM from original email timestamp
           const horaStr = `${String(parsedDate.getUTCHours()).padStart(2, "0")}:${String(parsedDate.getUTCMinutes()).padStart(2, "0")}`;
 
-          // Strip HTML for preview
-          const plainBody = msg.body.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+          // Generate clean preview from body
+          const plainPreview = msg.body
+            .replace(/<[^>]*>/g, "")
+            .replace(/&nbsp;/gi, " ")
+            .replace(/&[a-z]+;/gi, "")
+            .replace(/\s+/g, " ")
+            .trim();
 
           newEmails.push({
             user_id: user.id,
@@ -206,7 +208,7 @@ Deno.serve(async (req) => {
             remetente: msg.from || msg.fromEmail,
             email_remetente: msg.fromEmail,
             assunto: msg.subject,
-            preview: plainBody.slice(0, 200) || msg.subject.slice(0, 100),
+            preview: plainPreview.slice(0, 200) || msg.subject.slice(0, 100),
             corpo: msg.body || "",
             hora: horaStr,
             data: dateStr,
@@ -253,13 +255,22 @@ Deno.serve(async (req) => {
 
 /* ─── MIME Header Decoder ─── */
 function decodeMimeHeader(input: string): string {
-  return input.replace(/=\?([^?]+)\?([BbQq])\?([^?]+)\?=/g, (_match, _charset, encoding, encoded) => {
+  return input.replace(/=\?([^?]+)\?([BbQq])\?([^?]+)\?=/g, (_match, charset, encoding, encoded) => {
     try {
       if (encoding.toUpperCase() === "B") {
-        return atob(encoded);
+        const binary = atob(encoded);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return new TextDecoder(charset.toLowerCase()).decode(bytes);
       } else {
         // Quoted-Printable
-        return encoded.replace(/_/g, " ").replace(/=([0-9A-Fa-f]{2})/g, (_: string, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+        const decoded = encoded
+          .replace(/_/g, " ")
+          .replace(/=([0-9A-Fa-f]{2})/g, (_: string, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+        // Try to decode as charset
+        const bytes = new Uint8Array(decoded.length);
+        for (let i = 0; i < decoded.length; i++) bytes[i] = decoded.charCodeAt(i);
+        return new TextDecoder(charset.toLowerCase()).decode(bytes);
       }
     } catch {
       return encoded;
@@ -267,47 +278,50 @@ function decodeMimeHeader(input: string): string {
   });
 }
 
-/* ─── Email Body Parser ─── */
-function parseEmailBody(raw: string): string {
+/* ─── Parse raw email into readable body ─── */
+function parseRawEmail(raw: string): string {
   if (!raw || !raw.trim()) return "";
 
-  // Find Content-Type header
+  // Split headers and body
   const headerEnd = raw.indexOf("\r\n\r\n");
-  if (headerEnd === -1) {
-    // No headers - just body
-    return raw.trim();
-  }
+  if (headerEnd === -1) return raw.trim();
 
   const headers = raw.substring(0, headerEnd);
-  const bodyPart = raw.substring(headerEnd + 4);
+  const body = raw.substring(headerEnd + 4);
 
-  const ctMatch = headers.match(/Content-Type:\s*([^\r\n;]+)/i);
-  const contentType = ctMatch ? ctMatch[1].trim().toLowerCase() : "text/plain";
+  const contentType = getHeader(headers, "Content-Type") || "text/plain";
+  const encoding = getHeader(headers, "Content-Transfer-Encoding") || "7bit";
+  const charset = extractCharset(contentType) || "utf-8";
 
-  // Check Content-Transfer-Encoding
-  const cteMatch = headers.match(/Content-Transfer-Encoding:\s*([^\r\n]+)/i);
-  const encoding = cteMatch ? cteMatch[1].trim().toLowerCase() : "7bit";
-
-  // Multipart
-  if (contentType.startsWith("multipart/")) {
-    const boundaryMatch = headers.match(/boundary="?([^"\r\n;]+)"?/i);
-    if (!boundaryMatch) return decodeContent(bodyPart, encoding);
-    const boundary = boundaryMatch[1];
-    return parseMultipart(bodyPart, boundary);
+  // Handle multipart
+  if (contentType.toLowerCase().includes("multipart/")) {
+    const boundary = extractBoundary(contentType);
+    if (boundary) {
+      return parseMultipart(body, boundary);
+    }
   }
 
   // Single part
-  const decoded = decodeContent(bodyPart, encoding);
-
-  if (contentType.includes("text/html")) {
-    return decoded;
-  }
-  if (contentType.includes("text/plain")) {
-    // Wrap plain text in simple HTML for consistent rendering
-    return decoded;
-  }
-
+  const decoded = decodeBody(body, encoding.toLowerCase().trim(), charset);
   return decoded;
+}
+
+function getHeader(headers: string, name: string): string | null {
+  // Handle folded headers (continuation lines starting with whitespace)
+  const unfolded = headers.replace(/\r\n([ \t]+)/g, " ");
+  const regex = new RegExp(`^${name}:\\s*(.+)$`, "im");
+  const match = unfolded.match(regex);
+  return match ? match[1].trim() : null;
+}
+
+function extractCharset(contentType: string): string {
+  const match = contentType.match(/charset="?([^";\s]+)"?/i);
+  return match ? match[1].toLowerCase() : "utf-8";
+}
+
+function extractBoundary(contentType: string): string | null {
+  const match = contentType.match(/boundary="?([^"\s;]+)"?/i);
+  return match ? match[1] : null;
 }
 
 function parseMultipart(body: string, boundary: string): string {
@@ -316,7 +330,8 @@ function parseMultipart(body: string, boundary: string): string {
   let textContent = "";
 
   for (const part of parts) {
-    if (part.trim() === "--" || !part.trim()) continue;
+    const trimmed = part.trim();
+    if (trimmed === "--" || !trimmed) continue;
 
     const partHeaderEnd = part.indexOf("\r\n\r\n");
     if (partHeaderEnd === -1) continue;
@@ -324,54 +339,69 @@ function parseMultipart(body: string, boundary: string): string {
     const partHeaders = part.substring(0, partHeaderEnd);
     const partBody = part.substring(partHeaderEnd + 4);
 
-    const partCtMatch = partHeaders.match(/Content-Type:\s*([^\r\n;]+)/i);
-    const partCt = partCtMatch ? partCtMatch[1].trim().toLowerCase() : "text/plain";
-
-    const partCteMatch = partHeaders.match(/Content-Transfer-Encoding:\s*([^\r\n]+)/i);
-    const partEncoding = partCteMatch ? partCteMatch[1].trim().toLowerCase() : "7bit";
+    const partCt = getHeader(partHeaders, "Content-Type") || "text/plain";
+    const partEncoding = getHeader(partHeaders, "Content-Transfer-Encoding") || "7bit";
+    const partCharset = extractCharset(partCt);
 
     // Recurse for nested multipart
-    if (partCt.startsWith("multipart/")) {
-      const nestedBoundary = partHeaders.match(/boundary="?([^"\r\n;]+)"?/i);
+    if (partCt.toLowerCase().includes("multipart/")) {
+      const nestedBoundary = extractBoundary(partCt);
       if (nestedBoundary) {
-        const nested = parseMultipart(partBody, nestedBoundary[1]);
+        const nested = parseMultipart(partBody, nestedBoundary);
         if (nested) htmlContent = nested;
         continue;
       }
     }
 
-    if (partCt.includes("text/html")) {
-      htmlContent = decodeContent(partBody, partEncoding);
-    } else if (partCt.includes("text/plain") && !textContent) {
-      textContent = decodeContent(partBody, partEncoding);
+    const ctLower = partCt.toLowerCase();
+    if (ctLower.includes("text/html")) {
+      htmlContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
+    } else if (ctLower.includes("text/plain") && !textContent) {
+      textContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
     }
+    // Skip attachments, images, etc.
   }
 
   // Prefer HTML over plain text
   return htmlContent || textContent || "";
 }
 
-function decodeContent(content: string, encoding: string): string {
+function decodeBody(content: string, encoding: string, charset: string): string {
   let result = content;
+
+  // Remove trailing boundary markers that might have leaked in
+  const boundaryIdx = result.lastIndexOf("\r\n--");
+  if (boundaryIdx > 0) {
+    result = result.substring(0, boundaryIdx);
+  }
 
   if (encoding === "base64") {
     try {
       const cleaned = result.replace(/\r?\n/g, "").trim();
-      // Handle UTF-8 base64
       const binary = atob(cleaned);
-      // Try to decode as UTF-8
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
       }
-      result = new TextDecoder("utf-8").decode(bytes);
+      result = new TextDecoder(charset).decode(bytes);
     } catch {
-      // fallback
+      // fallback: return as-is
     }
   } else if (encoding === "quoted-printable") {
+    // Decode quoted-printable
     result = result
       .replace(/=\r?\n/g, "") // soft line breaks
       .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    // Now decode the byte sequence as the correct charset
+    try {
+      const bytes = new Uint8Array(result.length);
+      for (let i = 0; i < result.length; i++) {
+        bytes[i] = result.charCodeAt(i);
+      }
+      result = new TextDecoder(charset).decode(bytes);
+    } catch {
+      // fallback
+    }
   }
 
   return result.trim();
