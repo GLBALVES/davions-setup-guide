@@ -79,6 +79,8 @@
     "block": "Bloquear",
     "restoreToInbox": "Restaurar a Bandeja",
     "deletePermanently": "Eliminar definitivamente",
+    "archive": "Archivar",
+    "reportSpam": "Reportar como spam",
     "detectedActions": "Acciones detectadas",
     "noDetectedActions": "No se detectaron acciones"
   },
@@ -391,6 +393,7 @@
     "emailRestored": "Email restaurado",
     "senderBlocked": "Remitente bloqueado",
     "markedNotSpam": "Marcado como no spam",
+    "markedAsSpam": "Marcado como spam",
     "emailSent": "Email enviado",
     "ruleSaved": "Regla guardada",
     "ruleDeleted": "Regla eliminada"

@@ -798,6 +798,22 @@ const AdminEmailManager: React.FC = () => {
     setSelectedEmailId(null);
     toast({ title: t('toast.restoredToInbox'), duration: 3000 });
   }, [selectedEmailId, toast, persistEmailUpdate, t]);
+
+  const handleArquivar = useCallback(() => {
+    if (!selectedEmailId) return;
+    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "arquivo" as const } : e));
+    persistEmailUpdate(selectedEmailId, { tipo: "arquivo" });
+    setSelectedEmailId(null);
+    toast({ title: t('toast.emailArchived'), duration: 3000 });
+  }, [selectedEmailId, toast, persistEmailUpdate, t]);
+
+  const handleDenunciarSpam = useCallback(() => {
+    if (!selectedEmailId) return;
+    setEmails(prev => prev.map(e => e.id === selectedEmailId ? { ...e, tipo: "spam" as const, motivoSpam: "manual" } as EmailSpam : e));
+    persistEmailUpdate(selectedEmailId, { tipo: "spam", motivo_spam: "manual" });
+    setSelectedEmailId(null);
+    toast({ title: t('toast.markedAsSpam'), duration: 3000 });
+  }, [selectedEmailId, toast, persistEmailUpdate, t]);
   const handleExcluirDefinitivo = useCallback((emailId: string) => { setEmails(prev => prev.filter(e => e.id !== emailId)); persistEmailDelete(emailId); if (selectedEmailId === emailId) setSelectedEmailId(null); toast({ title: t('toast.permanentlyDeleted'), duration: 3000 }); }, [selectedEmailId, toast, persistEmailDelete, t]);
 
   const handleAcoesIA = useCallback(async () => {
@@ -1053,6 +1069,8 @@ const AdminEmailManager: React.FC = () => {
         {emailsFavoritos.has(email.id) ? <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" /> : <Star className="w-3.5 h-3.5" />}
       </Button>
       {renderMoverDropdown()}
+      <Button variant="ghost" size="icon" className="h-7 w-7" title={t('emailActions.archive')} onClick={handleArquivar}><Archive className="w-3.5 h-3.5" /></Button>
+      <Button variant="ghost" size="icon" className="h-7 w-7" title={t('emailActions.reportSpam')} onClick={handleDenunciarSpam}><ShieldOff className="w-3.5 h-3.5" /></Button>
       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExcluir(email.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
     </>
   );
