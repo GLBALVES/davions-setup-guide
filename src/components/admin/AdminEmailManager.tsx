@@ -703,6 +703,38 @@ const AdminEmailManager: React.FC = () => {
   }, [contas, toast, t, setEmails, persistEmailInsert, persistEmailUpdate]);
   const handleCloseModal = useCallback(() => { setModalAberto(false); setModalMinimizado(false); }, []);
 
+  const handleSyncEmails = useCallback(async () => {
+    setSyncing(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("admin-sync-email", {
+        body: { contaId: contaAtiva !== "todas" ? contaAtiva : undefined },
+      });
+      if (error || result?.error) {
+        toast({ title: "Erro ao sincronizar", description: result?.error || error?.message, variant: "destructive" });
+      } else {
+        const imported = result?.imported || 0;
+        if (imported > 0) {
+          const { data: emailsRes } = await supabase.from("email_emails").select("*");
+          if (emailsRes) {
+            const mapRow = (row: any) => {
+              const base = { id: row.id, assunto: row.assunto, preview: row.preview, corpo: row.corpo, hora: row.hora, data: row.data, lido: row.lido, favorito: row.favorito, prioridade: row.prioridade, tags: row.tags || [], pasta: row.pasta, contaId: row.conta_id || "" };
+              if (row.tipo === "enviado") return { ...base, tipo: "enviado" as const, remetente: row.remetente, emailRemetente: row.email_remetente, destinatario: row.destinatario || "", emailDestinatario: row.email_destinatario || "", status: row.status || "entregue" };
+              if (row.tipo === "spam") return { ...base, tipo: "spam" as const, remetente: row.remetente, emailRemetente: row.email_remetente, motivoSpam: row.motivo_spam || "" };
+              if (row.tipo === "arquivo") return { ...base, tipo: "arquivo" as const, remetente: row.remetente, emailRemetente: row.email_remetente };
+              return { ...base, tipo: "recebido" as const, remetente: row.remetente, emailRemetente: row.email_remetente };
+            };
+            setEmails(emailsRes.map(mapRow));
+          }
+        }
+        toast({ title: "Sincronização concluída", description: `${imported} novo(s) email(s) importado(s)${result?.errors?.length ? `. Erros: ${result.errors.join("; ")}` : ""}`, duration: 5000 });
+      }
+    } catch (err: any) {
+      toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
+    } finally {
+      setSyncing(false);
+    }
+  }, [contaAtiva, toast, setEmails]);
+
   const handleMoverParaPasta = useCallback((pastaId: string) => {
     if (!selectedEmailId) return;
     setPastas(prev => {
