@@ -3,7 +3,7 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bug, HelpCircle, Sparkles } from "lucide-react";
+import { Bug, HelpCircle, RefreshCw, Sparkles } from "lucide-react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useNavigate } from "react-router-dom";
 import seloPreto from "@/assets/selo_preto.png";
@@ -105,6 +105,18 @@ export function DashboardHeader() {
         </div>
 
         <NotificationBell />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => window.location.reload()}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
+              <RefreshCw size={15} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Refresh</TooltipContent>
+        </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
