@@ -9,7 +9,8 @@
     "compor": "Compose AI",
     "insights": "Insights",
     "config": "Settings",
-    "arquivo": "Archive"
+    "arquivo": "Archive",
+    "documentos": "Documents"
   },
   "header": {
     "title": "Email Manager",
@@ -396,6 +397,17 @@
     "emailSent": "Email sent",
     "ruleSaved": "Rule saved",
     "ruleDeleted": "Rule deleted"
+  },
+  "documents": {
+    "autoSave": "Auto-save documents",
+    "autoSaveDesc": "Automatically save received documents organized by sender",
+    "searchDocs": "Search documents...",
+    "noDocuments": "No documents found",
+    "save": "Save",
+    "saved": "Saved",
+    "download": "Download",
+    "savedSuccess": "Document saved",
+    "savePrompt": "Would you like to save this document?"
   },
   "languages": {
     "portuguese": "Portuguese",

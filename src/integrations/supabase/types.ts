@@ -894,6 +894,69 @@ export type Database = {
         }
         Relationships: []
       }
+      email_document_settings: {
+        Row: {
+          auto_save: boolean
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          auto_save?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          auto_save?: boolean
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_documents: {
+        Row: {
+          created_at: string
+          email_id: string
+          file_name: string
+          file_size: number
+          file_url: string | null
+          id: string
+          mime_type: string
+          saved: boolean
+          sender_email: string
+          sender_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          file_name?: string
+          file_size?: number
+          file_url?: string | null
+          id?: string
+          mime_type?: string
+          saved?: boolean
+          sender_email?: string
+          sender_name?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          file_name?: string
+          file_size?: number
+          file_url?: string | null
+          id?: string
+          mime_type?: string
+          saved?: boolean
+          sender_email?: string
+          sender_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_emails: {
         Row: {
           assunto: string

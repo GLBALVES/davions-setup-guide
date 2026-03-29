@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
           fromEmail: string;
           date: string;
           body: string;
+          attachments: { fileName: string; mimeType: string; size: number; content: string }[];
         }
 
         const messages: ParsedMsg[] = [];
@@ -161,10 +162,10 @@ Deno.serve(async (req) => {
             rawEmail = block.substring(startIdx, startIdx + literalLen);
           }
 
-          // Parse the full raw email to extract readable body
-          const parsedBody = parseRawEmail(rawEmail);
+          // Parse the full raw email to extract readable body and attachments
+          const { body: parsedBody, attachments } = parseRawEmailWithAttachments(rawEmail);
 
-          messages.push({ uid, subject, from: fromName, fromEmail, date, body: parsedBody });
+          messages.push({ uid, subject, from: fromName, fromEmail, date, body: parsedBody, attachments });
         }
 
         // Get existing emails to avoid duplicates
@@ -179,8 +180,17 @@ Deno.serve(async (req) => {
           (existingEmails || []).map((e: any) => `${e.email_remetente}|${e.assunto}|${e.data}`)
         );
 
+        // Check auto-save setting
+        const { data: docSettings } = await serviceSupabase
+          .from("email_document_settings")
+          .select("auto_save")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const autoSave = docSettings?.auto_save ?? false;
+
         // Build inserts
         const newEmails = [];
+        const newDocuments: any[] = [];
         for (const msg of messages) {
           let parsedDate: Date;
           try { parsedDate = new Date(msg.date); } catch { parsedDate = new Date(); }
@@ -202,7 +212,10 @@ Deno.serve(async (req) => {
             .replace(/\s+/g, " ")
             .trim();
 
+          const emailId = crypto.randomUUID();
+
           newEmails.push({
+            id: emailId,
             user_id: user.id,
             tipo: "recebido",
             remetente: msg.from || msg.fromEmail,
@@ -219,6 +232,36 @@ Deno.serve(async (req) => {
             pasta: null,
             conta_id: conta.id,
           });
+
+          // Process attachments
+          for (const att of msg.attachments) {
+            let fileUrl: string | null = null;
+
+            if (autoSave && att.content) {
+              try {
+                const safeSender = msg.fromEmail.replace(/[^a-zA-Z0-9@._-]/g, "_");
+                const path = `${user.id}/${safeSender}/${att.fileName}`;
+                const bytes = Uint8Array.from(atob(att.content), c => c.charCodeAt(0));
+                await serviceSupabase.storage.from("email-documents").upload(path, bytes, { contentType: att.mimeType, upsert: true });
+                const { data: urlData } = serviceSupabase.storage.from("email-documents").getPublicUrl(path);
+                fileUrl = urlData?.publicUrl || null;
+              } catch (e) {
+                console.error("Failed to upload attachment:", e);
+              }
+            }
+
+            newDocuments.push({
+              user_id: user.id,
+              email_id: emailId,
+              sender_email: msg.fromEmail,
+              sender_name: msg.from || msg.fromEmail,
+              file_name: att.fileName,
+              file_url: fileUrl,
+              mime_type: att.mimeType,
+              file_size: att.size,
+              saved: autoSave && fileUrl !== null,
+            });
+          }
         }
 
         if (newEmails.length > 0) {
@@ -227,6 +270,13 @@ Deno.serve(async (req) => {
             errors.push(`${conta.email}: Failed to insert: ${insertErr.message}`);
           } else {
             totalImported += newEmails.length;
+          }
+        }
+
+        if (newDocuments.length > 0) {
+          const { error: docErr } = await serviceSupabase.from("email_documents").insert(newDocuments);
+          if (docErr) {
+            errors.push(`${conta.email}: Failed to insert documents: ${docErr.message}`);
           }
         }
 
@@ -278,13 +328,14 @@ function decodeMimeHeader(input: string): string {
   });
 }
 
-/* ─── Parse raw email into readable body ─── */
-function parseRawEmail(raw: string): string {
-  if (!raw || !raw.trim()) return "";
+/* ─── Parse raw email into readable body + attachments ─── */
+interface Attachment { fileName: string; mimeType: string; size: number; content: string }
 
-  // Split headers and body
+function parseRawEmailWithAttachments(raw: string): { body: string; attachments: Attachment[] } {
+  if (!raw || !raw.trim()) return { body: "", attachments: [] };
+
   const headerEnd = raw.indexOf("\r\n\r\n");
-  if (headerEnd === -1) return raw.trim();
+  if (headerEnd === -1) return { body: raw.trim(), attachments: [] };
 
   const headers = raw.substring(0, headerEnd);
   const body = raw.substring(headerEnd + 4);
@@ -293,41 +344,22 @@ function parseRawEmail(raw: string): string {
   const encoding = getHeader(headers, "Content-Transfer-Encoding") || "7bit";
   const charset = extractCharset(contentType) || "utf-8";
 
-  // Handle multipart
   if (contentType.toLowerCase().includes("multipart/")) {
     const boundary = extractBoundary(contentType);
     if (boundary) {
-      return parseMultipart(body, boundary);
+      return parseMultipartWithAttachments(body, boundary);
     }
   }
 
-  // Single part
   const decoded = decodeBody(body, encoding.toLowerCase().trim(), charset);
-  return decoded;
+  return { body: decoded, attachments: [] };
 }
 
-function getHeader(headers: string, name: string): string | null {
-  // Handle folded headers (continuation lines starting with whitespace)
-  const unfolded = headers.replace(/\r\n([ \t]+)/g, " ");
-  const regex = new RegExp(`^${name}:\\s*(.+)$`, "im");
-  const match = unfolded.match(regex);
-  return match ? match[1].trim() : null;
-}
-
-function extractCharset(contentType: string): string {
-  const match = contentType.match(/charset="?([^";\s]+)"?/i);
-  return match ? match[1].toLowerCase() : "utf-8";
-}
-
-function extractBoundary(contentType: string): string | null {
-  const match = contentType.match(/boundary="?([^"\s;]+)"?/i);
-  return match ? match[1] : null;
-}
-
-function parseMultipart(body: string, boundary: string): string {
+function parseMultipartWithAttachments(body: string, boundary: string): { body: string; attachments: Attachment[] } {
   const parts = body.split(`--${boundary}`);
   let htmlContent = "";
   let textContent = "";
+  const attachments: Attachment[] = [];
 
   for (const part of parts) {
     const trimmed = part.trim();
@@ -342,28 +374,51 @@ function parseMultipart(body: string, boundary: string): string {
     const partCt = getHeader(partHeaders, "Content-Type") || "text/plain";
     const partEncoding = getHeader(partHeaders, "Content-Transfer-Encoding") || "7bit";
     const partCharset = extractCharset(partCt);
+    const disposition = getHeader(partHeaders, "Content-Disposition") || "";
 
     // Recurse for nested multipart
     if (partCt.toLowerCase().includes("multipart/")) {
       const nestedBoundary = extractBoundary(partCt);
       if (nestedBoundary) {
-        const nested = parseMultipart(partBody, nestedBoundary);
-        if (nested) htmlContent = nested;
+        const nested = parseMultipartWithAttachments(partBody, nestedBoundary);
+        if (nested.body) htmlContent = nested.body;
+        attachments.push(...nested.attachments);
         continue;
       }
     }
 
+    // Detect attachments
+    const isAttachment = disposition.toLowerCase().includes("attachment") ||
+      (disposition.toLowerCase().includes("filename") || partCt.toLowerCase().includes("name="));
     const ctLower = partCt.toLowerCase();
-    if (ctLower.includes("text/html")) {
+
+    if (isAttachment && !ctLower.includes("text/plain") && !ctLower.includes("text/html")) {
+      // Extract filename
+      let fileName = "";
+      const fnMatch = disposition.match(/filename="?([^";\r\n]+)"?/i) || partCt.match(/name="?([^";\r\n]+)"?/i);
+      if (fnMatch) fileName = decodeMimeHeader(fnMatch[1].trim());
+      if (!fileName) fileName = `attachment_${attachments.length + 1}`;
+
+      // Get raw base64 content
+      const cleanBody = partBody.replace(/\r?\n--.*$/, "").trim();
+      const rawContent = partEncoding.toLowerCase().includes("base64") ? cleanBody.replace(/\r?\n/g, "") : "";
+
+      const size = rawContent ? Math.floor(rawContent.length * 3 / 4) : partBody.length;
+
+      attachments.push({
+        fileName,
+        mimeType: partCt.split(";")[0].trim(),
+        size,
+        content: rawContent,
+      });
+    } else if (ctLower.includes("text/html")) {
       htmlContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
     } else if (ctLower.includes("text/plain") && !textContent) {
       textContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
     }
-    // Skip attachments, images, etc.
   }
 
-  // Prefer HTML over plain text
-  return htmlContent || textContent || "";
+  return { body: htmlContent || textContent || "", attachments };
 }
 
 function decodeBody(content: string, encoding: string, charset: string): string {

@@ -71,6 +71,11 @@ export function useAdminEmailData() {
   const [respostaAutomatica, setRespostaAutomatica] = useState<RespostaAutomatica>({ ativa: false, assunto: "", mensagem: "", de: "", ate: "", apenasConhecidos: false });
   const [bloqueados, setBloqueados] = useState<string[]>([]);
 
+  /* ─── Documents state ─── */
+  type EmailDocument = { id: string; emailId: string; senderEmail: string; senderName: string; fileName: string; fileUrl: string | null; mimeType: string; fileSize: number; saved: boolean; createdAt: string };
+  const [documents, setDocuments] = useState<EmailDocument[]>([]);
+  const [docAutoSave, setDocAutoSave] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -78,7 +83,7 @@ export function useAdminEmailData() {
         if (!user) { setLoading(false); return; }
         setUserId(user.id);
 
-        const [contasRes, emailsRes, pastasRes, assinaturasRes, templatesRes, gruposRes, contatosRes, regrasRes, prefsRes, bloqRes] = await Promise.all([
+        const [contasRes, emailsRes, pastasRes, assinaturasRes, templatesRes, gruposRes, contatosRes, regrasRes, prefsRes, bloqRes, docsRes, docSettingsRes] = await Promise.all([
           supabase.from("email_contas").select("*"),
           supabase.from("email_emails").select("*").order("created_at", { ascending: false }),
           supabase.from("email_pastas").select("*"),
@@ -89,6 +94,8 @@ export function useAdminEmailData() {
           supabase.from("email_regras_segmentacao").select("*"),
           supabase.from("email_preferencias").select("*").eq("user_id", user.id).maybeSingle(),
           supabase.from("email_bloqueados").select("email"),
+          supabase.from("email_documents").select("*").order("created_at", { ascending: false }),
+          supabase.from("email_document_settings").select("*").eq("user_id", user.id).maybeSingle(),
         ]);
 
         if (contasRes.data) setContas(contasRes.data.map(mapContaRow));
@@ -103,6 +110,8 @@ export function useAdminEmailData() {
           setRespostaAutomatica({ ativa: p.resposta_auto_ativa, assunto: p.resposta_auto_assunto, mensagem: p.resposta_auto_mensagem, de: p.resposta_auto_de, ate: p.resposta_auto_ate, apenasConhecidos: p.resposta_auto_apenas_conhecidos });
         }
         if (bloqRes.data) setBloqueados(bloqRes.data.map((r: any) => r.email));
+        if (docsRes.data) setDocuments(docsRes.data.map((r: any) => ({ id: r.id, emailId: r.email_id, senderEmail: r.sender_email, senderName: r.sender_name, fileName: r.file_name, fileUrl: r.file_url, mimeType: r.mime_type, fileSize: r.file_size, saved: r.saved, createdAt: r.created_at })));
+        if (docSettingsRes.data) setDocAutoSave(docSettingsRes.data.auto_save ?? false);
 
         if (gruposRes.data && contatosRes.data) {
           const contactsByGroup: Record<string, GrupoContato[]> = {};
@@ -232,6 +241,17 @@ export function useAdminEmailData() {
     await supabase.from("email_bloqueados").insert({ email, user_id: userId });
   }, [userId]);
 
+  const persistDocumentSave = useCallback(async (docId: string, fileUrl: string) => {
+    await supabase.from("email_documents").update({ saved: true, file_url: fileUrl }).eq("id", docId);
+    setDocuments(prev => prev.map(d => d.id === docId ? { ...d, saved: true, fileUrl } : d));
+  }, []);
+
+  const persistAutoSaveToggle = useCallback(async (val: boolean) => {
+    if (!userId) return;
+    await supabase.from("email_document_settings").upsert({ user_id: userId, auto_save: val });
+    setDocAutoSave(val);
+  }, [userId]);
+
   return {
     loading, userId,
     contas, setContas,
@@ -244,6 +264,7 @@ export function useAdminEmailData() {
     preferencias, setPreferencias,
     respostaAutomatica, setRespostaAutomatica,
     bloqueados, setBloqueados,
+    documents, setDocuments, docAutoSave,
     persistEmailUpdate, persistEmailInsert, persistEmailDelete,
     persistContaUpsert, persistContaDelete,
     persistPastaUpsert, persistPastaDelete,
@@ -253,5 +274,6 @@ export function useAdminEmailData() {
     persistRegraUpsert, persistRegraDelete,
     persistPreferencias,
     persistBloqueado,
+    persistDocumentSave, persistAutoSaveToggle,
   };
 }

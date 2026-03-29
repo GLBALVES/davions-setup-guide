@@ -9,7 +9,8 @@
     "compor": "Componer IA",
     "insights": "Estadísticas",
     "config": "Configuración",
-    "arquivo": "Archivo"
+    "arquivo": "Archivo",
+    "documentos": "Documentos"
   },
   "header": {
     "title": "Email Manager",
@@ -397,6 +398,17 @@
     "emailSent": "Email enviado",
     "ruleSaved": "Regla guardada",
     "ruleDeleted": "Regla eliminada"
+  },
+  "documents": {
+    "autoSave": "Guardar automáticamente",
+    "autoSaveDesc": "Guardar documentos recibidos automáticamente por remitente",
+    "searchDocs": "Buscar documentos...",
+    "noDocuments": "No se encontraron documentos",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "download": "Descargar",
+    "savedSuccess": "Documento guardado",
+    "savePrompt": "¿Desea guardar este documento?"
   },
   "languages": {
     "portuguese": "Portugués",

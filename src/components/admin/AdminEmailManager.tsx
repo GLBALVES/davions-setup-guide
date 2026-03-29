@@ -218,6 +218,7 @@ const tabsDef = [
   { id: "enviados", labelKey: "tabs.enviados", Icon: Send },
   { id: "favoritos", labelKey: "tabs.favoritos", Icon: Star },
   { id: "remetente", labelKey: "tabs.remetente", Icon: Users },
+  { id: "documentos", labelKey: "tabs.documentos", Icon: FileText },
   { id: "pastas", labelKey: "tabs.pastas", Icon: FolderOpen },
   { id: "spam", labelKey: "tabs.spam", Icon: ShieldOff },
   { id: "compor", labelKey: "tabs.compor", Icon: PenLine },
@@ -401,6 +402,7 @@ const AdminEmailManager: React.FC = () => {
     preferencias, setPreferencias,
     respostaAutomatica, setRespostaAutomatica,
     bloqueados, setBloqueados,
+    documents, setDocuments, docAutoSave,
     persistEmailUpdate, persistEmailInsert, persistEmailDelete,
     persistContaUpsert, persistContaDelete,
     persistPastaUpsert, persistPastaDelete,
@@ -410,6 +412,7 @@ const AdminEmailManager: React.FC = () => {
     persistRegraUpsert, persistRegraDelete,
     persistPreferencias,
     persistBloqueado,
+    persistDocumentSave, persistAutoSaveToggle,
   } = useAdminEmailData();
 
   /* ─── Sync i18n language from saved preferences ─── */
@@ -1280,7 +1283,115 @@ const AdminEmailManager: React.FC = () => {
     </div>);
   };
 
-  /* ═══ Tab: Insights ═══ */
+  /* ═══ Tab: Documentos ═══ */
+  const renderDocumentos = () => {
+    const formatSize = (bytes: number) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1048576) return `${(bytes / 1024).toFixed(0)} KB`;
+      return `${(bytes / 1048576).toFixed(1)} MB`;
+    };
+
+    const filteredDocs = documents.filter(d => {
+      if (!filtroTexto) return true;
+      const q = filtroTexto.toLowerCase();
+      return d.fileName.toLowerCase().includes(q) || d.senderEmail.toLowerCase().includes(q) || d.senderName.toLowerCase().includes(q);
+    });
+
+    const grouped: Record<string, typeof documents> = {};
+    filteredDocs.forEach(d => {
+      const key = d.senderEmail || "unknown";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(d);
+    });
+
+    const handleSaveDoc = async (doc: typeof documents[0]) => {
+      // For now mark as saved (actual file upload happens during sync if auto-save is on)
+      await persistDocumentSave(doc.id, doc.fileUrl || "");
+      toast({ title: t('documents.savedSuccess') });
+    };
+
+    const handleDownloadDoc = (doc: typeof documents[0]) => {
+      if (doc.fileUrl) {
+        window.open(doc.fileUrl, "_blank");
+      }
+    };
+
+    return (
+      <ScrollArea className="h-full">
+        <div className="p-4 space-y-4">
+          {/* Auto-save toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-xs font-medium">{t('documents.autoSave')}</p>
+                <p className="text-[10px] text-muted-foreground">{t('documents.autoSaveDesc')}</p>
+              </div>
+            </div>
+            <Switch checked={docAutoSave} onCheckedChange={persistAutoSaveToggle} />
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input value={filtroTexto} onChange={e => setFiltroTexto(e.target.value)} placeholder={t('documents.searchDocs')} className="h-8 text-xs pl-8" />
+          </div>
+
+          {/* Document list grouped by sender */}
+          {Object.keys(grouped).length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <FileText className="w-10 h-10" />
+              <p className="text-xs">{t('documents.noDocuments')}</p>
+            </div>
+          ) : (
+            Object.entries(grouped).map(([sender, docs]) => (
+              <div key={sender} className="rounded-lg border border-border overflow-hidden">
+                <div className="bg-secondary px-3 py-2 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[9px] font-medium shrink-0">
+                    {(docs[0].senderName || sender)[0]?.toUpperCase() || "?"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium truncate">{docs[0].senderName || sender}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{sender}</p>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{docs.length} {docs.length === 1 ? "doc" : "docs"}</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {docs.map(doc => (
+                    <div key={doc.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary/50 transition-colors">
+                      <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium truncate">{doc.fileName}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatSize(doc.fileSize)} · {doc.mimeType.split("/")[1]?.toUpperCase() || doc.mimeType}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {doc.saved ? (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium flex items-center gap-0.5">
+                            <CheckCircle className="w-3 h-3" /> {t('documents.saved')}
+                          </span>
+                        ) : (
+                          <Button variant="outline" size="sm" className="h-6 text-[10px] px-2 gap-1" onClick={() => handleSaveDoc(doc)}>
+                            <Save className="w-3 h-3" /> {t('documents.save')}
+                          </Button>
+                        )}
+                        {doc.fileUrl && (
+                          <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 gap-1" onClick={() => handleDownloadDoc(doc)}>
+                            <FileText className="w-3 h-3" /> {t('documents.download')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    );
+  };
+
+
   const renderInsights = () => {
     const { totalRecebidos, totalEnviados, naoLidos, pctNaoLidos, topSenders, maxSenderCount, tagDist, totalTags, maxTagCount, unanswered, hourCounts, maxHour } = dadosInsights;
     const periodPills: { key: "semana" | "mes" | "trimestre"; label: string }[] = [
@@ -1458,7 +1569,7 @@ const AdminEmailManager: React.FC = () => {
   };
 
   const tabContentMap: Record<string, () => React.ReactNode> = {
-    entrada: renderEntrada, enviados: renderEnviados, favoritos: renderFavoritos, remetente: renderPorRemetente, pastas: renderPastas, spam: renderSpam, compor: renderCompor, insights: renderInsights, config: renderConfig, arquivo: renderArquivo,
+    entrada: renderEntrada, enviados: renderEnviados, favoritos: renderFavoritos, remetente: renderPorRemetente, documentos: renderDocumentos, pastas: renderPastas, spam: renderSpam, compor: renderCompor, insights: renderInsights, config: renderConfig, arquivo: renderArquivo,
   };
 
   /* ═══════════ RETURN ═══════════ */
