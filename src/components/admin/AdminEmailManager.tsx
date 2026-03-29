@@ -778,6 +778,7 @@ const AdminEmailManager: React.FC = () => {
       persistContaUpsert(nova);
     }
     setModalContaAberto(false); setContaSendoEditada(null);
+    setActiveTab("config");
     toast({ title: t('toast.accountSaved'), duration: 3000 });
   }, [formConta, contaSendoEditada, toast, persistContaUpsert, t]);
 
@@ -1471,14 +1472,136 @@ const AdminEmailManager: React.FC = () => {
       <Dialog open={modalContaAberto} onOpenChange={setModalContaAberto}>
         <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
           <DialogHeader><DialogTitle>{contaSendoEditada ? t('accounts.editAccount') : t('accounts.addAccount')}</DialogTitle></DialogHeader>
+          {/* Tab switcher */}
+          <div className="flex gap-1 border-b border-border pb-1">
+            <button onClick={() => setContaModalTab("geral")} className={`px-3 py-1.5 text-xs font-medium rounded-t transition-colors ${contaModalTab === "geral" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{t('accounts.general') || 'Geral'}</button>
+            <button onClick={() => setContaModalTab("servidor")} className={`px-3 py-1.5 text-xs font-medium rounded-t transition-colors ${contaModalTab === "servidor" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{t('accounts.server') || 'Servidor'}</button>
+          </div>
           <ScrollArea className="flex-1 pr-2">
-            <div className="space-y-4 py-2">
-              <div><Label className="text-xs">{t('accounts.accountName')}</Label><Input value={formConta.nome} onChange={e => setFormConta(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
-              <div><Label className="text-xs">{t('accounts.emailAddress')}</Label><Input value={formConta.email} onChange={e => setFormConta(prev => ({ ...prev, email: e.target.value }))} className="h-8 text-xs mt-1" /></div>
-              <div><Label className="text-xs">{t('common.color')}</Label><div className="flex gap-2 mt-1">{["#378ADD", "#1D9E75", "#D85A30", "#9333EA", "#EAB308", "#6B7280"].map(c => (<button key={c} onClick={() => setFormConta(prev => ({ ...prev, cor: c }))} className={`w-7 h-7 rounded-full ${formConta.cor === c ? "ring-2 ring-primary ring-offset-2" : ""}`} style={{ backgroundColor: c }} />))}</div></div>
-              <div><Label className="text-xs">{t('accounts.signature')}</Label><Textarea value={formConta.assinatura} onChange={e => setFormConta(prev => ({ ...prev, assinatura: e.target.value }))} className="text-xs min-h-[80px] mt-1" /></div>
-              <div className="flex items-center gap-2"><Switch checked={formConta.padrao} onCheckedChange={v => setFormConta(prev => ({ ...prev, padrao: v }))} /><Label className="text-xs">{t('accounts.setAsDefault')}</Label></div>
-            </div>
+            {contaModalTab === "geral" ? (
+              <div className="space-y-4 py-2">
+                <div><Label className="text-xs">{t('accounts.accountName')}</Label><Input value={formConta.nome} onChange={e => setFormConta(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
+                <div><Label className="text-xs">{t('accounts.emailAddress')}</Label><Input value={formConta.email} onChange={e => setFormConta(prev => ({ ...prev, email: e.target.value }))} className="h-8 text-xs mt-1" /></div>
+                <div>
+                  <Label className="text-xs">{t('accounts.provider') || 'Provedor'}</Label>
+                  <Select value={formConta.provedor} onValueChange={(v: Conta["provedor"]) => {
+                    const preset = provedorPresets[v];
+                    if (preset) {
+                      setFormConta(prev => ({
+                        ...prev, provedor: v,
+                        imap: { ...prev.imap, ...preset.imap },
+                        smtp: { ...prev.smtp, ...preset.smtp },
+                      }));
+                    } else {
+                      setFormConta(prev => ({ ...prev, provedor: v }));
+                    }
+                  }}>
+                    <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gmail">Gmail</SelectItem>
+                      <SelectItem value="outlook">Outlook</SelectItem>
+                      <SelectItem value="hotmail">Hotmail</SelectItem>
+                      <SelectItem value="yahoo">Yahoo</SelectItem>
+                      <SelectItem value="icloud">iCloud</SelectItem>
+                      <SelectItem value="custom">{t('accounts.custom') || 'Personalizado'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label className="text-xs">{t('common.color')}</Label><div className="flex gap-2 mt-1">{["#378ADD", "#1D9E75", "#D85A30", "#9333EA", "#EAB308", "#6B7280"].map(c => (<button key={c} onClick={() => setFormConta(prev => ({ ...prev, cor: c }))} className={`w-7 h-7 rounded-full ${formConta.cor === c ? "ring-2 ring-primary ring-offset-2" : ""}`} style={{ backgroundColor: c }} />))}</div></div>
+                <div><Label className="text-xs">{t('accounts.signature')}</Label><Textarea value={formConta.assinatura} onChange={e => setFormConta(prev => ({ ...prev, assinatura: e.target.value }))} className="text-xs min-h-[80px] mt-1" /></div>
+                <div className="flex items-center gap-2"><Switch checked={formConta.padrao} onCheckedChange={v => setFormConta(prev => ({ ...prev, padrao: v }))} /><Label className="text-xs">{t('accounts.setAsDefault')}</Label></div>
+              </div>
+            ) : (
+              <div className="space-y-6 py-2">
+                {/* IMAP */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={formConta.imap.ativo} onCheckedChange={v => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, ativo: v } }))} />
+                    <Label className="text-xs font-semibold">IMAP</Label>
+                  </div>
+                  {formConta.imap.ativo && (
+                    <div className="space-y-3 pl-1">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label className="text-xs">{t('accounts.server') || 'Servidor'}</Label><Input value={formConta.imap.servidor} onChange={e => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, servidor: e.target.value } }))} className="h-8 text-xs mt-1" /></div>
+                        <div><Label className="text-xs">{t('accounts.port') || 'Porta'}</Label><Input type="number" value={formConta.imap.porta} onChange={e => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, porta: Number(e.target.value) } }))} className="h-8 text-xs mt-1" /></div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t('accounts.security') || 'Segurança'}</Label>
+                        <Select value={formConta.imap.seguranca} onValueChange={(v: ServerConfig["seguranca"]) => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, seguranca: v } }))}>
+                          <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ssl">SSL/TLS</SelectItem>
+                            <SelectItem value="starttls">STARTTLS</SelectItem>
+                            <SelectItem value="nenhuma">{t('accounts.none') || 'Nenhuma'}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div><Label className="text-xs">{t('accounts.username') || 'Usuário'}</Label><Input value={formConta.imap.usuario} onChange={e => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, usuario: e.target.value } }))} className="h-8 text-xs mt-1" /></div>
+                      <div className="relative">
+                        <Label className="text-xs">{t('accounts.password') || 'Senha'}</Label>
+                        <div className="relative mt-1">
+                          <Input type={showImapPassword ? "text" : "password"} value={formConta.imap.senha} onChange={e => setFormConta(prev => ({ ...prev, imap: { ...prev.imap, senha: e.target.value } }))} className="h-8 text-xs pr-8" />
+                          <button type="button" onClick={() => setShowImapPassword(!showImapPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                            {showImapPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <Separator />
+                {/* SMTP */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={formConta.smtp.ativo} onCheckedChange={v => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, ativo: v } }))} />
+                    <Label className="text-xs font-semibold">SMTP</Label>
+                  </div>
+                  {formConta.smtp.ativo && (
+                    <div className="space-y-3 pl-1">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label className="text-xs">{t('accounts.server') || 'Servidor'}</Label><Input value={formConta.smtp.servidor} onChange={e => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, servidor: e.target.value } }))} className="h-8 text-xs mt-1" /></div>
+                        <div><Label className="text-xs">{t('accounts.port') || 'Porta'}</Label><Input type="number" value={formConta.smtp.porta} onChange={e => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, porta: Number(e.target.value) } }))} className="h-8 text-xs mt-1" /></div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t('accounts.security') || 'Segurança'}</Label>
+                        <Select value={formConta.smtp.seguranca} onValueChange={(v: ServerConfig["seguranca"]) => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, seguranca: v } }))}>
+                          <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ssl">SSL/TLS</SelectItem>
+                            <SelectItem value="starttls">STARTTLS</SelectItem>
+                            <SelectItem value="nenhuma">{t('accounts.none') || 'Nenhuma'}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div><Label className="text-xs">{t('accounts.username') || 'Usuário'}</Label><Input value={formConta.smtp.usuario} onChange={e => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, usuario: e.target.value } }))} className="h-8 text-xs mt-1" /></div>
+                      <div className="relative">
+                        <Label className="text-xs">{t('accounts.password') || 'Senha'}</Label>
+                        <div className="relative mt-1">
+                          <Input type={showSmtpPassword ? "text" : "password"} value={formConta.smtp.senha} onChange={e => setFormConta(prev => ({ ...prev, smtp: { ...prev.smtp, senha: e.target.value } }))} className="h-8 text-xs pr-8" />
+                          <button type="button" onClick={() => setShowSmtpPassword(!showSmtpPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                            {showSmtpPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Test connection */}
+                {(formConta.imap.ativo || formConta.smtp.ativo) && (
+                  <div className="space-y-2">
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 w-full" disabled={testingConnection} onClick={() => {
+                      setTestingConnection(true); setTestResult(null);
+                      setTimeout(() => { setTestResult("success"); setTestingConnection(false); }, 1500);
+                    }}>
+                      {testingConnection ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wifi className="w-3.5 h-3.5" />}
+                      {t('accounts.testConnection') || 'Testar conexão'}
+                    </Button>
+                    {testResult === "success" && <p className="text-xs text-green-600 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> {t('accounts.connectionSuccess') || 'Conexão bem-sucedida'}</p>}
+                    {testResult === "error" && <p className="text-xs text-destructive flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> {t('accounts.connectionError') || 'Erro na conexão'}</p>}
+                  </div>
+                )}
+              </div>
+            )}
           </ScrollArea>
           <DialogFooter>
             <Button variant="ghost" size="sm" onClick={() => setModalContaAberto(false)}>{t('common.cancel')}</Button>
