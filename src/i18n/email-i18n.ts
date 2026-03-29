@@ -20,7 +20,8 @@ export const getI18nLanguage = (idiomaIA: string): string => {
 const emailI18n = i18n.createInstance();
 
 emailI18n.use(initReactI18next).init({
-  resources: { pt: { translation: pt }, en: { translation: en }, es: { translation: es } },
+  resources: { pt: { email: pt }, en: { email: en }, es: { email: es } },
+  defaultNS: 'email',
   lng: 'pt',
   fallbackLng: 'pt',
   interpolation: { escapeValue: false },
