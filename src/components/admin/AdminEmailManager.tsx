@@ -556,6 +556,27 @@ const AdminEmailManager: React.FC = () => {
 
   const favoritoEmails = useMemo(() => recebidos.filter(e => emailsFavoritos.has(e.id)), [recebidos, emailsFavoritos]);
 
+  const filteredEnviados = useMemo(() => {
+    if (!filtroTexto) return enviados;
+    const q = filtroTexto.toLowerCase();
+    return enviados.filter(e => (e.destinatario || "").toLowerCase().includes(q) || e.assunto.toLowerCase().includes(q) || e.preview.toLowerCase().includes(q));
+  }, [enviados, filtroTexto]);
+
+  const filteredFavoritos = useMemo(() => {
+    if (!filtroTexto) return favoritoEmails;
+    const q = filtroTexto.toLowerCase();
+    return favoritoEmails.filter(e => e.remetente.toLowerCase().includes(q) || e.assunto.toLowerCase().includes(q) || e.preview.toLowerCase().includes(q));
+  }, [favoritoEmails, filtroTexto]);
+
+  const filteredRemetenteGroups = useMemo(() => {
+    const map = new Map<string, EmailRecebido[]>();
+    recebidos.forEach(e => { if (!map.has(e.emailRemetente)) map.set(e.emailRemetente, []); map.get(e.emailRemetente)!.push(e); });
+    const all = Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+    if (!filtroTexto) return all;
+    const q = filtroTexto.toLowerCase();
+    return all.filter(([addr, grp]) => addr.toLowerCase().includes(q) || grp[0].remetente.toLowerCase().includes(q));
+  }, [recebidos, filtroTexto]);
+
   const suggestPasta = useMemo(() => {
     if (!selectedEmail) return null;
     if (sugestoesDismissed.has(selectedEmail.id)) return null;
@@ -1085,11 +1106,19 @@ const AdminEmailManager: React.FC = () => {
 
   /* ═══ Tab: Enviados ═══ */
   const renderEnviados = () => {
-    const sel = enviados.find(e => e.id === selectedEmailId) || null;
+    const sel = filteredEnviados.find(e => e.id === selectedEmailId) || null;
     return (<div className="flex h-full relative">
-      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}><ScrollArea className="flex-1">
-        {enviados.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-1"><Send className="w-8 h-8" /><p className="text-xs">{t('emailList.noSent')}</p></div>)
-          : enviados.map(email => renderEmailListItem(email, { nameField: email.destinatario, showAccountBadge: contaAtiva === "todas", extraBadge: <span className={`text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium flex items-center gap-1 ${email.status === "entregue" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{email.status === "entregue" ? <><CheckCircle className="w-2.5 h-2.5" /> {t('emailList.delivered')}</> : <><Clock className="w-2.5 h-2.5" /> {t('emailList.waiting')}</>}</span> }))}
+      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
+        <div className="p-2 border-b border-border flex gap-1.5 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
+            {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+          </div>
+        </div>
+        <ScrollArea className="flex-1">
+        {filteredEnviados.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-1"><Send className="w-8 h-8" /><p className="text-xs">{t('emailList.noSent')}</p></div>)
+          : filteredEnviados.map(email => renderEmailListItem(email, { nameField: email.destinatario, showAccountBadge: contaAtiva === "todas", extraBadge: <span className={`text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium flex items-center gap-1 ${email.status === "entregue" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{email.status === "entregue" ? <><CheckCircle className="w-2.5 h-2.5" /> {t('emailList.delivered')}</> : <><Clock className="w-2.5 h-2.5" /> {t('emailList.waiting')}</>}</span> }))}
       </ScrollArea></div>
       {sel ? renderRightPanel(sel, { actions: (<><Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={handleEncaminhar}><Forward className="w-3.5 h-3.5" /> {t('emailActions.forward')}</Button>{renderMoverDropdown()}<Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => handleExcluir(sel.id)}><Trash2 className="w-3.5 h-3.5" /> {t('common.delete')}</Button></>) }) : (!isCompact || !mobileShowPanel) && renderEmptyPanel()}
     </div>);
@@ -1097,26 +1126,36 @@ const AdminEmailManager: React.FC = () => {
 
   /* ═══ Tab: Favoritos ═══ */
   const renderFavoritos = () => {
-    const sel = favoritoEmails.find(e => e.id === selectedEmailId) || null;
+    const sel = filteredFavoritos.find(e => e.id === selectedEmailId) || null;
     return (<div className="flex h-full relative">
-      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}><ScrollArea className="flex-1">
-        {favoritoEmails.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2"><Star className="w-8 h-8" /><p className="text-xs">{t('emailList.noFavorites')}</p></div>)
-          : favoritoEmails.map(email => renderEmailListItem(email, { showUnread: true, showPrioDot: true, showTags: true, showAccountBadge: contaAtiva === "todas" }))}
+      <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
+        <div className="p-2 border-b border-border flex gap-1.5 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
+            {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+          </div>
+        </div>
+        <ScrollArea className="flex-1">
+        {filteredFavoritos.length === 0 ? (<div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2"><Star className="w-8 h-8" /><p className="text-xs">{t('emailList.noFavorites')}</p></div>)
+          : filteredFavoritos.map(email => renderEmailListItem(email, { showUnread: true, showPrioDot: true, showTags: true, showAccountBadge: contaAtiva === "todas" }))}
       </ScrollArea></div>
       {sel ? renderRightPanel(sel, { showAiPanel: true, showPrioDropdown: true, actions: (<><Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={handleResponder}><Reply className="w-3.5 h-3.5" /> {t('emailActions.reply')}</Button><Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={handleEncaminhar}><Forward className="w-3.5 h-3.5" /> {t('emailActions.forward')}</Button><Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={handleRespostaIA}><Sparkles className="w-3.5 h-3.5" /> {t('emailActions.aiReply')}</Button><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleFavorito(sel.id)}>{emailsFavoritos.has(sel.id) ? <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" /> : <Star className="w-3.5 h-3.5" />}</Button><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExcluir(sel.id)}><Trash2 className="w-3.5 h-3.5" /></Button></>) }) : (!isCompact || !mobileShowPanel) && renderEmptyPanel()}
     </div>);
   };
 
   /* ═══ Tab: Por Remetente ═══ */
-  const remetenteGroups = useMemo(() => {
-    const map = new Map<string, EmailRecebido[]>();
-    recebidos.forEach(e => { if (!map.has(e.emailRemetente)) map.set(e.emailRemetente, []); map.get(e.emailRemetente)!.push(e); });
-    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [recebidos]);
-
   const renderPorRemetente = () => (<div className="flex h-full relative">
-    <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}><ScrollArea className="flex-1">
-      {remetenteGroups.map(([emailAddr, groupEmails]) => {
+    <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
+      <div className="p-2 border-b border-border flex gap-1.5 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
+          {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+        </div>
+      </div>
+      <ScrollArea className="flex-1">
+      {filteredRemetenteGroups.map(([emailAddr, groupEmails]) => {
         const first = groupEmails[0]; const isExpanded = expandedRemetente === emailAddr;
         const sorted = [...groupEmails].sort((a, b) => b.hora.localeCompare(a.hora));
         return (<div key={emailAddr}>
