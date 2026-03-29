@@ -778,6 +778,7 @@ const AdminEmailManager: React.FC = () => {
       persistContaUpsert(nova);
     }
     setModalContaAberto(false); setContaSendoEditada(null);
+    setActiveTab("config");
     toast({ title: t('toast.accountSaved'), duration: 3000 });
   }, [formConta, contaSendoEditada, toast, persistContaUpsert, t]);
 
