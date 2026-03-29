@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /* ─── Types ─── */
 type ServerConfig = { ativo: boolean; servidor: string; porta: number; seguranca: "ssl" | "starttls" | "nenhuma"; usuario: string; senha: string };
-type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "custom"; imap: ServerConfig; smtp: ServerConfig };
+type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "hostinger" | "custom"; imap: ServerConfig; smtp: ServerConfig };
 type Prioridade = "urgente" | "alta" | "normal" | "baixa";
 type PastaRegra = { tipo: "remetente" | "assunto" | "tag"; valor: string };
 type Pasta = { id: string; nome: string; icone: string; cor: string; regras: PastaRegra[]; emailIds: string[] };

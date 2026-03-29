@@ -45,7 +45,7 @@ import { useAdminEmailData } from "@/hooks/use-admin-email-data";
 /* ─── Types ─── */
 type Prioridade = "urgente" | "alta" | "normal" | "baixa";
 type ServerConfig = { ativo: boolean; servidor: string; porta: number; seguranca: "ssl" | "starttls" | "nenhuma"; usuario: string; senha: string };
-type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "custom"; imap: ServerConfig; smtp: ServerConfig };
+type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "hostinger" | "custom"; imap: ServerConfig; smtp: ServerConfig };
 type PastaRegra = { tipo: "remetente" | "assunto" | "tag"; valor: string };
 type Pasta = { id: string; nome: string; icone: string; cor: string; regras: PastaRegra[]; emailIds: string[] };
 type Assinatura = { id: string; nome: string; conteudo: string; contaIds: string[] };
@@ -86,6 +86,7 @@ const provedorPresets: Record<string, { imap: Partial<ServerConfig>; smtp: Parti
   hotmail: { imap: { servidor: "outlook.office365.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.office365.com", porta: 587, seguranca: "starttls" } },
   yahoo: { imap: { servidor: "imap.mail.yahoo.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.mail.yahoo.com", porta: 465, seguranca: "ssl" } },
   icloud: { imap: { servidor: "imap.mail.me.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.mail.me.com", porta: 587, seguranca: "starttls" } },
+  hostinger: { imap: { servidor: "imap.hostinger.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.hostinger.com", porta: 465, seguranca: "ssl" } },
 };
 
 const categoriaTemplateOptions = ["Todas", "Vendas", "Relacionamento", "Onboarding", "Financeiro", "Outro"];
@@ -1519,6 +1520,7 @@ const AdminEmailManager: React.FC = () => {
                       <SelectItem value="hotmail">Hotmail</SelectItem>
                       <SelectItem value="yahoo">Yahoo</SelectItem>
                       <SelectItem value="icloud">iCloud</SelectItem>
+                      <SelectItem value="hostinger">Hostinger</SelectItem>
                       <SelectItem value="custom">{t('accounts.custom') || 'Personalizado'}</SelectItem>
                     </SelectContent>
                   </Select>
