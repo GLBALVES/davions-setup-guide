@@ -974,7 +974,13 @@ const AdminEmailManager: React.FC = () => {
         </div>
         <div className="flex items-center gap-1 px-4 py-2 border-b border-border shrink-0 flex-wrap">{actions}</div>
         <ScrollArea className="flex-1">
-          <div className="px-4 py-3.5 pb-6">{email.corpo.split("\n").map((line, i) => (<p key={i} className="text-[13px] leading-[1.8] text-secondary-foreground min-h-[1.4em]">{line || "\u00A0"}</p>))}</div>
+          <div className="px-4 py-3.5 pb-6">
+            {email.corpo && email.corpo.trim().startsWith("<") ? (
+              <div className="text-[13px] leading-[1.8] text-secondary-foreground prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: email.corpo }} />
+            ) : (
+              email.corpo.split("\n").map((line, i) => (<p key={i} className="text-[13px] leading-[1.8] text-secondary-foreground min-h-[1.4em]">{line || "\u00A0"}</p>))
+            )}
+          </div>
         </ScrollArea>
         {showAiPanel && (
           <div className="shrink-0 bg-secondary border-t border-border px-4 py-2.5" style={{ borderTopWidth: "0.5px" }}>
