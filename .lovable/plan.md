@@ -1,20 +1,16 @@
 
 
-## Corrigir conteúdo duplicado no AdminLayout
+## Refresh inteligente no módulo de email
 
 ### Problema
-O `AdminLayout.tsx` renderiza `{children}` duas vezes (linhas 52-57), causando toda a interface do email aparecer duplicada.
+O botão de refresh faz `window.location.reload()` — recarrega a página inteira, piscando a tela. Deveria apenas chamar a sincronização IMAP no servidor e atualizar os emails no state.
 
 ### Correção
-Arquivo: `src/components/admin/AdminLayout.tsx`
+Arquivo: `src/components/admin/AdminEmailManager.tsx`
 
-Remover o segundo `<div>` que renderiza `{children}` duplicado. O bloco `<main>` ficará assim:
+1. **Linha 1486**: Trocar `onClick={() => window.location.reload()}` por `onClick={handleSyncEmails}`
+2. **Linha 1487**: Adicionar classe de animação condicional ao ícone: `className={cn("w-4 h-4", syncing && "animate-spin")}` — o ícone gira enquanto `syncing` é `true`
+3. **Desabilitar** o botão durante sync: `disabled={syncing}`
 
-```tsx
-<main className="flex-1 overflow-y-auto">
-  {children}
-</main>
-```
-
-Uma única alteração, uma linha efetiva.
+Já existe `handleSyncEmails` (linha 706) e o state `syncing` — basta conectá-los ao botão. Zero lógica nova.
 
