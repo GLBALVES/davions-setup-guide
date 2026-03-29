@@ -45,3 +45,9 @@ verify_jwt = false
 [functions.check-ssl-cert]
 verify_jwt = false
 
+[functions.admin-send-email]
+verify_jwt = false
+
+[functions.admin-sync-email]
+verify_jwt = false
+
