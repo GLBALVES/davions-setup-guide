@@ -556,6 +556,27 @@ const AdminEmailManager: React.FC = () => {
 
   const favoritoEmails = useMemo(() => recebidos.filter(e => emailsFavoritos.has(e.id)), [recebidos, emailsFavoritos]);
 
+  const filteredEnviados = useMemo(() => {
+    if (!filtroTexto) return enviados;
+    const q = filtroTexto.toLowerCase();
+    return enviados.filter(e => (e.destinatario || "").toLowerCase().includes(q) || e.assunto.toLowerCase().includes(q) || e.preview.toLowerCase().includes(q));
+  }, [enviados, filtroTexto]);
+
+  const filteredFavoritos = useMemo(() => {
+    if (!filtroTexto) return favoritoEmails;
+    const q = filtroTexto.toLowerCase();
+    return favoritoEmails.filter(e => e.remetente.toLowerCase().includes(q) || e.assunto.toLowerCase().includes(q) || e.preview.toLowerCase().includes(q));
+  }, [favoritoEmails, filtroTexto]);
+
+  const filteredRemetenteGroups = useMemo(() => {
+    const map = new Map<string, EmailRecebido[]>();
+    recebidos.forEach(e => { if (!map.has(e.emailRemetente)) map.set(e.emailRemetente, []); map.get(e.emailRemetente)!.push(e); });
+    const all = Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+    if (!filtroTexto) return all;
+    const q = filtroTexto.toLowerCase();
+    return all.filter(([addr, grp]) => addr.toLowerCase().includes(q) || grp[0].remetente.toLowerCase().includes(q));
+  }, [recebidos, filtroTexto]);
+
   const suggestPasta = useMemo(() => {
     if (!selectedEmail) return null;
     if (sugestoesDismissed.has(selectedEmail.id)) return null;
