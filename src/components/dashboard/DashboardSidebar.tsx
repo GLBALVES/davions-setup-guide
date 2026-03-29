@@ -945,10 +945,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {translatedGroups.map((group) => {
-              if (group.disabled && !isAdmin) return null;
-              const visibleItems = filterItems(group.items);
-              if (visibleItems.length === 0) return null;
+             {translatedGroups.map((group) => {
+               if (group.disabled && !isAdmin) return null;
+               const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
+               if (restrictedKeys.includes(group.stableKey)) return null;
+               const visibleItems = filterItems(group.items);
+               if (visibleItems.length === 0) return null;
               return (
               <SidebarGroup key={group.stableKey}>
                 <SidebarGroupContent>
