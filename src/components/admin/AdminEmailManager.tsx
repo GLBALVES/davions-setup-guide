@@ -86,6 +86,7 @@ const provedorPresets: Record<string, { imap: Partial<ServerConfig>; smtp: Parti
   hotmail: { imap: { servidor: "outlook.office365.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.office365.com", porta: 587, seguranca: "starttls" } },
   yahoo: { imap: { servidor: "imap.mail.yahoo.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.mail.yahoo.com", porta: 465, seguranca: "ssl" } },
   icloud: { imap: { servidor: "imap.mail.me.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.mail.me.com", porta: 587, seguranca: "starttls" } },
+  hostinger: { imap: { servidor: "imap.hostinger.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.hostinger.com", porta: 465, seguranca: "ssl" } },
 };
 
 const categoriaTemplateOptions = ["Todas", "Vendas", "Relacionamento", "Onboarding", "Financeiro", "Outro"];
