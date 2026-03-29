@@ -1069,6 +1069,8 @@ const AdminEmailManager: React.FC = () => {
         {emailsFavoritos.has(email.id) ? <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" /> : <Star className="w-3.5 h-3.5" />}
       </Button>
       {renderMoverDropdown()}
+      <Button variant="ghost" size="icon" className="h-7 w-7" title={t('emailActions.archive')} onClick={handleArquivar}><Archive className="w-3.5 h-3.5" /></Button>
+      <Button variant="ghost" size="icon" className="h-7 w-7" title={t('emailActions.reportSpam')} onClick={handleDenunciarSpam}><ShieldOff className="w-3.5 h-3.5" /></Button>
       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExcluir(email.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
     </>
   );

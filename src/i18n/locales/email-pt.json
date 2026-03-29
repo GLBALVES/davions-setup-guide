@@ -79,6 +79,8 @@
     "block": "Bloquear",
     "restoreToInbox": "Restaurar para Entrada",
     "deletePermanently": "Excluir definitivamente",
+    "archive": "Arquivar",
+    "reportSpam": "Denunciar como spam",
     "detectedActions": "Ações detectadas",
     "noDetectedActions": "Nenhuma ação detectada"
   },

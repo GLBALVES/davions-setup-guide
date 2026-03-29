@@ -79,6 +79,8 @@
     "block": "Block",
     "restoreToInbox": "Restore to Inbox",
     "deletePermanently": "Delete permanently",
+    "archive": "Archive",
+    "reportSpam": "Report spam",
     "detectedActions": "Detected actions",
     "noDetectedActions": "No actions detected"
   },
