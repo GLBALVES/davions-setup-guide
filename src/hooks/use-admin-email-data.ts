@@ -172,10 +172,11 @@ export function useAdminEmailData() {
   }, []);
 
   const persistAssinaturaUpsert = useCallback(async (assinatura: Assinatura) => {
+    if (!userId) return;
     await supabase.from("email_assinaturas").upsert({
-      id: assinatura.id, nome: assinatura.nome, conteudo: assinatura.conteudo, conta_ids: assinatura.contaIds,
+      id: assinatura.id, user_id: userId, nome: assinatura.nome, conteudo: assinatura.conteudo, conta_ids: assinatura.contaIds,
     });
-  }, []);
+  }, [userId]);
 
   const persistTemplateUpsert = useCallback(async (template: Template) => {
     await supabase.from("email_templates").upsert({
