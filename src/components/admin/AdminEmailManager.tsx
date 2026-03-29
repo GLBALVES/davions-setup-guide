@@ -1029,12 +1029,15 @@ const AdminEmailManager: React.FC = () => {
     return (
       <div className="flex h-full relative">
         <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
-          <div className="p-2 border-b border-border">
-            <div className="relative">
+          <div className="p-2 border-b border-border flex gap-1.5 items-center">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
               {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
             </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleSyncEmails} disabled={syncing} title="Sincronizar emails">
+              {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+            </Button>
           </div>
           <div className="flex gap-1 px-2 py-1.5 border-b border-border flex-wrap">
             <button onClick={() => setPrioridadeFiltro("todos")} className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors ${prioridadeFiltro === "todos" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>{t('common.all')}</button>
