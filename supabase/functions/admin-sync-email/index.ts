@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
           fromEmail: string;
           date: string;
           body: string;
+          attachments: { fileName: string; mimeType: string; size: number; content: string }[];
         }
 
         const messages: ParsedMsg[] = [];
@@ -161,10 +162,10 @@ Deno.serve(async (req) => {
             rawEmail = block.substring(startIdx, startIdx + literalLen);
           }
 
-          // Parse the full raw email to extract readable body
-          const parsedBody = parseRawEmail(rawEmail);
+          // Parse the full raw email to extract readable body and attachments
+          const { body: parsedBody, attachments } = parseRawEmailWithAttachments(rawEmail);
 
-          messages.push({ uid, subject, from: fromName, fromEmail, date, body: parsedBody });
+          messages.push({ uid, subject, from: fromName, fromEmail, date, body: parsedBody, attachments });
         }
 
         // Get existing emails to avoid duplicates
@@ -179,8 +180,17 @@ Deno.serve(async (req) => {
           (existingEmails || []).map((e: any) => `${e.email_remetente}|${e.assunto}|${e.data}`)
         );
 
+        // Check auto-save setting
+        const { data: docSettings } = await serviceSupabase
+          .from("email_document_settings")
+          .select("auto_save")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const autoSave = docSettings?.auto_save ?? false;
+
         // Build inserts
         const newEmails = [];
+        const newDocuments: any[] = [];
         for (const msg of messages) {
           let parsedDate: Date;
           try { parsedDate = new Date(msg.date); } catch { parsedDate = new Date(); }
@@ -202,7 +212,10 @@ Deno.serve(async (req) => {
             .replace(/\s+/g, " ")
             .trim();
 
+          const emailId = crypto.randomUUID();
+
           newEmails.push({
+            id: emailId,
             user_id: user.id,
             tipo: "recebido",
             remetente: msg.from || msg.fromEmail,
@@ -219,6 +232,36 @@ Deno.serve(async (req) => {
             pasta: null,
             conta_id: conta.id,
           });
+
+          // Process attachments
+          for (const att of msg.attachments) {
+            let fileUrl: string | null = null;
+
+            if (autoSave && att.content) {
+              try {
+                const safeSender = msg.fromEmail.replace(/[^a-zA-Z0-9@._-]/g, "_");
+                const path = `${user.id}/${safeSender}/${att.fileName}`;
+                const bytes = Uint8Array.from(atob(att.content), c => c.charCodeAt(0));
+                await serviceSupabase.storage.from("email-documents").upload(path, bytes, { contentType: att.mimeType, upsert: true });
+                const { data: urlData } = serviceSupabase.storage.from("email-documents").getPublicUrl(path);
+                fileUrl = urlData?.publicUrl || null;
+              } catch (e) {
+                console.error("Failed to upload attachment:", e);
+              }
+            }
+
+            newDocuments.push({
+              user_id: user.id,
+              email_id: emailId,
+              sender_email: msg.fromEmail,
+              sender_name: msg.from || msg.fromEmail,
+              file_name: att.fileName,
+              file_url: fileUrl,
+              mime_type: att.mimeType,
+              file_size: att.size,
+              saved: autoSave && fileUrl !== null,
+            });
+          }
         }
 
         if (newEmails.length > 0) {
@@ -227,6 +270,13 @@ Deno.serve(async (req) => {
             errors.push(`${conta.email}: Failed to insert: ${insertErr.message}`);
           } else {
             totalImported += newEmails.length;
+          }
+        }
+
+        if (newDocuments.length > 0) {
+          const { error: docErr } = await serviceSupabase.from("email_documents").insert(newDocuments);
+          if (docErr) {
+            errors.push(`${conta.email}: Failed to insert documents: ${docErr.message}`);
           }
         }
 
