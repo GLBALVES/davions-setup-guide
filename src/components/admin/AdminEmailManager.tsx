@@ -648,6 +648,10 @@ const AdminEmailManager: React.FC = () => {
   const handleEnviarFromModal = useCallback(async (data: { para: string[]; cc: string[]; cco: string[]; assunto: string; corpo: string; contaId: string }) => {
     const conta = contas.find(c => c.id === data.contaId) || contas[0];
     if (!conta) { toast({ title: "Nenhuma conta configurada", variant: "destructive" }); return; }
+    if (!conta.smtp.servidor || !conta.smtp.usuario || !conta.smtp.senha) {
+      toast({ title: "SMTP não configurado", description: "Preencha usuário e senha SMTP nas configurações da conta.", variant: "destructive" });
+      return;
+    }
     const now = new Date();
     const novoEmail = {
       id: crypto.randomUUID(),
@@ -667,14 +671,34 @@ const AdminEmailManager: React.FC = () => {
       tags: [] as string[],
       pasta: null,
       contaId: data.contaId,
-      status: "entregue" as const,
+      status: "aguardando" as const,
     };
     setEmails(prev => [novoEmail, ...prev]);
     await persistEmailInsert(novoEmail);
     setModalAberto(false);
     setModalMinimizado(false);
-    toast({ title: t('toast.emailSent'), duration: 3000 });
-  }, [contas, toast, t, setEmails, persistEmailInsert]);
+    toast({ title: "Enviando email...", duration: 3000 });
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke("admin-send-email", {
+        body: { contaId: data.contaId, para: data.para, cc: data.cc, cco: data.cco, assunto: data.assunto, corpo: data.corpo },
+      });
+      if (error || result?.error) {
+        const errMsg = result?.error || error?.message || "Falha ao enviar";
+        setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
+        await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+        toast({ title: "Erro ao enviar email", description: errMsg, variant: "destructive" });
+      } else {
+        setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "entregue" as const } : e));
+        await persistEmailUpdate(novoEmail.id, { status: "entregue" });
+        toast({ title: t('toast.emailSent'), duration: 3000 });
+      }
+    } catch (err: any) {
+      setEmails(prev => prev.map(e => e.id === novoEmail.id && e.tipo === "enviado" ? { ...e, status: "aguardando" as const } : e));
+      await persistEmailUpdate(novoEmail.id, { status: "aguardando" });
+      toast({ title: "Erro ao enviar email", description: err.message, variant: "destructive" });
+    }
+  }, [contas, toast, t, setEmails, persistEmailInsert, persistEmailUpdate]);
   const handleCloseModal = useCallback(() => { setModalAberto(false); setModalMinimizado(false); }, []);
 
   const handleMoverParaPasta = useCallback((pastaId: string) => {
