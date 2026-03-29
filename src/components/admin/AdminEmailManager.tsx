@@ -850,7 +850,10 @@ const AdminEmailManager: React.FC = () => {
 
   const handleSalvarConta = useCallback(() => {
     if (!formConta.nome.trim() || !formConta.email.trim()) return;
-    const contaData = { nome: formConta.nome, email: formConta.email, cor: formConta.cor, assinatura: formConta.assinatura, padrao: formConta.padrao, provedor: formConta.provedor, imap: { ...formConta.imap }, smtp: { ...formConta.smtp } };
+    const smtpData = { ...formConta.smtp };
+    if (!smtpData.usuario && formConta.imap.usuario) smtpData.usuario = formConta.imap.usuario;
+    if (!smtpData.senha && formConta.imap.senha) smtpData.senha = formConta.imap.senha;
+    const contaData = { nome: formConta.nome, email: formConta.email, cor: formConta.cor, assinatura: formConta.assinatura, padrao: formConta.padrao, provedor: formConta.provedor, imap: { ...formConta.imap }, smtp: smtpData };
     const isNew = !contaSendoEditada;
     let savedConta: Conta;
     if (contaSendoEditada) {

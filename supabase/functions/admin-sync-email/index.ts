@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { contaId } = body;
 
-    // Fetch account(s)
     let query = supabase.from("email_contas").select("*").eq("user_id", user.id);
     if (contaId) query = query.eq("id", contaId);
     const { data: contas, error: contasErr } = await query;
@@ -61,7 +60,7 @@ Deno.serve(async (req) => {
         const decoder = new TextDecoder();
 
         const readResponse = async (): Promise<string> => {
-          const buf = new Uint8Array(16384);
+          const buf = new Uint8Array(32768);
           const n = await conn.read(buf);
           if (n === null) throw new Error("Connection closed");
           return decoder.decode(buf.subarray(0, n));
@@ -70,7 +69,7 @@ Deno.serve(async (req) => {
         const sendCommand = async (tag: string, cmd: string): Promise<string> => {
           await conn.write(encoder.encode(`${tag} ${cmd}\r\n`));
           let full = "";
-          while (true) {
+          for (let i = 0; i < 100; i++) {
             const chunk = await readResponse();
             full += chunk;
             if (full.includes(`${tag} OK`) || full.includes(`${tag} NO`) || full.includes(`${tag} BAD`)) break;
@@ -100,35 +99,40 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Fetch last 20 messages (or less)
+        // Fetch last 20 messages headers only first
         const startMsg = Math.max(1, totalMessages - 19);
-        const fetchRes = await sendCommand("A3", `FETCH ${startMsg}:${totalMessages} (ENVELOPE BODY.PEEK[TEXT])`);
 
-        // Parse emails from IMAP response
-        const envelopeRegex = /ENVELOPE \(([^)]*(?:\([^)]*\))*[^)]*)\)/g;
-        const messages: Array<{ subject: string; from: string; fromEmail: string; date: string }> = [];
+        // Fetch ENVELOPE for metadata
+        const fetchEnvRes = await sendCommand("A3", `FETCH ${startMsg}:${totalMessages} (UID ENVELOPE)`);
 
-        // Simple parsing: extract subject/from from ENVELOPE
-        const lines = fetchRes.split("\r\n");
-        let currentSubject = "";
-        let currentFrom = "";
-        let currentFromEmail = "";
-        let currentDate = "";
+        // Parse messages from ENVELOPE
+        interface ParsedMsg {
+          uid: string;
+          subject: string;
+          from: string;
+          fromEmail: string;
+          date: string;
+        }
+        const messages: ParsedMsg[] = [];
 
-        for (const line of lines) {
-          const envMatch = line.match(/ENVELOPE \("([^"]*)" "([^"]*)".*?\(\("([^"]*)" [^)]*"([^"]*)" "([^"]*)"\)\)/);
+        // Split response by FETCH lines
+        const fetchLines = fetchEnvRes.split("* ");
+        for (const block of fetchLines) {
+          const uidMatch = block.match(/UID (\d+)/);
+          const envMatch = block.match(/ENVELOPE \("([^"]*)" "([^"]*)".*?\(\("?([^"]*)"?\s+NIL\s+"([^"]*)"\s+"([^"]*)"\)\)/);
           if (envMatch) {
-            currentDate = envMatch[1];
-            currentSubject = envMatch[2] || "(sem assunto)";
-            currentFrom = envMatch[3] || "";
+            const uid = uidMatch ? uidMatch[1] : "";
+            const date = envMatch[1];
+            const subject = envMatch[2] || "(sem assunto)";
+            const fromName = envMatch[3] || "";
             const mailbox = envMatch[4] || "";
             const host = envMatch[5] || "";
-            currentFromEmail = `${mailbox}@${host}`;
-            messages.push({ subject: currentSubject, from: currentFrom, fromEmail: currentFromEmail, date: currentDate });
+            const fromEmail = `${mailbox}@${host}`;
+            messages.push({ uid, subject, from: fromName, fromEmail, date });
           }
         }
 
-        // Get existing email IDs to avoid duplicates
+        // Get existing emails to avoid duplicates
         const { data: existingEmails } = await serviceSupabase
           .from("email_emails")
           .select("email_remetente, assunto, data")
@@ -137,35 +141,97 @@ Deno.serve(async (req) => {
           .eq("tipo", "recebido");
 
         const existingSet = new Set(
-          (existingEmails || []).map(e => `${e.email_remetente}|${e.assunto}|${e.data}`)
+          (existingEmails || []).map((e: any) => `${e.email_remetente}|${e.assunto}|${e.data}`)
         );
 
-        const newEmails = [];
+        // Filter new messages and fetch their bodies
+        const newMessages: Array<ParsedMsg & { body: string }> = [];
         for (const msg of messages) {
           let parsedDate: Date;
           try { parsedDate = new Date(msg.date); } catch { parsedDate = new Date(); }
+          if (isNaN(parsedDate.getTime())) parsedDate = new Date();
           const dateStr = parsedDate.toISOString().slice(0, 10);
           const key = `${msg.fromEmail}|${msg.subject}|${dateStr}`;
 
           if (!existingSet.has(key)) {
-            newEmails.push({
-              user_id: user.id,
-              tipo: "recebido",
-              remetente: msg.from || msg.fromEmail,
-              email_remetente: msg.fromEmail,
-              assunto: msg.subject,
-              preview: msg.subject.slice(0, 100),
-              corpo: "",
-              hora: `${String(parsedDate.getHours()).padStart(2, "0")}:${String(parsedDate.getMinutes()).padStart(2, "0")}`,
-              data: dateStr,
-              lido: false,
-              favorito: false,
-              prioridade: "normal",
-              tags: [],
-              pasta: null,
-              conta_id: conta.id,
-            });
+            newMessages.push({ ...msg, body: "" });
           }
+        }
+
+        // Fetch body for new messages only (by UID)
+        if (newMessages.length > 0) {
+          const uidsToFetch = newMessages.filter(m => m.uid).map(m => m.uid);
+          if (uidsToFetch.length > 0) {
+            const uidList = uidsToFetch.join(",");
+            const bodyRes = await sendCommand("A4", `UID FETCH ${uidList} (UID BODY.PEEK[TEXT])`);
+
+            // Parse body responses - each starts with "* N FETCH"
+            const bodyBlocks = bodyRes.split(/\* \d+ FETCH/);
+            for (const block of bodyBlocks) {
+              const bUidMatch = block.match(/UID (\d+)/);
+              if (!bUidMatch) continue;
+              const uid = bUidMatch[1];
+
+              // Extract body text between literal size marker and closing paren
+              const literalMatch = block.match(/BODY\[TEXT\] \{(\d+)\}\r\n/);
+              let bodyText = "";
+              if (literalMatch) {
+                const startIdx = block.indexOf(literalMatch[0]) + literalMatch[0].length;
+                const len = parseInt(literalMatch[1]);
+                bodyText = block.substring(startIdx, startIdx + len);
+              } else {
+                // Try without literal - inline body
+                const inlineMatch = block.match(/BODY\[TEXT\] "(.*)"/s);
+                if (inlineMatch) bodyText = inlineMatch[1];
+              }
+
+              // Decode base64 if it looks like base64 (no spaces, long lines)
+              const trimmed = bodyText.trim();
+              if (trimmed && /^[A-Za-z0-9+/=\r\n]+$/.test(trimmed) && trimmed.length > 20) {
+                try {
+                  bodyText = atob(trimmed.replace(/\r?\n/g, ""));
+                } catch { /* keep original */ }
+              }
+
+              // Decode quoted-printable
+              bodyText = bodyText.replace(/=\r?\n/g, "").replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+
+              const msgIdx = newMessages.findIndex(m => m.uid === uid);
+              if (msgIdx !== -1) {
+                newMessages[msgIdx].body = bodyText;
+              }
+            }
+          }
+        }
+
+        // Insert new emails
+        const newEmails = [];
+        for (const msg of newMessages) {
+          let parsedDate: Date;
+          try { parsedDate = new Date(msg.date); } catch { parsedDate = new Date(); }
+          if (isNaN(parsedDate.getTime())) parsedDate = new Date();
+          const dateStr = parsedDate.toISOString().slice(0, 10);
+
+          // Strip HTML tags for preview
+          const plainBody = msg.body.replace(/<[^>]*>/g, "").trim();
+
+          newEmails.push({
+            user_id: user.id,
+            tipo: "recebido",
+            remetente: msg.from || msg.fromEmail,
+            email_remetente: msg.fromEmail,
+            assunto: msg.subject,
+            preview: plainBody.slice(0, 200) || msg.subject.slice(0, 100),
+            corpo: msg.body || "",
+            hora: `${String(parsedDate.getHours()).padStart(2, "0")}:${String(parsedDate.getMinutes()).padStart(2, "0")}`,
+            data: dateStr,
+            lido: false,
+            favorito: false,
+            prioridade: "normal",
+            tags: [],
+            pasta: null,
+            conta_id: conta.id,
+          });
         }
 
         if (newEmails.length > 0) {
@@ -178,7 +244,7 @@ Deno.serve(async (req) => {
         }
 
         // LOGOUT
-        try { await sendCommand("A4", "LOGOUT"); } catch {}
+        try { await sendCommand("A5", "LOGOUT"); } catch {}
         try { conn.close(); } catch {}
 
       } catch (err: any) {
