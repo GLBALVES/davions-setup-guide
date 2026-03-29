@@ -410,6 +410,15 @@ const AdminEmailManager: React.FC = () => {
     persistBloqueado,
   } = useAdminEmailData();
 
+  /* ─── Sync i18n language from saved preferences ─── */
+  useEffect(() => {
+    if (!dataLoading && preferencias.idiomaIA) {
+      const langMap: Record<string, string> = { "Português": "pt", "English": "en", "Español": "es", "Inglês": "en", "Espanhol": "es" };
+      const lng = langMap[preferencias.idiomaIA] || "pt";
+      if (i18n.language !== lng) i18n.changeLanguage(lng);
+    }
+  }, [dataLoading, preferencias.idiomaIA, i18n]);
+
   /* ─── Core state ─── */
   const [activeTab, setActiveTab] = useState("entrada");
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
