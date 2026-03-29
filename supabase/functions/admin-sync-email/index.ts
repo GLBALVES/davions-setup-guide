@@ -328,13 +328,14 @@ function decodeMimeHeader(input: string): string {
   });
 }
 
-/* ─── Parse raw email into readable body ─── */
-function parseRawEmail(raw: string): string {
-  if (!raw || !raw.trim()) return "";
+/* ─── Parse raw email into readable body + attachments ─── */
+interface Attachment { fileName: string; mimeType: string; size: number; content: string }
 
-  // Split headers and body
+function parseRawEmailWithAttachments(raw: string): { body: string; attachments: Attachment[] } {
+  if (!raw || !raw.trim()) return { body: "", attachments: [] };
+
   const headerEnd = raw.indexOf("\r\n\r\n");
-  if (headerEnd === -1) return raw.trim();
+  if (headerEnd === -1) return { body: raw.trim(), attachments: [] };
 
   const headers = raw.substring(0, headerEnd);
   const body = raw.substring(headerEnd + 4);
@@ -343,41 +344,22 @@ function parseRawEmail(raw: string): string {
   const encoding = getHeader(headers, "Content-Transfer-Encoding") || "7bit";
   const charset = extractCharset(contentType) || "utf-8";
 
-  // Handle multipart
   if (contentType.toLowerCase().includes("multipart/")) {
     const boundary = extractBoundary(contentType);
     if (boundary) {
-      return parseMultipart(body, boundary);
+      return parseMultipartWithAttachments(body, boundary);
     }
   }
 
-  // Single part
   const decoded = decodeBody(body, encoding.toLowerCase().trim(), charset);
-  return decoded;
+  return { body: decoded, attachments: [] };
 }
 
-function getHeader(headers: string, name: string): string | null {
-  // Handle folded headers (continuation lines starting with whitespace)
-  const unfolded = headers.replace(/\r\n([ \t]+)/g, " ");
-  const regex = new RegExp(`^${name}:\\s*(.+)$`, "im");
-  const match = unfolded.match(regex);
-  return match ? match[1].trim() : null;
-}
-
-function extractCharset(contentType: string): string {
-  const match = contentType.match(/charset="?([^";\s]+)"?/i);
-  return match ? match[1].toLowerCase() : "utf-8";
-}
-
-function extractBoundary(contentType: string): string | null {
-  const match = contentType.match(/boundary="?([^"\s;]+)"?/i);
-  return match ? match[1] : null;
-}
-
-function parseMultipart(body: string, boundary: string): string {
+function parseMultipartWithAttachments(body: string, boundary: string): { body: string; attachments: Attachment[] } {
   const parts = body.split(`--${boundary}`);
   let htmlContent = "";
   let textContent = "";
+  const attachments: Attachment[] = [];
 
   for (const part of parts) {
     const trimmed = part.trim();
@@ -392,28 +374,51 @@ function parseMultipart(body: string, boundary: string): string {
     const partCt = getHeader(partHeaders, "Content-Type") || "text/plain";
     const partEncoding = getHeader(partHeaders, "Content-Transfer-Encoding") || "7bit";
     const partCharset = extractCharset(partCt);
+    const disposition = getHeader(partHeaders, "Content-Disposition") || "";
 
     // Recurse for nested multipart
     if (partCt.toLowerCase().includes("multipart/")) {
       const nestedBoundary = extractBoundary(partCt);
       if (nestedBoundary) {
-        const nested = parseMultipart(partBody, nestedBoundary);
-        if (nested) htmlContent = nested;
+        const nested = parseMultipartWithAttachments(partBody, nestedBoundary);
+        if (nested.body) htmlContent = nested.body;
+        attachments.push(...nested.attachments);
         continue;
       }
     }
 
+    // Detect attachments
+    const isAttachment = disposition.toLowerCase().includes("attachment") ||
+      (disposition.toLowerCase().includes("filename") || partCt.toLowerCase().includes("name="));
     const ctLower = partCt.toLowerCase();
-    if (ctLower.includes("text/html")) {
+
+    if (isAttachment && !ctLower.includes("text/plain") && !ctLower.includes("text/html")) {
+      // Extract filename
+      let fileName = "";
+      const fnMatch = disposition.match(/filename="?([^";\r\n]+)"?/i) || partCt.match(/name="?([^";\r\n]+)"?/i);
+      if (fnMatch) fileName = decodeMimeHeader(fnMatch[1].trim());
+      if (!fileName) fileName = `attachment_${attachments.length + 1}`;
+
+      // Get raw base64 content
+      const cleanBody = partBody.replace(/\r?\n--.*$/, "").trim();
+      const rawContent = partEncoding.toLowerCase().includes("base64") ? cleanBody.replace(/\r?\n/g, "") : "";
+
+      const size = rawContent ? Math.floor(rawContent.length * 3 / 4) : partBody.length;
+
+      attachments.push({
+        fileName,
+        mimeType: partCt.split(";")[0].trim(),
+        size,
+        content: rawContent,
+      });
+    } else if (ctLower.includes("text/html")) {
       htmlContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
     } else if (ctLower.includes("text/plain") && !textContent) {
       textContent = decodeBody(partBody, partEncoding.toLowerCase().trim(), partCharset);
     }
-    // Skip attachments, images, etc.
   }
 
-  // Prefer HTML over plain text
-  return htmlContent || textContent || "";
+  return { body: htmlContent || textContent || "", attachments };
 }
 
 function decodeBody(content: string, encoding: string, charset: string): string {
