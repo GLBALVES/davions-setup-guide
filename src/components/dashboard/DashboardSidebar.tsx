@@ -98,6 +98,10 @@ import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+
+const RESTRICTED_ADMINS: Record<string, string[]> = {
+  "me@palomaschell.com": ["Marketing", "AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
+};
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
@@ -945,10 +949,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </SidebarGroup>
 
             {/* Group popovers */}
-            {translatedGroups.map((group) => {
-              if (group.disabled && !isAdmin) return null;
-              const visibleItems = filterItems(group.items);
-              if (visibleItems.length === 0) return null;
+             {translatedGroups.map((group) => {
+               if (group.disabled && !isAdmin) return null;
+               const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
+               if (restrictedKeys.includes(group.stableKey)) return null;
+               const visibleItems = filterItems(group.items);
+               if (visibleItems.length === 0) return null;
               return (
               <SidebarGroup key={group.stableKey}>
                 <SidebarGroupContent>
@@ -1052,10 +1058,12 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             </Collapsible>
 
             {/* Regular groups */}
-            {translatedGroups.map((group) => {
-              if (group.disabled && !isAdmin) return null;
-              const visibleItems = filterItems(group.items);
-              if (visibleItems.length === 0) return null;
+             {translatedGroups.map((group) => {
+               if (group.disabled && !isAdmin) return null;
+               const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
+               if (restrictedKeys.includes(group.stableKey)) return null;
+               const visibleItems = filterItems(group.items);
+               if (visibleItems.length === 0) return null;
               return (
               <Collapsible
                 key={group.stableKey}
