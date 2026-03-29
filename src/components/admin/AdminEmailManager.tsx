@@ -796,7 +796,7 @@ const AdminEmailManager: React.FC = () => {
       setAssinaturas(prev => prev.map(a => a.id === assinaturaSendoEditada.id ? updated : a));
       persistAssinaturaUpsert(updated);
     } else {
-      const nova = { id: `sig${Date.now()}`, ...formAssinatura };
+      const nova = { id: crypto.randomUUID(), ...formAssinatura };
       setAssinaturas(prev => [...prev, nova]);
       persistAssinaturaUpsert(nova);
     }

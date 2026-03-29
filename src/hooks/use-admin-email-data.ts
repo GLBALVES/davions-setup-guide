@@ -228,8 +228,9 @@ export function useAdminEmailData() {
   }, [userId]);
 
   const persistBloqueado = useCallback(async (email: string) => {
-    await supabase.from("email_bloqueados").insert({ email });
-  }, []);
+    if (!userId) return;
+    await supabase.from("email_bloqueados").insert({ email, user_id: userId });
+  }, [userId]);
 
   return {
     loading, userId,
