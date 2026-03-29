@@ -1499,8 +1499,8 @@ const AdminEmailManager: React.FC = () => {
                     if (preset) {
                       setFormConta(prev => ({
                         ...prev, provedor: v,
-                        imap: { ...prev.imap, ...preset.imap },
-                        smtp: { ...prev.smtp, ...preset.smtp },
+                        imap: { ...prev.imap, ...preset.imap, ativo: true },
+                        smtp: { ...prev.smtp, ...preset.smtp, ativo: true },
                       }));
                     } else {
                       setFormConta(prev => ({ ...prev, provedor: v }));
