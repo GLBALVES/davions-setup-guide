@@ -1,20 +1,26 @@
 
+O erro foi de lugar mesmo: hoje o refresh já existe no `AdminLayout`, mas a tela `/admin/email` também tem um header próprio dentro de `AdminEmailManager`, e é esse header que o usuário enxerga como barra principal do módulo.
 
-## Problema
+Plano direto:
+1. Remover a dependência visual do refresh no `AdminLayout` para esse caso e colocar o botão no header interno de `src/components/admin/AdminEmailManager.tsx`
+2. Posicionar o ícone de refresh no grupo de ações do topo, ao lado do sino, antes dos outros ícones
+3. Fazer o clique executar `window.location.reload()`
+4. Envolver com `Tooltip` e manter o mesmo padrão visual dos outros botões (`variant="outline" size="icon" className="h-8 w-8"`)
+5. Garantir que continue funcionando nos 3 idiomas sem quebrar layout do módulo
 
-O botão de refresh foi adicionado ao `DashboardHeader.tsx`, mas a página `/admin/email` usa o `AdminLayout`, que não inclui esse header. Por isso o botão não aparece ali.
+Arquivos:
+- `src/components/admin/AdminEmailManager.tsx` — adicionar o botão no lugar certo
+- opcional: `src/components/admin/AdminLayout.tsx` — remover o refresh global se estiver redundante e duplicando a ação em outras telas admin
 
-## Solução
+Resultado esperado:
+```text
+/admin/email
+topo do módulo de email
+[sino] [refresh] [idioma] [config] [compor]
+```
 
-Adicionar um header ao `AdminLayout` com o botão de refresh (e opcionalmente o sino de notificações), similar ao `DashboardHeader`.
-
-### Alteração no arquivo `src/components/admin/AdminLayout.tsx`
-
-1. Importar `RefreshCw` de `lucide-react` e `Tooltip`/`TooltipTrigger`/`TooltipContent`
-2. Adicionar um `<header>` dentro do `<main>` com:
-   - Botão de refresh com `window.location.reload()`
-   - Mesmo estilo visual do DashboardHeader (`h-14 border-b`)
-3. O conteúdo (`children`) fica abaixo do header
-
-Resultado: o botão de refresh aparecerá no topo de todas as páginas admin, incluindo `/admin/email`.
-
+Detalhe técnico:
+- O header visível do módulo está em `AdminEmailManager.tsx` nas linhas do bloco:
+  - sino (`Bell`) já existe
+  - depois dele entram idioma, config e compose
+- O botão certo deve entrar exatamente nesse bloco, não no `DashboardHeader` e não só no layout externo admin
