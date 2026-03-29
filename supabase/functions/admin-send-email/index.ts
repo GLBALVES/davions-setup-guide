@@ -40,8 +40,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Account not found" }), { status: 404, headers: corsHeaders });
     }
 
-    if (!conta.smtp_servidor || !conta.smtp_usuario || !conta.smtp_senha) {
-      return new Response(JSON.stringify({ error: "SMTP not configured. Please fill in SMTP user and password in account settings." }), { status: 400, headers: corsHeaders });
+    // Fallback: use IMAP credentials when SMTP credentials are empty
+    const smtpUser = conta.smtp_usuario || conta.imap_usuario;
+    const smtpPass = conta.smtp_senha || conta.imap_senha;
+    const smtpServer = conta.smtp_servidor || conta.imap_servidor;
+
+    if (!smtpServer || !smtpUser || !smtpPass) {
+      const missing = [];
+      if (!smtpServer) missing.push("servidor SMTP");
+      if (!smtpUser) missing.push("usuário SMTP/IMAP");
+      if (!smtpPass) missing.push("senha SMTP/IMAP");
+      return new Response(JSON.stringify({ error: `SMTP incompleto. Faltam: ${missing.join(", ")}. Configure nas configurações da conta.` }), { status: 400, headers: corsHeaders });
     }
 
     // Build email using raw SMTP via Deno's built-in TCP
