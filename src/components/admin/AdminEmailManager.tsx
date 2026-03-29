@@ -1218,14 +1218,20 @@ const AdminEmailManager: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: c.cor }} />
                   <div>
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-wrap gap-1">
                       <span className="text-xs font-medium">{c.nome}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{c.email}</span>
-                      {c.padrao && <span className="ml-2 text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium bg-primary text-primary-foreground">{t('settings.defaultAccount')}</span>}
+                      <span className="text-xs text-muted-foreground">{c.email}</span>
+                      {c.padrao && <span className="text-[9px] px-1.5 py-0 rounded-full leading-4 font-medium bg-primary text-primary-foreground">{t('settings.defaultAccount')}</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${c.imap.ativo ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>IMAP {c.imap.ativo ? "✓" : "✗"}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${c.smtp.ativo ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>SMTP {c.smtp.ativo ? "✓" : "✗"}</span>
+                      <span className="text-[9px] text-muted-foreground">{c.provedor}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => { setContaSendoEditada(c); setFormConta({ nome: c.nome, email: c.email, cor: c.cor, assinatura: c.assinatura, padrao: c.padrao, provedor: c.provedor, imap: { ...c.imap }, smtp: { ...c.smtp } }); setContaModalTab("servidor"); setTestResult(null); setModalContaAberto(true); }}><Wifi className="w-3 h-3" /> {t('accounts.server') || 'Servidor'}</Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setContaSendoEditada(c); setFormConta({ nome: c.nome, email: c.email, cor: c.cor, assinatura: c.assinatura, padrao: c.padrao, provedor: c.provedor, imap: { ...c.imap }, smtp: { ...c.smtp } }); setContaModalTab("geral"); setTestResult(null); setModalContaAberto(true); }}><Pencil className="w-3.5 h-3.5" /></Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleExcluirConta(c.id)} disabled={contas.length <= 1}><Trash2 className="w-3.5 h-3.5" /></Button>
                 </div>
