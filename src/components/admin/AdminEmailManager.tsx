@@ -410,6 +410,15 @@ const AdminEmailManager: React.FC = () => {
     persistBloqueado,
   } = useAdminEmailData();
 
+  /* ─── Sync i18n language from saved preferences ─── */
+  useEffect(() => {
+    if (!dataLoading && preferencias.idiomaIA) {
+      const langMap: Record<string, string> = { "Português": "pt", "English": "en", "Español": "es", "Inglês": "en", "Espanhol": "es" };
+      const lng = langMap[preferencias.idiomaIA] || "pt";
+      if (i18n.language !== lng) i18n.changeLanguage(lng);
+    }
+  }, [dataLoading, preferencias.idiomaIA, i18n]);
+
   /* ─── Core state ─── */
   const [activeTab, setActiveTab] = useState("entrada");
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
@@ -1364,6 +1373,22 @@ const AdminEmailManager: React.FC = () => {
               />
             )}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8"><Globe className="w-4 h-4" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => { i18n.changeLanguage("pt"); setPreferencias(prev => ({ ...prev, idiomaIA: "Português" })); persistPreferencias({ ...preferencias, idiomaIA: "Português" }, respostaAutomatica); }}>
+                🇧🇷 {t('languages.portuguese')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { i18n.changeLanguage("en"); setPreferencias(prev => ({ ...prev, idiomaIA: "English" })); persistPreferencias({ ...preferencias, idiomaIA: "English" }, respostaAutomatica); }}>
+                🇺🇸 {t('languages.english')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { i18n.changeLanguage("es"); setPreferencias(prev => ({ ...prev, idiomaIA: "Español" })); persistPreferencias({ ...preferencias, idiomaIA: "Español" }, respostaAutomatica); }}>
+                🇪🇸 {t('languages.spanish')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => {
             abasInicializadas.current.add("config"); setActiveTab("config"); setSelectedEmailId(null); setMobileShowPanel(false);
           }}><Settings className="w-4 h-4" /></Button>
