@@ -45,7 +45,7 @@ import { useAdminEmailData } from "@/hooks/use-admin-email-data";
 /* ─── Types ─── */
 type Prioridade = "urgente" | "alta" | "normal" | "baixa";
 type ServerConfig = { ativo: boolean; servidor: string; porta: number; seguranca: "ssl" | "starttls" | "nenhuma"; usuario: string; senha: string };
-type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "custom"; imap: ServerConfig; smtp: ServerConfig };
+type Conta = { id: string; nome: string; email: string; cor: string; assinatura: string; padrao: boolean; provedor: "gmail" | "outlook" | "yahoo" | "icloud" | "hotmail" | "hostinger" | "custom"; imap: ServerConfig; smtp: ServerConfig };
 type PastaRegra = { tipo: "remetente" | "assunto" | "tag"; valor: string };
 type Pasta = { id: string; nome: string; icone: string; cor: string; regras: PastaRegra[]; emailIds: string[] };
 type Assinatura = { id: string; nome: string; conteudo: string; contaIds: string[] };
