@@ -1,23 +1,17 @@
 
 
-## Adicionar Hostinger como preset de provedor
+## Mover seletor de provedor para fora das abas do modal
 
-### O que será feito
-Adicionar "Hostinger" como opção de provedor no módulo de e-mail, com preenchimento automático das configurações IMAP/SMTP.
+### Problema
+O seletor de provedor (Gmail, Outlook, Hostinger, etc.) está dentro da aba "Geral" do modal. Quando o usuário clica em "Servidor" na lista de contas, o modal abre direto na aba "Servidor" — e o seletor de provedor fica escondido na outra aba. Por isso parece que os presets não existem.
 
-### Alterações no arquivo `src/components/admin/AdminEmailManager.tsx`
+### Solução
+Mover o campo **Provedor** para o topo do modal, acima das abas, visível em ambas as views (Geral e Servidor). Assim, ao abrir o modal em qualquer aba, o usuário sempre vê e pode trocar o provedor, que preenche automaticamente os campos IMAP/SMTP.
 
-**1. Adicionar preset na linha 88** (após `icloud`):
-```typescript
-hostinger: { imap: { servidor: "imap.hostinger.com", porta: 993, seguranca: "ssl" }, smtp: { servidor: "smtp.hostinger.com", porta: 465, seguranca: "ssl" } },
-```
+### Alteração
+Arquivo: `src/components/admin/AdminEmailManager.tsx`
 
-**2. Adicionar opção no Select** (após a linha do iCloud, ~1521):
-```tsx
-<SelectItem value="hostinger">Hostinger</SelectItem>
-```
-
-**3. Atualizar o tipo `Conta["provedor"]`** para incluir `"hostinger"` se houver tipagem restrita.
-
-Uma alteração mínima em um único arquivo.
+1. Remover o bloco do `Select` de provedor de dentro da seção `contaModalTab === "geral"` (linhas ~1502-1527)
+2. Colocar esse mesmo bloco logo após o `DialogDescription` e antes dos botões de aba (Geral/Servidor), para que fique sempre visível
+3. Manter toda a lógica de presets igual — ao selecionar um provedor, IMAP/SMTP são preenchidos automaticamente
 
