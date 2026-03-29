@@ -726,7 +726,7 @@ const AdminEmailManager: React.FC = () => {
       setPastas(prev => prev.map(p => p.id === pastaSendoEditada.id ? updated : p));
       persistPastaUpsert(updated);
     } else {
-      const nova = { id: `p${Date.now()}`, ...formPasta, emailIds: [] };
+      const nova = { id: crypto.randomUUID(), ...formPasta, emailIds: [] };
       setPastas(prev => [...prev, nova]);
       persistPastaUpsert(nova);
     }
