@@ -726,7 +726,7 @@ const AdminEmailManager: React.FC = () => {
       setPastas(prev => prev.map(p => p.id === pastaSendoEditada.id ? updated : p));
       persistPastaUpsert(updated);
     } else {
-      const nova = { id: `p${Date.now()}`, ...formPasta, emailIds: [] };
+      const nova = { id: crypto.randomUUID(), ...formPasta, emailIds: [] };
       setPastas(prev => [...prev, nova]);
       persistPastaUpsert(nova);
     }
@@ -768,7 +768,7 @@ const AdminEmailManager: React.FC = () => {
       });
       persistContaUpsert(updated);
     } else {
-      const newId = `c${Date.now()}`;
+      const newId = crypto.randomUUID();
       const nova = { id: newId, ...contaData };
       setContas(prev => {
         let list = [...prev, nova];
@@ -796,7 +796,7 @@ const AdminEmailManager: React.FC = () => {
       setAssinaturas(prev => prev.map(a => a.id === assinaturaSendoEditada.id ? updated : a));
       persistAssinaturaUpsert(updated);
     } else {
-      const nova = { id: `sig${Date.now()}`, ...formAssinatura };
+      const nova = { id: crypto.randomUUID(), ...formAssinatura };
       setAssinaturas(prev => [...prev, nova]);
       persistAssinaturaUpsert(nova);
     }

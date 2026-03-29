@@ -127,8 +127,9 @@ export function useAdminEmailData() {
   }, []);
 
   const persistEmailInsert = useCallback(async (email: EmailType) => {
+    if (!userId) return;
     const row: any = {
-      id: email.id, tipo: email.tipo, remetente: email.remetente, email_remetente: email.emailRemetente,
+      id: email.id, user_id: userId, tipo: email.tipo, remetente: email.remetente, email_remetente: email.emailRemetente,
       assunto: email.assunto, preview: email.preview, corpo: email.corpo, hora: email.hora, data: email.data,
       lido: email.lido, favorito: email.favorito, prioridade: email.prioridade, tags: email.tags,
       pasta: email.pasta, conta_id: email.contaId,
@@ -136,73 +137,79 @@ export function useAdminEmailData() {
     if (email.tipo === "enviado") { row.destinatario = email.destinatario; row.email_destinatario = email.emailDestinatario; row.status = email.status; }
     if (email.tipo === "spam") { row.motivo_spam = (email as EmailSpam).motivoSpam; }
     await supabase.from("email_emails").insert(row);
-  }, []);
+  }, [userId]);
 
   const persistEmailDelete = useCallback(async (id: string) => {
     await supabase.from("email_emails").delete().eq("id", id);
   }, []);
 
   const persistContaUpsert = useCallback(async (conta: Conta) => {
+    if (!userId) return;
     await supabase.from("email_contas").upsert({
-      id: conta.id, nome: conta.nome, email: conta.email, cor: conta.cor, assinatura: conta.assinatura,
+      id: conta.id, user_id: userId, nome: conta.nome, email: conta.email, cor: conta.cor, assinatura: conta.assinatura,
       padrao: conta.padrao, provedor: conta.provedor,
       imap_ativo: conta.imap.ativo, imap_servidor: conta.imap.servidor, imap_porta: conta.imap.porta,
       imap_seguranca: conta.imap.seguranca, imap_usuario: conta.imap.usuario, imap_senha: conta.imap.senha,
       smtp_ativo: conta.smtp.ativo, smtp_servidor: conta.smtp.servidor, smtp_porta: conta.smtp.porta,
       smtp_seguranca: conta.smtp.seguranca, smtp_usuario: conta.smtp.usuario, smtp_senha: conta.smtp.senha,
     });
-  }, []);
+  }, [userId]);
 
   const persistContaDelete = useCallback(async (id: string) => {
     await supabase.from("email_contas").delete().eq("id", id);
   }, []);
 
   const persistPastaUpsert = useCallback(async (pasta: Pasta) => {
+    if (!userId) return;
     await supabase.from("email_pastas").upsert({
-      id: pasta.id, nome: pasta.nome, icone: pasta.icone, cor: pasta.cor,
+      id: pasta.id, user_id: userId, nome: pasta.nome, icone: pasta.icone, cor: pasta.cor,
       regras: pasta.regras as any, email_ids: pasta.emailIds,
     });
-  }, []);
+  }, [userId]);
 
   const persistPastaDelete = useCallback(async (id: string) => {
     await supabase.from("email_pastas").delete().eq("id", id);
   }, []);
 
   const persistAssinaturaUpsert = useCallback(async (assinatura: Assinatura) => {
+    if (!userId) return;
     await supabase.from("email_assinaturas").upsert({
-      id: assinatura.id, nome: assinatura.nome, conteudo: assinatura.conteudo, conta_ids: assinatura.contaIds,
+      id: assinatura.id, user_id: userId, nome: assinatura.nome, conteudo: assinatura.conteudo, conta_ids: assinatura.contaIds,
     });
-  }, []);
+  }, [userId]);
 
   const persistTemplateUpsert = useCallback(async (template: Template) => {
+    if (!userId) return;
     await supabase.from("email_templates").upsert({
-      id: template.id, nome: template.nome, categoria: template.categoria, assunto: template.assunto,
+      id: template.id, user_id: userId, nome: template.nome, categoria: template.categoria, assunto: template.assunto,
       corpo: template.corpo, tom: template.tom, criado_por_ia: template.criadoPorIA,
       criado_em: template.criadoEm.toISOString(), usos: template.usos,
     });
-  }, []);
+  }, [userId]);
 
   const persistTemplateDelete = useCallback(async (id: string) => {
     await supabase.from("email_templates").delete().eq("id", id);
   }, []);
 
   const persistGrupoUpsert = useCallback(async (grupo: Grupo) => {
-    await supabase.from("email_grupos").upsert({ id: grupo.id, nome: grupo.nome });
+    if (!userId) return;
+    await supabase.from("email_grupos").upsert({ id: grupo.id, user_id: userId, nome: grupo.nome });
     await supabase.from("email_grupo_contatos").delete().eq("grupo_id", grupo.id);
     if (grupo.contatos.length > 0) {
-      await supabase.from("email_grupo_contatos").insert(grupo.contatos.map(c => ({ grupo_id: grupo.id, nome: c.nome, email: c.email })));
+      await supabase.from("email_grupo_contatos").insert(grupo.contatos.map(c => ({ grupo_id: grupo.id, user_id: userId, nome: c.nome, email: c.email })));
     }
-  }, []);
+  }, [userId]);
 
   const persistGrupoDelete = useCallback(async (id: string) => {
     await supabase.from("email_grupos").delete().eq("id", id);
   }, []);
 
   const persistRegraUpsert = useCallback(async (regra: RegraSegmentacao) => {
+    if (!userId) return;
     await supabase.from("email_regras_segmentacao").upsert({
-      id: regra.id, se_tipo: regra.seTipo, se_valor: regra.seValor, entao_tipo: regra.entaoTipo, entao_valor: regra.entaoValor,
+      id: regra.id, user_id: userId, se_tipo: regra.seTipo, se_valor: regra.seValor, entao_tipo: regra.entaoTipo, entao_valor: regra.entaoValor,
     });
-  }, []);
+  }, [userId]);
 
   const persistRegraDelete = useCallback(async (id: string) => {
     await supabase.from("email_regras_segmentacao").delete().eq("id", id);
@@ -221,8 +228,9 @@ export function useAdminEmailData() {
   }, [userId]);
 
   const persistBloqueado = useCallback(async (email: string) => {
-    await supabase.from("email_bloqueados").insert({ email });
-  }, []);
+    if (!userId) return;
+    await supabase.from("email_bloqueados").insert({ email, user_id: userId });
+  }, [userId]);
 
   return {
     loading, userId,
