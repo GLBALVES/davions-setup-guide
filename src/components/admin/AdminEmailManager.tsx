@@ -1145,15 +1145,17 @@ const AdminEmailManager: React.FC = () => {
   };
 
   /* ═══ Tab: Por Remetente ═══ */
-  const remetenteGroups = useMemo(() => {
-    const map = new Map<string, EmailRecebido[]>();
-    recebidos.forEach(e => { if (!map.has(e.emailRemetente)) map.set(e.emailRemetente, []); map.get(e.emailRemetente)!.push(e); });
-    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [recebidos]);
-
   const renderPorRemetente = () => (<div className="flex h-full relative">
-    <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}><ScrollArea className="flex-1">
-      {remetenteGroups.map(([emailAddr, groupEmails]) => {
+    <div className={`${isCompact && mobileShowPanel ? "hidden" : ""} ${isCompact ? "w-full" : "w-[260px]"} border-r border-border flex flex-col shrink-0`}>
+      <div className="p-2 border-b border-border flex gap-1.5 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input placeholder={t('emailList.searchEmails')} value={filtroTextoInput} onChange={e => setFiltroTextoInput(e.target.value)} className="pl-8 pr-7 h-8 text-xs" />
+          {filtroTextoInput && <button onClick={() => { setFiltroTextoInput(""); setFiltroTexto(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+        </div>
+      </div>
+      <ScrollArea className="flex-1">
+      {filteredRemetenteGroups.map(([emailAddr, groupEmails]) => {
         const first = groupEmails[0]; const isExpanded = expandedRemetente === emailAddr;
         const sorted = [...groupEmails].sort((a, b) => b.hora.localeCompare(a.hora));
         return (<div key={emailAddr}>
