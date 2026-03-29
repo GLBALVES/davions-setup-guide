@@ -534,9 +534,10 @@ const AdminEmailManager: React.FC = () => {
   const isEmailLido = useCallback((email: EmailType): boolean => email.lido || emailsLidos.has(email.id), [emailsLidos]);
   const filterByAccount = useCallback(<T extends EmailType>(list: T[]): T[] => contaAtiva === "todas" ? list : list.filter(e => e.contaId === contaAtiva), [contaAtiva]);
 
-  const sortDesc = useCallback(<T extends EmailType>(list: T[]): T[] => list.sort((a, b) => {
-    const da = `${b.data} ${b.hora}`.localeCompare(`${a.data} ${a.hora}`);
-    return da !== 0 ? da : 0;
+  const sortDesc = useCallback(<T extends EmailType>(list: T[]): T[] => [...list].sort((a, b) => {
+    const dateA = `${a.data} ${a.hora}`;
+    const dateB = `${b.data} ${b.hora}`;
+    return dateB.localeCompare(dateA);
   }), []);
   const recebidos = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "recebido") as EmailRecebido[])), [emails, filterByAccount, sortDesc]);
   const enviados = useMemo(() => sortDesc(filterByAccount(emails.filter(e => e.tipo === "enviado") as EmailEnviado[])), [emails, filterByAccount, sortDesc]);
@@ -718,7 +719,7 @@ const AdminEmailManager: React.FC = () => {
       } else {
         const imported = result?.imported || 0;
         if (imported > 0) {
-          const { data: emailsRes } = await supabase.from("email_emails").select("*");
+          const { data: emailsRes } = await supabase.from("email_emails").select("*").order("created_at", { ascending: false });
           if (emailsRes) {
             const mapRow = (row: any) => {
               const base = { id: row.id, assunto: row.assunto, preview: row.preview, corpo: row.corpo, hora: row.hora, data: row.data, lido: row.lido, favorito: row.favorito, prioridade: row.prioridade, tags: row.tags || [], pasta: row.pasta, contaId: row.conta_id || "" };

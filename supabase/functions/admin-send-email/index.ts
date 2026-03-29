@@ -40,15 +40,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Account not found" }), { status: 404, headers: corsHeaders });
     }
 
-    if (!conta.smtp_servidor || !conta.smtp_usuario || !conta.smtp_senha) {
-      return new Response(JSON.stringify({ error: "SMTP not configured. Please fill in SMTP user and password in account settings." }), { status: 400, headers: corsHeaders });
+    // Fallback: use IMAP credentials when SMTP credentials are empty
+    const smtpUser = conta.smtp_usuario || conta.imap_usuario;
+    const smtpPass = conta.smtp_senha || conta.imap_senha;
+    const smtpServer = conta.smtp_servidor || conta.imap_servidor;
+
+    if (!smtpServer || !smtpUser || !smtpPass) {
+      const missing = [];
+      if (!smtpServer) missing.push("servidor SMTP");
+      if (!smtpUser) missing.push("usuário SMTP/IMAP");
+      if (!smtpPass) missing.push("senha SMTP/IMAP");
+      return new Response(JSON.stringify({ error: `SMTP incompleto. Faltam: ${missing.join(", ")}. Configure nas configurações da conta.` }), { status: 400, headers: corsHeaders });
     }
 
     // Build email using raw SMTP via Deno's built-in TCP
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    const smtpHost = conta.smtp_servidor;
+    const smtpHost = smtpServer;
     const smtpPort = conta.smtp_porta || 465;
     const useSSL = conta.smtp_seguranca === "ssl";
     const useStartTLS = conta.smtp_seguranca === "starttls";
@@ -90,10 +99,10 @@ Deno.serve(async (req) => {
     const authLoginRes = await sendCommand("AUTH LOGIN");
     if (!authLoginRes.startsWith("334")) throw new Error("AUTH LOGIN failed: " + authLoginRes);
 
-    const userRes = await sendCommand(btoa(conta.smtp_usuario));
+    const userRes = await sendCommand(btoa(smtpUser));
     if (!userRes.startsWith("334")) throw new Error("AUTH user failed: " + userRes);
 
-    const passRes = await sendCommand(btoa(conta.smtp_senha));
+    const passRes = await sendCommand(btoa(smtpPass));
     if (!passRes.startsWith("235")) throw new Error("AUTH password failed: " + passRes);
 
     // MAIL FROM
