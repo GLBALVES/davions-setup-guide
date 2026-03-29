@@ -109,6 +109,18 @@ export function DashboardHeader() {
         <Tooltip>
           <TooltipTrigger asChild>
             <button
+              onClick={() => window.location.reload()}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
+            >
+              <RefreshCw size={15} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Refresh</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
               onClick={() => setAssistantOpen(true)}
               className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-200"
             >
