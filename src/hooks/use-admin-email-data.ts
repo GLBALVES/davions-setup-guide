@@ -205,10 +205,11 @@ export function useAdminEmailData() {
   }, []);
 
   const persistRegraUpsert = useCallback(async (regra: RegraSegmentacao) => {
+    if (!userId) return;
     await supabase.from("email_regras_segmentacao").upsert({
-      id: regra.id, se_tipo: regra.seTipo, se_valor: regra.seValor, entao_tipo: regra.entaoTipo, entao_valor: regra.entaoValor,
+      id: regra.id, user_id: userId, se_tipo: regra.seTipo, se_valor: regra.seValor, entao_tipo: regra.entaoTipo, entao_valor: regra.entaoValor,
     });
-  }, []);
+  }, [userId]);
 
   const persistRegraDelete = useCallback(async (id: string) => {
     await supabase.from("email_regras_segmentacao").delete().eq("id", id);
