@@ -1,112 +1,76 @@
 
-## Diagnóstico
+Do I know what the issue is? Sim.
 
-Verifiquei o módulo e hoje o comportamento está assim:
+O problema real não é mais salvar no banco. O módulo hoje já tem:
+- aba `config` com lista de contas
+- modal de conta com abas `Geral` e `Servidor`
+- campos IMAP/SMTP
+- troca para `setActiveTab("config")` ao salvar
 
-1. A conta está sendo salva no banco
-- Há registro em `email_contas` para `partners@davions.com`.
-- Então o problema principal não é mais a gravação.
+Mas o fluxo continua ruim por 3 motivos:
 
-2. A “área de configuração” existe, mas não aparece automaticamente após adicionar
-- A lista de contas e o botão “Adicionar conta” ficam dentro da aba `config`.
-- Ao salvar uma nova conta, o código apenas fecha o modal (`setModalContaAberto(false)`), mas não muda para a aba de configuração.
-- Se você estiver em outra aba, parece que “nada abriu”.
+1. Depois de adicionar a conta, o modal fecha
+- o usuário não cai direto nas funções de configuração
+- ele volta só para a lista de contas
 
-3. A tela de configuração da conta está incompleta
-- Existe estado para `contaModalTab` com `"geral" | "servidor"`.
-- Porém o modal atual mostra só:
-  - nome
-  - email
-  - cor
-  - assinatura
-  - conta padrão
-- Os campos de configuração de servidor (IMAP/SMTP) não estão renderizados no modal, embora existam no estado e no banco.
-- Isso explica sua percepção: faltam as funções de “configurar”.
+2. As funções de servidor ficam “escondidas”
+- elas só aparecem na aba `Servidor`
+- e IMAP/SMTP só expandem se os toggles estiverem ativos
 
-4. Há um aviso de UI no modal
-- O console mostra warning de `DialogFooter` recebendo ref indevido e também falta de descrição em `DialogContent`.
-- Não parece ser a causa principal do fluxo, mas vale corrigir junto.
+3. A UX não replica o comportamento esperado do projeto original
+- salvar conta deveria levar imediatamente para configurar
+- não apenas mostrar a conta cadastrada
 
-## O que vou ajustar
+Arquivos isolados:
+- `src/components/admin/AdminEmailManager.tsx`
+- `src/components/ui/dialog.tsx`
+- `src/components/ui/select.tsx` (warning de ref, limpeza separada)
 
-### 1) Fazer a configuração aparecer logo após adicionar
-No salvar da conta nova:
-- manter o salvamento
-- fechar o modal
-- navegar automaticamente para a aba `config`
-- opcionalmente destacar/selecionar a conta recém-criada
+Plano de correção:
 
-Fluxo esperado:
+1. Ajustar o fluxo pós-criação da conta
+- em `handleSalvarConta`, quando for conta nova:
+  - persistir
+  - manter a conta selecionada
+  - ir para a aba `config`
+  - reabrir imediatamente o modal da própria conta em modo edição
+  - abrir direto em `contaModalTab = "servidor"`
+
+2. Mostrar a configuração de servidor sem esconder tudo
+- no modal da conta:
+  - manter abas `Geral` e `Servidor`
+  - ao abrir uma conta recém-criada, entrar em `Servidor`
+  - deixar claro visualmente que ali ficam IMAP e SMTP
+- para provedores conhecidos, preencher preset e já ativar `imap.ativo` e `smtp.ativo`
+
+3. Melhorar o fluxo de edição
+- ao clicar em editar na lista de contas:
+  - abrir a mesma conta com todos os dados carregados
+  - permitir alternar entre `Geral` e `Servidor`
+- opcional: adicionar botão “Configurar servidor” na própria lista, levando direto para a aba `Servidor`
+
+4. Corrigir a sensação de “não apareceu nada”
+- na aba `config`, destacar a conta recém-criada
+- se necessário, mostrar um bloco/resumo logo abaixo do cadastro:
+  - provedor
+  - status IMAP
+  - status SMTP
+  - ação rápida para configurar
+
+5. Limpar warnings que atrapalham a estabilidade da UI
+- revisar `DialogFooter` / `DialogContent`
+- revisar o uso do `Select` para eliminar o warning de ref no console
+- isso não é a causa principal do fluxo, mas precisa ser corrigido junto
+
+Resultado esperado:
 ```text
-Adicionar conta -> Salvar -> continuar na aba Configurações
--> ver a conta criada imediatamente -> poder editar/configurar
+Adicionar conta
+→ salvar
+→ ir para Configurações
+→ reabrir a conta automaticamente
+→ mostrar direto a aba Servidor
+→ exibir IMAP/SMTP prontos para configurar
 ```
 
-### 2) Restaurar a tela completa de configuração da conta
-No modal de conta, vou implementar as seções que já estão previstas pelo estado:
-
-- Aba/segmento “Geral”
-  - nome
-  - email
-  - cor
-  - assinatura
-  - conta padrão
-  - provedor
-
-- Aba/segmento “Servidor”
-  - IMAP:
-    - ativo
-    - servidor
-    - porta
-    - segurança
-    - usuário
-    - senha
-  - SMTP:
-    - ativo
-    - servidor
-    - porta
-    - segurança
-    - usuário
-    - senha
-
-### 3) Usar os presets por provedor
-Como já existem presets para:
-- Gmail
-- Outlook
-- Hotmail
-- Yahoo
-- iCloud
-
-Vou fazer o seletor de provedor preencher automaticamente IMAP/SMTP, sem impedir edição manual quando for `custom`.
-
-### 4) Melhorar o fluxo de edição
-Na listagem de contas da aba Configurações:
-- ao clicar em editar, abrir o mesmo modal completo
-- carregar todos os dados IMAP/SMTP já salvos
-- permitir trocar entre “Geral” e “Servidor”
-
-### 5) Corrigir warnings de dialog
-Vou ajustar os modais para:
-- usar estrutura compatível com refs
-- incluir descrição acessível no `DialogContent`
-
-## Resultado esperado depois da implementação
-
-Quando adicionar um email:
-- a conta será salva
-- você verá imediatamente a área de Configurações
-- a conta aparecerá na lista
-- ao abrir/editar, surgirão as funções completas de configurar IMAP e SMTP
-
-## Detalhes técnicos
-
-Arquivos a ajustar:
-- `src/components/admin/AdminEmailManager.tsx`
-- possivelmente `src/components/ui/dialog.tsx` se o warning de ref vier da implementação base
-
-Pontos específicos:
-- `handleSalvarConta` deve redirecionar para `config` após criar/editar
-- o modal da conta precisa renderizar os campos de `formConta.imap` e `formConta.smtp`
-- `contaModalTab` atualmente existe, mas não está sendo usado visualmente
-- os dados persistidos já suportam essa configuração no hook e no banco
-
+Detalhe importante:
+hoje as funções de configurar já existem no código, mas estão mal encadeadas no fluxo. A correção principal é transformar “cadastro + fechamento” em “cadastro + continuação imediata da configuração”.
