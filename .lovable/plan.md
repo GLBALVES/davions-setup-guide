@@ -1,52 +1,108 @@
 
+## Revisão atenta: por que ainda não resolveu
 
-## Relatório de Problemas Encontrados
+Encontrei 3 causas objetivas no código e no banco:
 
-### 1. Ordenação dos emails (último primeiro)
-**Problema**: A query no `use-admin-email-data.ts` (linha 83) busca emails sem `ORDER BY`. Além disso, as listas `recebidos`, `enviados`, etc. no `AdminEmailManager.tsx` (linhas 537-540) não aplicam `.sort()`.
-
-**Correção**:
-- Em `use-admin-email-data.ts`: adicionar `.order("created_at", { ascending: false })` na query de `email_emails`
-- Em `AdminEmailManager.tsx`: as listas filtradas (`filteredRecebidos`, `enviados`, etc.) devem ser ordenadas por `data` + `hora` DESC
-
-### 2. Corpo do email vazio (não veio o texto)
-**Problema**: A edge function `admin-sync-email` faz `BODY.PEEK[TEXT]` no IMAP mas **nunca extrai o conteúdo do body** da resposta. O regex na linha 119 só parseia o ENVELOPE. O campo `corpo` é sempre salvo como `""` (string vazia). Confirmado no banco: todos os emails têm `corpo_vazio: true`.
-
-**Correção**: Reescrever o parser na edge function para extrair o body text do IMAP FETCH response e salvá-lo no campo `corpo`.
-
-### 3. SMTP não configurado (erro ao responder)
-**Problema**: A conta Hostinger tem `smtp_servidor: smtp.hostinger.com` e `smtp_porta: 465` mas **`smtp_usuario` e `smtp_senha` estão vazios** (strings vazias, não NULL). Por isso o check na linha 43 do `admin-send-email` (`!conta.smtp_usuario || !conta.smtp_senha`) retorna true e bloqueia o envio.
-
-**Correção**: Ao salvar a conta com IMAP configurado, auto-preencher `smtp_usuario` com o mesmo valor de `imap_usuario` (e `smtp_senha` com `imap_senha`) quando estiverem vazios — já que para Hostinger geralmente são as mesmas credenciais. Além disso, mostrar um aviso visual quando SMTP está incompleto.
-
-### 4. Horário de envio possivelmente errado
-**Problema**: O `hora` é extraído do campo ENVELOPE date do IMAP que vem em UTC. O frontend salva com `parsedDate.getHours()` que converte para o timezone local do servidor (Deno edge function), não do usuário. Pode haver diferença de fuso.
-
-**Correção**: Salvar o timestamp completo ISO no campo `data` ou usar `created_at` para exibição, e ajustar no frontend para o timezone do usuário.
-
----
-
-## Plano de Correção
-
-### Arquivos alterados
-
-**1. `src/hooks/use-admin-email-data.ts`**
-- Linha 83: adicionar `.order("created_at", { ascending: false })` na query de emails
-
-**2. `src/components/admin/AdminEmailManager.tsx`**
-- Linhas 537-540: adicionar `.sort()` por `data` + `hora` DESC nas listas de emails
-- Linha 849 (handleSalvarConta): auto-copiar credenciais IMAP para SMTP quando SMTP usuario/senha estiverem vazios
-
-**3. `supabase/functions/admin-sync-email/index.ts`**
-- Reescrever o FETCH para buscar `ENVELOPE` e `BODY.PEEK[TEXT]` separadamente ou melhorar o parser
-- Extrair o body text e salvar no campo `corpo` e `preview`
-- Usar o timestamp ISO completo para o campo `hora`
-
-### Resultado esperado
+### 1. SMTP continua quebrado porque a conta já salva segue sem credenciais SMTP
+No banco, a conta ativa `partners@davions.com` está assim:
+```text
+IMAP: configurado
+SMTP servidor: smtp.hostinger.com
+SMTP usuário: vazio
+SMTP senha: vazia
 ```
-Inbox: emails mais recentes no topo
-Corpo: texto do email visível ao abrir
-Responder: funciona se SMTP auto-preenchido do IMAP
-Horário: correto baseado no timezone do email original
+O auto-preenchimento foi colocado apenas em `handleSalvarConta`, ou seja: só funciona quando a conta é salva de novo. A conta existente continua incompleta, então responder/enviar ainda falha.
+
+### 2. O horário ainda está errado por causa da origem do valor
+Hoje o sistema usa `data` + `hora` como texto, e o recebimento IMAP grava:
+```text
+data = parsedDate.toISOString().slice(0,10)
+hora = parsedDate.getHours():getMinutes()
+```
+Isso mistura UTC/ambiente do servidor com exibição local. O resultado é horário inconsistente e comparações erradas.
+
+### 3. O corpo do email segue vazio porque o parser IMAP ainda é frágil
+No banco, os emails recebidos recentes continuam com:
+```text
+corpo_len = 0
+```
+Então a alteração anterior não resolveu o parse real do `BODY.PEEK[TEXT]`. O fetch atual ainda depende de regex/split frágeis para respostas IMAP multipart/literal.
+
+## O que vou corrigir
+
+### A. Corrigir SMTP de verdade
+Arquivos:
+- `src/components/admin/AdminEmailManager.tsx`
+- `supabase/functions/admin-send-email/index.ts`
+
+Ajustes:
+1. No frontend, ao detectar conta com SMTP incompleto mas IMAP completo, mostrar aviso claro no modal/compose.
+2. Ao salvar conta, além de copiar usuário/senha, copiar também SMTP completo do preset quando faltar.
+3. No envio, antes de bloquear, aplicar fallback seguro:
+   - `smtp_usuario || imap_usuario`
+   - `smtp_senha || imap_senha`
+4. Melhorar a mensagem de erro retornada pelo envio para mostrar exatamente o campo faltante.
+5. Marcar email enviado com status de erro real, não “aguardando”, quando o SMTP falhar.
+
+### B. Corrigir horário com base consistente
+Arquivos:
+- `supabase/functions/admin-sync-email/index.ts`
+- `src/components/admin/AdminEmailManager.tsx`
+- possivelmente `src/hooks/use-admin-email-data.ts`
+
+Ajustes:
+1. Parar de confiar em `hora`/`data` textuais para ordenação principal.
+2. Usar `created_at` como critério de ordenação no app para garantir “último primeiro”.
+3. Para emails recebidos, armazenar `hora` em formato estável derivado do timestamp do email sem conversão ambígua.
+4. Na UI, formatar a exibição a partir de um timestamp consistente, mantendo o padrão 12h/AM-PM do app.
+5. Revisar todos os pontos que fazem `new Date(e.data + "T" + e.hora)` para não reconstruir datas quebradas.
+
+### C. Reescrever o parse do corpo IMAP
+Arquivo:
+- `supabase/functions/admin-sync-email/index.ts`
+
+Ajustes:
+1. Separar melhor leitura de cabeçalho e corpo.
+2. Trocar a extração baseada em regex ampla por parse orientado a literais IMAP.
+3. Capturar corretamente respostas com:
+   - plain text
+   - HTML
+   - quoted-printable
+   - base64
+   - multipart
+4. Preencher:
+   - `corpo` com conteúdo útil
+   - `preview` com texto limpo
+5. Manter fallback quando vier só HTML ou só plain text.
+
+## Resultado esperado após a correção
+```text
+/admin/email
+
+- Emails ordenados do mais recente para o mais antigo
+- Horário exibido corretamente
+- Corpo do email aparece ao abrir
+- Responder/enviar usa fallback IMAP→SMTP quando necessário
+- Erro de SMTP fica claro e específico, não genérico
 ```
 
+## Relatório de erros atual
+```text
+1. SMTP não resolvido:
+   conta partners@davions.com está com smtp_usuario vazio e smtp_senha vazia no banco
+
+2. Horário não resolvido:
+   sync usa data/hora textuais derivadas de parsedDate com conversão inconsistente
+
+3. Corpo não resolvido:
+   emails recebidos recentes ainda estão com corpo_len = 0 no banco
+```
+
+## Arquivos que precisam ser revisados nesta rodada
+- `src/components/admin/AdminEmailManager.tsx`
+- `src/hooks/use-admin-email-data.ts`
+- `supabase/functions/admin-sync-email/index.ts`
+- `supabase/functions/admin-send-email/index.ts`
+
+## Observação importante
+O warning de `ref` no `ComposeModal` existe, mas não é a causa principal desses 3 problemas. Posso corrigi-lo depois, separado, para não misturar com a revisão de email.
