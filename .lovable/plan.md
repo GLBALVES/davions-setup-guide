@@ -1,8 +1,22 @@
 
 
-## Fix: Hide scrollbar on email tab carousel
+## Corrigir labels mostrando "tabs.xxx" em vez do texto traduzido
 
-**Problem**: The tab carousel in `AdminEmailManager.tsx` uses `scrollbar-hide` class which doesn't exist in the project. The project defines `no-scrollbar` in `index.css`.
+### Problema
+O `useTranslation("email")` busca namespace `"email"`, mas `email-i18n.ts` registra sob `"translation"`. Resultado: chaves brutas aparecem na tela.
 
-**Fix**: Replace `scrollbar-hide` with `no-scrollbar` on line 1377 of `AdminEmailManager.tsx`.
+### Correção
+**Arquivo: `src/i18n/email-i18n.ts`** — Alterar namespace de `translation` para `email` e adicionar `defaultNS`:
+
+```typescript
+resources: {
+  pt: { email: pt },
+  en: { email: en },
+  es: { email: es }
+},
+defaultNS: 'email',
+lng: 'pt',
+```
+
+Uma única alteração, resolve todos os textos do módulo.
 
