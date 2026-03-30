@@ -420,6 +420,10 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => { onSaveDraft(); toast({ title: t('toast.draftSaved'), duration: 3000 }); }}><Save className="w-3.5 h-3.5" /> {t('compose.saveDraft')}</Button>
                 <Button size="sm" className="h-7 text-xs gap-1.5" onClick={() => {
                   const corpo = quillRef.current?.root?.innerHTML || quillRef.current?.getText()?.trim() || "";
+                  if (!corpo || corpo === "<p><br></p>") {
+                    toast({ title: t('compose.emptyBody') || "O corpo do email não pode estar vazio", variant: "destructive", duration: 3000 });
+                    return;
+                  }
                   onSend({ para, cc, cco, assunto, corpo, contaId: selectedContaId });
                 }}><SendHorizonal className="w-3.5 h-3.5" /> {t('compose.send')}</Button>
               </div>
