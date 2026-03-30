@@ -419,15 +419,6 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
               <div ref={editorRef} className="min-h-[280px]" />
             </div>
 
-            {/* SIGNATURE */}
-            <div className="shrink-0 border-t border-dashed border-border px-4 py-2">
-              <p className="text-[11px] text-muted-foreground whitespace-pre-line">
-                -- {"\n"}{selectedConta?.assinatura || t('compose.defaultSignature')}
-              </p>
-              <button onClick={() => setModalAssinaturasAberto(true)} className="text-[10px] text-muted-foreground underline hover:text-foreground mt-1">
-                {t('signaturesModal.editSignatureLink')}
-              </button>
-            </div>
 
             {/* FOOTER */}
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border shrink-0">
