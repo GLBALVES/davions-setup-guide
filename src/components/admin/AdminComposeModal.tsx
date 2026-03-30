@@ -157,7 +157,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
         placeholder: t('compose.placeholder'),
       });
       quillRef.current = q;
-      if (initialCorpo) q.setText(initialCorpo);
+      if (initialCorpo) q.clipboard.dangerouslyPasteHTML(0, initialCorpo);
       setQuillReady(true);
     };
     const timer = setTimeout(loadQuill, 100);
