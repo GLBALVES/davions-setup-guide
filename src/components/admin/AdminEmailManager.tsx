@@ -2048,7 +2048,7 @@ const AdminEmailManager: React.FC = () => {
                 <Separator orientation="vertical" className="h-5 mx-0.5" />
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} title={t('settings.textColor') || 'Cor'}><Palette className="w-3.5 h-3.5" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} title={t('compose.textColor') || 'Cor'}><Palette className="w-3.5 h-3.5" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-2" align="start">
                     <div className="flex flex-wrap gap-1.5">
