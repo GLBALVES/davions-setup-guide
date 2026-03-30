@@ -159,11 +159,31 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
       });
       quillRef.current = q;
       if (initialCorpo) q.clipboard.dangerouslyPasteHTML(0, initialCorpo);
+      // Auto-inject default signature
+      const defaultSig = assinaturas.find(a => a.contaIds.includes(selectedContaId)) || (selectedConta?.assinatura ? { conteudo: selectedConta.assinatura, nome: "default" } : null);
+      if (defaultSig) {
+        const len = q.getLength();
+        q.clipboard.dangerouslyPasteHTML(len - 1, "\n\n--\n" + defaultSig.conteudo);
+        setAssinaturaAtiva(defaultSig.conteudo);
+      }
       setQuillReady(true);
     };
     const timer = setTimeout(loadQuill, 100);
     return () => clearTimeout(timer);
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const replaceSignature = useCallback((html: string) => {
+    const q = quillRef.current;
+    if (!q) return;
+    const text = q.getText();
+    const sepIdx = text.lastIndexOf("\n--\n");
+    if (sepIdx >= 0) {
+      q.deleteText(sepIdx, q.getLength() - sepIdx);
+    }
+    const len = q.getLength();
+    q.clipboard.dangerouslyPasteHTML(len - 1, "\n\n--\n" + html);
+    setAssinaturaAtiva(html);
+  }, []);
 
   useEffect(() => {
     if (autoGenerateAI && quillReady && !aiAutoTriggered && isOpen && !isMinimized) {
