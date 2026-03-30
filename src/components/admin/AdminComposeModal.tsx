@@ -157,7 +157,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
         placeholder: t('compose.placeholder'),
       });
       quillRef.current = q;
-      if (initialCorpo) q.setText(initialCorpo);
+      if (initialCorpo) q.clipboard.dangerouslyPasteHTML(0, initialCorpo);
       setQuillReady(true);
     };
     const timer = setTimeout(loadQuill, 100);
@@ -420,6 +420,10 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => { onSaveDraft(); toast({ title: t('toast.draftSaved'), duration: 3000 }); }}><Save className="w-3.5 h-3.5" /> {t('compose.saveDraft')}</Button>
                 <Button size="sm" className="h-7 text-xs gap-1.5" onClick={() => {
                   const corpo = quillRef.current?.root?.innerHTML || quillRef.current?.getText()?.trim() || "";
+                  if (!corpo || corpo === "<p><br></p>") {
+                    toast({ title: t('compose.emptyBody') || "O corpo do email não pode estar vazio", variant: "destructive", duration: 3000 });
+                    return;
+                  }
                   onSend({ para, cc, cco, assunto, corpo, contaId: selectedContaId });
                 }}><SendHorizonal className="w-3.5 h-3.5" /> {t('compose.send')}</Button>
               </div>
@@ -472,7 +476,16 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
             <ScrollArea className="max-h-[320px]">
               <div className="space-y-2">
                 {assinaturas.map(a => (
-                  <div key={a.id} className="p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors" onClick={() => { onSelecionarAssinatura?.(a.conteudo); setModalAssinaturasAberto(false); }}>
+                  <div key={a.id} className="p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors" onClick={() => {
+                    onSelecionarAssinatura?.(a.conteudo);
+                    // Inject signature HTML into Quill editor
+                    const q = quillRef.current;
+                    if (q) {
+                      const len = q.getLength();
+                      q.clipboard.dangerouslyPasteHTML(len - 1, "\n--\n" + a.conteudo);
+                    }
+                    setModalAssinaturasAberto(false);
+                  }}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium">{a.nome}</span>
                       {onEditarAssinatura && (

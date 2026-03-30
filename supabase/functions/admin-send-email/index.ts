@@ -27,6 +27,9 @@ Deno.serve(async (req) => {
     if (!contaId || !para?.length || !assunto) {
       return new Response(JSON.stringify({ error: "Missing required fields: contaId, para, assunto" }), { status: 400, headers: corsHeaders });
     }
+    if (!corpo || typeof corpo !== "string" || corpo.trim().length === 0) {
+      return new Response(JSON.stringify({ error: "O corpo do email não pode estar vazio" }), { status: 400, headers: corsHeaders });
+    }
 
     // Fetch account with SMTP config
     const { data: conta, error: contaErr } = await supabase

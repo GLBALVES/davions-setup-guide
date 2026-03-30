@@ -264,7 +264,8 @@
     "urlPromptLink": "URL do link:",
     "urlPromptImage": "URL da imagem:",
     "colorPrompt": "Cor (hex):",
-    "defaultSignature": "Atenciosamente,\nNome do Usuário\nCargo · Empresa"
+    "defaultSignature": "Atenciosamente,\nNome do Usuário\nCargo · Empresa",
+    "emptyBody": "O corpo do email não pode estar vazio"
   },
   "templates": {
     "title": "Templates",

@@ -264,7 +264,8 @@
     "urlPromptLink": "Link URL:",
     "urlPromptImage": "Image URL:",
     "colorPrompt": "Color (hex):",
-    "defaultSignature": "Best regards,\nUser Name\nRole · Company"
+    "defaultSignature": "Best regards,\nUser Name\nRole · Company",
+    "emptyBody": "The email body cannot be empty"
   },
   "templates": {
     "title": "Templates",
