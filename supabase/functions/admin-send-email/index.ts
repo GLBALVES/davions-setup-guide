@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     if (useStartTLS && !(conn instanceof Deno.TlsConn)) {
       await sendCommand("STARTTLS");
       conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: smtpHost });
-      await sendCommand(`EHLO localhost`);
+      await sendCommand(`EHLO ${senderDomain}`);
     }
 
     // AUTH LOGIN
