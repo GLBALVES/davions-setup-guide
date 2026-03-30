@@ -75,7 +75,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { t } = useTranslation("email");
-  const [modalAssinaturasAberto, setModalAssinaturasAberto] = useState(false);
+  
 
   const [para, setPara] = useState<string[]>(initialPara);
   const [paraInput, setParaInput] = useState("");
