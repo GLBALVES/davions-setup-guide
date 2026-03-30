@@ -2042,9 +2042,9 @@ const AdminEmailManager: React.FC = () => {
               <Label className="text-xs">{t('signaturesModal.content')}</Label>
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-0.5 mt-1 p-1 border border-b-0 rounded-t-md bg-muted/30">
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('bold'); }} title="Bold"><Bold className="w-3.5 h-3.5" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('italic'); }} title="Italic"><Italic className="w-3.5 h-3.5" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('underline'); }} title="Underline"><Underline className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('bold'); }} title="Bold"><Bold className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('italic'); }} title="Italic"><Italic className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('underline'); }} title="Underline"><Underline className="w-3.5 h-3.5" /></Button>
                 <Separator orientation="vertical" className="h-5 mx-0.5" />
                 <Popover>
                   <PopoverTrigger asChild>
