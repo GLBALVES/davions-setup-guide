@@ -2034,8 +2034,8 @@ const AdminEmailManager: React.FC = () => {
 
       {/* ═══ SIGNATURE MODAL ═══ */}
       <Dialog open={modalAssinaturaAberto} onOpenChange={v => { setModalAssinaturaAberto(v); if (!v) { setSigSelectedImg(null); setSigResizePos(null); setSigImgPopover(false); } }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{assinaturaSendoEditada ? t('settings.editSignature') : t('settings.newSignature')}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg" aria-describedby={undefined}>
+          <DialogHeader><DialogTitle>{assinaturaSendoEditada ? t('signaturesModal.editSignature') : t('signaturesModal.newSignature')}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="text-xs">{t('common.name')}</Label><Input value={formAssinatura.nome} onChange={e => setFormAssinatura(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
             <div>
