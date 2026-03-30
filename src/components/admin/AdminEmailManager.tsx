@@ -2090,7 +2090,7 @@ const AdminEmailManager: React.FC = () => {
                             <span className="text-[10px] text-muted-foreground shrink-0">W: {sigImgWidth}px</span>
                             <input type="range" min={40} max={600} value={sigImgWidth} onChange={e => setSigImgWidth(Number(e.target.value))} className="flex-1 h-1 accent-primary" />
                           </div>
-                          <Button type="button" size="sm" className="w-full h-7 text-xs" onClick={handleSigImgInsert}>{t('common.insert') || 'Inserir'}</Button>
+                          <Button type="button" size="sm" className="w-full h-7 text-xs" onClick={handleSigImgInsert}>{t('signaturesModal.insert') || 'Inserir'}</Button>
                         </div>
                       )}
                     </div>
