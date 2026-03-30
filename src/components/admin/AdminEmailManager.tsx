@@ -948,18 +948,122 @@ const AdminEmailManager: React.FC = () => {
 
   const handleSalvarAssinatura = useCallback(() => {
     if (!formAssinatura.nome.trim()) return;
+    const conteudoFinal = sigEditorRef.current ? sigEditorRef.current.innerHTML : formAssinatura.conteudo;
+    const finalForm = { ...formAssinatura, conteudo: conteudoFinal };
     if (assinaturaSendoEditada) {
-      const updated = { ...assinaturaSendoEditada, ...formAssinatura };
+      const updated = { ...assinaturaSendoEditada, ...finalForm };
       setAssinaturas(prev => prev.map(a => a.id === assinaturaSendoEditada.id ? updated : a));
       persistAssinaturaUpsert(updated);
     } else {
-      const nova = { id: crypto.randomUUID(), ...formAssinatura };
+      const nova = { id: crypto.randomUUID(), ...finalForm };
       setAssinaturas(prev => [...prev, nova]);
       persistAssinaturaUpsert(nova);
     }
     setModalAssinaturaAberto(false); setAssinaturaSendoEditada(null);
     toast({ title: t('toast.signatureSaved'), duration: 3000 });
   }, [formAssinatura, assinaturaSendoEditada, toast, persistAssinaturaUpsert, t]);
+
+  // ═══ Signature editor: close resize toolbar on outside click
+  useEffect(() => {
+    if (!sigSelectedImg) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (sigResizeRef.current?.contains(target) || target === sigSelectedImg) return;
+      setSigSelectedImg(null);
+      setSigResizePos(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [sigSelectedImg]);
+
+  // Sync editor innerHTML when modal opens
+  useEffect(() => {
+    if (modalAssinaturaAberto && sigEditorRef.current) {
+      sigEditorRef.current.innerHTML = formAssinatura.conteudo;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalAssinaturaAberto]);
+
+  const handleSigEditorClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      const img = target as HTMLImageElement;
+      setSigSelectedImg(img);
+      const editorRect = sigEditorRef.current?.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+      if (editorRect) {
+        setSigResizePos({ top: imgRect.top - editorRect.top - 36, left: imgRect.left - editorRect.left });
+      }
+    } else {
+      setSigSelectedImg(null);
+      setSigResizePos(null);
+    }
+  }, []);
+
+  const handleSigImgResize = useCallback((width: number) => {
+    if (!sigSelectedImg) return;
+    sigSelectedImg.setAttribute('width', String(width));
+    sigSelectedImg.style.maxWidth = '100%';
+    if (sigEditorRef.current) {
+      setFormAssinatura(prev => ({ ...prev, conteudo: sigEditorRef.current!.innerHTML }));
+    }
+  }, [sigSelectedImg]);
+
+  const saveSigSelection = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) sigSavedRange.current = sel.getRangeAt(0).cloneRange();
+  }, []);
+
+  const restoreSigSelection = useCallback(() => {
+    if (sigSavedRange.current) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(sigSavedRange.current);
+    }
+  }, []);
+
+  const handleSigImgUpload = useCallback(async (file: File) => {
+    setSigImgUploading(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const filePath = `${session.user.id}/signatures/${Date.now()}-${safeName}`;
+        const { data, error } = await supabase.storage.from('email-documents').upload(filePath, file);
+        if (error || !data) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('email-documents').getPublicUrl(data.path);
+        setSigImgUrl(publicUrl);
+        return;
+      }
+      // Fallback: base64
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      setSigImgUrl(dataUrl);
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+      setSigImgPopover(false);
+    } finally {
+      setSigImgUploading(false);
+    }
+  }, [toast]);
+
+  const handleSigImgInsert = useCallback(() => {
+    if (!sigImgUrl) return;
+    restoreSigSelection();
+    sigEditorRef.current?.focus();
+    document.execCommand('insertHTML', false, `<img src="${sigImgUrl}" width="${sigImgWidth}" style="max-width:100%" />`);
+    setSigImgPopover(false);
+    setSigImgUrl("");
+    setSigImgUrlInput("");
+    setSigImgWidth(200);
+    if (sigEditorRef.current) {
+      setFormAssinatura(prev => ({ ...prev, conteudo: sigEditorRef.current!.innerHTML }));
+    }
+  }, [sigImgUrl, sigImgWidth, restoreSigSelection]);
 
   /* ═══ Render helpers ═══ */
   const renderEmptyPanel = () => (<div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2"><MailOpen className="w-8 h-8" /><p className="text-sm">{t('emailList.selectEmail')}</p></div>);
