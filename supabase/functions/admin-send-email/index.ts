@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     await readResponse();
 
     // EHLO
-    await sendCommand(`EHLO localhost`);
+    await sendCommand(`EHLO ${senderDomain}`);
 
     // STARTTLS upgrade if needed
     if (useStartTLS && !(conn instanceof Deno.TlsConn)) {
