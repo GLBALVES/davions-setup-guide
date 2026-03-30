@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
+    const senderDomain = conta.email.split("@")[1] || "localhost";
     const smtpHost = smtpServer;
     const smtpPort = conta.smtp_porta || 465;
     const useSSL = conta.smtp_seguranca === "ssl";
@@ -86,13 +87,13 @@ Deno.serve(async (req) => {
     await readResponse();
 
     // EHLO
-    await sendCommand(`EHLO localhost`);
+    await sendCommand(`EHLO ${senderDomain}`);
 
     // STARTTLS upgrade if needed
     if (useStartTLS && !(conn instanceof Deno.TlsConn)) {
       await sendCommand("STARTTLS");
       conn = await Deno.startTls(conn as Deno.TcpConn, { hostname: smtpHost });
-      await sendCommand(`EHLO localhost`);
+      await sendCommand(`EHLO ${senderDomain}`);
     }
 
     // AUTH LOGIN
@@ -127,6 +128,9 @@ Deno.serve(async (req) => {
       `To: ${para.join(", ")}`,
       cc?.length ? `Cc: ${cc.join(", ")}` : null,
       `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(assunto)))}?=`,
+      `Message-ID: <${Date.now()}.${crypto.randomUUID()}@${senderDomain}>`,
+      `Return-Path: <${conta.email}>`,
+      `X-Mailer: Davions Mail/1.0`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/alternative; boundary="${boundary}"`,
       `Date: ${new Date().toUTCString()}`,
