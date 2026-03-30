@@ -426,6 +426,26 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => fileInputRef.current?.click()}><Paperclip className="w-3.5 h-3.5" /> {t('compose.attach')}</Button>
                 <span className="text-[10px] text-muted-foreground">{anexos} {t('compose.attachments')}</span>
                 <input ref={fileInputRef} type="file" className="hidden" multiple onChange={e => { if (e.target.files) setAnexos(prev => prev + e.target.files!.length); e.target.value = ""; }} />
+                <div className="w-px h-4 bg-border mx-1" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5"><PenLine className="w-3.5 h-3.5" /> {t('settings.signatures')} <ChevronDown className="w-3 h-3" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[200px]">
+                    {assinaturas.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">{t('signaturesModal.noSignatures')}</div>
+                    ) : assinaturas.map(a => (
+                      <DropdownMenuItem key={a.id} onClick={() => { replaceSignature(a.conteudo); onSelecionarAssinatura?.(a.conteudo); }}>
+                        <span className="text-xs">{a.nome}</span>
+                      </DropdownMenuItem>
+                    ))}
+                    {onCriarAssinatura && (
+                      <DropdownMenuItem onClick={onCriarAssinatura}>
+                        <Plus className="w-3.5 h-3.5 mr-1.5" /> <span className="text-xs">{t('signaturesModal.createNew')}</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <div className="flex items-center gap-1.5">
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleCloseAttempt}>{t('compose.discard')}</Button>
