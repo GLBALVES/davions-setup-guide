@@ -2039,7 +2039,7 @@ const AdminEmailManager: React.FC = () => {
           <div className="space-y-4">
             <div><Label className="text-xs">{t('common.name')}</Label><Input value={formAssinatura.nome} onChange={e => setFormAssinatura(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
             <div>
-              <Label className="text-xs">{t('settings.content')}</Label>
+              <Label className="text-xs">{t('signaturesModal.content')}</Label>
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-0.5 mt-1 p-1 border border-b-0 rounded-t-md bg-muted/30">
                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('bold'); }} title="Bold"><Bold className="w-3.5 h-3.5" /></Button>
