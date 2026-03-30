@@ -976,13 +976,18 @@ const AdminEmailManager: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [sigSelectedImg]);
 
-  // Sync editor innerHTML when modal opens
+  // Sync editor innerHTML when modal opens (with rAF to wait for DOM)
   useEffect(() => {
-    if (modalAssinaturaAberto && sigEditorRef.current) {
-      sigEditorRef.current.innerHTML = formAssinatura.conteudo;
+    if (modalAssinaturaAberto && formAssinatura.conteudo) {
+      const timer = requestAnimationFrame(() => {
+        if (sigEditorRef.current) {
+          sigEditorRef.current.innerHTML = formAssinatura.conteudo;
+        }
+      });
+      return () => cancelAnimationFrame(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalAssinaturaAberto]);
+  }, [modalAssinaturaAberto, formAssinatura.conteudo]);
 
   const handleSigEditorClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -2100,7 +2105,12 @@ const AdminEmailManager: React.FC = () => {
               {/* Editor */}
               <div className="relative">
                 <div
-                  ref={sigEditorRef}
+                  ref={(el) => {
+                    sigEditorRef.current = el;
+                    if (el && modalAssinaturaAberto && formAssinatura.conteudo && !el.innerHTML.trim()) {
+                      el.innerHTML = formAssinatura.conteudo;
+                    }
+                  }}
                   contentEditable
                   suppressContentEditableWarning
                   className="min-h-[150px] max-h-[300px] overflow-y-auto p-3 border border-t-0 rounded-b-md text-xs focus:outline-none focus:ring-1 focus:ring-ring bg-background"
