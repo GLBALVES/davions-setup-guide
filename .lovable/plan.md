@@ -1,45 +1,26 @@
 
 
-## Correção: Imagem não aparece ao editar assinatura
+## Mostrar assinatura completa na lista (com imagem)
 
-### Problema identificado
-O `useEffect` que sincroniza o conteúdo HTML no editor (linha 980-985) depende de `modalAssinaturaAberto`, mas o `sigEditorRef.current` ainda não existe no DOM nesse momento porque o Dialog ainda está montando. Resultado: o editor abre vazio mesmo tendo conteúdo salvo.
-
-A assinatura **é salva corretamente** no banco (confirmado pelo network response com o HTML + imagem). O problema é apenas na **exibição ao reabrir para edição**.
+### Problema
+A preview da assinatura na lista usa `line-clamp-2`, `text-[11px]` e `max-h-8` nas imagens — isso trunca o texto e esconde a imagem.
 
 ### Correção
+**Arquivo:** `src/components/admin/AdminEmailManager.tsx` — linha 1657
 
-**Arquivo:** `src/components/admin/AdminEmailManager.tsx`
+Trocar as classes CSS para exibir o conteúdo completo:
 
-1. **Substituir o `useEffect`** de sincronização (linhas 979-985) por um `useEffect` que usa `requestAnimationFrame` ou um pequeno `setTimeout` para garantir que o DOM do Dialog já montou antes de setar o `innerHTML`:
+```tsx
+// De:
+<div className="text-[11px] text-muted-foreground line-clamp-2 [&_img]:inline [&_img]:max-h-8 [&_img]:align-middle" dangerouslySetInnerHTML={{ __html: a.conteudo }} />
 
-```typescript
-useEffect(() => {
-  if (modalAssinaturaAberto && formAssinatura.conteudo) {
-    const timer = requestAnimationFrame(() => {
-      if (sigEditorRef.current) {
-        sigEditorRef.current.innerHTML = formAssinatura.conteudo;
-      }
-    });
-    return () => cancelAnimationFrame(timer);
-  }
-}, [modalAssinaturaAberto, formAssinatura.conteudo]);
+// Para:
+<div className="text-xs text-muted-foreground mt-1 [&_img]:max-w-[200px] [&_img]:h-auto [&_img]:block [&_img]:mt-1" dangerouslySetInnerHTML={{ __html: a.conteudo }} />
 ```
 
-2. **Adicionar callback ref** no `div contentEditable` como fallback — quando o ref é atribuído, se o modal está aberto e há conteúdo, injeta o HTML:
-
-```typescript
-// No div contentEditable, trocar ref={sigEditorRef} por:
-ref={(el) => {
-  sigEditorRef.current = el;
-  if (el && modalAssinaturaAberto && formAssinatura.conteudo && !el.innerHTML.trim()) {
-    el.innerHTML = formAssinatura.conteudo;
-  }
-}}
-```
-
-Isso garante que mesmo se o `useEffect` rodar antes do DOM, o callback ref preencherá o editor assim que ele montar.
-
-### Resultado
-Ao clicar em editar uma assinatura, o editor exibirá o conteúdo completo incluindo imagens formatadas.
+**Mudanças:**
+- Remove `line-clamp-2` → texto completo visível
+- Remove `max-h-8` das imagens → imagem aparece em tamanho proporcional (max 200px largura)
+- `[&_img]:block` → imagem em linha própria, não inline cortada
+- Texto de `11px` para `text-xs` (12px) para legibilidade
 
