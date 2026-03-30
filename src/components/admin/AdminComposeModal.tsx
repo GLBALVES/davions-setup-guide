@@ -5,8 +5,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Quote,
   List, ListOrdered, Link, Image, AlignLeft, AlignCenter, AlignRight,
   Palette, Sparkles, RefreshCw, Globe, Loader2, Mail,
-  Heading1, Heading2, ChevronDown, FileText, SendHorizonal,
-  Pencil, Plus, PenLine,
+  Heading1, Heading2, ChevronDown, FileText, SendHorizonal, Plus, PenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
