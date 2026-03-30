@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
+    const senderDomain = conta.email.split("@")[1] || "localhost";
     const smtpHost = smtpServer;
     const smtpPort = conta.smtp_porta || 465;
     const useSSL = conta.smtp_seguranca === "ssl";
