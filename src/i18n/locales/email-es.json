@@ -215,7 +215,9 @@
     "use": "Usar",
     "newSignatureBtn": "Nueva firma",
     "editSignatureLink": "Editar firma",
-    "signatureApplied": "Firma \"{{name}}\" aplicada"
+    "signatureApplied": "Firma \"{{name}}\" aplicada",
+    "insertImage": "Insertar imagen",
+    "insert": "Insertar"
   },
   "compose": {
     "reply": "Responder",

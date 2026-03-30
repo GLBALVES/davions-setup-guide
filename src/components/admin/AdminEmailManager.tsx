@@ -2118,7 +2118,7 @@ const AdminEmailManager: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label className="text-xs">{t('settings.useInAccount')}:</Label>
+              <Label className="text-xs">{t('signaturesModal.useInAccount')}</Label>
               <div className="mt-1 space-y-1">{contas.map(c => (
                 <label key={c.id} className="flex items-center gap-2 text-xs cursor-pointer">
                   <input type="checkbox" checked={formAssinatura.contaIds.includes(c.id)} onChange={e => { setFormAssinatura(prev => ({ ...prev, contaIds: e.target.checked ? [...prev.contaIds, c.id] : prev.contaIds.filter(x => x !== c.id) })); }} className="rounded" />
