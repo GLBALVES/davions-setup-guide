@@ -5,8 +5,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Quote,
   List, ListOrdered, Link, Image, AlignLeft, AlignCenter, AlignRight,
   Palette, Sparkles, RefreshCw, Globe, Loader2, Mail,
-  Heading1, Heading2, ChevronDown, FileText, SendHorizonal,
-  Pencil, Plus, PenLine,
+  Heading1, Heading2, ChevronDown, FileText, SendHorizonal, Plus, PenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +17,8 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { useToast } from "@/hooks/use-toast";
 import { chamarIA } from "@/lib/email-ai-helper";
 
@@ -75,7 +71,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { t } = useTranslation("email");
-  const [modalAssinaturasAberto, setModalAssinaturasAberto] = useState(false);
+  
 
   const [para, setPara] = useState<string[]>(initialPara);
   const [paraInput, setParaInput] = useState("");
@@ -93,6 +89,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
   const [anexos, setAnexos] = useState(0);
   const [quillReady, setQuillReady] = useState(false);
   const [aiAutoTriggered, setAiAutoTriggered] = useState(false);
+  const [assinaturaAtiva, setAssinaturaAtiva] = useState<string | null>(null);
 
   const defaultContaId = contaAtiva !== "todas" ? contaAtiva : (contas.find(c => (c as any).padrao)?.id || contas[0]?.id || "");
   const [selectedContaId, setSelectedContaId] = useState(defaultContaId);
@@ -158,11 +155,31 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
       });
       quillRef.current = q;
       if (initialCorpo) q.clipboard.dangerouslyPasteHTML(0, initialCorpo);
+      // Auto-inject default signature
+      const defaultSig = assinaturas.find(a => a.contaIds.includes(selectedContaId)) || (selectedConta?.assinatura ? { conteudo: selectedConta.assinatura, nome: "default" } : null);
+      if (defaultSig) {
+        const len = q.getLength();
+        q.clipboard.dangerouslyPasteHTML(len - 1, "\n\n--\n" + defaultSig.conteudo);
+        setAssinaturaAtiva(defaultSig.conteudo);
+      }
       setQuillReady(true);
     };
     const timer = setTimeout(loadQuill, 100);
     return () => clearTimeout(timer);
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const replaceSignature = useCallback((html: string) => {
+    const q = quillRef.current;
+    if (!q) return;
+    const text = q.getText();
+    const sepIdx = text.lastIndexOf("\n--\n");
+    if (sepIdx >= 0) {
+      q.deleteText(sepIdx, q.getLength() - sepIdx);
+    }
+    const len = q.getLength();
+    q.clipboard.dangerouslyPasteHTML(len - 1, "\n\n--\n" + html);
+    setAssinaturaAtiva(html);
+  }, []);
 
   useEffect(() => {
     if (autoGenerateAI && quillReady && !aiAutoTriggered && isOpen && !isMinimized) {
@@ -398,15 +415,6 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
               <div ref={editorRef} className="min-h-[280px]" />
             </div>
 
-            {/* SIGNATURE */}
-            <div className="shrink-0 border-t border-dashed border-border px-4 py-2">
-              <p className="text-[11px] text-muted-foreground whitespace-pre-line">
-                -- {"\n"}{selectedConta?.assinatura || t('compose.defaultSignature')}
-              </p>
-              <button onClick={() => setModalAssinaturasAberto(true)} className="text-[10px] text-muted-foreground underline hover:text-foreground mt-1">
-                {t('signaturesModal.editSignatureLink')}
-              </button>
-            </div>
 
             {/* FOOTER */}
             <div className="flex items-center justify-between px-4 py-2.5 border-t border-border shrink-0">
@@ -414,6 +422,26 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => fileInputRef.current?.click()}><Paperclip className="w-3.5 h-3.5" /> {t('compose.attach')}</Button>
                 <span className="text-[10px] text-muted-foreground">{anexos} {t('compose.attachments')}</span>
                 <input ref={fileInputRef} type="file" className="hidden" multiple onChange={e => { if (e.target.files) setAnexos(prev => prev + e.target.files!.length); e.target.value = ""; }} />
+                <div className="w-px h-4 bg-border mx-1" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5"><PenLine className="w-3.5 h-3.5" /> {t('settings.signatures')} <ChevronDown className="w-3 h-3" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[200px]">
+                    {assinaturas.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-muted-foreground">{t('signaturesModal.noSignatures')}</div>
+                    ) : assinaturas.map(a => (
+                      <DropdownMenuItem key={a.id} onClick={() => { replaceSignature(a.conteudo); onSelecionarAssinatura?.(a.conteudo); }}>
+                        <span className="text-xs">{a.nome}</span>
+                      </DropdownMenuItem>
+                    ))}
+                    {onCriarAssinatura && (
+                      <DropdownMenuItem onClick={onCriarAssinatura}>
+                        <Plus className="w-3.5 h-3.5 mr-1.5" /> <span className="text-xs">{t('signaturesModal.createNew')}</span>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <div className="flex items-center gap-1.5">
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleCloseAttempt}>{t('compose.discard')}</Button>
@@ -456,57 +484,6 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* SIGNATURE SELECTION MODAL */}
-      <Dialog open={modalAssinaturasAberto} onOpenChange={setModalAssinaturasAberto}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-1.5"><PenLine className="w-4 h-4" /> {t('settings.signatures')}</DialogTitle>
-          </DialogHeader>
-          {assinaturas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-3">
-              <PenLine className="w-8 h-8 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">{t('signaturesModal.noSignatures')}</p>
-              {onCriarAssinatura && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => { setModalAssinaturasAberto(false); onCriarAssinatura(); }}>
-                  <Plus className="w-3.5 h-3.5" /> {t('signaturesModal.createNew')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[320px]">
-              <div className="space-y-2">
-                {assinaturas.map(a => (
-                  <div key={a.id} className="p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors" onClick={() => {
-                    onSelecionarAssinatura?.(a.conteudo);
-                    // Inject signature HTML into Quill editor
-                    const q = quillRef.current;
-                    if (q) {
-                      const len = q.getLength();
-                      q.clipboard.dangerouslyPasteHTML(len - 1, "\n--\n" + a.conteudo);
-                    }
-                    setModalAssinaturasAberto(false);
-                  }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium">{a.nome}</span>
-                      {onEditarAssinatura && (
-                        <button onClick={e => { e.stopPropagation(); setModalAssinaturasAberto(false); onEditarAssinatura(a); }} className="text-muted-foreground hover:text-foreground p-0.5">
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground whitespace-pre-line line-clamp-3">{a.conteudo}</p>
-                  </div>
-                ))}
-              </div>
-              {onCriarAssinatura && (
-                <Button variant="outline" size="sm" className="w-full mt-2 h-7 text-xs gap-1.5" onClick={() => { setModalAssinaturasAberto(false); onCriarAssinatura(); }}>
-                  <Plus className="w-3.5 h-3.5" /> {t('signaturesModal.createNew')}
-                </Button>
-              )}
-            </ScrollArea>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
