@@ -1649,7 +1649,7 @@ const AdminEmailManager: React.FC = () => {
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setAssinaturas(prev => prev.filter(x => x.id !== a.id)); toast({ title: t('toast.signatureDeleted'), duration: 3000 }); }}><Trash2 className="w-3.5 h-3.5" /></Button>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground whitespace-pre-line line-clamp-2">{a.conteudo}</p>
+                <div className="text-[11px] text-muted-foreground line-clamp-2 [&_img]:inline [&_img]:max-h-8 [&_img]:align-middle" dangerouslySetInnerHTML={{ __html: a.conteudo }} />
               </div>
             ))}
           </div>
