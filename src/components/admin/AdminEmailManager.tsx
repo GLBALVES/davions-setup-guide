@@ -2065,7 +2065,7 @@ const AdminEmailManager: React.FC = () => {
                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('signaturesModal.insertImage') || 'Imagem'}><ImageIcon className="w-3.5 h-3.5" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-3" align="start">
-                    <p className="text-xs font-medium mb-2">{t('settings.insertImage') || 'Inserir imagem'}</p>
+                    <p className="text-xs font-medium mb-2">{t('signaturesModal.insertImage') || 'Inserir imagem'}</p>
                     <div className="space-y-3">
                       {/* Upload */}
                       <div>
