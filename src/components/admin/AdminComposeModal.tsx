@@ -93,6 +93,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
   const [anexos, setAnexos] = useState(0);
   const [quillReady, setQuillReady] = useState(false);
   const [aiAutoTriggered, setAiAutoTriggered] = useState(false);
+  const [assinaturaAtiva, setAssinaturaAtiva] = useState<string | null>(null);
 
   const defaultContaId = contaAtiva !== "todas" ? contaAtiva : (contas.find(c => (c as any).padrao)?.id || contas[0]?.id || "");
   const [selectedContaId, setSelectedContaId] = useState(defaultContaId);
