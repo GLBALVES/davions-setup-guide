@@ -2062,7 +2062,7 @@ const AdminEmailManager: React.FC = () => {
                 <Separator orientation="vertical" className="h-5 mx-0.5" />
                 <Popover open={sigImgPopover} onOpenChange={v => { if (v) saveSigSelection(); setSigImgPopover(v); }}>
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('settings.insertImage') || 'Imagem'}><ImageIcon className="w-3.5 h-3.5" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('signaturesModal.insertImage') || 'Imagem'}><ImageIcon className="w-3.5 h-3.5" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-3" align="start">
                     <p className="text-xs font-medium mb-2">{t('settings.insertImage') || 'Inserir imagem'}</p>
