@@ -1031,8 +1031,9 @@ const AdminEmailManager: React.FC = () => {
         const filePath = `${session.user.id}/signatures/${Date.now()}-${safeName}`;
         const { data, error } = await supabase.storage.from('email-documents').upload(filePath, file);
         if (error || !data) throw error;
-        const { data: { publicUrl } } = supabase.storage.from('email-documents').getPublicUrl(data.path);
-        setSigImgUrl(publicUrl);
+        const { data: signedData, error: signedErr } = await supabase.storage.from('email-documents').createSignedUrl(data.path, 60 * 60 * 24 * 365);
+        if (signedErr || !signedData?.signedUrl) throw signedErr;
+        setSigImgUrl(signedData.signedUrl);
         return;
       }
       // Fallback: base64
