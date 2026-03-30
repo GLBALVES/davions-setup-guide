@@ -531,6 +531,18 @@ const AdminEmailManager: React.FC = () => {
   const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
   const [testingConnection, setTestingConnection] = useState(false);
   const [formAssinatura, setFormAssinatura] = useState({ nome: "", conteudo: "", contaIds: [] as string[] });
+  const sigImgInputRef = useRef<HTMLInputElement>(null);
+  const sigEditorRef = useRef<HTMLDivElement>(null);
+  const sigSavedRange = useRef<Range | null>(null);
+  const [sigImgPopover, setSigImgPopover] = useState(false);
+  const [sigImgUrl, setSigImgUrl] = useState("");
+  const [sigImgUrlInput, setSigImgUrlInput] = useState("");
+  const [sigImgWidth, setSigImgWidth] = useState(200);
+  const [sigImgUploading, setSigImgUploading] = useState(false);
+  const [sigSelectedImg, setSigSelectedImg] = useState<HTMLImageElement | null>(null);
+  const [sigResizePos, setSigResizePos] = useState<{ top: number; left: number } | null>(null);
+  const sigResizeRef = useRef<HTMLDivElement>(null);
+  const sigImgSizes = [{ label: 'P', w: 80 }, { label: 'M', w: 200 }, { label: 'G', w: 400 }, { label: 'GG', w: 600 }];
   const tabsRef = useRef<HTMLDivElement>(null);
 
   /* ═══ Derived ═══ */
