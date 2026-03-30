@@ -12,6 +12,7 @@ import {
   Eye, EyeOff, Wifi, FileText, Briefcase, Tag, BookOpen, Code,
   Globe, ShoppingBag, Heart, Rocket, LucideIcon, Zap,
   XCircle, Play, Pause, Copy, RotateCcw, FileEdit, Wand2,
+  Bold, Italic, Underline, ImageIcon, Palette, Upload, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
