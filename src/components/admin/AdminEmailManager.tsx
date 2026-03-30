@@ -976,13 +976,18 @@ const AdminEmailManager: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [sigSelectedImg]);
 
-  // Sync editor innerHTML when modal opens
+  // Sync editor innerHTML when modal opens (with rAF to wait for DOM)
   useEffect(() => {
-    if (modalAssinaturaAberto && sigEditorRef.current) {
-      sigEditorRef.current.innerHTML = formAssinatura.conteudo;
+    if (modalAssinaturaAberto && formAssinatura.conteudo) {
+      const timer = requestAnimationFrame(() => {
+        if (sigEditorRef.current) {
+          sigEditorRef.current.innerHTML = formAssinatura.conteudo;
+        }
+      });
+      return () => cancelAnimationFrame(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modalAssinaturaAberto]);
+  }, [modalAssinaturaAberto, formAssinatura.conteudo]);
 
   const handleSigEditorClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
