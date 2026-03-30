@@ -488,57 +488,6 @@ const ComposeModal: React.FC<ComposeModalProps> = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* SIGNATURE SELECTION MODAL */}
-      <Dialog open={modalAssinaturasAberto} onOpenChange={setModalAssinaturasAberto}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-1.5"><PenLine className="w-4 h-4" /> {t('settings.signatures')}</DialogTitle>
-          </DialogHeader>
-          {assinaturas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-3">
-              <PenLine className="w-8 h-8 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">{t('signaturesModal.noSignatures')}</p>
-              {onCriarAssinatura && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => { setModalAssinaturasAberto(false); onCriarAssinatura(); }}>
-                  <Plus className="w-3.5 h-3.5" /> {t('signaturesModal.createNew')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            <ScrollArea className="max-h-[320px]">
-              <div className="space-y-2">
-                {assinaturas.map(a => (
-                  <div key={a.id} className="p-3 rounded-lg border border-border hover:bg-secondary/50 cursor-pointer transition-colors" onClick={() => {
-                    onSelecionarAssinatura?.(a.conteudo);
-                    // Inject signature HTML into Quill editor
-                    const q = quillRef.current;
-                    if (q) {
-                      const len = q.getLength();
-                      q.clipboard.dangerouslyPasteHTML(len - 1, "\n--\n" + a.conteudo);
-                    }
-                    setModalAssinaturasAberto(false);
-                  }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium">{a.nome}</span>
-                      {onEditarAssinatura && (
-                        <button onClick={e => { e.stopPropagation(); setModalAssinaturasAberto(false); onEditarAssinatura(a); }} className="text-muted-foreground hover:text-foreground p-0.5">
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground whitespace-pre-line line-clamp-3">{a.conteudo}</p>
-                  </div>
-                ))}
-              </div>
-              {onCriarAssinatura && (
-                <Button variant="outline" size="sm" className="w-full mt-2 h-7 text-xs gap-1.5" onClick={() => { setModalAssinaturasAberto(false); onCriarAssinatura(); }}>
-                  <Plus className="w-3.5 h-3.5" /> {t('signaturesModal.createNew')}
-                </Button>
-              )}
-            </ScrollArea>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
