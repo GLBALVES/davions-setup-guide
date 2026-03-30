@@ -1,32 +1,52 @@
 
 
-## Corrigir `admin-send-email` para evitar SPAM
+## Upgrade do Modal de Assinatura com Editor Rich Text e Suporte a Imagens
 
-### Problemas identificados
+### O que muda
+O modal de assinatura atual usa um `<Textarea>` simples (texto puro). Será substituído por um editor `contentEditable` com toolbar de formatação e inserção de imagens (upload ou URL), com resize visual.
 
-1. **Linha 89/95:** `EHLO localhost` — servidores de email rejeitam/penalizam isso. Deve usar o domínio real do remetente.
-2. **Headers faltando:** Sem `Message-ID`, sem `Return-Path`, sem `X-Mailer` — são sinais de spam para filtros.
-3. **Domínio extraído dinamicamente:** Extrair domínio do `conta.email` (ex: `partners@davions.com` → `davions.com`) para usar no EHLO e no Message-ID.
+### Arquivo alterado
+`src/components/admin/AdminEmailManager.tsx`
 
-### Correções no arquivo `supabase/functions/admin-send-email/index.ts`
+### 1. Novos states e refs (junto aos existentes, ~linha 532)
+- `sigImgInputRef`, `sigEditorRef`, `sigSavedRange` (refs)
+- `sigImgPopover`, `sigImgUrl`, `sigImgUrlInput`, `sigImgWidth`, `sigImgUploading` (controle do popover de imagem)
+- `sigSelectedImg`, `sigResizePos`, `sigResizeRef` (toolbar de resize flutuante)
+- Array `sigImgSizes` com tamanhos P/M/G/GG
 
-#### 1. Extrair domínio do email do remetente (após linha 60)
-```typescript
-const senderDomain = conta.email.split("@")[1] || "localhost";
-```
+### 2. Novos handlers/effects (~após linha 949)
+- **useEffect** para fechar toolbar de resize ao clicar fora
+- **handleSigEditorClick** — detecta clique em `<img>` dentro do editor e posiciona toolbar
+- **handleSigImgResize** — altera width da imagem selecionada
+- **useEffect** para sincronizar `innerHTML` do editor ao abrir modal
+- **saveSigSelection / restoreSigSelection** — salva/restaura cursor para inserir imagem na posição correta
+- **handleSigImgUpload** — upload para Storage bucket `email-documents` (com fallback base64)
+- **handleSigImgInsert** — insere `<img>` via `insertHTML`
+- Atualizar **handleSalvarAssinatura** para ler do `sigEditorRef.current.innerHTML`
 
-#### 2. EHLO com domínio real (linhas 89 e 95)
-- `EHLO localhost` → `EHLO ${senderDomain}`
+### 3. Substituir modal UI (linhas 1917-1939)
+Trocar o `<Textarea>` por:
+- **Toolbar** com botões: Bold, Italic, Underline, color picker, inserir imagem (Popover com abas Upload/URL + slider de tamanho)
+- **Editor `contentEditable`** (`sigEditorRef`) com `min-h-[150px]`, `onInput` sincronizando `formAssinatura.conteudo`, `onClick={handleSigEditorClick}`
+- **Toolbar flutuante de resize** (aparece ao clicar numa imagem) com botões P/M/G/GG
+- Manter campo Nome e checkboxes de contas inalterados
 
-#### 3. Adicionar headers anti-spam (bloco de headers, linhas 125-133)
-Adicionar antes do `Date`:
-- `Message-ID: <${Date.now()}.${crypto.randomUUID()}@${senderDomain}>`
-- `Return-Path: <${conta.email}>`
-- `X-Mailer: Davions Mail/1.0`
+### 4. Bucket Storage
+O bucket `email-documents` já existe. O upload usa path `{userId}/signatures/{timestamp}-{filename}`.
 
 ### Resultado
-Emails enviados terão identificação válida do domínio no handshake SMTP e headers completos, reduzindo drasticamente a chance de cair em spam.
-
-### Nota sobre DNS
-Além do código, o domínio `davions.com` precisa ter registros **SPF**, **DKIM** e **DMARC** configurados no painel DNS do Hostinger. Isso é configuração externa, não código — posso explicar os registros necessários após a correção.
+```text
+┌─ Nova Assinatura ──────────────────────┐
+│ Nome: [______________]                 │
+│                                        │
+│ [B] [I] [U] [🎨] [📷 Imagem]          │
+│ ┌────────────────────────────────────┐ │
+│ │ Editor rich text contentEditable   │ │
+│ │ com imagens redimensionáveis       │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ Usar na conta: ☑ Partners  ☐ Noreply   │
+│                    [Cancelar] [Salvar]  │
+└────────────────────────────────────────┘
+```
 
