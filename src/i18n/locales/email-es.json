@@ -264,7 +264,8 @@
     "urlPromptLink": "URL del enlace:",
     "urlPromptImage": "URL de la imagen:",
     "colorPrompt": "Color (hex):",
-    "defaultSignature": "Atentamente,\nNombre del Usuario\nCargo · Empresa"
+    "defaultSignature": "Atentamente,\nNombre del Usuario\nCargo · Empresa",
+    "emptyBody": "El cuerpo del email no puede estar vacío"
   },
   "templates": {
     "title": "Plantillas",
