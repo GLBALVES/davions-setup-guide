@@ -1031,8 +1031,9 @@ const AdminEmailManager: React.FC = () => {
         const filePath = `${session.user.id}/signatures/${Date.now()}-${safeName}`;
         const { data, error } = await supabase.storage.from('email-documents').upload(filePath, file);
         if (error || !data) throw error;
-        const { data: { publicUrl } } = supabase.storage.from('email-documents').getPublicUrl(data.path);
-        setSigImgUrl(publicUrl);
+        const { data: signedData, error: signedErr } = await supabase.storage.from('email-documents').createSignedUrl(data.path, 60 * 60 * 24 * 365);
+        if (signedErr || !signedData?.signedUrl) throw signedErr;
+        setSigImgUrl(signedData.signedUrl);
         return;
       }
       // Fallback: base64
@@ -2033,21 +2034,21 @@ const AdminEmailManager: React.FC = () => {
 
       {/* ═══ SIGNATURE MODAL ═══ */}
       <Dialog open={modalAssinaturaAberto} onOpenChange={v => { setModalAssinaturaAberto(v); if (!v) { setSigSelectedImg(null); setSigResizePos(null); setSigImgPopover(false); } }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{assinaturaSendoEditada ? t('settings.editSignature') : t('settings.newSignature')}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg" aria-describedby={undefined}>
+          <DialogHeader><DialogTitle>{assinaturaSendoEditada ? t('signaturesModal.editSignature') : t('signaturesModal.newSignature')}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="text-xs">{t('common.name')}</Label><Input value={formAssinatura.nome} onChange={e => setFormAssinatura(prev => ({ ...prev, nome: e.target.value }))} className="h-8 text-xs mt-1" /></div>
             <div>
-              <Label className="text-xs">{t('settings.content')}</Label>
+              <Label className="text-xs">{t('signaturesModal.content')}</Label>
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-0.5 mt-1 p-1 border border-b-0 rounded-t-md bg-muted/30">
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('bold'); }} title="Bold"><Bold className="w-3.5 h-3.5" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('italic'); }} title="Italic"><Italic className="w-3.5 h-3.5" /></Button>
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sigEditorRef.current?.focus(); document.execCommand('underline'); }} title="Underline"><Underline className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('bold'); }} title="Bold"><Bold className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('italic'); }} title="Italic"><Italic className="w-3.5 h-3.5" /></Button>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} onClick={() => { restoreSigSelection(); document.execCommand('underline'); }} title="Underline"><Underline className="w-3.5 h-3.5" /></Button>
                 <Separator orientation="vertical" className="h-5 mx-0.5" />
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} title={t('settings.textColor') || 'Cor'}><Palette className="w-3.5 h-3.5" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onMouseDown={saveSigSelection} title={t('compose.textColor') || 'Cor'}><Palette className="w-3.5 h-3.5" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-2" align="start">
                     <div className="flex flex-wrap gap-1.5">
@@ -2061,10 +2062,10 @@ const AdminEmailManager: React.FC = () => {
                 <Separator orientation="vertical" className="h-5 mx-0.5" />
                 <Popover open={sigImgPopover} onOpenChange={v => { if (v) saveSigSelection(); setSigImgPopover(v); }}>
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('settings.insertImage') || 'Imagem'}><ImageIcon className="w-3.5 h-3.5" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('signaturesModal.insertImage') || 'Imagem'}><ImageIcon className="w-3.5 h-3.5" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-3" align="start">
-                    <p className="text-xs font-medium mb-2">{t('settings.insertImage') || 'Inserir imagem'}</p>
+                    <p className="text-xs font-medium mb-2">{t('signaturesModal.insertImage') || 'Inserir imagem'}</p>
                     <div className="space-y-3">
                       {/* Upload */}
                       <div>
@@ -2089,7 +2090,7 @@ const AdminEmailManager: React.FC = () => {
                             <span className="text-[10px] text-muted-foreground shrink-0">W: {sigImgWidth}px</span>
                             <input type="range" min={40} max={600} value={sigImgWidth} onChange={e => setSigImgWidth(Number(e.target.value))} className="flex-1 h-1 accent-primary" />
                           </div>
-                          <Button type="button" size="sm" className="w-full h-7 text-xs" onClick={handleSigImgInsert}>{t('common.insert') || 'Inserir'}</Button>
+                          <Button type="button" size="sm" className="w-full h-7 text-xs" onClick={handleSigImgInsert}>{t('signaturesModal.insert') || 'Inserir'}</Button>
                         </div>
                       )}
                     </div>
@@ -2117,7 +2118,7 @@ const AdminEmailManager: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label className="text-xs">{t('settings.useInAccount')}:</Label>
+              <Label className="text-xs">{t('signaturesModal.useInAccount')}</Label>
               <div className="mt-1 space-y-1">{contas.map(c => (
                 <label key={c.id} className="flex items-center gap-2 text-xs cursor-pointer">
                   <input type="checkbox" checked={formAssinatura.contaIds.includes(c.id)} onChange={e => { setFormAssinatura(prev => ({ ...prev, contaIds: e.target.checked ? [...prev.contaIds, c.id] : prev.contaIds.filter(x => x !== c.id) })); }} className="rounded" />
