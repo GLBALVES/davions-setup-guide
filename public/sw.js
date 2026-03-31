@@ -12,8 +12,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body || "",
-    icon: "/placeholder.svg",
-    badge: "/placeholder.svg",
+    icon: "/icon-notification.png",
+    badge: "/icon-notification.png",
     data: { url: data.url || "/dashboard" },
     vibrate: [200, 100, 200],
     tag: "davions-push",
