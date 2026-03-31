@@ -65,9 +65,12 @@ async function createVapidAuth(endpoint: string, vapidPub: Uint8Array, vapidPriv
 // --- Web Push Encryption (RFC 8291 / aes128gcm) ---
 
 async function hkdf(ikm: Uint8Array, salt: Uint8Array, info: Uint8Array, length: number): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", ikm, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const prk = new Uint8Array(await crypto.subtle.sign("HMAC", key, salt.length ? salt : new Uint8Array(32)));
+  // HKDF-Extract: PRK = HMAC-SHA256(key=salt, data=ikm)
+  const actualSalt = salt.length ? salt : new Uint8Array(32);
+  const saltKey = await crypto.subtle.importKey("raw", actualSalt, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const prk = new Uint8Array(await crypto.subtle.sign("HMAC", saltKey, ikm));
 
+  // HKDF-Expand: OKM = HMAC-SHA256(key=PRK, data=info || 0x01)
   const prkKey = await crypto.subtle.importKey("raw", prk, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const infoWithCounter = new Uint8Array(info.length + 1);
   infoWithCounter.set(info);
