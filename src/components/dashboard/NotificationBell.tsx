@@ -94,7 +94,7 @@ export function NotificationBell() {
 
           // Browser notification if permission granted
           if (Notification.permission === "granted") {
-            new Notification(newNotif.title, { body: newNotif.body, icon: "/placeholder.svg" });
+            new Notification(newNotif.title, { body: newNotif.body, icon: "/icon-notification.png" });
           }
         }
       )
