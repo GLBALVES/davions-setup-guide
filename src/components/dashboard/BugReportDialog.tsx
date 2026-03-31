@@ -14,6 +14,7 @@ import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { UserBugThread } from "@/components/dashboard/UserBugThread";
+import { RotateCcw } from "lucide-react";
 
 interface BugReportDialogProps {
   open: boolean;
