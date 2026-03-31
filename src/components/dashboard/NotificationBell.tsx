@@ -138,10 +138,10 @@ export function NotificationBell() {
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[360px] p-0" sideOffset={8}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h3 className="text-sm font-semibold">{n.title}</h3>
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold shrink-0">{n.title}</h3>
           {unread > 0 && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={handleMarkAllRead}>
+            <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1 shrink-0 whitespace-nowrap" onClick={handleMarkAllRead}>
               <CheckCheck className="h-3 w-3" /> {n.markAllRead}
             </Button>
           )}
