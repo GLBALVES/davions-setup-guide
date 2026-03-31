@@ -1,40 +1,68 @@
 
+## Correção do overflow no cabeçalho das notificações
 
-## Personalizar Notificações Push com Payload Criptografado
+### Problema identificado
+O botão continua “estourando” porque o layout atual soma vários fatores que aumentam demais a largura no português:
+- `Button` herda estilos globais com `uppercase` + `tracking-widest`
+- o texto da tradução em PT é longo: “Marcar todas como lidas”
+- no cabeçalho, tanto o título quanto o botão estão com comportamento que evita encolhimento (`shrink-0` / `whitespace-nowrap`)
+- o `PopoverContent` tem largura fixa (`w-[360px]`)
 
-### Problema atual
-Os chamadores (confirm-booking, session-booking-webhook, CreateBookingDialog, Settings) já enviam `title`, `body` e `url` para a função `send-push`, mas ela **ignora esses dados** e faz um POST sem corpo (payloadless). O Service Worker então mostra sempre a mensagem genérica "You have a new notification".
+Resultado: no header do popover, o botão ultrapassa a largura disponível do focus group.
 
-### Solução
-Implementar criptografia de payload Web Push (RFC 8291 / aes128gcm) na Edge Function, usando as chaves `p256dh` e `auth` já armazenadas em `push_subscriptions`.
+### O que vou ajustar
+**Arquivo:** `src/components/dashboard/NotificationBell.tsx`
 
-### Arquivos alterados
+1. **Refazer o header para não quebrar o popover**
+   - trocar o container do topo para um layout mais resiliente:
+     - `flex-wrap`
+     - `items-start`
+     - `gap-2`
+   - permitir que o título ocupe a linha disponível sem forçar overflow
 
-**1. `supabase/functions/send-push/index.ts`**
-- Buscar `p256dh` e `auth` além de `id, endpoint` na query
-- Implementar função `encryptPayload(sub, payload)` usando:
-  - ECDH key agreement (P-256) com a chave pública do cliente
-  - HKDF para derivação de chave e nonce
-  - AES-128-GCM para criptografia do conteúdo
-- Enviar o payload criptografado no body do POST com headers `Content-Type: application/octet-stream` e `Content-Encoding: aes128gcm`
-- O payload JSON contém: `{ title, body, url }`
-- Fallback: se a criptografia falhar para uma subscription, enviar payloadless como antes
+2. **Compactar visualmente o botão**
+   - remover os estilos que aumentam artificialmente a largura no contexto desse botão:
+     - `uppercase`
+     - `tracking-widest`
+   - usar classes locais no botão como:
+     - `normal-case`
+     - `tracking-normal`
+     - `px-2` ou `px-2.5`
+     - `text-[11px]`
+     - `leading-none` ou `leading-tight`
 
-**2. `public/sw.js`**
-- Já preparado para receber payload (`event.data.json()`) — nenhuma mudança necessária, apenas confirmar que o fallback continua funcionando
+3. **Evitar estouro em qualquer idioma**
+   - remover o `whitespace-nowrap` do botão
+   - permitir quebra controlada em 2 linhas se necessário
+   - manter o ícone, mas com espaçamento menor
 
-### Detalhes técnicos da criptografia
+4. **Se necessário, ajustar largura do popover**
+   - aumentar levemente de `w-[360px]` para algo como `w-[380px]`
+   - ou usar `max-w-[calc(100vw-2rem)]` para evitar corte em telas menores
 
-```text
-Cliente (browser)          Servidor (send-push)
-  p256dh ───────────────►  ECDH shared secret
-  auth   ───────────────►  HKDF(IKM=shared, salt=auth) → content encryption key + nonce
-                            AES-128-GCM(payload) → encrypted body
-                            POST endpoint com Content-Encoding: aes128gcm
-```
+### Abordagem recomendada
+Vou priorizar uma solução que **não dependa de encurtar o texto traduzido**:
+- header com wrap
+- botão com casing normal e tracking normal
+- largura mais econômica
 
-A implementação usará as APIs nativas do Deno (`crypto.subtle`) para ECDH, HKDF e AES-GCM, sem dependências externas.
+Assim o componente continua correto em inglês, português e espanhol.
 
 ### Resultado esperado
-As notificações push mostrarão o título real (ex: "New Booking — João Silva") e o corpo personalizado (ex: "Mini Session confirmed. R$500.") em vez da mensagem genérica.
+- o botão fica totalmente dentro do cabeçalho
+- o focus group não é ultrapassado
+- a versão em português deixa de quebrar o layout
+- o topo do popover continua visualmente organizado
 
+### Detalhes técnicos
+A principal causa não é só o texto longo, mas o uso do componente `Button`, que aplica por padrão:
+```tsx
+"whitespace-nowrap ... tracking-widest uppercase"
+```
+Então, mesmo com fonte menor, o botão continua largo demais. A correção precisa sobrescrever esse comportamento especificamente no `NotificationBell`, e também permitir que o header quebre linha quando o espaço horizontal não for suficiente.
+
+### Validação após implementar
+- abrir o sino em PT, EN e ES
+- testar com notificações não lidas e sem notificações
+- confirmar que o botão não sai da borda do popover
+- confirmar que o header continua alinhado em desktop nessa largura atual
