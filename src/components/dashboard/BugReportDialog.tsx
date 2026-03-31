@@ -394,6 +394,32 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                       {isExpanded && (
                         <div className="border-t border-border px-3 py-3 bg-muted/10">
                           <UserBugThread bugReportId={report.id} />
+                          {(report.status === "fixed" || report.status === "wont_fix") && (
+                            <div className="flex justify-end mt-3 pt-2 border-t border-border">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs gap-1.5"
+                                onClick={async () => {
+                                  const { error } = await (supabase as any)
+                                    .from("bug_reports")
+                                    .update({ status: "open" })
+                                    .eq("id", report.id);
+                                  if (error) {
+                                    toast.error("Failed to reopen report.");
+                                    return;
+                                  }
+                                  setMyReports((prev) =>
+                                    prev.map((r) => (r.id === report.id ? { ...r, status: "open" } : r))
+                                  );
+                                  toast.success("Report reopened.");
+                                }}
+                              >
+                                <RotateCcw size={12} />
+                                Reopen
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
