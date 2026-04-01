@@ -304,11 +304,13 @@ const Bookings = () => {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
+    // Append T00:00:00 to date-only strings so they parse as local time, not UTC
+    const safe = dateStr.length === 10 ? `${dateStr}T00:00:00` : dateStr;
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    }).format(new Date(dateStr));
+    }).format(new Date(safe));
   };
 
   const formatTime = (timeStr: string) => {
