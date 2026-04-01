@@ -133,6 +133,8 @@ type MenuGroup = {
   defaultOpen?: boolean;
   /** Set to true to temporarily hide this group from the sidebar */
   disabled?: boolean;
+  /** Only visible to admin users */
+  adminOnly?: boolean;
 };
 
 /** Stable English items list — used only for key generation & matching */
