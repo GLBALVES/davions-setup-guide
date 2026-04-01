@@ -146,6 +146,9 @@ const SessionForm = () => {
   }
   const [sessionExtras, setSessionExtras] = useState<SessionExtra[]>([]);
 
+  // ── Bonuses (simple text list) ──
+  const [sessionBonuses, setSessionBonuses] = useState<string[]>([]);
+
   // ── Confirmation step ──
   const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
   const [reminderDays, setReminderDays] = useState<number[]>([]);
@@ -485,6 +488,17 @@ const SessionForm = () => {
       );
     }
 
+    // Load bonuses
+    const { data: bonusesData } = await supabase
+      .from("session_bonuses" as never)
+      .select("text")
+      .eq("session_id", sid)
+      .order("position", { ascending: true });
+
+    if (bonusesData) {
+      setSessionBonuses((bonusesData as Array<{ text: string }>).map((b) => b.text));
+    }
+
     // Load confirmation settings
     const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
@@ -609,6 +623,8 @@ const SessionForm = () => {
       portfolio_photos: portfolioPhotos.length > 0 ? portfolioPhotos : null,
     };
 
+    let resolvedSessionId = sessionId;
+
     if (isEdit && sessionId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase.from("sessions").update(payloadWithType as any).eq("id", sessionId);
@@ -629,7 +645,24 @@ const SessionForm = () => {
         setSaving(false);
         return;
       }
+      resolvedSessionId = data.id;
       setSessionId(data.id);
+    }
+
+    // Save bonuses
+    if (resolvedSessionId) {
+      await supabase.from("session_bonuses" as never).delete().eq("session_id", resolvedSessionId);
+      const validBonuses = sessionBonuses.filter((b) => b.trim());
+      if (validBonuses.length > 0) {
+        await supabase.from("session_bonuses" as never).insert(
+          validBonuses.map((text, i) => ({
+            session_id: resolvedSessionId,
+            photographer_id: user.id,
+            text: text.trim(),
+            position: i,
+          })) as never
+        );
+      }
     }
 
     setSaving(false);
@@ -1562,6 +1595,62 @@ const SessionForm = () => {
                         Each slot takes {totalMinutes} min ({dur} min session + {brk} min break)
                       </p>
                     )}
+
+                    {/* ── Bonuses ── */}
+                    <section className="flex flex-col gap-3 border border-border p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs tracking-wider uppercase font-light">
+                            {lang === "pt" ? "Bônus" : lang === "es" ? "Bonificaciones" : "Bonuses"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {lang === "pt" ? "Itens bônus exibidos na página de agendamento" : lang === "es" ? "Bonificaciones mostradas en la página de reserva" : "Bonus items shown on the booking page"}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-[10px] tracking-wider uppercase gap-1 h-7 px-2"
+                          onClick={() => setSessionBonuses((prev) => [...prev, ""])}
+                        >
+                          <Plus className="h-3 w-3" />
+                          {lang === "pt" ? "Adicionar" : lang === "es" ? "Agregar" : "Add"}
+                        </Button>
+                      </div>
+
+                      {sessionBonuses.length === 0 ? (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                          {lang === "pt" ? "Nenhum bônus configurado." : lang === "es" ? "Ninguna bonificación configurada." : "No bonuses configured."}
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {sessionBonuses.map((bonus, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <Input
+                                placeholder={lang === "pt" ? "Ex: Álbum digital incluso" : lang === "es" ? "Ej: Álbum digital incluido" : "e.g. Digital album included"}
+                                value={bonus}
+                                onChange={(e) => {
+                                  const updated = [...sessionBonuses];
+                                  updated[idx] = e.target.value;
+                                  setSessionBonuses(updated);
+                                }}
+                                className="text-xs h-8"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                                onClick={() => setSessionBonuses((prev) => prev.filter((_, i) => i !== idx))}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
 
                     <div className="flex items-center justify-between border border-border p-4">
                       <div>
