@@ -127,7 +127,7 @@ export function DashboardHeader() {
               <Sparkles size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Davions Assistant</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.assistant}</TooltipContent>
         </Tooltip>
 
 
