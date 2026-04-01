@@ -168,6 +168,7 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; bookingId: string; action: "confirm" | "cancel" }>({
