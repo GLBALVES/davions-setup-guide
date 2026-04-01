@@ -452,12 +452,32 @@ const Bookings = () => {
                 }
                 const hasMultipleGroups = groups.size > 1;
 
+                const SORT_COLUMNS: { label: string; mode: SortMode | null }[] = [
+                  { label: bk.client, mode: "client" },
+                  { label: bk.session, mode: null },
+                  { label: bk.dateTime, mode: "date" },
+                  { label: bk.payment, mode: null },
+                  { label: bk.status, mode: null },
+                  { label: bk.actions, mode: null },
+                ];
+
                 const tableHeader = (
                   <div className="hidden md:grid grid-cols-[2fr_1.5fr_140px_90px_100px_80px] gap-x-4 px-5 py-3 bg-muted/30 border-b border-border">
-                    {[bk.client, bk.session, bk.dateTime, bk.payment, bk.status, bk.actions].map((h) => (
-                      <span key={h} className="text-[9px] tracking-[0.25em] uppercase text-muted-foreground font-medium">
-                        {h}
-                      </span>
+                    {SORT_COLUMNS.map(({ label, mode }) => (
+                      <button
+                        key={label}
+                        onClick={() => mode && setSortMode((prev) => prev === mode ? "newest" : mode)}
+                        className={`text-[9px] tracking-[0.25em] uppercase font-medium flex items-center gap-1 text-left ${
+                          mode ? "cursor-pointer hover:text-foreground" : "cursor-default"
+                        } ${sortMode === mode ? "text-foreground" : "text-muted-foreground"}`}
+                        disabled={!mode}
+                      >
+                        {label}
+                        {mode && <ArrowUpDown className={`h-2.5 w-2.5 shrink-0 ${sortMode === mode ? "opacity-100" : "opacity-30"}`} />}
+                      </button>
+                    ))}
+                  </div>
+                );
                     ))}
                   </div>
                 );
