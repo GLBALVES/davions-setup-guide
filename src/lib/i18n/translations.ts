@@ -1909,6 +1909,11 @@ export const translations = {
       partial: "Parcial",
       failed: "Falhou",
       refunded: "Reembolsado",
+      sortBy: "Ordenar por",
+      sortNewest: "Mais recente",
+      sortOldest: "Mais antigo",
+      sortDate: "Data",
+      sortClient: "Cliente A–Z",
     },
     schedule: {
       title: "Agenda",
