@@ -119,6 +119,8 @@ type MenuItem = {
   isCollapsibleParent?: boolean;
   /** Sub-items with this key are hidden when the parent is collapsed */
   parentKey?: string;
+  /** Only visible to admin users */
+  adminOnly?: boolean;
 };
 
 type MenuGroup = {
