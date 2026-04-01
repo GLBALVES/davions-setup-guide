@@ -54,6 +54,7 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
   const [myReports, setMyReports] = useState<BugReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [expandedReport, setExpandedReport] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Unread admin replies
   const [unreadReportIds, setUnreadReportIds] = useState<Set<string>>(new Set());
