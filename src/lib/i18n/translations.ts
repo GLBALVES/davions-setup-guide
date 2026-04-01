@@ -3526,7 +3526,7 @@ export const translations = {
       settings: "Configuración",
       myFeatures: "Mis Funciones",
       dashboard: "Panel",
-      projects: "Proyectos",
+      projects: "Workflow",
       sessions: "Sesiones",
       schedule: "Calendario",
       bookings: "Reservas",
