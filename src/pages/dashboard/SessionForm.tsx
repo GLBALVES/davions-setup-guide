@@ -1941,7 +1941,7 @@ const SessionForm = () => {
                         <div>
                           <p className="text-xs tracking-wider uppercase font-light">Add-ons</p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {t.lang === "pt" ? "Itens adicionais exibidos no agendamento" : t.lang === "es" ? "Ítems adicionales mostrados en la reserva" : "Extra items shown during booking"}
+                            {lang === "pt" ? "Itens adicionais exibidos no agendamento" : lang === "es" ? "Ítems adicionales mostrados en la reserva" : "Extra items shown during booking"}
                           </p>
                         </div>
                         <Button
@@ -1952,22 +1952,22 @@ const SessionForm = () => {
                           onClick={() => setSessionExtras((prev) => [...prev, { description: "", quantity: "99", price: "0.00", _local: true }])}
                         >
                           <Plus className="h-3 w-3" />
-                          {t.lang === "pt" ? "Adicionar" : t.lang === "es" ? "Agregar" : "Add"}
+                          {lang === "pt" ? "Adicionar" : lang === "es" ? "Agregar" : "Add"}
                         </Button>
                       </div>
 
                       {sessionExtras.length === 0 ? (
                         <p className="text-[10px] text-muted-foreground/60 italic">
-                          {t.lang === "pt" ? "Nenhum item adicional configurado." : t.lang === "es" ? "Ningún ítem adicional configurado." : "No add-ons configured."}
+                          {lang === "pt" ? "Nenhum item adicional configurado." : lang === "es" ? "Ningún ítem adicional configurado." : "No add-ons configured."}
                         </p>
                       ) : (
                         <div className="flex flex-col gap-2">
                           {sessionExtras.map((extra, idx) => (
                             <div key={idx} className="grid grid-cols-[1fr_70px_80px_28px] gap-2 items-end">
                               <div className="flex flex-col gap-1">
-                                {idx === 0 && <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.lang === "pt" ? "Descrição" : t.lang === "es" ? "Descripción" : "Description"}</Label>}
+                                {idx === 0 && <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">{lang === "pt" ? "Descrição" : lang === "es" ? "Descripción" : "Description"}</Label>}
                                 <Input
-                                  placeholder={t.lang === "pt" ? "Ex: Álbum impresso" : t.lang === "es" ? "Ej: Álbum impreso" : "e.g. Printed album"}
+                                  placeholder={lang === "pt" ? "Ex: Álbum impresso" : lang === "es" ? "Ej: Álbum impreso" : "e.g. Printed album"}
                                   value={extra.description}
                                   onChange={(e) => {
                                     const updated = [...sessionExtras];
@@ -1993,7 +1993,7 @@ const SessionForm = () => {
                                 />
                               </div>
                               <div className="flex flex-col gap-1">
-                                {idx === 0 && <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">{t.lang === "pt" ? "Preço" : t.lang === "es" ? "Precio" : "Price"}</Label>}
+                                {idx === 0 && <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">{lang === "pt" ? "Preço" : lang === "es" ? "Precio" : "Price"}</Label>}
                                 <Input
                                   type="number"
                                   min="0"
