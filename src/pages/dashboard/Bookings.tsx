@@ -389,7 +389,7 @@ const Bookings = () => {
                   })}
                 </div>
 
-                <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
+                <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -399,6 +399,22 @@ const Bookings = () => {
                     <Calendar className="h-3.5 w-3.5" />
                     {bk.schedule}
                   </Button>
+
+                  {/* Sort dropdown */}
+                  <div className="relative shrink-0">
+                    <select
+                      value={sortMode}
+                      onChange={(e) => setSortMode(e.target.value as SortMode)}
+                      className="h-8 pl-7 pr-3 text-[10px] tracking-wider uppercase font-light bg-background border border-border rounded-sm appearance-none cursor-pointer text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="newest">{bk.sortNewest}</option>
+                      <option value="oldest">{bk.sortOldest}</option>
+                      <option value="date">{bk.sortDate}</option>
+                      <option value="client">{bk.sortClient}</option>
+                    </select>
+                    <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  </div>
+
                   <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     <Input
