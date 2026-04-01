@@ -807,7 +807,6 @@ function SessionRow({
   session,
   storeSlug,
   isManual,
-  dragHandleProps,
   onClick,
   onStatusChange,
   onDelete,
@@ -815,7 +814,6 @@ function SessionRow({
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
   onDelete: (id: string) => void;
