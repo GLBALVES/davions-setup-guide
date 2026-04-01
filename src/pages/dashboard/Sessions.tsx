@@ -586,7 +586,6 @@ function SessionCard({
   session,
   storeSlug,
   isManual,
-  dragHandleProps,
   onClick,
   onStatusChange,
   onDelete,
@@ -594,7 +593,6 @@ function SessionCard({
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
   onDelete: (id: string) => void;
