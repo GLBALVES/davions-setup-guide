@@ -488,6 +488,17 @@ const SessionForm = () => {
       );
     }
 
+    // Load bonuses
+    const { data: bonusesData } = await supabase
+      .from("session_bonuses" as never)
+      .select("text")
+      .eq("session_id", sid)
+      .order("position", { ascending: true });
+
+    if (bonusesData) {
+      setSessionBonuses((bonusesData as Array<{ text: string }>).map((b) => b.text));
+    }
+
     // Load confirmation settings
     const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
