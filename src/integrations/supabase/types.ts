@@ -2519,6 +2519,48 @@ export type Database = {
           },
         ]
       }
+      session_bonuses: {
+        Row: {
+          created_at: string
+          id: string
+          photographer_id: string
+          position: number
+          session_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photographer_id: string
+          position?: number
+          session_id: string
+          text?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photographer_id?: string
+          position?: number
+          session_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_bonuses_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_bonuses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_day_config: {
         Row: {
           buffer_after_min: number
