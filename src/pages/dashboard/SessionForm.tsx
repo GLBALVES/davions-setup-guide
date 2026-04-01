@@ -146,6 +146,9 @@ const SessionForm = () => {
   }
   const [sessionExtras, setSessionExtras] = useState<SessionExtra[]>([]);
 
+  // ── Bonuses (simple text list) ──
+  const [sessionBonuses, setSessionBonuses] = useState<string[]>([]);
+
   // ── Confirmation step ──
   const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
   const [reminderDays, setReminderDays] = useState<number[]>([]);
