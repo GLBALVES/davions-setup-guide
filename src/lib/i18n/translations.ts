@@ -14,7 +14,7 @@ export const translations = {
       myFeatures: "My Features",
       // Items
       dashboard: "Dashboard",
-      projects: "Projects",
+      projects: "Workflow",
       sessions: "Sessions",
       schedule: "Calendar",
       bookings: "Bookings",
