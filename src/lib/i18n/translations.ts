@@ -3514,6 +3514,8 @@ export const translations = {
       bugReport: "Reportar um bug",
     },
   },
+
+  es: {
     nav: {
       photographers: "Fotógrafos",
       marketing: "Marketing",
