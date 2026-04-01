@@ -49,6 +49,7 @@ import {
   CreditCard,
   SlidersHorizontal,
   HelpCircle,
+  Inbox,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -152,6 +153,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
+        { title: t.nav.emailInbox, icon: Inbox, to: "/dashboard/email-inbox" },
       ],
     },
     {
@@ -252,6 +254,7 @@ const groups: MenuGroup[] = [
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
       { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
+      { title: "Email Inbox", icon: Inbox, to: "/dashboard/email-inbox" },
     ],
   },
   { stableKey: "Marketing", title: "Marketing", icon: Megaphone, disabled: true, items: [

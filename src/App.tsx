@@ -69,6 +69,7 @@ import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
 import AdminVps from "./pages/admin/AdminVps";
 import AdminEmail from "./pages/admin/AdminEmail";
+import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
@@ -168,6 +169,7 @@ const App = () => {
                  <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  <Route path="/dashboard/help" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
+                 <Route path="/dashboard/email-inbox" element={<ProtectedRoute><EmailInbox /></ProtectedRoute>} />
 
                  {/* Admin routes */}
                  <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
