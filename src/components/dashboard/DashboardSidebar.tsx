@@ -961,6 +961,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             {/* Group popovers */}
              {translatedGroups.map((group) => {
                if (group.disabled && !isAdmin) return null;
+               if (group.adminOnly && !isAdmin) return null;
                const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
                if (restrictedKeys.includes(group.stableKey)) return null;
                const visibleItems = filterItems(group.items);
