@@ -237,7 +237,7 @@ const Sessions = () => {
                     {SORT_OPTIONS.map(({ key, label }) => (
                       <button
                         key={key}
-                        onClick={() => setSort(key)}
+                        onClick={() => handleSetSort(key)}
                         className={`px-2.5 py-1 text-[10px] tracking-wider uppercase font-light border transition-colors ${
                           sort === key
                             ? "border-foreground text-foreground bg-foreground/5"
