@@ -254,6 +254,7 @@ const groups: MenuGroup[] = [
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
       { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
+      { title: "Email Inbox", icon: Inbox, to: "/dashboard/email-inbox" },
     ],
   },
   { stableKey: "Marketing", title: "Marketing", icon: Megaphone, disabled: true, items: [
