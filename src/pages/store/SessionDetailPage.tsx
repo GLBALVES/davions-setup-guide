@@ -953,6 +953,12 @@ const SessionDetailPage = () => {
                         <span className="text-sm font-light">{session.location}</span>
                       </div>
                     )}
+                    {bonuses.map((b, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Check className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-light">{b}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
