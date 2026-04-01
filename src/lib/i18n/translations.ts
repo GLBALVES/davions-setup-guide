@@ -3398,6 +3398,7 @@ export const translations = {
       socialMedia: "Redes Sociales",
       seo: "SEO",
       emails: "Correos",
+      emailInbox: "Bandeja de Email",
       push: "Push",
       chat: "Chat",
       aiAgents: "Agentes de IA",
