@@ -258,7 +258,7 @@ const Sessions = () => {
 
                 {isManual && (
                   <p className="text-[10px] text-muted-foreground/60 tracking-wide">
-                    {s.manualHint ?? "Drag the ⠿ handle to reorder your sessions"}
+                    {s.manualHint ?? "Drag any card to reorder your sessions"}
                   </p>
                 )}
               </div>
@@ -515,12 +515,16 @@ function SortableSessionCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(isManual ? { ...attributes, ...listeners } : {})}
+      className={isManual ? "cursor-grab active:cursor-grabbing" : ""}
+    >
       <SessionCard
         session={session}
         storeSlug={storeSlug}
         isManual={isManual}
-        dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
         onDelete={onDelete}
@@ -558,12 +562,16 @@ function SortableSessionRow({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(isManual ? { ...attributes, ...listeners } : {})}
+      className={isManual ? "cursor-grab active:cursor-grabbing" : ""}
+    >
       <SessionRow
         session={session}
         storeSlug={storeSlug}
         isManual={isManual}
-        dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
         onDelete={onDelete}
@@ -578,7 +586,6 @@ function SessionCard({
   session,
   storeSlug,
   isManual,
-  dragHandleProps,
   onClick,
   onStatusChange,
   onDelete,
@@ -586,7 +593,6 @@ function SessionCard({
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
   onDelete: (id: string) => void;
@@ -620,16 +626,11 @@ function SessionCard({
             </div>
           )}
 
-          {/* Drag handle — top-left, only in manual mode */}
+          {/* Manual mode indicator */}
           {isManual && (
-            <button
-              {...dragHandleProps}
-              onClick={(e) => e.stopPropagation()}
-              className="absolute top-2 left-2 p-1 bg-background/80 backdrop-blur-sm rounded-sm text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
-              title="Drag to reorder"
-            >
+            <div className="absolute top-2 left-2 p-1 bg-background/80 backdrop-blur-sm rounded-sm text-muted-foreground pointer-events-none">
               <GripVertical className="h-3.5 w-3.5" />
-            </button>
+            </div>
           )}
 
           <div className="absolute top-2 right-2 flex items-center gap-1.5 group/badge">
@@ -806,7 +807,6 @@ function SessionRow({
   session,
   storeSlug,
   isManual,
-  dragHandleProps,
   onClick,
   onStatusChange,
   onDelete,
@@ -814,7 +814,6 @@ function SessionRow({
   session: Session;
   storeSlug: string | null;
   isManual: boolean;
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
   onDelete: (id: string) => void;
@@ -834,16 +833,11 @@ function SessionRow({
         onClick={onClick}
         className={`grid gap-4 px-4 py-3 items-center hover:bg-muted/30 cursor-pointer transition-colors group ${isManual ? "grid-cols-[auto_2fr_1fr_1fr_1fr_auto]" : "grid-cols-[2fr_1fr_1fr_1fr_auto]"}`}
       >
-        {/* Drag handle — list mode */}
+        {/* Drag indicator — list mode */}
         {isManual && (
-          <button
-            {...dragHandleProps}
-            onClick={(e) => e.stopPropagation()}
-            className="p-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
-            title="Drag to reorder"
-          >
+          <div className="p-1 text-muted-foreground pointer-events-none">
             <GripVertical className="h-3.5 w-3.5" />
-          </button>
+          </div>
         )}
 
         {/* Title + thumbnail */}
