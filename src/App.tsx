@@ -169,6 +169,7 @@ const App = () => {
                  <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  <Route path="/dashboard/help" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
+                 <Route path="/dashboard/email-inbox" element={<ProtectedRoute><EmailInbox /></ProtectedRoute>} />
 
                  {/* Admin routes */}
                  <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
