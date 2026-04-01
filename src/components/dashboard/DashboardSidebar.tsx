@@ -119,6 +119,8 @@ type MenuItem = {
   isCollapsibleParent?: boolean;
   /** Sub-items with this key are hidden when the parent is collapsed */
   parentKey?: string;
+  /** Only visible to admin users */
+  adminOnly?: boolean;
 };
 
 type MenuGroup = {
@@ -131,6 +133,8 @@ type MenuGroup = {
   defaultOpen?: boolean;
   /** Set to true to temporarily hide this group from the sidebar */
   disabled?: boolean;
+  /** Only visible to admin users */
+  adminOnly?: boolean;
 };
 
 /** Stable English items list — used only for key generation & matching */
@@ -152,7 +156,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.proofGalleries, icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries", badgeKey: "unlinkedGalleries" },
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
-        { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
+        { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website", adminOnly: true },
         { title: t.nav.emailInbox, icon: Inbox, to: "/dashboard/email-inbox" },
       ],
     },
@@ -221,6 +225,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Settings",
       title: t.nav.settings,
       icon: Settings,
+      adminOnly: true,
       items: [
         { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
         { title: t.nav.billing, icon: CreditCard, to: "/dashboard/billing" },
@@ -656,8 +661,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   // Filter a group's items based on permissions
   const filterItems = (items: MenuItem[]): MenuItem[] => {
     if (permsLoading) return items; // show all while loading
-    if (isOwner) return items;      // owner sees everything
-    return items.filter((item) => !item.permKey || can(item.permKey));
+    // Hide adminOnly items from non-admins
+    const filtered = items.filter((item) => !item.adminOnly || isAdmin);
+    if (isOwner) return filtered;      // owner sees everything (except adminOnly)
+    return filtered.filter((item) => !item.permKey || can(item.permKey));
   };
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
@@ -954,6 +961,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             {/* Group popovers */}
              {translatedGroups.map((group) => {
                if (group.disabled && !isAdmin) return null;
+               if (group.adminOnly && !isAdmin) return null;
                const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
                if (restrictedKeys.includes(group.stableKey)) return null;
                const visibleItems = filterItems(group.items);
@@ -1063,6 +1071,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
             {/* Regular groups */}
              {translatedGroups.map((group) => {
                if (group.disabled && !isAdmin) return null;
+               if (group.adminOnly && !isAdmin) return null;
                const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
                if (restrictedKeys.includes(group.stableKey)) return null;
                const visibleItems = filterItems(group.items);
