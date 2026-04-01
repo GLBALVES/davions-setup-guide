@@ -27,6 +27,7 @@ export const translations = {
       socialMedia: "Social Media",
       seo: "SEO",
       emails: "Emails",
+      emailInbox: "Email Inbox",
       push: "Push",
       chat: "Chat",
       aiAgents: "AI Agents",
