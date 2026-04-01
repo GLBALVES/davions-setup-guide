@@ -562,12 +562,16 @@ function SortableSessionRow({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(isManual ? { ...attributes, ...listeners } : {})}
+      className={isManual ? "cursor-grab active:cursor-grabbing" : ""}
+    >
       <SessionRow
         session={session}
         storeSlug={storeSlug}
         isManual={isManual}
-        dragHandleProps={isManual ? { ...attributes, ...listeners } : undefined}
         onClick={onClick}
         onStatusChange={onStatusChange}
         onDelete={onDelete}
