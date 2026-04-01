@@ -153,6 +153,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.finalGalleries, icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
         { title: t.nav.personalize, icon: Wand2, to: "/dashboard/personalize" },
         { title: t.nav.website, icon: Globe, to: "/dashboard/website", permKey: "website" },
+        { title: t.nav.emailInbox, icon: Inbox, to: "/dashboard/email-inbox" },
       ],
     },
     {
