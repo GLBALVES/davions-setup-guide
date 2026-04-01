@@ -250,7 +250,7 @@ const groups: MenuGroup[] = [
   {
     stableKey: "Photographers", title: "Photographers", icon: Camera, defaultOpen: true,
     items: [
-      { title: "Projects", icon: Columns, to: "/dashboard/projects", badgeKey: "projectUpdates" },
+      { title: "Workflow", icon: Columns, to: "/dashboard/projects", badgeKey: "projectUpdates" },
       { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard", end: true },
       { title: "Sessions", icon: CalendarDays, to: "/dashboard/sessions", badgeKey: "draftSessions", permKey: "sessions" },
       { title: "Schedule", icon: CalendarCheck2, to: "/dashboard/schedule", permKey: "schedule", isCollapsibleParent: true, parentKey: "schedule" },
