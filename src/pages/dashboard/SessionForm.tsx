@@ -646,6 +646,23 @@ const SessionForm = () => {
       setSessionId(data.id);
     }
 
+    // Save bonuses
+    const finalSessionId = sessionId ?? (undefined as unknown as string);
+    if (finalSessionId) {
+      await supabase.from("session_bonuses" as never).delete().eq("session_id", finalSessionId);
+      const validBonuses = sessionBonuses.filter((b) => b.trim());
+      if (validBonuses.length > 0) {
+        await supabase.from("session_bonuses" as never).insert(
+          validBonuses.map((text, i) => ({
+            session_id: finalSessionId,
+            photographer_id: user.id,
+            text: text.trim(),
+            position: i,
+          })) as never
+        );
+      }
+    }
+
     setSaving(false);
     setStep(2);
   };
