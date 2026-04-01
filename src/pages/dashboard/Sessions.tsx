@@ -62,7 +62,19 @@ const Sessions = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc" | "manual">("newest");
+  const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc" | "manual">(() => {
+    const saved = localStorage.getItem("davions_sessions_sort");
+    if (saved && ["newest", "oldest", "az", "za", "price_asc", "price_desc", "manual"].includes(saved)) {
+      return saved as any;
+    }
+    return "newest";
+  });
+
+  // Persist sort preference
+  const handleSetSort = (s: typeof sort) => {
+    setSort(s);
+    localStorage.setItem("davions_sessions_sort", s);
+  };
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const sensors = useSensors(
@@ -225,7 +237,7 @@ const Sessions = () => {
                     {SORT_OPTIONS.map(({ key, label }) => (
                       <button
                         key={key}
-                        onClick={() => setSort(key)}
+                        onClick={() => handleSetSort(key)}
                         className={`px-2.5 py-1 text-[10px] tracking-wider uppercase font-light border transition-colors ${
                           sort === key
                             ? "border-foreground text-foreground bg-foreground/5"
