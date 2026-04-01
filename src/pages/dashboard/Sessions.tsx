@@ -833,16 +833,11 @@ function SessionRow({
         onClick={onClick}
         className={`grid gap-4 px-4 py-3 items-center hover:bg-muted/30 cursor-pointer transition-colors group ${isManual ? "grid-cols-[auto_2fr_1fr_1fr_1fr_auto]" : "grid-cols-[2fr_1fr_1fr_1fr_auto]"}`}
       >
-        {/* Drag handle — list mode */}
+        {/* Drag indicator — list mode */}
         {isManual && (
-          <button
-            {...dragHandleProps}
-            onClick={(e) => e.stopPropagation()}
-            className="p-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
-            title="Drag to reorder"
-          >
+          <div className="p-1 text-muted-foreground pointer-events-none">
             <GripVertical className="h-3.5 w-3.5" />
-          </button>
+          </div>
         )}
 
         {/* Title + thumbnail */}
