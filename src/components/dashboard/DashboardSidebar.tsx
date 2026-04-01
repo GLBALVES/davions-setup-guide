@@ -661,8 +661,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   // Filter a group's items based on permissions
   const filterItems = (items: MenuItem[]): MenuItem[] => {
     if (permsLoading) return items; // show all while loading
-    if (isOwner) return items;      // owner sees everything
-    return items.filter((item) => !item.permKey || can(item.permKey));
+    // Hide adminOnly items from non-admins
+    const filtered = items.filter((item) => !item.adminOnly || isAdmin);
+    if (isOwner) return filtered;      // owner sees everything (except adminOnly)
+    return filtered.filter((item) => !item.permKey || can(item.permKey));
   };
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
