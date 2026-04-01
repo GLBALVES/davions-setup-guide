@@ -55,6 +55,7 @@ interface Booking {
 }
 
 type FilterStatus = "all" | "pending" | "confirmed" | "cancelled";
+type SortMode = "newest" | "oldest" | "date" | "client";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   pending:   { label: "Pending",   className: "bg-amber-50 text-amber-700 border border-amber-200" },
