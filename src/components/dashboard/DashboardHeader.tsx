@@ -140,7 +140,7 @@ export function DashboardHeader() {
               <Bug size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Report a bug</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.bugReport}</TooltipContent>
         </Tooltip>
       </div>
 
