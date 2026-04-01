@@ -623,6 +623,8 @@ const SessionForm = () => {
       portfolio_photos: portfolioPhotos.length > 0 ? portfolioPhotos : null,
     };
 
+    let resolvedSessionId = sessionId;
+
     if (isEdit && sessionId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase.from("sessions").update(payloadWithType as any).eq("id", sessionId);
@@ -643,18 +645,18 @@ const SessionForm = () => {
         setSaving(false);
         return;
       }
+      resolvedSessionId = data.id;
       setSessionId(data.id);
     }
 
     // Save bonuses
-    const finalSessionId = sessionId ?? (undefined as unknown as string);
-    if (finalSessionId) {
-      await supabase.from("session_bonuses" as never).delete().eq("session_id", finalSessionId);
+    if (resolvedSessionId) {
+      await supabase.from("session_bonuses" as never).delete().eq("session_id", resolvedSessionId);
       const validBonuses = sessionBonuses.filter((b) => b.trim());
       if (validBonuses.length > 0) {
         await supabase.from("session_bonuses" as never).insert(
           validBonuses.map((text, i) => ({
-            session_id: finalSessionId,
+            session_id: resolvedSessionId,
             photographer_id: user.id,
             text: text.trim(),
             position: i,
