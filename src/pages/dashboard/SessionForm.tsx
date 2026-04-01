@@ -105,7 +105,7 @@ const SessionForm = () => {
   const { id } = useParams();
   const isEdit = Boolean(id) && id !== "new";
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
