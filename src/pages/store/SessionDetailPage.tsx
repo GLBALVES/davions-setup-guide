@@ -366,11 +366,19 @@ const SessionDetailPage = () => {
         setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
 
-      const { data: extrasData } = await supabase
-        .from("session_extras")
-        .select("id, description, price, quantity")
-        .eq("session_id", s.id);
+      const [{ data: extrasData }, { data: bonusData }] = await Promise.all([
+        supabase
+          .from("session_extras")
+          .select("id, description, price, quantity")
+          .eq("session_id", s.id),
+        (supabase as any)
+          .from("session_bonuses")
+          .select("text, position")
+          .eq("session_id", s.id)
+          .order("position", { ascending: true }),
+      ]);
       setExtras((extrasData ?? []) as SessionExtra[]);
+      setBonuses(((bonusData ?? []) as { text: string; position: number }[]).map((b) => b.text));
 
       // Portfolio images for the hero slider — stored directly on the session row
       const portfolioUrls: string[] = Array.isArray(s.portfolio_photos)
