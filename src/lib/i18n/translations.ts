@@ -201,6 +201,11 @@ export const translations = {
       partial: "Partial",
       failed: "Failed",
       refunded: "Refunded",
+      sortBy: "Sort by",
+      sortNewest: "Newest",
+      sortOldest: "Oldest",
+      sortDate: "Date",
+      sortClient: "Client A–Z",
     },
     // ── Schedule page ──
     schedule: {
