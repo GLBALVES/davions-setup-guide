@@ -1,27 +1,27 @@
 
-## Levar o Editor de Emails para o Dashboard do Fotógrafo
 
-### Contexto
-O módulo de email admin (`AdminEmailManager`) já é isolado por `user_id` via RLS. Não há verificação de role — qualquer usuário autenticado pode usar. Basta criar uma rota no dashboard e adicionar ao sidebar.
+## Restringir sidebar para usuários não-admin
+
+### Problema
+Atualmente, usuários não-admin veem o grupo **Settings** e o item **Website** dentro de Fotógrafos. Na fase de testes, apenas admins devem ver esses itens.
 
 ### Alterações
 
-**1. Nova página `src/pages/dashboard/EmailInbox.tsx`**
-- Layout fullscreen igual ao admin (`flex flex-col h-screen overflow-hidden`)
-- Header com botão "Voltar" para `/dashboard`
-- Renderiza `<AdminEmailManager />` no corpo
+**Arquivo: `src/components/dashboard/DashboardSidebar.tsx`**
 
-**2. Adicionar rota em `src/App.tsx`**
-- `/dashboard/email-inbox` → `EmailInbox`
+1. **Ocultar o grupo Settings para não-admins** — adicionar a flag `adminOnly: true` ao tipo `MenuGroup` e marcar o grupo Settings com ela. Na renderização (linhas ~956 e ~1065), filtrar grupos com `adminOnly` quando `!isAdmin`.
 
-**3. Adicionar item no sidebar `src/components/dashboard/DashboardSidebar.tsx`**
-- Item "Email" com ícone `Mail` no grupo adequado
-- Link para `/dashboard/email-inbox`
-
-**4. Permissões (opcional)**
-- Verificar se o grupo de menu onde o item será adicionado precisa de `PermissionGate`
+2. **Ocultar o item Website para não-admins** — adicionar `adminOnly?: boolean` ao tipo `MenuItem` e marcar o item Website (`permKey: "website"`) com `adminOnly: true`. No `filterItems()` (linha ~657), filtrar itens com `adminOnly` quando `!isAdmin`.
 
 ### Detalhes técnicos
-- Nenhuma migração de banco necessária — as tabelas e RLS já suportam multi-usuário
-- Nenhuma alteração nas Edge Functions — já autenticam por JWT
-- O componente `AdminEmailManager` será reutilizado diretamente (sem cópia)
+
+- Adicionar `adminOnly?: boolean` aos tipos `MenuItem` e `MenuGroup`
+- No grupo Settings (stableKey `"Settings"`), adicionar `adminOnly: true`
+- No item Website dentro de Photographers, adicionar `adminOnly: true`
+- No filtro de grupos (ambos collapsed e expanded), adicionar: `if (group.adminOnly && !isAdmin) return null;`
+- No `filterItems`, adicionar: filtrar itens com `adminOnly` quando `!isAdmin`
+- O estado `isAdmin` já existe no componente (linha 633), então não precisa de queries adicionais
+
+### Resultado
+Usuários não-admin verão apenas: Favoritos + Fotógrafos (Projetos, Painel, Sessões, Calendário, Galerias de Prova, Galerias Finais, Personalizar, Caixa de Email). Admins continuam vendo tudo.
+
