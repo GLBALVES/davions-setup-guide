@@ -27,7 +27,7 @@ export function DashboardHeader() {
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
