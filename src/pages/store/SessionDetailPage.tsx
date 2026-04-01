@@ -288,6 +288,7 @@ const SessionDetailPage = () => {
   const [campaignSlots, setCampaignSlots] = useState<CampaignSlotDef[]>([]);
   const [isCampaign, setIsCampaign] = useState(false);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
+  const [bonuses, setBonuses] = useState<string[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -365,11 +366,19 @@ const SessionDetailPage = () => {
         setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
 
-      const { data: extrasData } = await supabase
-        .from("session_extras")
-        .select("id, description, price, quantity")
-        .eq("session_id", s.id);
+      const [{ data: extrasData }, { data: bonusData }] = await Promise.all([
+        supabase
+          .from("session_extras")
+          .select("id, description, price, quantity")
+          .eq("session_id", s.id),
+        (supabase as any)
+          .from("session_bonuses")
+          .select("text, position")
+          .eq("session_id", s.id)
+          .order("position", { ascending: true }),
+      ]);
       setExtras((extrasData ?? []) as SessionExtra[]);
+      setBonuses(((bonusData ?? []) as { text: string; position: number }[]).map((b) => b.text));
 
       // Portfolio images for the hero slider — stored directly on the session row
       const portfolioUrls: string[] = Array.isArray(s.portfolio_photos)
@@ -944,6 +953,12 @@ const SessionDetailPage = () => {
                         <span className="text-sm font-light">{session.location}</span>
                       </div>
                     )}
+                    {bonuses.map((b, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Check className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-light">{b}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
