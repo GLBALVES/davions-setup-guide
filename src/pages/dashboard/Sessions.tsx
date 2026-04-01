@@ -258,7 +258,7 @@ const Sessions = () => {
 
                 {isManual && (
                   <p className="text-[10px] text-muted-foreground/60 tracking-wide">
-                    {s.manualHint ?? "Drag the ⠿ handle to reorder your sessions"}
+                    {s.manualHint ?? "Drag any card to reorder your sessions"}
                   </p>
                 )}
               </div>
