@@ -244,8 +244,21 @@ const Bookings = () => {
       );
     }
 
+    // Sort
+    list = [...list].sort((a, b) => {
+      if (sortMode === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortMode === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sortMode === "client") return a.client_name.localeCompare(b.client_name);
+      if (sortMode === "date") {
+        const dateA = a.session_availability?.date ?? a.booked_date ?? "";
+        const dateB = b.session_availability?.date ?? b.booked_date ?? "";
+        return dateA.localeCompare(dateB);
+      }
+      return 0;
+    });
+
     return list;
-  }, [bookings, filter, search]);
+  }, [bookings, filter, search, sortMode]);
 
   // Show custody banner when: stripe account exists but onboarding incomplete AND there are confirmed+paid bookings
   const hasFundsInCustody = useMemo(() => {
