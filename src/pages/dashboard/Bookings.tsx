@@ -478,9 +478,6 @@ const Bookings = () => {
                     ))}
                   </div>
                 );
-                    ))}
-                  </div>
-                );
 
                 const renderRow = (booking: Booking, idx: number, list: Booking[]) => {
                   const avail = booking.session_availability;
