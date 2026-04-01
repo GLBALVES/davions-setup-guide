@@ -288,6 +288,7 @@ const SessionDetailPage = () => {
   const [campaignSlots, setCampaignSlots] = useState<CampaignSlotDef[]>([]);
   const [isCampaign, setIsCampaign] = useState(false);
   const [extras, setExtras] = useState<SessionExtra[]>([]);
+  const [bonuses, setBonuses] = useState<string[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
