@@ -3576,6 +3576,11 @@ export const translations = {
       partial: "Parcial",
       failed: "Fallido",
       refunded: "Reembolsado",
+      sortBy: "Ordenar por",
+      sortNewest: "Más reciente",
+      sortOldest: "Más antiguo",
+      sortDate: "Fecha",
+      sortClient: "Cliente A–Z",
     },
     schedule: {
       title: "Agenda",
