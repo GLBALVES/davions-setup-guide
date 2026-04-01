@@ -115,7 +115,7 @@ export function DashboardHeader() {
               <RefreshCw size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Refresh</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.refresh}</TooltipContent>
         </Tooltip>
 
         <Tooltip>

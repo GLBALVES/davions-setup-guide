@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle2, Circle, ChevronRight, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChecklistStep {
   key: string;
@@ -18,26 +19,27 @@ const DISMISSED_KEY = "onboarding_dismissed_v1";
 export function OnboardingChecklist() {
   const { photographerId } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [steps, setSteps] = useState<ChecklistStep[]>([
     {
       key: "profile",
-      label: "Complete your profile",
-      description: "Add your business name, bio, and contact info",
+      label: t.onboarding.stepProfile,
+      description: t.onboarding.stepProfileDesc,
       path: "/dashboard/settings",
       done: false,
     },
     {
       key: "session",
-      label: "Create your first session",
-      description: "Set up a booking type with price and availability",
+      label: t.onboarding.stepSession,
+      description: t.onboarding.stepSessionDesc,
       path: "/dashboard/sessions/new",
       done: false,
     },
     {
       key: "store",
-      label: "Configure your public store",
-      description: "Set your store URL and website appearance",
+      label: t.onboarding.stepStore,
+      description: t.onboarding.stepStoreDesc,
       path: "/dashboard/website",
       done: false,
     },
@@ -47,6 +49,18 @@ export function OnboardingChecklist() {
   const [dismissed, setDismissed] = useState(() =>
     localStorage.getItem(DISMISSED_KEY) === "true"
   );
+
+  // Update labels when language changes
+  useEffect(() => {
+    setSteps((prev) =>
+      prev.map((s) => {
+        if (s.key === "profile") return { ...s, label: t.onboarding.stepProfile, description: t.onboarding.stepProfileDesc };
+        if (s.key === "session") return { ...s, label: t.onboarding.stepSession, description: t.onboarding.stepSessionDesc };
+        if (s.key === "store") return { ...s, label: t.onboarding.stepStore, description: t.onboarding.stepStoreDesc };
+        return s;
+      })
+    );
+  }, [t]);
 
   useEffect(() => {
     if (!photographerId || dismissed) {
@@ -77,7 +91,6 @@ export function OnboardingChecklist() {
       const hasSessions = (sessionsRes.data?.length ?? 0) > 0;
       const site = siteRes.data as any;
 
-      // Also check store_slug on photographers table
       const slugRes = await supabase
         .from("photographers")
         .select("store_slug")
@@ -107,7 +120,6 @@ export function OnboardingChecklist() {
   const completedCount = steps.filter((s) => s.done).length;
   const allDone = completedCount === steps.length;
 
-  // Auto-hide permanently after all steps are done
   useEffect(() => {
     if (!loading && allDone) {
       const timer = setTimeout(() => {
@@ -121,6 +133,7 @@ export function OnboardingChecklist() {
   if (loading || dismissed) return null;
 
   const progressPct = Math.round((completedCount / steps.length) * 100);
+  const ob = t.onboarding;
 
   return (
     <AnimatePresence>
@@ -138,16 +151,15 @@ export function OnboardingChecklist() {
             <Sparkles className="h-3.5 w-3.5 text-foreground/60" />
             <div>
               <p className="text-xs font-light tracking-wide">
-                {allDone ? "You're all set! 🎉" : "Getting started"}
+                {allDone ? ob.allSet : ob.gettingStarted}
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                {completedCount} of {steps.length} steps completed
+                {ob.stepsCompleted(completedCount, steps.length)}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Progress bar */}
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-28 h-1 bg-border rounded-full overflow-hidden">
                 <motion.div
@@ -189,7 +201,6 @@ export function OnboardingChecklist() {
                   : "hover:bg-muted/30 cursor-pointer group"
               }`}
             >
-              {/* Status icon */}
               <span className="shrink-0">
                 {step.done ? (
                   <CheckCircle2 className="h-4 w-4 text-foreground" />
@@ -198,7 +209,6 @@ export function OnboardingChecklist() {
                 )}
               </span>
 
-              {/* Text */}
               <div className="flex-1 min-w-0">
                 <p
                   className={`text-xs tracking-wide ${
@@ -212,7 +222,6 @@ export function OnboardingChecklist() {
                 )}
               </div>
 
-              {/* Arrow */}
               {!step.done && (
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-foreground transition-colors" />
               )}
@@ -220,7 +229,6 @@ export function OnboardingChecklist() {
           ))}
         </div>
 
-        {/* All done celebration */}
         <AnimatePresence>
           {allDone && (
             <motion.div
@@ -230,7 +238,7 @@ export function OnboardingChecklist() {
               className="px-5 py-3 bg-foreground/5 border-t border-border"
             >
               <p className="text-[10px] text-muted-foreground text-center tracking-wide">
-                All done! This checklist will disappear in a moment.
+                {ob.allDoneMsg}
               </p>
             </motion.div>
           )}

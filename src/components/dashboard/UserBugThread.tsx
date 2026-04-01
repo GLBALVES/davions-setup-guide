@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -23,6 +24,7 @@ interface UserBugThreadProps {
 
 export function UserBugThread({ bugReportId }: UserBugThreadProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
@@ -118,7 +120,7 @@ export function UserBugThread({ bugReportId }: UserBugThreadProps) {
         );
       }
     } catch {
-      toast.error("Failed to send message.");
+      toast.error(t.bugReport.failedSend);
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
       seenIds.current.delete(optimisticMsg.id);
       setNewMessage(content);
@@ -134,9 +136,11 @@ export function UserBugThread({ bugReportId }: UserBugThreadProps) {
     }
   };
 
+  const br = t.bugReport;
+
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Messages with Support</p>
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">{br.messagesWithSupport}</p>
 
       <div className="flex flex-col gap-2 max-h-52 overflow-y-auto pr-1">
         {loading ? (
@@ -144,7 +148,7 @@ export function UserBugThread({ bugReportId }: UserBugThreadProps) {
             <Loader2 size={14} className="animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <p className="text-xs text-muted-foreground/50 italic text-center py-3">No replies yet.</p>
+          <p className="text-xs text-muted-foreground/50 italic text-center py-3">{br.noRepliesYet}</p>
         ) : (
           messages.map((msg) => (
             <div
@@ -168,7 +172,7 @@ export function UserBugThread({ bugReportId }: UserBugThreadProps) {
                     !msg.is_admin ? "opacity-70" : "text-muted-foreground"
                   )}
                 >
-                  {msg.is_admin ? "Support Team" : "You"}
+                  {msg.is_admin ? br.supportTeam : br.you}
                 </span>
                 <span
                   className={cn(
@@ -194,7 +198,7 @@ export function UserBugThread({ bugReportId }: UserBugThreadProps) {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Add a message… (Enter to send)"
+          placeholder={br.messagePlaceholder}
           className="min-h-[56px] resize-none text-xs"
           maxLength={2000}
         />
