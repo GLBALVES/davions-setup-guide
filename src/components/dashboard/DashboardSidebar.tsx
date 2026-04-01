@@ -225,6 +225,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       stableKey: "Settings",
       title: t.nav.settings,
       icon: Settings,
+      adminOnly: true,
       items: [
         { title: t.nav.myProfile, icon: UserCircle, to: "/dashboard/settings" },
         { title: t.nav.billing, icon: CreditCard, to: "/dashboard/billing" },
