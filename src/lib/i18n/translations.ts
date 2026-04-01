@@ -5318,6 +5318,7 @@ export const translations = {
       bugReport: "Reportar un bug",
     },
   },
+} as const;
 
 // Recursively widen all literal string types to `string`, preserving function signatures
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
