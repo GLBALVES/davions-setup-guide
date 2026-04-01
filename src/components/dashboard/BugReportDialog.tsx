@@ -355,7 +355,33 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {myReports.map((report) => {
+                {/* Status filter */}
+                <div className="flex gap-1.5 flex-wrap">
+                  {[
+                    { value: "all", label: "All" },
+                    { value: "open", label: "Open" },
+                    { value: "in_progress", label: "In Progress" },
+                    { value: "fixed", label: "Fixed" },
+                    { value: "wont_fix", label: "Won't Fix" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setStatusFilter(opt.value)}
+                      className={cn(
+                        "text-[10px] tracking-widest uppercase px-2.5 py-1 rounded-sm border transition-colors duration-200",
+                        statusFilter === opt.value
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-transparent text-muted-foreground border-border hover:border-foreground/40"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {myReports
+                  .filter((r) => statusFilter === "all" || r.status === statusFilter)
+                  .map((report) => {
                   const scfg = STATUS_LABELS[report.status] || STATUS_LABELS.open;
                   const isExpanded = expandedReport === report.id;
                   const hasUnread = unreadReportIds.has(report.id);
