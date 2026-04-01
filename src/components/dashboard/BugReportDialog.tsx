@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { UserBugThread } from "@/components/dashboard/UserBugThread";
 import { RotateCcw } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BugReportDialogProps {
   open: boolean;
@@ -31,17 +32,18 @@ type BugReport = {
   route: string;
 };
 
-const STATUS_LABELS: Record<string, { label: string; class: string }> = {
-  open: { label: "Open", class: "bg-destructive/10 text-destructive border-destructive/20" },
-  in_progress: { label: "In Progress", class: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  fixed: { label: "Fixed", class: "bg-green-500/10 text-green-600 border-green-500/20" },
-  wont_fix: { label: "Won't Fix", class: "bg-muted text-muted-foreground border-border" },
-};
-
 export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
   const { user } = useAuth();
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
+
+  const STATUS_LABELS: Record<string, { label: string; class: string }> = {
+    open: { label: t.bugReport.statusOpen, class: "bg-destructive/10 text-destructive border-destructive/20" },
+    in_progress: { label: t.bugReport.statusInProgress, class: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+    fixed: { label: t.bugReport.statusFixed, class: "bg-green-500/10 text-green-600 border-green-500/20" },
+    wont_fix: { label: t.bugReport.statusWontFix, class: "bg-muted text-muted-foreground border-border" },
+  };
 
   // New report form
   const [title, setTitle] = useState("");
@@ -84,7 +86,6 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
     setMyReports(data || []);
     setLoadingReports(false);
 
-    // Check for unread admin messages for each report
     if (data && data.length > 0) {
       const ids = data.map((r: BugReport) => r.id);
       const { data: msgs } = await (supabase as any)
@@ -112,7 +113,6 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
     }
   };
 
-  // Realtime: listen for new admin messages while dialog is open
   useEffect(() => {
     if (!open || !user) return;
     const channel: RealtimeChannel = (supabase as any)
@@ -122,12 +122,10 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
           const reportId = payload.new?.bug_report_id;
           const createdAt = payload.new?.created_at;
           if (!reportId || !createdAt) return;
-          // Only mark unread if it's not the currently expanded report
           setExpandedReport((expanded) => {
             if (expanded !== reportId) {
               setUnreadReportIds((prev) => new Set([...prev, reportId]));
             } else {
-              // auto-mark seen if already open
               markReportSeen(reportId, createdAt);
             }
             return expanded;
@@ -179,7 +177,7 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim()) {
-      toast.error("Please fill in title and description.");
+      toast.error(t.bugReport.fillRequired);
       return;
     }
     if (!user) return;
@@ -207,11 +205,13 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
         setMediaFiles([]);
       }, 2000);
     } catch {
-      toast.error("Failed to submit report. Please try again.");
+      toast.error(t.bugReport.failedSubmit);
     } finally {
       setSubmitting(false);
     }
   };
+
+  const br = t.bugReport;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -219,15 +219,15 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-medium tracking-wide uppercase">
             <Bug size={15} className="text-muted-foreground" />
-            Bug Reports
+            {br.dialogTitle}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="new">
           <TabsList className="w-full mb-2">
-            <TabsTrigger value="new" className="flex-1 text-xs uppercase tracking-widest">New Report</TabsTrigger>
+            <TabsTrigger value="new" className="flex-1 text-xs uppercase tracking-widest">{br.tabNew}</TabsTrigger>
             <TabsTrigger value="my" className="flex-1 text-xs uppercase tracking-widest relative">
-              My Reports
+              {br.tabMy}
               {myReports.length > 0 && (
                 <span className="ml-1.5 bg-muted text-muted-foreground text-[10px] rounded-full px-1.5 py-0.5">{myReports.length}</span>
               )}
@@ -242,19 +242,19 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
             {success ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
                 <CheckCircle2 size={36} className="text-primary" />
-                <p className="text-sm text-foreground font-medium">Report submitted. Thank you!</p>
-                <p className="text-xs text-muted-foreground">We'll look into this as soon as possible.</p>
+                <p className="text-sm text-foreground font-medium">{br.successTitle}</p>
+                <p className="text-xs text-muted-foreground">{br.successDesc}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 <p className="text-[10px] tracking-widest uppercase text-muted-foreground/60 font-light">
-                  Page: <span className="text-muted-foreground">{location.pathname}</span>
+                  {br.pageLabel} <span className="text-muted-foreground">{location.pathname}</span>
                 </p>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs uppercase tracking-widest font-light">Title</Label>
+                  <Label className="text-xs uppercase tracking-widest font-light">{br.titleLabel}</Label>
                   <Input
-                    placeholder="Short summary of the bug"
+                    placeholder={br.titlePlaceholder}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={120}
@@ -262,9 +262,9 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs uppercase tracking-widest font-light">Description</Label>
+                  <Label className="text-xs uppercase tracking-widest font-light">{br.descriptionLabel}</Label>
                   <Textarea
-                    placeholder="Describe what happened and what you expected to happen..."
+                    placeholder={br.descriptionPlaceholder}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="min-h-[110px] resize-none"
@@ -275,8 +275,8 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                 {/* Media attachments */}
                 <div className="flex flex-col gap-2">
                   <Label className="text-xs uppercase tracking-widest font-light">
-                    Attachments{" "}
-                    <span className="text-muted-foreground/50 normal-case tracking-normal">(images &amp; videos, up to 5)</span>
+                    {br.attachmentsLabel}{" "}
+                    <span className="text-muted-foreground/50 normal-case tracking-normal">({br.attachmentsHint})</span>
                   </Label>
 
                   {mediaFiles.length > 0 && (
@@ -320,7 +320,7 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                         )}
                       >
                         <Upload size={13} />
-                        <span>Upload screenshots or screen recordings</span>
+                        <span>{br.uploadHint}</span>
                         <div className="ml-auto flex items-center gap-1 opacity-40">
                           <ImageIcon size={12} />
                           <Video size={12} />
@@ -332,10 +332,10 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={submitting}>
-                    Cancel
+                    {br.cancel}
                   </Button>
                   <Button size="sm" onClick={handleSubmit} disabled={submitting || !title.trim() || !description.trim()}>
-                    {submitting ? <Loader2 size={13} className="animate-spin" /> : "Submit Report"}
+                    {submitting ? <Loader2 size={13} className="animate-spin" /> : br.submitReport}
                   </Button>
                 </div>
               </div>
@@ -351,18 +351,18 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
             ) : myReports.length === 0 ? (
               <div className="flex flex-col items-center py-10 gap-2 text-muted-foreground">
                 <Bug size={22} className="opacity-30" />
-                <p className="text-sm">No reports submitted yet.</p>
+                <p className="text-sm">{br.noReportsYet}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {/* Status filter */}
                 <div className="flex gap-1.5 flex-wrap">
                   {[
-                    { value: "all", label: "All" },
-                    { value: "open", label: "Open" },
-                    { value: "in_progress", label: "In Progress" },
-                    { value: "fixed", label: "Fixed" },
-                    { value: "wont_fix", label: "Won't Fix" },
+                    { value: "all", label: br.filterAll },
+                    { value: "open", label: br.filterOpen },
+                    { value: "in_progress", label: br.filterInProgress },
+                    { value: "fixed", label: br.filterFixed },
+                    { value: "wont_fix", label: br.filterWontFix },
                   ].map((opt) => (
                     <button
                       key={opt.value}
@@ -405,7 +405,7 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                           <p className={cn("text-sm truncate", hasUnread ? "font-medium" : "font-light")}>{report.title}</p>
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                             {new Date(report.created_at).toLocaleDateString()}
-                            {hasUnread && <span className="ml-2 text-destructive">• New reply</span>}
+                            {hasUnread && <span className="ml-2 text-destructive">• {br.newReply}</span>}
                           </p>
                         </div>
                         <Badge variant="outline" className={cn("text-[10px] tracking-widest uppercase font-light shrink-0", scfg.class)}>
@@ -433,17 +433,17 @@ export function BugReportDialog({ open, onOpenChange }: BugReportDialogProps) {
                                     .update({ status: "open" })
                                     .eq("id", report.id);
                                   if (error) {
-                                    toast.error("Failed to reopen report.");
+                                    toast.error(br.failedReopen);
                                     return;
                                   }
                                   setMyReports((prev) =>
                                     prev.map((r) => (r.id === report.id ? { ...r, status: "open" } : r))
                                   );
-                                  toast.success("Report reopened.");
+                                  toast.success(br.reportReopened);
                                 }}
                               >
                                 <RotateCcw size={12} />
-                                Reopen
+                                {br.reopen}
                               </Button>
                             </div>
                           )}

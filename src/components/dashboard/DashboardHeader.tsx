@@ -27,7 +27,7 @@ export function DashboardHeader() {
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
 
   useEffect(() => {
     if (!user) return;
@@ -115,7 +115,7 @@ export function DashboardHeader() {
               <RefreshCw size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Refresh</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.refresh}</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -127,7 +127,7 @@ export function DashboardHeader() {
               <Sparkles size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Davions Assistant</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.assistant}</TooltipContent>
         </Tooltip>
 
 
@@ -140,7 +140,7 @@ export function DashboardHeader() {
               <Bug size={15} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Report a bug</TooltipContent>
+          <TooltipContent side="bottom">{t.headerTooltips.bugReport}</TooltipContent>
         </Tooltip>
       </div>
 
