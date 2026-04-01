@@ -626,16 +626,11 @@ function SessionCard({
             </div>
           )}
 
-          {/* Drag handle — top-left, only in manual mode */}
+          {/* Manual mode indicator */}
           {isManual && (
-            <button
-              {...dragHandleProps}
-              onClick={(e) => e.stopPropagation()}
-              className="absolute top-2 left-2 p-1 bg-background/80 backdrop-blur-sm rounded-sm text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
-              title="Drag to reorder"
-            >
+            <div className="absolute top-2 left-2 p-1 bg-background/80 backdrop-blur-sm rounded-sm text-muted-foreground pointer-events-none">
               <GripVertical className="h-3.5 w-3.5" />
-            </button>
+            </div>
           )}
 
           <div className="absolute top-2 right-2 flex items-center gap-1.5 group/badge">
