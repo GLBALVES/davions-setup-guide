@@ -201,6 +201,11 @@ export const translations = {
       partial: "Partial",
       failed: "Failed",
       refunded: "Refunded",
+      sortBy: "Sort by",
+      sortNewest: "Newest",
+      sortOldest: "Oldest",
+      sortDate: "Date",
+      sortClient: "Client A–Z",
     },
     // ── Schedule page ──
     schedule: {
@@ -1904,6 +1909,11 @@ export const translations = {
       partial: "Parcial",
       failed: "Falhou",
       refunded: "Reembolsado",
+      sortBy: "Ordenar por",
+      sortNewest: "Mais recente",
+      sortOldest: "Mais antigo",
+      sortDate: "Data",
+      sortClient: "Cliente A–Z",
     },
     schedule: {
       title: "Agenda",
@@ -3566,6 +3576,11 @@ export const translations = {
       partial: "Parcial",
       failed: "Fallido",
       refunded: "Reembolsado",
+      sortBy: "Ordenar por",
+      sortNewest: "Más reciente",
+      sortOldest: "Más antiguo",
+      sortDate: "Fecha",
+      sortClient: "Cliente A–Z",
     },
     schedule: {
       title: "Agenda",

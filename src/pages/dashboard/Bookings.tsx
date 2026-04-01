@@ -37,6 +37,7 @@ import {
   ClipboardList,
   AlertTriangle,
   ArrowRight,
+  ArrowUpDown,
 } from "lucide-react";
 
 interface Booking {
@@ -54,6 +55,7 @@ interface Booking {
 }
 
 type FilterStatus = "all" | "pending" | "confirmed" | "cancelled";
+type SortMode = "newest" | "oldest" | "date" | "client";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   pending:   { label: "Pending",   className: "bg-amber-50 text-amber-700 border border-amber-200" },
@@ -166,6 +168,7 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; bookingId: string; action: "confirm" | "cancel" }>({
@@ -241,8 +244,21 @@ const Bookings = () => {
       );
     }
 
+    // Sort
+    list = [...list].sort((a, b) => {
+      if (sortMode === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sortMode === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sortMode === "client") return a.client_name.localeCompare(b.client_name);
+      if (sortMode === "date") {
+        const dateA = a.session_availability?.date ?? a.booked_date ?? "";
+        const dateB = b.session_availability?.date ?? b.booked_date ?? "";
+        return dateA.localeCompare(dateB);
+      }
+      return 0;
+    });
+
     return list;
-  }, [bookings, filter, search]);
+  }, [bookings, filter, search, sortMode]);
 
   // Show custody banner when: stripe account exists but onboarding incomplete AND there are confirmed+paid bookings
   const hasFundsInCustody = useMemo(() => {
@@ -373,7 +389,7 @@ const Bookings = () => {
                   })}
                 </div>
 
-                <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
+                <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -383,6 +399,22 @@ const Bookings = () => {
                     <Calendar className="h-3.5 w-3.5" />
                     {bk.schedule}
                   </Button>
+
+                  {/* Sort dropdown */}
+                  <div className="relative shrink-0">
+                    <select
+                      value={sortMode}
+                      onChange={(e) => setSortMode(e.target.value as SortMode)}
+                      className="h-8 pl-7 pr-3 text-[10px] tracking-wider uppercase font-light bg-background border border-border rounded-sm appearance-none cursor-pointer text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="newest">{bk.sortNewest}</option>
+                      <option value="oldest">{bk.sortOldest}</option>
+                      <option value="date">{bk.sortDate}</option>
+                      <option value="client">{bk.sortClient}</option>
+                    </select>
+                    <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  </div>
+
                   <div className="relative flex-1 sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     <Input
