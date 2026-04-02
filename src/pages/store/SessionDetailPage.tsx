@@ -593,7 +593,7 @@ const SessionDetailPage = () => {
   // ────────────────────────────────────────────
 
   const changeExtraQty = (extra: SessionExtra, delta: number) => {
-    const maxQty = extra.quantity > 1 ? extra.quantity : 99;
+    const maxQty = extra.quantity && extra.quantity < 99 ? extra.quantity : 99;
     setSelectedExtras((prev) => {
       const existing = prev.find((e) => e.id === extra.id);
       if (existing) {
