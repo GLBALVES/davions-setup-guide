@@ -28,6 +28,31 @@ const TEMPLATE_CONFIG: Record<string, {
     overlayColor: "rgba(245,245,244,0.55)",
     accentColor: "rgba(30,30,30,0.85)",
   },
+  sierra: {
+    imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80",
+    overlayColor: "rgba(0,0,0,0.50)",
+    accentColor: "rgba(255,255,255,0.90)",
+  },
+  canvas: {
+    imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80",
+    overlayColor: "rgba(20,15,10,0.45)",
+    accentColor: "rgba(255,255,255,0.85)",
+  },
+  avery: {
+    imageUrl: "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=600&q=80",
+    overlayColor: "rgba(250,250,249,0.50)",
+    accentColor: "rgba(30,30,30,0.80)",
+  },
+  seville: {
+    imageUrl: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=600&q=80",
+    overlayColor: "rgba(255,250,245,0.40)",
+    accentColor: "rgba(40,30,20,0.80)",
+  },
+  milo: {
+    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
+    overlayColor: "rgba(250,245,235,0.60)",
+    accentColor: "rgba(50,40,30,0.85)",
+  },
 };
 
 // ── Template UI overlay (wireframe elements drawn on top of the photo) ─────────
@@ -138,11 +163,137 @@ function CleanOverlay() {
   );
 }
 
+// ── Sierra overlay: full-screen hero, serif typography, bottom nav, slide counter ──
+function SierraOverlay() {
+  return (
+    <div className="absolute inset-0 flex flex-col justify-between p-3 pointer-events-none">
+      {/* Slide counter */}
+      <div className="flex justify-end">
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="w-4 h-1.5 rounded-sm bg-white/70" />
+          <div className="w-3 h-1 rounded-sm bg-white/30" />
+          <div className="w-3 h-1 rounded-sm bg-white/30" />
+        </div>
+      </div>
+      {/* Center serif title */}
+      <div className="flex flex-col items-center gap-1.5 mb-6">
+        <div className="w-32 h-4 rounded-sm bg-white/80" />
+        <div className="w-20 h-1.5 rounded-sm bg-white/40" />
+      </div>
+      {/* Bottom nav */}
+      <div className="flex items-center justify-center gap-3">
+        {[0,1,2,3].map(i => <div key={i} className="w-7 h-1.5 rounded-sm bg-white/50" />)}
+      </div>
+    </div>
+  );
+}
+
+// ── Canvas overlay: poetic serif italic, centered nav with name ──
+function CanvasOverlay() {
+  return (
+    <div className="absolute inset-0 flex flex-col pointer-events-none">
+      {/* Nav: centered name */}
+      <div className="flex items-center justify-center px-3 py-2.5">
+        <div className="flex gap-2 items-center">
+          <div className="w-6 h-1.5 rounded-sm bg-white/40" />
+          <div className="w-14 h-2 rounded-sm bg-white/70" />
+          <div className="w-6 h-1.5 rounded-sm bg-white/40" />
+        </div>
+      </div>
+      {/* Center italic title */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-2">
+        <div className="w-28 h-4 rounded-sm bg-white/75 rotate-[-1deg]" />
+        <div className="w-16 h-1.5 rounded-sm bg-white/35" />
+      </div>
+      {/* Arrows */}
+      <div className="absolute top-1/2 left-2 w-3 h-3 border-l border-b border-white/50 rotate-45" />
+      <div className="absolute top-1/2 right-2 w-3 h-3 border-r border-t border-white/50 rotate-45" />
+    </div>
+  );
+}
+
+// ── Avery overlay: sidebar + masonry grid ──
+function AveryOverlay() {
+  return (
+    <div className="absolute inset-0 flex pointer-events-none">
+      {/* Sidebar */}
+      <div className="w-[22%] border-r border-foreground/10 bg-white/30 flex flex-col items-center py-3 gap-2">
+        <div className="w-8 h-2 rounded-sm bg-foreground/50 mb-2" />
+        {[0,1,2,3].map(i => <div key={i} className="w-6 h-1 rounded-sm bg-foreground/25" />)}
+      </div>
+      {/* Masonry grid */}
+      <div className="flex-1 p-2 grid grid-cols-3 gap-1 content-start">
+        <div className="col-span-2 row-span-2 rounded-sm bg-foreground/15 border border-foreground/10" style={{ minHeight: "50%" }} />
+        <div className="rounded-sm bg-foreground/10 border border-foreground/10" />
+        <div className="rounded-sm bg-foreground/12 border border-foreground/10" />
+        <div className="rounded-sm bg-foreground/10 border border-foreground/10" />
+        <div className="rounded-sm bg-foreground/08 border border-foreground/10" />
+        <div className="rounded-sm bg-foreground/12 border border-foreground/10" />
+      </div>
+    </div>
+  );
+}
+
+// ── Seville overlay: contained hero, elegant typography ──
+function SevilleOverlay() {
+  return (
+    <div className="absolute inset-0 flex flex-col pointer-events-none">
+      {/* Nav */}
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="w-14 h-2 rounded-sm bg-foreground/50" />
+        <div className="flex gap-2">
+          {[0,1,2].map(i => <div key={i} className="w-6 h-1.5 rounded-sm bg-foreground/30" />)}
+        </div>
+      </div>
+      {/* Contained hero */}
+      <div className="mx-3 mt-1 flex-1 rounded-sm bg-foreground/10 border border-foreground/10 relative overflow-hidden flex flex-col items-center justify-center gap-1.5">
+        <div className="w-24 h-3 rounded-sm bg-foreground/40" />
+        <div className="w-16 h-1.5 rounded-sm bg-foreground/20" />
+        <div className="mt-1 w-14 h-4 rounded-sm border border-foreground/30 flex items-center justify-center">
+          <div className="w-8 h-1.5 rounded-sm bg-foreground/30" />
+        </div>
+      </div>
+      {/* Bottom spacer */}
+      <div className="h-3" />
+    </div>
+  );
+}
+
+// ── Milo overlay: text-only hero, asymmetric photos below ──
+function MiloOverlay() {
+  return (
+    <div className="absolute inset-0 flex flex-col pointer-events-none">
+      {/* Nav: centered name + CTA */}
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="w-6 h-1.5 rounded-sm bg-foreground/30" />
+        <div className="w-12 h-2 rounded-sm bg-foreground/50" />
+        <div className="w-10 h-3 rounded-sm bg-foreground/60 border border-foreground/20" />
+      </div>
+      {/* Big text hero (no image) */}
+      <div className="flex flex-col items-center justify-center py-3 gap-1">
+        <div className="w-32 h-4 rounded-sm bg-foreground/50" />
+        <div className="w-20 h-1.5 rounded-sm bg-foreground/25" />
+      </div>
+      {/* Asymmetric photos */}
+      <div className="flex-1 px-2 pb-2 flex gap-1.5 items-stretch">
+        <div className="w-[25%] rounded-sm bg-foreground/10 border border-foreground/10" />
+        <div className="flex-1 rounded-sm bg-foreground/15 border border-foreground/10" />
+        <div className="w-[25%] rounded-sm bg-foreground/10 border border-foreground/10" />
+      </div>
+    </div>
+  );
+}
+
 const OVERLAYS: Record<string, React.FC> = {
   editorial: EditorialOverlay,
   grid: GridOverlay,
   magazine: MagazineOverlay,
   clean: CleanOverlay,
+  sierra: SierraOverlay,
+  canvas: CanvasOverlay,
+  avery: AveryOverlay,
+  seville: SevilleOverlay,
+  milo: MiloOverlay,
 };
 
 // ── Template card ─────────────────────────────────────────────────────────────

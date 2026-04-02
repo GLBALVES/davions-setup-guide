@@ -735,7 +735,7 @@ function deriveCommon(props: Props) {
 
 /** Build the blockMap for a given template variant. Each key returns a React node or null. */
 function buildBlockMap(
-  variant: "editorial" | "grid" | "magazine" | "clean",
+  variant: "editorial" | "grid" | "magazine" | "clean" | "sierra" | "canvas" | "avery" | "seville" | "milo",
   props: Props,
   derived: ReturnType<typeof deriveCommon>
 ): Record<string, React.ReactNode> {
@@ -1429,6 +1429,316 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: SIERRA — Dark editorial, large serif hero, bottom nav, slide counter
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SIERRA_DEFAULT_ORDER = ["hero", "quote", "sessions", "experience", "portfolio", "about", "testimonials"];
+
+function SierraTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { photographer, site, sessions, galleries, sessionHref, galleryHref, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
+
+  // Sierra reuses editorial blocks but with a unique hero
+  const blocks = buildBlockMap("editorial", props, derived);
+
+  // Override hero with Sierra-specific design
+  if (showBlock("hero")) {
+    blocks.hero = (
+      <div key="hero" data-block-key="hero" className="relative w-full h-[85vh] min-h-[500px] overflow-hidden">
+        {site?.site_hero_image_url
+          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+          : <div className="absolute inset-0 bg-foreground" />
+        }
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+        {/* Slide counter */}
+        <div className="absolute top-8 right-8 z-10 flex flex-col items-end gap-1 text-white/50 text-[10px] tracking-widest font-light">
+          <span className="text-white/90">01</span>
+          <div className="w-4 h-px bg-white/30" />
+          <span>03</span>
+        </div>
+        {/* Center: large serif title */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
+          <h1 className="text-4xl md:text-7xl font-extralight tracking-[0.15em] uppercase text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            {ed("site_headline", headline)}
+          </h1>
+          {(subheadline || editMode) && (
+            <p className="mt-4 text-[11px] tracking-[0.5em] uppercase text-white/50 font-light">{ed("site_subheadline", subheadline)}</p>
+          )}
+        </div>
+        {/* Bottom nav */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-8 py-5 bg-black/30 backdrop-blur-sm">
+          {navLinks.map(link => (
+            <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-[10px] tracking-[0.4em] uppercase text-white/60 hover:text-white transition-colors font-light">
+              {link.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const orderedKeys = (props.visibleSections ?? SIERRA_DEFAULT_ORDER).filter((k) => k !== "footer");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: CANVAS — Poetic serif italic, centered nav, elegant
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CANVAS_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "experience", "about", "testimonials"];
+
+function CanvasTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, headline, subheadline, ctaText, accentColor, showBooking, showContact, navLinks, handleNavClick, editMode, ed, showBlock } = derived;
+
+  const blocks = buildBlockMap("editorial", props, derived);
+
+  // Override hero with Canvas-specific design
+  if (showBlock("hero")) {
+    blocks.hero = (
+      <div key="hero" data-block-key="hero" className="relative w-full h-[75vh] min-h-[450px] overflow-hidden">
+        {site?.site_hero_image_url
+          ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+          : <div className="absolute inset-0 bg-foreground" />
+        }
+        <div className="absolute inset-0 bg-black/40" />
+        {/* Centered nav with name in middle */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center py-5">
+          <div className="flex items-center gap-6">
+            {navLinks.slice(0, 2).map(link => (
+              <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-[10px] tracking-[0.3em] uppercase text-white/50 hover:text-white transition-colors font-light">
+                {link.label}
+              </button>
+            ))}
+            <span className="text-[11px] tracking-[0.4em] uppercase text-white/90 font-light px-4">{displayName}</span>
+            {navLinks.slice(2).map(link => (
+              <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-[10px] tracking-[0.3em] uppercase text-white/50 hover:text-white transition-colors font-light">
+                {link.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Center italic title */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
+          <h1 className="text-3xl md:text-6xl font-extralight tracking-wide text-white italic leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            {ed("site_headline", headline)}
+          </h1>
+          {(subheadline || editMode) && (
+            <p className="mt-4 text-sm text-white/50 font-light italic">{ed("site_subheadline", subheadline)}</p>
+          )}
+        </div>
+        {/* Arrows */}
+        <button className="absolute left-6 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center text-white/40 hover:text-white transition-colors">
+          <ArrowRight className="h-5 w-5 rotate-180" />
+        </button>
+        <button className="absolute right-6 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center text-white/40 hover:text-white transition-colors">
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      </div>
+    );
+  }
+
+  const orderedKeys = (props.visibleSections ?? CANVAS_DEFAULT_ORDER).filter((k) => k !== "footer");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: AVERY — Vertical sidebar + masonry content
+// ═══════════════════════════════════════════════════════════════════════════
+
+const AVERY_DEFAULT_ORDER = ["sessions", "portfolio", "about", "experience", "testimonials"];
+
+function AveryTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, sessions, galleries, sessionHref, galleryHref, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, accentColor, showBooking, showStore, showContact, navLinks, handleNavClick, ctaText, showBlock } = derived;
+
+  const blocks = buildBlockMap("grid", props, derived);
+
+  // Override hero with masonry grid (no traditional hero)
+  if (showBlock("hero")) {
+    blocks.hero = null; // Avery has no hero — portfolio IS the hero
+  }
+
+  const orderedKeys = (props.visibleSections ?? AVERY_DEFAULT_ORDER).filter((k) => k !== "footer");
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Fixed sidebar */}
+      <aside className="hidden md:flex w-[220px] shrink-0 border-r border-border flex-col justify-between py-8 px-6 fixed top-0 left-0 h-full bg-background z-40">
+        <div>
+          {site?.logo_url ? (
+            <img src={site.logo_url} alt={displayName} className="h-8 object-contain mb-8" />
+          ) : (
+            <p className="text-[10px] tracking-[0.4em] uppercase font-light mb-8">{displayName}</p>
+          )}
+          <nav className="flex flex-col gap-4">
+            {navLinks.map(link => (
+              <button key={link.label} onClick={() => handleNavClick(link.href)} className="text-left text-[10px] tracking-[0.3em] uppercase text-muted-foreground hover:text-foreground transition-colors font-light">
+                {link.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="flex flex-col gap-3">
+          {showBooking && (
+            <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor }} className="text-[9px] tracking-[0.3em] uppercase border px-3 py-2 text-foreground hover:bg-foreground hover:text-background transition-colors font-light">
+              {ctaText}
+            </button>
+          )}
+          <SocialIcons site={site} scrolled={true} size="xs" />
+        </div>
+      </aside>
+
+      {/* Mobile nav */}
+      <div className="md:hidden">
+        <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+          displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+          navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      </div>
+
+      {/* Main content */}
+      <main className="flex-1 md:ml-[220px] pt-14 md:pt-0">
+        {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+        <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      </main>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: SEVILLE — Contained hero, airy, luxurious
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SEVILLE_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "about", "experience", "testimonials"];
+
+function SevilleTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, headline, subheadline, ctaText, accentColor, showBooking, showContact, navLinks, handleNavClick, editMode, ed, showBlock } = derived;
+
+  const blocks = buildBlockMap("clean", props, derived);
+
+  // Override hero with Seville contained design
+  if (showBlock("hero")) {
+    blocks.hero = (
+      <div key="hero" data-block-key="hero" className="pt-20 px-6 md:px-12">
+        <div className="relative w-full max-w-6xl mx-auto overflow-hidden" style={{ aspectRatio: "16/7" }}>
+          {site?.site_hero_image_url
+            ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
+            : <div className="absolute inset-0 bg-muted" />
+          }
+          <div className="absolute inset-0 bg-black/25" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
+            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+              {ed("site_headline", headline)}
+            </h1>
+            {(subheadline || editMode) && (
+              <p className="mt-3 text-[11px] tracking-[0.3em] uppercase text-white/60 font-light">{ed("site_subheadline", subheadline)}</p>
+            )}
+            {showBooking && (
+              <button onClick={() => handleNavClick("#sessions")} className="mt-6 px-8 py-2.5 border border-white/60 text-[10px] tracking-[0.3em] uppercase text-white font-light hover:bg-white hover:text-black transition-colors">
+                {ed("cta_text", ctaText)}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const orderedKeys = (props.visibleSections ?? SEVILLE_DEFAULT_ORDER).filter((k) => k !== "footer");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE: MILO — Typography hero, warm, asymmetric photos
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MILO_DEFAULT_ORDER = ["hero", "quote", "sessions", "portfolio", "about", "experience", "testimonials"];
+
+function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<typeof deriveCommon> }) {
+  const { site, sessions, galleries, galleryHref, scrolled, mobileMenuOpen, setMobileMenuOpen } = props;
+  const { displayName, headline, subheadline, ctaText, accentColor, showBooking, showContact, navLinks, handleNavClick, editMode, ed, showBlock } = derived;
+
+  const blocks = buildBlockMap("editorial", props, derived);
+
+  // Override hero with Milo text-only + asymmetric photos
+  if (showBlock("hero")) {
+    // Gather cover images from sessions/galleries for asymmetric display
+    const coverImages = [
+      ...sessions.filter(s => s.cover_image_url).map(s => s.cover_image_url!),
+      ...galleries.filter(g => g.cover_image_url).map(g => g.cover_image_url!),
+    ].slice(0, 3);
+
+    blocks.hero = (
+      <div key="hero" data-block-key="hero" className="pt-20">
+        {/* Text hero */}
+        <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
+          <h1 className="text-4xl md:text-7xl font-extralight tracking-[0.08em] leading-tight text-foreground" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            {ed("site_headline", headline)}
+          </h1>
+          {(subheadline || editMode) && (
+            <p className="mt-5 text-sm font-light text-muted-foreground leading-relaxed max-w-xl mx-auto">{ed("site_subheadline", subheadline)}</p>
+          )}
+          {showBooking && (
+            <button onClick={() => handleNavClick("#sessions")} style={{ borderColor: accentColor }} className="mt-8 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase text-foreground hover:bg-foreground hover:text-background transition-colors font-light">
+              {ed("cta_text", ctaText)}
+            </button>
+          )}
+        </div>
+        {/* Asymmetric photos */}
+        {coverImages.length > 0 && (
+          <div className="max-w-6xl mx-auto px-6 pb-12 flex gap-4 items-stretch" style={{ height: "40vh", minHeight: 280 }}>
+            {coverImages[0] && <div className="w-[28%] overflow-hidden"><img src={coverImages[0]} alt="" className="w-full h-full object-cover" /></div>}
+            {coverImages[1] && <div className="flex-1 overflow-hidden"><img src={coverImages[1]} alt="" className="w-full h-full object-cover" /></div>}
+            {coverImages[2] && <div className="w-[28%] overflow-hidden"><img src={coverImages[2]} alt="" className="w-full h-full object-cover" /></div>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const orderedKeys = (props.visibleSections ?? MILO_DEFAULT_ORDER).filter((k) => k !== "footer");
+
+  // Milo uses a centered nav with CTA
+  return (
+    <div className="min-h-screen bg-background">
+      <SharedNav scrolled={scrolled} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}
+        displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
+        navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
+      {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+    </div>
+  );
+}
+
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
@@ -1516,6 +1826,11 @@ export default function PublicSiteRenderer(props: Props) {
       case "grid":     return <GridTemplate props={props} derived={derived} />;
       case "magazine": return <MagazineTemplate props={props} derived={derived} />;
       case "clean":    return <CleanTemplate props={props} derived={derived} />;
+      case "sierra":   return <SierraTemplate props={props} derived={derived} />;
+      case "canvas":   return <CanvasTemplate props={props} derived={derived} />;
+      case "avery":    return <AveryTemplate props={props} derived={derived} />;
+      case "seville":  return <SevilleTemplate props={props} derived={derived} />;
+      case "milo":     return <MiloTemplate props={props} derived={derived} />;
       default:         return <EditorialTemplate props={props} derived={derived} />;
     }
   })();
