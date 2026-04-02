@@ -22,7 +22,7 @@ const messages = {
 
 export default function PendingApprovalScreen() {
   const { signOut } = useAuth();
-  const { language } = useLanguage();
+  const { lang } = useLanguage();
   const t = messages[language as keyof typeof messages] || messages.en;
 
   return (
