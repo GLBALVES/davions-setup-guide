@@ -2074,6 +2074,7 @@ export type Database = {
       }
       photographers: {
         Row: {
+          approval_status: string
           bio: string | null
           business_address: string | null
           business_city: string | null
@@ -2098,6 +2099,7 @@ export type Database = {
           watermark_url: string | null
         }
         Insert: {
+          approval_status?: string
           bio?: string | null
           business_address?: string | null
           business_city?: string | null
@@ -2122,6 +2124,7 @@ export type Database = {
           watermark_url?: string | null
         }
         Update: {
+          approval_status?: string
           bio?: string | null
           business_address?: string | null
           business_city?: string | null
