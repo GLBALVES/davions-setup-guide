@@ -11,6 +11,7 @@ const NAV = [
   { to: "/admin/domains", label: "Domains", icon: Globe },
   { to: "/admin/vps", label: "VPS", icon: Server },
   { to: "/admin/email", label: "Email", icon: Mail },
+  { to: "/admin/approvals", label: "Approvals", icon: UserCheck },
 ];
 
 export function AdminSidebar() {

@@ -182,6 +182,7 @@ const App = () => {
                  <Route path="/admin/vps-docs" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/vps" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/email" element={<ProtectedRoute><AdminEmail /></ProtectedRoute>} />
+                 <Route path="/admin/approvals" element={<ProtectedRoute><AdminApprovals /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

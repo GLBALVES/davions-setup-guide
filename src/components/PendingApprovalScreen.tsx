@@ -23,7 +23,7 @@ const messages = {
 export default function PendingApprovalScreen() {
   const { signOut } = useAuth();
   const { lang } = useLanguage();
-  const t = messages[language as keyof typeof messages] || messages.en;
+  const t = messages[lang as keyof typeof messages] || messages.en;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 text-center px-6">
