@@ -1,0 +1,1 @@
+UPDATE session_extras SET quantity = 2 WHERE id = '349c41ab-2839-49ae-8154-71e17f53b668' AND description = '1 pessoa';
