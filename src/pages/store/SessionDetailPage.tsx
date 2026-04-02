@@ -592,22 +592,21 @@ const SessionDetailPage = () => {
   // Extras helpers
   // ────────────────────────────────────────────
 
-  const toggleExtra = (extra: SessionExtra) => {
+  const changeExtraQty = (extra: SessionExtra, delta: number) => {
+    const maxQty = extra.quantity > 1 ? extra.quantity : 99;
     setSelectedExtras((prev) => {
       const existing = prev.find((e) => e.id === extra.id);
-      if (existing) return prev.filter((e) => e.id !== extra.id);
-      return [...prev, { id: extra.id, description: extra.description, price: extra.price, qty: 1, maxQty: extra.quantity > 1 ? extra.quantity : 99 }];
+      if (existing) {
+        const newQty = Math.max(0, Math.min(maxQty, existing.qty + delta));
+        if (newQty === 0) return prev.filter((e) => e.id !== extra.id);
+        return prev.map((e) => e.id === extra.id ? { ...e, qty: newQty } : e);
+      }
+      // Adding new
+      if (delta > 0) {
+        return [...prev, { id: extra.id, description: extra.description, price: extra.price, qty: 1, maxQty }];
+      }
+      return prev;
     });
-  };
-
-  const changeExtraQty = (id: string, delta: number) => {
-    setSelectedExtras((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? { ...e, qty: Math.max(1, Math.min(e.maxQty, e.qty + delta)) }
-          : e
-      )
-    );
   };
 
   // ────────────────────────────────────────────
