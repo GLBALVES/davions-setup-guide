@@ -1398,7 +1398,7 @@ const SessionDetailPage = () => {
                 {extras.map((extra) => {
                   const sel = selectedExtras.find((e) => e.id === extra.id);
                   const qty = sel ? sel.qty : 0;
-                  const maxQty = extra.quantity > 1 ? extra.quantity : 99;
+                  const maxQty = extra.quantity && extra.quantity < 99 ? extra.quantity : 99;
                   return (
                     <div
                       key={extra.id}
