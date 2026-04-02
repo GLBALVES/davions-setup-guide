@@ -69,6 +69,7 @@ import AdminHelpAssistant from "./pages/admin/AdminHelpAssistant";
 import AdminDomains from "./pages/admin/AdminDomains";
 import AdminVps from "./pages/admin/AdminVps";
 import AdminEmail from "./pages/admin/AdminEmail";
+import AdminApprovals from "./pages/admin/AdminApprovals";
 import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
