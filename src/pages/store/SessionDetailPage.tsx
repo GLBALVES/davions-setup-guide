@@ -1397,40 +1397,31 @@ const SessionDetailPage = () => {
               <div className="flex flex-col gap-3">
                 {extras.map((extra) => {
                   const sel = selectedExtras.find((e) => e.id === extra.id);
+                  const qty = sel ? sel.qty : 0;
+                  const maxQty = extra.quantity > 1 ? extra.quantity : 99;
                   return (
                     <div
                       key={extra.id}
                       className={cn(
-                        "bg-background rounded-sm shadow-sm border-2 p-5 flex items-center justify-between transition-all cursor-pointer",
-                        sel
+                        "bg-background rounded-sm shadow-sm border-2 p-5 flex items-center justify-between transition-all",
+                        qty > 0
                           ? "border-foreground ring-1 ring-foreground/10"
-                          : "border-border hover:border-foreground/40 hover:shadow-md"
+                          : "border-border"
                       )}
-                      onClick={() => toggleExtra(extra)}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "h-5 w-5 border-2 flex items-center justify-center shrink-0 transition-colors rounded-[2px]",
-                          sel ? "border-foreground bg-foreground" : "border-muted-foreground/40"
-                        )}>
-                          {sel && <Check className="h-3 w-3 text-background" />}
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-sm font-light tracking-wide">{extra.description}</p>
-                          <p className="text-xs text-muted-foreground">{formatCurrency(extra.price)} each</p>
-                        </div>
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-light tracking-wide">{extra.description}</p>
+                        <p className="text-xs text-muted-foreground">{formatCurrency(extra.price)} each{maxQty < 99 ? ` · max ${maxQty}` : ""}</p>
                       </div>
-                      {sel && (
-                        <div className="flex items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => changeExtraQty(extra.id, -1)} className="h-7 w-7 border border-border flex items-center justify-center hover:border-foreground transition-colors rounded-[2px]">
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="text-sm font-light w-5 text-center">{sel.qty}</span>
-                          <button onClick={() => changeExtraQty(extra.id, +1)} disabled={sel.qty >= sel.maxQty} className="h-7 w-7 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40 rounded-[2px]">
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2.5">
+                        <button onClick={() => changeExtraQty(extra, -1)} disabled={qty === 0} className="h-7 w-7 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40 rounded-[2px]">
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="text-sm font-light w-5 text-center">{qty}</span>
+                        <button onClick={() => changeExtraQty(extra, +1)} disabled={qty >= maxQty} className="h-7 w-7 border border-border flex items-center justify-center hover:border-foreground transition-colors disabled:opacity-40 rounded-[2px]">
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
