@@ -28,6 +28,31 @@ const TEMPLATE_CONFIG: Record<string, {
     overlayColor: "rgba(245,245,244,0.55)",
     accentColor: "rgba(30,30,30,0.85)",
   },
+  sierra: {
+    imageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80",
+    overlayColor: "rgba(0,0,0,0.50)",
+    accentColor: "rgba(255,255,255,0.90)",
+  },
+  canvas: {
+    imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80",
+    overlayColor: "rgba(20,15,10,0.45)",
+    accentColor: "rgba(255,255,255,0.85)",
+  },
+  avery: {
+    imageUrl: "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?w=600&q=80",
+    overlayColor: "rgba(250,250,249,0.50)",
+    accentColor: "rgba(30,30,30,0.80)",
+  },
+  seville: {
+    imageUrl: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=600&q=80",
+    overlayColor: "rgba(255,250,245,0.40)",
+    accentColor: "rgba(40,30,20,0.80)",
+  },
+  milo: {
+    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80",
+    overlayColor: "rgba(250,245,235,0.60)",
+    accentColor: "rgba(50,40,30,0.85)",
+  },
 };
 
 // ── Template UI overlay (wireframe elements drawn on top of the photo) ─────────
