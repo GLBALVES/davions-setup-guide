@@ -1,0 +1,1 @@
+DELETE FROM session_extras a USING session_extras b WHERE a.id > b.id AND a.session_id = b.session_id AND a.description = b.description;
