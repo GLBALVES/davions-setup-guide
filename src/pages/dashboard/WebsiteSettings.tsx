@@ -52,6 +52,36 @@ const TEMPLATES = [
     description: "Centered, whitespace-heavy, distraction-free.",
     preview: "bg-background border border-border",
   },
+  {
+    value: "sierra",
+    label: "Sierra",
+    description: "Full-screen hero, large serif typography, dark editorial tone.",
+    preview: "bg-foreground",
+  },
+  {
+    value: "canvas",
+    label: "Canvas",
+    description: "Elegant serif italic hero, poetic and intimate feel.",
+    preview: "bg-foreground",
+  },
+  {
+    value: "avery",
+    label: "Avery",
+    description: "Fixed vertical sidebar with masonry portfolio grid.",
+    preview: "bg-background border border-border",
+  },
+  {
+    value: "seville",
+    label: "Seville",
+    description: "Contained hero, airy typography, luxurious and light.",
+    preview: "bg-muted/40",
+  },
+  {
+    value: "milo",
+    label: "Milo",
+    description: "Typography-focused hero, warm tone, asymmetric photos.",
+    preview: "bg-background border border-border",
+  },
 ];
 
 const SectionHeading = forwardRef<HTMLDivElement, { title: string; description?: string }>(

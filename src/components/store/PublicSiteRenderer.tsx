@@ -735,7 +735,7 @@ function deriveCommon(props: Props) {
 
 /** Build the blockMap for a given template variant. Each key returns a React node or null. */
 function buildBlockMap(
-  variant: "editorial" | "grid" | "magazine" | "clean",
+  variant: "editorial" | "grid" | "magazine" | "clean" | "sierra" | "canvas" | "avery" | "seville" | "milo",
   props: Props,
   derived: ReturnType<typeof deriveCommon>
 ): Record<string, React.ReactNode> {
