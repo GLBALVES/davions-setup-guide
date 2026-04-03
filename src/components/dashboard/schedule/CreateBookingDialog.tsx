@@ -337,26 +337,13 @@ export function CreateBookingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("p-0 gap-0", step === 1 ? "max-w-lg" : "max-w-md")}>
+      <DialogContent className={cn("p-0 gap-0", step === 1 ? "max-w-2xl" : "max-w-md")}>
         {/* ── STEP 1: Select Session ── */}
         {step === 1 && (
           <div className="flex flex-col">
-            <DialogHeader className="px-5 pt-5 pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
-                  <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-[10px] gap-1.5 h-7"
-                  onClick={() => { onOpenChange(false); navigate("/dashboard/sessions/new"); }}
-                >
-                  <Plus className="h-3 w-3" /> New Session
-                </Button>
-              </div>
+            <DialogHeader className="px-5 pt-5 pb-3 pr-10">
+              <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
+              <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
             </DialogHeader>
 
             {/* Search */}
@@ -372,17 +359,25 @@ export function CreateBookingDialog({
               </div>
             </div>
 
-            <ScrollArea className="max-h-[400px] px-5 pb-5">
+            <ScrollArea className="max-h-[460px] px-5 pb-5">
               {sessionsLoading ? (
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : filteredSessions.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic text-center py-10">
-                  {sessions.length === 0 ? "No active sessions found." : "No sessions match your search."}
-                </p>
+              ) : filteredSessions.length === 0 && sessions.length === 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Add session card only */}
+                  <button
+                    type="button"
+                    onClick={() => { onOpenChange(false); navigate("/dashboard/sessions/new"); }}
+                    className="w-full text-left border-2 border-dashed border-muted-foreground/30 hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex flex-col items-center justify-center aspect-[3/4] gap-2"
+                  >
+                    <Plus className="h-6 w-6 text-muted-foreground/50" />
+                    <span className="text-xs text-muted-foreground">Add Session</span>
+                  </button>
+                </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                   {filteredSessions.map((s) => (
                     <button
                       key={s.id}
@@ -415,6 +410,15 @@ export function CreateBookingDialog({
                       </div>
                     </button>
                   ))}
+                  {/* Add session card at end */}
+                  <button
+                    type="button"
+                    onClick={() => { onOpenChange(false); navigate("/dashboard/sessions/new"); }}
+                    className="w-full text-left border-2 border-dashed border-muted-foreground/30 hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2"
+                  >
+                    <Plus className="h-6 w-6 text-muted-foreground/50" />
+                    <span className="text-xs text-muted-foreground">Add Session</span>
+                  </button>
                 </div>
               )}
             </ScrollArea>
