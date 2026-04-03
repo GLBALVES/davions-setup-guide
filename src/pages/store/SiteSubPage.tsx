@@ -54,7 +54,7 @@ const SiteSubPage = () => {
       const [{ data: siteData }, { data: sessionData }, { data: galleryData }, { data: pagesData }] =
         await Promise.all([
           supabase.from("photographer_site").select("*").eq("photographer_id", photoData.id).maybeSingle(),
-          supabase.from("sessions").select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url").eq("photographer_id", photoData.id).eq("status", "active"),
+          (supabase as any).from("sessions").select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url").eq("photographer_id", photoData.id).eq("status", "active").neq("hide_from_store", true),
           supabase.from("galleries").select("id, slug, title, category, cover_image_url").eq("photographer_id", photoData.id).eq("status", "published"),
           supabase.from("site_pages").select("*").eq("photographer_id", photoData.id).order("sort_order"),
         ]);

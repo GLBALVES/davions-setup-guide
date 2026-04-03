@@ -71,7 +71,7 @@ export default function WebsiteEditor() {
       const [siteRes, pgRes, sessRes, galRes, pagesRes] = await Promise.all([
         supabase.from("photographer_site").select("*").eq("photographer_id", user.id).maybeSingle(),
         supabase.from("photographers").select("id, full_name, email, store_slug, bio, business_name").eq("id", user.id).maybeSingle(),
-        supabase.from("sessions").select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url").eq("photographer_id", user.id).eq("status", "active"),
+        (supabase as any).from("sessions").select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url").eq("photographer_id", user.id).eq("status", "active").neq("hide_from_store", true),
         supabase.from("galleries").select("id, slug, title, category, cover_image_url").eq("photographer_id", user.id).eq("status", "published"),
         supabase.from("site_pages").select("*").eq("photographer_id", user.id).order("sort_order"),
       ]);

@@ -157,6 +157,7 @@ const SessionForm = () => {
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
   const [bookingWindowDays, setBookingWindowDays] = useState("60");
   const [virtualBlockPercent, setVirtualBlockPercent] = useState("0");
+  const [hideFromStore, setHideFromStore] = useState(false);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -507,6 +508,7 @@ const SessionForm = () => {
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
+    setHideFromStore((s as any).hide_from_store ?? false);
     // Load contract text
     const existingContract = sAny3.contract_text ?? "";
     setContractText(existingContract);
@@ -898,6 +900,7 @@ const SessionForm = () => {
         booking_notice_days: parseInt(bookingNoticeDays) || 1,
         booking_window_days: parseInt(bookingWindowDays) || 60,
         virtual_block_percent: Math.min(100, Math.max(0, parseInt(virtualBlockPercent) || 0)),
+        hide_from_store: hideFromStore,
       } as any)
       .eq("id", sessionId);
 
@@ -2848,6 +2851,17 @@ const SessionForm = () => {
                           Maximum is 90% to ensure clients always see at least some availability.
                         </p>
                       )}
+                    </div>
+
+                    {/* Hide from store */}
+                    <div className="border border-border p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Hide from Store</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          When enabled, this session won't appear on your public store page. You can still create manual bookings or share a direct link with clients.
+                        </p>
+                      </div>
+                      <Switch checked={hideFromStore} onCheckedChange={setHideFromStore} />
                     </div>
                   </section>
 
