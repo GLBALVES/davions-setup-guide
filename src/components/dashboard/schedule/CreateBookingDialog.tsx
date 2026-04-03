@@ -367,45 +367,35 @@ export function CreateBookingDialog({
                   {sessions.length === 0 ? "No active sessions found." : "No sessions match your search."}
                 </p>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {filteredSessions.map((s) => (
                     <button
                       key={s.id}
                       type="button"
                       onClick={() => handleSelectSession(s.id)}
-                      className="w-full text-left border border-border bg-background hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex"
+                      className="w-full text-left border border-border bg-background hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex flex-col"
                     >
                       {/* Cover */}
-                      <div className="w-20 h-20 shrink-0 bg-muted flex items-center justify-center overflow-hidden">
+                      <div className="w-full aspect-[4/3] bg-muted flex items-center justify-center overflow-hidden">
                         {s.cover_image_url ? (
                           <img src={s.cover_image_url} alt={s.title} className="w-full h-full object-cover" />
                         ) : (
-                          <Camera className="h-5 w-5 text-muted-foreground/40" />
+                          <Camera className="h-6 w-6 text-muted-foreground/40" />
                         )}
                       </div>
                       {/* Info */}
-                      <div className="flex-1 min-w-0 p-3 flex flex-col gap-1">
+                      <div className="p-2.5 flex flex-col gap-1">
                         <span className="text-xs font-medium truncate">{s.title}</span>
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1">
+                        <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-0.5">
                             <Clock className="h-3 w-3" /> {s.duration_minutes} min
                           </span>
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-0.5">
                             <DollarSign className="h-3 w-3" /> {formatCurrency(s.price)}
                           </span>
-                          {s.num_photos > 0 && (
-                            <span className="flex items-center gap-1">
-                              <Camera className="h-3 w-3" /> {s.num_photos} photos
-                            </span>
-                          )}
-                          {s.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" /> {s.location}
-                            </span>
-                          )}
                         </div>
                         {s.description && (
-                          <p className="text-[10px] text-muted-foreground/70 line-clamp-1 mt-0.5">{s.description}</p>
+                          <p className="text-[10px] text-muted-foreground/70 line-clamp-2 mt-0.5">{s.description}</p>
                         )}
                       </div>
                     </button>
