@@ -87,20 +87,7 @@ Deno.serve(async (req) => {
     const uint8Array  = new Uint8Array(arrayBuffer);
 
     // Use original name for DB display, safe name for storage path
-    // Ensure the filename always has an extension (Lightroom plugin may omit it)
-    let originalName = photo_name || `${crypto.randomUUID()}.jpg`;
-    const hasExtension = /\.\w{2,5}$/.test(originalName);
-    if (!hasExtension) {
-      // Derive extension from the uploaded file's MIME type or original file name
-      const photoFileName = photo.name || "";
-      const photoExt = photoFileName.includes(".") ? photoFileName.split(".").pop() : null;
-      const mimeToExt: Record<string, string> = {
-        "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp",
-        "image/tiff": "tiff", "image/gif": "gif",
-      };
-      const derivedExt = photoExt || mimeToExt[photo.type] || "jpg";
-      originalName = `${originalName}.${derivedExt}`;
-    }
+    const originalName = photo_name || `${crypto.randomUUID()}.jpg`;
     const ext = originalName.split(".").pop() ?? "jpg";
     // Thorough sanitization: normalize accents, then keep only safe chars
     const safeName = originalName
