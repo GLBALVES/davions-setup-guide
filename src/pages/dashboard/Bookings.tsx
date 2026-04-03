@@ -187,6 +187,7 @@ const Bookings = () => {
     bookingId: "",
     briefingId: "",
   });
+  const [createBookingOpen, setCreateBookingOpen] = useState(false);
 
   const fetchBookings = async () => {
     setLoading(true);
