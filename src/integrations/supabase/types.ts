@@ -2754,6 +2754,7 @@ export type Database = {
           deposit_type: string
           description: string | null
           duration_minutes: number
+          hide_from_store: boolean
           id: string
           location: string | null
           num_photos: number
@@ -2788,6 +2789,7 @@ export type Database = {
           deposit_type?: string
           description?: string | null
           duration_minutes?: number
+          hide_from_store?: boolean
           id?: string
           location?: string | null
           num_photos?: number
@@ -2822,6 +2824,7 @@ export type Database = {
           deposit_type?: string
           description?: string | null
           duration_minutes?: number
+          hide_from_store?: boolean
           id?: string
           location?: string | null
           num_photos?: number
