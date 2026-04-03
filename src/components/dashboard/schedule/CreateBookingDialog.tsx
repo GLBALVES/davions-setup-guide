@@ -95,6 +95,7 @@ export function CreateBookingDialog({
   onCreated,
 }: CreateBookingDialogProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Step: 1 = select session, 2 = details
