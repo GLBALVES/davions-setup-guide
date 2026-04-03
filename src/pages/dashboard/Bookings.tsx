@@ -38,7 +38,9 @@ import {
   AlertTriangle,
   ArrowRight,
   ArrowUpDown,
+  Plus,
 } from "lucide-react";
+import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 
 interface Booking {
   id: string;
@@ -185,6 +187,7 @@ const Bookings = () => {
     bookingId: "",
     briefingId: "",
   });
+  const [createBookingOpen, setCreateBookingOpen] = useState(false);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -392,6 +395,15 @@ const Bookings = () => {
                 </div>
 
                 <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto flex-wrap">
+                  <Button
+                    size="sm"
+                    className="h-8 gap-2 text-xs shrink-0"
+                    onClick={() => setCreateBookingOpen(true)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {t.schedule?.newBooking ?? "New Booking"}
+                  </Button>
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -682,6 +694,12 @@ const Bookings = () => {
           briefingId={briefingDialog.briefingId}
         />
       )}
+
+      <CreateBookingDialog
+        open={createBookingOpen}
+        onOpenChange={setCreateBookingOpen}
+        onCreated={fetchBookings}
+      />
     </SidebarProvider>
   );
 };
