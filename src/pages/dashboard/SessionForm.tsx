@@ -900,6 +900,7 @@ const SessionForm = () => {
         booking_notice_days: parseInt(bookingNoticeDays) || 1,
         booking_window_days: parseInt(bookingWindowDays) || 60,
         virtual_block_percent: Math.min(100, Math.max(0, parseInt(virtualBlockPercent) || 0)),
+        hide_from_store: hideFromStore,
       } as any)
       .eq("id", sessionId);
 
