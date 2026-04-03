@@ -508,7 +508,7 @@ function PagesTree({
                     onDelete={() => onDeletePage(page.id)}
                     onRename={(title) => onRenamePage(page.id, title)}
                     onToggleVisibility={() => onTogglePageVisibility(page.id)}
-                    onAddSection={() => onAddSection(page.id)}
+                    onAddSection={() => { setExpanded((prev) => ({ ...prev, [page.id]: true })); onAddSection(page.id); }}
                     onOpenPageSettings={() => onOpenPageSettings(page.id)}
                     hasChildren={children.length > 0 || pageSections.length > 0}
                   />
