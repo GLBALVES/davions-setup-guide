@@ -2852,7 +2852,6 @@ const SessionForm = () => {
                         </p>
                       )}
                     </div>
-                  </section>
 
                     {/* Hide from store */}
                     <div className="border border-border p-5 flex items-center justify-between">
