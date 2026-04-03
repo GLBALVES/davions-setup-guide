@@ -341,8 +341,21 @@ export function CreateBookingDialog({
         {step === 1 && (
           <div className="flex flex-col">
             <DialogHeader className="px-5 pt-5 pb-3">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
-              <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
+                  <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-[10px] gap-1.5 h-7"
+                  onClick={() => { onOpenChange(false); navigate("/dashboard/sessions/new"); }}
+                >
+                  <Plus className="h-3 w-3" /> New Session
+                </Button>
+              </div>
             </DialogHeader>
 
             {/* Search */}
