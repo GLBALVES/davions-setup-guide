@@ -694,6 +694,12 @@ const Bookings = () => {
           briefingId={briefingDialog.briefingId}
         />
       )}
+
+      <CreateBookingDialog
+        open={createBookingOpen}
+        onOpenChange={setCreateBookingOpen}
+        onCreated={fetchBookings}
+      />
     </SidebarProvider>
   );
 };
