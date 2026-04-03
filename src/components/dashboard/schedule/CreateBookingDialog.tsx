@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, Clock, DollarSign, Loader2, MapPin, Search } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, Clock, DollarSign, Loader2, MapPin, Plus, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /* ── types ─────────────────────────────────────────── */
@@ -94,6 +95,7 @@ export function CreateBookingDialog({
   onCreated,
 }: CreateBookingDialogProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Step: 1 = select session, 2 = details
@@ -340,8 +342,21 @@ export function CreateBookingDialog({
         {step === 1 && (
           <div className="flex flex-col">
             <DialogHeader className="px-5 pt-5 pb-3">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
-              <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
+                  <DialogTitle className="text-base font-light tracking-wide">Select Session</DialogTitle>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-[10px] gap-1.5 h-7"
+                  onClick={() => { onOpenChange(false); navigate("/dashboard/sessions/new"); }}
+                >
+                  <Plus className="h-3 w-3" /> New Session
+                </Button>
+              </div>
             </DialogHeader>
 
             {/* Search */}
