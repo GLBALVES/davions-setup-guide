@@ -2854,6 +2854,18 @@ const SessionForm = () => {
                     </div>
                   </section>
 
+                    {/* Hide from store */}
+                    <div className="border border-border p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Hide from Store</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          When enabled, this session won't appear on your public store page. You can still create manual bookings or share a direct link with clients.
+                        </p>
+                      </div>
+                      <Switch checked={hideFromStore} onCheckedChange={setHideFromStore} />
+                    </div>
+                  </section>
+
                   {/* Step 7 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
                     <Button variant="ghost" onClick={() => setStep(6)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">

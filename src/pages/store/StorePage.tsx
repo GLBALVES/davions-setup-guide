@@ -48,6 +48,7 @@ const StorePage = () => {
           .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url, session_type_id, session_types ( name )")
           .eq("photographer_id", photoData.id)
           .eq("status", "active")
+          .neq("hide_from_store" as any, true)
           .order("sort_order", { ascending: true }),
         supabase
           .from("galleries")
