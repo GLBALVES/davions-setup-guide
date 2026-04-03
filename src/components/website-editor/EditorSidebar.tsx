@@ -372,12 +372,20 @@ function PagesTree({
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
 
-  // Default: home expanded
+  // Default: home expanded, active page expanded
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     if (homePage) init[homePage.id] = true;
+    if (activePageId) init[activePageId] = true;
     return init;
   });
+
+  // Auto-expand the active page whenever it changes
+  useEffect(() => {
+    if (activePageId) {
+      setExpanded((prev) => ({ ...prev, [activePageId]: true }));
+    }
+  }, [activePageId]);
 
   const toggleExpand = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
@@ -451,7 +459,7 @@ function PagesTree({
               onDelete={() => {}}
               onRename={() => {}}
               onToggleVisibility={() => {}}
-              onAddSection={() => onAddSection(homePage.id)}
+              onAddSection={() => { setExpanded((prev) => ({ ...prev, [homePage.id]: true })); onAddSection(homePage.id); }}
               hasChildren={sections.length > 0}
             />
 
@@ -500,7 +508,7 @@ function PagesTree({
                     onDelete={() => onDeletePage(page.id)}
                     onRename={(title) => onRenamePage(page.id, title)}
                     onToggleVisibility={() => onTogglePageVisibility(page.id)}
-                    onAddSection={() => onAddSection(page.id)}
+                    onAddSection={() => { setExpanded((prev) => ({ ...prev, [page.id]: true })); onAddSection(page.id); }}
                     onOpenPageSettings={() => onOpenPageSettings(page.id)}
                     hasChildren={children.length > 0 || pageSections.length > 0}
                   />
