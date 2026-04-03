@@ -372,12 +372,20 @@ function PagesTree({
   const homePage = pages.find((p) => p.is_home);
   const nonHomePages = pages.filter((p) => !p.is_home);
 
-  // Default: home expanded
+  // Default: home expanded, active page expanded
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     if (homePage) init[homePage.id] = true;
+    if (activePageId) init[activePageId] = true;
     return init;
   });
+
+  // Auto-expand the active page whenever it changes
+  useEffect(() => {
+    if (activePageId) {
+      setExpanded((prev) => ({ ...prev, [activePageId]: true }));
+    }
+  }, [activePageId]);
 
   const toggleExpand = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
