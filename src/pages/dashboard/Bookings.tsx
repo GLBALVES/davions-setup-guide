@@ -38,7 +38,9 @@ import {
   AlertTriangle,
   ArrowRight,
   ArrowUpDown,
+  Plus,
 } from "lucide-react";
+import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 
 interface Booking {
   id: string;
