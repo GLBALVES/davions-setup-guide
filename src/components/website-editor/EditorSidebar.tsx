@@ -459,7 +459,7 @@ function PagesTree({
               onDelete={() => {}}
               onRename={() => {}}
               onToggleVisibility={() => {}}
-              onAddSection={() => onAddSection(homePage.id)}
+              onAddSection={() => { setExpanded((prev) => ({ ...prev, [homePage.id]: true })); onAddSection(homePage.id); }}
               hasChildren={sections.length > 0}
             />
 
