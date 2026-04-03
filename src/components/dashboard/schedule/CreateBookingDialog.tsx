@@ -18,7 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, Clock, DollarSign, Loader2, MapPin, Search } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, Clock, DollarSign, Loader2, MapPin, Plus, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 /* ── types ─────────────────────────────────────────── */
