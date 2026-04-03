@@ -1210,7 +1210,8 @@ const GalleryDetail = () => {
                 {/* Lightroom Export Modal — proof only */}
                 {gallery.category === "proof" && (() => {
                   const favoritedPhotos = photos.filter((p) => (p.favorite_count ?? 0) > 0).sort((a, b) => a.order_index - b.order_index);
-                  const csvText = favoritedPhotos.map((p) => p.filename).join(",");
+                  const stripExt = (name: string) => name.replace(/\.[^.]+$/, "");
+                  const csvText = favoritedPhotos.map((p) => stripExt(p.filename)).join(",");
                   const copyText = async () => {
                     await navigator.clipboard.writeText(csvText);
                     setCopiedFavorites(true);
@@ -1241,7 +1242,7 @@ const GalleryDetail = () => {
                           <div className="max-h-48 overflow-y-auto rounded border border-border bg-secondary/30 px-3 py-2">
                             <ul className="space-y-0.5">
                               {favoritedPhotos.map((p) => (
-                                <li key={p.id} className="text-xs font-mono text-muted-foreground truncate">{p.filename}</li>
+                                <li key={p.id} className="text-xs font-mono text-muted-foreground truncate">{stripExt(p.filename)}</li>
                               ))}
                             </ul>
                           </div>
