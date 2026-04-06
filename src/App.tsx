@@ -117,10 +117,8 @@ const App = () => {
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
 
-                {/* Protected routes */}
+
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/dashboard/sessions" element={<ProtectedRoute><PermissionGate permKey="sessions"><Sessions /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/sessions/new" element={<ProtectedRoute><PermissionGate permKey="sessions"><SessionForm /></PermissionGate></ProtectedRoute>} />
@@ -131,7 +129,7 @@ const App = () => {
                 <Route path="/dashboard/galleries" element={<ProtectedRoute><PermissionGate permKey="galleries"><Galleries /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><PermissionGate permKey="galleries"><GalleryDetail /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/blog" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogManager /></PermissionGate></ProtectedRoute>} />
-                <Route path="/dashboard/blog/:id" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogEditor /></PermissionGate></ProtectedRoute>} />
+                
                 <Route path="/dashboard/seo" element={<ProtectedRoute><PermissionGate permKey="seo"><SiteSeo /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/emails" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailMarketing /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/emails/campaign/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailCampaignEditor /></PermissionGate></ProtectedRoute>} />
