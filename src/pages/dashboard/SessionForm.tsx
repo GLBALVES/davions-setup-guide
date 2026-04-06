@@ -1604,10 +1604,10 @@ const SessionForm = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs tracking-wider uppercase font-light">
-                            {lang === "pt" ? "Bônus" : lang === "es" ? "Bonificaciones" : "Bonuses"}
+                            {lang === "pt" ? "Itens Inclusos" : lang === "es" ? "Ítems Incluidos" : "Included Items"}
                           </p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {lang === "pt" ? "Itens bônus exibidos na página de agendamento" : lang === "es" ? "Bonificaciones mostradas en la página de reserva" : "Bonus items shown on the booking page"}
+                            {lang === "pt" ? "Itens inclusos exibidos na página de agendamento" : lang === "es" ? "Ítems incluidos mostrados en la página de reserva" : "Included items shown on the booking page"}
                           </p>
                         </div>
                         <Button
@@ -1624,7 +1624,7 @@ const SessionForm = () => {
 
                       {sessionBonuses.length === 0 ? (
                         <p className="text-[10px] text-muted-foreground/60 italic">
-                          {lang === "pt" ? "Nenhum bônus configurado." : lang === "es" ? "Ninguna bonificación configurada." : "No bonuses configured."}
+                          {lang === "pt" ? "Nenhum item incluso configurado." : lang === "es" ? "Ningún ítem incluido configurado." : "No included items configured."}
                         </p>
                       ) : (
                         <div className="flex flex-col gap-2">
