@@ -179,7 +179,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
                 <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Navigation visibility</p>
                 <ToggleField label="Show Sessions link" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
                 <ToggleField label="Show About link" checked={data.show_about ?? true} onChange={(v) => p({ show_about: v })} />
-                <ToggleField label="Show Blog link" checked={data.show_blog ?? false} onChange={(v) => p({ show_blog: v })} />
+                
                 <ToggleField label="Show Contact / Social links" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
               </div>
 

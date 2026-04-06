@@ -34,7 +34,6 @@ export interface AnalyticsPageview {
 export const DEFAULT_PAGES = [
   { page_path: "/", page_name: "Home" },
   { page_path: "/store", page_name: "Store" },
-  { page_path: "/blog", page_name: "Blog" },
   { page_path: "/gallery", page_name: "Gallery" },
 ];
 

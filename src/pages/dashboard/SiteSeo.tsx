@@ -54,12 +54,11 @@ function AnalyticsTab({ photographerId }: { photographerId: string }) {
   const stats = useMemo(() => {
     const totalVisits = pageviews.length;
     const uniquePaths = new Set(pageviews.map((p) => p.page_path)).size;
-    const blogVisits = pageviews.filter((p) => p.page_path.startsWith("/blog")).length;
     const actions = pageviews.reduce<Record<string, number>>((acc, p) => {
       acc[p.action] = (acc[p.action] || 0) + 1;
       return acc;
     }, {});
-    return { totalVisits, uniquePaths, blogVisits, actions };
+    return { totalVisits, uniquePaths, actions };
   }, [pageviews]);
 
   // Daily chart data
@@ -118,16 +117,6 @@ function AnalyticsTab({ photographerId }: { photographerId: string }) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{stats.uniquePaths}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> Blog Visits
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.blogVisits}</p>
           </CardContent>
         </Card>
         <Card>
