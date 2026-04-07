@@ -147,6 +147,11 @@ export function CreateBookingDialog({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  // Save-as-preset dialog
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [presetSessionId, setPresetSessionId] = useState<string | null>(null);
+  const [presetConverting, setPresetConverting] = useState(false);
+
   // Reset when dialog opens
   useEffect(() => {
     if (open) {
