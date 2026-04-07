@@ -539,7 +539,18 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
                 Create Gallery
               </Button>
 
-              {hasBriefing && (
+              {booking.status !== "cancelled" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="justify-start gap-2.5"
+                  disabled={sendingLink}
+                  onClick={sendConfirmationLink}
+                >
+                  {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Send Confirmation Link
+                </Button>
+              )
                 <Button
                   variant="ghost"
                   size="sm"
