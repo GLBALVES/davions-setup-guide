@@ -1093,6 +1093,11 @@ export function ProjectDetailSheet({
   const { t } = useLanguage();
   const tp = t.projects;
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Partial<ProjectSheetData>>({});
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
   const STAGES: { key: Stage; label: string }[] = [
@@ -1109,11 +1114,106 @@ export function ProjectDetailSheet({
     setSessionTypeId(matched?.id ?? null);
   }, [project?.id, project?.session_type, sessionTypes]);
 
+  // Reset pending changes when project changes
+  useEffect(() => {
+    setPendingChanges({});
+    setConflictWarning(null);
+  }, [project?.id]);
+
   if (!project) return null;
 
   const isArchived = project.stage === "archived";
-  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
-  const save = async (data: Partial<ProjectSheetData>) => { await onUpdate(project.id, data); };
+
+  // Get the effective value: pending overrides project
+  const effective = { ...project, ...pendingChanges };
+
+  const queueChange = (data: Partial<ProjectSheetData>) => {
+    setPendingChanges((prev) => ({ ...prev, ...data }));
+  };
+
+  const commitSave = async () => {
+    if (!hasPendingChanges) return;
+    setSaving(true);
+
+    // If date/time changed, validate conflicts & sync
+    const dateChanged = "shoot_date" in pendingChanges || "shoot_time" in pendingChanges;
+    if (dateChanged) {
+      const shootDate = pendingChanges.shoot_date ?? project.shoot_date;
+      const shootTime = pendingChanges.shoot_time ?? project.shoot_time ?? "09:00";
+
+      if (shootDate && project.booking_id) {
+        const { data: bookingData } = await (supabase as any)
+          .from("bookings")
+          .select("session_id")
+          .eq("id", project.booking_id)
+          .single();
+
+        if (bookingData) {
+          const { data: sessionData } = await (supabase as any)
+            .from("sessions")
+            .select("duration_minutes")
+            .eq("id", bookingData.session_id)
+            .single();
+
+          const duration = sessionData?.duration_minutes ?? 60;
+          const totalMins = timeToMinutes(shootTime) + duration;
+          const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+
+          const conflictResult = await checkBookingConflict(
+            photographerId,
+            shootDate,
+            shootTime,
+            endTime,
+            project.booking_id,
+          );
+
+          if (conflictResult.hasConflict) {
+            const msg = conflictResult.conflictDetails || "Time conflict detected";
+            setConflictWarning(msg);
+            toast.error(msg);
+            setSaving(false);
+            return;
+          }
+        }
+
+        const syncResult = await syncProjectDateToBooking(
+          project.booking_id,
+          shootDate,
+          shootTime,
+        );
+
+        if (!syncResult.success) {
+          toast.error(syncResult.error || "Failed to sync booking");
+          setSaving(false);
+          return;
+        }
+      } else if (shootDate) {
+        const { data: blockedTimes } = await (supabase as any)
+          .from("blocked_times")
+          .select("start_time, end_time, all_day, reason")
+          .eq("photographer_id", photographerId)
+          .eq("date", shootDate);
+
+        if (blockedTimes) {
+          for (const bt of blockedTimes) {
+            if (bt.all_day) {
+              toast.error(bt.reason || "This day is blocked");
+              setSaving(false);
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    setConflictWarning(null);
+    await onUpdate(project.id, pendingChanges);
+    setPendingChanges({});
+    setSaving(false);
+    toast.success(tp.projectUpdated || "Saved");
+  };
+
+  const save = async (data: Partial<ProjectSheetData>) => { queueChange(data); };
 
   // Conflict-aware save for date/time changes
   const saveDateTime = async (newDate: string | null, newTime: string | null) => {
