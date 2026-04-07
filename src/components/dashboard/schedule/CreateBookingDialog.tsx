@@ -425,7 +425,7 @@ export function CreateBookingDialog({
         .single();
       if (availError) throw availError;
 
-      const { error: bookingError } = await (supabase as any).from("bookings").insert({
+      const { data: bookingData, error: bookingError } = await (supabase as any).from("bookings").insert({
         photographer_id: user.id,
         session_id: selectedSessionId,
         availability_id: availData.id,
@@ -434,8 +434,10 @@ export function CreateBookingDialog({
         client_email: clientEmail.trim(),
         status: "confirmed",
         payment_status: "pending",
-      });
+      }).select("id").single();
       if (bookingError) throw bookingError;
+
+      const createdBookingId = bookingData?.id;
 
       const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
 
