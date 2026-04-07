@@ -1,26 +1,35 @@
 
 
-## Separar "Itens Inclusos" do "Endereço" na página de sessão pública
+## Corrigir vídeos "corrompidos" nos Bug Reports
 
-### O que será feito
-Na seção "What's included" da `SessionDetailPage.tsx`, o endereço (location) aparece misturado com os itens inclusos (duração, fotos, bônus). Vamos separar o endereço em sua própria seção abaixo dos itens inclusos.
+### Diagnóstico
+Os arquivos de vídeo estão íntegros no storage (H.264 MP4 válidos). O problema é que os elementos `<video>` no código não possuem os atributos necessários para carregar vídeos de origens externas (Supabase Storage). O navegador exibe "arquivo corrompido" porque falham ao tentar carregar o vídeo via cross-origin sem as permissões adequadas.
 
-### Alteração
+### Correção
 
-**Arquivo:** `src/pages/store/SessionDetailPage.tsx` (linhas ~936-961)
+**Arquivo:** `src/pages/admin/AdminBugReports.tsx`
 
-Mover o bloco `session.location` para fora da seção "What's included", criando uma seção separada "Location" logo abaixo:
+Em todas as tags `<video>` (linhas ~244, ~376), adicionar:
+- `crossOrigin="anonymous"` — permite ao navegador carregar o vídeo cross-origin
+- `preload="metadata"` — carrega apenas metadados inicialmente (evita timeout em vídeos grandes)
+- `playsInline` — melhora reprodução em dispositivos móveis
 
+Há 3 instâncias de `<video>` no arquivo:
+1. Linha ~244: vídeo inline na lista expandida (desktop)
+2. Linha ~376: vídeo inline na lista expandida (mobile/compacta)  
+3. Lightbox (se existente) — verificar e corrigir também
+
+Alterar de:
+```tsx
+<video src={url} controls className="..." />
 ```
-What's included
-  ✓ 60 minutes session
-  ✓ 20 edited photos delivered
-  ✓ [bônus items...]
-
-Location
-  📍 Endereço aqui
+Para:
+```tsx
+<video src={url} controls crossOrigin="anonymous" preload="metadata" playsInline className="..." />
 ```
 
-- A seção "Location" terá o mesmo estilo visual (label uppercase tracking-wide + ícone MapPin)
-- Só aparece se `session.location` existir
+### Detalhes técnicos
+- O Storage retorna `Access-Control-Allow-Origin: *` nos headers, então `crossOrigin="anonymous"` funcionará
+- `preload="metadata"` evita que vídeos grandes (até 54MB detectados) causem timeout de carregamento
+- A correção será aplicada em todas as instâncias de `<video>` no `AdminBugReports.tsx`
 
