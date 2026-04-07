@@ -1291,6 +1291,7 @@ const Projects = () => {
         booking_id: b.id,
         stage: "upcoming",
         shoot_date: b.booked_date ?? null,
+        shoot_time: (b.session_availability as any)?.start_time?.slice(0, 5) ?? null,
         position: (existingProjects?.length ?? 0) + i,
       }));
       await supabase.from("client_projects" as any).insert(toInsert as any);
@@ -1388,16 +1389,21 @@ const Projects = () => {
         }
       }
 
-      const mapped = (allProjects as any[]).map((p) => ({
-        ...p,
-        session_title: (p.bookings as any)?.sessions?.title ?? null,
-        gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
-        gallery_deadline: p.gallery_deadline ?? null,
-        gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
-        location: p.location ?? null,
-        description: p.description ?? null,
-        client_phone: p.client_phone ?? null,
-      }));
+      const mapped = (allProjects as any[]).map((p) => {
+        // Derive shoot_time from availability if not set on the project
+        const availStartTime = (p.bookings as any)?.session_availability?.start_time?.slice(0, 5) ?? null;
+        return {
+          ...p,
+          shoot_time: p.shoot_time ?? availStartTime,
+          session_title: (p.bookings as any)?.sessions?.title ?? null,
+          gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
+          gallery_deadline: p.gallery_deadline ?? null,
+          gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
+          location: p.location ?? null,
+          description: p.description ?? null,
+          client_phone: p.client_phone ?? null,
+        };
+      });
 
       // 6. Auto-advance "upcoming" → "shot" when session has ended
       const now = new Date();
