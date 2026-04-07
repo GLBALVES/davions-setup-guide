@@ -461,9 +461,34 @@ export function CreateBookingDialog({
         });
       } catch (_) {}
 
+      // Send confirmation email to client with booking link (for one_session)
+      const isOneSession = selectedSession?.session_model === "one_session";
+      if (isOneSession && createdBookingId) {
+        try {
+          await supabase.functions.invoke("confirm-booking-email", {
+            body: {
+              bookingId: createdBookingId,
+              clientEmail: clientEmail.trim(),
+              clientName: finalClientName,
+              sessionTitle: sessionTitle,
+              bookedDate: dateStr,
+              startTime,
+            },
+          });
+        } catch (_) {}
+      }
+
       toast({ title: t.createBooking.bookingCreated });
       onCreated();
       onOpenChange(false);
+
+      // Show save-as-preset prompt for one_session
+      if (isOneSession) {
+        setTimeout(() => {
+          setPresetSessionId(selectedSessionId);
+          setPresetDialogOpen(true);
+        }, 300);
+      }
     } catch (err: any) {
       toast({ title: err?.message ?? "Failed to create booking", variant: "destructive" });
     } finally {
