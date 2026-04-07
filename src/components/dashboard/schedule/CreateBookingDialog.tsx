@@ -455,7 +455,7 @@ export function CreateBookingDialog({
         });
       } catch (_) {}
 
-      toast({ title: t("createBooking.bookingCreated") });
+      toast({ title: t.createBooking.bookingCreated });
       onCreated();
       onOpenChange(false);
     } catch (err: any) {
@@ -475,7 +475,7 @@ export function CreateBookingDialog({
           <div className="flex flex-col">
             <DialogHeader className="px-5 pt-5 pb-3 pr-10">
               <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
-              <DialogTitle className="text-base font-light tracking-wide">{t("createBooking.selectSession")}</DialogTitle>
+              <DialogTitle className="text-base font-light tracking-wide">{t.createBooking.selectSession}</DialogTitle>
             </DialogHeader>
 
             {/* Search */}
@@ -483,7 +483,7 @@ export function CreateBookingDialog({
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder={t("createBooking.searchSessions")}
+                  placeholder={t.createBooking.searchSessions}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-8 text-xs h-8"
@@ -536,7 +536,7 @@ export function CreateBookingDialog({
                     className="w-full text-left border-2 border-dashed border-primary/40 hover:border-primary transition-colors rounded-sm overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2 bg-primary/5"
                   >
                     <Zap className="h-6 w-6 text-primary/60" />
-                    <span className="text-xs font-medium text-primary/80">{t("createBooking.oneSession")}</span>
+                    <span className="text-xs font-medium text-primary/80">{t.createBooking.oneSession}</span>
                   </button>
 
                   {/* Add session card */}
@@ -546,7 +546,7 @@ export function CreateBookingDialog({
                     className="w-full text-left border-2 border-dashed border-muted-foreground/30 hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2"
                   >
                     <Plus className="h-6 w-6 text-muted-foreground/50" />
-                    <span className="text-xs text-muted-foreground">{t("createBooking.addSession")}</span>
+                    <span className="text-xs text-muted-foreground">{t.createBooking.addSession}</span>
                   </button>
                 </div>
               )}
@@ -564,7 +564,7 @@ export function CreateBookingDialog({
                 </button>
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 1</p>
-                  <DialogTitle className="text-base font-light tracking-wide">{t("createBooking.oneSession")}</DialogTitle>
+                  <DialogTitle className="text-base font-light tracking-wide">{t.createBooking.oneSession}</DialogTitle>
                 </div>
               </div>
             </DialogHeader>
@@ -573,40 +573,40 @@ export function CreateBookingDialog({
               <div className="flex flex-col gap-4 px-5 pb-5">
                 {/* Session Name */}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.sessionName")} *</Label>
-                  <Input value={osName} onChange={e => setOsName(e.target.value)} className="text-xs h-8" placeholder={t("createBooking.sessionName")} />
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.sessionName} *</Label>
+                  <Input value={osName} onChange={e => setOsName(e.target.value)} className="text-xs h-8" placeholder={t.createBooking.sessionName} />
                 </div>
 
                 {/* Duration + Num Photos */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.duration")} *</Label>
+                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.duration} *</Label>
                     <div className="relative">
                       <Input type="number" min={15} value={osDuration} onChange={e => setOsDuration(Number(e.target.value))} className="text-xs h-8 pr-10" />
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">min</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.numPhotos")}</Label>
+                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.numPhotos}</Label>
                     <Input type="number" min={0} value={osNumPhotos} onChange={e => setOsNumPhotos(Number(e.target.value))} className="text-xs h-8" />
                   </div>
                 </div>
 
                 {/* Location */}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.location")}</Label>
-                  <Input value={osLocation} onChange={e => setOsLocation(e.target.value)} className="text-xs h-8" placeholder={t("createBooking.location")} />
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.location}</Label>
+                  <Input value={osLocation} onChange={e => setOsLocation(e.target.value)} className="text-xs h-8" placeholder={t.createBooking.location} />
                 </div>
 
                 {/* Contract */}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.contract")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.contract}</Label>
                   <Select value={osContractId} onValueChange={setOsContractId}>
                     <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder={t("createBooking.noContract")} />
+                      <SelectValue placeholder={t.createBooking.noContract} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">{t("createBooking.noContract")}</SelectItem>
+                      <SelectItem value="none">{t.createBooking.noContract}</SelectItem>
                       {contracts.map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
@@ -616,13 +616,13 @@ export function CreateBookingDialog({
 
                 {/* Briefing */}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.briefing")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.briefing}</Label>
                   <Select value={osBriefingId} onValueChange={setOsBriefingId}>
                     <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder={t("createBooking.noBriefing")} />
+                      <SelectValue placeholder={t.createBooking.noBriefing} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">{t("createBooking.noBriefing")}</SelectItem>
+                      <SelectItem value="none">{t.createBooking.noBriefing}</SelectItem>
                       {briefings.map(b => (
                         <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                       ))}
@@ -632,14 +632,14 @@ export function CreateBookingDialog({
 
                 {/* Items Included */}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.itemsIncluded")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.itemsIncluded}</Label>
                   <div className="flex gap-2">
                     <Input
                       value={osIncludeInput}
                       onChange={e => setOsIncludeInput(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddInclude(); } }}
                       className="text-xs h-8 flex-1"
-                      placeholder={t("createBooking.addItem")}
+                      placeholder={t.createBooking.addItem}
                     />
                     <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={handleAddInclude}>
                       <Plus className="h-3.5 w-3.5" />
@@ -662,7 +662,7 @@ export function CreateBookingDialog({
                 {/* Continue */}
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => setMode("select")} className="text-xs">
-                    {t("createBooking.back")}
+                    {t.createBooking.back}
                   </Button>
                   <Button
                     type="button"
@@ -672,7 +672,7 @@ export function CreateBookingDialog({
                     className="text-xs gap-2"
                   >
                     {osCreating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    {t("createBooking.continue")}
+                    {t.createBooking.continue}
                   </Button>
                 </DialogFooter>
               </div>
@@ -690,7 +690,7 @@ export function CreateBookingDialog({
                 </button>
                 <div>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Step 2</p>
-                  <DialogTitle className="text-base font-light tracking-wide">{t("createBooking.bookingDetails")}</DialogTitle>
+                  <DialogTitle className="text-base font-light tracking-wide">{t.createBooking.bookingDetails}</DialogTitle>
                 </div>
               </div>
             </DialogHeader>
@@ -710,7 +710,7 @@ export function CreateBookingDialog({
                   <p className="text-[10px] text-muted-foreground">{selectedSession.duration_minutes} min · {formatCurrency(selectedSession.price)}</p>
                 </div>
                 <Button type="button" variant="ghost" size="sm" className="text-[10px] h-6 px-2" onClick={() => setStep(1)}>
-                  {t("createBooking.change")}
+                  {t.createBooking.change}
                 </Button>
               </div>
             )}
@@ -718,7 +718,7 @@ export function CreateBookingDialog({
             <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-5 pb-5">
               {/* Date */}
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.date")}</Label>
+                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.date}</Label>
                 <Popover open={calOpen} onOpenChange={setCalOpen}>
                   <PopoverTrigger asChild>
                     <Button
@@ -728,7 +728,7 @@ export function CreateBookingDialog({
                       className={cn("justify-start gap-2 font-light text-xs", !date && "text-muted-foreground")}
                     >
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {date ? format(date, "EEEE, MMMM d, yyyy") : t("createBooking.pickDate")}
+                      {date ? format(date, "EEEE, MMMM d, yyyy") : t.createBooking.pickDate}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -746,7 +746,7 @@ export function CreateBookingDialog({
               {/* Time */}
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.start")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.start}</Label>
                   <TimePickerInput
                     value={startTime}
                     onChange={setStartTime}
@@ -754,7 +754,7 @@ export function CreateBookingDialog({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.end")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.end}</Label>
                   <TimePickerInput
                     value={endTime}
                     onChange={setEndTime}
@@ -787,7 +787,7 @@ export function CreateBookingDialog({
               {/* Existing bookings on this day */}
               {existingBookings.length > 0 && (
                 <div className="flex flex-col gap-1">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.bookingsOnDay")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.bookingsOnDay}</Label>
                   <div className="flex flex-col gap-0.5">
                     {existingBookings.map((eb, i) => (
                       <p key={i} className="text-[10px] text-muted-foreground font-light">
@@ -801,11 +801,11 @@ export function CreateBookingDialog({
               {/* Client - Email with search */}
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5 relative">
-                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.clientEmail")}</Label>
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientEmail}</Label>
                   <Input
                     ref={emailInputRef}
                     type="email"
-                    placeholder={t("createBooking.searchClient")}
+                    placeholder={t.createBooking.searchClient}
                     value={clientEmail}
                     onChange={(e) => { setClientEmail(e.target.value); setShowSuggestions(true); }}
                     onFocus={() => clientSuggestions.length > 0 && setShowSuggestions(true)}
@@ -835,9 +835,9 @@ export function CreateBookingDialog({
                 </div>
                 {clientName && (
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t("createBooking.clientName")}</Label>
+                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientName}</Label>
                     <Input
-                      placeholder={t("createBooking.clientName")}
+                      placeholder={t.createBooking.clientName}
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
                       className="text-xs h-8"
@@ -854,7 +854,7 @@ export function CreateBookingDialog({
                   onClick={() => setStep(1)}
                   className="text-xs"
                 >
-                  {t("createBooking.back")}
+                  {t.createBooking.back}
                 </Button>
                 <Button
                   type="submit"
@@ -864,7 +864,7 @@ export function CreateBookingDialog({
                   title={hasConflict ? "This time slot has a conflict" : undefined}
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {t("createBooking.createBooking")}
+                  {t.createBooking.createBooking}
                 </Button>
               </DialogFooter>
             </form>
