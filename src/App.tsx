@@ -115,6 +115,7 @@ const App = () => {
                 <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
+                <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />
