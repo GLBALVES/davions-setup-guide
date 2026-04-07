@@ -927,14 +927,14 @@ export function CreateBookingDialog({
 
     {/* Save as preset dialog */}
     <AlertDialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
-      <AlertDialogContent className="max-w-sm z-[60]">
+      <AlertDialogContent className="max-w-[340px] z-[60] p-5">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-base font-light tracking-wide">{t.createBooking.saveAsPreset ?? "Save as Session?"}</AlertDialogTitle>
-          <AlertDialogDescription className="text-xs font-light leading-relaxed">
+          <AlertDialogTitle className="text-sm font-light tracking-wide">{t.createBooking.saveAsPreset ?? "Save as Session?"}</AlertDialogTitle>
+          <AlertDialogDescription className="text-[11px] font-light leading-relaxed">
             {t.createBooking.saveAsPresetDesc ?? "Would you like to save this one-off session as a reusable session template? You'll be redirected to complete the full setup."}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2">
+        <AlertDialogFooter className="gap-2 flex-col sm:flex-col">
           <AlertDialogCancel asChild>
             <Button variant="outline" size="sm" className="text-xs" onClick={() => setPresetDialogOpen(false)}>
               {t.createBooking.noThanks ?? "No, keep as one-off"}
