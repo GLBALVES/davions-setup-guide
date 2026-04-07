@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import oneSessionPlaceholder from "@/assets/one-session-placeholder.jpg";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
