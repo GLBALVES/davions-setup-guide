@@ -476,9 +476,9 @@ export function CreateBookingDialog({
         });
       } catch (_) {}
 
-      // Send confirmation email to client with booking link (for one_session)
+      // Send confirmation email to client with booking link
       const isOneSession = selectedSession?.session_model === "one_session";
-      if (isOneSession && createdBookingId) {
+      if (createdBookingId) {
         try {
           await supabase.functions.invoke("confirm-booking-email", {
             body: {
