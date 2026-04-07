@@ -1,0 +1,2 @@
+ALTER TABLE public.sessions DROP CONSTRAINT sessions_session_model_check;
+ALTER TABLE public.sessions ADD CONSTRAINT sessions_session_model_check CHECK (session_model = ANY (ARRAY['standard'::text, 'campaign'::text, 'one_session'::text]));
