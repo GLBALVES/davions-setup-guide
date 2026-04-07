@@ -209,7 +209,7 @@ const Sessions = () => {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-1 border-b border-border pb-1">
                   {FILTERS.map(({ key, label }) => {
-                    const count = key === "all" ? sessions.length : sessions.filter(sess => key === "active" ? sess.status === "active" : sess.status !== "active").length;
+                    const count = key === "all" ? standardSessions.length : key === "one_session" ? oneSessionsList.length : standardSessions.filter(sess => key === "active" ? sess.status === "active" : sess.status !== "active").length;
                     return (
                       <button
                         key={key}
