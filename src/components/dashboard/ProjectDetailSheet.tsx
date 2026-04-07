@@ -1194,7 +1194,8 @@ export function ProjectDetailSheet({
       }
     }
 
-    // Save to client_projects
+    // Clear conflict and save to client_projects
+    setConflictWarning(null);
     const updates: Partial<ProjectSheetData> = {};
     if (newDate !== undefined) updates.shoot_date = newDate;
     if (newTime !== undefined) updates.shoot_time = newTime;
@@ -1379,6 +1380,12 @@ export function ProjectDetailSheet({
                           </>
                         )}
                       </div>
+                      {conflictWarning && (
+                        <div className="flex items-center gap-1.5 text-destructive text-[11px] mt-1 p-1.5 rounded-md bg-destructive/10 border border-destructive/20">
+                          <AlertTriangle className="h-3 w-3 shrink-0" />
+                          <span>{conflictWarning}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.locationLabel}</Label>
