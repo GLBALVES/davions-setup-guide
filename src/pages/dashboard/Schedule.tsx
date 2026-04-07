@@ -351,6 +351,7 @@ const Schedule = () => {
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         onStatusChange={handleStatusChange}
+        onBookingUpdated={fetchData}
       />
 
       <CreateBookingDialog

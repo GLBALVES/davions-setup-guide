@@ -20,6 +20,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import {
   User,
@@ -32,7 +35,14 @@ import {
   Images,
   ClipboardList,
   Camera,
+  Pencil,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { checkBookingConflict, addMinutesToTime } from "@/lib/booking-conflict";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface ScheduleBooking {
   id: string;
@@ -43,6 +53,7 @@ export interface ScheduleBooking {
   booked_date: string | null;
   session_id: string;
   availability_id: string;
+  photographer_id?: string;
   sessions?: { title: string; duration_minutes?: number; briefing_id?: string | null } | null;
   session_availability?: { start_time: string; end_time: string; date: string | null } | null;
 }
@@ -84,55 +95,42 @@ function BriefingDialog({
         .maybeSingle(),
     ]);
     if (briefingData) {
-      setBriefingName(briefingData.name ?? "");
-      setQuestions((briefingData.questions as BriefingQuestion[]) ?? []);
+      setBriefingName(briefingData.name ?? "Briefing");
+      setQuestions(
+        Array.isArray(briefingData.questions) ? (briefingData.questions as BriefingQuestion[]) : []
+      );
     }
-    if (responseData) {
-      setAnswers((responseData.answers as Record<string, string | string[]>) ?? {});
+    if (responseData?.answers) {
+      setAnswers(responseData.answers as Record<string, string | string[]>);
       setHasResponse(true);
     } else {
       setHasResponse(false);
-      setAnswers({});
     }
     setLoading(false);
   };
 
+  if (open && loading && questions.length === 0) load();
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (!v) onClose();
-        else load();
-      }}
-    >
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-sm tracking-widest uppercase font-light flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            {briefingName || "Briefing"}
-          </DialogTitle>
+          <DialogTitle className="font-light tracking-wide">{briefingName}</DialogTitle>
         </DialogHeader>
         {loading ? (
-          <p className="text-xs text-muted-foreground py-4 text-center animate-pulse">Loading…</p>
+          <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
         ) : !hasResponse ? (
-          <p className="text-[11px] text-muted-foreground italic py-4 text-center">
-            The client hasn't submitted their briefing yet.
-          </p>
+          <p className="text-sm text-muted-foreground py-6 text-center">No response submitted yet.</p>
         ) : (
-          <div className="flex flex-col gap-4 pt-1">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             {questions.map((q) => {
               const ans = answers[q.id];
-              const display = !ans
-                ? "—"
-                : Array.isArray(ans)
-                ? ans.length
-                  ? ans.join(", ")
-                  : "—"
-                : ans || "—";
               return (
-                <div key={q.id} className="flex flex-col gap-1">
-                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{q.label}</p>
-                  <p className="text-sm font-light">{display}</p>
+                <div key={q.id} className="space-y-1">
+                  <p className="text-xs font-medium">{q.label}</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {Array.isArray(ans) ? ans.join(", ") : ans || "—"}
+                  </p>
                 </div>
               );
             })}
@@ -143,17 +141,18 @@ function BriefingDialog({
   );
 }
 
-const STATUS_META: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "Pending", variant: "secondary" },
+const STATUS_META: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
+  pending:   { label: "Pending",   variant: "secondary" },
   confirmed: { label: "Confirmed", variant: "default" },
   cancelled: { label: "Cancelled", variant: "destructive" },
 };
 
 const PAYMENT_META: Record<string, { label: string; className: string }> = {
-  pending: { label: "Unpaid", className: "text-muted-foreground" },
-  paid: { label: "Paid", className: "text-green-600" },
-  failed: { label: "Failed", className: "text-destructive" },
-  refunded: { label: "Refunded", className: "text-muted-foreground" },
+  pending:      { label: "Unpaid",   className: "text-muted-foreground" },
+  paid:         { label: "Paid",     className: "text-emerald-600" },
+  deposit_paid: { label: "Partial",  className: "text-amber-600" },
+  failed:       { label: "Failed",   className: "text-destructive" },
+  refunded:     { label: "Refunded", className: "text-muted-foreground" },
 };
 
 function formatTime(t: string) {
@@ -164,7 +163,6 @@ function formatTime(t: string) {
 }
 
 function formatDate(s: string) {
-  // Append T00:00:00 for date-only strings to prevent timezone shifting
   const dateObj = s.length === 10 ? new Date(s + "T00:00:00") : new Date(s);
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -179,10 +177,12 @@ interface BookingDetailSheetProps {
   open: boolean;
   onClose: () => void;
   onStatusChange: (id: string, status: "confirmed" | "cancelled") => void;
+  onBookingUpdated?: () => void;
 }
 
-export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: BookingDetailSheetProps) {
+export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onBookingUpdated }: BookingDetailSheetProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; action: "confirm" | "cancel" }>({
     open: false,
     action: "confirm",
@@ -190,6 +190,13 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: B
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
+
+  // Date/time editing state
+  const [editingSchedule, setEditingSchedule] = useState(false);
+  const [editDate, setEditDate] = useState<string>("");
+  const [editTime, setEditTime] = useState<string>("09:00");
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   if (!booking) return null;
 
@@ -203,6 +210,97 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: B
   const statusMeta = STATUS_META[booking.status] ?? STATUS_META["pending"];
   const paymentMeta = PAYMENT_META[booking.payment_status] ?? PAYMENT_META["pending"];
   const hasBriefing = Boolean(booking.sessions?.briefing_id);
+
+  const photographerId = booking.photographer_id || user?.id || "";
+
+  const startEditing = () => {
+    setEditDate(dateStr ?? "");
+    setEditTime(avail?.start_time?.slice(0, 5) ?? "09:00");
+    setConflictWarning(null);
+    setEditingSchedule(true);
+  };
+
+  const cancelEditing = () => {
+    setEditingSchedule(false);
+    setConflictWarning(null);
+  };
+
+  const saveSchedule = async () => {
+    if (!editDate) return;
+    setSaving(true);
+    setConflictWarning(null);
+
+    try {
+      const duration = booking.sessions?.duration_minutes ?? 60;
+      const endTime = addMinutesToTime(editTime, duration);
+
+      // Check conflicts
+      const conflict = await checkBookingConflict(
+        photographerId,
+        editDate,
+        editTime,
+        endTime,
+        booking.id,
+      );
+
+      if (conflict.hasConflict) {
+        const msg = conflict.conflictDetails || "Time conflict detected";
+        setConflictWarning(msg);
+        toast({ title: msg, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      // Update bookings.booked_date
+      const { error: bookingErr } = await supabase
+        .from("bookings")
+        .update({ booked_date: editDate } as any)
+        .eq("id", booking.id);
+
+      if (bookingErr) {
+        toast({ title: "Failed to update booking", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      // Update session_availability
+      const { error: availErr } = await (supabase as any)
+        .from("session_availability")
+        .update({
+          date: editDate,
+          start_time: editTime,
+          end_time: endTime,
+        })
+        .eq("id", booking.availability_id);
+
+      if (availErr) {
+        toast({ title: "Failed to update availability", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      // Also sync client_projects if linked
+      const { data: linkedProject } = await (supabase as any)
+        .from("client_projects")
+        .select("id")
+        .eq("booking_id", booking.id)
+        .maybeSingle();
+
+      if (linkedProject) {
+        await (supabase as any)
+          .from("client_projects")
+          .update({ shoot_date: editDate, shoot_time: editTime })
+          .eq("id", linkedProject.id);
+      }
+
+      toast({ title: "Schedule updated" });
+      setEditingSchedule(false);
+      onBookingUpdated?.();
+    } catch {
+      toast({ title: "An error occurred", variant: "destructive" });
+    }
+    setSaving(false);
+  };
 
   const handleUpdate = async (status: "confirmed" | "cancelled") => {
     setUpdating(true);
@@ -262,10 +360,83 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: B
               </div>
             </div>
 
-            {/* Date & Time */}
-            {(dateLabel || timeLabel) && (
-              <div className="flex flex-col gap-3">
+            {/* Date & Time — Editable */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
                 <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60">Schedule</p>
+                {!editingSchedule && booking.status !== "cancelled" && (
+                  <button
+                    onClick={startEditing}
+                    className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              {editingSchedule ? (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex items-center gap-1.5 h-8 px-3 rounded-md border text-sm transition-colors text-left flex-1",
+                            editDate ? "border-input text-foreground" : "border-input text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-xs">
+                            {editDate
+                              ? format(new Date(editDate + "T00:00:00"), "MMM d, yyyy")
+                              : "Select date"}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarPicker
+                          mode="single"
+                          selected={editDate ? new Date(editDate + "T00:00:00") : undefined}
+                          onSelect={(d) => {
+                            if (d) {
+                              const y = d.getFullYear();
+                              const m = String(d.getMonth() + 1).padStart(2, "0");
+                              const day = String(d.getDate()).padStart(2, "0");
+                              setEditDate(`${y}-${m}-${day}`);
+                              setConflictWarning(null);
+                            }
+                          }}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <TimePickerInput
+                      value={editTime}
+                      onChange={(v) => { setEditTime(v); setConflictWarning(null); }}
+                      className="shrink-0"
+                    />
+                  </div>
+
+                  {conflictWarning && (
+                    <div className="flex items-center gap-1.5 text-destructive text-[11px] p-1.5 rounded-md bg-destructive/10 border border-destructive/20">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      <span>{conflictWarning}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" className="h-7 text-xs gap-1.5" onClick={saveSchedule} disabled={saving || !editDate}>
+                      {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3" />}
+                      Save
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={cancelEditing} disabled={saving}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
                 <div className="flex flex-col gap-2">
                   {dateLabel && (
                     <div className="flex items-center gap-2.5 text-sm font-light">
@@ -284,9 +455,12 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange }: B
                       )}
                     </div>
                   )}
+                  {!dateLabel && !timeLabel && (
+                    <p className="text-xs text-muted-foreground/40">No schedule set</p>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Payment */}
             <div className="flex flex-col gap-3">
