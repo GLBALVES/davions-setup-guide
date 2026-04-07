@@ -37,6 +37,7 @@ interface SessionFull {
   cover_image_url: string | null;
   num_photos: number;
   status: string;
+  session_model?: string;
 }
 
 interface BlockedTime {
