@@ -38,6 +38,7 @@ import {
   Pencil,
   AlertTriangle,
   Loader2,
+  Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -197,6 +198,7 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
   const [editTime, setEditTime] = useState<string>("09:00");
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sendingLink, setSendingLink] = useState(false);
 
   if (!booking) return null;
 
@@ -300,6 +302,29 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
       toast({ title: "An error occurred", variant: "destructive" });
     }
     setSaving(false);
+  };
+
+  const sendConfirmationLink = async () => {
+    setSendingLink(true);
+    try {
+      const sessionTitle = booking.sessions?.title ?? "Session";
+      const bookedDate = dateStr ?? "";
+      const startTime = avail?.start_time?.slice(0, 5) ?? "";
+      await supabase.functions.invoke("confirm-booking-email", {
+        body: {
+          bookingId: booking.id,
+          clientEmail: booking.client_email,
+          clientName: booking.client_name,
+          sessionTitle,
+          bookedDate,
+          startTime,
+        },
+      });
+      toast({ title: "Confirmation link sent to client" });
+    } catch {
+      toast({ title: "Failed to send email", variant: "destructive" });
+    }
+    setSendingLink(false);
   };
 
   const handleUpdate = async (status: "confirmed" | "cancelled") => {
@@ -513,6 +538,19 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
                 <Images className="h-3.5 w-3.5" />
                 Create Gallery
               </Button>
+
+              {booking.status !== "cancelled" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="justify-start gap-2.5"
+                  disabled={sendingLink}
+                  onClick={sendConfirmationLink}
+                >
+                  {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Send Confirmation Link
+                </Button>
+              )}
 
               {hasBriefing && (
                 <Button
