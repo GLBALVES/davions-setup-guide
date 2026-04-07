@@ -111,6 +111,9 @@ export default function AdminBugReports() {
               src={lightbox.url}
               controls
               autoPlay
+              crossOrigin="anonymous"
+              preload="metadata"
+              playsInline
               className="max-w-[90vw] max-h-[85vh] rounded-lg border border-border shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
@@ -242,6 +245,9 @@ export default function AdminBugReports() {
                                   <video
                                     src={url}
                                     controls
+                                    crossOrigin="anonymous"
+                                    preload="metadata"
+                                    playsInline
                                     className="w-full max-h-32 object-contain bg-black"
                                   />
                                   <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -373,7 +379,7 @@ export default function AdminBugReports() {
                                     {report.screenshot_urls.map((url, i) =>
                                       isVideo(url) ? (
                                         <div key={i} className="relative group w-48 rounded border border-border overflow-hidden bg-muted">
-                                          <video src={url} controls className="w-full max-h-32 object-contain bg-black" />
+                                          <video src={url} controls crossOrigin="anonymous" preload="metadata" playsInline className="w-full max-h-32 object-contain bg-black" />
                                           <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => setLightbox({ url, type: "video" })} className="bg-background/80 rounded p-0.5 hover:bg-background transition-colors"><Maximize2 size={11} /></button>
                                             <a href={url} target="_blank" rel="noopener noreferrer" className="bg-background/80 rounded p-0.5 hover:bg-background transition-colors"><ExternalLink size={11} /></a>
