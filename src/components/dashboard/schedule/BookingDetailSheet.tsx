@@ -304,6 +304,29 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setSaving(false);
   };
 
+  const sendConfirmationLink = async () => {
+    setSendingLink(true);
+    try {
+      const sessionTitle = booking.sessions?.title ?? "Session";
+      const bookedDate = dateStr ?? "";
+      const startTime = avail?.start_time?.slice(0, 5) ?? "";
+      await supabase.functions.invoke("confirm-booking-email", {
+        body: {
+          bookingId: booking.id,
+          clientEmail: booking.client_email,
+          clientName: booking.client_name,
+          sessionTitle,
+          bookedDate,
+          startTime,
+        },
+      });
+      toast({ title: "Confirmation link sent to client" });
+    } catch {
+      toast({ title: "Failed to send email", variant: "destructive" });
+    }
+    setSendingLink(false);
+  };
+
   const handleUpdate = async (status: "confirmed" | "cancelled") => {
     setUpdating(true);
     const { error } = await supabase.from("bookings").update({ status }).eq("id", booking.id);
