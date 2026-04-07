@@ -25,7 +25,7 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
-import NotFound from "./pages/NotFound";
+import BookingConfirm from "./pages/BookingConfirm";
 import BlogManager from "./pages/dashboard/BlogManager";
 import SiteSeo from "./pages/dashboard/SiteSeo";
 import EmailMarketing from "./pages/dashboard/EmailMarketing";
