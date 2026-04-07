@@ -756,11 +756,17 @@ export function CreateBookingDialog({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.end}</Label>
-                  <TimePickerInput
-                    value={endTime}
-                    onChange={setEndTime}
-                    className={cn(hasConflict && "ring-1 ring-destructive")}
-                  />
+                  {selectedSession && sessions.find(s => s.id === selectedSessionId && s.status === "active") && (sessions.find(s => s.id === selectedSessionId) as any)?.__isOneSession ? (
+                    <div className={cn("flex items-center h-8 px-3 border border-border rounded-sm bg-muted/30 text-xs text-muted-foreground", hasConflict && "ring-1 ring-destructive")}>
+                      {endTime ? formatTime12(endTime) : "--:--"}
+                    </div>
+                  ) : (
+                    <TimePickerInput
+                      value={endTime}
+                      onChange={setEndTime}
+                      className={cn(hasConflict && "ring-1 ring-destructive")}
+                    />
+                  )}
                 </div>
               </div>
 
