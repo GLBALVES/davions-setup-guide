@@ -1215,91 +1215,12 @@ export function ProjectDetailSheet({
 
   const save = async (data: Partial<ProjectSheetData>) => { queueChange(data); };
 
-  // Conflict-aware save for date/time changes
-  const saveDateTime = async (newDate: string | null, newTime: string | null) => {
-    const shootDate = newDate ?? project.shoot_date;
-    const shootTime = newTime ?? project.shoot_time ?? "09:00";
-
-    // Only validate if we have a date
-    if (shootDate && project.booking_id) {
-      // Check for conflicts (excluding own booking)
-      const conflict = await checkBookingConflict(
-        photographerId,
-        shootDate,
-        shootTime,
-        "", // endTime calculated inside the utility isn't needed for overlap – we'll compute below
-        project.booking_id,
-      );
-
-      // We need to get session duration for proper end time
-      const { data: bookingData } = await (supabase as any)
-        .from("bookings")
-        .select("session_id")
-        .eq("id", project.booking_id)
-        .single();
-      
-      if (bookingData) {
-        const { data: sessionData } = await (supabase as any)
-          .from("sessions")
-          .select("duration_minutes")
-          .eq("id", bookingData.session_id)
-          .single();
-        
-        const duration = sessionData?.duration_minutes ?? 60;
-        const totalMins = timeToMinutes(shootTime) + duration;
-        const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
-        
-        const conflictResult = await checkBookingConflict(
-          photographerId,
-          shootDate,
-          shootTime,
-          endTime,
-          project.booking_id,
-        );
-
-        if (conflictResult.hasConflict) {
-          const msg = conflictResult.conflictDetails || "Time conflict detected";
-          setConflictWarning(msg);
-          toast.error(msg);
-          return;
-        }
-      }
-
-      // Sync to booking + availability tables
-      const syncResult = await syncProjectDateToBooking(
-        project.booking_id,
-        shootDate,
-        shootTime,
-      );
-
-      if (!syncResult.success) {
-        toast.error(syncResult.error || "Failed to sync booking");
-        return;
-      }
-    } else if (shootDate) {
-      // No booking_id – just validate blocked times
-      const { data: blockedTimes } = await (supabase as any)
-        .from("blocked_times")
-        .select("start_time, end_time, all_day, reason")
-        .eq("photographer_id", photographerId)
-        .eq("date", shootDate);
-      
-      if (blockedTimes) {
-        for (const bt of blockedTimes) {
-          if (bt.all_day) {
-            toast.error(bt.reason || "This day is blocked");
-            return;
-          }
-        }
-      }
-    }
-
-    // Clear conflict and save to client_projects
-    setConflictWarning(null);
+  const queueDateTime = (newDate: string | null, newTime: string | null) => {
     const updates: Partial<ProjectSheetData> = {};
     if (newDate !== undefined) updates.shoot_date = newDate;
     if (newTime !== undefined) updates.shoot_time = newTime;
-    await save(updates);
+    queueChange(updates);
+    setConflictWarning(null);
   };
 
   const handleSessionTypeChange = async (id: string | null) => {
