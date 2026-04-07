@@ -1450,12 +1450,21 @@ const Projects = () => {
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => {
-      const da = a.gallery_deadline;
-      const db = b.gallery_deadline;
-      if (da && db) return da < db ? -1 : da > db ? 1 : 0;
-      if (da) return -1; // deadline first, nulls last
-      if (db) return 1;
-      return a.position - b.position; // fallback to manual order
+      // Primary sort: shoot_date ascending (nulls last)
+      const dateA = a.shoot_date;
+      const dateB = b.shoot_date;
+      if (dateA && dateB) {
+        const cmpDate = dateA.localeCompare(dateB);
+        if (cmpDate !== 0) return cmpDate;
+        // Same date — sort by shoot_time ascending
+        const timeA = a.shoot_time || "00:00";
+        const timeB = b.shoot_time || "00:00";
+        const cmpTime = timeA.localeCompare(timeB);
+        if (cmpTime !== 0) return cmpTime;
+      }
+      if (dateA && !dateB) return -1;
+      if (!dateA && dateB) return 1;
+      return a.position - b.position;
     });
 
   const activeProject = projects.find((p) => p.id === activeId) ?? null;
