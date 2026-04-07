@@ -60,7 +60,7 @@ const Sessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "active" | "draft">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "draft" | "one_session">("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "az" | "za" | "price_asc" | "price_desc" | "manual">(() => {
     const saved = localStorage.getItem("davions_sessions_sort");
@@ -98,8 +98,12 @@ const Sessions = () => {
     fetchSessions();
   }, [photographerId]);
 
+  const standardSessions = useMemo(() => sessions.filter(s => s.session_model !== "one_session"), [sessions]);
+  const oneSessionsList = useMemo(() => sessions.filter(s => s.session_model === "one_session"), [sessions]);
+
   const filteredSessions = useMemo(() => {
-    let list = sessions.filter((sess) => {
+    if (filter === "one_session") return []; // handled separately
+    let list = standardSessions.filter((sess) => {
       if (filter === "active") return sess.status === "active";
       if (filter === "draft") return sess.status !== "active";
       return true;
@@ -127,7 +131,7 @@ const Sessions = () => {
       });
     }
     return list;
-  }, [sessions, filter, search, sort]);
+  }, [standardSessions, filter, search, sort]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
