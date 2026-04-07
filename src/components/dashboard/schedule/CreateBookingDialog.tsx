@@ -129,6 +129,7 @@ export function CreateBookingDialog({
   const [osDuration, setOsDuration] = useState<number>(60);
   const [osLocation, setOsLocation] = useState("");
   const [osNumPhotos, setOsNumPhotos] = useState<number>(0);
+  const [osPrice, setOsPrice] = useState<number | "">("");
   const [osBriefingId, setOsBriefingId] = useState("");
   const [osContractId, setOsContractId] = useState("");
   const [osIncludes, setOsIncludes] = useState<string[]>([]);
@@ -348,7 +349,7 @@ export function CreateBookingDialog({
           session_model: "one_session",
           hide_from_store: true,
           status: "active",
-          price: 0,
+          price: osPrice === "" ? 0 : osPrice,
           briefing_id: osBriefingId || null,
           contract_text: contractText || null,
         })
@@ -577,8 +578,8 @@ export function CreateBookingDialog({
                   <Input value={osName} onChange={e => setOsName(e.target.value)} className="text-xs h-8" placeholder={t.createBooking.sessionName} />
                 </div>
 
-                {/* Duration + Num Photos */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Duration + Num Photos + Price */}
+                <div className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.duration} *</Label>
                     <div className="relative">
@@ -589,6 +590,13 @@ export function CreateBookingDialog({
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.numPhotos}</Label>
                     <Input type="number" min={0} value={osNumPhotos} onChange={e => setOsNumPhotos(Number(e.target.value))} className="text-xs h-8" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.price}</Label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">R$</span>
+                      <Input type="number" min={0} step={0.01} value={osPrice} onChange={e => setOsPrice(e.target.value === "" ? "" : Number(e.target.value))} className="text-xs h-8 pl-8" placeholder="0" />
+                    </div>
                   </div>
                 </div>
 
