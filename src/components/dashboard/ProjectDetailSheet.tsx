@@ -1327,19 +1327,30 @@ export function ProjectDetailSheet({
               <input
                 defaultValue={project.title}
                 key={project.id + "-title"}
-                onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) save({ title: v }); }}
+                onChange={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) queueChange({ title: v }); }}
                 onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                 className="text-lg font-semibold bg-transparent border-0 border-b border-transparent hover:border-border focus:border-foreground/40 outline-none w-full py-0.5 transition-colors leading-tight"
                 placeholder={tp.title_field}
               />
             </div>
+            {hasPendingChanges && (
+              <Button
+                size="sm"
+                className="h-7 text-xs gap-1.5 shrink-0"
+                onClick={commitSave}
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                {tp.save || "Save"}
+              </Button>
+            )}
             {isArchived ? (
               <span className={cn("self-start inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0", STAGE_COLORS.archived)}>
                 <Archive className="h-2.5 w-2.5" /> {tp.archivedLabel}
               </span>
             ) : (
-              <Select value={project.stage} onValueChange={(v) => save({ stage: v as Stage })}>
-                <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[project.stage])}>
+              <Select value={effective.stage} onValueChange={(v) => save({ stage: v as Stage })}>
+                <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[effective.stage])}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
