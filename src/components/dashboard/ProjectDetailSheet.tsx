@@ -1389,10 +1389,10 @@ export function ProjectDetailSheet({
                           </span>
                         ) : (
                           <>
-                            <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
-                              onBlur={(e) => saveDateTime(e.target.value || null, null)}
+                            <input type="date" defaultValue={effective.shoot_date ?? ""} key={project.id + "-date"}
+                              onChange={(e) => queueDateTime(e.target.value || null, null)}
                               className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors" />
-                            <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => saveDateTime(null, v)} className="shrink-0" />
+                            <TimePickerInput value={effective.shoot_time ?? "09:00"} onChange={(v) => queueDateTime(null, v)} className="shrink-0" />
                             {project.shoot_date && (
                               <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
                                 {isOverdue ? tp.overdue : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
