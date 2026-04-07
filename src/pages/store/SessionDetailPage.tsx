@@ -956,7 +956,7 @@ const SessionDetailPage = () => {
                 </div>
                 {session.location && (
                   <div>
-                    <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-4">Location</p>
+                    <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-4">Where</p>
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="text-sm font-light">{session.location}</span>
