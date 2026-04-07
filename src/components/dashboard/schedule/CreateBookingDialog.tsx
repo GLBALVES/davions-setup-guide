@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import oneSessionPlaceholder from "@/assets/one-session-placeholder.jpg";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -507,11 +508,7 @@ export function CreateBookingDialog({
                       className="w-full text-left border border-border bg-background hover:border-foreground/50 transition-colors rounded-sm overflow-hidden flex flex-col"
                     >
                       <div className="w-full aspect-[4/3] bg-muted flex items-center justify-center overflow-hidden">
-                        {s.cover_image_url ? (
-                          <img src={s.cover_image_url} alt={s.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <Camera className="h-6 w-6 text-muted-foreground/40" />
-                        )}
+<img src={s.cover_image_url || oneSessionPlaceholder} alt={s.title} className="w-full h-full object-cover" loading="lazy" />
                       </div>
                       <div className="p-2.5 flex flex-col gap-1">
                         <span className="text-xs font-medium truncate">{s.title}</span>
@@ -707,11 +704,7 @@ export function CreateBookingDialog({
             {selectedSession && (
               <div className="mx-5 mb-4 flex items-center gap-3 p-2 border border-border rounded-sm bg-muted/30">
                 <div className="w-10 h-10 shrink-0 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
-                  {selectedSession.cover_image_url ? (
-                    <img src={selectedSession.cover_image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Camera className="h-3.5 w-3.5 text-muted-foreground/40" />
-                  )}
+<img src={selectedSession.cover_image_url || oneSessionPlaceholder} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{selectedSession.title}</p>
