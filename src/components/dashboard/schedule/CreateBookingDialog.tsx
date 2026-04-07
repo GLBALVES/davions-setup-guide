@@ -37,6 +37,7 @@ interface SessionFull {
   cover_image_url: string | null;
   num_photos: number;
   status: string;
+  session_model?: string;
 }
 
 interface BlockedTime {
@@ -171,7 +172,7 @@ export function CreateBookingDialog({
     setSessionsLoading(true);
     (supabase as any)
       .from("sessions")
-      .select("id, title, description, duration_minutes, price, location, cover_image_url, num_photos, status")
+      .select("id, title, description, duration_minutes, price, location, cover_image_url, num_photos, status, session_model")
       .eq("photographer_id", user.id)
       .eq("status", "active")
       .order("sort_order", { ascending: true })
@@ -375,11 +376,12 @@ export function CreateBookingDialog({
         title: osName.trim(),
         description: null,
         duration_minutes: osDuration || 60,
-        price: 0,
+        price: osPrice === "" ? 0 : Number(osPrice),
         location: osLocation || null,
         cover_image_url: null,
         num_photos: osNumPhotos || 0,
         status: "active",
+        session_model: "one_session",
       };
       setSessions(prev => [...prev, newSession]);
       setSelectedSessionId(sessionData.id);
@@ -756,11 +758,17 @@ export function CreateBookingDialog({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.end}</Label>
-                  <TimePickerInput
-                    value={endTime}
-                    onChange={setEndTime}
-                    className={cn(hasConflict && "ring-1 ring-destructive")}
-                  />
+                  {selectedSession?.session_model === "one_session" ? (
+                    <div className={cn("flex items-center h-8 px-3 border border-border rounded-sm bg-muted/30 text-xs text-muted-foreground", hasConflict && "ring-1 ring-destructive")}>
+                      {endTime ? formatTime12(endTime) : "--:--"}
+                    </div>
+                  ) : (
+                    <TimePickerInput
+                      value={endTime}
+                      onChange={setEndTime}
+                      className={cn(hasConflict && "ring-1 ring-destructive")}
+                    />
+                  )}
                 </div>
               </div>
 
