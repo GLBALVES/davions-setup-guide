@@ -282,18 +282,52 @@ const Sessions = () => {
 
               {loading ? (
                 <SessionsSkeleton />
+              ) : filter === "one_session" ? (
+                /* ── One Sessions tab ── */
+                oneSessionsList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border">
+                    <Zap className="h-10 w-10 text-muted-foreground/30" />
+                    <div>
+                      <p className="text-sm font-light text-muted-foreground">{s.noOneSessions}</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">{s.oneSessionsHint}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {oneSessionsList.map((session) => (
+                      <OneSessionCard
+                        key={session.id}
+                        session={session}
+                        onConvert={async (id) => {
+                          const { error } = await supabase
+                            .from("sessions")
+                            .update({ session_model: "standard", hide_from_store: false } as any)
+                            .eq("id", id);
+                          if (error) {
+                            toast({ title: error.message, variant: "destructive" });
+                          } else {
+                            toast({ title: s.converted });
+                            setSessions((prev) => prev.map((ss) => ss.id === id ? { ...ss, session_model: "standard" } : ss));
+                            navigate(`/dashboard/sessions/${id}`);
+                          }
+                        }}
+                        onDelete={(id) => setSessions((prev) => prev.filter((ss) => ss.id !== id))}
+                      />
+                    ))}
+                  </div>
+                )
               ) : filteredSessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-center border border-dashed border-border">
                   <Camera className="h-10 w-10 text-muted-foreground/30" />
                   <div>
                     <p className="text-sm font-light text-muted-foreground">
-                      {sessions.length === 0 ? s.noSessionsYet : search ? `${s.noResults} "${search}"` : s.noMatch}
+                      {standardSessions.length === 0 ? s.noSessionsYet : search ? `${s.noResults} "${search}"` : s.noMatch}
                     </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {sessions.length === 0 ? s.createFirst : search ? s.differentSearch : s.differentFilter}
+                      {standardSessions.length === 0 ? s.createFirst : search ? s.differentSearch : s.differentFilter}
                     </p>
                   </div>
-                  {sessions.length === 0 && (
+                  {standardSessions.length === 0 && (
                     <Button
                       size="sm"
                       variant="outline"
