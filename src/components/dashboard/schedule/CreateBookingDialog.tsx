@@ -147,6 +147,11 @@ export function CreateBookingDialog({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  // Save-as-preset dialog
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [presetSessionId, setPresetSessionId] = useState<string | null>(null);
+  const [presetConverting, setPresetConverting] = useState(false);
+
   // Reset when dialog opens
   useEffect(() => {
     if (open) {
@@ -425,7 +430,7 @@ export function CreateBookingDialog({
         .single();
       if (availError) throw availError;
 
-      const { error: bookingError } = await (supabase as any).from("bookings").insert({
+      const { data: bookingData, error: bookingError } = await (supabase as any).from("bookings").insert({
         photographer_id: user.id,
         session_id: selectedSessionId,
         availability_id: availData.id,
@@ -434,8 +439,10 @@ export function CreateBookingDialog({
         client_email: clientEmail.trim(),
         status: "confirmed",
         payment_status: "pending",
-      });
+      }).select("id").single();
       if (bookingError) throw bookingError;
+
+      const createdBookingId = bookingData?.id;
 
       const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
 
@@ -459,9 +466,34 @@ export function CreateBookingDialog({
         });
       } catch (_) {}
 
+      // Send confirmation email to client with booking link (for one_session)
+      const isOneSession = selectedSession?.session_model === "one_session";
+      if (isOneSession && createdBookingId) {
+        try {
+          await supabase.functions.invoke("confirm-booking-email", {
+            body: {
+              bookingId: createdBookingId,
+              clientEmail: clientEmail.trim(),
+              clientName: finalClientName,
+              sessionTitle: sessionTitle,
+              bookedDate: dateStr,
+              startTime,
+            },
+          });
+        } catch (_) {}
+      }
+
       toast({ title: t.createBooking.bookingCreated });
       onCreated();
       onOpenChange(false);
+
+      // Show save-as-preset prompt for one_session
+      if (isOneSession) {
+        setTimeout(() => {
+          setPresetSessionId(selectedSessionId);
+          setPresetDialogOpen(true);
+        }, 300);
+      }
     } catch (err: any) {
       toast({ title: err?.message ?? "Failed to create booking", variant: "destructive" });
     } finally {
@@ -472,6 +504,7 @@ export function CreateBookingDialog({
   const isValid = Boolean(date && selectedSessionId && clientEmail.trim() && !hasConflict);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("p-0 gap-0", step === 1 ? "max-w-2xl" : "max-w-md")}>
         {/* ── STEP 1: Select Session ── */}
@@ -881,5 +914,39 @@ export function CreateBookingDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Save as preset dialog */}
+    <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-base font-light tracking-wide">{t.createBooking.saveAsPreset ?? "Save as Session?"}</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground font-light leading-relaxed">
+          {t.createBooking.saveAsPresetDesc ?? "Would you like to save this one-off session as a reusable session template? You'll be redirected to complete the full setup."}
+        </p>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => setPresetDialogOpen(false)}>
+            {t.createBooking.noThanks ?? "No, keep as one-off"}
+          </Button>
+          <Button
+            size="sm"
+            className="text-xs gap-2"
+            disabled={presetConverting}
+            onClick={async () => {
+              if (!presetSessionId) return;
+              setPresetConverting(true);
+              await supabase.from("sessions").update({ session_model: "standard", hide_from_store: false } as any).eq("id", presetSessionId);
+              setPresetConverting(false);
+              setPresetDialogOpen(false);
+              navigate(`/dashboard/sessions/${presetSessionId}`);
+            }}
+          >
+            {presetConverting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {t.createBooking.yesConvert ?? "Yes, convert to session"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

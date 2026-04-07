@@ -25,6 +25,7 @@ import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
 import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
+import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
 import BlogManager from "./pages/dashboard/BlogManager";
 import SiteSeo from "./pages/dashboard/SiteSeo";
@@ -114,6 +115,7 @@ const App = () => {
                 <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
+                <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />

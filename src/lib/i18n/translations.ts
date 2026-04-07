@@ -1818,6 +1818,10 @@ export const translations = {
       searchClient: "Search client by email or name...",
       createBooking: "Create Booking",
       bookingCreated: "Booking created successfully",
+      saveAsPreset: "Save as Session?",
+      saveAsPresetDesc: "Would you like to save this one-off session as a reusable session template? You'll be redirected to complete the full setup.",
+      noThanks: "No, keep as one-off",
+      yesConvert: "Yes, convert to session",
     },
   },
 
@@ -3586,6 +3590,10 @@ export const translations = {
       searchClient: "Buscar cliente por e-mail ou nome...",
       createBooking: "Criar Agendamento",
       bookingCreated: "Agendamento criado com sucesso",
+      saveAsPreset: "Salvar como Sessão?",
+      saveAsPresetDesc: "Deseja salvar esta sessão avulsa como um modelo reutilizável? Você será redirecionado para completar o cadastro.",
+      noThanks: "Não, manter como avulsa",
+      yesConvert: "Sim, converter em sessão",
     },
   },
 
@@ -5429,6 +5437,10 @@ export const translations = {
       searchClient: "Buscar cliente por e-mail o nombre...",
       createBooking: "Crear Reserva",
       bookingCreated: "Reserva creada con éxito",
+      saveAsPreset: "¿Guardar como Sesión?",
+      saveAsPresetDesc: "¿Desea guardar esta sesión única como plantilla reutilizable? Será redirigido para completar la configuración.",
+      noThanks: "No, mantener como única",
+      yesConvert: "Sí, convertir en sesión",
     },
   },
 } as const;

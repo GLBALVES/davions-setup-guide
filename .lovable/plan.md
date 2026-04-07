@@ -1,80 +1,44 @@
+## Fluxo Completo One Session — Implementação
 
+### Visão Geral
+Após o fotógrafo criar um agendamento via One Session, o sistema envia um link por e-mail ao cliente. O cliente acessa uma página pública para finalizar: ver detalhes, responder briefing, assinar contrato e fazer pagamento. O fotógrafo pode adicionar itens extras na invoice durante a sessão.
 
-## Sessão Avulsa (One Session) no Diálogo de Agendamento
+### Etapas de Implementação
 
-### O que será feito
+#### Etapa 1: Página pública do cliente para One Session
+- Criar rota pública `/booking/:bookingId/confirm`
+- Reutilizar componentes existentes do BookingSuccess (briefing, contrato)
+- Exibir: detalhes da sessão, data/hora, local, itens inclusos
+- Tabs: Detalhes → Briefing → Contrato → Pagamento
+- Pagamento: mesmo fluxo Stripe da sessão normal (depósito + saldo)
+- Fotos extras e adicionais: mesmo do fluxo normal
 
-Adicionar uma opção "One Session" no Step 1 do `CreateBookingDialog`, ao lado dos cards de sessões existentes. Ao escolher essa opção, o fotógrafo preenche um mini-formulário inline para criar uma sessão avulsa, e depois segue para o Step 2 normalmente (data/hora/cliente).
+#### Etapa 2: Envio de e-mail ao cliente
+- Após criar One Session booking, enviar e-mail via Brevo com link da página de confirmação
+- Template com dados da sessão (nome, data, hora, fotógrafo)
+- Botão CTA "Finalizar Agendamento"
 
-### Fluxo do usuário
+#### Etapa 3: Invoice com itens adicionais livres
+- No ProjectDetailSheet (aba Payments), permitir adicionar itens livres: descrição, valor, quantidade
+- Tabela `booking_invoice_items` (nova) com: booking_id, description, unit_price, quantity, created_at
+- Itens cobrados no pagamento restante (saldo)
+- Fotógrafo adiciona durante ou após a sessão
 
-```text
-Step 1: Select Session
-  ┌────────────┐ ┌────────────┐ ┌──────────────┐
-  │ Session A   │ │ Session B  │ │ + One Session │  ← novo card
-  └────────────┘ └────────────┘ └──────────────┘
+#### Etapa 4: Salvar como preset (opcional)
+- Após criar One Session, modal perguntando "Deseja salvar como sessão reutilizável?"
+- Se sim: converte session_model para 'standard' e redireciona para edição completa
+- Se não: mantém como one_session (rascunho) na aba One Sessions
 
-  Ao clicar em "+ One Session":
-  → Substitui a grid por um formulário com:
-    - Nome da sessão (texto)
-    - Duração (minutos)
-    - Local (endereço)
-    - Quantidade de fotos
-    - Contrato (select dos contratos existentes)
-    - Briefing (select dos briefings existentes)
-    - Itens inclusos (lista de textos, adicionar/remover)
+#### Etapa 5: Referência futura
+- One Sessions ficam na aba separada em Sessions (já implementado)
+- Aparecem também vinculadas aos bookings/projetos no Workflow
+- Fotógrafo pode completar o cadastro a qualquer momento convertendo em sessão padrão
 
-  Botão "Continue" → cria a sessão na tabela `sessions`
-  com session_model='one_session', status='active',
-  hide_from_store=true → vai pro Step 2
+### Detalhes Técnicos
+- A página do cliente é pública (sem auth), acessada via link único com booking ID
+- Briefing e contrato são opcionais (depende se foram configurados na One Session)
+- Pagamento usa Stripe Checkout existente via `create-session-checkout`
+- Invoice items são uma nova tabela com RLS para o fotógrafo
+- E-mail enviado via edge function existente `send-client-email` ou nova função dedicada
 
-Step 2: Booking Details (já existe, sem mudanças)
-  - Data / Hora / Conflitos
-  - Cliente: SOMENTE email
-    - Campo de email com busca: ao digitar, sugere clientes
-      existentes (tabela bookings, client_email/client_name)
-    - Se encontrar, preenche o nome automaticamente
-    - Se não, preenche apenas o email (nome fica vazio ou
-      extraído do email)
-```
-
-### Alterações
-
-#### 1. `CreateBookingDialog.tsx` — Adicionar modo One Session no Step 1
-
-- Novo estado `mode`: `'select' | 'one_session'` (default: `'select'`)
-- Quando `mode === 'select'`: grid atual de sessões + card "One Session" (ícone diferenciado)
-- Quando `mode === 'one_session'`: formulário com os 7 campos
-- Campos do formulário:
-  - `osName` (text, obrigatório)
-  - `osDuration` (number, obrigatório)
-  - `osLocation` (text, opcional)
-  - `osNumPhotos` (number, opcional)
-  - `osContractId` (select, opcional) — carrega da tabela `contracts`
-  - `osBriefingId` (select, opcional) — carrega da tabela `briefings`
-  - `osIncludes` (array de strings) — input + botão adicionar, chips removíveis
-- Botão "Continue": insere na tabela `sessions` (session_model='one_session', hide_from_store=true) e os itens inclusos na tabela `session_bonuses`, depois avança para Step 2
-
-#### 2. `CreateBookingDialog.tsx` — Step 2: Cliente apenas email com busca
-
-- Remover campo "Client Name" obrigatório
-- Campo email com autocomplete:
-  - Ao digitar 3+ caracteres, busca `bookings` por `client_email` ou `client_name` (ILIKE)
-  - Dropdown de sugestões mostrando nome + email
-  - Ao selecionar, preenche email e nome
-  - Se não selecionar nenhum, usa apenas o email digitado
-- `clientName` se torna opcional (preenchido automaticamente pela busca ou vazio)
-- Ajustar validação: `isValid` exige apenas `clientEmail`, não `clientName`
-
-#### 3. Traduções (i18n)
-
-Adicionar chaves nos 3 idiomas (en/pt/es) para:
-- "One Session", "Session Name", "Duration", "Location", "Number of Photos", "Contract", "Briefing", "Items Included", "Add item", "Search client...", "No briefing", "No contract", "Continue"
-
-### Detalhes técnicos
-
-- A sessão criada via One Session usa `session_model='one_session'` (coluna já existe na tabela `sessions`) e `hide_from_store=true` para não aparecer na loja pública
-- Os itens inclusos são salvos na tabela `session_bonuses` (já existe, com FK para `session_id`)
-- A busca de clientes usa query ILIKE em `bookings` filtrado por `photographer_id`, com `DISTINCT ON (client_email)` para evitar duplicatas
-- Contratos e briefings são carregados com queries simples filtradas por `photographer_id`
-
+### Ordem: Etapa 1 → 2 → 3 → 4 (5 já está pronto)

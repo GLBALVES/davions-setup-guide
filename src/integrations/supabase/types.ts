@@ -366,6 +366,44 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_invoice_items: {
+        Row: {
+          booking_id: string
+          created_at: string
+          description: string
+          id: string
+          photographer_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          description?: string
+          id?: string
+          photographer_id: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          photographer_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_invoice_items_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           availability_id: string
