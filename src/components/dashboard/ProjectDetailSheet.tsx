@@ -1112,6 +1112,7 @@ export function ProjectDetailSheet({
   if (!project) return null;
 
   const isArchived = project.stage === "archived";
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const save = async (data: Partial<ProjectSheetData>) => { await onUpdate(project.id, data); };
 
   // Conflict-aware save for date/time changes
@@ -1157,7 +1158,9 @@ export function ProjectDetailSheet({
         );
 
         if (conflictResult.hasConflict) {
-          toast.error(conflictResult.conflictDetails || "Time conflict detected");
+          const msg = conflictResult.conflictDetails || "Time conflict detected";
+          setConflictWarning(msg);
+          toast.error(msg);
           return;
         }
       }
