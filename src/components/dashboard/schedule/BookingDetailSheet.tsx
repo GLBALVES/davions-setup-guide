@@ -39,6 +39,8 @@ import {
   AlertTriangle,
   Loader2,
   Send,
+  Copy,
+  MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -304,7 +306,12 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setSaving(false);
   };
 
-  const sendConfirmationLink = async () => {
+  const getConfirmUrl = () => {
+    const origin = window.location.origin;
+    return `${origin}/booking/${booking.id}/confirm`;
+  };
+
+  const sendConfirmationEmail = async () => {
     setSendingLink(true);
     try {
       const sessionTitle = booking.sessions?.title ?? "Session";
@@ -320,11 +327,29 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
           startTime,
         },
       });
-      toast({ title: "Confirmation link sent to client" });
+      toast({ title: "Confirmation email sent" });
     } catch {
       toast({ title: "Failed to send email", variant: "destructive" });
     }
     setSendingLink(false);
+  };
+
+  const sendViaWhatsApp = () => {
+    const url = getConfirmUrl();
+    const sessionTitle = booking.sessions?.title ?? "Session";
+    const msg = encodeURIComponent(
+      `Hi ${booking.client_name}! 👋\n\nYour session *${sessionTitle}* is booked for ${dateStr ?? ""}.\n\nPlease complete your booking here:\n${url}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+  };
+
+  const copyConfirmLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getConfirmUrl());
+      toast({ title: "Link copied to clipboard" });
+    } catch {
+      toast({ title: "Failed to copy", variant: "destructive" });
+    }
   };
 
   const handleUpdate = async (status: "confirmed" | "cancelled") => {
@@ -540,16 +565,44 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
               </Button>
 
               {booking.status !== "cancelled" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="justify-start gap-2.5"
-                  disabled={sendingLink}
-                  onClick={sendConfirmationLink}
-                >
-                  {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                  Send Confirmation Link
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start gap-2.5"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      Send Confirmation Link
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-52 p-1.5" align="start">
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left disabled:opacity-50"
+                        disabled={sendingLink}
+                        onClick={sendConfirmationEmail}
+                      >
+                        {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 text-muted-foreground" />}
+                        E-mail
+                      </button>
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
+                        onClick={sendViaWhatsApp}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        WhatsApp
+                      </button>
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
+                        onClick={copyConfirmLink}
+                      >
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        Copy link
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
 
               {hasBriefing && (
