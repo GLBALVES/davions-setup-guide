@@ -38,6 +38,7 @@ import {
   Pencil,
   AlertTriangle,
   Loader2,
+  Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
