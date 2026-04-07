@@ -8,6 +8,8 @@ import {
   Camera,
   Check,
   CheckCircle,
+  ChevronRight,
+  ChevronLeft,
   ClipboardList,
   Clock,
   FileText,
@@ -96,7 +98,13 @@ function formatCurrency(cents: number) {
   return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-type Tab = "details" | "briefing" | "contract" | "payment";
+type StepKey = "details" | "briefing" | "contract" | "payment";
+
+interface StepDef {
+  key: StepKey;
+  label: string;
+  icon: React.ReactNode;
+}
 
 /* ── Component ──────────────────────────────────────── */
 
@@ -110,7 +118,7 @@ const BookingConfirm = () => {
   const [bonuses, setBonuses] = useState<BonusItem[]>([]);
   const [briefing, setBriefing] = useState<BriefingData | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerData | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const [currentStep, setCurrentStep] = useState(0);
 
   // Briefing state
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
@@ -128,7 +136,6 @@ const BookingConfirm = () => {
     if (!bookingId) { setLoading(false); return; }
 
     const load = async () => {
-      // Fetch booking
       const { data: bData } = await supabase
         .from("bookings")
         .select("id, client_name, client_email, booked_date, status, payment_status, availability_id, session_id, photographer_id")
@@ -139,7 +146,6 @@ const BookingConfirm = () => {
       const b = bData as BookingData;
       setBooking(b);
 
-      // Fetch session, availability, photographer in parallel
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
           .from("sessions")
@@ -162,7 +168,6 @@ const BookingConfirm = () => {
         const s = sessRes.data as SessionData;
         setSession(s);
 
-        // Fetch bonuses
         const { data: bonusData } = await (supabase as any)
           .from("session_bonuses")
           .select("text")
@@ -170,7 +175,6 @@ const BookingConfirm = () => {
           .order("position", { ascending: true });
         setBonuses(bonusData ?? []);
 
-        // Fetch briefing if configured
         if (s.briefing_id) {
           const { data: brData } = await (supabase as any)
             .from("briefings")
@@ -179,7 +183,6 @@ const BookingConfirm = () => {
             .single();
           if (brData) {
             setBriefing(brData as BriefingData);
-            // Check if already submitted
             const { data: existing } = await (supabase as any)
               .from("booking_briefing_responses")
               .select("id")
@@ -248,15 +251,50 @@ const BookingConfirm = () => {
     }
   };
 
-  /* ── Available tabs ── */
-  const tabs: { key: Tab; label: string; icon: React.ReactNode; available: boolean }[] = [
-    { key: "details", label: "Details", icon: <Calendar className="h-3.5 w-3.5" />, available: true },
-    { key: "briefing", label: "Briefing", icon: <ClipboardList className="h-3.5 w-3.5" />, available: !!briefing },
-    { key: "contract", label: "Contract", icon: <FileText className="h-3.5 w-3.5" />, available: !!session?.contract_text },
-    { key: "payment", label: "Payment", icon: <CreditCard className="h-3.5 w-3.5" />, available: session?.price != null && session.price > 0 },
-  ];
+  /* ── Build steps dynamically ── */
+  const buildSteps = (): StepDef[] => {
+    if (!session) return [];
+    const steps: StepDef[] = [
+      { key: "details", label: "Details", icon: <Calendar className="h-4 w-4" /> },
+    ];
+    if (briefing) {
+      steps.push({ key: "briefing", label: "Briefing", icon: <ClipboardList className="h-4 w-4" /> });
+    }
+    if (session.contract_text) {
+      steps.push({ key: "contract", label: "Contract", icon: <FileText className="h-4 w-4" /> });
+    }
+    if (session.price != null && session.price > 0) {
+      steps.push({ key: "payment", label: "Payment", icon: <CreditCard className="h-4 w-4" /> });
+    }
+    return steps;
+  };
 
-  const availableTabs = tabs.filter((t) => t.available);
+  const steps = buildSteps();
+  const activeStep = steps[currentStep] ?? steps[0];
+  const isLastStep = currentStep === steps.length - 1;
+  const isFirstStep = currentStep === 0;
+
+  /* ── Step validation ── */
+  const canProceed = (): boolean => {
+    if (!activeStep) return false;
+    if (activeStep.key === "briefing") {
+      if (!briefing) return true;
+      if (alreadySubmittedBriefing || briefingSubmitted) return true;
+      return false; // must submit briefing first
+    }
+    if (activeStep.key === "contract") {
+      return contractAccepted;
+    }
+    return true;
+  };
+
+  const goNext = () => {
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  };
+
+  const goBack = () => {
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
+  };
 
   /* ── Loading ── */
   if (loading) {
@@ -288,32 +326,70 @@ const BookingConfirm = () => {
           </p>
           <h1 className="text-xl font-light tracking-wide">{session.title}</h1>
           <p className="text-xs text-muted-foreground font-light">
-            Complete your booking details below
+            Complete the steps below to finalize your booking
           </p>
         </div>
 
-        {/* Tab navigation */}
-        {availableTabs.length > 1 && (
-          <div className="flex items-center border-b border-border">
-            {availableTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] tracking-[0.2em] uppercase font-light border-b-2 -mb-px transition-colors ${
-                  activeTab === tab.key
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+        {/* ── Step Progress Indicator ── */}
+        {steps.length > 1 && (
+          <div className="flex items-center justify-center gap-0">
+            {steps.map((step, idx) => {
+              const isActive = idx === currentStep;
+              const isCompleted = idx < currentStep;
+              return (
+                <div key={step.key} className="flex items-center">
+                  {/* Step circle + label */}
+                  <button
+                    onClick={() => {
+                      // allow going back to completed steps
+                      if (idx <= currentStep) setCurrentStep(idx);
+                    }}
+                    className={`flex flex-col items-center gap-1.5 px-2 transition-all ${
+                      idx <= currentStep ? "cursor-pointer" : "cursor-default"
+                    }`}
+                  >
+                    <div
+                      className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                        isCompleted
+                          ? "bg-foreground border-foreground text-background"
+                          : isActive
+                          ? "border-foreground text-foreground"
+                          : "border-muted-foreground/30 text-muted-foreground/40"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <span className="text-[11px] font-light">{idx + 1}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-[9px] tracking-[0.15em] uppercase font-light transition-colors ${
+                        isActive ? "text-foreground" : isCompleted ? "text-foreground/70" : "text-muted-foreground/40"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </button>
+
+                  {/* Connector line */}
+                  {idx < steps.length - 1 && (
+                    <div
+                      className={`h-px w-8 sm:w-12 transition-colors mt-[-18px] ${
+                        idx < currentStep ? "bg-foreground" : "bg-muted-foreground/20"
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* ── Details Tab ── */}
-        {activeTab === "details" && (
+        {/* ── Step Content ── */}
+
+        {/* Details */}
+        {activeStep?.key === "details" && (
           <div className="border border-border divide-y divide-border">
             {session.cover_image_url && (
               <div className="aspect-video overflow-hidden">
@@ -353,7 +429,6 @@ const BookingConfirm = () => {
                 )}
               </div>
 
-              {/* Included items */}
               {bonuses.length > 0 && (
                 <div className="flex flex-col gap-2 pt-3 border-t border-border">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">What's included</p>
@@ -368,7 +443,6 @@ const BookingConfirm = () => {
                 </div>
               )}
 
-              {/* Status badges */}
               <div className="flex items-center gap-2 pt-3 border-t border-border">
                 <Badge variant={booking.status === "confirmed" ? "default" : "secondary"} className="text-[9px] tracking-wider uppercase">
                   {booking.status}
@@ -381,8 +455,8 @@ const BookingConfirm = () => {
           </div>
         )}
 
-        {/* ── Briefing Tab ── */}
-        {activeTab === "briefing" && briefing && (
+        {/* Briefing */}
+        {activeStep?.key === "briefing" && briefing && (
           <div className="border border-border flex flex-col divide-y divide-border">
             <div className="p-5 flex flex-col gap-1">
               <div className="flex items-center gap-2">
@@ -474,8 +548,8 @@ const BookingConfirm = () => {
           </div>
         )}
 
-        {/* ── Contract Tab ── */}
-        {activeTab === "contract" && session.contract_text && (
+        {/* Contract */}
+        {activeStep?.key === "contract" && session.contract_text && (
           <div className="border border-border flex flex-col divide-y divide-border">
             <div className="p-5 flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -505,8 +579,8 @@ const BookingConfirm = () => {
           </div>
         )}
 
-        {/* ── Payment Tab ── */}
-        {activeTab === "payment" && (
+        {/* Payment */}
+        {activeStep?.key === "payment" && (
           <div className="border border-border flex flex-col divide-y divide-border">
             <div className="p-5 flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -514,7 +588,6 @@ const BookingConfirm = () => {
             </div>
 
             <div className="p-5 flex flex-col gap-4">
-              {/* Price breakdown */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-light">{session.title}</span>
@@ -534,21 +607,53 @@ const BookingConfirm = () => {
               ) : (
                 <Button
                   onClick={handlePayment}
-                  disabled={paymentLoading || (!!session.contract_text && !contractAccepted)}
+                  disabled={paymentLoading}
                   className="w-full text-xs tracking-wider uppercase font-light gap-2"
                 >
                   {paymentLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Proceed to Payment
                 </Button>
               )}
-
-              {!!session.contract_text && !contractAccepted && booking.payment_status !== "paid" && (
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Please accept the service agreement before proceeding to payment.
-                </p>
-              )}
             </div>
           </div>
+        )}
+
+        {/* ── Navigation Buttons ── */}
+        {steps.length > 1 && (
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goBack}
+              disabled={isFirstStep}
+              className="text-xs gap-1.5 tracking-wider uppercase font-light"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Back
+            </Button>
+
+            {!isLastStep ? (
+              <Button
+                size="sm"
+                onClick={goNext}
+                disabled={!canProceed()}
+                className="text-xs gap-1.5 tracking-wider uppercase font-light"
+              >
+                Next
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            ) : (
+              // On the last step (payment), no "Next" button needed — payment button handles it
+              <div />
+            )}
+          </div>
+        )}
+
+        {/* Step hint */}
+        {steps.length > 1 && (
+          <p className="text-center text-[10px] text-muted-foreground/50 font-light">
+            Step {currentStep + 1} of {steps.length}
+          </p>
         )}
       </div>
 
