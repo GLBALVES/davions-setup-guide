@@ -1,88 +1,80 @@
 
 
-## Validação de Conflitos e Sincronização de Datas/Horários entre Agenda, Bookings e Workflow
+## Sessão Avulsa (One Session) no Diálogo de Agendamento
 
-### Problema identificado
+### O que será feito
 
-1. **Sem validação de conflito ao editar datas/horários**: No `ProjectDetailSheet.tsx` (Workflow), o fotógrafo pode alterar `shoot_date` e `shoot_time` livremente sem verificar conflitos com outros agendamentos existentes.
+Adicionar uma opção "One Session" no Step 1 do `CreateBookingDialog`, ao lado dos cards de sessões existentes. Ao escolher essa opção, o fotógrafo preenche um mini-formulário inline para criar uma sessão avulsa, e depois segue para o Step 2 normalmente (data/hora/cliente).
 
-2. **Sem sincronização entre os 3 locais**: Quando a data/hora é alterada no Workflow (`client_projects.shoot_date/shoot_time`), os dados do booking correspondente (`bookings.booked_date` + `session_availability.date/start_time/end_time`) NÃO são atualizados, e vice-versa. As 3 telas (Schedule, Bookings, Workflow) leem de tabelas diferentes.
-
-3. **Datas inconsistentes**: O Schedule/Bookings lê de `session_availability.date` + `start_time/end_time`, enquanto o Workflow lê de `client_projects.shoot_date/shoot_time`. Esses dados podem divergir.
-
-### Arquitetura dos dados
+### Fluxo do usuário
 
 ```text
-Schedule/Bookings:
-  bookings.booked_date ← data principal
-  session_availability.date/start_time/end_time ← horários detalhados
+Step 1: Select Session
+  ┌────────────┐ ┌────────────┐ ┌──────────────┐
+  │ Session A   │ │ Session B  │ │ + One Session │  ← novo card
+  └────────────┘ └────────────┘ └──────────────┘
 
-Workflow (Projects):
-  client_projects.shoot_date / shoot_time ← campos independentes
-  client_projects.booking_id → referência ao booking
+  Ao clicar em "+ One Session":
+  → Substitui a grid por um formulário com:
+    - Nome da sessão (texto)
+    - Duração (minutos)
+    - Local (endereço)
+    - Quantidade de fotos
+    - Contrato (select dos contratos existentes)
+    - Briefing (select dos briefings existentes)
+    - Itens inclusos (lista de textos, adicionar/remover)
+
+  Botão "Continue" → cria a sessão na tabela `sessions`
+  com session_model='one_session', status='active',
+  hide_from_store=true → vai pro Step 2
+
+Step 2: Booking Details (já existe, sem mudanças)
+  - Data / Hora / Conflitos
+  - Cliente: SOMENTE email
+    - Campo de email com busca: ao digitar, sugere clientes
+      existentes (tabela bookings, client_email/client_name)
+    - Se encontrar, preenche o nome automaticamente
+    - Se não, preenche apenas o email (nome fica vazio ou
+      extraído do email)
 ```
 
-### Alterações planejadas
+### Alterações
 
-#### 1. Adicionar validação de conflito no ProjectDetailSheet (Workflow)
+#### 1. `CreateBookingDialog.tsx` — Adicionar modo One Session no Step 1
 
-**Arquivo:** `src/components/dashboard/ProjectDetailSheet.tsx`
+- Novo estado `mode`: `'select' | 'one_session'` (default: `'select'`)
+- Quando `mode === 'select'`: grid atual de sessões + card "One Session" (ícone diferenciado)
+- Quando `mode === 'one_session'`: formulário com os 7 campos
+- Campos do formulário:
+  - `osName` (text, obrigatório)
+  - `osDuration` (number, obrigatório)
+  - `osLocation` (text, opcional)
+  - `osNumPhotos` (number, opcional)
+  - `osContractId` (select, opcional) — carrega da tabela `contracts`
+  - `osBriefingId` (select, opcional) — carrega da tabela `briefings`
+  - `osIncludes` (array de strings) — input + botão adicionar, chips removíveis
+- Botão "Continue": insere na tabela `sessions` (session_model='one_session', hide_from_store=true) e os itens inclusos na tabela `session_bonuses`, depois avança para Step 2
 
-Quando o fotógrafo editar `shoot_date` ou `shoot_time` no painel de detalhes do projeto:
-- Antes de salvar, consultar `bookings` + `session_availability` para verificar se o novo horário conflita com agendamentos existentes (excluindo o próprio booking do projeto)
-- Exibir alerta visual se houver conflito, bloqueando o salvamento
-- Reutilizar a mesma lógica `timesOverlap` já existente no `CreateBookingDialog`
+#### 2. `CreateBookingDialog.tsx` — Step 2: Cliente apenas email com busca
 
-#### 2. Sincronizar alterações bidirecionalmente
+- Remover campo "Client Name" obrigatório
+- Campo email com autocomplete:
+  - Ao digitar 3+ caracteres, busca `bookings` por `client_email` ou `client_name` (ILIKE)
+  - Dropdown de sugestões mostrando nome + email
+  - Ao selecionar, preenche email e nome
+  - Se não selecionar nenhum, usa apenas o email digitado
+- `clientName` se torna opcional (preenchido automaticamente pela busca ou vazio)
+- Ajustar validação: `isValid` exige apenas `clientEmail`, não `clientName`
 
-**Arquivo:** `src/components/dashboard/ProjectDetailSheet.tsx`
+#### 3. Traduções (i18n)
 
-Na função `save()`, quando `shoot_date` ou `shoot_time` for alterado e o projeto tiver um `booking_id`:
-- Atualizar também `bookings.booked_date` com a nova data
-- Atualizar `session_availability.date`, `start_time` e `end_time` (recalculando end_time com base na duração da sessão)
-
-**Arquivo:** `src/components/dashboard/schedule/BookingDetailSheet.tsx`
-
-Atualmente o BookingDetailSheet não permite editar data/hora — apenas visualiza. Isso é seguro por enquanto, mas se for adicionado edição futuramente, a mesma lógica de sync deverá ser aplicada.
-
-#### 3. Criar utilitário compartilhado de validação de conflito
-
-**Novo arquivo:** `src/lib/booking-conflict.ts`
-
-Extrair as funções `timeToMinutes`, `timesOverlap`, e uma nova função `checkBookingConflict(photographerId, date, startTime, endTime, excludeBookingId?)` que:
-- Consulta `bookings` + `session_availability` para a data
-- Consulta `blocked_times` para a data
-- Retorna `{ hasConflict, conflictType, conflictDetails }` 
-
-Será usado por:
-- `CreateBookingDialog` (já tem lógica inline — migrar para usar o utilitário)
-- `ProjectDetailSheet` (nova validação)
-
-#### 4. Garantir formato correto de datas em todos os locais
-
-**Arquivos:** `BookingDetailSheet.tsx`, `MonthView.tsx`, `WeekView.tsx`, `DayView.tsx`, `Bookings.tsx`
-
-Padronizar o parsing de datas usando o padrão `T00:00:00` já estabelecido no projeto para evitar timezone shifting:
-- `formatDate` no `BookingDetailSheet` (linha 167): `new Date(s)` → `new Date(s + "T00:00:00")` quando `s` é date-only
-- Verificar e corrigir nos demais componentes
-
-### Resumo visual
-
-```text
-Antes:
-  Workflow edita shoot_date → NÃO atualiza booking → datas divergem
-  Nenhuma validação de conflito ao editar
-
-Depois:
-  Workflow edita shoot_date → valida conflito → atualiza booking + availability
-  Utilitário compartilhado de conflito usado em todas as telas
-  Datas parseadas consistentemente com T00:00:00
-```
+Adicionar chaves nos 3 idiomas (en/pt/es) para:
+- "One Session", "Session Name", "Duration", "Location", "Number of Photos", "Contract", "Briefing", "Items Included", "Add item", "Search client...", "No briefing", "No contract", "Continue"
 
 ### Detalhes técnicos
 
-- O utilitário `checkBookingConflict` fará 2 queries ao banco (bookings+availability e blocked_times) — são queries leves filtradas por data e photographer_id
-- A sincronização será feita em cascata: `client_projects` → `bookings.booked_date` → `session_availability.date/start_time/end_time`
-- Para calcular `end_time`, buscaremos `sessions.duration_minutes` via o `session_id` do booking
-- Traduções i18n necessárias: mensagens de erro de conflito ("This time conflicts with...", "Slot blocked...")
+- A sessão criada via One Session usa `session_model='one_session'` (coluna já existe na tabela `sessions`) e `hide_from_store=true` para não aparecer na loja pública
+- Os itens inclusos são salvos na tabela `session_bonuses` (já existe, com FK para `session_id`)
+- A busca de clientes usa query ILIKE em `bookings` filtrado por `photographer_id`, com `DISTINCT ON (client_email)` para evitar duplicatas
+- Contratos e briefings são carregados com queries simples filtradas por `photographer_id`
 
