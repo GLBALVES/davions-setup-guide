@@ -383,14 +383,13 @@ function KanbanCard({
                 >
                   <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
                   <span>
-                    {deadlineDateStr
-                      ? (() => {
-                          const [h24, m24] = deadlineTimeStr.split(":").map(Number);
-                          const period = h24 < 12 ? "AM" : "PM";
-                          const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-                          return `${format(parseISO(deadlineDateStr + "T00:00:00"), "MMM d")} ${h12}:${String(m24).padStart(2,"0")} ${period}`;
-                        })()
-                      : format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {project.shoot_time && (() => {
+                      const [h, m] = project.shoot_time.split(":").map(Number);
+                      const p = h < 12 ? "AM" : "PM";
+                      const h12 = h % 12 === 0 ? 12 : h % 12;
+                      return ` ${h12}:${String(m).padStart(2,"0")} ${p}`;
+                    })()}
                   </span>
                   <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/deadline:opacity-60 transition-opacity" />
                 </button>
@@ -405,9 +404,13 @@ function KanbanCard({
                 >
                   <CalendarIcon className="h-2.5 w-2.5 shrink-0" />
                   <span>
-                    {expiryDateStr
-                      ? format(parseISO(expiryDateStr + "T00:00:00"), "MMM d")
-                      : format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {format(new Date(project.shoot_date + "T00:00:00"), "MMM d")}
+                    {project.shoot_time && (() => {
+                      const [h, m] = project.shoot_time.split(":").map(Number);
+                      const p = h < 12 ? "AM" : "PM";
+                      const h12 = h % 12 === 0 ? 12 : h % 12;
+                      return ` ${h12}:${String(m).padStart(2,"0")} ${p}`;
+                    })()}
                   </span>
                   <Pencil className="h-2 w-2 shrink-0 opacity-0 group-hover/expiry:opacity-60 transition-opacity" />
                 </button>
