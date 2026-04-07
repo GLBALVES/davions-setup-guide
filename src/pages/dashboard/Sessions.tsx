@@ -168,10 +168,11 @@ const Sessions = () => {
     { key: "manual", label: s.manual ?? "Manual", icon: <GripVertical className="h-3 w-3" /> },
   ];
 
-  const FILTERS: { key: "all" | "active" | "draft"; label: string }[] = [
+  const FILTERS: { key: typeof filter; label: string }[] = [
     { key: "all", label: s.all },
     { key: "active", label: s.published },
     { key: "draft", label: s.unpublished },
+    { key: "one_session", label: s.oneSessions },
   ];
 
   const isManual = sort === "manual";
