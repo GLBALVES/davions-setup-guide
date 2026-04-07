@@ -885,17 +885,15 @@ export function CreateBookingDialog({
                     </div>
                   )}
                 </div>
-                {clientName && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientName}</Label>
-                    <Input
-                      placeholder={t.createBooking.clientName}
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      className="text-xs h-8"
-                    />
-                  </div>
-                )}
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientName}</Label>
+                  <Input
+                    placeholder={t.createBooking.clientName}
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
               </div>
 
               <DialogFooter className="pt-1">
