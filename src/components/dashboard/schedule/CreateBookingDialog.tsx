@@ -504,6 +504,7 @@ export function CreateBookingDialog({
   const isValid = Boolean(date && selectedSessionId && clientEmail.trim() && !hasConflict);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("p-0 gap-0", step === 1 ? "max-w-2xl" : "max-w-md")}>
         {/* ── STEP 1: Select Session ── */}
