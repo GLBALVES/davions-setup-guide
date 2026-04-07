@@ -1093,6 +1093,11 @@ export function ProjectDetailSheet({
   const { t } = useLanguage();
   const tp = t.projects;
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Partial<ProjectSheetData>>({});
+  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
   const STAGES: { key: Stage; label: string }[] = [
@@ -1109,97 +1114,113 @@ export function ProjectDetailSheet({
     setSessionTypeId(matched?.id ?? null);
   }, [project?.id, project?.session_type, sessionTypes]);
 
+  // Reset pending changes when project changes
+  useEffect(() => {
+    setPendingChanges({});
+    setConflictWarning(null);
+  }, [project?.id]);
+
   if (!project) return null;
 
   const isArchived = project.stage === "archived";
-  const [conflictWarning, setConflictWarning] = useState<string | null>(null);
-  const save = async (data: Partial<ProjectSheetData>) => { await onUpdate(project.id, data); };
 
-  // Conflict-aware save for date/time changes
-  const saveDateTime = async (newDate: string | null, newTime: string | null) => {
-    const shootDate = newDate ?? project.shoot_date;
-    const shootTime = newTime ?? project.shoot_time ?? "09:00";
+  // Get the effective value: pending overrides project
+  const effective = { ...project, ...pendingChanges };
 
-    // Only validate if we have a date
-    if (shootDate && project.booking_id) {
-      // Check for conflicts (excluding own booking)
-      const conflict = await checkBookingConflict(
-        photographerId,
-        shootDate,
-        shootTime,
-        "", // endTime calculated inside the utility isn't needed for overlap – we'll compute below
-        project.booking_id,
-      );
+  const queueChange = (data: Partial<ProjectSheetData>) => {
+    setPendingChanges((prev) => ({ ...prev, ...data }));
+  };
 
-      // We need to get session duration for proper end time
-      const { data: bookingData } = await (supabase as any)
-        .from("bookings")
-        .select("session_id")
-        .eq("id", project.booking_id)
-        .single();
-      
-      if (bookingData) {
-        const { data: sessionData } = await (supabase as any)
-          .from("sessions")
-          .select("duration_minutes")
-          .eq("id", bookingData.session_id)
+  const commitSave = async () => {
+    if (!hasPendingChanges) return;
+    setSaving(true);
+
+    // If date/time changed, validate conflicts & sync
+    const dateChanged = "shoot_date" in pendingChanges || "shoot_time" in pendingChanges;
+    if (dateChanged) {
+      const shootDate = pendingChanges.shoot_date ?? project.shoot_date;
+      const shootTime = pendingChanges.shoot_time ?? project.shoot_time ?? "09:00";
+
+      if (shootDate && project.booking_id) {
+        const { data: bookingData } = await (supabase as any)
+          .from("bookings")
+          .select("session_id")
+          .eq("id", project.booking_id)
           .single();
-        
-        const duration = sessionData?.duration_minutes ?? 60;
-        const totalMins = timeToMinutes(shootTime) + duration;
-        const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
-        
-        const conflictResult = await checkBookingConflict(
-          photographerId,
+
+        if (bookingData) {
+          const { data: sessionData } = await (supabase as any)
+            .from("sessions")
+            .select("duration_minutes")
+            .eq("id", bookingData.session_id)
+            .single();
+
+          const duration = sessionData?.duration_minutes ?? 60;
+          const totalMins = timeToMinutes(shootTime) + duration;
+          const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+
+          const conflictResult = await checkBookingConflict(
+            photographerId,
+            shootDate,
+            shootTime,
+            endTime,
+            project.booking_id,
+          );
+
+          if (conflictResult.hasConflict) {
+            const msg = conflictResult.conflictDetails || "Time conflict detected";
+            setConflictWarning(msg);
+            toast.error(msg);
+            setSaving(false);
+            return;
+          }
+        }
+
+        const syncResult = await syncProjectDateToBooking(
+          project.booking_id,
           shootDate,
           shootTime,
-          endTime,
-          project.booking_id,
         );
 
-        if (conflictResult.hasConflict) {
-          const msg = conflictResult.conflictDetails || "Time conflict detected";
-          setConflictWarning(msg);
-          toast.error(msg);
+        if (!syncResult.success) {
+          toast.error(syncResult.error || "Failed to sync booking");
+          setSaving(false);
           return;
         }
-      }
+      } else if (shootDate) {
+        const { data: blockedTimes } = await (supabase as any)
+          .from("blocked_times")
+          .select("start_time, end_time, all_day, reason")
+          .eq("photographer_id", photographerId)
+          .eq("date", shootDate);
 
-      // Sync to booking + availability tables
-      const syncResult = await syncProjectDateToBooking(
-        project.booking_id,
-        shootDate,
-        shootTime,
-      );
-
-      if (!syncResult.success) {
-        toast.error(syncResult.error || "Failed to sync booking");
-        return;
-      }
-    } else if (shootDate) {
-      // No booking_id – just validate blocked times
-      const { data: blockedTimes } = await (supabase as any)
-        .from("blocked_times")
-        .select("start_time, end_time, all_day, reason")
-        .eq("photographer_id", photographerId)
-        .eq("date", shootDate);
-      
-      if (blockedTimes) {
-        for (const bt of blockedTimes) {
-          if (bt.all_day) {
-            toast.error(bt.reason || "This day is blocked");
-            return;
+        if (blockedTimes) {
+          for (const bt of blockedTimes) {
+            if (bt.all_day) {
+              toast.error(bt.reason || "This day is blocked");
+              setSaving(false);
+              return;
+            }
           }
         }
       }
     }
 
-    // Clear conflict and save to client_projects
     setConflictWarning(null);
+    await onUpdate(project.id, pendingChanges);
+    setPendingChanges({});
+    setSaving(false);
+    toast.success(tp.projectUpdated || "Saved");
+  };
+
+  const save = async (data: Partial<ProjectSheetData>) => { queueChange(data); };
+
+  const queueDateTime = (newDate: string | null, newTime: string | null) => {
     const updates: Partial<ProjectSheetData> = {};
     if (newDate !== undefined) updates.shoot_date = newDate;
     if (newTime !== undefined) updates.shoot_time = newTime;
-    await save(updates);
+    queueChange(updates);
+    setConflictWarning(null);
   };
 
   const handleSessionTypeChange = async (id: string | null) => {
@@ -1306,19 +1327,30 @@ export function ProjectDetailSheet({
               <input
                 defaultValue={project.title}
                 key={project.id + "-title"}
-                onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) save({ title: v }); }}
+                onChange={(e) => { const v = e.target.value.trim(); if (v && v !== project.title) queueChange({ title: v }); }}
                 onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                 className="text-lg font-semibold bg-transparent border-0 border-b border-transparent hover:border-border focus:border-foreground/40 outline-none w-full py-0.5 transition-colors leading-tight"
                 placeholder={tp.title_field}
               />
             </div>
+            {hasPendingChanges && (
+              <Button
+                size="sm"
+                className="h-7 text-xs gap-1.5 shrink-0"
+                onClick={commitSave}
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                {tp.save || "Save"}
+              </Button>
+            )}
             {isArchived ? (
               <span className={cn("self-start inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0", STAGE_COLORS.archived)}>
                 <Archive className="h-2.5 w-2.5" /> {tp.archivedLabel}
               </span>
             ) : (
-              <Select value={project.stage} onValueChange={(v) => save({ stage: v as Stage })}>
-                <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[project.stage])}>
+              <Select value={effective.stage} onValueChange={(v) => save({ stage: v as Stage })}>
+                <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[effective.stage])}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -1368,10 +1400,10 @@ export function ProjectDetailSheet({
                           </span>
                         ) : (
                           <>
-                            <input type="date" defaultValue={project.shoot_date ?? ""} key={project.id + "-date"}
-                              onBlur={(e) => saveDateTime(e.target.value || null, null)}
+                            <input type="date" defaultValue={effective.shoot_date ?? ""} key={project.id + "-date"}
+                              onChange={(e) => queueDateTime(e.target.value || null, null)}
                               className="h-7 text-sm bg-transparent border border-input rounded-md px-2 focus:outline-none focus:border-foreground/40 transition-colors" />
-                            <TimePickerInput value={project.shoot_time ?? "09:00"} onChange={(v) => saveDateTime(null, v)} className="shrink-0" />
+                            <TimePickerInput value={effective.shoot_time ?? "09:00"} onChange={(v) => queueDateTime(null, v)} className="shrink-0" />
                             {project.shoot_date && (
                               <span className={cn("text-[10px] shrink-0", isOverdue ? "text-destructive" : "text-muted-foreground")}>
                                 {isOverdue ? tp.overdue : format(new Date(project.shoot_date + "T00:00:00"), "MMM d, yyyy")}
