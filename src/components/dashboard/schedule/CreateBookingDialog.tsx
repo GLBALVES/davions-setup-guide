@@ -913,5 +913,39 @@ export function CreateBookingDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Save as preset dialog */}
+    <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-base font-light tracking-wide">{t.createBooking.saveAsPreset ?? "Save as Session?"}</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground font-light leading-relaxed">
+          {t.createBooking.saveAsPresetDesc ?? "Would you like to save this one-off session as a reusable session template? You'll be redirected to complete the full setup."}
+        </p>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => setPresetDialogOpen(false)}>
+            {t.createBooking.noThanks ?? "No, keep as one-off"}
+          </Button>
+          <Button
+            size="sm"
+            className="text-xs gap-2"
+            disabled={presetConverting}
+            onClick={async () => {
+              if (!presetSessionId) return;
+              setPresetConverting(true);
+              await supabase.from("sessions").update({ session_model: "standard", hide_from_store: false } as any).eq("id", presetSessionId);
+              setPresetConverting(false);
+              setPresetDialogOpen(false);
+              navigate(`/dashboard/sessions/${presetSessionId}`);
+            }}
+          >
+            {presetConverting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {t.createBooking.yesConvert ?? "Yes, convert to session"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
