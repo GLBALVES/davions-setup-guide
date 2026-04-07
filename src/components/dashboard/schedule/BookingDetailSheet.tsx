@@ -306,7 +306,12 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setSaving(false);
   };
 
-  const sendConfirmationLink = async () => {
+  const getConfirmUrl = () => {
+    const origin = window.location.origin;
+    return `${origin}/booking/${booking.id}/confirm`;
+  };
+
+  const sendConfirmationEmail = async () => {
     setSendingLink(true);
     try {
       const sessionTitle = booking.sessions?.title ?? "Session";
@@ -322,11 +327,29 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
           startTime,
         },
       });
-      toast({ title: "Confirmation link sent to client" });
+      toast({ title: "Confirmation email sent" });
     } catch {
       toast({ title: "Failed to send email", variant: "destructive" });
     }
     setSendingLink(false);
+  };
+
+  const sendViaWhatsApp = () => {
+    const url = getConfirmUrl();
+    const sessionTitle = booking.sessions?.title ?? "Session";
+    const msg = encodeURIComponent(
+      `Hi ${booking.client_name}! 👋\n\nYour session *${sessionTitle}* is booked for ${dateStr ?? ""}.\n\nPlease complete your booking here:\n${url}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+  };
+
+  const copyConfirmLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getConfirmUrl());
+      toast({ title: "Link copied to clipboard" });
+    } catch {
+      toast({ title: "Failed to copy", variant: "destructive" });
+    }
   };
 
   const handleUpdate = async (status: "confirmed" | "cancelled") => {
