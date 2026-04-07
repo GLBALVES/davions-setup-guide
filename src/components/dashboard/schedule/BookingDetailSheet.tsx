@@ -565,16 +565,44 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
               </Button>
 
               {booking.status !== "cancelled" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="justify-start gap-2.5"
-                  disabled={sendingLink}
-                  onClick={sendConfirmationLink}
-                >
-                  {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                  Send Confirmation Link
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="justify-start gap-2.5"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      Send Confirmation Link
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-52 p-1.5" align="start">
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left disabled:opacity-50"
+                        disabled={sendingLink}
+                        onClick={sendConfirmationEmail}
+                      >
+                        {sendingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 text-muted-foreground" />}
+                        E-mail
+                      </button>
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
+                        onClick={sendViaWhatsApp}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        WhatsApp
+                      </button>
+                      <button
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
+                        onClick={copyConfirmLink}
+                      >
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        Copy link
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
 
               {hasBriefing && (
