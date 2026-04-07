@@ -164,12 +164,14 @@ function formatTime(t: string) {
 }
 
 function formatDate(s: string) {
+  // Append T00:00:00 for date-only strings to prevent timezone shifting
+  const dateObj = s.length === 10 ? new Date(s + "T00:00:00") : new Date(s);
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(s));
+  }).format(dateObj);
 }
 
 interface BookingDetailSheetProps {
