@@ -1041,4 +1041,158 @@ function SessionRow({
   );
 }
 
+/* ─────────────────────────── One Session Card ─────────────────────────── */
+
+function OneSessionCard({
+  session,
+  onConvert,
+  onDelete,
+}: {
+  session: Session;
+  onConvert: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const { t } = useLanguage();
+  const s = t.sessions;
+  const { toast } = useToast();
+  const { photographerId } = useAuth();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+
+  const priceFormatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(session.price / 100);
+
+  const handleConfirmDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const { data: linkedBookings } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("session_id", session.id)
+        .limit(1);
+
+      if (linkedBookings && linkedBookings.length > 0) {
+        await supabase.from("sessions").update({ status: "draft" }).eq("id", session.id).eq("photographer_id", photographerId ?? "");
+        onDelete(session.id);
+        toast({ title: "Session deactivated", description: "This session has linked bookings and was deactivated instead." });
+      } else {
+        await supabase.from("sessions").delete().eq("id", session.id).eq("photographer_id", photographerId ?? "");
+        onDelete(session.id);
+        toast({ title: "Session deleted" });
+      }
+    } catch {
+      toast({ title: "Failed to delete session", variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <div className="border border-border bg-card overflow-hidden flex flex-col">
+        <div className="h-2 bg-primary/20" />
+        <div className="p-4 flex flex-col gap-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-3.5 w-3.5 text-primary shrink-0" />
+              <h3 className="text-sm font-light tracking-wide truncate">{session.title || "Untitled"}</h3>
+            </div>
+            <Badge variant="secondary" className="text-[9px] tracking-wider uppercase font-light shrink-0">
+              One Session
+            </Badge>
+          </div>
+
+          <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {session.duration_minutes}min
+            </span>
+            <span className="flex items-center gap-1">
+              <Camera className="h-3 w-3" />
+              {session.num_photos} {s.photos}
+            </span>
+            {session.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {session.location}
+              </span>
+            )}
+            {session.price > 0 && (
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-3 w-3" />
+                {priceFormatted}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-border">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-[10px] tracking-wider uppercase font-light gap-1.5 flex-1"
+              onClick={() => setConvertDialogOpen(true)}
+            >
+              <ArrowRight className="h-3 w-3" />
+              {s.convertToSession}
+            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="p-1.5 transition-colors text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">Delete</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </div>
+
+      {/* Convert confirmation */}
+      <AlertDialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{s.convertToSession}</AlertDialogTitle>
+            <AlertDialogDescription>{s.convertConfirm}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConvertDialogOpen(false); onConvert(session.id); }}>
+              {s.convertToSession}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{session.title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              If this session has linked bookings, it will be deactivated instead of deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Processing…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </TooltipProvider>
+  );
+}
+
 export default Sessions;
