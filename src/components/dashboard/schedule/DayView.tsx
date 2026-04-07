@@ -64,7 +64,8 @@ export function DayView({ currentDate, bookings, blockedSlots, manualBlocks, onB
       bookings.filter((b) => {
         const dateStr = b.session_availability?.date ?? b.booked_date;
         if (!dateStr) return false;
-        return isSameDay(new Date(dateStr), currentDate);
+        const d = dateStr.length === 10 ? new Date(dateStr + "T00:00:00") : new Date(dateStr);
+        return isSameDay(d, currentDate);
       }),
     [bookings, currentDate]
   );
@@ -73,13 +74,17 @@ export function DayView({ currentDate, bookings, blockedSlots, manualBlocks, onB
     () =>
       blockedSlots.filter((s) => {
         if (!s.date) return false;
-        return isSameDay(new Date(s.date), currentDate);
+        const d = s.date.length === 10 ? new Date(s.date + "T00:00:00") : new Date(s.date);
+        return isSameDay(d, currentDate);
       }),
     [blockedSlots, currentDate]
   );
 
   const dayManualBlocks = useMemo(
-    () => manualBlocks.filter((mb) => isSameDay(new Date(mb.date), currentDate)),
+    () => manualBlocks.filter((mb) => {
+      const d = mb.date.length === 10 ? new Date(mb.date + "T00:00:00") : new Date(mb.date);
+      return isSameDay(d, currentDate);
+    }),
     [manualBlocks, currentDate]
   );
 
