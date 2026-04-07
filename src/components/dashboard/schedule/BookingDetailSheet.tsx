@@ -198,6 +198,7 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
   const [editTime, setEditTime] = useState<string>("09:00");
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sendingLink, setSendingLink] = useState(false);
 
   if (!booking) return null;
 
