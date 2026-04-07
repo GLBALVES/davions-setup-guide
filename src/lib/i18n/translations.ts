@@ -136,6 +136,12 @@ export const translations = {
       linkCopied: "Link copied!",
       bookingUrlCopied: "Booking URL copied to clipboard.",
       failedToCopy: "Failed to copy",
+      oneSessions: "One Sessions",
+      convertToSession: "Convert to Session",
+      convertConfirm: "This will convert the one-off session into a standard session you can fully edit.",
+      converted: "Converted to standard session",
+      noOneSessions: "No one-off sessions",
+      oneSessionsHint: "Sessions created via manual booking appear here",
     },
     // ── Galleries page ──
     galleries: {
@@ -1945,6 +1951,12 @@ export const translations = {
       linkCopied: "Link copiado!",
       bookingUrlCopied: "URL de agendamento copiada.",
       failedToCopy: "Falha ao copiar",
+      oneSessions: "Sessões Avulsas",
+      convertToSession: "Converter em Sessão",
+      convertConfirm: "Isso converterá a sessão avulsa em uma sessão padrão que você pode editar completamente.",
+      converted: "Convertida em sessão padrão",
+      noOneSessions: "Nenhuma sessão avulsa",
+      oneSessionsHint: "Sessões criadas via agendamento manual aparecem aqui",
     },
     galleries: {
       title: "Galerias",
@@ -3706,6 +3718,12 @@ export const translations = {
       linkCopied: "¡Enlace copiado!",
       bookingUrlCopied: "URL de reserva copiada al portapapeles.",
       failedToCopy: "Error al copiar",
+      oneSessions: "Sesiones Únicas",
+      convertToSession: "Convertir en Sesión",
+      convertConfirm: "Esto convertirá la sesión única en una sesión estándar que puede editar completamente.",
+      converted: "Convertida en sesión estándar",
+      noOneSessions: "Sin sesiones únicas",
+      oneSessionsHint: "Las sesiones creadas vía reserva manual aparecen aquí",
     },
     galleries: {
       title: "Galerías",
