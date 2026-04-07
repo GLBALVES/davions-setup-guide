@@ -946,12 +946,6 @@ const SessionDetailPage = () => {
                         <span className="text-sm font-light">{session.num_photos} edited photos delivered</span>
                       </div>
                     )}
-                    {session.location && (
-                      <div className="flex items-center gap-3">
-                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm font-light">{session.location}</span>
-                      </div>
-                    )}
                     {bonuses.map((b, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <Check className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -960,6 +954,15 @@ const SessionDetailPage = () => {
                     ))}
                   </div>
                 </div>
+                {session.location && (
+                  <div>
+                    <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-4">Location</p>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-light">{session.location}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Sticky booking card */}
