@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Calendar,
   Camera,
@@ -16,6 +18,7 @@ import {
   Loader2,
   MapPin,
   CreditCard,
+  UserCircle,
 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────── */
@@ -98,7 +101,19 @@ function formatCurrency(amount: number) {
   return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-type StepKey = "details" | "briefing" | "contract" | "payment";
+type StepKey = "details" | "client_info" | "briefing" | "contract" | "payment";
+
+interface ClientInfo {
+  full_name: string;
+  phone: string;
+  birth_date: string;
+  address_street: string;
+  address_city: string;
+  address_state: string;
+  address_zip: string;
+  address_country: string;
+  instagram: string;
+}
 
 interface StepDef {
   key: StepKey;
@@ -126,6 +141,21 @@ const BookingConfirm = () => {
   const [alreadySubmittedBriefing, setAlreadySubmittedBriefing] = useState(false);
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
 
+  // Client info state
+  const [clientInfo, setClientInfo] = useState<ClientInfo>({
+    full_name: "",
+    phone: "",
+    birth_date: "",
+    address_street: "",
+    address_city: "",
+    address_state: "",
+    address_zip: "",
+    address_country: "",
+    instagram: "",
+  });
+  const [clientInfoSaved, setClientInfoSaved] = useState(false);
+  const [savingClientInfo, setSavingClientInfo] = useState(false);
+
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
 
@@ -145,6 +175,7 @@ const BookingConfirm = () => {
       if (!bData) { setLoading(false); return; }
       const b = bData as BookingData;
       setBooking(b);
+      setClientInfo((prev) => ({ ...prev, full_name: b.client_name || "" }));
 
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
@@ -197,6 +228,30 @@ const BookingConfirm = () => {
       if (availRes.data) setAvail(availRes.data as AvailData);
       if (photoRes.data) setPhotographer(photoRes.data as PhotographerData);
 
+      // Load existing client info if available
+      if (b.client_email && b.photographer_id) {
+        const { data: existingClient } = await (supabase as any)
+          .from("clients")
+          .select("full_name, phone, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
+          .eq("photographer_id", b.photographer_id)
+          .eq("email", b.client_email)
+          .maybeSingle();
+        if (existingClient) {
+          setClientInfo({
+            full_name: existingClient.full_name || b.client_name || "",
+            phone: existingClient.phone || "",
+            birth_date: existingClient.birth_date || "",
+            address_street: existingClient.address_street || "",
+            address_city: existingClient.address_city || "",
+            address_state: existingClient.address_state || "",
+            address_zip: existingClient.address_zip || "",
+            address_country: existingClient.address_country || "",
+            instagram: existingClient.instagram || "",
+          });
+          setClientInfoSaved(true);
+        }
+      }
+
       setLoading(false);
     };
 
@@ -230,6 +285,37 @@ const BookingConfirm = () => {
     setBriefingSubmitted(true);
   };
 
+  /* ── Client info handler ── */
+  const handleSaveClientInfo = async () => {
+    if (!booking) return;
+    if (!clientInfo.full_name.trim() || !clientInfo.phone.trim()) return;
+    setSavingClientInfo(true);
+    try {
+      await (supabase as any).from("clients").upsert(
+        {
+          photographer_id: booking.photographer_id,
+          email: booking.client_email,
+          full_name: clientInfo.full_name.trim(),
+          phone: clientInfo.phone.trim() || null,
+          birth_date: clientInfo.birth_date || null,
+          address_street: clientInfo.address_street.trim() || null,
+          address_city: clientInfo.address_city.trim() || null,
+          address_state: clientInfo.address_state.trim() || null,
+          address_zip: clientInfo.address_zip.trim() || null,
+          address_country: clientInfo.address_country.trim() || null,
+          instagram: clientInfo.instagram.trim() || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "photographer_id,email" }
+      );
+      setClientInfoSaved(true);
+    } catch (err) {
+      console.error("Save client info error:", err);
+    } finally {
+      setSavingClientInfo(false);
+    }
+  };
+
   /* ── Payment handler ── */
   const handlePayment = async () => {
     if (!booking || !session) return;
@@ -256,6 +342,7 @@ const BookingConfirm = () => {
     if (!session) return [];
     const steps: StepDef[] = [
       { key: "details", label: "Details", icon: <Calendar className="h-4 w-4" /> },
+      { key: "client_info", label: "Your Info", icon: <UserCircle className="h-4 w-4" /> },
     ];
     if (briefing) {
       steps.push({ key: "briefing", label: "Briefing", icon: <ClipboardList className="h-4 w-4" /> });
@@ -277,10 +364,13 @@ const BookingConfirm = () => {
   /* ── Step validation ── */
   const canProceed = (): boolean => {
     if (!activeStep) return false;
+    if (activeStep.key === "client_info") {
+      return clientInfoSaved;
+    }
     if (activeStep.key === "briefing") {
       if (!briefing) return true;
       if (alreadySubmittedBriefing || briefingSubmitted) return true;
-      return false; // must submit briefing first
+      return false;
     }
     if (activeStep.key === "contract") {
       return contractAccepted;
@@ -452,6 +542,135 @@ const BookingConfirm = () => {
                 </Badge>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Client Info */}
+        {activeStep?.key === "client_info" && (
+          <div className="border border-border flex flex-col divide-y divide-border">
+            <div className="p-5 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs tracking-[0.2em] uppercase font-light">Your Information</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Please fill in your details so we can get in touch with you.
+              </p>
+            </div>
+
+            {clientInfoSaved ? (
+              <div className="p-5 flex flex-col items-center gap-3 text-center">
+                <CheckCircle className="h-8 w-8 text-primary" strokeWidth={1.5} />
+                <p className="text-sm font-light">Your information has been saved.</p>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setClientInfoSaved(false)}>
+                  Edit
+                </Button>
+              </div>
+            ) : (
+              <div className="p-5 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Full Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={clientInfo.full_name}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, full_name: e.target.value }))}
+                    placeholder="Your full name"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Phone <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="tel"
+                    value={clientInfo.phone}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder="+1 (555) 123-4567"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Date of Birth</Label>
+                    <Input
+                      type="date"
+                      value={clientInfo.birth_date}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, birth_date: e.target.value }))}
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Instagram</Label>
+                    <Input
+                      value={clientInfo.instagram}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, instagram: e.target.value }))}
+                      placeholder="@username"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Street Address</Label>
+                  <Input
+                    value={clientInfo.address_street}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, address_street: e.target.value }))}
+                    placeholder="123 Main St"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">City</Label>
+                    <Input
+                      value={clientInfo.address_city}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_city: e.target.value }))}
+                      placeholder="City"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">State</Label>
+                    <Input
+                      value={clientInfo.address_state}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_state: e.target.value }))}
+                      placeholder="State"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">ZIP Code</Label>
+                    <Input
+                      value={clientInfo.address_zip}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_zip: e.target.value }))}
+                      placeholder="12345"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Country</Label>
+                    <Input
+                      value={clientInfo.address_country}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_country: e.target.value }))}
+                      placeholder="Country"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSaveClientInfo}
+                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim()}
+                  className="w-full text-xs tracking-wider uppercase font-light mt-1"
+                >
+                  {savingClientInfo ? "Saving…" : "Save & Continue"}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
