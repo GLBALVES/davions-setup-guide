@@ -175,6 +175,7 @@ const BookingConfirm = () => {
       if (!bData) { setLoading(false); return; }
       const b = bData as BookingData;
       setBooking(b);
+      setClientInfo((prev) => ({ ...prev, full_name: b.client_name || "" }));
 
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
