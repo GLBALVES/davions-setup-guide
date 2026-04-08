@@ -50,6 +50,33 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
+/** Reusable color picker pair (background + text) for any section */
+function SectionColorFields({ section, data, onChange }: { section: string; data: any; onChange: (patch: any) => void }) {
+  const bgKey = `${section}_bg_color`;
+  const fgKey = `${section}_text_color`;
+  return (
+    <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+      <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Background & Colors</p>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Background Color</Label>
+        <div className="flex items-center gap-2">
+          <input type="color" value={data[bgKey] ?? "#ffffff"} onChange={(e) => onChange({ [bgKey]: e.target.value })} className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5" />
+          <Input value={data[bgKey] ?? ""} onChange={(e) => onChange({ [bgKey]: e.target.value || null })} className="h-8 text-xs flex-1" placeholder="default (theme)" />
+          {data[bgKey] && <button onClick={() => onChange({ [bgKey]: null })} className="text-[9px] text-muted-foreground hover:text-destructive shrink-0" title="Reset">✕</button>}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Text Color</Label>
+        <div className="flex items-center gap-2">
+          <input type="color" value={data[fgKey] ?? "#000000"} onChange={(e) => onChange({ [fgKey]: e.target.value })} className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5" />
+          <Input value={data[fgKey] ?? ""} onChange={(e) => onChange({ [fgKey]: e.target.value || null })} className="h-8 text-xs flex-1" placeholder="auto" />
+          {data[fgKey] && <button onClick={() => onChange({ [fgKey]: null })} className="text-[9px] text-muted-foreground hover:text-destructive shrink-0" title="Reset">✕</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Props) {
   const p = (patch: Parameters<typeof onChange>[0]) => onChange(patch);
 
