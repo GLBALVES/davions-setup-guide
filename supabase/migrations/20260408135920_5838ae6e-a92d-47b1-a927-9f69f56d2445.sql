@@ -1,0 +1,17 @@
+ALTER TABLE public.photographer_site
+  ADD COLUMN IF NOT EXISTS hero_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS hero_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS sessions_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS sessions_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS portfolio_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS portfolio_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS about_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS about_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS quote_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS quote_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS experience_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS experience_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS contact_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS contact_text_color TEXT,
+  ADD COLUMN IF NOT EXISTS testimonials_bg_color TEXT,
+  ADD COLUMN IF NOT EXISTS testimonials_text_color TEXT;

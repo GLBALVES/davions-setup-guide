@@ -143,6 +143,34 @@ export interface SiteConfig {
   footer_visible_socials?: string[] | null;
   /** Footer preset template id */
   footer_preset?: string | null;
+  /** Per-section background & text colors */
+  hero_bg_color?: string | null;
+  hero_text_color?: string | null;
+  sessions_bg_color?: string | null;
+  sessions_text_color?: string | null;
+  portfolio_bg_color?: string | null;
+  portfolio_text_color?: string | null;
+  about_bg_color?: string | null;
+  about_text_color?: string | null;
+  quote_bg_color?: string | null;
+  quote_text_color?: string | null;
+  experience_bg_color?: string | null;
+  experience_text_color?: string | null;
+  contact_bg_color?: string | null;
+  contact_text_color?: string | null;
+  testimonials_bg_color?: string | null;
+  testimonials_text_color?: string | null;
+}
+
+/** Helper: returns inline style for a section's custom bg/text colors */
+function getSectionStyle(site: SiteConfig | null, section: string): React.CSSProperties {
+  if (!site) return {};
+  const bg = (site as any)[`${section}_bg_color`] as string | null | undefined;
+  const fg = (site as any)[`${section}_text_color`] as string | null | undefined;
+  const s: React.CSSProperties = {};
+  if (bg) s.backgroundColor = bg;
+  if (fg) s.color = fg;
+  return s;
 }
 
 export interface Session {
@@ -518,7 +546,7 @@ function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | n
   const layout = site?.about_layout ?? "image-right";
 
   return (
-    <section id="about" className="border-t border-border">
+    <section id="about" className="border-t border-border" style={getSectionStyle(site, "about")}>
       <div className="max-w-6xl mx-auto px-6 py-16">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">
           {site?.about_title || "About"}
@@ -569,7 +597,7 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
   if (layout === "quotes") {
     return (
-      <section className="border-t border-border py-16 md:py-24 bg-muted/20">
+      <section className="border-t border-border py-16 md:py-24 bg-muted/20" style={getSectionStyle(site, "testimonials")}>
         <div className="max-w-4xl mx-auto px-6">
           <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
           <div className="flex flex-col gap-12">
@@ -595,7 +623,7 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
   // cards layout
   return (
-    <section className="border-t border-border py-16 md:py-24">
+    <section className="border-t border-border py-16 md:py-24" style={getSectionStyle(site, "testimonials")}>
       <div className="max-w-6xl mx-auto px-6">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -632,7 +660,7 @@ function QuoteSection({ site, editMode, onFieldChange }: { site: SiteConfig | nu
   if (!site?.quote_text && !editMode) return null;
   const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
-    <section className="py-16 md:py-24 border-t border-border bg-muted/20">
+    <section className="py-16 md:py-24 border-t border-border bg-muted/20" style={getSectionStyle(site, "quote")}>
       <div className="max-w-3xl mx-auto px-6 text-center">
         <Quote className="h-5 w-5 text-muted-foreground/30 mx-auto mb-6" />
         <blockquote className="text-xl md:text-2xl font-light leading-relaxed text-foreground tracking-wide italic mb-6">
@@ -652,7 +680,7 @@ function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { sit
   if (!site?.experience_text && !editMode) return null;
   const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
-    <section className="border-t border-border py-16 md:py-24">
+    <section className="border-t border-border py-16 md:py-24" style={getSectionStyle(site, "experience")}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-12 items-start max-w-5xl mx-auto">
           <div className="md:w-1/3 shrink-0">
@@ -748,7 +776,7 @@ function buildBlockMap(
     if (variant === "editorial") {
       if ((site?.hero_layout ?? "full") === "split") {
         hero = (
-          <div key="hero" data-block-key="hero" className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
+          <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full min-h-[65vh] flex flex-col md:flex-row overflow-hidden">
             <div className="w-full md:w-1/2 h-[40vh] md:h-auto relative bg-foreground">
               {site?.site_hero_image_url
                 ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
@@ -768,7 +796,7 @@ function buildBlockMap(
         );
       } else {
         hero = (
-          <div key="hero" data-block-key="hero" className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
+          <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[65vh] min-h-[420px] overflow-hidden">
             {site?.site_hero_image_url
               ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
               : <div className="absolute inset-0 bg-foreground" />
@@ -788,7 +816,7 @@ function buildBlockMap(
       }
     } else if (variant === "grid") {
       hero = (
-        <div key="hero" data-block-key="hero" className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
+        <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[40vh] min-h-[260px] overflow-hidden">
           {site?.site_hero_image_url
             ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
             : <div className="absolute inset-0 bg-foreground" />
@@ -807,7 +835,7 @@ function buildBlockMap(
       );
     } else if (variant === "magazine") {
       hero = (
-        <div key="hero" data-block-key="hero" className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
+        <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[55vh] min-h-[340px] overflow-hidden">
           {site?.site_hero_image_url
             ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
             : <div className="absolute inset-0 bg-foreground" />
@@ -836,7 +864,7 @@ function buildBlockMap(
     } else {
       // clean
       hero = (
-        <div key="hero" data-block-key="hero" className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
+        <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[55vh] min-h-[360px] overflow-hidden">
           {site?.site_hero_image_url
             ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
             : <div className="absolute inset-0 bg-foreground" />
@@ -1154,7 +1182,7 @@ function buildBlockMap(
   if (showBlock("sessions") && showStore) {
     if (variant === "editorial") {
       sessionsBlock = (
-        <main key="sessions" data-block-key="sessions" id="sessions">
+        <main key="sessions" data-block-key="sessions" style={getSectionStyle(site, "sessions")} id="sessions">
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Camera className="h-10 w-10 text-muted-foreground/30" />
@@ -1165,20 +1193,20 @@ function buildBlockMap(
       );
     } else if (variant === "grid") {
       sessionsBlock = sessions.length > 0 ? (
-        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-7xl mx-auto px-4 py-12">
+        <main key="sessions" data-block-key="sessions" style={getSectionStyle(site, "sessions")} id="sessions" className="max-w-7xl mx-auto px-4 py-12">
           {buildSessionsBlock(sessions, "grid", "max-w-7xl mx-auto px-4 py-12", "Sessions")}
         </main>
       ) : null;
     } else if (variant === "magazine") {
       sessionsBlock = sessions.length > 0 ? (
-        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-6xl mx-auto px-6 py-16">
+        <main key="sessions" data-block-key="sessions" style={getSectionStyle(site, "sessions")} id="sessions" className="max-w-6xl mx-auto px-6 py-16">
           {buildSessionsBlock(sessions, "magazine", "max-w-6xl mx-auto px-6 py-16", "Sessions")}
         </main>
       ) : null;
     } else {
       // clean
       sessionsBlock = sessions.length > 0 ? (
-        <main key="sessions" data-block-key="sessions" id="sessions" className="max-w-2xl mx-auto px-6 py-20">
+        <main key="sessions" data-block-key="sessions" style={getSectionStyle(site, "sessions")} id="sessions" className="max-w-2xl mx-auto px-6 py-20">
           {buildSessionsBlock(sessions, "clean", "max-w-2xl mx-auto px-6 py-20", "Available Sessions")}
         </main>
       ) : null;
@@ -1190,7 +1218,7 @@ function buildBlockMap(
   if (showBlock("portfolio") && galleries.length > 0) {
     if (variant === "editorial") {
       portfolio = (
-        <section key="portfolio" data-block-key="portfolio" className="border-t border-border">
+        <section key="portfolio" data-block-key="portfolio" style={getSectionStyle(site, "portfolio")} className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1216,7 +1244,7 @@ function buildBlockMap(
       );
     } else if (variant === "grid") {
       portfolio = (
-        <div key="portfolio" data-block-key="portfolio" className="max-w-7xl mx-auto px-4 py-12">
+        <div key="portfolio" data-block-key="portfolio" style={getSectionStyle(site, "portfolio")} className="max-w-7xl mx-auto px-4 py-12">
           <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-8 pl-2">Portfolio</p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {galleries.map((gallery) => (
@@ -1237,7 +1265,7 @@ function buildBlockMap(
       );
     } else if (variant === "magazine") {
       portfolio = (
-        <section key="portfolio" data-block-key="portfolio" className="border-t border-border">
+        <section key="portfolio" data-block-key="portfolio" style={getSectionStyle(site, "portfolio")} className="border-t border-border">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-6 h-px" style={{ backgroundColor: accentColor }} />
@@ -1266,7 +1294,7 @@ function buildBlockMap(
     } else {
       // clean
       portfolio = (
-        <section key="portfolio" data-block-key="portfolio" className="border-t border-border bg-muted/20">
+        <section key="portfolio" data-block-key="portfolio" style={getSectionStyle(site, "portfolio")} className="border-t border-border bg-muted/20">
           <div className="max-w-4xl mx-auto px-6 py-20">
             <p className="text-[9px] tracking-[0.6em] uppercase text-muted-foreground/70 text-center mb-16">Portfolio</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -1300,7 +1328,7 @@ function buildBlockMap(
     if (variant === "clean") {
       if ((site?.show_about !== false) && (photographer?.bio || site?.about_image_url)) {
         about = (
-          <section key="about" data-block-key="about" id="about" className="border-t border-border">
+          <section key="about" data-block-key="about" style={getSectionStyle(site, "about")} id="about" className="border-t border-border">
             <div className="max-w-2xl mx-auto px-6 py-20 text-center">
               {site?.about_image_url && (
                 <img src={site.about_image_url} alt={displayName} className="w-32 h-32 object-cover rounded-full mx-auto mb-8 grayscale" />
@@ -1313,7 +1341,7 @@ function buildBlockMap(
         );
       }
     } else {
-      about = <div key="about" data-block-key="about"><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>;
+      about = <div key="about" data-block-key="about" style={getSectionStyle(site, "about")}><SharedAbout site={site} photographer={photographer} displayName={displayName} /></div>;
     }
   }
 
@@ -1445,7 +1473,7 @@ function SierraTemplate({ props, derived }: { props: Props; derived: ReturnType<
   // Override hero with Sierra-specific design
   if (showBlock("hero")) {
     blocks.hero = (
-      <div key="hero" data-block-key="hero" className="relative w-full h-[85vh] min-h-[500px] overflow-hidden">
+      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[85vh] min-h-[500px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -1506,7 +1534,7 @@ function CanvasTemplate({ props, derived }: { props: Props; derived: ReturnType<
   // Override hero with Canvas-specific design
   if (showBlock("hero")) {
     blocks.hero = (
-      <div key="hero" data-block-key="hero" className="relative w-full h-[75vh] min-h-[450px] overflow-hidden">
+      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="relative w-full h-[75vh] min-h-[450px] overflow-hidden">
         {site?.site_hero_image_url
           ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
           : <div className="absolute inset-0 bg-foreground" />
@@ -1639,7 +1667,7 @@ function SevilleTemplate({ props, derived }: { props: Props; derived: ReturnType
   // Override hero with Seville contained design
   if (showBlock("hero")) {
     blocks.hero = (
-      <div key="hero" data-block-key="hero" className="pt-20 px-6 md:px-12">
+      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="pt-20 px-6 md:px-12">
         <div className="relative w-full max-w-6xl mx-auto overflow-hidden" style={{ aspectRatio: "16/7" }}>
           {site?.site_hero_image_url
             ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
@@ -1698,7 +1726,7 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
     ].slice(0, 3);
 
     blocks.hero = (
-      <div key="hero" data-block-key="hero" className="pt-20">
+      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="pt-20">
         {/* Text hero */}
         <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
           <h1 className="text-4xl md:text-7xl font-extralight tracking-[0.08em] leading-tight text-foreground" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>

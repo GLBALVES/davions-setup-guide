@@ -50,6 +50,33 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
+/** Reusable color picker pair (background + text) for any section */
+function SectionColorFields({ section, data, onChange }: { section: string; data: any; onChange: (patch: any) => void }) {
+  const bgKey = `${section}_bg_color`;
+  const fgKey = `${section}_text_color`;
+  return (
+    <div className="border-t border-border/40 pt-4 flex flex-col gap-3">
+      <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-light">Background & Colors</p>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Background Color</Label>
+        <div className="flex items-center gap-2">
+          <input type="color" value={data[bgKey] ?? "#ffffff"} onChange={(e) => onChange({ [bgKey]: e.target.value })} className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5" />
+          <Input value={data[bgKey] ?? ""} onChange={(e) => onChange({ [bgKey]: e.target.value || null })} className="h-8 text-xs flex-1" placeholder="default (theme)" />
+          {data[bgKey] && <button onClick={() => onChange({ [bgKey]: null })} className="text-[9px] text-muted-foreground hover:text-destructive shrink-0" title="Reset">✕</button>}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">Text Color</Label>
+        <div className="flex items-center gap-2">
+          <input type="color" value={data[fgKey] ?? "#000000"} onChange={(e) => onChange({ [fgKey]: e.target.value })} className="h-8 w-10 cursor-pointer rounded-sm border border-input bg-transparent p-0.5" />
+          <Input value={data[fgKey] ?? ""} onChange={(e) => onChange({ [fgKey]: e.target.value || null })} className="h-8 text-xs flex-1" placeholder="auto" />
+          {data[fgKey] && <button onClick={() => onChange({ [fgKey]: null })} className="text-[9px] text-muted-foreground hover:text-destructive shrink-0" title="Reset">✕</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Props) {
   const p = (patch: Parameters<typeof onChange>[0]) => onChange(patch);
 
@@ -253,6 +280,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="CTA Link (optional)">
               <Input value={data.cta_link ?? ""} onChange={(e) => p({ cta_link: e.target.value })} className="h-8 text-xs" placeholder="https://..." />
             </Field>
+            <SectionColorFields section="hero" data={data} onChange={onChange} />
           </>
         )}
 
@@ -261,6 +289,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <ToggleField label="Show Sessions section" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
             <ToggleField label="Show booking CTA" checked={data.show_booking ?? true} onChange={(v) => p({ show_booking: v })} />
             <p className="text-[10px] text-muted-foreground leading-relaxed">Sessions are managed in the Sessions section of the dashboard. Toggle visibility to show/hide this section on your public site.</p>
+            <SectionColorFields section="sessions" data={data} onChange={onChange} />
           </>
         )}
 
@@ -268,6 +297,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
           <>
             <ToggleField label="Show Portfolio section" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
             <p className="text-[10px] text-muted-foreground leading-relaxed">Portfolio galleries are managed in the Galleries section of the dashboard.</p>
+            <SectionColorFields section="portfolio" data={data} onChange={onChange} />
           </>
         )}
 
@@ -307,6 +337,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Bio">
               <Textarea value={data.bio ?? ""} onChange={(e) => p({ bio: e.target.value })} className="text-xs min-h-[100px] resize-none" placeholder="Tell clients about yourself..." />
             </Field>
+            <SectionColorFields section="about" data={data} onChange={onChange} />
           </>
         )}
 
@@ -318,6 +349,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Quote Author">
               <Input value={data.quote_author ?? ""} onChange={(e) => p({ quote_author: e.target.value })} className="h-8 text-xs" placeholder="— Your Name" />
             </Field>
+            <SectionColorFields section="quote" data={data} onChange={onChange} />
           </>
         )}
 
@@ -329,6 +361,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Description">
               <Textarea value={data.experience_text ?? ""} onChange={(e) => p({ experience_text: e.target.value })} className="text-xs min-h-[100px] resize-none" placeholder="Describe what clients can expect..." />
             </Field>
+            <SectionColorFields section="experience" data={data} onChange={onChange} />
           </>
         )}
 
@@ -356,6 +389,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="WhatsApp (number only)">
               <Input value={data.whatsapp ?? ""} onChange={(e) => p({ whatsapp: e.target.value })} className="h-8 text-xs" placeholder="5511999999999" />
             </Field>
+            <SectionColorFields section="contact" data={data} onChange={onChange} />
           </>
         )}
 
@@ -590,6 +624,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
                 <Plus className="h-3.5 w-3.5" />
                 Add Testimonial
               </button>
+              <SectionColorFields section="testimonials" data={data} onChange={onChange} />
             </>
           );
         })()}

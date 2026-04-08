@@ -133,6 +133,22 @@ export function LivePreview({
     header_bg_color: (data as any).header_bg_color ?? null,
     header_text_color: (data as any).header_text_color ?? null,
     header_visible_socials: (data as any).header_visible_socials ?? null,
+    hero_bg_color: (data as any).hero_bg_color ?? null,
+    hero_text_color: (data as any).hero_text_color ?? null,
+    sessions_bg_color: (data as any).sessions_bg_color ?? null,
+    sessions_text_color: (data as any).sessions_text_color ?? null,
+    portfolio_bg_color: (data as any).portfolio_bg_color ?? null,
+    portfolio_text_color: (data as any).portfolio_text_color ?? null,
+    about_bg_color: (data as any).about_bg_color ?? null,
+    about_text_color: (data as any).about_text_color ?? null,
+    quote_bg_color: (data as any).quote_bg_color ?? null,
+    quote_text_color: (data as any).quote_text_color ?? null,
+    experience_bg_color: (data as any).experience_bg_color ?? null,
+    experience_text_color: (data as any).experience_text_color ?? null,
+    contact_bg_color: (data as any).contact_bg_color ?? null,
+    contact_text_color: (data as any).contact_text_color ?? null,
+    testimonials_bg_color: (data as any).testimonials_bg_color ?? null,
+    testimonials_text_color: (data as any).testimonials_text_color ?? null,
   };
 
   const getBlockRect = useCallback((key: string) => {
