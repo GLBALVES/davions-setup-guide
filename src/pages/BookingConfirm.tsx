@@ -285,6 +285,37 @@ const BookingConfirm = () => {
     setBriefingSubmitted(true);
   };
 
+  /* ── Client info handler ── */
+  const handleSaveClientInfo = async () => {
+    if (!booking) return;
+    if (!clientInfo.full_name.trim() || !clientInfo.phone.trim()) return;
+    setSavingClientInfo(true);
+    try {
+      await (supabase as any).from("clients").upsert(
+        {
+          photographer_id: booking.photographer_id,
+          email: booking.client_email,
+          full_name: clientInfo.full_name.trim(),
+          phone: clientInfo.phone.trim() || null,
+          birth_date: clientInfo.birth_date || null,
+          address_street: clientInfo.address_street.trim() || null,
+          address_city: clientInfo.address_city.trim() || null,
+          address_state: clientInfo.address_state.trim() || null,
+          address_zip: clientInfo.address_zip.trim() || null,
+          address_country: clientInfo.address_country.trim() || null,
+          instagram: clientInfo.instagram.trim() || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "photographer_id,email" }
+      );
+      setClientInfoSaved(true);
+    } catch (err) {
+      console.error("Save client info error:", err);
+    } finally {
+      setSavingClientInfo(false);
+    }
+  };
+
   /* ── Payment handler ── */
   const handlePayment = async () => {
     if (!booking || !session) return;
