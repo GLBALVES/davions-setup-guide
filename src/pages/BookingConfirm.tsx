@@ -545,6 +545,135 @@ const BookingConfirm = () => {
           </div>
         )}
 
+        {/* Client Info */}
+        {activeStep?.key === "client_info" && (
+          <div className="border border-border flex flex-col divide-y divide-border">
+            <div className="p-5 flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs tracking-[0.2em] uppercase font-light">Your Information</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Please fill in your details so we can get in touch with you.
+              </p>
+            </div>
+
+            {clientInfoSaved ? (
+              <div className="p-5 flex flex-col items-center gap-3 text-center">
+                <CheckCircle className="h-8 w-8 text-primary" strokeWidth={1.5} />
+                <p className="text-sm font-light">Your information has been saved.</p>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setClientInfoSaved(false)}>
+                  Edit
+                </Button>
+              </div>
+            ) : (
+              <div className="p-5 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Full Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={clientInfo.full_name}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, full_name: e.target.value }))}
+                    placeholder="Your full name"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Phone <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="tel"
+                    value={clientInfo.phone}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder="+1 (555) 123-4567"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Date of Birth</Label>
+                    <Input
+                      type="date"
+                      value={clientInfo.birth_date}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, birth_date: e.target.value }))}
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Instagram</Label>
+                    <Input
+                      value={clientInfo.instagram}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, instagram: e.target.value }))}
+                      placeholder="@username"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">Street Address</Label>
+                  <Input
+                    value={clientInfo.address_street}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, address_street: e.target.value }))}
+                    placeholder="123 Main St"
+                    className="text-sm font-light"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">City</Label>
+                    <Input
+                      value={clientInfo.address_city}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_city: e.target.value }))}
+                      placeholder="City"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">State</Label>
+                    <Input
+                      value={clientInfo.address_state}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_state: e.target.value }))}
+                      placeholder="State"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">ZIP Code</Label>
+                    <Input
+                      value={clientInfo.address_zip}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_zip: e.target.value }))}
+                      placeholder="12345"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-light">Country</Label>
+                    <Input
+                      value={clientInfo.address_country}
+                      onChange={(e) => setClientInfo((p) => ({ ...p, address_country: e.target.value }))}
+                      placeholder="Country"
+                      className="text-sm font-light"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSaveClientInfo}
+                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim()}
+                  className="w-full text-xs tracking-wider uppercase font-light mt-1"
+                >
+                  {savingClientInfo ? "Saving…" : "Save & Continue"}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Briefing */}
         {activeStep?.key === "briefing" && briefing && (
           <div className="border border-border flex flex-col divide-y divide-border">
