@@ -546,7 +546,7 @@ function SharedAbout({ site, photographer, displayName }: { site: SiteConfig | n
   const layout = site?.about_layout ?? "image-right";
 
   return (
-    <section id="about" className="border-t border-border">
+    <section id="about" className="border-t border-border" style={getSectionStyle(site, "about")}>
       <div className="max-w-6xl mx-auto px-6 py-16">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-10">
           {site?.about_title || "About"}
@@ -597,7 +597,7 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
   if (layout === "quotes") {
     return (
-      <section className="border-t border-border py-16 md:py-24 bg-muted/20">
+      <section className="border-t border-border py-16 md:py-24 bg-muted/20" style={getSectionStyle(site, "testimonials")}>
         <div className="max-w-4xl mx-auto px-6">
           <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
           <div className="flex flex-col gap-12">
@@ -623,7 +623,7 @@ function SharedTestimonials({ site, accentColor }: { site: SiteConfig | null; ac
 
   // cards layout
   return (
-    <section className="border-t border-border py-16 md:py-24">
+    <section className="border-t border-border py-16 md:py-24" style={getSectionStyle(site, "testimonials")}>
       <div className="max-w-6xl mx-auto px-6">
         <p className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground text-center mb-12">{title}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -660,7 +660,7 @@ function QuoteSection({ site, editMode, onFieldChange }: { site: SiteConfig | nu
   if (!site?.quote_text && !editMode) return null;
   const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
-    <section className="py-16 md:py-24 border-t border-border bg-muted/20">
+    <section className="py-16 md:py-24 border-t border-border bg-muted/20" style={getSectionStyle(site, "quote")}>
       <div className="max-w-3xl mx-auto px-6 text-center">
         <Quote className="h-5 w-5 text-muted-foreground/30 mx-auto mb-6" />
         <blockquote className="text-xl md:text-2xl font-light leading-relaxed text-foreground tracking-wide italic mb-6">
@@ -680,7 +680,7 @@ function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { sit
   if (!site?.experience_text && !editMode) return null;
   const save = (k: string, v: string) => onFieldChange?.(k, v);
   return (
-    <section className="border-t border-border py-16 md:py-24">
+    <section className="border-t border-border py-16 md:py-24" style={getSectionStyle(site, "experience")}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-12 items-start max-w-5xl mx-auto">
           <div className="md:w-1/3 shrink-0">
