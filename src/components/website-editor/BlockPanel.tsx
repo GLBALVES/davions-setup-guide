@@ -340,6 +340,8 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <SectionColorFields section="about" data={data} onChange={onChange} />
           </>
         )}
+
+        {blockKey === "quote" && (
           <>
             <Field label="Quote Text">
               <Textarea value={data.quote_text ?? ""} onChange={(e) => p({ quote_text: e.target.value })} className="text-xs min-h-[80px] resize-none" placeholder="An inspiring quote..." />
@@ -347,6 +349,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Quote Author">
               <Input value={data.quote_author ?? ""} onChange={(e) => p({ quote_author: e.target.value })} className="h-8 text-xs" placeholder="— Your Name" />
             </Field>
+            <SectionColorFields section="quote" data={data} onChange={onChange} />
           </>
         )}
 
