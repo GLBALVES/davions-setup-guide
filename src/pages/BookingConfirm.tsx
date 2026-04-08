@@ -364,10 +364,13 @@ const BookingConfirm = () => {
   /* ── Step validation ── */
   const canProceed = (): boolean => {
     if (!activeStep) return false;
+    if (activeStep.key === "client_info") {
+      return clientInfoSaved;
+    }
     if (activeStep.key === "briefing") {
       if (!briefing) return true;
       if (alreadySubmittedBriefing || briefingSubmitted) return true;
-      return false; // must submit briefing first
+      return false;
     }
     if (activeStep.key === "contract") {
       return contractAccepted;
