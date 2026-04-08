@@ -624,6 +624,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
                 <Plus className="h-3.5 w-3.5" />
                 Add Testimonial
               </button>
+              <SectionColorFields section="testimonials" data={data} onChange={onChange} />
             </>
           );
         })()}
