@@ -2021,13 +2021,19 @@ export type Database = {
       }
       photographer_site: {
         Row: {
+          about_bg_color: string | null
           about_image_url: string | null
+          about_text_color: string | null
           about_title: string | null
           accent_color: string | null
+          contact_bg_color: string | null
+          contact_text_color: string | null
           created_at: string
           cta_link: string | null
           cta_text: string | null
+          experience_bg_color: string | null
           experience_text: string | null
+          experience_text_color: string | null
           experience_title: string | null
           facebook_pixel_id: string | null
           facebook_url: string | null
@@ -2043,16 +2049,24 @@ export type Database = {
           header_bg_color: string | null
           header_text_color: string | null
           header_visible_socials: Json | null
+          hero_bg_color: string | null
+          hero_text_color: string | null
           instagram_url: string | null
           linkedin_url: string | null
           logo_url: string | null
           og_image_url: string | null
           photographer_id: string
           pinterest_url: string | null
+          portfolio_bg_color: string | null
+          portfolio_text_color: string | null
           quote_author: string | null
+          quote_bg_color: string | null
           quote_text: string | null
+          quote_text_color: string | null
           seo_description: string | null
           seo_title: string | null
+          sessions_bg_color: string | null
+          sessions_text_color: string | null
           show_about: boolean | null
           show_blog: boolean | null
           show_booking: boolean | null
@@ -2065,19 +2079,27 @@ export type Database = {
           site_template: string | null
           tagline: string | null
           testimonials: Json | null
+          testimonials_bg_color: string | null
+          testimonials_text_color: string | null
           tiktok_url: string | null
           updated_at: string
           whatsapp: string | null
           youtube_url: string | null
         }
         Insert: {
+          about_bg_color?: string | null
           about_image_url?: string | null
+          about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          contact_bg_color?: string | null
+          contact_text_color?: string | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          experience_bg_color?: string | null
           experience_text?: string | null
+          experience_text_color?: string | null
           experience_title?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
@@ -2093,16 +2115,24 @@ export type Database = {
           header_bg_color?: string | null
           header_text_color?: string | null
           header_visible_socials?: Json | null
+          hero_bg_color?: string | null
+          hero_text_color?: string | null
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id: string
           pinterest_url?: string | null
+          portfolio_bg_color?: string | null
+          portfolio_text_color?: string | null
           quote_author?: string | null
+          quote_bg_color?: string | null
           quote_text?: string | null
+          quote_text_color?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          sessions_bg_color?: string | null
+          sessions_text_color?: string | null
           show_about?: boolean | null
           show_blog?: boolean | null
           show_booking?: boolean | null
@@ -2115,19 +2145,27 @@ export type Database = {
           site_template?: string | null
           tagline?: string | null
           testimonials?: Json | null
+          testimonials_bg_color?: string | null
+          testimonials_text_color?: string | null
           tiktok_url?: string | null
           updated_at?: string
           whatsapp?: string | null
           youtube_url?: string | null
         }
         Update: {
+          about_bg_color?: string | null
           about_image_url?: string | null
+          about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          contact_bg_color?: string | null
+          contact_text_color?: string | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          experience_bg_color?: string | null
           experience_text?: string | null
+          experience_text_color?: string | null
           experience_title?: string | null
           facebook_pixel_id?: string | null
           facebook_url?: string | null
@@ -2143,16 +2181,24 @@ export type Database = {
           header_bg_color?: string | null
           header_text_color?: string | null
           header_visible_socials?: Json | null
+          hero_bg_color?: string | null
+          hero_text_color?: string | null
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id?: string
           pinterest_url?: string | null
+          portfolio_bg_color?: string | null
+          portfolio_text_color?: string | null
           quote_author?: string | null
+          quote_bg_color?: string | null
           quote_text?: string | null
+          quote_text_color?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          sessions_bg_color?: string | null
+          sessions_text_color?: string | null
           show_about?: boolean | null
           show_blog?: boolean | null
           show_booking?: boolean | null
@@ -2165,6 +2211,8 @@ export type Database = {
           site_template?: string | null
           tagline?: string | null
           testimonials?: Json | null
+          testimonials_bg_color?: string | null
+          testimonials_text_color?: string | null
           tiktok_url?: string | null
           updated_at?: string
           whatsapp?: string | null
