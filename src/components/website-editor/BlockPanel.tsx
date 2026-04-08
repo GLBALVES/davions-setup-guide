@@ -361,10 +361,9 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Description">
               <Textarea value={data.experience_text ?? ""} onChange={(e) => p({ experience_text: e.target.value })} className="text-xs min-h-[100px] resize-none" placeholder="Describe what clients can expect..." />
             </Field>
+            <SectionColorFields section="experience" data={data} onChange={onChange} />
           </>
         )}
-
-        {blockKey === "contact" && (
           <>
             <ToggleField label="Show Contact / Social links" checked={data.show_contact ?? true} onChange={(v) => p({ show_contact: v })} />
             <Field label="Instagram">
