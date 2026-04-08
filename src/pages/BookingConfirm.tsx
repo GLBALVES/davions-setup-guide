@@ -94,8 +94,8 @@ function formatTime(t: string) {
   return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-function formatCurrency(cents: number) {
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+function formatCurrency(amount: number) {
+  return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
 type StepKey = "details" | "briefing" | "contract" | "payment";
