@@ -143,6 +143,34 @@ export interface SiteConfig {
   footer_visible_socials?: string[] | null;
   /** Footer preset template id */
   footer_preset?: string | null;
+  /** Per-section background & text colors */
+  hero_bg_color?: string | null;
+  hero_text_color?: string | null;
+  sessions_bg_color?: string | null;
+  sessions_text_color?: string | null;
+  portfolio_bg_color?: string | null;
+  portfolio_text_color?: string | null;
+  about_bg_color?: string | null;
+  about_text_color?: string | null;
+  quote_bg_color?: string | null;
+  quote_text_color?: string | null;
+  experience_bg_color?: string | null;
+  experience_text_color?: string | null;
+  contact_bg_color?: string | null;
+  contact_text_color?: string | null;
+  testimonials_bg_color?: string | null;
+  testimonials_text_color?: string | null;
+}
+
+/** Helper: returns inline style for a section's custom bg/text colors */
+function getSectionStyle(site: SiteConfig | null, section: string): React.CSSProperties {
+  if (!site) return {};
+  const bg = (site as any)[`${section}_bg_color`] as string | null | undefined;
+  const fg = (site as any)[`${section}_text_color`] as string | null | undefined;
+  const s: React.CSSProperties = {};
+  if (bg) s.backgroundColor = bg;
+  if (fg) s.color = fg;
+  return s;
 }
 
 export interface Session {
