@@ -703,6 +703,68 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          address_city: string | null
+          address_country: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          birth_date: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          instagram: string | null
+          notes: string | null
+          phone: string | null
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          birth_date?: string | null
+          created_at?: string
+          email: string
+          full_name?: string
+          id?: string
+          instagram?: string | null
+          notes?: string | null
+          phone?: string | null
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          address_city?: string | null
+          address_country?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          birth_date?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          instagram?: string | null
+          notes?: string | null
+          phone?: string | null
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           body: string
