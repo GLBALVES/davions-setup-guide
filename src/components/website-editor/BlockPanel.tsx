@@ -280,6 +280,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="CTA Link (optional)">
               <Input value={data.cta_link ?? ""} onChange={(e) => p({ cta_link: e.target.value })} className="h-8 text-xs" placeholder="https://..." />
             </Field>
+            <SectionColorFields section="hero" data={data} onChange={onChange} />
           </>
         )}
 
@@ -288,6 +289,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <ToggleField label="Show Sessions section" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
             <ToggleField label="Show booking CTA" checked={data.show_booking ?? true} onChange={(v) => p({ show_booking: v })} />
             <p className="text-[10px] text-muted-foreground leading-relaxed">Sessions are managed in the Sessions section of the dashboard. Toggle visibility to show/hide this section on your public site.</p>
+            <SectionColorFields section="sessions" data={data} onChange={onChange} />
           </>
         )}
 
@@ -295,6 +297,7 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
           <>
             <ToggleField label="Show Portfolio section" checked={data.show_store ?? true} onChange={(v) => p({ show_store: v })} />
             <p className="text-[10px] text-muted-foreground leading-relaxed">Portfolio galleries are managed in the Galleries section of the dashboard.</p>
+            <SectionColorFields section="portfolio" data={data} onChange={onChange} />
           </>
         )}
 
@@ -334,10 +337,9 @@ export function BlockPanel({ blockKey, data, onChange, onBack, hideHeader }: Pro
             <Field label="Bio">
               <Textarea value={data.bio ?? ""} onChange={(e) => p({ bio: e.target.value })} className="text-xs min-h-[100px] resize-none" placeholder="Tell clients about yourself..." />
             </Field>
+            <SectionColorFields section="about" data={data} onChange={onChange} />
           </>
         )}
-
-        {blockKey === "quote" && (
           <>
             <Field label="Quote Text">
               <Textarea value={data.quote_text ?? ""} onChange={(e) => p({ quote_text: e.target.value })} className="text-xs min-h-[80px] resize-none" placeholder="An inspiring quote..." />
