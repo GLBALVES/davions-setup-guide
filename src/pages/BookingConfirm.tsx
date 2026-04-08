@@ -101,7 +101,19 @@ function formatCurrency(amount: number) {
   return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-type StepKey = "details" | "briefing" | "contract" | "payment";
+type StepKey = "details" | "client_info" | "briefing" | "contract" | "payment";
+
+interface ClientInfo {
+  full_name: string;
+  phone: string;
+  birth_date: string;
+  address_street: string;
+  address_city: string;
+  address_state: string;
+  address_zip: string;
+  address_country: string;
+  instagram: string;
+}
 
 interface StepDef {
   key: StepKey;
