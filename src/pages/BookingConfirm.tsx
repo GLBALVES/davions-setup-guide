@@ -141,6 +141,21 @@ const BookingConfirm = () => {
   const [alreadySubmittedBriefing, setAlreadySubmittedBriefing] = useState(false);
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
 
+  // Client info state
+  const [clientInfo, setClientInfo] = useState<ClientInfo>({
+    full_name: "",
+    phone: "",
+    birth_date: "",
+    address_street: "",
+    address_city: "",
+    address_state: "",
+    address_zip: "",
+    address_country: "",
+    instagram: "",
+  });
+  const [clientInfoSaved, setClientInfoSaved] = useState(false);
+  const [savingClientInfo, setSavingClientInfo] = useState(false);
+
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
 
