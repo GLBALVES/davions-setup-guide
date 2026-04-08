@@ -228,6 +228,30 @@ const BookingConfirm = () => {
       if (availRes.data) setAvail(availRes.data as AvailData);
       if (photoRes.data) setPhotographer(photoRes.data as PhotographerData);
 
+      // Load existing client info if available
+      if (b.client_email && b.photographer_id) {
+        const { data: existingClient } = await (supabase as any)
+          .from("clients")
+          .select("full_name, phone, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
+          .eq("photographer_id", b.photographer_id)
+          .eq("email", b.client_email)
+          .maybeSingle();
+        if (existingClient) {
+          setClientInfo({
+            full_name: existingClient.full_name || b.client_name || "",
+            phone: existingClient.phone || "",
+            birth_date: existingClient.birth_date || "",
+            address_street: existingClient.address_street || "",
+            address_city: existingClient.address_city || "",
+            address_state: existingClient.address_state || "",
+            address_zip: existingClient.address_zip || "",
+            address_country: existingClient.address_country || "",
+            instagram: existingClient.instagram || "",
+          });
+          setClientInfoSaved(true);
+        }
+      }
+
       setLoading(false);
     };
 
