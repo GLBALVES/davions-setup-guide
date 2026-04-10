@@ -162,6 +162,9 @@ export function CreateBookingDialog({
   const [presetSessionId, setPresetSessionId] = useState<string | null>(null);
   const [presetConverting, setPresetConverting] = useState(false);
 
+  // Conflict override dialog
+  const [showOverrideDialog, setShowOverrideDialog] = useState(false);
+
   // Reset when dialog opens
   useEffect(() => {
     if (open) {
@@ -416,10 +419,8 @@ export function CreateBookingDialog({
     setOsIncludeInput("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performCreation = async () => {
     if (!user || !date || !selectedSessionId || !clientEmail.trim()) return;
-    if (hasConflict) return;
 
     setSaving(true);
     const dateStr = format(date, "yyyy-MM-dd");
@@ -511,7 +512,17 @@ export function CreateBookingDialog({
     }
   };
 
-  const isValid = Boolean(date && selectedSessionId && clientEmail.trim() && !hasConflict);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !date || !selectedSessionId || !clientEmail.trim()) return;
+    if (hasConflict) {
+      setShowOverrideDialog(true);
+      return;
+    }
+    performCreation();
+  };
+
+  const isValid = Boolean(date && selectedSessionId && clientEmail.trim());
 
   return (
     <>
@@ -910,11 +921,12 @@ export function CreateBookingDialog({
                   type="submit"
                   size="sm"
                   disabled={!isValid || saving}
-                  className="text-xs gap-2"
-                  title={hasConflict ? "This time slot has a conflict" : undefined}
+                  className={cn("text-xs gap-2", hasConflict && "bg-amber-600 hover:bg-amber-700")}
                 >
                   {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  {t.createBooking.createBooking}
+                  {hasConflict ? (
+                    <><AlertTriangle className="h-3.5 w-3.5" />{t.createBooking.createBooking}</>
+                  ) : t.createBooking.createBooking}
                 </Button>
               </DialogFooter>
             </form>
@@ -954,6 +966,48 @@ export function CreateBookingDialog({
             >
               {presetConverting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {t.createBooking.yesConvert ?? "Yes, convert to session"}
+            </Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Conflict override confirmation */}
+    <AlertDialog open={showOverrideDialog} onOpenChange={setShowOverrideDialog}>
+      <AlertDialogContent className="max-w-[380px] z-[60] p-5">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-sm font-light tracking-wide flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            {t.createBooking.conflictOverrideTitle ?? "Time Conflict"}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-[11px] font-light leading-relaxed">
+            {conflictingBlock
+              ? (conflictingBlock.all_day
+                  ? (conflictingBlock.reason || (t.createBooking.dayBlocked ?? "This day is blocked"))
+                  : `${conflictingBlock.reason || (t.createBooking.blockedSlot ?? "Blocked")}: ${conflictingBlock.start_time.slice(0,5)}–${conflictingBlock.end_time.slice(0,5)}`)
+              : conflictingBooking
+                ? `${t.createBooking.conflictsWith ?? "Conflicts with"} ${conflictingBooking.client_name} (${conflictingBooking.start_time.slice(0,5)}–${conflictingBooking.end_time.slice(0,5)})`
+                : ""}
+            {"\n\n"}
+            {t.createBooking.conflictOverrideDesc ?? "Do you want to create this booking anyway?"}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2">
+          <AlertDialogCancel asChild>
+            <Button variant="outline" size="sm" className="text-xs">
+              {t.createBooking.conflictCancel ?? "Cancel"}
+            </Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button
+              size="sm"
+              className="text-xs gap-2 bg-amber-600 hover:bg-amber-700"
+              onClick={() => {
+                setShowOverrideDialog(false);
+                performCreation();
+              }}
+            >
+              {t.createBooking.conflictConfirm ?? "Yes, create anyway"}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>
