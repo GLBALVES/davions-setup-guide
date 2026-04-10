@@ -101,8 +101,8 @@ function timesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string
          timeToMinutes(aEnd) > timeToMinutes(bStart);
 }
 
-function formatCurrency(v: number) {
-  return v.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 });
+function formatCurrency(cents: number) {
+  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 }
 
 /* ── component ─────────────────────────────────────── */
