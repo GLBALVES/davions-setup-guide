@@ -366,7 +366,7 @@ export function CreateBookingDialog({
           session_model: "one_session",
           hide_from_store: true,
           status: "active",
-          price: osPrice === "" ? 0 : osPrice,
+          price: osPrice === "" ? 0 : Math.round(Number(osPrice) * 100),
           briefing_id: osBriefingId || null,
           contract_text: contractText || null,
         })
@@ -391,7 +391,7 @@ export function CreateBookingDialog({
         title: osName.trim(),
         description: null,
         duration_minutes: osDuration || 60,
-        price: osPrice === "" ? 0 : Number(osPrice),
+        price: osPrice === "" ? 0 : Math.round(Number(osPrice) * 100),
         location: osLocation || null,
         cover_image_url: null,
         num_photos: osNumPhotos || 0,
