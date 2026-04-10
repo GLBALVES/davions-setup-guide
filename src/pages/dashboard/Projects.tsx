@@ -1561,8 +1561,7 @@ const Projects = () => {
   };
 
   const openEdit = (p: ClientProject) => {
-    setEditing(p);
-    setModalOpen(true);
+    openView(p);
   };
 
   const openView = (p: ClientProject) => {
