@@ -74,6 +74,9 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import { CookieBanner } from "./components/CookieBanner";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -93,6 +96,7 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
+          <CookieBanner />
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
@@ -111,6 +115,8 @@ const App = () => {
                 <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
                 <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/store/:slug" element={<StorePage />} />
                 <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />

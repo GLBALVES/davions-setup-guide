@@ -1,0 +1,1 @@
+ALTER TABLE public.bookings ADD COLUMN consent_given_at timestamptz DEFAULT NULL;

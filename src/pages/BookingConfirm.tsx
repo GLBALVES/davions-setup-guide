@@ -159,6 +159,9 @@ const BookingConfirm = () => {
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
 
+  // LGPD consent
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+
   // Payment state
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -364,7 +367,7 @@ const BookingConfirm = () => {
   const canProceed = (): boolean => {
     if (!activeStep) return false;
     if (activeStep.key === "client_info") {
-      return clientInfoSaved;
+      return clientInfoSaved && privacyConsent;
     }
     if (activeStep.key === "briefing") {
       if (!briefing) return true;
@@ -668,6 +671,22 @@ const BookingConfirm = () => {
                 >
                   {savingClientInfo ? "Saving…" : "Save & Continue"}
                 </Button>
+
+                {/* LGPD Consent Checkbox */}
+                <label className="flex items-start gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={privacyConsent}
+                    onChange={(e) => setPrivacyConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                  />
+                  <span className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                    I agree to the collection and use of my data as described in the{" "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 text-foreground hover:text-primary">
+                      Privacy Policy
+                    </a>.
+                  </span>
+                </label>
               </div>
             )}
           </div>
