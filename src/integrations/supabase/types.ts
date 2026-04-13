@@ -402,13 +402,6 @@ export type Database = {
             referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "booking_invoice_items_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "public_booking_info"
-            referencedColumns: ["id"]
-          },
         ]
       }
       bookings: {
@@ -699,13 +692,6 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_projects_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "public_booking_info"
             referencedColumns: ["id"]
           },
           {
@@ -1422,13 +1408,6 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "galleries_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "public_booking_info"
             referencedColumns: ["id"]
           },
           {
@@ -3763,67 +3742,7 @@ export type Database = {
       }
     }
     Views: {
-      public_booking_info: {
-        Row: {
-          availability_id: string | null
-          booked_date: string | null
-          client_email: string | null
-          client_name: string | null
-          id: string | null
-          payment_status: string | null
-          photographer_id: string | null
-          session_id: string | null
-          status: string | null
-          stripe_checkout_session_id: string | null
-        }
-        Insert: {
-          availability_id?: string | null
-          booked_date?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          id?: string | null
-          payment_status?: string | null
-          photographer_id?: string | null
-          session_id?: string | null
-          status?: string | null
-          stripe_checkout_session_id?: string | null
-        }
-        Update: {
-          availability_id?: string | null
-          booked_date?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          id?: string | null
-          payment_status?: string | null
-          photographer_id?: string | null
-          session_id?: string | null
-          status?: string | null
-          stripe_checkout_session_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bookings_availability_id_fkey"
-            columns: ["availability_id"]
-            isOneToOne: false
-            referencedRelation: "session_availability"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_photographer_id_fkey"
-            columns: ["photographer_id"]
-            isOneToOne: false
-            referencedRelation: "photographers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       get_my_photographer_id: { Args: never; Returns: string }
