@@ -521,6 +521,7 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
+  const [templateAlreadySaved, setTemplateAlreadySaved] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -752,6 +753,7 @@ const WebsiteSettings = () => {
         setShowAbout(s.show_about ?? true);
         setShowContact(s.show_contact ?? true);
         setSiteTemplate(s.site_template ?? "editorial");
+        if (s.site_template) setTemplateAlreadySaved(true);
         setSeoTitle(s.seo_title ?? "");
         setSeoDescription(s.seo_description ?? "");
         setOgImageUrl(s.og_image_url ?? "");
@@ -903,14 +905,16 @@ const WebsiteSettings = () => {
               {loading ? (
                  <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{ws.loading}</p>
               ) : (
-                <Tabs defaultValue="templates" className="flex flex-col gap-6">
+                <Tabs defaultValue={templateAlreadySaved ? "settings" : "templates"} className="flex flex-col gap-6">
                   <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent p-0 h-auto gap-0">
-                    <TabsTrigger
-                      value="templates"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-4 pb-2.5 pt-0 text-[11px] tracking-[0.2em] uppercase font-light text-muted-foreground data-[state=active]:text-foreground"
-                    >
-                      Templates
-                    </TabsTrigger>
+                    {!templateAlreadySaved && (
+                      <TabsTrigger
+                        value="templates"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-4 pb-2.5 pt-0 text-[11px] tracking-[0.2em] uppercase font-light text-muted-foreground data-[state=active]:text-foreground"
+                      >
+                        Templates
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger
                       value="settings"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-4 pb-2.5 pt-0 text-[11px] tracking-[0.2em] uppercase font-light text-muted-foreground data-[state=active]:text-foreground"
