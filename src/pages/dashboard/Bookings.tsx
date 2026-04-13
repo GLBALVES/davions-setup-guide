@@ -39,8 +39,10 @@ import {
   ArrowRight,
   ArrowUpDown,
   Plus,
+  Pencil,
 } from "lucide-react";
 import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
+import { BookingDetailSheet, ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
 
 interface Booking {
   id: string;
