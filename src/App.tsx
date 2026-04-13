@@ -37,6 +37,9 @@ import { SeoPage } from "./pages/dashboard/blog/SeoPage";
 import { BancoTemasPage } from "./pages/dashboard/blog/BancoTemasPage";
 import { ConfigPage } from "./pages/dashboard/blog/ConfigPage";
 import { PreviewPage } from "./pages/dashboard/blog/PreviewPage";
+import CreativeIndexPage from "./pages/dashboard/creative/CreativeIndexPage";
+import CarrosselPage from "./pages/dashboard/creative/CarrosselPage";
+import MetaConfigPage from "./pages/dashboard/creative/MetaConfigPage";
 import SiteSeo from "./pages/dashboard/SiteSeo";
 import EmailMarketing from "./pages/dashboard/EmailMarketing";
 import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
@@ -176,7 +179,11 @@ const App = () => {
                 <Route path="/dashboard/contracts/new" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/contracts/:id/edit" element={<ProtectedRoute><ContractEditor /></ProtectedRoute>} />
                  <Route path="/dashboard/clients" element={<ProtectedRoute><PermissionGate permKey="clients"><Clients /></PermissionGate></ProtectedRoute>} />
-                 <Route path="/dashboard/creative" element={<ProtectedRoute><PermissionGate permKey="creative"><CreativeStudio /></PermissionGate></ProtectedRoute>} />
+                 <Route path="/dashboard/creative" element={<ProtectedRoute><PermissionGate permKey="creative"><CreativeStudio /></PermissionGate></ProtectedRoute>}>
+                   <Route index element={<CreativeIndexPage />} />
+                   <Route path="carrossel" element={<CarrosselPage />} />
+                   <Route path="meta-config" element={<MetaConfigPage />} />
+                 </Route>
                  <Route path="/dashboard/website" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteSettings /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/website/editor" element={<ProtectedRoute><PermissionGate permKey="website"><WebsiteEditor /></PermissionGate></ProtectedRoute>} />
                  <Route path="/dashboard/website/preview" element={<ProtectedRoute><WebsitePreview /></ProtectedRoute>} />
