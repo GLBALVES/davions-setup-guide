@@ -957,6 +957,27 @@ const WebsiteSettings = () => {
                   <TabsContent value="settings" className="mt-0">
                 <div className="flex flex-col gap-10">
 
+                   {/* ── 0. Template ── */}
+                  <section className="flex flex-col gap-4">
+                    <div className="flex items-center gap-2">
+                      <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title="Template" description="Change your site layout template." />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TEMPLATES.map((tmpl) => (
+                        <TemplatePreviewCard
+                          key={tmpl.value}
+                          value={tmpl.value}
+                          label={tmpl.label}
+                          description={tmpl.description}
+                          selected={siteTemplate === tmpl.value}
+                          onClick={() => setSiteTemplate(tmpl.value)}
+                          onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+
                    {/* ── 1. Branding ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
