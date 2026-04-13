@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Layers, Instagram } from "lucide-react";
 
 const CreativeIndexPage = () => {
@@ -12,18 +11,18 @@ const CreativeIndexPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
         <Link to="/dashboard/creative/carrossel">
-          <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-            <Layers className="h-6 w-6" />
-            <span className="text-sm font-medium">Gerador de Carrossel</span>
-            <span className="text-xs text-muted-foreground">Posts para Instagram com IA</span>
-          </Button>
+          <div className="flex flex-col items-center justify-center h-28 p-6 border border-border rounded-lg hover:bg-muted transition-colors cursor-pointer text-center">
+            <Layers className="h-8 w-8 mb-2 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Gerador de Carrossel</span>
+            <span className="text-xs text-muted-foreground mt-1">Posts para Instagram com IA</span>
+          </div>
         </Link>
         <Link to="/dashboard/creative/meta-config">
-          <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-            <Instagram className="h-6 w-6" />
-            <span className="text-sm font-medium">Config Meta</span>
-            <span className="text-xs text-muted-foreground">Integração Instagram</span>
-          </Button>
+          <div className="flex flex-col items-center justify-center h-28 p-6 border border-border rounded-lg hover:bg-muted transition-colors cursor-pointer text-center">
+            <Instagram className="h-8 w-8 mb-2 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Config Meta</span>
+            <span className="text-xs text-muted-foreground mt-1">Integração Instagram</span>
+          </div>
         </Link>
       </div>
     </div>
