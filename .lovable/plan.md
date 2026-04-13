@@ -1,20 +1,30 @@
 
 
-## Ajustar modal "Salvar Carrossel" — botões saindo do modal
+## Mostrar Blog e Estúdio Criativo para me@palomaschell.com
 
 ### Problema
-Os botões de seleção de modelo e os botões "Cancelar"/"Salvar" estão transbordando para fora do modal porque o `DialogContent` não tem `overflow-hidden` e os botões com `flex-1` podem expandir além do container em telas menores.
+Os itens "Blog" e "Creative Studio" pertencem ao grupo "Marketing" no sidebar, que está na lista `RESTRICTED_ADMINS` para `me@palomaschell.com` — por isso ficam ocultos.
 
 ### Solução
 
-**Editar `src/pages/dashboard/creative/CarrosselPage.tsx`** (linhas 260-281):
-- Adicionar `overflow-hidden` ao `DialogContent`
-- Trocar o layout dos botões de modelo para `flex-wrap` e remover `flex-1`, usando `min-w-[100px]` para manter consistência
-- Garantir que `DialogFooter` fique dentro do modal com espaçamento correto
+**Editar `src/components/dashboard/DashboardSidebar.tsx`** (linha 104):
+- Remover `"Marketing"` da lista de restrições para `me@palomaschell.com`
+
+Antes:
+```ts
+"me@palomaschell.com": ["Marketing", "AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
+```
+
+Depois:
+```ts
+"me@palomaschell.com": ["AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
+```
+
+Isso tornará o grupo Marketing (que contém Blog e Creative Studio) visível para essa usuária.
 
 ### Arquivo
 
 | Ação | Arquivo |
 |------|---------|
-| Editar | `src/pages/dashboard/creative/CarrosselPage.tsx` — classes do dialog de aprovação |
+| Editar | `src/components/dashboard/DashboardSidebar.tsx` — remover "Marketing" do RESTRICTED_ADMINS |
 
