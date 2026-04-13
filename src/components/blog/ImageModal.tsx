@@ -27,7 +27,7 @@ export function ImageModal({
   blogKeyword,
   onImageSaved,
 }: Props) {
-  const { config } = useBlogContext();
+  const { config, photographerId } = useBlogContext();
 
   const [imagePrompt, setImagePrompt] = useState(
     () => `${config.defaultImagePrompt}. Blog: "${blogTitle}", keyword: "${blogKeyword}"`
@@ -111,7 +111,7 @@ export function ImageModal({
         alt_text: altText,
         prompt_used: imageData instanceof File ? null : imagePrompt,
         selected: true,
-        photographer_id: config.photographerId ?? "",
+        photographer_id: photographerId ?? "",
       } as any);
 
       const updateFields =
