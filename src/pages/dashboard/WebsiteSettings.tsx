@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 
@@ -521,7 +521,6 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
-  const [templateAlreadySaved, setTemplateAlreadySaved] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -753,7 +752,6 @@ const WebsiteSettings = () => {
         setShowAbout(s.show_about ?? true);
         setShowContact(s.show_contact ?? true);
         setSiteTemplate(s.site_template ?? "editorial");
-        if (s.site_template) setTemplateAlreadySaved(true);
         setSeoTitle(s.seo_title ?? "");
         setSeoDescription(s.seo_description ?? "");
         setOgImageUrl(s.og_image_url ?? "");
@@ -905,57 +903,29 @@ const WebsiteSettings = () => {
               {loading ? (
                  <p className="text-xs text-muted-foreground animate-pulse tracking-widest uppercase">{ws.loading}</p>
               ) : (
-                <Tabs defaultValue={templateAlreadySaved ? "settings" : "templates"} className="flex flex-col gap-6">
-                  <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent p-0 h-auto gap-0">
-                    {!templateAlreadySaved && (
-                      <TabsTrigger
-                        value="templates"
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-4 pb-2.5 pt-0 text-[11px] tracking-[0.2em] uppercase font-light text-muted-foreground data-[state=active]:text-foreground"
-                      >
-                        Templates
-                      </TabsTrigger>
-                    )}
-                    <TabsTrigger
-                      value="settings"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-4 pb-2.5 pt-0 text-[11px] tracking-[0.2em] uppercase font-light text-muted-foreground data-[state=active]:text-foreground"
-                    >
-                      Site Settings
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* ══ TAB: Templates ══════════════════════════════════════ */}
-                  <TabsContent value="templates" className="mt-0">
-                    <div className="flex flex-col gap-5">
-                      <div>
-                        <p className="text-[11px] tracking-[0.25em] uppercase font-light mb-0.5">{ws.templateTitle}</p>
-                        <p className="text-[11px] text-muted-foreground">{ws.templateDesc}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {TEMPLATES.map((tmpl) => (
-                          <TemplatePreviewCard
-                            key={tmpl.value}
-                            value={tmpl.value}
-                            label={tmpl.label}
-                            description={tmpl.description}
-                            selected={siteTemplate === tmpl.value}
-                            onClick={() => setSiteTemplate(tmpl.value)}
-                            onPreview={() => setPreviewModalTemplate(tmpl.value)}
-                          />
-                        ))}
-                      </div>
-                      {/* Apply button */}
-                      <div className="flex items-center gap-3 pt-2 border-t border-border">
-                        <Button onClick={handleSave} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : "Apply Template"}
-                        </Button>
-                        <p className="text-[10px] text-muted-foreground/60">Saves the selected template to your live site.</p>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  {/* ══ TAB: Site Settings ══════════════════════════════════ */}
-                  <TabsContent value="settings" className="mt-0">
                 <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-10">
+
+                   {/* ── 0. Template ── */}
+                  <section className="flex flex-col gap-4">
+                    <div className="flex items-center gap-2">
+                      <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title="Template" description="Change your site layout template." />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TEMPLATES.map((tmpl) => (
+                        <TemplatePreviewCard
+                          key={tmpl.value}
+                          value={tmpl.value}
+                          label={tmpl.label}
+                          description={tmpl.description}
+                          selected={siteTemplate === tmpl.value}
+                          onClick={() => setSiteTemplate(tmpl.value)}
+                          onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
 
                    {/* ── 1. Branding ── */}
                   <section className="flex flex-col gap-5">
@@ -1528,8 +1498,7 @@ const WebsiteSettings = () => {
                   </div>
 
                 </div>
-                  </TabsContent>
-                </Tabs>
+                </div>
               )}
             </div>
           </main>
