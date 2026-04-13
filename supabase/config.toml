@@ -62,3 +62,15 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = false
+
+[functions.generate-themes]
+verify_jwt = false
+
+[functions.generate-blog]
+verify_jwt = false
+
+[functions.generate-blog-image]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false
