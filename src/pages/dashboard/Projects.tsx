@@ -683,7 +683,7 @@ function KanbanColumn({
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
       {/* header */}
-      <div className="flex items-center justify-between mb-2 px-0.5">
+      <div className="flex items-center justify-between mb-2 px-0.5 h-6">
         <div className="flex items-center gap-2 min-w-0">
           <span
             className="h-2 w-2 rounded-full shrink-0"
