@@ -1,22 +1,20 @@
 
 
-## Bug Fix: Website Settings fields clearing on save
+## Ajustar botões da Creative Studio
 
-### Root Cause
-Two issues combine to cause the bug:
+Os dois botões-card da página Creative Studio estão usando o `Button` com `variant="outline"`, que aplica `uppercase tracking-widest font-light` — estilo pensado para botões de ação, não para cards de navegação. Isso causa texto esmagado e visual desalinhado do padrão card do resto do dashboard.
 
-1. **useEffect depends on `[user]` (object reference)** — line 771. Supabase token refresh creates a new `user` object in AuthContext (even for `TOKEN_REFRESHED` events), which re-triggers the data fetch effect. This re-fetch overwrites the form state with old/null DB values during or right after save.
+### Mudanças
 
-2. **`photographers.update()` error is not checked** — line 808. The update for `full_name` and `bio` doesn't capture the error result. If it fails (e.g., RLS), the success toast from `photographer_site` upsert still shows, but the profile data was never saved.
+**Arquivo: `src/pages/dashboard/creative/CreativeIndexPage.tsx`**
 
-### Fix
+Substituir os `Button variant="outline"` por cards estilizados diretamente (usando classes de `border`, `rounded-lg`, `hover`) que se comportam melhor como cards de navegação:
 
-**File: `src/pages/dashboard/WebsiteSettings.tsx`**
+- Trocar `Button` por `div` estilizado dentro do `Link`, com `border rounded-lg p-6 hover:bg-muted transition-colors cursor-pointer`
+- Manter ícone, título e descrição com tipografia normal (sem uppercase/tracking-widest forçado pelo Button)
+- Aumentar levemente a altura para `h-28` e dar mais padding
+- Manter grid `grid-cols-1 sm:grid-cols-2` para responsividade
+- Garantir que no mobile (< 640px) os cards fiquem empilhados e com largura total
 
-1. **Change useEffect dependency** from `[user]` to `[user?.id]` (stable string). This prevents re-fetching on token refresh while still re-fetching on actual login/logout.
-
-2. **Capture and handle the photographers update error** in `handleSave`. If either the `photographers` update or the `photographer_site` upsert fails, show the error. Only show success if both succeed.
-
-### Changes
-- `src/pages/dashboard/WebsiteSettings.tsx` — two edits (dependency array + error handling in handleSave)
+Resultado: cards limpos, alinhados ao design system luxury-minimal, sem o estilo de botão de ação.
 
