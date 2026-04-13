@@ -521,6 +521,7 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
+  const [showTemplateGrid, setShowTemplateGrid] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -937,7 +938,7 @@ const WebsiteSettings = () => {
                                   onClick={() => setShowTemplateGrid(true)}
                                 >
                                   <Button variant="outline" size="sm" className="pointer-events-none">
-                                    {ws.changeTemplate ?? "Change template"}
+                                    Change template
                                   </Button>
                                 </div>
                               </>
