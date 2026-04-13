@@ -96,7 +96,7 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
-          <CookieBanner />
+          
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
