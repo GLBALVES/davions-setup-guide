@@ -28,17 +28,15 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: claimsData, error: claimsError } = await supabaseAnon.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: authedUser }, error: userError } = await supabaseAnon.auth.getUser();
+    if (userError || !authedUser) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = authedUser.id;
 
     // Use service role to gather all data
     const supabase = createClient(
