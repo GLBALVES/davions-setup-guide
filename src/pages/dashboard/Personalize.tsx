@@ -48,25 +48,25 @@ const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 const TEMPLATES = [
 {
   value: "editorial",
-  label: "Editorial",
+  label: "Rosa",
   description: "Full-bleed hero, minimal typography, luxury feel.",
   preview: "bg-foreground"
 },
 {
   value: "grid",
-  label: "Grid",
+  label: "Lírio",
   description: "Photo-first grid layout with sidebar details.",
   preview: "bg-muted"
 },
 {
   value: "magazine",
-  label: "Magazine",
+  label: "Orquídea",
   description: "Bold columns, mixed-size cards, editorial headlines.",
   preview: "bg-muted/60"
 },
 {
   value: "clean",
-  label: "Clean",
+  label: "Jasmim",
   description: "Centered, whitespace-heavy, distraction-free.",
   preview: "bg-background border border-border"
 }];
