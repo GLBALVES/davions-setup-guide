@@ -25,10 +25,10 @@ import type { SiteConfig, Session, Gallery, Photographer } from "@/components/st
 type Viewport = "desktop" | "tablet" | "mobile";
 
 const TEMPLATES = [
-  { value: "editorial", label: "Editorial" },
-  { value: "grid",      label: "Grid" },
-  { value: "magazine",  label: "Magazine" },
-  { value: "clean",     label: "Clean" },
+  { value: "editorial", label: "Rosa" },
+  { value: "grid",      label: "Lírio" },
+  { value: "magazine",  label: "Orquídea" },
+  { value: "clean",     label: "Jasmim" },
 ];
 
 export default function WebsiteEditor() {
