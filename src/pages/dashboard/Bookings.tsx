@@ -573,6 +573,24 @@ const Bookings = () => {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2.5">
+                        <button
+                          onClick={() => setDetailBooking({
+                            id: booking.id,
+                            client_name: booking.client_name,
+                            client_email: booking.client_email,
+                            status: booking.status,
+                            payment_status: booking.payment_status,
+                            booked_date: booking.booked_date,
+                            session_id: booking.session_id,
+                            availability_id: booking.availability_id,
+                            sessions: booking.sessions ? { title: booking.sessions.title, briefing_id: booking.sessions.briefing_id } : null,
+                            session_availability: booking.session_availability,
+                          })}
+                          title="Edit booking"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
                         {booking.status !== "confirmed" && booking.status !== "cancelled" && (
                           <button
                             onClick={() => setConfirmDialog({ open: true, bookingId: booking.id, action: "confirm" })}
