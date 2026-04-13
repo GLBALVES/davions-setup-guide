@@ -1,28 +1,22 @@
 
 
-## Corrigir erros de build + Verificar responsividade dos botões
+## Bug Fix: Website Settings fields clearing on save
 
-### Problema atual
-A página não renderiza devido a erros de compilação em 3 frentes:
+### Root Cause
+Two issues combine to cause the bug:
 
-1. **Tabelas do carrossel não estão nos tipos gerados** (`carousel_historico`, `carousel_meta_config`, `carousel_image_library`) — os componentes tentam usar `supabase.from("carousel_historico")` mas o TypeScript rejeita porque a tabela não existe em `types.ts`.
+1. **useEffect depends on `[user]` (object reference)** — line 771. Supabase token refresh creates a new `user` object in AuthContext (even for `TOKEN_REFRESHED` events), which re-triggers the data fetch effect. This re-fetch overwrites the form state with old/null DB values during or right after save.
 
-2. **Import `npm:` em `confirm-booking/index.ts`** — mesmo problema que foi corrigido em `check-subscription` mas existe em outra function.
+2. **`photographers.update()` error is not checked** — line 808. The update for `full_name` and `bio` doesn't capture the error result. If it fails (e.g., RLS), the success toast from `photographer_site` upsert still shows, but the profile data was never saved.
 
-### Plano
+### Fix
 
-**1. Criar migração para as 3 tabelas do carrossel** (se não existirem no banco):
-- `carousel_historico` — histórico de carrosseis gerados
-- `carousel_meta_config` — config Meta/Instagram por fotógrafo  
-- `carousel_image_library` — biblioteca de imagens para backgrounds
-- Com RLS policies filtrando por `photographer_id`
-- Isso vai regenerar `types.ts` automaticamente
+**File: `src/pages/dashboard/WebsiteSettings.tsx`**
 
-**2. Corrigir import em `confirm-booking/index.ts`** — trocar `npm:@supabase/supabase-js@2.57.2` por `https://esm.sh/@supabase/supabase-js@2.49.1`
+1. **Change useEffect dependency** from `[user]` to `[user?.id]` (stable string). This prevents re-fetching on token refresh while still re-fetching on actual login/logout.
 
-**3. Após build funcionar** — verificar responsividade dos botões da CreativeIndexPage em mobile (320px) e tablet (768px), propondo ajustes se necessário.
+2. **Capture and handle the photographers update error** in `handleSave`. If either the `photographers` update or the `photographer_site` upsert fails, show the error. Only show success if both succeed.
 
-### Arquivos
-- Nova migração SQL (3 tabelas + RLS)
-- `supabase/functions/confirm-booking/index.ts` (fix import)
+### Changes
+- `src/pages/dashboard/WebsiteSettings.tsx` — two edits (dependency array + error handling in handleSave)
 
