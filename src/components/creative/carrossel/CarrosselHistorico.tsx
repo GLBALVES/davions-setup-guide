@@ -2,19 +2,29 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CarrosselData } from "@/pages/dashboard/creative/CarrosselPage";
+import type { BackgroundConfig } from "@/components/creative/carrossel/CarrosselBackgroundEditor";
 
 interface HistoricoItem {
   id: string;
   tema: string;
   created_at: string;
   slides_json: CarrosselData;
+  layout_model: string | null;
+  background_config: BackgroundConfig | null;
 }
 
+const LAYOUT_LABELS: Record<string, string> = {
+  model1: "Modelo 1",
+  model2: "Modelo 2",
+  model3: "Modelo 3",
+};
+
 interface Props {
-  onLoad: (data: CarrosselData) => void;
+  onLoad: (data: CarrosselData, layoutModel?: string, background?: BackgroundConfig) => void;
   refreshKey?: number;
 }
 
@@ -28,7 +38,7 @@ const CarrosselHistorico = ({ onLoad, refreshKey }: Props) => {
     const fetchHistory = async () => {
       const { data } = await supabase
         .from("carousel_historico")
-        .select("id, tema, created_at, slides_json")
+        .select("id, tema, created_at, slides_json, layout_model, background_config")
         .eq("photographer_id", photographerId)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -55,7 +65,14 @@ const CarrosselHistorico = ({ onLoad, refreshKey }: Props) => {
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm text-foreground truncate">{item.tema}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm text-foreground truncate">{item.tema}</p>
+                  {item.layout_model && LAYOUT_LABELS[item.layout_model] && (
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {LAYOUT_LABELS[item.layout_model]}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {new Date(item.created_at).toLocaleDateString("pt-BR", {
                     day: "2-digit",
@@ -66,7 +83,15 @@ const CarrosselHistorico = ({ onLoad, refreshKey }: Props) => {
                   })}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => onLoad(item.slides_json)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onLoad(
+                  item.slides_json,
+                  item.layout_model ?? undefined,
+                  item.background_config ?? undefined,
+                )}
+              >
                 Carregar
               </Button>
             </div>
