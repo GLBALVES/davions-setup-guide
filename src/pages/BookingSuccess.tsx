@@ -90,12 +90,11 @@ const BookingSuccess = () => {
         return null;
       }
 
-      // Re-fetch the now-confirmed booking
-      const { data: refreshed } = await supabase
-        .from("bookings")
-        .select("client_name, client_email, booked_date, status, payment_status, availability_id")
-        .eq("id", bookingId!)
-        .single();
+      // Re-fetch the now-confirmed booking via edge function
+      const { data: refreshResult } = await supabase.functions.invoke("get-booking-public", {
+        body: { booking_id: bookingId },
+      });
+      const refreshed = refreshResult?.booking ?? null;
 
       return refreshed as BookingDetails | null;
     } catch (e) {
@@ -117,18 +116,18 @@ const BookingSuccess = () => {
     const load = async () => {
       const checkoutSessionId = searchParams.get("checkout_session_id");
 
-      const [{ data: bookingData }, { data: sessionData }] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("client_name, client_email, booked_date, status, payment_status, availability_id, stripe_checkout_session_id")
-          .eq("id", bookingId)
-          .single(),
+      const [bookingResult, { data: sessionData }] = await Promise.all([
+        supabase.functions.invoke("get-booking-public", {
+          body: { booking_id: bookingId },
+        }),
         (supabase as any)
           .from("sessions")
           .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id")
           .eq("id", sessionId)
           .single(),
       ]);
+
+      const bookingData = bookingResult.data?.booking ?? null;
 
       // Determine the checkout session ID to use for confirmation
       const rawBooking = bookingData as (BookingDetails & { stripe_checkout_session_id?: string }) | null;

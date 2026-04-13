@@ -427,44 +427,23 @@ export function CreateBookingDialog({
     const finalClientName = clientName.trim() || clientEmail.split("@")[0];
 
     try {
-      const { data: availData, error: availError } = await (supabase as any)
-        .from("session_availability")
-        .insert({
-          photographer_id: user.id,
+      const { data: result, error: fnError } = await supabase.functions.invoke("create-booking", {
+        body: {
           session_id: selectedSessionId,
           date: dateStr,
           start_time: startTime,
           end_time: endTime || addMinutesToTime(startTime, 60),
-          is_booked: true,
-        })
-        .select("id")
-        .single();
-      if (availError) throw availError;
-
-      const { data: bookingData, error: bookingError } = await (supabase as any).from("bookings").insert({
-        photographer_id: user.id,
-        session_id: selectedSessionId,
-        availability_id: availData.id,
-        booked_date: dateStr,
-        client_name: finalClientName,
-        client_email: clientEmail.trim(),
-        status: "confirmed",
-        payment_status: "pending",
-      }).select("id").single();
-      if (bookingError) throw bookingError;
-
-      const createdBookingId = bookingData?.id;
-
-      const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
-
-      await (supabase as any).from("notifications").insert({
-        photographer_id: user.id,
-        type: "success",
-        event: "new_booking",
-        title: `New Booking — ${finalClientName}`,
-        body: `${sessionTitle} confirmed for ${dateStr}.`,
-        metadata: { session_id: selectedSessionId },
+          client_name: finalClientName,
+          client_email: clientEmail.trim(),
+          status: "confirmed",
+          payment_status: "pending",
+        },
       });
+
+      if (fnError || result?.error) throw new Error(result?.error || fnError?.message || "Failed to create booking");
+
+      const createdBookingId = result?.id;
+      const sessionTitle = sessions.find((s) => s.id === selectedSessionId)?.title ?? "Session";
 
       try {
         await supabase.functions.invoke("send-push", {

@@ -51,3 +51,8 @@ verify_jwt = false
 [functions.admin-sync-email]
 verify_jwt = false
 
+[functions.create-booking]
+verify_jwt = false
+
+[functions.get-booking-public]
+verify_jwt = false
