@@ -410,6 +410,7 @@ export type Database = {
           booked_date: string | null
           client_email: string
           client_name: string
+          consent_given_at: string | null
           created_at: string
           extras_total: number
           id: string
@@ -425,6 +426,7 @@ export type Database = {
           booked_date?: string | null
           client_email: string
           client_name: string
+          consent_given_at?: string | null
           created_at?: string
           extras_total?: number
           id?: string
@@ -440,6 +442,7 @@ export type Database = {
           booked_date?: string | null
           client_email?: string
           client_name?: string
+          consent_given_at?: string | null
           created_at?: string
           extras_total?: number
           id?: string
