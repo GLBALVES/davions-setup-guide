@@ -1514,7 +1514,7 @@ const GalleryDetail = () => {
                 const favoritedPhotos = photos
                   .filter((p) => (p.favorite_count ?? 0) > 0)
                   .sort((a, b) => a.order_index - b.order_index);
-                const listText = favoritedPhotos.map((p) => p.filename).join("\n");
+                const listText = favoritedPhotos.map((p) => p.filename.replace(/\.[^.]+$/, "")).join("\n");
                 const copyFavorites = async () => {
                   await navigator.clipboard.writeText(listText);
                   setCopiedFavorites(true);
