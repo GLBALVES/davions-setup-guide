@@ -190,6 +190,7 @@ const Bookings = () => {
     briefingId: "",
   });
   const [createBookingOpen, setCreateBookingOpen] = useState(false);
+  const [detailBooking, setDetailBooking] = useState<ScheduleBooking | null>(null);
 
   const fetchBookings = async () => {
     setLoading(true);
