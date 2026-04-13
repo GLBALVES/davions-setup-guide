@@ -1,25 +1,16 @@
 
 
-## Mostrar apenas o template atual com botão "Alterar" ao hover
+## Alinhar cards do Kanban entre colunas
 
-### Ideia
-Em vez de exibir o grid com os 9 templates sempre visível, mostrar apenas o card do template selecionado. Ao fazer hover no card, aparece um botão "Alterar". Ao clicar, abre o grid completo (ou um modal) para escolher outro template.
+### Problema
+As colunas "SHOT" e "POST-PRODUCTION" têm botões extras (Timer/deadline popover) no header que não existem nas outras colunas. Isso faz o header dessas colunas ter altura diferente, empurrando os cards para baixo e desalinhando com as demais colunas.
 
-### Implementação
+### Solução
+Definir uma altura fixa (`h-6`) no container do header de cada coluna (`KanbanColumn`), garantindo que todas as colunas tenham a mesma altura de header independentemente do conteúdo extra.
 
-**Arquivo: `src/pages/dashboard/WebsiteSettings.tsx`** (seção Template, linhas ~909-928)
+### Arquivo
 
-1. Adicionar estado `showTemplateGrid` (default `false`)
-2. Quando `showTemplateGrid === false`:
-   - Renderizar apenas o `TemplatePreviewCard` do template atual (`siteTemplate`)
-   - No hover do card, exibir overlay com botão "Alterar template"
-   - O clique no botão seta `showTemplateGrid = true`
-3. Quando `showTemplateGrid === true`:
-   - Mostrar o grid 3-col com todos os 9 templates (como está hoje)
-   - Ao selecionar um template, setar `siteTemplate` e voltar `showTemplateGrid = false`
-
-### Detalhe visual
-- O card atual ocupa largura maior (ex: `max-w-xs`) quando sozinho, com aspecto mais destacado
-- O overlay de hover usa `bg-background/60 backdrop-blur` com botão centralizado "Alterar" (estilo outline)
-- Transição suave com AnimatePresence (já importado no arquivo)
+| Arquivo | Mudança |
+|---------|---------|
+| `src/pages/dashboard/Projects.tsx` | Linha 686 — adicionar `h-6` ao div do header da coluna para forçar altura uniforme |
 
