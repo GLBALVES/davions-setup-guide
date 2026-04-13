@@ -111,7 +111,8 @@ export function ImageModal({
         alt_text: altText,
         prompt_used: imageData instanceof File ? null : imagePrompt,
         selected: true,
-      });
+        photographer_id: config.photographerId ?? "",
+      } as any);
 
       const updateFields =
         position === "cover"
