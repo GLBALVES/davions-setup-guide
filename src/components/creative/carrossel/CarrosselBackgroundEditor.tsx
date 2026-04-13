@@ -80,9 +80,10 @@ interface Props {
 
 interface LibraryImage {
   id: string;
-  url: string;
-  source: string;
-  prompt: string | null;
+  file_url: string;
+  name: string;
+  is_favorite: boolean;
+  photographer_id: string;
   created_at: string;
 }
 
