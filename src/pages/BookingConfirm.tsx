@@ -166,11 +166,10 @@ const BookingConfirm = () => {
     if (!bookingId) { setLoading(false); return; }
 
     const load = async () => {
-      const { data: bData } = await supabase
-        .from("bookings")
-        .select("id, client_name, client_email, booked_date, status, payment_status, availability_id, session_id, photographer_id")
-        .eq("id", bookingId)
-        .single();
+      const { data: fnResult, error: fnError } = await supabase.functions.invoke("get-booking-public", {
+        body: { booking_id: bookingId },
+      });
+      const bData = fnError ? null : fnResult?.booking;
 
       if (!bData) { setLoading(false); return; }
       const b = bData as BookingData;

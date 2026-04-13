@@ -90,12 +90,11 @@ const BookingSuccess = () => {
         return null;
       }
 
-      // Re-fetch the now-confirmed booking
-      const { data: refreshed } = await supabase
-        .from("bookings")
-        .select("client_name, client_email, booked_date, status, payment_status, availability_id")
-        .eq("id", bookingId!)
-        .single();
+      // Re-fetch the now-confirmed booking via edge function
+      const { data: refreshResult } = await supabase.functions.invoke("get-booking-public", {
+        body: { booking_id: bookingId },
+      });
+      const refreshed = refreshResult?.booking ?? null;
 
       return refreshed as BookingDetails | null;
     } catch (e) {
