@@ -889,8 +889,10 @@ export type Database = {
       }
       carousel_historico: {
         Row: {
+          background_config: Json | null
           created_at: string
           id: string
+          layout_model: string | null
           nicho: string | null
           photographer_id: string
           slides_json: Json
@@ -898,8 +900,10 @@ export type Database = {
           tom: string | null
         }
         Insert: {
+          background_config?: Json | null
           created_at?: string
           id?: string
+          layout_model?: string | null
           nicho?: string | null
           photographer_id: string
           slides_json?: Json
@@ -907,8 +911,10 @@ export type Database = {
           tom?: string | null
         }
         Update: {
+          background_config?: Json | null
           created_at?: string
           id?: string
+          layout_model?: string | null
           nicho?: string | null
           photographer_id?: string
           slides_json?: Json

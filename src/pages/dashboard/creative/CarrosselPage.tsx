@@ -16,6 +16,14 @@ import CarrosselPreviewModel3 from "@/components/creative/carrossel/CarrosselPre
 import CarrosselExportButton from "@/components/creative/carrossel/CarrosselExportButton";
 import CarrosselExportSlide from "@/components/creative/carrossel/CarrosselExportSlide";
 import { Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export interface Slide {
   numero: number;
@@ -39,6 +47,14 @@ export interface FormData {
   cta: string;
 }
 
+export type LayoutModel = "model1" | "model2" | "model3";
+
+const LAYOUT_LABELS: Record<LayoutModel, string> = {
+  model1: "Modelo 1",
+  model2: "Modelo 2",
+  model3: "Modelo 3",
+};
+
 const CarrosselPage = () => {
   const { user } = useAuth();
   const photographerId = user?.id ?? null;
@@ -51,9 +67,13 @@ const CarrosselPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formDataRef, setFormDataRef] = useState<FormData | null>(null);
   const [background, setBackground] = useState<BackgroundConfig>({ type: "solid", color: "#1a1a2e", applyTo: "all", textPalette: "classic-dark" });
-  const [layoutModel, setLayoutModel] = useState<"model1" | "model2" | "model3">("model1");
+  const [layoutModel, setLayoutModel] = useState<LayoutModel>("model1");
   const slideRef = useRef<HTMLDivElement>(null);
   const exportSlideRef = useRef<HTMLDivElement>(null);
+
+  // Approval dialog state
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [selectedSaveModel, setSelectedSaveModel] = useState<LayoutModel>("model1");
 
   const handleGenerate = async (formData: FormData) => {
     setIsLoading(true);
@@ -89,8 +109,15 @@ const CarrosselPage = () => {
     }
   };
 
+  const openApproveDialog = () => {
+    setSelectedSaveModel(layoutModel);
+    setApproveDialogOpen(true);
+  };
+
   const handleApprove = async () => {
     if (!carrossel || !formDataRef || !photographerId) return;
+
+    setApproveDialogOpen(false);
 
     const { error } = await supabase.from("carousel_historico").insert({
       tema: formDataRef.tema,
@@ -98,6 +125,8 @@ const CarrosselPage = () => {
       nicho: formDataRef.nicho || null,
       slides_json: carrossel as unknown as any,
       photographer_id: photographerId,
+      background_config: background as unknown as any,
+      layout_model: selectedSaveModel,
     });
 
     if (error) {
@@ -116,10 +145,16 @@ const CarrosselPage = () => {
     setFormDataRef(null);
   };
 
-  const handleLoadFromHistory = (data: CarrosselData) => {
+  const handleLoadFromHistory = (data: CarrosselData, historyLayoutModel?: string, historyBackground?: BackgroundConfig) => {
     setCarrossel(data);
     setActiveSlide(0);
     setIsEditing(false);
+    if (historyLayoutModel && ["model1", "model2", "model3"].includes(historyLayoutModel)) {
+      setLayoutModel(historyLayoutModel as LayoutModel);
+    }
+    if (historyBackground && historyBackground.type) {
+      setBackground(historyBackground);
+    }
   };
 
   return (
@@ -149,7 +184,7 @@ const CarrosselPage = () => {
                 setCarrossel(updated);
                 if (activeSlide >= updated.slides.length) setActiveSlide(0);
               }}
-              onApprove={handleApprove}
+              onApprove={openApproveDialog}
               onDiscard={handleDiscard}
             />
             {formDataRef && (
@@ -219,6 +254,32 @@ const CarrosselPage = () => {
       )}
 
       <CarrosselHistorico refreshKey={refreshHistory} onLoad={handleLoadFromHistory} />
+
+      {/* Approval dialog - choose layout model */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Salvar Carrossel</DialogTitle>
+            <DialogDescription>Escolha o modelo de layout para salvar com este carrossel.</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 py-4">
+            {(["model1", "model2", "model3"] as LayoutModel[]).map((m) => (
+              <Button
+                key={m}
+                variant={selectedSaveModel === m ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setSelectedSaveModel(m)}
+              >
+                {LAYOUT_LABELS[m]}
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleApprove}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
