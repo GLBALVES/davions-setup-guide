@@ -28,6 +28,15 @@ import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
 import BlogManager from "./pages/dashboard/BlogManager";
+import { BlogDashboardPage } from "./pages/dashboard/blog/DashboardPage";
+import { ManualPage } from "./pages/dashboard/blog/ManualPage";
+import { TemasPage } from "./pages/dashboard/blog/TemasPage";
+import { GeradorPage } from "./pages/dashboard/blog/GeradorPage";
+import { PublicadosPage } from "./pages/dashboard/blog/PublicadosPage";
+import { SeoPage } from "./pages/dashboard/blog/SeoPage";
+import { BancoTemasPage } from "./pages/dashboard/blog/BancoTemasPage";
+import { ConfigPage } from "./pages/dashboard/blog/ConfigPage";
+import { PreviewPage } from "./pages/dashboard/blog/PreviewPage";
 import SiteSeo from "./pages/dashboard/SiteSeo";
 import EmailMarketing from "./pages/dashboard/EmailMarketing";
 import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
@@ -136,7 +145,17 @@ const App = () => {
                 <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/dashboard/galleries" element={<ProtectedRoute><PermissionGate permKey="galleries"><Galleries /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/galleries/:id" element={<ProtectedRoute><PermissionGate permKey="galleries"><GalleryDetail /></PermissionGate></ProtectedRoute>} />
-                <Route path="/dashboard/blog" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogManager /></PermissionGate></ProtectedRoute>} />
+                <Route path="/dashboard/blog" element={<ProtectedRoute><PermissionGate permKey="blog"><BlogManager /></PermissionGate></ProtectedRoute>}>
+                  <Route index element={<BlogDashboardPage />} />
+                  <Route path="manual" element={<ManualPage />} />
+                  <Route path="temas" element={<TemasPage />} />
+                  <Route path="gerador" element={<GeradorPage />} />
+                  <Route path="publicados" element={<PublicadosPage />} />
+                  <Route path="seo" element={<SeoPage />} />
+                  <Route path="banco-temas" element={<BancoTemasPage />} />
+                  <Route path="config" element={<ConfigPage />} />
+                  <Route path="preview" element={<PreviewPage />} />
+                </Route>
                 
                 <Route path="/dashboard/seo" element={<ProtectedRoute><PermissionGate permKey="seo"><SiteSeo /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/emails" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailMarketing /></PermissionGate></ProtectedRoute>} />
