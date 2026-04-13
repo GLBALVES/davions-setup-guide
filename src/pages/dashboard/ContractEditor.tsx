@@ -19,6 +19,7 @@ import {
   List, ListOrdered, Quote, Undo, Redo,
   AlignLeft, AlignCenter, AlignRight, Minus,
   LinkIcon, ArrowLeft, ChevronDown, Check, Loader2, FileText,
+  Plus, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +27,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
 // ── Available smart variables ─────────────────────────────────────────────────
@@ -44,15 +47,32 @@ export const CONTRACT_VARIABLES = [
 
 export type VariableKey = (typeof CONTRACT_VARIABLES)[number]["key"];
 
+interface CustomField {
+  id: string;
+  field_key: string;
+  field_label: string;
+  default_value: string;
+}
+
 // ── Resolve [[key]] tokens in HTML ──────────────────────────────────────────
 export function resolveContractVariables(
   html: string,
-  data: Partial<Record<VariableKey, string>>
+  data: Partial<Record<string, string>>,
+  customFields?: CustomField[]
 ): string {
-  return CONTRACT_VARIABLES.reduce((acc, v) => {
+  let result = CONTRACT_VARIABLES.reduce((acc, v) => {
     const val = data[v.key] ?? `[${v.label}]`;
     return acc.replace(new RegExp(`\\[\\[${v.key}\\]\\]`, "g"), val);
   }, html);
+
+  if (customFields) {
+    for (const cf of customFields) {
+      const val = data[cf.field_key] ?? (cf.default_value || `[${cf.field_label}]`);
+      result = result.replace(new RegExp(`\\[\\[${cf.field_key}\\]\\]`, "g"), val);
+    }
+  }
+
+  return result;
 }
 
 // ── Custom Tiptap Node: Variable chip ────────────────────────────────────────
@@ -81,11 +101,20 @@ const VariableNode = Node.create({
       `{{${HTMLAttributes.label}}}`,
     ];
   },
-  // Serialize to [[key]] tokens for storage
   renderText({ node }) {
     return `[[${node.attrs.key}]]`;
   },
 });
+
+// ── Slug generator ──────────────────────────────────────────────────────────
+function toFieldKey(label: string): string {
+  return "custom_" + label
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 40);
+}
 
 // ── Main component ─────────────────────────────────────────────────────────────
 const ContractEditor = () => {
@@ -102,6 +131,12 @@ const ContractEditor = () => {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
   const [loading, setLoading] = useState(!isNew);
+
+  // Custom fields
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldDefault, setNewFieldDefault] = useState("");
+  const [addingField, setAddingField] = useState(false);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -142,8 +177,7 @@ const ContractEditor = () => {
         setContractId(data.id);
         setContractName(data.name || "Untitled Contract");
         if (editor && data.body) {
-          // body is HTML with [[key]] tokens — convert them back to VariableNode for editing
-          const restored = restoreVariableNodes(data.body);
+          const restored = restoreVariableNodes(data.body, customFields);
           editor.commands.setContent(restored);
         }
       }
@@ -151,12 +185,42 @@ const ContractEditor = () => {
     })();
   }, [id, isNew, editor]);
 
+  // ── Load custom fields ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", user.id)
+        .order("created_at", { ascending: true });
+      if (data) setCustomFields(data);
+    })();
+  }, [user]);
+
+  // Re-restore editor content when custom fields load (to recognize custom variable tokens)
+  useEffect(() => {
+    if (!editor || customFields.length === 0 || isNew) return;
+    const html = editor.getHTML();
+    if (html.includes("[[custom_")) {
+      const restored = restoreVariableNodes(serializeVariables(html, customFields), customFields);
+      editor.commands.setContent(restored);
+    }
+  }, [customFields, editor]);
+
   // Convert stored [[key]] tokens back into VariableNode HTML for the editor
-  function restoreVariableNodes(html: string): string {
-    return CONTRACT_VARIABLES.reduce((acc, v) => {
+  function restoreVariableNodes(html: string, cfs: CustomField[]): string {
+    let result = CONTRACT_VARIABLES.reduce((acc, v) => {
       const chip = `<span data-variable="${v.key}" data-label="${v.label}">${v.label}</span>`;
       return acc.replace(new RegExp(`\\[\\[${v.key}\\]\\]`, "g"), chip);
     }, html);
+
+    for (const cf of cfs) {
+      const chip = `<span data-variable="${cf.field_key}" data-label="${cf.field_label}">${cf.field_label}</span>`;
+      result = result.replace(new RegExp(`\\[\\[${cf.field_key}\\]\\]`, "g"), chip);
+    }
+
+    return result;
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -166,11 +230,8 @@ const ContractEditor = () => {
       setSaving(true);
       setSaveStatus("saving");
 
-      // Serialize: variables must become [[key]] tokens
-      // We rely on renderText from VariableNode for getText, but for HTML storage
-      // we capture innerHTML and replace chip HTML with [[key]] tokens
       const rawHtml = editor.getHTML();
-      const serialized = serializeVariables(rawHtml);
+      const serialized = serializeVariables(rawHtml, customFields);
 
       let newId = contractId;
       if (!newId) {
@@ -195,19 +256,28 @@ const ContractEditor = () => {
       setSaveStatus("saved");
       if (mode === "manual") toast({ title: ce.contractSaved });
     },
-    [user, editor, contractId, contractName, toast]
+    [user, editor, contractId, contractName, toast, customFields]
   );
 
   // Convert chip HTML to [[key]] tokens for storage
-  function serializeVariables(html: string): string {
-    return CONTRACT_VARIABLES.reduce((acc, v) => {
-      // Match <span data-variable="key" ...>...</span>
+  function serializeVariables(html: string, cfs: CustomField[]): string {
+    let result = CONTRACT_VARIABLES.reduce((acc, v) => {
       const re = new RegExp(
         `<span[^>]*data-variable="${v.key}"[^>]*>[^<]*<\\/span>`,
         "g"
       );
       return acc.replace(re, `[[${v.key}]]`);
     }, html);
+
+    for (const cf of cfs) {
+      const re = new RegExp(
+        `<span[^>]*data-variable="${cf.field_key}"[^>]*>[^<]*<\\/span>`,
+        "g"
+      );
+      result = result.replace(re, `[[${cf.field_key}]]`);
+    }
+
+    return result;
   }
 
   // ── Insert variable ───────────────────────────────────────────────────────
@@ -221,6 +291,41 @@ const ContractEditor = () => {
     },
     [editor]
   );
+
+  // ── Add custom field ──────────────────────────────────────────────────────
+  const handleAddCustomField = async () => {
+    if (!user || !newFieldLabel.trim()) return;
+    setAddingField(true);
+    const fieldKey = toFieldKey(newFieldLabel.trim());
+    const { data, error } = await (supabase as any)
+      .from("contract_custom_fields")
+      .insert({
+        photographer_id: user.id,
+        field_key: fieldKey,
+        field_label: newFieldLabel.trim(),
+        default_value: newFieldDefault.trim(),
+      })
+      .select("id, field_key, field_label, default_value")
+      .single();
+
+    if (data && !error) {
+      setCustomFields((prev) => [...prev, data]);
+      setNewFieldLabel("");
+      setNewFieldDefault("");
+      toast({ title: ce.customFieldAdded });
+    }
+    setAddingField(false);
+  };
+
+  // ── Delete custom field ───────────────────────────────────────────────────
+  const handleDeleteCustomField = async (fieldId: string) => {
+    await (supabase as any)
+      .from("contract_custom_fields")
+      .delete()
+      .eq("id", fieldId);
+    setCustomFields((prev) => prev.filter((f) => f.id !== fieldId));
+    toast({ title: ce.customFieldDeleted });
+  };
 
   // ── Add link ──────────────────────────────────────────────────────────────
   const addLink = useCallback(() => {
@@ -250,6 +355,12 @@ const ContractEditor = () => {
       {children}
     </button>
   );
+
+  // All insertable fields (built-in + custom)
+  const allFields = [
+    ...CONTRACT_VARIABLES.map((v) => ({ key: v.key, label: v.label, isCustom: false })),
+    ...customFields.map((cf) => ({ key: cf.field_key, label: cf.field_label, isCustom: true })),
+  ];
 
   if (loading) {
     return (
@@ -326,7 +437,10 @@ const ContractEditor = () => {
                     <ChevronDown className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-52">
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                    {ce.smartFieldsLabel}
+                  </DropdownMenuLabel>
                   {CONTRACT_VARIABLES.map((v) => (
                     <DropdownMenuItem key={v.key} onClick={() => insertVariable(v.key, v.label)} className="text-xs gap-2 cursor-pointer">
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
@@ -334,6 +448,21 @@ const ContractEditor = () => {
                       </span>
                     </DropdownMenuItem>
                   ))}
+                  {customFields.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                        {ce.customFieldsLabel}
+                      </DropdownMenuLabel>
+                      {customFields.map((cf) => (
+                        <DropdownMenuItem key={cf.id} onClick={() => insertVariable(cf.field_key, cf.field_label)} className="text-xs gap-2 cursor-pointer">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent text-accent-foreground border border-border">
+                            {"{{"}{cf.field_label}{"}}"}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
@@ -352,6 +481,8 @@ const ContractEditor = () => {
               <Input value={contractName} onChange={(e) => { setContractName(e.target.value); setSaveStatus("unsaved"); }} className="text-xs font-light h-8" placeholder={ce.contractNamePlaceholder} />
             </div>
             <Separator />
+
+            {/* Built-in Smart Fields */}
             <div className="flex flex-col gap-2">
               <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.smartFieldsLabel}</p>
               <p className="text-[10px] text-muted-foreground leading-relaxed">{ce.smartFieldsHint}</p>
@@ -365,6 +496,70 @@ const ContractEditor = () => {
                 ))}
               </div>
             </div>
+            <Separator />
+
+            {/* Custom Fields */}
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.customFieldsLabel}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{ce.customFieldsHint}</p>
+
+              {/* Existing custom fields */}
+              {customFields.length > 0 && (
+                <div className="flex flex-col gap-1.5 mt-1">
+                  {customFields.map((cf) => (
+                    <div key={cf.id} className="flex items-center gap-1.5 group">
+                      <button
+                        type="button"
+                        onClick={() => insertVariable(cf.field_key, cf.field_label)}
+                        className="flex-1 flex items-center gap-2 text-left hover:bg-muted/60 rounded px-1.5 py-1 transition-colors"
+                      >
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap">
+                          {"{{"}{cf.field_label}{"}}"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomField(cf.id)}
+                        title={ce.deleteField}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-0.5"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new custom field */}
+              <div className="flex flex-col gap-1.5 mt-2">
+                <Input
+                  value={newFieldLabel}
+                  onChange={(e) => setNewFieldLabel(e.target.value)}
+                  placeholder={ce.fieldLabelPlaceholder}
+                  className="text-xs h-7"
+                  maxLength={60}
+                />
+                <Input
+                  value={newFieldDefault}
+                  onChange={(e) => setNewFieldDefault(e.target.value)}
+                  placeholder={ce.defaultValuePlaceholder}
+                  className="text-xs h-7"
+                  maxLength={200}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-[10px] tracking-wider uppercase font-light gap-1.5 w-full"
+                  disabled={!newFieldLabel.trim() || addingField}
+                  onClick={handleAddCustomField}
+                >
+                  {addingField ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                  {ce.addCustomField}
+                </Button>
+              </div>
+            </div>
+
             <Separator />
             <div className="flex flex-col gap-2">
               <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.tipsLabel}</p>

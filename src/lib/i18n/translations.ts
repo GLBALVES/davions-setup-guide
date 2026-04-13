@@ -1610,6 +1610,14 @@ export const translations = {
       tip2: "If a field has no value it shows as [Field Name].",
       tip3: "Use bold for section headings inside the document.",
       contractSaved: "Contract saved", untitledContract: "Untitled Contract",
+      customFieldsLabel: "Custom Fields",
+      customFieldsHint: "Create your own fields for specific contract needs.",
+      addCustomField: "Add field",
+      fieldLabelPlaceholder: "Field name (e.g. Venue Address)",
+      defaultValuePlaceholder: "Default value (optional)",
+      deleteField: "Delete",
+      customFieldAdded: "Custom field added",
+      customFieldDeleted: "Custom field deleted",
     },
     // ── Auth pages ──
     auth: {
@@ -3454,6 +3462,14 @@ export const translations = {
       tip2: "Se um campo não tiver valor, aparece como [Nome do Campo].",
       tip3: "Use negrito para títulos de seção dentro do documento.",
       contractSaved: "Contrato salvo", untitledContract: "Contrato sem título",
+      customFieldsLabel: "Campos Personalizados",
+      customFieldsHint: "Crie seus próprios campos para necessidades específicas de cada contrato.",
+      addCustomField: "Adicionar campo",
+      fieldLabelPlaceholder: "Nome do campo (ex: Endereço do local)",
+      defaultValuePlaceholder: "Valor padrão (opcional)",
+      deleteField: "Excluir",
+      customFieldAdded: "Campo personalizado adicionado",
+      customFieldDeleted: "Campo personalizado excluído",
     },
     // ── Auth pages ──
     auth: {
@@ -5367,6 +5383,14 @@ export const translations = {
       tip3: "Usa negrita para los títulos de sección dentro del documento.",
       contractSaved: "Contrato guardado",
       untitledContract: "Contrato sin título",
+      customFieldsLabel: "Campos Personalizados",
+      customFieldsHint: "Crea tus propios campos para necesidades específicas de cada contrato.",
+      addCustomField: "Agregar campo",
+      fieldLabelPlaceholder: "Nombre del campo (ej: Dirección del lugar)",
+      defaultValuePlaceholder: "Valor predeterminado (opcional)",
+      deleteField: "Eliminar",
+      customFieldAdded: "Campo personalizado agregado",
+      customFieldDeleted: "Campo personalizado eliminado",
     },
     // ── Auth pages ──
     auth: {

@@ -1111,6 +1111,33 @@ export type Database = {
           },
         ]
       }
+      contract_custom_fields: {
+        Row: {
+          created_at: string
+          default_value: string
+          field_key: string
+          field_label: string
+          id: string
+          photographer_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: string
+          field_key?: string
+          field_label?: string
+          id?: string
+          photographer_id: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: string
+          field_key?: string
+          field_label?: string
+          id?: string
+          photographer_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           body: string
