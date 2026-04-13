@@ -74,3 +74,9 @@ verify_jwt = false
 
 [functions.check-subscription]
 verify_jwt = false
+
+[functions.generate-carousel]
+verify_jwt = false
+
+[functions.generate-caption]
+verify_jwt = false
