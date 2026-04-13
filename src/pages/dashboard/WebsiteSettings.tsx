@@ -521,6 +521,7 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
+  const [showTemplateGrid, setShowTemplateGrid] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -912,19 +913,60 @@ const WebsiteSettings = () => {
                       <Palette className="h-3.5 w-3.5 text-muted-foreground" />
                       <SectionHeading title="Template" description="Change your site layout template." />
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {TEMPLATES.map((tmpl) => (
-                        <TemplatePreviewCard
-                          key={tmpl.value}
-                          value={tmpl.value}
-                          label={tmpl.label}
-                          description={tmpl.description}
-                          selected={siteTemplate === tmpl.value}
-                          onClick={() => setSiteTemplate(tmpl.value)}
-                          onPreview={() => setPreviewModalTemplate(tmpl.value)}
-                        />
-                      ))}
-                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {!showTemplateGrid ? (
+                        <motion.div
+                          key="single"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="relative max-w-xs group"
+                        >
+                          {(() => {
+                            const current = TEMPLATES.find(t => t.value === siteTemplate) ?? TEMPLATES[0];
+                            return (
+                              <>
+                                <TemplatePreviewCard
+                                  value={current.value}
+                                  label={current.label}
+                                  description={current.description}
+                                  selected
+                                  onClick={() => setShowTemplateGrid(true)}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                                  onClick={() => setShowTemplateGrid(true)}
+                                >
+                                  <Button variant="outline" size="sm" className="pointer-events-none">
+                                    Change template
+                                  </Button>
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="grid"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          className="grid grid-cols-3 gap-2"
+                        >
+                          {TEMPLATES.map((tmpl) => (
+                            <TemplatePreviewCard
+                              key={tmpl.value}
+                              value={tmpl.value}
+                              label={tmpl.label}
+                              description={tmpl.description}
+                              selected={siteTemplate === tmpl.value}
+                              onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
+                              onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                            />
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </section>
 
                    {/* ── 1. Branding ── */}
