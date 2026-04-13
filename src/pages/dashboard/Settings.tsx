@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Check, AlertCircle, Loader2, CreditCard, ExternalLink, Unlink, KeyRound, Trash2, Eye, EyeOff, Camera, UserCircle2, Bell, BellOff, BellRing, Send,
+  Check, AlertCircle, Loader2, CreditCard, ExternalLink, Unlink, KeyRound, Trash2, Eye, EyeOff, Camera, UserCircle2, Bell, BellOff, BellRing, Send, Download,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -499,24 +499,42 @@ const Settings = () => {
     setSavingPassword(false);
   };
 
-  // ── Security: Delete Account ──
+  // ── Security: Delete Account (via Edge Function) ──
   const handleDeleteAccount = async () => {
     if (!user) return;
     setDeletingAccount(true);
     try {
-      // Delete all user data first, then sign out (cascade handles DB rows)
-      const { error } = await supabase.functions.invoke("create-studio-user", {
-        method: "DELETE" as any,
-      }).catch(() => ({ error: null }));
-
-      // Sign the user out — account deletion requires service role key on backend
-      // For now, we delete profile data and sign out
-      await supabase.from("photographers").delete().eq("id", user.id).then(() => {});
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
       await supabase.auth.signOut();
       navigate("/login");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
       setDeletingAccount(false);
+    }
+  };
+
+  // ── Data Export (LGPD portability) ──
+  const [exportingData, setExportingData] = useState(false);
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-user-data");
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `my-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: t.lgpd.dataExported });
+    } catch (err: any) {
+      toast({ title: t.lgpd.dataExportFailed, description: err.message, variant: "destructive" });
+    } finally {
+      setExportingData(false);
     }
   };
 
@@ -1062,6 +1080,34 @@ const Settings = () => {
                         >
                           {savingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                           {savingPassword ? t.settings.updating : t.settings.updatePassword}
+                        </Button>
+                      </div>
+                    </section>
+
+                    {/* Divider */}
+                    <div className="border-t border-border" />
+
+                    {/* Export Data (LGPD) */}
+                    <section className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-1">
+                        <p className="text-xs tracking-widest uppercase font-light text-foreground flex items-center gap-2">
+                          <Download className="h-3.5 w-3.5" />
+                          {t.lgpd.exportMyData}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-light leading-relaxed">
+                          {t.lgpd.exportMyDataDesc}
+                        </p>
+                      </div>
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExportData}
+                          disabled={exportingData}
+                          className="gap-2 text-xs tracking-wider uppercase font-light"
+                        >
+                          {exportingData ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                          {exportingData ? t.lgpd.exportingData : t.lgpd.exportMyData}
                         </Button>
                       </div>
                     </section>
