@@ -1,21 +1,28 @@
 
 
-## Adicionar botão "Esconder" ao carregar carrossel do histórico
+## Renomear templates de site para nomes de flores
 
-### Problema
-Quando o usuário carrega um carrossel do histórico, ele fica visível na tela sem opção de escondê-lo. O usuário quer poder ocultar o preview carregado.
+### Mapeamento
 
-### Solução
+| ID interno (não muda) | Nome atual | Novo nome |
+|------------------------|-----------|-----------|
+| editorial | Editorial | Rosa |
+| grid | Grid | Lírio |
+| magazine | Magazine | Orquídea |
+| clean | Clean | Jasmim |
+| sierra | Sierra | Lavanda |
+| canvas | Canvas | Dália |
+| avery | Avery | Camélia |
+| seville | Seville | Magnólia |
+| milo | Milo | Violeta |
 
-**Editar `src/pages/dashboard/creative/CarrosselPage.tsx`:**
-- Na seção `{carrossel && !isEditing && (...)}` (linha ~239), adicionar um botão "Esconder" (com ícone `EyeOff`) que limpa o estado do carrossel (`setCarrossel(null)`)
-- Posicionar o botão no topo da seção de preview, ao lado dos controles existentes
+### Arquivos a editar
 
-O botão simplesmente executa `setCarrossel(null)` para ocultar o preview, sem deletar nada do histórico.
+| Arquivo | O que muda |
+|---------|-----------|
+| `src/pages/dashboard/WebsiteSettings.tsx` | Labels dos 9 templates |
+| `src/pages/dashboard/WebsiteEditor.tsx` | Labels dos 4 templates listados |
+| `src/pages/dashboard/Personalize.tsx` | Labels dos 4 templates listados |
 
-### Arquivo
-
-| Ação | Arquivo |
-|------|---------|
-| Editar | `src/pages/dashboard/creative/CarrosselPage.tsx` — adicionar botão Esconder na view de carregamento |
+Os `value` internos (`editorial`, `grid`, etc.) permanecem iguais — só o texto exibido ao usuário muda.
 
