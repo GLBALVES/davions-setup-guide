@@ -257,17 +257,17 @@ const CarrosselPage = () => {
 
       {/* Approval dialog - choose layout model */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[425px] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Salvar Carrossel</DialogTitle>
             <DialogDescription>Escolha o modelo de layout para salvar com este carrossel.</DialogDescription>
           </DialogHeader>
-          <div className="flex gap-2 py-4">
+          <div className="flex flex-wrap gap-2 py-4">
             {(["model1", "model2", "model3"] as LayoutModel[]).map((m) => (
               <Button
                 key={m}
                 variant={selectedSaveModel === m ? "default" : "outline"}
-                className="flex-1"
+                className="min-w-[100px]"
                 onClick={() => setSelectedSaveModel(m)}
               >
                 {LAYOUT_LABELS[m]}
