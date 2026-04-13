@@ -67,7 +67,7 @@ export function resolveContractVariables(
 
   if (customFields) {
     for (const cf of customFields) {
-      const val = data[cf.field_key] ?? cf.default_value || `[${cf.field_label}]`;
+      const val = data[cf.field_key] ?? (cf.default_value || `[${cf.field_label}]`);
       result = result.replace(new RegExp(`\\[\\[${cf.field_key}\\]\\]`, "g"), val);
     }
   }
