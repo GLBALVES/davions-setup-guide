@@ -768,7 +768,7 @@ const WebsiteSettings = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [user]);
+  }, [user?.id]);
 
   // Auto-check connectivity once after the saved domain is loaded
   useEffect(() => {
@@ -805,10 +805,16 @@ const WebsiteSettings = () => {
     if (!user) return;
     setSaving(true);
 
-    await supabase.from("photographers").update({
+    const { error: profileError } = await supabase.from("photographers").update({
       full_name: fullName.trim() || null,
       bio: bio.trim() || null,
     } as any).eq("id", user.id);
+
+    if (profileError) {
+      toast({ title: ws.failedToSave, description: profileError.message, variant: "destructive" });
+      setSaving(false);
+      return;
+    }
 
     const { error } = await (supabase as any).from("photographer_site").upsert({
       photographer_id: user.id,
