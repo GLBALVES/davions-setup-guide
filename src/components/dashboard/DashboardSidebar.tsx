@@ -101,7 +101,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 const RESTRICTED_ADMINS: Record<string, string[]> = {
-  "me@palomaschell.com": ["Marketing", "AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
+  "me@palomaschell.com": ["AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
 };
 import { useLanguage } from "@/contexts/LanguageContext";
 
