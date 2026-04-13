@@ -76,6 +76,199 @@ export type Database = {
           },
         ]
       }
+      ai_blog_config: {
+        Row: {
+          company_name: string
+          created_at: string
+          default_article_size: string | null
+          default_cta: string | null
+          default_image_prompt: string | null
+          default_language: string | null
+          default_tone: string | null
+          id: string
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string
+          created_at?: string
+          default_article_size?: string | null
+          default_cta?: string | null
+          default_image_prompt?: string | null
+          default_language?: string | null
+          default_tone?: string | null
+          id?: string
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          default_article_size?: string | null
+          default_cta?: string | null
+          default_image_prompt?: string | null
+          default_language?: string | null
+          default_tone?: string | null
+          id?: string
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_blog_images: {
+        Row: {
+          alt_text: string | null
+          blog_id: string
+          created_at: string
+          id: string
+          image_url: string
+          photographer_id: string
+          position: string
+          prompt_used: string | null
+          selected: boolean | null
+        }
+        Insert: {
+          alt_text?: string | null
+          blog_id: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          photographer_id: string
+          position?: string
+          prompt_used?: string | null
+          selected?: boolean | null
+        }
+        Update: {
+          alt_text?: string | null
+          blog_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          photographer_id?: string
+          position?: string
+          prompt_used?: string | null
+          selected?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_blog_images_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_blog_seo: {
+        Row: {
+          blog_id: string
+          cannibalization_conflict_id: string | null
+          cannibalization_warning: boolean | null
+          checklist: Json | null
+          created_at: string
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          og_description: string | null
+          og_title: string | null
+          photographer_id: string
+          score: number | null
+          secondary_keywords: string[] | null
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          blog_id: string
+          cannibalization_conflict_id?: string | null
+          cannibalization_warning?: boolean | null
+          checklist?: Json | null
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_title?: string | null
+          photographer_id: string
+          score?: number | null
+          secondary_keywords?: string[] | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blog_id?: string
+          cannibalization_conflict_id?: string | null
+          cannibalization_warning?: boolean | null
+          checklist?: Json | null
+          created_at?: string
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_title?: string | null
+          photographer_id?: string
+          score?: number | null
+          secondary_keywords?: string[] | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_blog_seo_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: true
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_themes: {
+        Row: {
+          blog_id: string | null
+          created_at: string
+          generated_at: string
+          id: string
+          intent: string | null
+          keyword: string
+          language: string | null
+          photographer_id: string
+          secondary_keywords: string[] | null
+          status: string
+          title: string
+          tone: string | null
+          used_at: string | null
+        }
+        Insert: {
+          blog_id?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          intent?: string | null
+          keyword?: string
+          language?: string | null
+          photographer_id: string
+          secondary_keywords?: string[] | null
+          status?: string
+          title?: string
+          tone?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          blog_id?: string | null
+          created_at?: string
+          generated_at?: string
+          id?: string
+          intent?: string | null
+          keyword?: string
+          language?: string | null
+          photographer_id?: string
+          secondary_keywords?: string[] | null
+          status?: string
+          title?: string
+          tone?: string | null
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       analytics_pageviews: {
         Row: {
           action: string
@@ -341,6 +534,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      blogs: {
+        Row: {
+          content: string
+          cover_image_alt: string | null
+          cover_image_url: string | null
+          created_at: string
+          cta_text: string | null
+          id: string
+          keyword: string | null
+          middle_image_alt: string | null
+          middle_image_url: string | null
+          mode: string
+          photographer_id: string
+          published_at: string | null
+          reading_time_minutes: number | null
+          secondary_keywords: string[] | null
+          slug: string | null
+          status: string
+          theme_id: string | null
+          title: string
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          content?: string
+          cover_image_alt?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          cta_text?: string | null
+          id?: string
+          keyword?: string | null
+          middle_image_alt?: string | null
+          middle_image_url?: string | null
+          mode?: string
+          photographer_id: string
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          secondary_keywords?: string[] | null
+          slug?: string | null
+          status?: string
+          theme_id?: string | null
+          title?: string
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          content?: string
+          cover_image_alt?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          cta_text?: string | null
+          id?: string
+          keyword?: string | null
+          middle_image_alt?: string | null
+          middle_image_url?: string | null
+          mode?: string
+          photographer_id?: string
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          secondary_keywords?: string[] | null
+          slug?: string | null
+          status?: string
+          theme_id?: string | null
+          title?: string
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: []
       }
       booking_briefing_responses: {
         Row: {
