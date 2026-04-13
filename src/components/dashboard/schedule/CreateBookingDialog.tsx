@@ -495,7 +495,12 @@ export function CreateBookingDialog({
     e.preventDefault();
     if (!user || !date || !selectedSessionId || !clientEmail.trim()) return;
     if (hasConflict) {
-      setShowOverrideDialog(true);
+      const isOneSession = selectedSession?.session_model === "one_session";
+      if (isOneSession) {
+        setShowOverrideDialog(true);
+      } else {
+        toast({ title: conflictingBlock ? (conflictingBlock.reason || "This time is blocked") : (conflictingBooking ? `Conflicts with ${conflictingBooking.client_name}'s booking` : "Time conflict detected"), variant: "destructive" });
+      }
       return;
     }
     performCreation();
