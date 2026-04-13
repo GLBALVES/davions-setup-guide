@@ -521,7 +521,6 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
-  const [templateAlreadySaved, setTemplateAlreadySaved] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
