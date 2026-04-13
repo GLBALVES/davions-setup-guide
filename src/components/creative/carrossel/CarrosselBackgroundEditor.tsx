@@ -224,9 +224,9 @@ const CarrosselBackgroundEditor = ({ background, onChange, activeSlide }: Props)
     }
   };
 
-  const saveToLibrary = async (url: string, source: "upload" | "ai", promptText?: string) => {
+  const saveToLibrary = async (url: string, _source: "upload" | "ai", _promptText?: string) => {
     if (!photographerId) return;
-    await supabase.from("carousel_image_library").insert({ url, source, prompt: promptText || null, photographer_id: photographerId });
+    await supabase.from("carousel_image_library").insert({ file_url: url, name: _source === "ai" ? "AI Generated" : "Upload", photographer_id: photographerId });
     loadLibrary();
   };
 
@@ -467,12 +467,12 @@ const CarrosselBackgroundEditor = ({ background, onChange, activeSlide }: Props)
               <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto">
                 {library.map((img) => (
                   <div key={img.id} className="relative group">
-                    <button onClick={() => applyImage(img.url)} className="relative aspect-square w-full rounded-md overflow-hidden border-2 border-transparent hover:border-primary transition-all">
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
-                      <span className="absolute bottom-0 right-0 text-[8px] bg-black/60 text-white px-1 rounded-tl">{img.source === "ai" ? "IA" : "UP"}</span>
+                    <button onClick={() => applyImage(img.file_url)} className="relative aspect-square w-full rounded-md overflow-hidden border-2 border-transparent hover:border-primary transition-all">
+                      <img src={img.file_url} alt="" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 right-0 text-[8px] bg-black/60 text-white px-1 rounded-tl">{img.name === "AI Generated" ? "IA" : "UP"}</span>
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteFromLibrary(img.id, img.url); }}
+                      onClick={(e) => { e.stopPropagation(); deleteFromLibrary(img.id, img.file_url); }}
                       className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
                       <Trash2 className="h-3 w-3" />
