@@ -15,7 +15,7 @@ import CarrosselPreviewModel2 from "@/components/creative/carrossel/CarrosselPre
 import CarrosselPreviewModel3 from "@/components/creative/carrossel/CarrosselPreviewModel3";
 import CarrosselExportButton from "@/components/creative/carrossel/CarrosselExportButton";
 import CarrosselExportSlide from "@/components/creative/carrossel/CarrosselExportSlide";
-import { Settings } from "lucide-react";
+import { Settings, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -237,18 +237,25 @@ const CarrosselPage = () => {
       )}
 
       {carrossel && !isEditing && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {layoutModel === "model1" ? (
-              <CarrosselPreview slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
-            ) : layoutModel === "model2" ? (
-              <CarrosselPreviewModel2 slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
-            ) : (
-              <CarrosselPreviewModel3 slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
-            )}
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setCarrossel(null)}>
+              <EyeOff className="w-4 h-4 mr-1" /> Esconder
+            </Button>
           </div>
-          <div>
-            <CarrosselSlideList slides={carrossel.slides} activeSlide={activeSlide} onSlideSelect={setActiveSlide} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              {layoutModel === "model1" ? (
+                <CarrosselPreview slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
+              ) : layoutModel === "model2" ? (
+                <CarrosselPreviewModel2 slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
+              ) : (
+                <CarrosselPreviewModel3 slides={carrossel.slides} activeSlide={activeSlide} onSlideChange={setActiveSlide} tituloSerie={carrossel.titulo_serie} background={background} />
+              )}
+            </div>
+            <div>
+              <CarrosselSlideList slides={carrossel.slides} activeSlide={activeSlide} onSlideSelect={setActiveSlide} />
+            </div>
           </div>
         </div>
       )}
