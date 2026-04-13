@@ -721,6 +721,17 @@ const Bookings = () => {
         onOpenChange={setCreateBookingOpen}
         onCreated={fetchBookings}
       />
+
+      <BookingDetailSheet
+        booking={detailBooking}
+        open={!!detailBooking}
+        onClose={() => setDetailBooking(null)}
+        onStatusChange={(id, status) => {
+          updateStatus(id, status);
+          setDetailBooking(null);
+        }}
+        onBookingUpdated={fetchBookings}
+      />
     </SidebarProvider>
   );
 };
