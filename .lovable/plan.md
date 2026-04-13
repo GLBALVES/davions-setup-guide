@@ -1,40 +1,29 @@
 
 
-## Auditoria: Por que o carrossel não gera
+## Fix: Criar edge function `generate-background-image`
 
-### Problema encontrado
+### Problema
+O frontend (`CarrosselBackgroundEditor.tsx` linha 286) chama `generate-background-image`, mas essa edge function não existe no projeto. A requisição falha com "Failed to fetch".
 
-O frontend chama **duas edge functions que não existem**:
+### Solução
 
-1. **`generate-carousel`** — chamada em `CarrosselPage.tsx` linha 69
-2. **`generate-caption`** — chamada em `CarrosselCaption.tsx` linha 31
+**1. Criar `supabase/functions/generate-background-image/index.ts`**
+- Recebe `{ prompt }` no body
+- Usa Lovable AI Gateway com modelo `google/gemini-3.1-flash-image-preview` (rápido + qualidade pro)
+- Envia `modalities: ["image", "text"]` para obter imagem base64
+- Faz upload da imagem gerada no bucket `creative-assets` do Storage
+- Retorna `{ imageUrl: "<public_url>" }` — formato esperado pelo frontend (linha 291)
+- CORS headers padrão
 
-A função `generate-creative` existe mas serve outros tipos (text, image, themes, gradient) — não tem handler para carrossel no formato esperado pelo frontend (retornar `{ titulo_serie, slides: [{ numero, tag, titulo, corpo, cta }] }`).
-
-### Plano de correção
-
-**1. Criar edge function `generate-carousel`**
-- Recebe `{ tema, tom, nicho, quantidade, marca, cta }`
-- Usa Lovable AI Gateway (`google/gemini-3-flash-preview`) com tool calling
-- Retorna `{ titulo_serie, slides: [{ numero, tag, titulo, corpo, cta }] }` — exatamente o formato que `CarrosselData` espera
-- CORS headers padrão + `verify_jwt = false` no config.toml
-
-**2. Criar edge function `generate-caption`**
-- Recebe `{ tema, nicho, tom, titulo_serie }`
-- Usa Lovable AI Gateway para gerar legenda de Instagram
-- Retorna `{ caption: "..." }`
-- CORS headers + `verify_jwt = false`
-
-**3. Atualizar `supabase/config.toml`**
-- Adicionar blocos `[functions.generate-carousel]` e `[functions.generate-caption]` com `verify_jwt = false`
+**2. Atualizar `supabase/config.toml`**
+- Adicionar `[functions.generate-background-image]` com `verify_jwt = false`
 
 ### Arquivos
 
 | Ação | Arquivo |
 |------|---------|
-| Criar | `supabase/functions/generate-carousel/index.ts` |
-| Criar | `supabase/functions/generate-caption/index.ts` |
-| Editar | `supabase/config.toml` (2 blocos) |
+| Criar | `supabase/functions/generate-background-image/index.ts` |
+| Editar | `supabase/config.toml` |
 
-Nenhuma mudança no frontend — os componentes já chamam os nomes corretos.
+Nenhuma mudança no frontend necessária.
 
