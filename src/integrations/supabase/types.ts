@@ -887,6 +887,87 @@ export type Database = {
         }
         Relationships: []
       }
+      carousel_historico: {
+        Row: {
+          created_at: string
+          id: string
+          photographer_id: string
+          slides_json: Json
+          tema: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photographer_id: string
+          slides_json?: Json
+          tema?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photographer_id?: string
+          slides_json?: Json
+          tema?: string
+        }
+        Relationships: []
+      }
+      carousel_image_library: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          is_favorite: boolean
+          name: string
+          photographer_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          photographer_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          is_favorite?: boolean
+          name?: string
+          photographer_id?: string
+        }
+        Relationships: []
+      }
+      carousel_meta_config: {
+        Row: {
+          access_token: string
+          app_id: string
+          created_at: string
+          id: string
+          ig_account_id: string
+          photographer_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string
+          app_id?: string
+          created_at?: string
+          id?: string
+          ig_account_id?: string
+          photographer_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          app_id?: string
+          created_at?: string
+          id?: string
+          ig_account_id?: string
+          photographer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_projects: {
         Row: {
           booking_id: string | null
