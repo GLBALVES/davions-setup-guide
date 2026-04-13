@@ -1,28 +1,20 @@
 
 
-## Adicionar botão de deletar no histórico de carrosseis
+## Ajustar modal "Salvar Carrossel" — botões saindo do modal
 
 ### Problema
-O histórico de carrosseis só tem o botão "Carregar". O usuário quer poder deletar itens do histórico.
+Os botões de seleção de modelo e os botões "Cancelar"/"Salvar" estão transbordando para fora do modal porque o `DialogContent` não tem `overflow-hidden` e os botões com `flex-1` podem expandir além do container em telas menores.
 
 ### Solução
 
-**Editar `src/components/creative/carrossel/CarrosselHistorico.tsx`:**
-- Importar `Trash2` do lucide-react e `AlertDialog` do shadcn
-- Adicionar estado para controlar o dialog de confirmação de exclusão (`deleteId`)
-- Criar função `handleDelete` que faz `supabase.from("carousel_historico").delete().eq("id", id)` e remove o item do estado local
-- Adicionar botão com ícone de lixeira ao lado do botão "Carregar" em cada item
-- Ao clicar no botão de deletar, abrir AlertDialog de confirmação antes de excluir
-- Mostrar `toast.success` ao deletar com sucesso ou `toast.error` se falhar
+**Editar `src/pages/dashboard/creative/CarrosselPage.tsx`** (linhas 260-281):
+- Adicionar `overflow-hidden` ao `DialogContent`
+- Trocar o layout dos botões de modelo para `flex-wrap` e remover `flex-1`, usando `min-w-[100px]` para manter consistência
+- Garantir que `DialogFooter` fique dentro do modal com espaçamento correto
 
-### RLS
-A tabela `carousel_historico` já tem política `ALL` para o photographer autenticado, então o DELETE já é permitido.
-
-### Arquivos
+### Arquivo
 
 | Ação | Arquivo |
 |------|---------|
-| Editar | `src/components/creative/carrossel/CarrosselHistorico.tsx` |
-
-Nenhuma migração necessária.
+| Editar | `src/pages/dashboard/creative/CarrosselPage.tsx` — classes do dialog de aprovação |
 
