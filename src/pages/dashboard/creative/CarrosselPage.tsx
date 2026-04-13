@@ -15,7 +15,7 @@ import CarrosselPreviewModel2 from "@/components/creative/carrossel/CarrosselPre
 import CarrosselPreviewModel3 from "@/components/creative/carrossel/CarrosselPreviewModel3";
 import CarrosselExportButton from "@/components/creative/carrossel/CarrosselExportButton";
 import CarrosselExportSlide from "@/components/creative/carrossel/CarrosselExportSlide";
-import { Settings } from "lucide-react";
+import { Settings, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
