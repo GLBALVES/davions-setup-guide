@@ -1,20 +1,40 @@
 
 
-## Ajustar botões da Creative Studio
+## Auditoria: Por que o carrossel não gera
 
-Os dois botões-card da página Creative Studio estão usando o `Button` com `variant="outline"`, que aplica `uppercase tracking-widest font-light` — estilo pensado para botões de ação, não para cards de navegação. Isso causa texto esmagado e visual desalinhado do padrão card do resto do dashboard.
+### Problema encontrado
 
-### Mudanças
+O frontend chama **duas edge functions que não existem**:
 
-**Arquivo: `src/pages/dashboard/creative/CreativeIndexPage.tsx`**
+1. **`generate-carousel`** — chamada em `CarrosselPage.tsx` linha 69
+2. **`generate-caption`** — chamada em `CarrosselCaption.tsx` linha 31
 
-Substituir os `Button variant="outline"` por cards estilizados diretamente (usando classes de `border`, `rounded-lg`, `hover`) que se comportam melhor como cards de navegação:
+A função `generate-creative` existe mas serve outros tipos (text, image, themes, gradient) — não tem handler para carrossel no formato esperado pelo frontend (retornar `{ titulo_serie, slides: [{ numero, tag, titulo, corpo, cta }] }`).
 
-- Trocar `Button` por `div` estilizado dentro do `Link`, com `border rounded-lg p-6 hover:bg-muted transition-colors cursor-pointer`
-- Manter ícone, título e descrição com tipografia normal (sem uppercase/tracking-widest forçado pelo Button)
-- Aumentar levemente a altura para `h-28` e dar mais padding
-- Manter grid `grid-cols-1 sm:grid-cols-2` para responsividade
-- Garantir que no mobile (< 640px) os cards fiquem empilhados e com largura total
+### Plano de correção
 
-Resultado: cards limpos, alinhados ao design system luxury-minimal, sem o estilo de botão de ação.
+**1. Criar edge function `generate-carousel`**
+- Recebe `{ tema, tom, nicho, quantidade, marca, cta }`
+- Usa Lovable AI Gateway (`google/gemini-3-flash-preview`) com tool calling
+- Retorna `{ titulo_serie, slides: [{ numero, tag, titulo, corpo, cta }] }` — exatamente o formato que `CarrosselData` espera
+- CORS headers padrão + `verify_jwt = false` no config.toml
+
+**2. Criar edge function `generate-caption`**
+- Recebe `{ tema, nicho, tom, titulo_serie }`
+- Usa Lovable AI Gateway para gerar legenda de Instagram
+- Retorna `{ caption: "..." }`
+- CORS headers + `verify_jwt = false`
+
+**3. Atualizar `supabase/config.toml`**
+- Adicionar blocos `[functions.generate-carousel]` e `[functions.generate-caption]` com `verify_jwt = false`
+
+### Arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Criar | `supabase/functions/generate-carousel/index.ts` |
+| Criar | `supabase/functions/generate-caption/index.ts` |
+| Editar | `supabase/config.toml` (2 blocos) |
+
+Nenhuma mudança no frontend — os componentes já chamam os nomes corretos.
 
