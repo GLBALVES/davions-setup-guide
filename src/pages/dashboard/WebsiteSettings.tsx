@@ -521,6 +521,7 @@ const WebsiteSettings = () => {
 
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
+  const [templateAlreadySaved, setTemplateAlreadySaved] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -752,6 +753,7 @@ const WebsiteSettings = () => {
         setShowAbout(s.show_about ?? true);
         setShowContact(s.show_contact ?? true);
         setSiteTemplate(s.site_template ?? "editorial");
+        if (s.site_template) setTemplateAlreadySaved(true);
         setSeoTitle(s.seo_title ?? "");
         setSeoDescription(s.seo_description ?? "");
         setOgImageUrl(s.og_image_url ?? "");
