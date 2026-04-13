@@ -92,20 +92,21 @@ const CarrosselPage = () => {
   const handleApprove = async () => {
     if (!carrossel || !formDataRef || !photographerId) return;
 
-    try {
-      await supabase.from("carousel_historico").insert({
-        tema: formDataRef.tema,
-        tom: formDataRef.tom,
-        nicho: formDataRef.nicho || null,
-        slides_json: carrossel as unknown as any,
-        photographer_id: photographerId,
-      });
-      setRefreshHistory((prev) => prev + 1);
-      toast.success("Carrossel aprovado e salvo!");
-    } catch {
-      console.error("Failed to save history");
+    const { error } = await supabase.from("carousel_historico").insert({
+      tema: formDataRef.tema,
+      tom: formDataRef.tom,
+      nicho: formDataRef.nicho || null,
+      slides_json: carrossel as unknown as any,
+      photographer_id: photographerId,
+    });
+
+    if (error) {
+      toast.error("Erro ao salvar carrossel: " + error.message);
+      return;
     }
 
+    setRefreshHistory((prev) => prev + 1);
+    toast.success("Carrossel aprovado e salvo!");
     setIsEditing(false);
   };
 
