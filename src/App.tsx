@@ -76,7 +76,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import { CookieBanner } from "./components/CookieBanner";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -96,7 +96,7 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
-          <CookieBanner />
+          
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
