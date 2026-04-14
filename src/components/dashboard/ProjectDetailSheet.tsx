@@ -36,15 +36,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkBookingConflict, syncProjectDateToBooking, timeToMinutes } from "@/lib/booking-conflict";
-import {
-  type SessionOption,
-  type BookingAddon,
-  fmtCurrency,
-  loadActiveSessions,
-  fetchBookingAddons,
-  executeSessionChange,
-} from "@/lib/session-change";
-import { AddonReviewModal } from "@/components/dashboard/AddonReviewModal";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
@@ -1106,16 +1097,6 @@ export function ProjectDetailSheet({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Session change (booking-linked) state
-  const [editingBookingSession, setEditingBookingSession] = useState(false);
-  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
-  const [sessionOptions, setSessionOptions] = useState<SessionOption[]>([]);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-  const [pendingNewSession, setPendingNewSession] = useState<SessionOption | null>(null);
-  const [addonReviewOpen, setAddonReviewOpen] = useState(false);
-  const [currentAddons, setCurrentAddons] = useState<BookingAddon[]>([]);
-  const [savingSession, setSavingSession] = useState(false);
-
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
@@ -1137,9 +1118,6 @@ export function ProjectDetailSheet({
   useEffect(() => {
     setPendingChanges({});
     setConflictWarning(null);
-    setEditingBookingSession(false);
-    setSessionPickerOpen(false);
-    setPendingNewSession(null);
   }, [project?.id]);
 
   if (!project) return null;
@@ -1251,66 +1229,6 @@ export function ProjectDetailSheet({
     await save({ session_type: name });
   };
 
-  /* ── Booking Session change logic ── */
-  const loadBookingSessions = async () => {
-    if (sessionOptions.length > 0) { setSessionPickerOpen(true); return; }
-    setLoadingSessions(true);
-    const sessions = await loadActiveSessions(photographerId);
-    setSessionOptions(sessions);
-    setLoadingSessions(false);
-    setSessionPickerOpen(true);
-  };
-
-  const handleBookingSessionSelect = async (newSession: SessionOption) => {
-    if (!project.booking_id) return;
-    const { data: bk } = await (supabase as any)
-      .from("bookings").select("session_id, availability_id").eq("id", project.booking_id).single();
-    if (bk && newSession.id === bk.session_id) {
-      setSessionPickerOpen(false);
-      setEditingBookingSession(false);
-      return;
-    }
-    setPendingNewSession(newSession);
-    setSessionPickerOpen(false);
-
-    const addons = await fetchBookingAddons(project.booking_id);
-    if (addons.length > 0) {
-      setCurrentAddons(addons);
-      setAddonReviewOpen(true);
-    } else {
-      await doBookingSessionChange(newSession, []);
-    }
-  };
-
-  const doBookingSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
-    if (!project.booking_id) return;
-    setSavingSession(true);
-
-    const { data: bk } = await (supabase as any)
-      .from("bookings").select("availability_id, session_availability(start_time)").eq("id", project.booking_id).single();
-
-    const result = await executeSessionChange({
-      bookingId: project.booking_id,
-      availabilityId: bk?.availability_id ?? "",
-      startTime: bk?.session_availability?.start_time ?? null,
-      newSession,
-      keptAddons,
-      allAddons: currentAddons,
-    });
-
-    if (!result.success) {
-      toast.error(result.error || "Failed to update session");
-    } else {
-      toast.success("Session updated");
-      setAddonReviewOpen(false);
-      setEditingBookingSession(false);
-      setPendingNewSession(null);
-      setCurrentAddons([]);
-      await onUpdate(project.id, { session_type: newSession.title } as any);
-    }
-    setSavingSession(false);
-  };
-
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
 
   const renderDeadlineSection = () => {
@@ -1399,7 +1317,6 @@ export function ProjectDetailSheet({
   const deadlineSection = renderDeadlineSection();
 
   return (
-    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "88vh" }}>
 
@@ -1462,73 +1379,7 @@ export function ProjectDetailSheet({
                       selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
                       onRefetch={onRefetchSessionTypes} mode="select"
                     />
-                    {/* Booking session (editable if booking_id exists) */}
-                    {project.booking_id && project.session_title && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Camera className="h-3 w-3 shrink-0" />
-                          <span className="italic">{project.session_title}</span>
-                        </div>
-                        {!editingBookingSession && (
-                          <button
-                            onClick={() => { setEditingBookingSession(true); loadBookingSessions(); }}
-                            className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Edit
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    {project.booking_id && editingBookingSession && (
-                      <div className="flex flex-col gap-2">
-                        <Popover open={sessionPickerOpen} onOpenChange={setSessionPickerOpen}>
-                          <PopoverTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={() => { if (sessionOptions.length === 0) loadBookingSessions(); else setSessionPickerOpen(true); }}
-                              className="flex items-center justify-between gap-1.5 h-8 px-3 rounded-md border text-sm text-left w-full transition-colors hover:bg-accent/50"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-xs truncate">{project.session_title ?? "Select session"}</span>
-                              </div>
-                              {loadingSessions ? (
-                                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
-                              ) : (
-                                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-                              )}
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 p-1.5 max-h-60 overflow-y-auto" align="start">
-                            {sessionOptions.length === 0 ? (
-                              <p className="text-xs text-muted-foreground p-3 text-center">No sessions found</p>
-                            ) : (
-                              sessionOptions.map((s) => (
-                                <button
-                                  key={s.id}
-                                  className="flex items-center justify-between w-full px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
-                                  onClick={() => handleBookingSessionSelect(s)}
-                                >
-                                  <span className="truncate">{s.title}</span>
-                                  <span className="text-muted-foreground shrink-0 ml-2">{fmtCurrency(s.price)}</span>
-                                </button>
-                              ))
-                            )}
-                          </PopoverContent>
-                        </Popover>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 text-xs self-start"
-                          onClick={() => { setEditingBookingSession(false); setSessionPickerOpen(false); }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
-                    {/* Non-booking session title */}
-                    {!project.booking_id && project.session_title && (
+                    {project.session_title && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Camera className="h-3 w-3 shrink-0" />
                         <span className="italic">{project.session_title}</span>
@@ -1735,17 +1586,5 @@ export function ProjectDetailSheet({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-    {pendingNewSession && (
-      <AddonReviewModal
-        open={addonReviewOpen}
-        onClose={() => { setAddonReviewOpen(false); setPendingNewSession(null); }}
-        addons={currentAddons}
-        oldSessionTitle={project.session_title ?? "Current Session"}
-        newSession={pendingNewSession}
-        onConfirm={(kept) => doBookingSessionChange(pendingNewSession, kept)}
-        saving={savingSession}
-      />
-    )}
-    </>
   );
 }
