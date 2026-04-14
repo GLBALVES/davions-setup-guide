@@ -190,17 +190,27 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
     }
   };
 
-  const handleAttachToProject = async (project: ClientProject) => {
+  // Attach confirmation state
+  const [pendingAttachProject, setPendingAttachProject] = useState<ClientProject | null>(null);
+  const [confirmAttachOpen, setConfirmAttachOpen] = useState(false);
+  const [confirmNotifyOpen, setConfirmNotifyOpen] = useState(false);
+
+  const handleAttachToProject = (project: ClientProject) => {
+    setPendingAttachProject(project);
+    setConfirmAttachOpen(true);
+  };
+
+  const executeAttachToProject = async (notify: boolean) => {
+    const project = pendingAttachProject;
+    if (!project) return;
     setAttaching(true);
     try {
-      // Link gallery to project and publish it
       const { error } = await supabase
         .from("galleries")
         .update({ project_id: project.id, status: "published" } as any)
         .eq("id", gallery.id);
       if (error) throw error;
 
-      // Update project stage to proof_gallery if it's in an earlier stage
       const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
       const currentIdx = stageOrder.indexOf(project.stage);
       const proofIdx = stageOrder.indexOf("proof_gallery");
@@ -211,8 +221,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
           .eq("id", project.id);
       }
 
-      // Send notification email to client if they have an email
-      if (project.client_email) {
+      if (notify && project.client_email) {
         try {
           await supabase.functions.invoke("send-gallery-link", {
             body: {
@@ -221,9 +230,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
               clientName: project.client_name,
             },
           });
-        } catch {
-          // Email failure shouldn't block the attach
-        }
+        } catch { /* silent */ }
       }
 
       toast({
@@ -236,6 +243,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
       toast({ title: "Failed to attach to project", variant: "destructive" });
     } finally {
       setAttaching(false);
+      setPendingAttachProject(null);
     }
   };
 

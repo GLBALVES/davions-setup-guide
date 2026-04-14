@@ -777,8 +777,19 @@ const GalleryDetail = () => {
     );
   });
 
-  const handleAttachProject = async (project: ClientProject) => {
-    if (!gallery) return;
+  // Attach confirmation state
+  const [pendingAttachProject, setPendingAttachProject] = useState<ClientProject | null>(null);
+  const [confirmAttachOpen, setConfirmAttachOpen] = useState(false);
+  const [confirmNotifyOpen, setConfirmNotifyOpen] = useState(false);
+
+  const handleAttachProject = (project: ClientProject) => {
+    setPendingAttachProject(project);
+    setConfirmAttachOpen(true);
+  };
+
+  const executeAttach = async (notify: boolean) => {
+    const project = pendingAttachProject;
+    if (!gallery || !project) return;
     setAttachingProject(true);
     try {
       const { error } = await supabase
@@ -787,7 +798,6 @@ const GalleryDetail = () => {
         .eq("id", gallery.id);
       if (error) throw error;
 
-      // Advance project stage to proof_gallery if earlier
       const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
       const currentIdx = stageOrder.indexOf(project.stage);
       const proofIdx = stageOrder.indexOf("proof_gallery");
@@ -798,8 +808,7 @@ const GalleryDetail = () => {
           .eq("id", project.id);
       }
 
-      // Send notification to client
-      if (project.client_email) {
+      if (notify && project.client_email) {
         try {
           await supabase.functions.invoke("send-gallery-link", {
             body: {
@@ -821,6 +830,7 @@ const GalleryDetail = () => {
       toast({ title: "Failed to attach", variant: "destructive" });
     } finally {
       setAttachingProject(false);
+      setPendingAttachProject(null);
     }
   };
 
