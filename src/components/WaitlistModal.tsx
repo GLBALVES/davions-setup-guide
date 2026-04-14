@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const COUNTRIES: Record<string, string[]> = {
