@@ -354,18 +354,21 @@ const GalleryDetail = () => {
           client_name,
           booked_date,
           sessions ( title )
-        )
+        ),
+        client_projects ( title )
       `)
       .eq("id", id)
       .single();
     if (data) {
       const raw = data as any;
+      const projectTitle = raw.client_projects?.title ?? null;
       setGallery({
         ...raw,
         client_name: raw.bookings?.client_name ?? null,
         session_title: raw.bookings?.sessions?.title ?? null,
         booked_date: raw.bookings?.booked_date ?? null,
       } as Gallery);
+      setLinkedProjectTitle(projectTitle);
       setAccessCode(raw.access_code ?? "");
       setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
       setPricePerPhoto(raw.price_per_photo ?? 0);
