@@ -439,6 +439,11 @@ export const translations = {
       changeSessionBtn: "Change",
       durationLabel: "Duration",
       sessionIncludes: "Includes",
+      invoiceItems: "Add-ons",
+      addItem: "Add",
+      itemDescription: "Description",
+      itemQty: "Qty",
+      itemPrice: "Price",
     },
     // ── Clients page ──
     clients: {
