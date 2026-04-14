@@ -1169,6 +1169,73 @@ export function ProjectDetailSheet({
     enabled: !!currentBookingSessionId && open,
   });
 
+  // Fetch booking invoice items (add-ons)
+  const { data: bookingInvoiceItems = [], refetch: refetchInvoiceItems } = useQuery({
+    queryKey: ["booking-invoice-items", project?.booking_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("booking_invoice_items")
+        .select("id, description, quantity, unit_price")
+        .eq("booking_id", project!.booking_id!)
+        .order("created_at");
+      return (data ?? []) as { id: string; description: string; quantity: number; unit_price: number }[];
+    },
+    enabled: !!project?.booking_id && open,
+  });
+
+  // Sync extras_total on bookings when invoice items change
+  const syncExtrasTotal = async (items: { quantity: number; unit_price: number }[]) => {
+    if (!project?.booking_id) return;
+    const newExtras = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    await (supabase as any)
+      .from("bookings")
+      .update({ extras_total: newExtras })
+      .eq("id", project.booking_id);
+    queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
+    queryClient.invalidateQueries({ queryKey: ["project-booking-session"] });
+  };
+
+  const addInvoiceItem = async () => {
+    if (!project?.booking_id || !newItemDesc.trim()) return;
+    const priceInCents = Math.round(parseFloat(newItemPrice || "0") * 100);
+    const qty = parseInt(newItemQty) || 1;
+    await supabase.from("booking_invoice_items").insert({
+      booking_id: project.booking_id,
+      photographer_id: photographerId,
+      description: newItemDesc.trim(),
+      quantity: qty,
+      unit_price: priceInCents,
+    });
+    setNewItemDesc(""); setNewItemQty("1"); setNewItemPrice(""); setShowAddItem(false);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
+
+  const updateInvoiceItem = async (itemId: string) => {
+    if (!project?.booking_id) return;
+    const priceInCents = Math.round(parseFloat(editItemPrice || "0") * 100);
+    const qty = parseInt(editItemQty) || 1;
+    await supabase.from("booking_invoice_items")
+      .update({ description: editItemDesc.trim(), quantity: qty, unit_price: priceInCents })
+      .eq("id", itemId);
+    setEditingItemId(null);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
+
+  const deleteInvoiceItem = async (itemId: string) => {
+    if (!project?.booking_id) return;
+    await supabase.from("booking_invoice_items").delete().eq("id", itemId);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
+
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
