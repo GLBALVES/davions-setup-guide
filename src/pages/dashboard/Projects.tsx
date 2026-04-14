@@ -504,7 +504,7 @@ function KanbanCard({
           // Clamp so the label doesn't overflow: min 0, max ~92% to leave room for text
           const clampedPct = Math.min(Math.max(progress, 0), 93);
           return (
-            <div className="mt-1 relative w-full">
+            <div className="mt-4 relative w-full">
               {/* track */}
               <div className="h-1 w-full rounded-full bg-muted/50 overflow-hidden">
                 <div
