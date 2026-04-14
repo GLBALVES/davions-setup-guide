@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Image, FolderOpen, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X } from "lucide-react";
+import { Image, FolderOpen, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X, FolderLink, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { differenceInHours, differenceInDays, isPast, parseISO } from "date-fns";
@@ -25,6 +25,15 @@ interface Booking {
   client_email: string;
   booked_date: string | null;
   session_title: string | null;
+}
+
+interface ClientProject {
+  id: string;
+  title: string;
+  client_name: string;
+  client_email: string | null;
+  stage: string;
+  shoot_date: string | null;
 }
 
 interface GalleryCardProps {
@@ -66,6 +75,13 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const [bookingQuery, setBookingQuery] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  // Attach to project popover
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [projects, setProjects] = useState<ClientProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectQuery, setProjectQuery] = useState("");
+  const [attaching, setAttaching] = useState(false);
+
   const fetchBookings = useCallback(async () => {
     setBookingsLoading(true);
     const { data } = await supabase
@@ -86,12 +102,39 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
     setBookingsLoading(false);
   }, []);
 
+  const fetchProjects = useCallback(async () => {
+    setProjectsLoading(true);
+    const { data } = await supabase
+      .from("client_projects")
+      .select("id, title, client_name, client_email, stage, shoot_date")
+      .order("created_at", { ascending: false });
+
+    setProjects(
+      (data ?? []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        client_name: p.client_name,
+        client_email: p.client_email ?? null,
+        stage: p.stage,
+        shoot_date: p.shoot_date ?? null,
+      }))
+    );
+    setProjectsLoading(false);
+  }, []);
+
   useEffect(() => {
     if (assignOpen) {
       setBookingQuery("");
       fetchBookings();
     }
   }, [assignOpen, fetchBookings]);
+
+  useEffect(() => {
+    if (attachOpen) {
+      setProjectQuery("");
+      fetchProjects();
+    }
+  }, [attachOpen, fetchProjects]);
 
   const filteredBookings = bookings.filter((b) => {
     if (!bookingQuery.trim()) return true;
@@ -103,10 +146,19 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
     );
   });
 
+  const filteredProjects = projects.filter((p) => {
+    if (!projectQuery.trim()) return true;
+    const q = projectQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.client_name.toLowerCase().includes(q) ||
+      (p.client_email?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
   const handleAssign = async (booking: Booking) => {
     setAssigning(true);
     try {
-      // Build a new title from the booking data, only if gallery has no meaningful title
       const suggestedTitle = [booking.client_name, booking.session_title]
         .filter(Boolean)
         .join(" · ");
@@ -135,6 +187,55 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
       toast({ title: "Failed to assign client", variant: "destructive" });
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleAttachToProject = async (project: ClientProject) => {
+    setAttaching(true);
+    try {
+      // Link gallery to project and publish it
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: project.id, status: "published" } as any)
+        .eq("id", gallery.id);
+      if (error) throw error;
+
+      // Update project stage to proof_gallery if it's in an earlier stage
+      const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+      const currentIdx = stageOrder.indexOf(project.stage);
+      const proofIdx = stageOrder.indexOf("proof_gallery");
+      if (currentIdx < proofIdx) {
+        await supabase
+          .from("client_projects")
+          .update({ stage: "proof_gallery" })
+          .eq("id", project.id);
+      }
+
+      // Send notification email to client if they have an email
+      if (project.client_email) {
+        try {
+          await supabase.functions.invoke("send-gallery-link", {
+            body: {
+              galleryId: gallery.id,
+              clientEmail: project.client_email,
+              clientName: project.client_name,
+            },
+          });
+        } catch {
+          // Email failure shouldn't block the attach
+        }
+      }
+
+      toast({
+        title: "Gallery attached to project",
+        description: `Linked to "${project.title}" and published.`,
+      });
+      setAttachOpen(false);
+      onAssigned?.();
+    } catch {
+      toast({ title: "Failed to attach to project", variant: "destructive" });
+    } finally {
+      setAttaching(false);
     }
   };
 
