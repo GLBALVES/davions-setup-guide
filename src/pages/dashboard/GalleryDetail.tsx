@@ -51,6 +51,8 @@ import {
   Send,
   Mail,
   Briefcase,
+  Search,
+  Loader2,
   ImagePlus,
   Star,
   Stamp,
