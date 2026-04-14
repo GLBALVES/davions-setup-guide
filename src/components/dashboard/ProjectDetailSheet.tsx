@@ -1755,6 +1755,18 @@ export function ProjectDetailSheet({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {pendingNewSession && (
+        <AddonReviewModal
+          open={addonReviewOpen}
+          onOpenChange={(v) => { if (!v) { setAddonReviewOpen(false); setPendingNewSession(null); } }}
+          items={addonItems}
+          newSession={pendingNewSession}
+          depositAlreadyPaid={bookingData?.payment_status === "deposit_paid" || bookingData?.payment_status === "paid"}
+          onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
+          confirming={changingSession}
+        />
+      )}
     </Dialog>
   );
 }
