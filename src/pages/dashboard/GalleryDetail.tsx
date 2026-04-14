@@ -310,6 +310,7 @@ const GalleryDetail = () => {
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [attachProjectOpen, setAttachProjectOpen] = useState(false);
+  const [linkedProjectTitle, setLinkedProjectTitle] = useState<string | null>(null);
   const [projectsList, setProjectsList] = useState<ClientProject[]>([]);
   const [projectsListLoading, setProjectsListLoading] = useState(false);
   const [projectSearchQuery, setProjectSearchQuery] = useState("");
