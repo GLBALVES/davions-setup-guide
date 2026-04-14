@@ -43,6 +43,8 @@ import {
 } from "lucide-react";
 import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 import { BookingDetailSheet, ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
+import { ProjectDetailSheet } from "@/components/dashboard/ProjectDetailSheet";
+import { useProjectSheet } from "@/hooks/useProjectSheet";
 
 interface Booking {
   id: string;
@@ -191,6 +193,20 @@ const Bookings = () => {
   });
   const [createBookingOpen, setCreateBookingOpen] = useState(false);
   const [detailBooking, setDetailBooking] = useState<ScheduleBooking | null>(null);
+
+  const {
+    sheetProject: projSheetProject,
+    sheetOpen: projSheetOpen,
+    setSheetOpen: setProjSheetOpen,
+    sessionTypes: projSessionTypes,
+    fetchSessionTypes: projFetchSessionTypes,
+    openByBookingId,
+    handleUpdate: projHandleUpdate,
+    handleDelete: projHandleDelete,
+    handleArchive: projHandleArchive,
+    handleUnarchive: projHandleUnarchive,
+    setSheetProject: setProjSheetProject,
+  } = useProjectSheet(photographerId ?? user?.id);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -574,7 +590,7 @@ const Bookings = () => {
                       {/* Actions */}
                       <div className="flex items-center gap-2.5">
                         <button
-                          onClick={() => navigate(`/dashboard/projects?openBooking=${booking.id}`)}
+                          onClick={() => openByBookingId(booking.id)}
                           title="Edit booking"
                           className="text-muted-foreground hover:text-foreground transition-colors"
                         >
@@ -720,6 +736,20 @@ const Bookings = () => {
           setDetailBooking(null);
         }}
         onBookingUpdated={fetchBookings}
+      />
+
+      <ProjectDetailSheet
+        project={projSheetProject}
+        open={projSheetOpen}
+        onOpenChange={setProjSheetOpen}
+        onUpdate={projHandleUpdate}
+        onDelete={projHandleDelete}
+        onArchive={projHandleArchive}
+        onUnarchive={projHandleUnarchive}
+        onOpenEdit={() => {}}
+        photographerId={photographerId ?? user?.id ?? ""}
+        sessionTypes={projSessionTypes}
+        onRefetchSessionTypes={projFetchSessionTypes}
       />
     </SidebarProvider>
   );
