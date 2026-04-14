@@ -2359,6 +2359,9 @@ export const translations = {
       itemDescription: "Descrição",
       itemQty: "Qtd",
       itemPrice: "Valor",
+      subtotal: "Subtotal",
+      grandTotal: "Total",
+      totalPaid: "Pago",
     },
     clients: {
       title: "Clientes",
@@ -4228,6 +4231,9 @@ export const translations = {
       itemDescription: "Descripción",
       itemQty: "Cant",
       itemPrice: "Precio",
+      subtotal: "Subtotal",
+      grandTotal: "Total",
+      totalPaid: "Pagado",
     },
     clients: {
       title: "Clientes",
