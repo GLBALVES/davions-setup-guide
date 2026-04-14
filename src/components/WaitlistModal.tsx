@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const COUNTRIES = [
@@ -93,26 +93,24 @@ export function WaitlistModal() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Liquid backdrop */}
-          <div className="absolute inset-0 bg-foreground/90 backdrop-blur-md" onClick={() => setOpen(false)} />
+          {/* Liquid glass backdrop — iOS 26 style */}
+          <div
+            className="absolute inset-0 backdrop-blur-xl"
+            style={{
+              background: "linear-gradient(135deg, hsla(0,0%,100%,0.25) 0%, hsla(0,0%,100%,0.15) 50%, hsla(0,0%,100%,0.25) 100%)",
+              WebkitBackdropFilter: "blur(24px) saturate(1.8)",
+              backdropFilter: "blur(24px) saturate(1.8)",
+            }}
+          />
 
           <motion.div
             key="waitlist-card"
-            className="relative z-10 w-full max-w-md mx-4 bg-background border border-border p-8 flex flex-col gap-6"
+            className="relative z-10 w-full max-w-md mx-4 bg-background/95 border border-border p-8 flex flex-col gap-6 rounded-2xl shadow-2xl"
             initial={{ opacity: 0, y: 40, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.96 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Close button */}
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={l.close}
-            >
-              <X size={16} />
-            </button>
-
             {/* Header */}
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
