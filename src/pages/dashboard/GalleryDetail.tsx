@@ -1844,6 +1844,20 @@ const GalleryDetail = () => {
                     )}
                   </div>
 
+                  {/* Linked project info */}
+                  {gallery.project_id && linkedProjectTitle && (
+                    <div className="flex items-center gap-2 px-3 py-2 border border-border bg-muted/30">
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-light text-foreground truncate flex-1">{linkedProjectTitle}</span>
+                      <Link
+                        to="/dashboard/projects"
+                        className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      >
+                        View →
+                      </Link>
+                    </div>
+                  )}
+
                   <Popover open={attachProjectOpen} onOpenChange={setAttachProjectOpen}>
                     <PopoverTrigger asChild>
                       <Button
