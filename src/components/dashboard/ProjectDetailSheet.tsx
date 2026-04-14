@@ -1396,6 +1396,7 @@ export function ProjectDetailSheet({
   const deadlineSection = renderDeadlineSection();
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl w-full p-0 flex flex-col overflow-hidden" style={{ maxHeight: "88vh" }}>
 
