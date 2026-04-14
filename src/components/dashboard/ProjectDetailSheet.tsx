@@ -1458,7 +1458,73 @@ export function ProjectDetailSheet({
                       selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
                       onRefetch={onRefetchSessionTypes} mode="select"
                     />
-                    {project.session_title && (
+                    {/* Booking session (editable if booking_id exists) */}
+                    {project.booking_id && project.session_title && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Camera className="h-3 w-3 shrink-0" />
+                          <span className="italic">{project.session_title}</span>
+                        </div>
+                        {!editingBookingSession && (
+                          <button
+                            onClick={() => { setEditingBookingSession(true); loadBookingSessions(); }}
+                            className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {project.booking_id && editingBookingSession && (
+                      <div className="flex flex-col gap-2">
+                        <Popover open={sessionPickerOpen} onOpenChange={setSessionPickerOpen}>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => { if (sessionOptions.length === 0) loadBookingSessions(); else setSessionPickerOpen(true); }}
+                              className="flex items-center justify-between gap-1.5 h-8 px-3 rounded-md border text-sm text-left w-full transition-colors hover:bg-accent/50"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-xs truncate">{project.session_title ?? "Select session"}</span>
+                              </div>
+                              {loadingSessions ? (
+                                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
+                              ) : (
+                                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                              )}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 p-1.5 max-h-60 overflow-y-auto" align="start">
+                            {sessionOptions.length === 0 ? (
+                              <p className="text-xs text-muted-foreground p-3 text-center">No sessions found</p>
+                            ) : (
+                              sessionOptions.map((s) => (
+                                <button
+                                  key={s.id}
+                                  className="flex items-center justify-between w-full px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left"
+                                  onClick={() => handleBookingSessionSelect(s)}
+                                >
+                                  <span className="truncate">{s.title}</span>
+                                  <span className="text-muted-foreground shrink-0 ml-2">{fmtCurrency(s.price)}</span>
+                                </button>
+                              ))
+                            )}
+                          </PopoverContent>
+                        </Popover>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs self-start"
+                          onClick={() => { setEditingBookingSession(false); setSessionPickerOpen(false); }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                    {/* Non-booking session title */}
+                    {!project.booking_id && project.session_title && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Camera className="h-3 w-3 shrink-0" />
                         <span className="italic">{project.session_title}</span>
