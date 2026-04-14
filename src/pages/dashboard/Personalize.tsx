@@ -1359,6 +1359,11 @@ const Personalize = () => {
                     </section>
                   </TabsContent>
 
+                  {/* ── TEMPLATES TAB ── */}
+                  <TabsContent value="templates" className="mt-0 flex flex-col gap-8">
+                    <WorkflowEmailTemplates />
+                  </TabsContent>
+
                 </Tabs>
               }
             </div>
