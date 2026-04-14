@@ -22,6 +22,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
+import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
 type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
@@ -622,7 +623,8 @@ const Personalize = () => {
                     {[
                   { value: "studio", label: t.personalize.studioTab },
                   { value: "business", label: t.personalize.businessTab },
-                  { value: "galleries", label: t.personalize.galleriesTab }].
+                  { value: "galleries", label: t.personalize.galleriesTab },
+                  { value: "templates", label: t.personalize.templatesTab }].
                   map((tab) =>
                   <TabsTrigger
                     key={tab.value}
