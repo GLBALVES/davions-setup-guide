@@ -3932,6 +3932,42 @@ export type Database = {
           },
         ]
       }
+      workflow_email_templates: {
+        Row: {
+          auto_send: boolean
+          created_at: string
+          enabled: boolean
+          html_content: string
+          id: string
+          photographer_id: string
+          stage_trigger: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          auto_send?: boolean
+          created_at?: string
+          enabled?: boolean
+          html_content?: string
+          id?: string
+          photographer_id: string
+          stage_trigger: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_send?: boolean
+          created_at?: string
+          enabled?: boolean
+          html_content?: string
+          id?: string
+          photographer_id?: string
+          stage_trigger?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       workflow_members: {
         Row: {
           id: string
