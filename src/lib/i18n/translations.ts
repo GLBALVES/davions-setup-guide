@@ -444,6 +444,9 @@ export const translations = {
       itemDescription: "Description",
       itemQty: "Qty",
       itemPrice: "Price",
+      subtotal: "Subtotal",
+      grandTotal: "Total",
+      totalPaid: "Paid",
     },
     // ── Clients page ──
     clients: {
