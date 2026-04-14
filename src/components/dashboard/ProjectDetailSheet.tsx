@@ -1131,6 +1131,21 @@ export function ProjectDetailSheet({
     enabled: !!photographerId && open,
   });
 
+  // Fetch session bonuses/includes for the current booking session
+  const currentBookingSessionId = bookingData?.session_id;
+  const { data: sessionIncludes = [] } = useQuery({
+    queryKey: ["session-bonuses", currentBookingSessionId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("session_bonuses")
+        .select("id, text, position")
+        .eq("session_id", currentBookingSessionId)
+        .order("position");
+      return (data ?? []) as { id: string; text: string; position: number }[];
+    },
+    enabled: !!currentBookingSessionId && open,
+  });
+
   // Get current booking's session_id
   const { data: bookingData } = useQuery({
     queryKey: ["project-booking-session", project?.booking_id],
