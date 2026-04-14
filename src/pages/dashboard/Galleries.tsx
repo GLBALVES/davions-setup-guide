@@ -122,8 +122,9 @@ const Galleries = () => {
     const { data: galleriesData } = await supabase
       .from("galleries")
       .select(`
-        id, title, slug, category, status, created_at, sort_order, cover_image_url, expires_at, booking_id,
-        bookings ( client_name, client_email, sessions ( title ) )
+        id, title, slug, category, status, created_at, sort_order, cover_image_url, expires_at, booking_id, project_id,
+        bookings ( client_name, client_email, sessions ( title ) ),
+        client_projects ( title )
       `)
       .eq("photographer_id", photographerId)
       .order("sort_order", { ascending: true });
@@ -148,6 +149,8 @@ const Galleries = () => {
           cover_image_url: gal.cover_image_url ?? null,
           expires_at: gal.expires_at ?? null,
           booking_id: gal.booking_id ?? null,
+          project_id: gal.project_id ?? null,
+          project_title: gal.client_projects?.title ?? null,
           client_name: gal.bookings?.client_name ?? null,
           client_email: gal.bookings?.client_email ?? null,
           session_title: (gal.bookings as any)?.sessions?.title ?? null,

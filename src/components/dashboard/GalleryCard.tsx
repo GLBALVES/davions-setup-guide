@@ -51,6 +51,8 @@ interface GalleryCardProps {
     client_email?: string | null;
     session_title?: string | null;
     booking_id?: string | null;
+    project_id?: string | null;
+    project_title?: string | null;
   };
   onEdit?: () => void;
   onDelete?: () => void;
@@ -523,6 +525,18 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
             </Badge>
           )}
         </div>
+
+        {/* Linked project badge */}
+        {!compact && gallery.project_id && gallery.project_title && (
+          <Link
+            to={`/dashboard/projects`}
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors truncate"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Briefcase className="h-3 w-3 shrink-0" />
+            <span className="truncate">{gallery.project_title}</span>
+          </Link>
+        )}
 
         {/* Photo count + status inline */}
         {!compact && (

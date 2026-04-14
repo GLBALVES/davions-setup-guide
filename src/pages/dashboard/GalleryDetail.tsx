@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -310,6 +310,7 @@ const GalleryDetail = () => {
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [attachProjectOpen, setAttachProjectOpen] = useState(false);
+  const [linkedProjectTitle, setLinkedProjectTitle] = useState<string | null>(null);
   const [projectsList, setProjectsList] = useState<ClientProject[]>([]);
   const [projectsListLoading, setProjectsListLoading] = useState(false);
   const [projectSearchQuery, setProjectSearchQuery] = useState("");
@@ -354,18 +355,21 @@ const GalleryDetail = () => {
           client_name,
           booked_date,
           sessions ( title )
-        )
+        ),
+        client_projects ( title )
       `)
       .eq("id", id)
       .single();
     if (data) {
       const raw = data as any;
+      const projectTitle = raw.client_projects?.title ?? null;
       setGallery({
         ...raw,
         client_name: raw.bookings?.client_name ?? null,
         session_title: raw.bookings?.sessions?.title ?? null,
         booked_date: raw.bookings?.booked_date ?? null,
       } as Gallery);
+      setLinkedProjectTitle(projectTitle);
       setAccessCode(raw.access_code ?? "");
       setExpiresAt(raw.expires_at ? new Date(raw.expires_at) : undefined);
       setPricePerPhoto(raw.price_per_photo ?? 0);
@@ -821,6 +825,7 @@ const GalleryDetail = () => {
       }
 
       setGallery({ ...gallery, project_id: project.id, status: "published" });
+      setLinkedProjectTitle(project.title);
       toast({
         title: "Gallery attached",
         description: `Linked to "${project.title}" and published.`,
@@ -1838,6 +1843,20 @@ const GalleryDetail = () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Linked project info */}
+                  {gallery.project_id && linkedProjectTitle && (
+                    <div className="flex items-center gap-2 px-3 py-2 border border-border bg-muted/30">
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-light text-foreground truncate flex-1">{linkedProjectTitle}</span>
+                      <Link
+                        to="/dashboard/projects"
+                        className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      >
+                        View →
+                      </Link>
+                    </div>
+                  )}
 
                   <Popover open={attachProjectOpen} onOpenChange={setAttachProjectOpen}>
                     <PopoverTrigger asChild>
