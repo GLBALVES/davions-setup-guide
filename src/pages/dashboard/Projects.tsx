@@ -1466,6 +1466,46 @@ const Projects = () => {
     return () => { supabase.removeChannel(channel); };
   }, [photographerId]);
 
+  // Auto-advance upcoming → shot every 30s while page is open
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const toAdvance: string[] = [];
+
+      for (const p of projects) {
+        if (p.stage !== "upcoming") continue;
+
+        let sessionEnd: Date | null = null;
+        if (p.shoot_date && p.shoot_time) {
+          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
+          if (!isNaN(start.getTime())) {
+            sessionEnd = start; // advance when session starts
+          }
+        } else if (p.shoot_date) {
+          const d = new Date(p.shoot_date + "T23:59:59");
+          if (!isNaN(d.getTime())) sessionEnd = d;
+        }
+
+        if (sessionEnd && sessionEnd <= now) {
+          toAdvance.push(p.id);
+        }
+      }
+
+      if (toAdvance.length > 0) {
+        setProjects((prev) =>
+          prev.map((p) => toAdvance.includes(p.id) ? { ...p, stage: "shot" as Stage } : p)
+        );
+        supabase
+          .from("client_projects" as any)
+          .update({ stage: "shot" } as any)
+          .in("id", toAdvance)
+          .then();
+      }
+    }, 30_000); // check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [projects]);
+
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => {
       // Primary sort: shoot_date ascending (nulls last)
