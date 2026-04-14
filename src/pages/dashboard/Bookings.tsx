@@ -574,7 +574,7 @@ const Bookings = () => {
                       {/* Actions */}
                       <div className="flex items-center gap-2.5">
                         <button
-                          onClick={() => navigate(`/dashboard/projects?openBooking=${booking.id}`)}
+                          onClick={() => openByBookingId(booking.id)}
                           title="Edit booking"
                           className="text-muted-foreground hover:text-foreground transition-colors"
                         >

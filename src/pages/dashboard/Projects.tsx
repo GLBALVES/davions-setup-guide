@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
-import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -1451,8 +1450,6 @@ const Projects = () => {
     if (silent) setRefreshing(false);
   }, [photographerId]);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
   // Realtime subscription — refetch on any change to client_projects, bookings or galleries
   useEffect(() => {
     if (!photographerId) return;
@@ -1468,19 +1465,6 @@ const Projects = () => {
 
     return () => { supabase.removeChannel(channel); };
   }, [photographerId]);
-
-  // Auto-open ProjectDetailSheet when navigated with ?openBooking=<id>
-  useEffect(() => {
-    const openBookingId = searchParams.get("openBooking");
-    if (!openBookingId || loading || projects.length === 0) return;
-    const project = projects.find((p) => p.booking_id === openBookingId);
-    if (project) {
-      setSheetProject(project);
-      setSheetOpen(true);
-    }
-    // Clear the param so it doesn't re-trigger
-    setSearchParams({}, { replace: true });
-  }, [searchParams, loading, projects]);
 
   const projectsByStage = (stage: Stage) =>
     projects.filter((p) => p.stage === stage).sort((a, b) => {

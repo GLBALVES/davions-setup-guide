@@ -177,7 +177,7 @@ const Schedule = () => {
 
   const handleBookingClick = (booking: ScheduleBooking) => {
     if (booking.id) {
-      goTo(`/dashboard/projects?openBooking=${booking.id}`);
+      openByBookingId(booking.id);
       return;
     }
     setSelectedBooking(booking);
