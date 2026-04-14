@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
+import { AddonReviewModal, type AddonItem, type SessionInfo } from "@/components/dashboard/AddonReviewModal";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
@@ -1096,6 +1097,44 @@ export function ProjectDetailSheet({
   const [pendingChanges, setPendingChanges] = useState<Partial<ProjectSheetData>>({});
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addonReviewOpen, setAddonReviewOpen] = useState(false);
+  const [addonItems, setAddonItems] = useState<AddonItem[]>([]);
+  const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
+  const [changingSession, setChangingSession] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Fetch sessions for this photographer
+  const { data: photographerSessions = [] } = useQuery({
+    queryKey: ["photographer-sessions-for-project", photographerId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sessions")
+        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes")
+        .eq("photographer_id", photographerId)
+        .eq("status", "active")
+        .order("title");
+      return (data ?? []) as Array<{
+        id: string; title: string; price: number; tax_rate: number;
+        deposit_enabled: boolean; deposit_amount: number; deposit_type: string; duration_minutes: number;
+      }>;
+    },
+    enabled: !!photographerId && open,
+  });
+
+  // Get current booking's session_id
+  const { data: bookingData } = useQuery({
+    queryKey: ["project-booking-session", project?.booking_id],
+    queryFn: async () => {
+      if (!project?.booking_id) return null;
+      const { data } = await (supabase as any)
+        .from("bookings")
+        .select("session_id, payment_status, extras_total")
+        .eq("id", project.booking_id)
+        .single();
+      return data as { session_id: string; payment_status: string; extras_total: number } | null;
+    },
+    enabled: !!project?.booking_id && open,
+  });
 
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
@@ -1227,6 +1266,115 @@ export function ProjectDetailSheet({
     setSessionTypeId(id);
     const name = sessionTypes.find((t) => t.id === id)?.name ?? null;
     await save({ session_type: name });
+  };
+
+  const handleSessionChange = async (newSessionId: string) => {
+    if (!project.booking_id) return;
+    const newSess = photographerSessions.find((s) => s.id === newSessionId);
+    if (!newSess) return;
+
+    const sessInfo: SessionInfo = {
+      id: newSess.id,
+      title: newSess.title,
+      price: newSess.price,
+      tax_rate: newSess.tax_rate,
+      deposit_enabled: newSess.deposit_enabled,
+      deposit_amount: newSess.deposit_amount,
+      deposit_type: newSess.deposit_type,
+    };
+
+    // Fetch existing invoice items (addons)
+    const { data: invoiceItems } = await supabase
+      .from("booking_invoice_items")
+      .select("id, description, quantity, unit_price")
+      .eq("booking_id", project.booking_id);
+
+    const items = (invoiceItems ?? []) as AddonItem[];
+
+    if (items.length > 0) {
+      setAddonItems(items);
+      setPendingNewSession(sessInfo);
+      setAddonReviewOpen(true);
+    } else {
+      await applySessionChange(sessInfo, []);
+    }
+  };
+
+  const applySessionChange = async (newSess: SessionInfo, keptItems: AddonItem[]) => {
+    if (!project.booking_id) return;
+    setChangingSession(true);
+
+    try {
+      // 1. Delete removed items
+      const { data: existingItems } = await supabase
+        .from("booking_invoice_items")
+        .select("id")
+        .eq("booking_id", project.booking_id);
+      const existingIds = (existingItems ?? []).map((i: any) => i.id);
+      const keptIds = keptItems.map((i) => i.id);
+      const toDelete = existingIds.filter((id: string) => !keptIds.includes(id));
+
+      for (const id of toDelete) {
+        await supabase.from("booking_invoice_items").delete().eq("id", id);
+      }
+
+      // 2. Update edited items
+      for (const item of keptItems) {
+        await supabase.from("booking_invoice_items")
+          .update({ quantity: item.quantity, unit_price: item.unit_price })
+          .eq("id", item.id);
+      }
+
+      // 3. Calculate new extras_total
+      const newExtras = keptItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+
+      // 4. Update booking session_id + extras_total
+      await (supabase as any)
+        .from("bookings")
+        .update({ session_id: newSess.id, extras_total: newExtras })
+        .eq("id", project.booking_id);
+
+      // 5. Update session_availability session_id + duration
+      const sess = photographerSessions.find((s) => s.id === newSess.id);
+      if (sess) {
+        const { data: avail } = await (supabase as any)
+          .from("bookings")
+          .select("availability_id")
+          .eq("id", project.booking_id)
+          .single();
+        if (avail?.availability_id) {
+          // recalculate end_time based on new session duration
+          const { data: availData } = await (supabase as any)
+            .from("session_availability")
+            .select("start_time")
+            .eq("id", avail.availability_id)
+            .single();
+          if (availData?.start_time) {
+            const totalMins = timeToMinutes(availData.start_time) + sess.duration_minutes;
+            const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+            await (supabase as any)
+              .from("session_availability")
+              .update({ session_id: newSess.id, end_time: endTime })
+              .eq("id", avail.availability_id);
+          }
+        }
+      }
+
+      // 6. Update client_projects session_type
+      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+
+      // 7. Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
+      queryClient.invalidateQueries({ queryKey: ["project-booking-session"] });
+
+      toast.success(tp.projectUpdated || "Session updated");
+    } catch (err) {
+      toast.error("Failed to change session");
+    } finally {
+      setChangingSession(false);
+      setAddonReviewOpen(false);
+      setPendingNewSession(null);
+    }
   };
 
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
@@ -1374,16 +1522,33 @@ export function ProjectDetailSheet({
                 <div>
                   <SectionLabel>{tp.sessionSection}</SectionLabel>
                   <div className="flex flex-col gap-3">
-                    <SessionTypeManager
-                      photographerId={photographerId} sessionTypes={sessionTypes}
-                      selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
-                      onRefetch={onRefetchSessionTypes} mode="select"
-                    />
-                    {project.session_title && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Camera className="h-3 w-3 shrink-0" />
-                        <span className="italic">{project.session_title}</span>
-                      </div>
+                    {project.booking_id ? (
+                      <>
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.sessionLabel}</Label>
+                          <Select
+                            value={bookingData?.session_id ?? ""}
+                            onValueChange={handleSessionChange}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder={tp.selectSession} />
+                            </SelectTrigger>
+                            <SelectContent className="z-[200]">
+                              {photographerSessions.map((s) => (
+                                <SelectItem key={s.id} value={s.id} className="text-xs">
+                                  {s.title} — ${(s.price / 100).toFixed(2)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    ) : (
+                      <SessionTypeManager
+                        photographerId={photographerId} sessionTypes={sessionTypes}
+                        selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
+                        onRefetch={onRefetchSessionTypes} mode="select"
+                      />
                     )}
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.dateTime}</Label>
@@ -1497,15 +1662,20 @@ export function ProjectDetailSheet({
                     <InlineField label={tp.phone} value={project.client_phone ?? ""} placeholder={tp.addPhonePlaceholder}
                       type="tel" icon={<FileText className="h-3.5 w-3.5" />} onSave={(v) => save({ client_phone: v || null } as any)} />
                   </div>
-                  {project.session_type && (
-                    <div className="px-3 py-2.5">
-                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.sessionTypeLabel}</p>
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span>{project.session_type}</span>
+                  {(project.session_type || bookingData?.session_id) && (() => {
+                    const sessTitle = bookingData?.session_id
+                      ? photographerSessions.find((s) => s.id === bookingData.session_id)?.title ?? project.session_type
+                      : project.session_type;
+                    return (
+                      <div className="px-3 py-2.5">
+                        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.sessionLabel}</p>
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                          <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>{sessTitle}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {project.shoot_date && (
                     <div className="px-3 py-2.5">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.shootDateLabel}</p>
@@ -1585,6 +1755,18 @@ export function ProjectDetailSheet({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {pendingNewSession && (
+        <AddonReviewModal
+          open={addonReviewOpen}
+          onOpenChange={(v) => { if (!v) { setAddonReviewOpen(false); setPendingNewSession(null); } }}
+          items={addonItems}
+          newSession={pendingNewSession}
+          depositAlreadyPaid={bookingData?.payment_status === "deposit_paid" || bookingData?.payment_status === "paid"}
+          onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
+          confirming={changingSession}
+        />
+      )}
     </Dialog>
   );
 }
