@@ -992,6 +992,11 @@ export const translations = {
       emailSent: "Email sent",
       galleryLinkSent: "Gallery link sent to",
       failedToSendEmail: "Failed to send email",
+      attachToProject: "Attach to Project",
+      attachedToProject: "Attached to Project",
+      searchProject: "Search project or client…",
+      noProjectsFound: "No projects found",
+      attachDesc: "Links gallery to a project, publishes it, and notifies the client.",
     },
     // ── Session Form ──
     sessionForm: {
@@ -2911,6 +2916,11 @@ export const translations = {
       emailSent: "E-mail enviado",
       galleryLinkSent: "Link da galeria enviado para",
       failedToSendEmail: "Falha ao enviar e-mail",
+      attachToProject: "Vincular ao Projeto",
+      attachedToProject: "Vinculada ao Projeto",
+      searchProject: "Buscar projeto ou cliente…",
+      noProjectsFound: "Nenhum projeto encontrado",
+      attachDesc: "Vincula a galeria ao projeto, publica e notifica o cliente.",
     },
     sessionForm: {
       sectionLabel: "Fotógrafos",
@@ -4807,6 +4817,11 @@ export const translations = {
       emailSent: "Correo enviado",
       galleryLinkSent: "Enlace de galería enviado a",
       failedToSendEmail: "Error al enviar correo",
+      attachToProject: "Vincular al Proyecto",
+      attachedToProject: "Vinculada al Proyecto",
+      searchProject: "Buscar proyecto o cliente…",
+      noProjectsFound: "No se encontraron proyectos",
+      attachDesc: "Vincula la galería al proyecto, la publica y notifica al cliente.",
     },
     sessionForm: {
       sectionLabel: "Fotógrafos",

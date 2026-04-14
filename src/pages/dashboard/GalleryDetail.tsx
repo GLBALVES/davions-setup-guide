@@ -50,6 +50,9 @@ import {
   XCircle,
   Send,
   Mail,
+  Briefcase,
+  Search,
+  Loader2,
   ImagePlus,
   Star,
   Stamp,
@@ -104,12 +107,22 @@ interface Gallery {
   cover_focal_y: number | null;
   created_at: string;
   booking_id: string | null;
+  project_id: string | null;
   watermark_id: string | null;
   expires_at: string | null;
   price_per_photo: number;
   client_name?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
+}
+
+interface ClientProject {
+  id: string;
+  title: string;
+  client_name: string;
+  client_email: string | null;
+  stage: string;
+  shoot_date: string | null;
 }
 
 interface Photo {
@@ -296,6 +309,11 @@ const GalleryDetail = () => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [attachProjectOpen, setAttachProjectOpen] = useState(false);
+  const [projectsList, setProjectsList] = useState<ClientProject[]>([]);
+  const [projectsListLoading, setProjectsListLoading] = useState(false);
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
+  const [attachingProject, setAttachingProject] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [settingCover, setSettingCover] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -722,39 +740,87 @@ const GalleryDetail = () => {
     setEditingTitle(false);
   };
 
-  // ── Send gallery link to client ─────────────────────────────────────────────
-  const sendGalleryLink = async () => {
+  // ── Fetch projects for attach ────────────────────────────────────────────────
+  const fetchProjectsForAttach = useCallback(async () => {
+    setProjectsListLoading(true);
+    const { data } = await supabase
+      .from("client_projects")
+      .select("id, title, client_name, client_email, stage, shoot_date")
+      .order("created_at", { ascending: false });
+    setProjectsList(
+      (data ?? []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        client_name: p.client_name,
+        client_email: p.client_email ?? null,
+        stage: p.stage,
+        shoot_date: p.shoot_date ?? null,
+      }))
+    );
+    setProjectsListLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (attachProjectOpen) {
+      setProjectSearchQuery("");
+      fetchProjectsForAttach();
+    }
+  }, [attachProjectOpen, fetchProjectsForAttach]);
+
+  const filteredProjectsList = projectsList.filter((p) => {
+    if (!projectSearchQuery.trim()) return true;
+    const q = projectSearchQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.client_name.toLowerCase().includes(q) ||
+      (p.client_email?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  const handleAttachProject = async (project: ClientProject) => {
     if (!gallery) return;
-    const clientEmail = gallery.client_name
-      ? prompt(`Send gallery to client email:`)
-      : prompt(`Send gallery to client email:`);
-    if (!clientEmail?.trim()) return;
-
-    setSendingEmail(true);
+    setAttachingProject(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("send-gallery-link", {
-        body: {
-          galleryId: gallery.id,
-          clientEmail: clientEmail.trim(),
-          clientName: gallery.client_name ?? undefined,
-        },
-      });
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: project.id, status: "published" } as any)
+        .eq("id", gallery.id);
+      if (error) throw error;
 
-      if (res.error) throw res.error;
+      // Advance project stage to proof_gallery if earlier
+      const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+      const currentIdx = stageOrder.indexOf(project.stage);
+      const proofIdx = stageOrder.indexOf("proof_gallery");
+      if (currentIdx < proofIdx) {
+        await supabase
+          .from("client_projects")
+          .update({ stage: "proof_gallery" })
+          .eq("id", project.id);
+      }
 
+      // Send notification to client
+      if (project.client_email) {
+        try {
+          await supabase.functions.invoke("send-gallery-link", {
+            body: {
+              galleryId: gallery.id,
+              clientEmail: project.client_email,
+              clientName: project.client_name,
+            },
+          });
+        } catch { /* email failure shouldn't block */ }
+      }
+
+      setGallery({ ...gallery, project_id: project.id, status: "published" });
       toast({
-        title: "Email sent",
-        description: `Gallery link sent to ${clientEmail.trim()}`,
+        title: "Gallery attached",
+        description: `Linked to "${project.title}" and published.`,
       });
-    } catch (err: any) {
-      toast({
-        title: "Failed to send email",
-        description: err?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      setAttachProjectOpen(false);
+    } catch {
+      toast({ title: "Failed to attach", variant: "destructive" });
     } finally {
-      setSendingEmail(false);
+      setAttachingProject(false);
     }
   };
 
@@ -1763,20 +1829,67 @@ const GalleryDetail = () => {
                     )}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 text-xs tracking-wider uppercase font-light"
-                    onClick={sendGalleryLink}
-                    disabled={sendingEmail}
-                  >
-                     {sendingEmail ? (
-                       <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
-                     ) : (
-                       <><Send className="h-3.5 w-3.5" /> {gd.sendToClient}</>
-                     )}
-                  </Button>
+                  <Popover open={attachProjectOpen} onOpenChange={setAttachProjectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 text-xs tracking-wider uppercase font-light"
+                      >
+                        <Briefcase className="h-3.5 w-3.5" />
+                        {gallery.project_id ? gd.attachedToProject ?? "Attached to Project" : gd.attachToProject ?? "Attach to Project"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0 rounded-none border-border" side="top" align="start">
+                      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                        <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <p className="text-[11px] tracking-[0.2em] uppercase font-light flex-1">
+                          {gd.attachToProject ?? "Attach to Project"}
+                        </p>
+                      </div>
+                      <div className="px-3 py-2 border-b border-border relative">
+                        <Search className="absolute left-5.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50 pointer-events-none" />
+                        <Input
+                          value={projectSearchQuery}
+                          onChange={(e) => setProjectSearchQuery(e.target.value)}
+                          placeholder={gd.searchProject ?? "Search project or client…"}
+                          className="h-7 pl-7 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-56 overflow-y-auto">
+                        {projectsListLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                          </div>
+                        ) : filteredProjectsList.length === 0 ? (
+                          <div className="py-8 text-center">
+                            <p className="text-xs text-muted-foreground font-light">{gd.noProjectsFound ?? "No projects found"}</p>
+                          </div>
+                        ) : (
+                          filteredProjectsList.map((p) => (
+                            <button
+                              key={p.id}
+                              disabled={attachingProject}
+                              onClick={() => handleAttachProject(p)}
+                              className="w-full flex flex-col gap-0.5 px-4 py-3 text-left border-b border-border last:border-0 hover:bg-accent transition-colors disabled:opacity-50"
+                            >
+                              <span className="text-xs font-light text-foreground truncate">{p.title}</span>
+                              <span className="text-[10px] text-muted-foreground truncate">
+                                {[p.client_name, p.stage].filter(Boolean).join(" · ")}
+                              </span>
+                              {p.shoot_date && (
+                                <span className="text-[10px] text-muted-foreground/60">
+                                  {new Date(p.shoot_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                                </span>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
-                    Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
+                    {gd.attachDesc ?? "Links gallery to a project, publishes it, and notifies the client."}
                   </p>
                 </div>
               </div>

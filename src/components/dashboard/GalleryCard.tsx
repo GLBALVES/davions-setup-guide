@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Image, FolderOpen, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X } from "lucide-react";
+import { Image, FolderOpen, Eye, Pencil, CalendarX2, Clock, Send, Loader2, Check, Mail, Trash2, UserX, UserCheck, Search, X, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { differenceInHours, differenceInDays, isPast, parseISO } from "date-fns";
@@ -25,6 +25,15 @@ interface Booking {
   client_email: string;
   booked_date: string | null;
   session_title: string | null;
+}
+
+interface ClientProject {
+  id: string;
+  title: string;
+  client_name: string;
+  client_email: string | null;
+  stage: string;
+  shoot_date: string | null;
 }
 
 interface GalleryCardProps {
@@ -66,6 +75,13 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const [bookingQuery, setBookingQuery] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  // Attach to project popover
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [projects, setProjects] = useState<ClientProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectQuery, setProjectQuery] = useState("");
+  const [attaching, setAttaching] = useState(false);
+
   const fetchBookings = useCallback(async () => {
     setBookingsLoading(true);
     const { data } = await supabase
@@ -86,12 +102,39 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
     setBookingsLoading(false);
   }, []);
 
+  const fetchProjects = useCallback(async () => {
+    setProjectsLoading(true);
+    const { data } = await supabase
+      .from("client_projects")
+      .select("id, title, client_name, client_email, stage, shoot_date")
+      .order("created_at", { ascending: false });
+
+    setProjects(
+      (data ?? []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        client_name: p.client_name,
+        client_email: p.client_email ?? null,
+        stage: p.stage,
+        shoot_date: p.shoot_date ?? null,
+      }))
+    );
+    setProjectsLoading(false);
+  }, []);
+
   useEffect(() => {
     if (assignOpen) {
       setBookingQuery("");
       fetchBookings();
     }
   }, [assignOpen, fetchBookings]);
+
+  useEffect(() => {
+    if (attachOpen) {
+      setProjectQuery("");
+      fetchProjects();
+    }
+  }, [attachOpen, fetchProjects]);
 
   const filteredBookings = bookings.filter((b) => {
     if (!bookingQuery.trim()) return true;
@@ -103,10 +146,19 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
     );
   });
 
+  const filteredProjects = projects.filter((p) => {
+    if (!projectQuery.trim()) return true;
+    const q = projectQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.client_name.toLowerCase().includes(q) ||
+      (p.client_email?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
   const handleAssign = async (booking: Booking) => {
     setAssigning(true);
     try {
-      // Build a new title from the booking data, only if gallery has no meaningful title
       const suggestedTitle = [booking.client_name, booking.session_title]
         .filter(Boolean)
         .join(" · ");
@@ -135,6 +187,55 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
       toast({ title: "Failed to assign client", variant: "destructive" });
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleAttachToProject = async (project: ClientProject) => {
+    setAttaching(true);
+    try {
+      // Link gallery to project and publish it
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: project.id, status: "published" } as any)
+        .eq("id", gallery.id);
+      if (error) throw error;
+
+      // Update project stage to proof_gallery if it's in an earlier stage
+      const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+      const currentIdx = stageOrder.indexOf(project.stage);
+      const proofIdx = stageOrder.indexOf("proof_gallery");
+      if (currentIdx < proofIdx) {
+        await supabase
+          .from("client_projects")
+          .update({ stage: "proof_gallery" })
+          .eq("id", project.id);
+      }
+
+      // Send notification email to client if they have an email
+      if (project.client_email) {
+        try {
+          await supabase.functions.invoke("send-gallery-link", {
+            body: {
+              galleryId: gallery.id,
+              clientEmail: project.client_email,
+              clientName: project.client_name,
+            },
+          });
+        } catch {
+          // Email failure shouldn't block the attach
+        }
+      }
+
+      toast({
+        title: "Gallery attached to project",
+        description: `Linked to "${project.title}" and published.`,
+      });
+      setAttachOpen(false);
+      onAssigned?.();
+    } catch {
+      toast({ title: "Failed to attach to project", variant: "destructive" });
+    } finally {
+      setAttaching(false);
     }
   };
 
@@ -557,65 +658,76 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
               {/* Assign-client button — only for unassigned galleries */}
               {isUnassigned && assignPopover}
 
-              {isPublished && !isExpired && (
-                <Popover open={sendOpen} onOpenChange={(v) => { setSendOpen(v); if (!v) { setSent(false); setEmail(gallery.client_email ?? ""); } }}>
-                  <PopoverTrigger asChild>
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      title="Send gallery to client"
-                      className="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors"
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-72 p-0 rounded-none border-border"
-                    side="top"
-                    align="end"
+              {/* Attach to Project button */}
+              <Popover open={attachOpen} onOpenChange={setAttachOpen}>
+                <PopoverTrigger asChild>
+                  <button
                     onClick={(e) => e.stopPropagation()}
+                    title="Attach to project"
+                    className="p-1.5 text-muted-foreground/50 hover:text-foreground transition-colors"
                   >
-                    <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <p className="text-[11px] tracking-[0.2em] uppercase font-light">Send Gallery Link</p>
-                    </div>
-                    <form onSubmit={handleSend} className="p-4 flex flex-col gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] tracking-wider uppercase text-muted-foreground font-light">
-                          Client email
-                        </label>
-                        <Input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="client@example.com"
-                          required
-                          className="h-8 text-sm font-light rounded-none"
-                          autoFocus
-                        />
+                    <Briefcase className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-80 p-0 rounded-none border-border"
+                  side="top"
+                  align="end"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <p className="text-[11px] tracking-[0.2em] uppercase font-light flex-1">Attach to Project</p>
+                    <button
+                      onClick={() => setAttachOpen(false)}
+                      className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="px-3 py-2 border-b border-border relative">
+                    <Search className="absolute left-5.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                      value={projectQuery}
+                      onChange={(e) => setProjectQuery(e.target.value)}
+                      placeholder="Search project or client…"
+                      className="h-7 pl-7 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {projectsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
                       </div>
-                      {gallery.client_name && (
-                        <p className="text-[10px] text-muted-foreground/70 -mt-1">
-                          Sending to <span className="text-foreground/70">{gallery.client_name}</span>
-                        </p>
-                      )}
-                      <Button
-                        type="submit"
-                        size="sm"
-                        disabled={sending || sent || !email.trim()}
-                        className="gap-2 text-[10px] tracking-widest uppercase font-light rounded-none w-full"
-                      >
-                        {sent ? (
-                          <><Check className="h-3.5 w-3.5" /> Sent!</>
-                        ) : sending ? (
-                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
-                        ) : (
-                          <><Send className="h-3.5 w-3.5" /> Send</>
-                        )}
-                      </Button>
-                    </form>
-                  </PopoverContent>
-                </Popover>
-              )}
+                    ) : filteredProjects.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p className="text-xs text-muted-foreground font-light">No projects found</p>
+                      </div>
+                    ) : (
+                      filteredProjects.map((p) => (
+                        <button
+                          key={p.id}
+                          disabled={attaching}
+                          onClick={() => handleAttachToProject(p)}
+                          className="w-full flex flex-col gap-0.5 px-4 py-3 text-left border-b border-border last:border-0 hover:bg-accent transition-colors disabled:opacity-50"
+                        >
+                          <span className="text-xs font-light text-foreground truncate">{p.title}</span>
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {[p.client_name, p.stage].filter(Boolean).join(" · ")}
+                          </span>
+                          {p.shoot_date && (
+                            <span className="text-[10px] text-muted-foreground/60">
+                              {new Date(p.shoot_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                            </span>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
 
               {isPublished && !isExpired && (
                 <a
