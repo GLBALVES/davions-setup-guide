@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const COUNTRIES: Record<string, string[]> = {
@@ -127,10 +128,8 @@ export function WaitlistModal() {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Header */}
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
-                <Sparkles size={16} className="text-background" />
-              </div>
+            <div className="flex flex-col items-center text-center gap-4">
+              <img src={logoPrincipal} alt="Davions" className="h-6 w-auto object-contain" />
               <h2 className="text-lg font-light leading-snug tracking-wide text-foreground max-w-sm">
                 {l.headline}
               </h2>
