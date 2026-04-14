@@ -819,7 +819,7 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
           addons={currentAddons}
           oldSessionTitle={booking.sessions?.title ?? "Current Session"}
           newSession={pendingNewSession}
-          onConfirm={(kept) => executeSessionChange(pendingNewSession, kept)}
+          onConfirm={(kept) => doSessionChange(pendingNewSession, kept)}
           saving={savingSession}
         />
       )}
