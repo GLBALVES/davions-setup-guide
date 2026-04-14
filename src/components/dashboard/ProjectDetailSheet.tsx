@@ -1102,6 +1102,7 @@ export function ProjectDetailSheet({
   const [addonItems, setAddonItems] = useState<AddonItem[]>([]);
   const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
   const [changingSession, setChangingSession] = useState(false);
+  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch sessions for this photographer
@@ -1110,14 +1111,22 @@ export function ProjectDetailSheet({
     queryFn: async () => {
       const { data } = await supabase
         .from("sessions")
-        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes")
+        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes, cover_image_url, session_type_id, session_types ( name )")
         .eq("photographer_id", photographerId)
         .eq("status", "active")
         .order("title");
-      return (data ?? []) as Array<{
-        id: string; title: string; price: number; tax_rate: number;
-        deposit_enabled: boolean; deposit_amount: number; deposit_type: string; duration_minutes: number;
-      }>;
+      return (data ?? []).map((s: any) => ({
+        id: s.id as string,
+        title: s.title as string,
+        price: s.price as number,
+        tax_rate: s.tax_rate as number,
+        deposit_enabled: s.deposit_enabled as boolean,
+        deposit_amount: s.deposit_amount as number,
+        deposit_type: s.deposit_type as string,
+        duration_minutes: s.duration_minutes as number,
+        cover_image_url: (s.cover_image_url as string | null),
+        session_type_name: (s.session_types as any)?.name as string | null,
+      }));
     },
     enabled: !!photographerId && open,
   });
