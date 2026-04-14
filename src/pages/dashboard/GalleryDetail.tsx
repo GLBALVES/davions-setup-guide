@@ -2100,6 +2100,51 @@ const GalleryDetail = () => {
           />
         </div>
       )}
+      {/* Confirm Attach Dialog */}
+      <AlertDialog open={confirmAttachOpen} onOpenChange={setConfirmAttachOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Vincular galeria ao projeto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A galeria <span className="font-medium text-foreground">"{gallery?.title}"</span> será vinculada ao projeto <span className="font-medium text-foreground">"{pendingAttachProject?.title}"</span>, publicada e o estágio do projeto será atualizado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingAttachProject(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmAttachOpen(false);
+              if (pendingAttachProject?.client_email) {
+                setConfirmNotifyOpen(true);
+              } else {
+                executeAttach(false);
+              }
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Notify Dialog */}
+      <AlertDialog open={confirmNotifyOpen} onOpenChange={setConfirmNotifyOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar o cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja enviar um email para <span className="font-medium text-foreground">{pendingAttachProject?.client_email}</span> com o link da galeria?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => executeAttach(false)}>Não enviar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmNotifyOpen(false);
+              executeAttach(true);
+            }}>
+              Enviar notificação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
