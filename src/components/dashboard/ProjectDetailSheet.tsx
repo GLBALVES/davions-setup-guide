@@ -1103,6 +1103,14 @@ export function ProjectDetailSheet({
   const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
   const [changingSession, setChangingSession] = useState(false);
   const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newItemDesc, setNewItemDesc] = useState("");
+  const [newItemQty, setNewItemQty] = useState("1");
+  const [newItemPrice, setNewItemPrice] = useState("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemDesc, setEditItemDesc] = useState("");
+  const [editItemQty, setEditItemQty] = useState("1");
+  const [editItemPrice, setEditItemPrice] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch sessions for this photographer
