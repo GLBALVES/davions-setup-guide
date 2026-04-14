@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +23,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CreateGalleryDialog } from "@/components/dashboard/CreateGalleryDialog";
 import {
   User,
@@ -43,8 +41,6 @@ import {
   Send,
   Copy,
   MessageCircle,
-  ChevronDown,
-  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -71,25 +67,6 @@ interface BriefingQuestion {
   label: string;
   required: boolean;
   options: string[];
-}
-
-interface SessionOption {
-  id: string;
-  title: string;
-  price: number;
-  deposit_enabled: boolean;
-  deposit_amount: number;
-  deposit_type: string;
-  tax_rate: number;
-  duration_minutes: number;
-}
-
-interface BookingAddon {
-  id: string;
-  description: string;
-  unit_price: number;
-  quantity: number;
-  keep: boolean;
 }
 
 function BriefingDialog({
@@ -198,171 +175,6 @@ function formatDate(s: string) {
   }).format(dateObj);
 }
 
-const fmtCurrency = (cents: number) =>
-  (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-/* ── Add-on Review Modal ── */
-function AddonReviewModal({
-  open,
-  onClose,
-  addons,
-  oldSessionTitle,
-  newSession,
-  onConfirm,
-  saving,
-}: {
-  open: boolean;
-  onClose: () => void;
-  addons: BookingAddon[];
-  oldSessionTitle: string;
-  newSession: SessionOption;
-  onConfirm: (kept: BookingAddon[]) => void;
-  saving: boolean;
-}) {
-  const [items, setItems] = useState<BookingAddon[]>([]);
-
-  useEffect(() => {
-    if (open) setItems(addons.map((a) => ({ ...a, keep: true })));
-  }, [open, addons]);
-
-  const toggleKeep = (id: string) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, keep: !i.keep } : i)));
-
-  const updateField = (id: string, field: "unit_price" | "quantity", value: number) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
-
-  const keptItems = items.filter((i) => i.keep);
-  const keptExtrasTotal = keptItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
-  const subtotal = newSession.price + keptExtrasTotal;
-  const taxAmount = Math.round(subtotal * (newSession.tax_rate / 100));
-  const total = subtotal + taxAmount;
-
-  const depositBase = newSession.deposit_enabled
-    ? newSession.deposit_type === "percent" || newSession.deposit_type === "percentage"
-      ? Math.round(total * (newSession.deposit_amount / 100))
-      : newSession.deposit_amount
-    : 0;
-  const balance = newSession.deposit_enabled ? total - depositBase : 0;
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-light tracking-wide text-base">Review Add-ons</DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Changing from <span className="font-medium text-foreground">{oldSessionTitle}</span> to{" "}
-            <span className="font-medium text-foreground">{newSession.title}</span>
-          </p>
-        </DialogHeader>
-
-        <div className="space-y-3 max-h-[40vh] overflow-y-auto">
-          {items.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">No add-ons to review.</p>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className={cn(
-                  "flex items-start gap-3 p-3 rounded-md border transition-opacity",
-                  !item.keep && "opacity-40 bg-muted/30"
-                )}
-              >
-                <Checkbox
-                  checked={item.keep}
-                  onCheckedChange={() => toggleKeep(item.id)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <p className={cn("text-sm font-light", !item.keep && "line-through")}>{item.description}</p>
-                  {item.keep && (
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">Qty:</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) => updateField(item.id, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
-                          className="h-6 w-14 text-xs px-1.5"
-                        />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">Price:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={0.01}
-                          value={(item.unit_price / 100).toFixed(2)}
-                          onChange={(e) => updateField(item.id, "unit_price", Math.round(parseFloat(e.target.value || "0") * 100))}
-                          className="h-6 w-20 text-xs px-1.5"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {!item.keep && (
-                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Financial summary */}
-        <div className="border-t pt-3 space-y-1.5 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Session ({newSession.title})</span>
-            <span>{fmtCurrency(newSession.price)}</span>
-          </div>
-          {keptExtrasTotal > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Add-ons ({keptItems.length})</span>
-              <span>{fmtCurrency(keptExtrasTotal)}</span>
-            </div>
-          )}
-          {taxAmount > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax ({newSession.tax_rate}%)</span>
-              <span>{fmtCurrency(taxAmount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-medium pt-1 border-t">
-            <span>Total</span>
-            <span>{fmtCurrency(total)}</span>
-          </div>
-          {newSession.deposit_enabled && (
-            <>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Deposit</span>
-                <span>{fmtCurrency(depositBase)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Balance due</span>
-                <span>{fmtCurrency(balance)}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={saving} className="text-xs">
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => onConfirm(keptItems)}
-            disabled={saving}
-            className="text-xs gap-1.5"
-          >
-            {saving && <Loader2 className="h-3 w-3 animate-spin" />}
-            Confirm Change
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 interface BookingDetailSheetProps {
   booking: ScheduleBooking | null;
   open: boolean;
@@ -389,16 +201,6 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [sendingLink, setSendingLink] = useState(false);
-
-  // Session change state
-  const [editingSession, setEditingSession] = useState(false);
-  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
-  const [sessionOptions, setSessionOptions] = useState<SessionOption[]>([]);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-  const [pendingNewSession, setPendingNewSession] = useState<SessionOption | null>(null);
-  const [addonReviewOpen, setAddonReviewOpen] = useState(false);
-  const [currentAddons, setCurrentAddons] = useState<BookingAddon[]>([]);
-  const [savingSession, setSavingSession] = useState(false);
 
   if (!booking) return null;
 
@@ -565,124 +367,6 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setConfirmDialog({ open: false, action: "confirm" });
   };
 
-  /* ── Session change logic ── */
-  const loadSessions = async () => {
-    if (sessionOptions.length > 0) {
-      setSessionPickerOpen(true);
-      return;
-    }
-    setLoadingSessions(true);
-    const { data } = await supabase
-      .from("sessions")
-      .select("id, title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes")
-      .eq("photographer_id", photographerId)
-      .eq("status", "active")
-      .order("title");
-    setSessionOptions((data as SessionOption[]) ?? []);
-    setLoadingSessions(false);
-    setSessionPickerOpen(true);
-  };
-
-  const handleSessionSelect = async (newSession: SessionOption) => {
-    if (newSession.id === booking.session_id) {
-      setSessionPickerOpen(false);
-      setEditingSession(false);
-      return;
-    }
-
-    setPendingNewSession(newSession);
-    setSessionPickerOpen(false);
-
-    // Check for existing add-ons (booking_invoice_items)
-    const { data: invoiceItems } = await (supabase as any)
-      .from("booking_invoice_items")
-      .select("id, description, unit_price, quantity")
-      .eq("booking_id", booking.id);
-
-    const addons: BookingAddon[] = (invoiceItems ?? []).map((item: any) => ({
-      id: item.id,
-      description: item.description,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      keep: true,
-    }));
-
-    if (addons.length > 0) {
-      setCurrentAddons(addons);
-      setAddonReviewOpen(true);
-    } else {
-      // No addons — directly change session
-      await executeSessionChange(newSession, []);
-    }
-  };
-
-  const executeSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
-    setSavingSession(true);
-    try {
-      const keptExtrasTotal = keptAddons.reduce((s, a) => s + a.unit_price * a.quantity, 0);
-
-      // Update booking session_id and extras_total
-      const { error: bookingErr } = await supabase
-        .from("bookings")
-        .update({
-          session_id: newSession.id,
-          extras_total: keptExtrasTotal,
-        } as any)
-        .eq("id", booking.id);
-
-      if (bookingErr) {
-        toast({ title: "Failed to update booking", variant: "destructive" });
-        setSavingSession(false);
-        return;
-      }
-
-      // Delete removed addons
-      const keptIds = keptAddons.map((a) => a.id);
-      if (currentAddons.length > 0) {
-        const removedIds = currentAddons.filter((a) => !keptIds.includes(a.id)).map((a) => a.id);
-        if (removedIds.length > 0) {
-          await (supabase as any)
-            .from("booking_invoice_items")
-            .delete()
-            .in("id", removedIds);
-        }
-      }
-
-      // Update kept addons (price/qty may have changed)
-      for (const addon of keptAddons) {
-        await (supabase as any)
-          .from("booking_invoice_items")
-          .update({ unit_price: addon.unit_price, quantity: addon.quantity })
-          .eq("id", addon.id);
-      }
-
-      // Update session_availability with new duration
-      if (booking.session_availability?.start_time) {
-        const endTime = addMinutesToTime(
-          booking.session_availability.start_time.slice(0, 5),
-          newSession.duration_minutes
-        );
-        await (supabase as any)
-          .from("session_availability")
-          .update({
-            session_id: newSession.id,
-            end_time: endTime,
-          })
-          .eq("id", booking.availability_id);
-      }
-
-      toast({ title: "Session updated" });
-      setAddonReviewOpen(false);
-      setEditingSession(false);
-      setPendingNewSession(null);
-      setCurrentAddons([]);
-      onBookingUpdated?.();
-    } catch {
-      toast({ title: "An error occurred", variant: "destructive" });
-    }
-    setSavingSession(false);
-  };
-
   return (
     <>
       <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -717,76 +401,13 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
               </div>
             </div>
 
-            {/* Session — Editable */}
+            {/* Session */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60">Session</p>
-                {!editingSession && booking.status !== "cancelled" && (
-                  <button
-                    onClick={() => { setEditingSession(true); loadSessions(); }}
-                    className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    Edit
-                  </button>
-                )}
+              <p className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground/60">Session</p>
+              <div className="flex items-center gap-2.5 text-sm font-light">
+                <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                {booking.sessions?.title ?? "—"}
               </div>
-
-              {editingSession ? (
-                <div className="flex flex-col gap-2">
-                  <Popover open={sessionPickerOpen} onOpenChange={setSessionPickerOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => { if (sessionOptions.length === 0) loadSessions(); else setSessionPickerOpen(true); }}
-                        className="flex items-center justify-between gap-1.5 h-8 px-3 rounded-md border text-sm text-left w-full transition-colors hover:bg-accent/50"
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-xs truncate">{booking.sessions?.title ?? "Select session"}</span>
-                        </div>
-                        {loadingSessions ? (
-                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
-                        ) : (
-                          <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-                        )}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-1.5 max-h-60 overflow-y-auto" align="start">
-                      {sessionOptions.length === 0 ? (
-                        <p className="text-xs text-muted-foreground p-3 text-center">No sessions found</p>
-                      ) : (
-                        sessionOptions.map((s) => (
-                          <button
-                            key={s.id}
-                            className={cn(
-                              "flex items-center justify-between w-full px-3 py-2 rounded-sm text-xs font-light hover:bg-accent transition-colors text-left",
-                              s.id === booking.session_id && "bg-accent"
-                            )}
-                            onClick={() => handleSessionSelect(s)}
-                          >
-                            <span className="truncate">{s.title}</span>
-                            <span className="text-muted-foreground shrink-0 ml-2">{fmtCurrency(s.price)}</span>
-                          </button>
-                        ))
-                      )}
-                    </PopoverContent>
-                  </Popover>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs self-start"
-                    onClick={() => { setEditingSession(false); setSessionPickerOpen(false); }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2.5 text-sm font-light">
-                  <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  {booking.sessions?.title ?? "—"}
-                </div>
-              )}
             </div>
 
             {/* Date & Time — Editable */}
@@ -1043,19 +664,6 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
           onClose={() => setBriefingOpen(false)}
           bookingId={booking.id}
           briefingId={booking.sessions!.briefing_id!}
-        />
-      )}
-
-      {/* Add-on Review Modal */}
-      {pendingNewSession && (
-        <AddonReviewModal
-          open={addonReviewOpen}
-          onClose={() => { setAddonReviewOpen(false); setPendingNewSession(null); setEditingSession(false); }}
-          addons={currentAddons}
-          oldSessionTitle={booking.sessions?.title ?? "Current Session"}
-          newSession={pendingNewSession}
-          onConfirm={(kept) => executeSessionChange(pendingNewSession, kept)}
-          saving={savingSession}
         />
       )}
     </>
