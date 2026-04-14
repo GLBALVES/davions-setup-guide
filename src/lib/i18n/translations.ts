@@ -432,6 +432,12 @@ export const translations = {
       balanceDue: "Balance due",
       confirmSessionChange: "Confirm change",
       selectSession: "Select a session…",
+      searchSessionsPlaceholder: "Search sessions…",
+      allTypes: "All",
+      noSessionsFound: "No sessions found",
+      currentSession: "Current",
+      changeSessionBtn: "Change",
+      durationLabel: "Duration",
     },
     // ── Clients page ──
     clients: {
@@ -2332,6 +2338,12 @@ export const translations = {
       balanceDue: "Saldo devedor",
       confirmSessionChange: "Confirmar troca",
       selectSession: "Selecione uma sessão…",
+      searchSessionsPlaceholder: "Buscar sessões…",
+      allTypes: "Todas",
+      noSessionsFound: "Nenhuma sessão encontrada",
+      currentSession: "Atual",
+      changeSessionBtn: "Trocar",
+      durationLabel: "Duração",
     },
     clients: {
       title: "Clientes",
@@ -4189,6 +4201,12 @@ export const translations = {
       balanceDue: "Saldo pendiente",
       confirmSessionChange: "Confirmar cambio",
       selectSession: "Seleccione una sesión…",
+      searchSessionsPlaceholder: "Buscar sesiones…",
+      allTypes: "Todas",
+      noSessionsFound: "No se encontraron sesiones",
+      currentSession: "Actual",
+      changeSessionBtn: "Cambiar",
+      durationLabel: "Duración",
     },
     clients: {
       title: "Clientes",

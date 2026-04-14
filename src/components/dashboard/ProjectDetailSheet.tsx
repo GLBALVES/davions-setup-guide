@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { AddonReviewModal, type AddonItem, type SessionInfo } from "@/components/dashboard/AddonReviewModal";
+import { SessionPickerModal, type PickerSession } from "@/components/dashboard/SessionPickerModal";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
@@ -1101,6 +1102,7 @@ export function ProjectDetailSheet({
   const [addonItems, setAddonItems] = useState<AddonItem[]>([]);
   const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
   const [changingSession, setChangingSession] = useState(false);
+  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch sessions for this photographer
@@ -1109,14 +1111,22 @@ export function ProjectDetailSheet({
     queryFn: async () => {
       const { data } = await supabase
         .from("sessions")
-        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes")
+        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes, cover_image_url, session_type_id, session_types ( name )")
         .eq("photographer_id", photographerId)
         .eq("status", "active")
         .order("title");
-      return (data ?? []) as Array<{
-        id: string; title: string; price: number; tax_rate: number;
-        deposit_enabled: boolean; deposit_amount: number; deposit_type: string; duration_minutes: number;
-      }>;
+      return (data ?? []).map((s: any) => ({
+        id: s.id as string,
+        title: s.title as string,
+        price: s.price as number,
+        tax_rate: s.tax_rate as number,
+        deposit_enabled: s.deposit_enabled as boolean,
+        deposit_amount: s.deposit_amount as number,
+        deposit_type: s.deposit_type as string,
+        duration_minutes: s.duration_minutes as number,
+        cover_image_url: (s.cover_image_url as string | null),
+        session_type_name: (s.session_types as any)?.name as string | null,
+      }));
     },
     enabled: !!photographerId && open,
   });
@@ -1524,23 +1534,63 @@ export function ProjectDetailSheet({
                   <div className="flex flex-col gap-3">
                     {project.booking_id ? (
                       <>
-                        <div className="flex flex-col gap-1">
-                          <Select
-                            value={bookingData?.session_id ?? ""}
-                            onValueChange={handleSessionChange}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder={tp.selectSession} />
-                            </SelectTrigger>
-                            <SelectContent className="z-[200]">
-                              {photographerSessions.map((s) => (
-                                <SelectItem key={s.id} value={s.id} className="text-xs">
-                                  {s.title} — ${(s.price / 100).toFixed(2)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        {(() => {
+                          const currentSess = photographerSessions.find((s) => s.id === bookingData?.session_id);
+                          if (!currentSess) return (
+                            <button
+                              type="button"
+                              onClick={() => setSessionPickerOpen(true)}
+                              className="flex items-center justify-center gap-2 border border-dashed border-border rounded-lg p-4 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+                            >
+                              <Camera className="h-4 w-4" />
+                              {tp.selectSession}
+                            </button>
+                          );
+                          return (
+                            <div className="rounded-lg border border-border overflow-hidden bg-muted/20">
+                              <div className="flex gap-3">
+                                {/* Cover thumbnail */}
+                                <div className="w-20 h-16 shrink-0 bg-muted/40 overflow-hidden">
+                                  {currentSess.cover_image_url ? (
+                                    <img src={currentSess.cover_image_url} alt={currentSess.title}
+                                      className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                                      <Camera className="h-5 w-5" />
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Details */}
+                                <div className="flex-1 min-w-0 py-2 pr-2 flex flex-col justify-center gap-0.5">
+                                  <p className="text-xs font-medium truncate leading-tight">{currentSess.title}</p>
+                                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                    <span className="flex items-center gap-0.5 font-semibold text-foreground">
+                                      <DollarSign className="h-2.5 w-2.5" />
+                                      {(currentSess.price / 100).toFixed(2)}
+                                    </span>
+                                    <span className="flex items-center gap-0.5">
+                                      <Clock className="h-2.5 w-2.5" />
+                                      {currentSess.duration_minutes}min
+                                    </span>
+                                    {currentSess.session_type_name && (
+                                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                                        {currentSess.session_type_name}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Change button */}
+                              <button
+                                type="button"
+                                onClick={() => setSessionPickerOpen(true)}
+                                className="w-full border-t border-border py-1.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                              >
+                                {tp.changeSessionBtn}
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </>
                     ) : (
                       <SessionTypeManager
@@ -1766,6 +1816,14 @@ export function ProjectDetailSheet({
           confirming={changingSession}
         />
       )}
+
+      <SessionPickerModal
+        open={sessionPickerOpen}
+        onOpenChange={setSessionPickerOpen}
+        sessions={photographerSessions as PickerSession[]}
+        currentSessionId={bookingData?.session_id ?? null}
+        onSelect={handleSessionChange}
+      />
     </Dialog>
   );
 }
