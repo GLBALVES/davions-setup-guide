@@ -97,9 +97,9 @@ export function WaitlistModal() {
           <div
             className="absolute inset-0 backdrop-blur-xl"
             style={{
-              background: "linear-gradient(135deg, hsla(0,0%,100%,0.25) 0%, hsla(0,0%,100%,0.15) 50%, hsla(0,0%,100%,0.25) 100%)",
-              WebkitBackdropFilter: "blur(24px) saturate(1.8)",
-              backdropFilter: "blur(24px) saturate(1.8)",
+              background: "linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.06) 50%, hsla(0,0%,100%,0.12) 100%)",
+              WebkitBackdropFilter: "blur(8px) saturate(1.4)",
+              backdropFilter: "blur(8px) saturate(1.4)",
             }}
           />
 
