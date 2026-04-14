@@ -103,6 +103,14 @@ export function WaitlistModal() {
             }}
           />
 
+          <motion.div
+            key="waitlist-card"
+            className="relative z-10 w-full max-w-md mx-4 bg-background/95 border border-border p-8 flex flex-col gap-6 rounded-2xl shadow-2xl"
+            initial={{ opacity: 0, y: 40, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.96 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
             {/* Header */}
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
