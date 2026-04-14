@@ -7,11 +7,23 @@ import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const COUNTRIES = [
-  "Brasil", "United States", "Portugal", "España", "Argentina", "México",
-  "Colombia", "Chile", "Peru", "United Kingdom", "Canada", "France",
-  "Germany", "Italy", "Australia", "Other",
-];
+const COUNTRIES: Record<string, string[]> = {
+  en: [
+    "Brazil", "United States", "Portugal", "Spain", "Argentina", "Mexico",
+    "Colombia", "Chile", "Peru", "United Kingdom", "Canada", "France",
+    "Germany", "Italy", "Australia", "Other",
+  ],
+  pt: [
+    "Brasil", "Estados Unidos", "Portugal", "Espanha", "Argentina", "México",
+    "Colômbia", "Chile", "Peru", "Reino Unido", "Canadá", "França",
+    "Alemanha", "Itália", "Austrália", "Outro",
+  ],
+  es: [
+    "Brasil", "Estados Unidos", "Portugal", "España", "Argentina", "México",
+    "Colombia", "Chile", "Perú", "Reino Unido", "Canadá", "Francia",
+    "Alemania", "Italia", "Australia", "Otro",
+  ],
+};
 
 const labels = {
   en: {
@@ -24,7 +36,8 @@ const labels = {
     cta: "Join the Waitlist",
     success: "You're on the list! We'll be in touch soon.",
     selectCountry: "Select your country",
-    close: "Close",
+    error: "Something went wrong. Try again.",
+    loading: "Sending...",
   },
   pt: {
     headline: "Em breve a maior plataforma para fotografia, integrada com inteligência artificial, do mundo!",
@@ -36,10 +49,11 @@ const labels = {
     cta: "Entrar na Fila de Espera",
     success: "Você está na lista! Entraremos em contato em breve.",
     selectCountry: "Selecione seu país",
-    close: "Fechar",
+    error: "Algo deu errado. Tente novamente.",
+    loading: "Enviando...",
   },
   es: {
-    headline: "Próximamente la plataforma de fotografía integrada con inteligencia artificial más grande del mundo!",
+    headline: "¡Próximamente la plataforma de fotografía integrada con inteligencia artificial más grande del mundo!",
     sub: "Únete a la lista de espera",
     name: "Nombre completo",
     email: "Correo electrónico",
@@ -48,7 +62,8 @@ const labels = {
     cta: "Unirse a la Lista de Espera",
     success: "¡Estás en la lista! Te contactaremos pronto.",
     selectCountry: "Selecciona tu país",
-    close: "Cerrar",
+    error: "Algo salió mal. Inténtalo de nuevo.",
+    loading: "Enviando...",
   },
 };
 
@@ -72,7 +87,7 @@ export function WaitlistModal() {
     });
     setLoading(false);
     if (error) {
-      toast.error("Something went wrong. Try again.");
+      toast.error(l.error);
       return;
     }
     setSubmitted(true);
@@ -165,13 +180,13 @@ export function WaitlistModal() {
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
                 >
                   <option value="" disabled>{l.selectCountry}</option>
-                  {COUNTRIES.map((c) => (
+                  {(COUNTRIES[lang] || COUNTRIES.en).map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
 
                 <Button type="submit" size="lg" className="w-full mt-2" disabled={loading}>
-                  {loading ? "..." : l.cta}
+                  {loading ? l.loading : l.cta}
                 </Button>
               </form>
             )}
