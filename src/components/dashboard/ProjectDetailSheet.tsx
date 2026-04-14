@@ -36,6 +36,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkBookingConflict, syncProjectDateToBooking, timeToMinutes } from "@/lib/booking-conflict";
+import {
+  type SessionOption,
+  type BookingAddon,
+  fmtCurrency,
+  loadActiveSessions,
+  fetchBookingAddons,
+  executeSessionChange,
+} from "@/lib/session-change";
+import { AddonReviewModal } from "@/components/dashboard/AddonReviewModal";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
 
