@@ -180,7 +180,7 @@ export function WaitlistModal() {
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
                 >
                   <option value="" disabled>{l.selectCountry}</option>
-                  {COUNTRIES.map((c) => (
+                  {(COUNTRIES[lang] || COUNTRIES.en).map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
