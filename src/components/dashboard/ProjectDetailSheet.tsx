@@ -1816,6 +1816,14 @@ export function ProjectDetailSheet({
           confirming={changingSession}
         />
       )}
+
+      <SessionPickerModal
+        open={sessionPickerOpen}
+        onOpenChange={setSessionPickerOpen}
+        sessions={photographerSessions as PickerSession[]}
+        currentSessionId={bookingData?.session_id ?? null}
+        onSelect={handleSessionChange}
+      />
     </Dialog>
   );
 }
