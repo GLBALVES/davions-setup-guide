@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Bug, ArrowLeft, Shield, Sparkles, Globe, Server, Mail, UserCheck } from "lucide-react";
+import { LayoutDashboard, Users, Bug, ArrowLeft, Shield, Sparkles, Globe, Server, Mail, UserCheck, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 
@@ -12,6 +12,7 @@ const NAV = [
   { to: "/admin/vps", label: "VPS", icon: Server },
   { to: "/admin/email", label: "Email", icon: Mail },
   { to: "/admin/approvals", label: "Approvals", icon: UserCheck },
+  { to: "/admin/leads", label: "Waitlist Leads", icon: UserPlus },
 ];
 
 export function AdminSidebar() {
