@@ -1606,6 +1606,20 @@ export function ProjectDetailSheet({
                             </div>
                           );
                         })()}
+                        {/* Session includes */}
+                        {sessionIncludes.length > 0 && (
+                          <div className="mt-2 rounded-md border border-border bg-muted/10 px-3 py-2">
+                            <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1.5">{tp.includes || "Includes"}</p>
+                            <ul className="space-y-1">
+                              {sessionIncludes.map((item) => (
+                                <li key={item.id} className="flex items-start gap-1.5 text-xs text-foreground">
+                                  <Check className="h-3 w-3 mt-0.5 shrink-0 text-primary" />
+                                  <span>{item.text}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <SessionTypeManager
