@@ -419,6 +419,19 @@ export const translations = {
       commsEmailSentSuccess: "Email sent successfully",
       commsEmailSentError: "Failed to send email",
       commsEmailNoSubject: "Please enter a subject",
+      // Session change & addon review
+      sessionLabel: "Session",
+      changeSession: "Change session",
+      addonReviewTitle: "Review Add-ons",
+      addonReviewDesc: "Review existing add-ons before changing session. You can keep, edit or remove each item.",
+      noAddonsToReview: "No add-ons to review",
+      newSessionPrice: "Session price",
+      extrasTotal: "Extras",
+      taxAmount: "Tax",
+      depositAmount: "Deposit paid",
+      balanceDue: "Balance due",
+      confirmSessionChange: "Confirm change",
+      selectSession: "Select a session…",
     },
     // ── Clients page ──
     clients: {
