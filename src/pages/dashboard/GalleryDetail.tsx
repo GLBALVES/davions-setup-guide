@@ -307,6 +307,11 @@ const GalleryDetail = () => {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [attachProjectOpen, setAttachProjectOpen] = useState(false);
+  const [projectsList, setProjectsList] = useState<ClientProject[]>([]);
+  const [projectsListLoading, setProjectsListLoading] = useState(false);
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
+  const [attachingProject, setAttachingProject] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [settingCover, setSettingCover] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
