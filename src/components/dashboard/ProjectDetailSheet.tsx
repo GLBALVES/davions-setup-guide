@@ -1106,6 +1106,16 @@ export function ProjectDetailSheet({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Session change (booking-linked) state
+  const [editingBookingSession, setEditingBookingSession] = useState(false);
+  const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
+  const [sessionOptions, setSessionOptions] = useState<SessionOption[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [pendingNewSession, setPendingNewSession] = useState<SessionOption | null>(null);
+  const [addonReviewOpen, setAddonReviewOpen] = useState(false);
+  const [currentAddons, setCurrentAddons] = useState<BookingAddon[]>([]);
+  const [savingSession, setSavingSession] = useState(false);
+
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
