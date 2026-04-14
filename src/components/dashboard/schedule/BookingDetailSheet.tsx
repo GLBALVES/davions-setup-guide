@@ -73,24 +73,15 @@ interface BriefingQuestion {
   options: string[];
 }
 
-interface SessionOption {
-  id: string;
-  title: string;
-  price: number;
-  deposit_enabled: boolean;
-  deposit_amount: number;
-  deposit_type: string;
-  tax_rate: number;
-  duration_minutes: number;
-}
-
-interface BookingAddon {
-  id: string;
-  description: string;
-  unit_price: number;
-  quantity: number;
-  keep: boolean;
-}
+import {
+  type SessionOption,
+  type BookingAddon,
+  fmtCurrency,
+  loadActiveSessions,
+  fetchBookingAddons,
+  executeSessionChange as executeSessionChangeShared,
+} from "@/lib/session-change";
+import { AddonReviewModal } from "@/components/dashboard/AddonReviewModal";
 
 function BriefingDialog({
   open,
