@@ -36,6 +36,8 @@ import { DayView } from "@/components/dashboard/schedule/DayView";
 import { BookingDetailSheet, type ScheduleBooking } from "@/components/dashboard/schedule/BookingDetailSheet";
 import { CreateBookingDialog } from "@/components/dashboard/schedule/CreateBookingDialog";
 import { BlockDayDialog } from "@/components/dashboard/schedule/BlockDayDialog";
+import { ProjectDetailSheet } from "@/components/dashboard/ProjectDetailSheet";
+import { useProjectSheet } from "@/hooks/useProjectSheet";
 
 export interface BlockedSlot {
   id: string;
@@ -93,6 +95,20 @@ const Schedule = () => {
   const [createDefaultTime, setCreateDefaultTime] = useState<string | null>(null);
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockDefaultDate, setBlockDefaultDate] = useState<Date | null>(null);
+
+  const {
+    sheetProject: projSheetProject,
+    sheetOpen: projSheetOpen,
+    setSheetOpen: setProjSheetOpen,
+    sessionTypes: projSessionTypes,
+    fetchSessionTypes: projFetchSessionTypes,
+    openByBookingId,
+    handleUpdate: projHandleUpdate,
+    handleDelete: projHandleDelete,
+    handleArchive: projHandleArchive,
+    handleUnarchive: projHandleUnarchive,
+    setSheetProject: setProjSheetProject,
+  } = useProjectSheet(photographerId ?? user?.id);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -371,6 +387,20 @@ const Schedule = () => {
         onOpenChange={setBlockOpen}
         defaultDate={blockDefaultDate}
         onBlocked={fetchData}
+      />
+
+      <ProjectDetailSheet
+        project={projSheetProject}
+        open={projSheetOpen}
+        onOpenChange={setProjSheetOpen}
+        onUpdate={projHandleUpdate}
+        onDelete={projHandleDelete}
+        onArchive={projHandleArchive}
+        onUnarchive={projHandleUnarchive}
+        onOpenEdit={() => {}}
+        photographerId={photographerId ?? user?.id ?? ""}
+        sessionTypes={projSessionTypes}
+        onRefetchSessionTypes={projFetchSessionTypes}
       />
     </SidebarProvider>
   );
