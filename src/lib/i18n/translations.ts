@@ -438,6 +438,7 @@ export const translations = {
       currentSession: "Current",
       changeSessionBtn: "Change",
       durationLabel: "Duration",
+      sessionIncludes: "Includes",
     },
     // ── Clients page ──
     clients: {
@@ -2344,6 +2345,7 @@ export const translations = {
       currentSession: "Atual",
       changeSessionBtn: "Trocar",
       durationLabel: "Duração",
+      sessionIncludes: "Inclui",
     },
     clients: {
       title: "Clientes",
@@ -4207,6 +4209,7 @@ export const translations = {
       currentSession: "Actual",
       changeSessionBtn: "Cambiar",
       durationLabel: "Duración",
+      sessionIncludes: "Incluye",
     },
     clients: {
       title: "Clientes",
