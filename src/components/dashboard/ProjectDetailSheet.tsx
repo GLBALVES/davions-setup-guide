@@ -1662,15 +1662,20 @@ export function ProjectDetailSheet({
                     <InlineField label={tp.phone} value={project.client_phone ?? ""} placeholder={tp.addPhonePlaceholder}
                       type="tel" icon={<FileText className="h-3.5 w-3.5" />} onSave={(v) => save({ client_phone: v || null } as any)} />
                   </div>
-                  {project.session_type && (
-                    <div className="px-3 py-2.5">
-                      <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.sessionTypeLabel}</p>
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span>{project.session_type}</span>
+                  {(project.session_type || bookingData?.session_id) && (() => {
+                    const sessTitle = bookingData?.session_id
+                      ? photographerSessions.find((s) => s.id === bookingData.session_id)?.title ?? project.session_type
+                      : project.session_type;
+                    return (
+                      <div className="px-3 py-2.5">
+                        <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.sessionLabel}</p>
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                          <Camera className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>{sessTitle}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {project.shoot_date && (
                     <div className="px-3 py-2.5">
                       <p className="text-[9px] tracking-widest uppercase text-muted-foreground/60 mb-1">{tp.shootDateLabel}</p>
