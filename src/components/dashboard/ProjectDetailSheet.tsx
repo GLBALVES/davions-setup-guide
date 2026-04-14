@@ -1525,7 +1525,6 @@ export function ProjectDetailSheet({
                     {project.booking_id ? (
                       <>
                         <div className="flex flex-col gap-1">
-                          <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.sessionLabel}</Label>
                           <Select
                             value={bookingData?.session_id ?? ""}
                             onValueChange={handleSessionChange}
