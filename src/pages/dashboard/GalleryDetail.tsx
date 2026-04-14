@@ -777,8 +777,19 @@ const GalleryDetail = () => {
     );
   });
 
-  const handleAttachProject = async (project: ClientProject) => {
-    if (!gallery) return;
+  // Attach confirmation state
+  const [pendingAttachProject, setPendingAttachProject] = useState<ClientProject | null>(null);
+  const [confirmAttachOpen, setConfirmAttachOpen] = useState(false);
+  const [confirmNotifyOpen, setConfirmNotifyOpen] = useState(false);
+
+  const handleAttachProject = (project: ClientProject) => {
+    setPendingAttachProject(project);
+    setConfirmAttachOpen(true);
+  };
+
+  const executeAttach = async (notify: boolean) => {
+    const project = pendingAttachProject;
+    if (!gallery || !project) return;
     setAttachingProject(true);
     try {
       const { error } = await supabase
@@ -787,7 +798,6 @@ const GalleryDetail = () => {
         .eq("id", gallery.id);
       if (error) throw error;
 
-      // Advance project stage to proof_gallery if earlier
       const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
       const currentIdx = stageOrder.indexOf(project.stage);
       const proofIdx = stageOrder.indexOf("proof_gallery");
@@ -798,8 +808,7 @@ const GalleryDetail = () => {
           .eq("id", project.id);
       }
 
-      // Send notification to client
-      if (project.client_email) {
+      if (notify && project.client_email) {
         try {
           await supabase.functions.invoke("send-gallery-link", {
             body: {
@@ -821,6 +830,7 @@ const GalleryDetail = () => {
       toast({ title: "Failed to attach", variant: "destructive" });
     } finally {
       setAttachingProject(false);
+      setPendingAttachProject(null);
     }
   };
 
@@ -2090,6 +2100,51 @@ const GalleryDetail = () => {
           />
         </div>
       )}
+      {/* Confirm Attach Dialog */}
+      <AlertDialog open={confirmAttachOpen} onOpenChange={setConfirmAttachOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Vincular galeria ao projeto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A galeria <span className="font-medium text-foreground">"{gallery?.title}"</span> será vinculada ao projeto <span className="font-medium text-foreground">"{pendingAttachProject?.title}"</span>, publicada e o estágio do projeto será atualizado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingAttachProject(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmAttachOpen(false);
+              if (pendingAttachProject?.client_email) {
+                setConfirmNotifyOpen(true);
+              } else {
+                executeAttach(false);
+              }
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Notify Dialog */}
+      <AlertDialog open={confirmNotifyOpen} onOpenChange={setConfirmNotifyOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar o cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja enviar um email para <span className="font-medium text-foreground">{pendingAttachProject?.client_email}</span> com o link da galeria?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => executeAttach(false)}>Não enviar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmNotifyOpen(false);
+              executeAttach(true);
+            }}>
+              Enviar notificação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
