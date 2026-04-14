@@ -439,6 +439,11 @@ export const translations = {
       changeSessionBtn: "Change",
       durationLabel: "Duration",
       sessionIncludes: "Includes",
+      invoiceItems: "Add-ons",
+      addItem: "Add",
+      itemDescription: "Description",
+      itemQty: "Qty",
+      itemPrice: "Price",
     },
     // ── Clients page ──
     clients: {
@@ -2346,6 +2351,11 @@ export const translations = {
       changeSessionBtn: "Trocar",
       durationLabel: "Duração",
       sessionIncludes: "Inclui",
+      invoiceItems: "Itens extras",
+      addItem: "Adicionar",
+      itemDescription: "Descrição",
+      itemQty: "Qtd",
+      itemPrice: "Valor",
     },
     clients: {
       title: "Clientes",
@@ -4210,6 +4220,11 @@ export const translations = {
       changeSessionBtn: "Cambiar",
       durationLabel: "Duración",
       sessionIncludes: "Incluye",
+      invoiceItems: "Extras",
+      addItem: "Agregar",
+      itemDescription: "Descripción",
+      itemQty: "Cant",
+      itemPrice: "Precio",
     },
     clients: {
       title: "Clientes",

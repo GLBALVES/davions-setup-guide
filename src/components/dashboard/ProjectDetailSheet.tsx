@@ -1103,6 +1103,14 @@ export function ProjectDetailSheet({
   const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
   const [changingSession, setChangingSession] = useState(false);
   const [sessionPickerOpen, setSessionPickerOpen] = useState(false);
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newItemDesc, setNewItemDesc] = useState("");
+  const [newItemQty, setNewItemQty] = useState("1");
+  const [newItemPrice, setNewItemPrice] = useState("");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemDesc, setEditItemDesc] = useState("");
+  const [editItemQty, setEditItemQty] = useState("1");
+  const [editItemPrice, setEditItemPrice] = useState("");
   const queryClient = useQueryClient();
 
   // Fetch sessions for this photographer
@@ -1160,6 +1168,73 @@ export function ProjectDetailSheet({
     },
     enabled: !!currentBookingSessionId && open,
   });
+
+  // Fetch booking invoice items (add-ons)
+  const { data: bookingInvoiceItems = [], refetch: refetchInvoiceItems } = useQuery({
+    queryKey: ["booking-invoice-items", project?.booking_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("booking_invoice_items")
+        .select("id, description, quantity, unit_price")
+        .eq("booking_id", project!.booking_id!)
+        .order("created_at");
+      return (data ?? []) as { id: string; description: string; quantity: number; unit_price: number }[];
+    },
+    enabled: !!project?.booking_id && open,
+  });
+
+  // Sync extras_total on bookings when invoice items change
+  const syncExtrasTotal = async (items: { quantity: number; unit_price: number }[]) => {
+    if (!project?.booking_id) return;
+    const newExtras = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    await (supabase as any)
+      .from("bookings")
+      .update({ extras_total: newExtras })
+      .eq("id", project.booking_id);
+    queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
+    queryClient.invalidateQueries({ queryKey: ["project-booking-session"] });
+  };
+
+  const addInvoiceItem = async () => {
+    if (!project?.booking_id || !newItemDesc.trim()) return;
+    const priceInCents = Math.round(parseFloat(newItemPrice || "0") * 100);
+    const qty = parseInt(newItemQty) || 1;
+    await supabase.from("booking_invoice_items").insert({
+      booking_id: project.booking_id,
+      photographer_id: photographerId,
+      description: newItemDesc.trim(),
+      quantity: qty,
+      unit_price: priceInCents,
+    });
+    setNewItemDesc(""); setNewItemQty("1"); setNewItemPrice(""); setShowAddItem(false);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
+
+  const updateInvoiceItem = async (itemId: string) => {
+    if (!project?.booking_id) return;
+    const priceInCents = Math.round(parseFloat(editItemPrice || "0") * 100);
+    const qty = parseInt(editItemQty) || 1;
+    await supabase.from("booking_invoice_items")
+      .update({ description: editItemDesc.trim(), quantity: qty, unit_price: priceInCents })
+      .eq("id", itemId);
+    setEditingItemId(null);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
+
+  const deleteInvoiceItem = async (itemId: string) => {
+    if (!project?.booking_id) return;
+    await supabase.from("booking_invoice_items").delete().eq("id", itemId);
+    const { data: updated } = await supabase.from("booking_invoice_items")
+      .select("id, description, quantity, unit_price").eq("booking_id", project.booking_id);
+    await syncExtrasTotal(updated ?? []);
+    refetchInvoiceItems();
+  };
 
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
@@ -1618,6 +1693,110 @@ export function ProjectDetailSheet({
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        )}
+                        {/* Invoice items (add-ons) */}
+                        {project.booking_id && (
+                          <div className="mt-2 rounded-md border border-border bg-muted/10 px-3 py-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <p className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.invoiceItems || "Add-ons"}</p>
+                              <button
+                                type="button"
+                                onClick={() => setShowAddItem(true)}
+                                className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 transition-colors"
+                              >
+                                <Plus className="h-3 w-3" /> {tp.addItem || "Add"}
+                              </button>
+                            </div>
+
+                            {bookingInvoiceItems.length > 0 && (
+                              <ul className="space-y-1.5 mb-2">
+                                {bookingInvoiceItems.map((item) => {
+                                  if (editingItemId === item.id) {
+                                    return (
+                                      <li key={item.id} className="flex flex-col gap-1.5 rounded-md border border-primary/20 bg-muted/20 p-2">
+                                        <Input value={editItemDesc} onChange={(e) => setEditItemDesc(e.target.value)}
+                                          placeholder={tp.itemDescription || "Description"} className="h-6 text-[11px]" />
+                                        <div className="flex gap-1.5">
+                                          <Input type="number" value={editItemQty} onChange={(e) => setEditItemQty(e.target.value)}
+                                            placeholder="Qty" min={1} className="h-6 text-[11px] w-14" />
+                                          <Input type="number" value={editItemPrice} onChange={(e) => setEditItemPrice(e.target.value)}
+                                            placeholder="0.00" min={0} step="0.01" className="h-6 text-[11px] flex-1" />
+                                          <button type="button" onClick={() => updateInvoiceItem(item.id)}
+                                            className="h-6 px-2 rounded-md bg-primary text-primary-foreground text-[10px] hover:bg-primary/90 transition-colors">
+                                            <Check className="h-3 w-3" />
+                                          </button>
+                                          <button type="button" onClick={() => setEditingItemId(null)}
+                                            className="h-6 px-2 rounded-md border border-border text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      </li>
+                                    );
+                                  }
+                                  return (
+                                    <li key={item.id} className="flex items-center gap-2 group">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs truncate">{item.description}</p>
+                                        <p className="text-[10px] text-muted-foreground">
+                                          {item.quantity} × ${(item.unit_price / 100).toFixed(2)}
+                                          <span className="ml-1.5 font-medium text-foreground">
+                                            = ${((item.quantity * item.unit_price) / 100).toFixed(2)}
+                                          </span>
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button type="button" onClick={() => {
+                                          setEditingItemId(item.id);
+                                          setEditItemDesc(item.description);
+                                          setEditItemQty(String(item.quantity));
+                                          setEditItemPrice((item.unit_price / 100).toFixed(2));
+                                        }} className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors">
+                                          <Pencil className="h-2.5 w-2.5" />
+                                        </button>
+                                        <button type="button" onClick={() => deleteInvoiceItem(item.id)}
+                                          className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive transition-colors">
+                                          <Trash2 className="h-2.5 w-2.5" />
+                                        </button>
+                                      </div>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+
+                            {bookingInvoiceItems.length > 0 && (
+                              <div className="border-t border-border pt-1.5">
+                                <div className="flex justify-between text-[10px]">
+                                  <span className="text-muted-foreground uppercase tracking-wider">{tp.extrasTotal || "Extras"}</span>
+                                  <span className="font-semibold tabular-nums text-foreground">
+                                    ${(bookingInvoiceItems.reduce((s, i) => s + i.quantity * i.unit_price, 0) / 100).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {showAddItem && (
+                              <div className="mt-1.5 flex flex-col gap-1.5 rounded-md border border-primary/20 bg-muted/20 p-2">
+                                <Input value={newItemDesc} onChange={(e) => setNewItemDesc(e.target.value)}
+                                  placeholder={tp.itemDescription || "Description"} className="h-6 text-[11px]" />
+                                <div className="flex gap-1.5">
+                                  <Input type="number" value={newItemQty} onChange={(e) => setNewItemQty(e.target.value)}
+                                    placeholder="Qty" min={1} className="h-6 text-[11px] w-14" />
+                                  <Input type="number" value={newItemPrice} onChange={(e) => setNewItemPrice(e.target.value)}
+                                    placeholder="0.00" min={0} step="0.01" className="h-6 text-[11px] flex-1" />
+                                  <button type="button" onClick={addInvoiceItem}
+                                    disabled={!newItemDesc.trim()}
+                                    className="h-6 px-2 rounded-md bg-primary text-primary-foreground text-[10px] hover:bg-primary/90 disabled:opacity-50 transition-colors">
+                                    <Check className="h-3 w-3" />
+                                  </button>
+                                  <button type="button" onClick={() => { setShowAddItem(false); setNewItemDesc(""); setNewItemQty("1"); setNewItemPrice(""); }}
+                                    className="h-6 px-2 rounded-md border border-border text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </>
