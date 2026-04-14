@@ -1146,6 +1146,21 @@ export function ProjectDetailSheet({
     enabled: !!project?.booking_id && open,
   });
 
+  // Fetch session bonuses/includes for the current booking session
+  const currentBookingSessionId = bookingData?.session_id;
+  const { data: sessionIncludes = [] } = useQuery({
+    queryKey: ["session-bonuses", currentBookingSessionId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("session_bonuses")
+        .select("id, text, position")
+        .eq("session_id", currentBookingSessionId)
+        .order("position");
+      return (data ?? []) as { id: string; text: string; position: number }[];
+    },
+    enabled: !!currentBookingSessionId && open,
+  });
+
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   // Build STAGES from translations
@@ -1591,6 +1606,20 @@ export function ProjectDetailSheet({
                             </div>
                           );
                         })()}
+                        {/* Session includes */}
+                        {sessionIncludes.length > 0 && (
+                          <div className="mt-2 rounded-md border border-border bg-muted/10 px-3 py-2">
+                            <p className="text-[10px] tracking-widest uppercase text-muted-foreground mb-1.5">{tp.sessionIncludes}</p>
+                            <ul className="space-y-1">
+                              {sessionIncludes.map((item) => (
+                                <li key={item.id} className="flex items-start gap-1.5 text-xs text-foreground">
+                                  <Check className="h-3 w-3 mt-0.5 shrink-0 text-primary" />
+                                  <span>{item.text}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <SessionTypeManager
