@@ -738,39 +738,87 @@ const GalleryDetail = () => {
     setEditingTitle(false);
   };
 
-  // ── Send gallery link to client ─────────────────────────────────────────────
-  const sendGalleryLink = async () => {
+  // ── Fetch projects for attach ────────────────────────────────────────────────
+  const fetchProjectsForAttach = useCallback(async () => {
+    setProjectsListLoading(true);
+    const { data } = await supabase
+      .from("client_projects")
+      .select("id, title, client_name, client_email, stage, shoot_date")
+      .order("created_at", { ascending: false });
+    setProjectsList(
+      (data ?? []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        client_name: p.client_name,
+        client_email: p.client_email ?? null,
+        stage: p.stage,
+        shoot_date: p.shoot_date ?? null,
+      }))
+    );
+    setProjectsListLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (attachProjectOpen) {
+      setProjectSearchQuery("");
+      fetchProjectsForAttach();
+    }
+  }, [attachProjectOpen, fetchProjectsForAttach]);
+
+  const filteredProjectsList = projectsList.filter((p) => {
+    if (!projectSearchQuery.trim()) return true;
+    const q = projectSearchQuery.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.client_name.toLowerCase().includes(q) ||
+      (p.client_email?.toLowerCase().includes(q) ?? false)
+    );
+  });
+
+  const handleAttachProject = async (project: ClientProject) => {
     if (!gallery) return;
-    const clientEmail = gallery.client_name
-      ? prompt(`Send gallery to client email:`)
-      : prompt(`Send gallery to client email:`);
-    if (!clientEmail?.trim()) return;
-
-    setSendingEmail(true);
+    setAttachingProject(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("send-gallery-link", {
-        body: {
-          galleryId: gallery.id,
-          clientEmail: clientEmail.trim(),
-          clientName: gallery.client_name ?? undefined,
-        },
-      });
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: project.id, status: "published" } as any)
+        .eq("id", gallery.id);
+      if (error) throw error;
 
-      if (res.error) throw res.error;
+      // Advance project stage to proof_gallery if earlier
+      const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+      const currentIdx = stageOrder.indexOf(project.stage);
+      const proofIdx = stageOrder.indexOf("proof_gallery");
+      if (currentIdx < proofIdx) {
+        await supabase
+          .from("client_projects")
+          .update({ stage: "proof_gallery" })
+          .eq("id", project.id);
+      }
 
+      // Send notification to client
+      if (project.client_email) {
+        try {
+          await supabase.functions.invoke("send-gallery-link", {
+            body: {
+              galleryId: gallery.id,
+              clientEmail: project.client_email,
+              clientName: project.client_name,
+            },
+          });
+        } catch { /* email failure shouldn't block */ }
+      }
+
+      setGallery({ ...gallery, project_id: project.id, status: "published" });
       toast({
-        title: "Email sent",
-        description: `Gallery link sent to ${clientEmail.trim()}`,
+        title: gd.galleryAttached ?? "Gallery attached",
+        description: `Linked to "${project.title}" and published.`,
       });
-    } catch (err: any) {
-      toast({
-        title: "Failed to send email",
-        description: err?.message || "Something went wrong",
-        variant: "destructive",
-      });
+      setAttachProjectOpen(false);
+    } catch {
+      toast({ title: "Failed to attach", variant: "destructive" });
     } finally {
-      setSendingEmail(false);
+      setAttachingProject(false);
     }
   };
 
