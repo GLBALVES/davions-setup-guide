@@ -87,7 +87,7 @@ export function WaitlistModal() {
     });
     setLoading(false);
     if (error) {
-      toast.error("Something went wrong. Try again.");
+      toast.error(l.error);
       return;
     }
     setSubmitted(true);
