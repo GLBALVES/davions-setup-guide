@@ -1248,6 +1248,66 @@ export function ProjectDetailSheet({
     await save({ session_type: name });
   };
 
+  /* ── Booking Session change logic ── */
+  const loadBookingSessions = async () => {
+    if (sessionOptions.length > 0) { setSessionPickerOpen(true); return; }
+    setLoadingSessions(true);
+    const sessions = await loadActiveSessions(photographerId);
+    setSessionOptions(sessions);
+    setLoadingSessions(false);
+    setSessionPickerOpen(true);
+  };
+
+  const handleBookingSessionSelect = async (newSession: SessionOption) => {
+    if (!project.booking_id) return;
+    const { data: bk } = await (supabase as any)
+      .from("bookings").select("session_id, availability_id").eq("id", project.booking_id).single();
+    if (bk && newSession.id === bk.session_id) {
+      setSessionPickerOpen(false);
+      setEditingBookingSession(false);
+      return;
+    }
+    setPendingNewSession(newSession);
+    setSessionPickerOpen(false);
+
+    const addons = await fetchBookingAddons(project.booking_id);
+    if (addons.length > 0) {
+      setCurrentAddons(addons);
+      setAddonReviewOpen(true);
+    } else {
+      await doBookingSessionChange(newSession, []);
+    }
+  };
+
+  const doBookingSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
+    if (!project.booking_id) return;
+    setSavingSession(true);
+
+    const { data: bk } = await (supabase as any)
+      .from("bookings").select("availability_id, session_availability(start_time)").eq("id", project.booking_id).single();
+
+    const result = await executeSessionChange({
+      bookingId: project.booking_id,
+      availabilityId: bk?.availability_id ?? "",
+      startTime: bk?.session_availability?.start_time ?? null,
+      newSession,
+      keptAddons,
+      allAddons: currentAddons,
+    });
+
+    if (!result.success) {
+      toast.error(result.error || "Failed to update session");
+    } else {
+      toast.success("Session updated");
+      setAddonReviewOpen(false);
+      setEditingBookingSession(false);
+      setPendingNewSession(null);
+      setCurrentAddons([]);
+      await onUpdate(project.id, { session_type: newSession.title } as any);
+    }
+    setSavingSession(false);
+  };
+
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
 
   const renderDeadlineSection = () => {
