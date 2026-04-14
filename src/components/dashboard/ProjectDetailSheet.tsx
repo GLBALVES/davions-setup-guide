@@ -1731,5 +1731,17 @@ export function ProjectDetailSheet({
         </ScrollArea>
       </DialogContent>
     </Dialog>
+    {pendingNewSession && (
+      <AddonReviewModal
+        open={addonReviewOpen}
+        onClose={() => { setAddonReviewOpen(false); setPendingNewSession(null); }}
+        addons={currentAddons}
+        oldSessionTitle={project.session_title ?? "Current Session"}
+        newSession={pendingNewSession}
+        onConfirm={(kept) => doBookingSessionChange(pendingNewSession, kept)}
+        saving={savingSession}
+      />
+    )}
+    </>
   );
 }
