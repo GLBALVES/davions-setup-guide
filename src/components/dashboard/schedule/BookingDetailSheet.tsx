@@ -73,24 +73,15 @@ interface BriefingQuestion {
   options: string[];
 }
 
-interface SessionOption {
-  id: string;
-  title: string;
-  price: number;
-  deposit_enabled: boolean;
-  deposit_amount: number;
-  deposit_type: string;
-  tax_rate: number;
-  duration_minutes: number;
-}
-
-interface BookingAddon {
-  id: string;
-  description: string;
-  unit_price: number;
-  quantity: number;
-  keep: boolean;
-}
+import {
+  type SessionOption,
+  type BookingAddon,
+  fmtCurrency,
+  loadActiveSessions,
+  fetchBookingAddons,
+  executeSessionChange as executeSessionChangeShared,
+} from "@/lib/session-change";
+import { AddonReviewModal } from "@/components/dashboard/AddonReviewModal";
 
 function BriefingDialog({
   open,
@@ -196,171 +187,6 @@ function formatDate(s: string) {
     day: "numeric",
     year: "numeric",
   }).format(dateObj);
-}
-
-const fmtCurrency = (cents: number) =>
-  (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-/* ── Add-on Review Modal ── */
-function AddonReviewModal({
-  open,
-  onClose,
-  addons,
-  oldSessionTitle,
-  newSession,
-  onConfirm,
-  saving,
-}: {
-  open: boolean;
-  onClose: () => void;
-  addons: BookingAddon[];
-  oldSessionTitle: string;
-  newSession: SessionOption;
-  onConfirm: (kept: BookingAddon[]) => void;
-  saving: boolean;
-}) {
-  const [items, setItems] = useState<BookingAddon[]>([]);
-
-  useEffect(() => {
-    if (open) setItems(addons.map((a) => ({ ...a, keep: true })));
-  }, [open, addons]);
-
-  const toggleKeep = (id: string) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, keep: !i.keep } : i)));
-
-  const updateField = (id: string, field: "unit_price" | "quantity", value: number) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
-
-  const keptItems = items.filter((i) => i.keep);
-  const keptExtrasTotal = keptItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
-  const subtotal = newSession.price + keptExtrasTotal;
-  const taxAmount = Math.round(subtotal * (newSession.tax_rate / 100));
-  const total = subtotal + taxAmount;
-
-  const depositBase = newSession.deposit_enabled
-    ? newSession.deposit_type === "percent" || newSession.deposit_type === "percentage"
-      ? Math.round(total * (newSession.deposit_amount / 100))
-      : newSession.deposit_amount
-    : 0;
-  const balance = newSession.deposit_enabled ? total - depositBase : 0;
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-light tracking-wide text-base">Review Add-ons</DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Changing from <span className="font-medium text-foreground">{oldSessionTitle}</span> to{" "}
-            <span className="font-medium text-foreground">{newSession.title}</span>
-          </p>
-        </DialogHeader>
-
-        <div className="space-y-3 max-h-[40vh] overflow-y-auto">
-          {items.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">No add-ons to review.</p>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className={cn(
-                  "flex items-start gap-3 p-3 rounded-md border transition-opacity",
-                  !item.keep && "opacity-40 bg-muted/30"
-                )}
-              >
-                <Checkbox
-                  checked={item.keep}
-                  onCheckedChange={() => toggleKeep(item.id)}
-                  className="mt-0.5"
-                />
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <p className={cn("text-sm font-light", !item.keep && "line-through")}>{item.description}</p>
-                  {item.keep && (
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">Qty:</span>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) => updateField(item.id, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
-                          className="h-6 w-14 text-xs px-1.5"
-                        />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-muted-foreground">Price:</span>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={0.01}
-                          value={(item.unit_price / 100).toFixed(2)}
-                          onChange={(e) => updateField(item.id, "unit_price", Math.round(parseFloat(e.target.value || "0") * 100))}
-                          className="h-6 w-20 text-xs px-1.5"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {!item.keep && (
-                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Financial summary */}
-        <div className="border-t pt-3 space-y-1.5 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Session ({newSession.title})</span>
-            <span>{fmtCurrency(newSession.price)}</span>
-          </div>
-          {keptExtrasTotal > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Add-ons ({keptItems.length})</span>
-              <span>{fmtCurrency(keptExtrasTotal)}</span>
-            </div>
-          )}
-          {taxAmount > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax ({newSession.tax_rate}%)</span>
-              <span>{fmtCurrency(taxAmount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-medium pt-1 border-t">
-            <span>Total</span>
-            <span>{fmtCurrency(total)}</span>
-          </div>
-          {newSession.deposit_enabled && (
-            <>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Deposit</span>
-                <span>{fmtCurrency(depositBase)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Balance due</span>
-                <span>{fmtCurrency(balance)}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={saving} className="text-xs">
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => onConfirm(keptItems)}
-            disabled={saving}
-            className="text-xs gap-1.5"
-          >
-            {saving && <Loader2 className="h-3 w-3 animate-spin" />}
-            Confirm Change
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 interface BookingDetailSheetProps {
@@ -572,13 +398,8 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
       return;
     }
     setLoadingSessions(true);
-    const { data } = await supabase
-      .from("sessions")
-      .select("id, title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes")
-      .eq("photographer_id", photographerId)
-      .eq("status", "active")
-      .order("title");
-    setSessionOptions((data as SessionOption[]) ?? []);
+    const sessions = await loadActiveSessions(photographerId);
+    setSessionOptions(sessions);
     setLoadingSessions(false);
     setSessionPickerOpen(true);
   };
@@ -593,92 +414,36 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setPendingNewSession(newSession);
     setSessionPickerOpen(false);
 
-    // Check for existing add-ons (booking_invoice_items)
-    const { data: invoiceItems } = await (supabase as any)
-      .from("booking_invoice_items")
-      .select("id, description, unit_price, quantity")
-      .eq("booking_id", booking.id);
-
-    const addons: BookingAddon[] = (invoiceItems ?? []).map((item: any) => ({
-      id: item.id,
-      description: item.description,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      keep: true,
-    }));
+    const addons = await fetchBookingAddons(booking.id);
 
     if (addons.length > 0) {
       setCurrentAddons(addons);
       setAddonReviewOpen(true);
     } else {
-      // No addons — directly change session
-      await executeSessionChange(newSession, []);
+      await doSessionChange(newSession, []);
     }
   };
 
-  const executeSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
+  const doSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
     setSavingSession(true);
-    try {
-      const keptExtrasTotal = keptAddons.reduce((s, a) => s + a.unit_price * a.quantity, 0);
+    const result = await executeSessionChangeShared({
+      bookingId: booking.id,
+      availabilityId: booking.availability_id,
+      startTime: booking.session_availability?.start_time ?? null,
+      newSession,
+      keptAddons,
+      allAddons: currentAddons,
+    });
 
-      // Update booking session_id and extras_total
-      const { error: bookingErr } = await supabase
-        .from("bookings")
-        .update({
-          session_id: newSession.id,
-          extras_total: keptExtrasTotal,
-        } as any)
-        .eq("id", booking.id);
-
-      if (bookingErr) {
-        toast({ title: "Failed to update booking", variant: "destructive" });
-        setSavingSession(false);
-        return;
-      }
-
-      // Delete removed addons
-      const keptIds = keptAddons.map((a) => a.id);
-      if (currentAddons.length > 0) {
-        const removedIds = currentAddons.filter((a) => !keptIds.includes(a.id)).map((a) => a.id);
-        if (removedIds.length > 0) {
-          await (supabase as any)
-            .from("booking_invoice_items")
-            .delete()
-            .in("id", removedIds);
-        }
-      }
-
-      // Update kept addons (price/qty may have changed)
-      for (const addon of keptAddons) {
-        await (supabase as any)
-          .from("booking_invoice_items")
-          .update({ unit_price: addon.unit_price, quantity: addon.quantity })
-          .eq("id", addon.id);
-      }
-
-      // Update session_availability with new duration
-      if (booking.session_availability?.start_time) {
-        const endTime = addMinutesToTime(
-          booking.session_availability.start_time.slice(0, 5),
-          newSession.duration_minutes
-        );
-        await (supabase as any)
-          .from("session_availability")
-          .update({
-            session_id: newSession.id,
-            end_time: endTime,
-          })
-          .eq("id", booking.availability_id);
-      }
-
+    if (!result.success) {
+      toast({ title: result.error || "Failed to update session", variant: "destructive" });
+    } else {
       toast({ title: "Session updated" });
       setAddonReviewOpen(false);
       setEditingSession(false);
       setPendingNewSession(null);
       setCurrentAddons([]);
       onBookingUpdated?.();
-    } catch {
-      toast({ title: "An error occurred", variant: "destructive" });
     }
     setSavingSession(false);
   };
@@ -1054,7 +819,7 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
           addons={currentAddons}
           oldSessionTitle={booking.sessions?.title ?? "Current Session"}
           newSession={pendingNewSession}
-          onConfirm={(kept) => executeSessionChange(pendingNewSession, kept)}
+          onConfirm={(kept) => doSessionChange(pendingNewSession, kept)}
           saving={savingSession}
         />
       )}
