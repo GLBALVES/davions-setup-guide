@@ -218,7 +218,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     extras_total: number;
     booked_date: string | null;
     created_at: string;
-    sessions: { title: string; price?: number } | null;
+    sessions: { title: string; price?: number; tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; deposit_type?: string } | null;
     session_availability: { start_time: string; end_time: string; date: string } | null;
   }
 
@@ -228,7 +228,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       if (!project.booking_id) return null;
       const { data, error } = await (supabase as any)
         .from("bookings")
-        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price ), session_availability ( start_time, end_time, date )")
+        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type ), session_availability ( start_time, end_time, date )")
         .eq("id", project.booking_id)
         .single();
       if (error) return null;
@@ -301,7 +301,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         </button>
       </div>
 
-      {/* ── Booking payment card ───────────────────────────────────────── */}
+      {/* ── Booking financial breakdown ───────────────────────────────── */}
       {bookingPayment && (() => {
         const ps = bookingPayment.payment_status;
         const isFullPaid    = ps === "paid";
@@ -314,19 +314,111 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         const cfgColor = isFullPaid ? "text-emerald-600" : isDepositPaid ? "text-amber-600" : "text-muted-foreground";
         const label    = isFullPaid ? tp.bookingPaymentFull : isDepositPaid ? tp.bookingPaymentDeposit : tp.bookingPaymentPending;
         const Icon     = isFullPaid ? CheckCircle2 : isDepositPaid ? CreditCard : Clock;
+
+        // Financial calculations (all in cents)
+        const sess = bookingPayment.sessions as any;
+        const sessionPrice = sess?.price ?? 0;
+        const taxRate = sess?.tax_rate ?? 0;
+        const depositEnabled = sess?.deposit_enabled ?? false;
+        const depositAmount = sess?.deposit_amount ?? 0;
+        const depositType = sess?.deposit_type ?? "fixed";
+        const extrasTotal = bookingPayment.extras_total ?? 0;
+        const subtotal = sessionPrice + extrasTotal;
+        const taxAmount = Math.round(subtotal * taxRate / 100);
+        const grandTotal = subtotal + taxAmount;
+        const depositValue = depositEnabled
+          ? (depositType === "percentage" ? Math.round(grandTotal * depositAmount / 100) : depositAmount)
+          : 0;
+        const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
+        const totalPaidAmount = isFullPaid ? grandTotal : depositPaid;
+        const balanceDue = grandTotal - totalPaidAmount;
+
         return (
-          <div className={cn("rounded-md border px-3 py-2 flex items-center gap-2.5", cfgBg)}>
-            <Icon className={cn("h-4 w-4 shrink-0", cfgColor)} />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate leading-tight">{sessionTitle}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {tp.bookingPaymentSection}
-                {sessionDate && <> · {format(parseISO(sessionDate), "d MMM yyyy")}</>}
-              </p>
+          <div className="rounded-lg border border-border overflow-hidden">
+            {/* Status header */}
+            <div className={cn("px-3 py-2 flex items-center gap-2.5 border-b border-border/50", cfgBg)}>
+              <Icon className={cn("h-4 w-4 shrink-0", cfgColor)} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate leading-tight">{sessionTitle}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {tp.bookingPaymentSection}
+                  {sessionDate && <> · {format(parseISO(sessionDate), "d MMM yyyy")}</>}
+                </p>
+              </div>
+              <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfgBg, cfgColor)}>
+                {label}
+              </span>
             </div>
-            <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0", cfgBg, cfgColor)}>
-              {label}
-            </span>
+
+            {/* Financial details */}
+            <div className="px-3 py-2.5 space-y-1.5 bg-muted/5">
+              {/* Session price */}
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{tp.newSessionPrice}</span>
+                <span className="tabular-nums font-medium">{fmt(sessionPrice / 100)}</span>
+              </div>
+
+              {/* Extras */}
+              {extrasTotal > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{tp.extrasTotal}</span>
+                  <span className="tabular-nums font-medium">{fmt(extrasTotal / 100)}</span>
+                </div>
+              )}
+
+              {/* Subtotal (only if extras exist) */}
+              {extrasTotal > 0 && (
+                <div className="flex justify-between text-xs border-t border-border/30 pt-1">
+                  <span className="text-muted-foreground">{tp.subtotal || "Subtotal"}</span>
+                  <span className="tabular-nums font-medium">{fmt(subtotal / 100)}</span>
+                </div>
+              )}
+
+              {/* Tax */}
+              {taxRate > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{tp.taxAmount} ({taxRate}%)</span>
+                  <span className="tabular-nums font-medium">{fmt(taxAmount / 100)}</span>
+                </div>
+              )}
+
+              {/* Grand total */}
+              <div className="flex justify-between text-xs font-semibold border-t border-border/50 pt-1.5">
+                <span>{tp.grandTotal || "Total"}</span>
+                <span className="tabular-nums">{fmt(grandTotal / 100)}</span>
+              </div>
+
+              {/* Deposit */}
+              {depositEnabled && depositValue > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {tp.depositAmount}
+                    {depositType === "percentage" && ` (${depositAmount}%)`}
+                  </span>
+                  <span className={cn("tabular-nums font-medium", depositPaid > 0 ? "text-emerald-600" : "text-muted-foreground")}>
+                    {depositPaid > 0 ? `−${fmt(depositPaid / 100)}` : fmt(depositValue / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Total paid */}
+              {totalPaidAmount > 0 && !isFullPaid && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-emerald-600">{tp.totalPaid || "Paid"}</span>
+                  <span className="tabular-nums font-medium text-emerald-600">−{fmt(totalPaidAmount / 100)}</span>
+                </div>
+              )}
+
+              {/* Balance due */}
+              {!isFullPaid && (
+                <div className={cn("flex justify-between text-xs font-semibold border-t border-border/50 pt-1.5",
+                  balanceDue > 0 ? "text-amber-600" : "text-emerald-600"
+                )}>
+                  <span>{tp.balanceDue}</span>
+                  <span className="tabular-nums">{fmt(balanceDue / 100)}</span>
+                </div>
+              )}
+            </div>
           </div>
         );
       })()}
