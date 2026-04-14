@@ -1739,6 +1739,7 @@ export type Database = {
           id: string
           photographer_id: string
           price_per_photo: number
+          project_id: string | null
           slug: string | null
           sort_order: number
           status: string
@@ -1759,6 +1760,7 @@ export type Database = {
           id?: string
           photographer_id: string
           price_per_photo?: number
+          project_id?: string | null
           slug?: string | null
           sort_order?: number
           status?: string
@@ -1779,6 +1781,7 @@ export type Database = {
           id?: string
           photographer_id?: string
           price_per_photo?: number
+          project_id?: string | null
           slug?: string | null
           sort_order?: number
           status?: string
@@ -1800,6 +1803,13 @@ export type Database = {
             columns: ["photographer_id"]
             isOneToOne: false
             referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "galleries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
             referencedColumns: ["id"]
           },
           {
