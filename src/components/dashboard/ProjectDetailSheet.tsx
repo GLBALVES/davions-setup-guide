@@ -1522,16 +1522,33 @@ export function ProjectDetailSheet({
                 <div>
                   <SectionLabel>{tp.sessionSection}</SectionLabel>
                   <div className="flex flex-col gap-3">
-                    <SessionTypeManager
-                      photographerId={photographerId} sessionTypes={sessionTypes}
-                      selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
-                      onRefetch={onRefetchSessionTypes} mode="select"
-                    />
-                    {project.session_title && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Camera className="h-3 w-3 shrink-0" />
-                        <span className="italic">{project.session_title}</span>
-                      </div>
+                    {project.booking_id ? (
+                      <>
+                        <div className="flex flex-col gap-1">
+                          <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.sessionLabel}</Label>
+                          <Select
+                            value={bookingData?.session_id ?? ""}
+                            onValueChange={handleSessionChange}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder={tp.selectSession} />
+                            </SelectTrigger>
+                            <SelectContent className="z-[200]">
+                              {photographerSessions.map((s) => (
+                                <SelectItem key={s.id} value={s.id} className="text-xs">
+                                  {s.title} — ${(s.price / 100).toFixed(2)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    ) : (
+                      <SessionTypeManager
+                        photographerId={photographerId} sessionTypes={sessionTypes}
+                        selectedTypeId={sessionTypeId} onSelect={handleSessionTypeChange}
+                        onRefetch={onRefetchSessionTypes} mode="select"
+                      />
                     )}
                     <div className="flex flex-col gap-1">
                       <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">{tp.dateTime}</Label>
