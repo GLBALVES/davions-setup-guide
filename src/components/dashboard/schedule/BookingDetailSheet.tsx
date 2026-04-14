@@ -398,13 +398,8 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
       return;
     }
     setLoadingSessions(true);
-    const { data } = await supabase
-      .from("sessions")
-      .select("id, title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes")
-      .eq("photographer_id", photographerId)
-      .eq("status", "active")
-      .order("title");
-    setSessionOptions((data as SessionOption[]) ?? []);
+    const sessions = await loadActiveSessions(photographerId);
+    setSessionOptions(sessions);
     setLoadingSessions(false);
     setSessionPickerOpen(true);
   };
@@ -419,92 +414,36 @@ export function BookingDetailSheet({ booking, open, onClose, onStatusChange, onB
     setPendingNewSession(newSession);
     setSessionPickerOpen(false);
 
-    // Check for existing add-ons (booking_invoice_items)
-    const { data: invoiceItems } = await (supabase as any)
-      .from("booking_invoice_items")
-      .select("id, description, unit_price, quantity")
-      .eq("booking_id", booking.id);
-
-    const addons: BookingAddon[] = (invoiceItems ?? []).map((item: any) => ({
-      id: item.id,
-      description: item.description,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      keep: true,
-    }));
+    const addons = await fetchBookingAddons(booking.id);
 
     if (addons.length > 0) {
       setCurrentAddons(addons);
       setAddonReviewOpen(true);
     } else {
-      // No addons — directly change session
-      await executeSessionChange(newSession, []);
+      await doSessionChange(newSession, []);
     }
   };
 
-  const executeSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
+  const doSessionChange = async (newSession: SessionOption, keptAddons: BookingAddon[]) => {
     setSavingSession(true);
-    try {
-      const keptExtrasTotal = keptAddons.reduce((s, a) => s + a.unit_price * a.quantity, 0);
+    const result = await executeSessionChangeShared({
+      bookingId: booking.id,
+      availabilityId: booking.availability_id,
+      startTime: booking.session_availability?.start_time ?? null,
+      newSession,
+      keptAddons,
+      allAddons: currentAddons,
+    });
 
-      // Update booking session_id and extras_total
-      const { error: bookingErr } = await supabase
-        .from("bookings")
-        .update({
-          session_id: newSession.id,
-          extras_total: keptExtrasTotal,
-        } as any)
-        .eq("id", booking.id);
-
-      if (bookingErr) {
-        toast({ title: "Failed to update booking", variant: "destructive" });
-        setSavingSession(false);
-        return;
-      }
-
-      // Delete removed addons
-      const keptIds = keptAddons.map((a) => a.id);
-      if (currentAddons.length > 0) {
-        const removedIds = currentAddons.filter((a) => !keptIds.includes(a.id)).map((a) => a.id);
-        if (removedIds.length > 0) {
-          await (supabase as any)
-            .from("booking_invoice_items")
-            .delete()
-            .in("id", removedIds);
-        }
-      }
-
-      // Update kept addons (price/qty may have changed)
-      for (const addon of keptAddons) {
-        await (supabase as any)
-          .from("booking_invoice_items")
-          .update({ unit_price: addon.unit_price, quantity: addon.quantity })
-          .eq("id", addon.id);
-      }
-
-      // Update session_availability with new duration
-      if (booking.session_availability?.start_time) {
-        const endTime = addMinutesToTime(
-          booking.session_availability.start_time.slice(0, 5),
-          newSession.duration_minutes
-        );
-        await (supabase as any)
-          .from("session_availability")
-          .update({
-            session_id: newSession.id,
-            end_time: endTime,
-          })
-          .eq("id", booking.availability_id);
-      }
-
+    if (!result.success) {
+      toast({ title: result.error || "Failed to update session", variant: "destructive" });
+    } else {
       toast({ title: "Session updated" });
       setAddonReviewOpen(false);
       setEditingSession(false);
       setPendingNewSession(null);
       setCurrentAddons([]);
       onBookingUpdated?.();
-    } catch {
-      toast({ title: "An error occurred", variant: "destructive" });
     }
     setSavingSession(false);
   };
