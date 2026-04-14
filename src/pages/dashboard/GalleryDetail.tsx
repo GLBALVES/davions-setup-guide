@@ -50,6 +50,7 @@ import {
   XCircle,
   Send,
   Mail,
+  Briefcase,
   ImagePlus,
   Star,
   Stamp,
@@ -104,12 +105,22 @@ interface Gallery {
   cover_focal_y: number | null;
   created_at: string;
   booking_id: string | null;
+  project_id: string | null;
   watermark_id: string | null;
   expires_at: string | null;
   price_per_photo: number;
   client_name?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
+}
+
+interface ClientProject {
+  id: string;
+  title: string;
+  client_name: string;
+  client_email: string | null;
+  stage: string;
+  shoot_date: string | null;
 }
 
 interface Photo {
