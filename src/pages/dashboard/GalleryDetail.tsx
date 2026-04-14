@@ -811,7 +811,7 @@ const GalleryDetail = () => {
 
       setGallery({ ...gallery, project_id: project.id, status: "published" });
       toast({
-        title: gd.galleryAttached ?? "Gallery attached",
+        title: "Gallery attached",
         description: `Linked to "${project.title}" and published.`,
       });
       setAttachProjectOpen(false);
@@ -1827,20 +1827,67 @@ const GalleryDetail = () => {
                     )}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 text-xs tracking-wider uppercase font-light"
-                    onClick={sendGalleryLink}
-                    disabled={sendingEmail}
-                  >
-                     {sendingEmail ? (
-                       <><Mail className="h-3.5 w-3.5 animate-pulse" /> Sending…</>
-                     ) : (
-                       <><Send className="h-3.5 w-3.5" /> {gd.sendToClient}</>
-                     )}
-                  </Button>
+                  <Popover open={attachProjectOpen} onOpenChange={setAttachProjectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2 text-xs tracking-wider uppercase font-light"
+                      >
+                        <Briefcase className="h-3.5 w-3.5" />
+                        {gallery.project_id ? gd.attachedToProject ?? "Attached to Project" : gd.attachToProject ?? "Attach to Project"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0 rounded-none border-border" side="top" align="start">
+                      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                        <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <p className="text-[11px] tracking-[0.2em] uppercase font-light flex-1">
+                          {gd.attachToProject ?? "Attach to Project"}
+                        </p>
+                      </div>
+                      <div className="px-3 py-2 border-b border-border relative">
+                        <Search className="absolute left-5.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/50 pointer-events-none" />
+                        <Input
+                          value={projectSearchQuery}
+                          onChange={(e) => setProjectSearchQuery(e.target.value)}
+                          placeholder={gd.searchProject ?? "Search project or client…"}
+                          className="h-7 pl-7 text-xs font-light rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground/40"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-56 overflow-y-auto">
+                        {projectsListLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                          </div>
+                        ) : filteredProjectsList.length === 0 ? (
+                          <div className="py-8 text-center">
+                            <p className="text-xs text-muted-foreground font-light">{gd.noProjectsFound ?? "No projects found"}</p>
+                          </div>
+                        ) : (
+                          filteredProjectsList.map((p) => (
+                            <button
+                              key={p.id}
+                              disabled={attachingProject}
+                              onClick={() => handleAttachProject(p)}
+                              className="w-full flex flex-col gap-0.5 px-4 py-3 text-left border-b border-border last:border-0 hover:bg-accent transition-colors disabled:opacity-50"
+                            >
+                              <span className="text-xs font-light text-foreground truncate">{p.title}</span>
+                              <span className="text-[10px] text-muted-foreground truncate">
+                                {[p.client_name, p.stage].filter(Boolean).join(" · ")}
+                              </span>
+                              {p.shoot_date && (
+                                <span className="text-[10px] text-muted-foreground/60">
+                                  {new Date(p.shoot_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                                </span>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <p className="text-[10px] text-muted-foreground/50 text-center -mt-2">
-                    Sends the gallery link{gallery.access_code ? " and access code" : ""} to the client by email.
+                    {gd.attachDesc ?? "Links gallery to a project, publishes it, and notifies the client."}
                   </p>
                 </div>
               </div>
