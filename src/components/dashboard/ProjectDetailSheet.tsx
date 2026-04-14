@@ -1268,6 +1268,115 @@ export function ProjectDetailSheet({
     await save({ session_type: name });
   };
 
+  const handleSessionChange = async (newSessionId: string) => {
+    if (!project.booking_id) return;
+    const newSess = photographerSessions.find((s) => s.id === newSessionId);
+    if (!newSess) return;
+
+    const sessInfo: SessionInfo = {
+      id: newSess.id,
+      title: newSess.title,
+      price: newSess.price,
+      tax_rate: newSess.tax_rate,
+      deposit_enabled: newSess.deposit_enabled,
+      deposit_amount: newSess.deposit_amount,
+      deposit_type: newSess.deposit_type,
+    };
+
+    // Fetch existing invoice items (addons)
+    const { data: invoiceItems } = await supabase
+      .from("booking_invoice_items")
+      .select("id, description, quantity, unit_price")
+      .eq("booking_id", project.booking_id);
+
+    const items = (invoiceItems ?? []) as AddonItem[];
+
+    if (items.length > 0) {
+      setAddonItems(items);
+      setPendingNewSession(sessInfo);
+      setAddonReviewOpen(true);
+    } else {
+      await applySessionChange(sessInfo, []);
+    }
+  };
+
+  const applySessionChange = async (newSess: SessionInfo, keptItems: AddonItem[]) => {
+    if (!project.booking_id) return;
+    setChangingSession(true);
+
+    try {
+      // 1. Delete removed items
+      const { data: existingItems } = await supabase
+        .from("booking_invoice_items")
+        .select("id")
+        .eq("booking_id", project.booking_id);
+      const existingIds = (existingItems ?? []).map((i: any) => i.id);
+      const keptIds = keptItems.map((i) => i.id);
+      const toDelete = existingIds.filter((id: string) => !keptIds.includes(id));
+
+      for (const id of toDelete) {
+        await supabase.from("booking_invoice_items").delete().eq("id", id);
+      }
+
+      // 2. Update edited items
+      for (const item of keptItems) {
+        await supabase.from("booking_invoice_items")
+          .update({ quantity: item.quantity, unit_price: item.unit_price })
+          .eq("id", item.id);
+      }
+
+      // 3. Calculate new extras_total
+      const newExtras = keptItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+
+      // 4. Update booking session_id + extras_total
+      await (supabase as any)
+        .from("bookings")
+        .update({ session_id: newSess.id, extras_total: newExtras })
+        .eq("id", project.booking_id);
+
+      // 5. Update session_availability session_id + duration
+      const sess = photographerSessions.find((s) => s.id === newSess.id);
+      if (sess) {
+        const { data: avail } = await (supabase as any)
+          .from("bookings")
+          .select("availability_id")
+          .eq("id", project.booking_id)
+          .single();
+        if (avail?.availability_id) {
+          // recalculate end_time based on new session duration
+          const { data: availData } = await (supabase as any)
+            .from("session_availability")
+            .select("start_time")
+            .eq("id", avail.availability_id)
+            .single();
+          if (availData?.start_time) {
+            const totalMins = timeToMinutes(availData.start_time) + sess.duration_minutes;
+            const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+            await (supabase as any)
+              .from("session_availability")
+              .update({ session_id: newSess.id, end_time: endTime })
+              .eq("id", avail.availability_id);
+          }
+        }
+      }
+
+      // 6. Update client_projects session_type
+      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+
+      // 7. Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
+      queryClient.invalidateQueries({ queryKey: ["project-booking-session"] });
+
+      toast.success(tp.projectUpdated || "Session updated");
+    } catch (err) {
+      toast.error("Failed to change session");
+    } finally {
+      setChangingSession(false);
+      setAddonReviewOpen(false);
+      setPendingNewSession(null);
+    }
+  };
+
   const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
 
   const renderDeadlineSection = () => {
