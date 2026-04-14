@@ -176,6 +176,10 @@ const Schedule = () => {
   };
 
   const handleBookingClick = (booking: ScheduleBooking) => {
+    if (booking.id) {
+      goTo(`/dashboard/projects?openBooking=${booking.id}`);
+      return;
+    }
     setSelectedBooking(booking);
     setSheetOpen(true);
   };
