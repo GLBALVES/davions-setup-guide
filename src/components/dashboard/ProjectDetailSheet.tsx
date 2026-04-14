@@ -1137,6 +1137,9 @@ export function ProjectDetailSheet({
   useEffect(() => {
     setPendingChanges({});
     setConflictWarning(null);
+    setEditingBookingSession(false);
+    setSessionPickerOpen(false);
+    setPendingNewSession(null);
   }, [project?.id]);
 
   if (!project) return null;
