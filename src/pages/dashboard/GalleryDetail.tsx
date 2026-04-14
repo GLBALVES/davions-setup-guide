@@ -825,6 +825,7 @@ const GalleryDetail = () => {
       }
 
       setGallery({ ...gallery, project_id: project.id, status: "published" });
+      setLinkedProjectTitle(project.title);
       toast({
         title: "Gallery attached",
         description: `Linked to "${project.title}" and published.`,
