@@ -218,7 +218,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     extras_total: number;
     booked_date: string | null;
     created_at: string;
-    sessions: { title: string; price?: number } | null;
+    sessions: { title: string; price?: number; tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; deposit_type?: string } | null;
     session_availability: { start_time: string; end_time: string; date: string } | null;
   }
 
@@ -228,7 +228,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       if (!project.booking_id) return null;
       const { data, error } = await (supabase as any)
         .from("bookings")
-        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price ), session_availability ( start_time, end_time, date )")
+        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type ), session_availability ( start_time, end_time, date )")
         .eq("id", project.booking_id)
         .single();
       if (error) return null;
