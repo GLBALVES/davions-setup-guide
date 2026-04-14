@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
+import { AddonReviewModal, type AddonItem, type SessionInfo } from "@/components/dashboard/AddonReviewModal";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import {
   Trash2, Archive, ArchiveRestore, Camera,
@@ -1096,6 +1097,44 @@ export function ProjectDetailSheet({
   const [pendingChanges, setPendingChanges] = useState<Partial<ProjectSheetData>>({});
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [addonReviewOpen, setAddonReviewOpen] = useState(false);
+  const [addonItems, setAddonItems] = useState<AddonItem[]>([]);
+  const [pendingNewSession, setPendingNewSession] = useState<SessionInfo | null>(null);
+  const [changingSession, setChangingSession] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Fetch sessions for this photographer
+  const { data: photographerSessions = [] } = useQuery({
+    queryKey: ["photographer-sessions-for-project", photographerId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sessions")
+        .select("id, title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type, duration_minutes")
+        .eq("photographer_id", photographerId)
+        .eq("status", "active")
+        .order("title");
+      return (data ?? []) as Array<{
+        id: string; title: string; price: number; tax_rate: number;
+        deposit_enabled: boolean; deposit_amount: number; deposit_type: string; duration_minutes: number;
+      }>;
+    },
+    enabled: !!photographerId && open,
+  });
+
+  // Get current booking's session_id
+  const { data: bookingData } = useQuery({
+    queryKey: ["project-booking-session", project?.booking_id],
+    queryFn: async () => {
+      if (!project?.booking_id) return null;
+      const { data } = await (supabase as any)
+        .from("bookings")
+        .select("session_id, payment_status, extras_total")
+        .eq("id", project.booking_id)
+        .single();
+      return data as { session_id: string; payment_status: string; extras_total: number } | null;
+    },
+    enabled: !!project?.booking_id && open,
+  });
 
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
