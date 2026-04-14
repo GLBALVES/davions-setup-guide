@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -18,7 +18,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -45,7 +44,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch gallery (must belong to the authenticated photographer)
     const { data: gallery, error: galleryError } = await supabase
       .from("galleries")
       .select("id, title, access_code, status, photographer_id")
@@ -60,17 +58,15 @@ serve(async (req) => {
       });
     }
 
-    // Fetch photographer name
     const { data: photographer } = await supabase
       .from("photographers")
-      .select("full_name, email")
+      .select("full_name, brand_name, email")
       .eq("id", user.id)
       .single();
 
-    const photographerName = photographer?.full_name || "Your Photographer";
+    const senderName = photographer?.brand_name || photographer?.full_name || "Your Photographer";
     const galleryUrl = `${req.headers.get("origin") || "https://app.davions.com"}/gallery/${galleryId}`;
     const greeting = clientName ? `Hi ${clientName},` : "Hi,";
-
     const hasCode = Boolean(gallery.access_code);
 
     const htmlBody = `
@@ -82,11 +78,11 @@ serve(async (req) => {
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e5e5;">
         <tr><td style="padding:40px 48px 0;">
-          <p style="margin:0 0 32px;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#999;">${photographerName}</p>
+          <p style="margin:0 0 32px;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#999;">${senderName}</p>
           <h1 style="margin:0 0 8px;font-size:24px;font-weight:300;letter-spacing:0.05em;color:#111;">${gallery.title}</h1>
           <p style="margin:0 0 32px;font-size:13px;color:#777;">Your gallery is ready to view.</p>
           <p style="margin:0 0 24px;font-size:14px;color:#444;line-height:1.7;">${greeting}<br><br>
-            ${photographerName} has shared your gallery with you. Click the button below to view your photos.
+            ${senderName} has shared your gallery with you. Click the button below to view your photos.
           </p>
 
           ${hasCode ? `
@@ -117,31 +113,33 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
+    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    if (!BREVO_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Email service not configured. Please set RESEND_API_KEY." }),
+        JSON.stringify({ error: "Email service not configured. Please set BREVO_API_KEY." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const emailRes = await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "api-key": BREVO_API_KEY,
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({
-        from: "Davions <noreply@davions.com>",
-        to: [clientEmail],
+        sender: { name: senderName, email: "noreply@davions.com" },
+        to: [{ email: clientEmail, name: clientName || clientEmail }],
+        replyTo: { email: photographer?.email || "noreply@davions.com", name: senderName },
         subject: `Your gallery is ready — ${gallery.title}`,
-        html: htmlBody,
+        htmlContent: htmlBody,
       }),
     });
 
     if (!emailRes.ok) {
       const errText = await emailRes.text();
-      console.error("Resend error:", errText);
+      console.error("Brevo error:", errText);
       return new Response(
         JSON.stringify({ error: "Failed to send email", details: errText }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
