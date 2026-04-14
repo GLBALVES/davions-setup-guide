@@ -98,8 +98,8 @@ export function WaitlistModal() {
             className="absolute inset-0 backdrop-blur-xl"
             style={{
               background: "linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.06) 50%, hsla(0,0%,100%,0.12) 100%)",
-              WebkitBackdropFilter: "blur(8px) saturate(1.4)",
-              backdropFilter: "blur(8px) saturate(1.4)",
+              WebkitBackdropFilter: "blur(4px) saturate(1.3)",
+              backdropFilter: "blur(4px) saturate(1.3)",
             }}
           />
 
