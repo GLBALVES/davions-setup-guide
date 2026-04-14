@@ -826,7 +826,7 @@ function KanbanColumn({
       {/* drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex flex-col gap-2 min-h-[60px] rounded-sm transition-colors ${
+        className={`flex flex-col gap-3 min-h-[60px] rounded-sm transition-colors ${
           isOver ? "bg-muted/40 ring-1 ring-border" : ""
         }`}
       >
