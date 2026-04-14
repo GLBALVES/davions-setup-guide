@@ -80,6 +80,7 @@ import AdminDomains from "./pages/admin/AdminDomains";
 import AdminVps from "./pages/admin/AdminVps";
 import AdminEmail from "./pages/admin/AdminEmail";
 import AdminApprovals from "./pages/admin/AdminApprovals";
+import AdminLeads from "./pages/admin/AdminLeads";
 import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -212,6 +213,7 @@ const App = () => {
                  <Route path="/admin/vps" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/email" element={<ProtectedRoute><AdminEmail /></ProtectedRoute>} />
                  <Route path="/admin/approvals" element={<ProtectedRoute><AdminApprovals /></ProtectedRoute>} />
+                 <Route path="/admin/leads" element={<ProtectedRoute><AdminLeads /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

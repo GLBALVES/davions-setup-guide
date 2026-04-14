@@ -1925,6 +1925,33 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          country: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       mkt_email_automated: {
         Row: {
           created_at: string
