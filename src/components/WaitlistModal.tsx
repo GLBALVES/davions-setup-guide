@@ -186,7 +186,7 @@ export function WaitlistModal() {
                 </select>
 
                 <Button type="submit" size="lg" className="w-full mt-2" disabled={loading}>
-                  {loading ? "..." : l.cta}
+                  {loading ? l.loading : l.cta}
                 </Button>
               </form>
             )}
