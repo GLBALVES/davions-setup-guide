@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -8,23 +8,31 @@ import { Sparkles } from "lucide-react";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const COUNTRIES: Record<string, string[]> = {
-  en: [
-    "Brazil", "United States", "Portugal", "Spain", "Argentina", "Mexico",
-    "Colombia", "Chile", "Peru", "United Kingdom", "Canada", "France",
-    "Germany", "Italy", "Australia", "Other",
-  ],
-  pt: [
-    "Brasil", "Estados Unidos", "Portugal", "Espanha", "Argentina", "México",
-    "Colômbia", "Chile", "Peru", "Reino Unido", "Canadá", "França",
-    "Alemanha", "Itália", "Austrália", "Outro",
-  ],
-  es: [
-    "Brasil", "Estados Unidos", "Portugal", "España", "Argentina", "México",
-    "Colombia", "Chile", "Perú", "Reino Unido", "Canadá", "Francia",
-    "Alemania", "Italia", "Australia", "Otro",
-  ],
-};
+/* ── Country list with DDI codes ── */
+interface CountryEntry {
+  /** Display name per language */
+  name: Record<string, string>;
+  ddi: string;
+}
+
+const COUNTRY_DATA: CountryEntry[] = [
+  { name: { en: "Brazil", pt: "Brasil", es: "Brasil" }, ddi: "+55" },
+  { name: { en: "United States", pt: "Estados Unidos", es: "Estados Unidos" }, ddi: "+1" },
+  { name: { en: "Portugal", pt: "Portugal", es: "Portugal" }, ddi: "+351" },
+  { name: { en: "Spain", pt: "Espanha", es: "España" }, ddi: "+34" },
+  { name: { en: "Argentina", pt: "Argentina", es: "Argentina" }, ddi: "+54" },
+  { name: { en: "Mexico", pt: "México", es: "México" }, ddi: "+52" },
+  { name: { en: "Colombia", pt: "Colômbia", es: "Colombia" }, ddi: "+57" },
+  { name: { en: "Chile", pt: "Chile", es: "Chile" }, ddi: "+56" },
+  { name: { en: "Peru", pt: "Peru", es: "Perú" }, ddi: "+51" },
+  { name: { en: "United Kingdom", pt: "Reino Unido", es: "Reino Unido" }, ddi: "+44" },
+  { name: { en: "Canada", pt: "Canadá", es: "Canadá" }, ddi: "+1" },
+  { name: { en: "France", pt: "França", es: "Francia" }, ddi: "+33" },
+  { name: { en: "Germany", pt: "Alemanha", es: "Alemania" }, ddi: "+49" },
+  { name: { en: "Italy", pt: "Itália", es: "Italia" }, ddi: "+39" },
+  { name: { en: "Australia", pt: "Austrália", es: "Australia" }, ddi: "+61" },
+  { name: { en: "Other", pt: "Outro", es: "Otro" }, ddi: "" },
+];
 
 const labels = {
   en: {
@@ -75,14 +83,21 @@ export function WaitlistModal() {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", country: "" });
 
+  const selectedDdi = useMemo(() => {
+    if (!form.country) return "";
+    const entry = COUNTRY_DATA.find((c) => c.name[lang] === form.country || c.name.en === form.country);
+    return entry?.ddi ?? "";
+  }, [form.country, lang]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.phone || !form.country) return;
     setLoading(true);
+    const fullPhone = selectedDdi ? `${selectedDdi} ${form.phone}` : form.phone;
     const { error } = await supabase.from("leads").insert({
       name: form.name,
       email: form.email,
-      phone: form.phone,
+      phone: fullPhone,
       country: form.country,
     });
     setLoading(false);
@@ -96,101 +111,111 @@ export function WaitlistModal() {
 
   return (
     <AnimatePresence>
+      <motion.div
+        key="waitlist-overlay"
+        className="fixed inset-0 z-[9999] flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div
+          className="absolute inset-0 backdrop-blur-xl"
+          style={{
+            background: "linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.06) 50%, hsla(0,0%,100%,0.12) 100%)",
+            WebkitBackdropFilter: "blur(4px) saturate(1.3)",
+            backdropFilter: "blur(4px) saturate(1.3)",
+          }}
+        />
+
         <motion.div
-          key="waitlist-overlay"
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
+          key="waitlist-card"
+          className="relative z-10 w-full max-w-md mx-4 bg-background/95 border border-border p-8 flex flex-col gap-6 rounded-2xl shadow-2xl"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.96 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Liquid glass backdrop — iOS 26 style */}
-          <div
-            className="absolute inset-0 backdrop-blur-xl"
-            style={{
-              background: "linear-gradient(135deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.06) 50%, hsla(0,0%,100%,0.12) 100%)",
-              WebkitBackdropFilter: "blur(4px) saturate(1.3)",
-              backdropFilter: "blur(4px) saturate(1.3)",
-            }}
-          />
+          <div className="flex flex-col items-center text-center gap-4">
+            <img src={logoPrincipal} alt="Davions" className="h-6 w-auto object-contain" />
+            <h2 className="text-lg font-light leading-snug tracking-wide text-foreground max-w-sm">
+              {l.headline}
+            </h2>
+            <p className="text-xs tracking-[0.25em] uppercase text-muted-foreground">{l.sub}</p>
+          </div>
 
-          <motion.div
-            key="waitlist-card"
-            className="relative z-10 w-full max-w-md mx-4 bg-background/95 border border-border p-8 flex flex-col gap-6 rounded-2xl shadow-2xl"
-            initial={{ opacity: 0, y: 40, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.96 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {/* Header */}
-            <div className="flex flex-col items-center text-center gap-4">
-              <img src={logoPrincipal} alt="Davions" className="h-6 w-auto object-contain" />
-              <h2 className="text-lg font-light leading-snug tracking-wide text-foreground max-w-sm">
-                {l.headline}
-              </h2>
-              <p className="text-xs tracking-[0.25em] uppercase text-muted-foreground">{l.sub}</p>
-            </div>
+          {submitted ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-3 py-6"
+            >
+              <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center">
+                <Sparkles size={20} className="text-background" />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">{l.success}</p>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <Input
+                placeholder={l.name}
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                required
+                className="h-11"
+              />
+              <Input
+                type="email"
+                placeholder={l.email}
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                required
+                className="h-11"
+              />
 
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-3 py-6"
+              {/* Country BEFORE phone */}
+              <select
+                value={form.country}
+                onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))}
+                required
+                className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
               >
-                <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center">
-                  <Sparkles size={20} className="text-background" />
-                </div>
-                <p className="text-sm text-muted-foreground text-center">{l.success}</p>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                <Input
-                  placeholder={l.name}
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  required
-                  className="h-11"
-                />
-                <Input
-                  type="email"
-                  placeholder={l.email}
-                  value={form.email}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                  required
-                  className="h-11"
-                />
+                <option value="" disabled>{l.selectCountry}</option>
+                {COUNTRY_DATA.map((c) => (
+                  <option key={c.name.en} value={c.name[lang] || c.name.en}>
+                    {c.name[lang] || c.name.en}
+                  </option>
+                ))}
+              </select>
+
+              {/* Phone with DDI prefix */}
+              <div className="flex gap-2">
+                {selectedDdi && (
+                  <div className="flex items-center justify-center h-11 px-3 rounded-md border border-input bg-muted text-sm text-muted-foreground font-medium min-w-[60px] shrink-0">
+                    {selectedDdi}
+                  </div>
+                )}
                 <Input
                   type="tel"
                   placeholder={l.phone}
                   value={form.phone}
                   onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                   required
-                  className="h-11"
+                  className="h-11 flex-1"
                 />
-                <select
-                  value={form.country}
-                  onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))}
-                  required
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-foreground"
-                >
-                  <option value="" disabled>{l.selectCountry}</option>
-                  {(COUNTRIES[lang] || COUNTRIES.en).map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+              </div>
 
-                <Button type="submit" size="lg" className="w-full mt-2" disabled={loading}>
-                  {loading ? l.loading : l.cta}
-                </Button>
-              </form>
-            )}
+              <Button type="submit" size="lg" className="w-full mt-2" disabled={loading}>
+                {loading ? l.loading : l.cta}
+              </Button>
+            </form>
+          )}
 
-            {/* Bottom decoration */}
-            <div className="flex justify-center">
-              <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground/50">davions</span>
-            </div>
-          </motion.div>
+          <div className="flex justify-center">
+            <span className="text-[9px] tracking-[0.4em] uppercase text-muted-foreground/50">davions</span>
+          </div>
         </motion.div>
+      </motion.div>
     </AnimatePresence>
   );
 }
