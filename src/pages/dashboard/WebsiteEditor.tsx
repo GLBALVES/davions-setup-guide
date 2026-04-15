@@ -577,12 +577,11 @@ const PageSectionsPanel = ({
 };
 
 // ── Pages Panel ───────────────────────────────────────────────────────────────
-const PagesPanel = () => {
+const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: string | null; setEditingSection: (s: string | null) => void }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [pages, setPages] = useState<SitePage[]>(INITIAL_PAGES);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
-  const [editingSection, setEditingSection] = useState<string | null>(null);
   const { t } = useLanguage();
   const we = t.websiteEditor;
 
