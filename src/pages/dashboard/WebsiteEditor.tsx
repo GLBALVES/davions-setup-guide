@@ -803,6 +803,7 @@ const PagesPanel = ({
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
+  const [editingSectionsPageId, setEditingSectionsPageId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const { t } = useLanguage();
   const we = t.websiteEditor;
