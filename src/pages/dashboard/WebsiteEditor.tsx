@@ -607,6 +607,22 @@ const PagesPanel = () => {
 
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
+  // If editing a section (e.g. header slider)
+  if (editingSection === "header-slider") {
+    return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
+  }
+
+  // If viewing page sections
+  if (sectionsPage) {
+    return (
+      <PageSectionsPanel
+        pageLabel={sectionsPage.label}
+        onBack={() => setSectionsPage(null)}
+        onEditSection={(section) => setEditingSection(section)}
+      />
+    );
+  }
+
   // If settings is open, show that view
   if (settingsPage) {
     const livePage = allPages.find((p) => p.id === settingsPage.id) || settingsPage;
