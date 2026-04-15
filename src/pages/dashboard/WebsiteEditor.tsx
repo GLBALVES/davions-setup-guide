@@ -810,7 +810,7 @@ const PagesPanel = ({
     setPages((prev) => [...prev, newPage]);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
-    await supabase.from("site_pages").insert(row);
+    await supabase.from("site_pages").insert([row]);
   };
 
   const addPage = async (type: "page" | "folder" | "link") => {
@@ -835,7 +835,7 @@ const PagesPanel = ({
     setAddOpen(false);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
-    await supabase.from("site_pages").insert(row);
+    await supabase.from("site_pages").insert([row]);
   };
 
   const handleTemplateSelect = async (templateId: string, title: string) => {
@@ -856,7 +856,7 @@ const PagesPanel = ({
     setSettingsPage(newPage);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
-    await supabase.from("site_pages").insert(row);
+    await supabase.from("site_pages").insert([row]);
   };
 
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
