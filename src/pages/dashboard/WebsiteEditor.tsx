@@ -685,7 +685,11 @@ const PagesPanel = () => {
               key={page.id}
               page={page}
               activePage={activePage}
-              onSelect={setActivePage}
+              onSelect={(id) => {
+                setActivePage(id);
+                const target = page.children?.find((c) => c.id === id) || page;
+                setSectionsPage(target);
+              }}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
             />
