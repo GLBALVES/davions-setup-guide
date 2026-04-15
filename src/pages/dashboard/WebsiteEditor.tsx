@@ -662,14 +662,27 @@ const WebsiteEditor = () => {
           </Button>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center space-y-3">
-            <div className="w-16 h-16 mx-auto rounded-full bg-muted/60 flex items-center justify-center">
-              <Eye className="h-6 w-6 text-muted-foreground/60" />
-            </div>
-            <p className="text-sm text-muted-foreground">Live preview will appear here</p>
-            <p className="text-xs text-muted-foreground/60">Select a page from the sidebar to start editing</p>
-          </div>
+        <div className="flex-1 relative">
+          {(() => {
+            const slug = (user as any)?.user_metadata?.store_slug;
+            return slug ? (
+              <iframe
+                src={`/store/${slug}`}
+                className="absolute inset-0 w-full h-full border-0"
+                title="Site Preview"
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center h-full p-8">
+                <div className="text-center space-y-3">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-muted/60 flex items-center justify-center">
+                    <Eye className="h-6 w-6 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Live preview will appear here</p>
+                  <p className="text-xs text-muted-foreground/60">Configure your store slug in Settings to see the preview</p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
