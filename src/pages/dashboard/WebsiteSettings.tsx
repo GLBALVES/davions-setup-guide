@@ -1106,35 +1106,6 @@ const WebsiteSettings = () => {
                     </div>
                   </section>
 
-                  <Divider />
-
-                  {/* ── 5. Navigation ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Layout className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.navigationTitle} description={ws.navigationDesc} />
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      {[
-                        { label: ws.navStore, desc: ws.navStoreDesc, value: showStore, set: setShowStore },
-                        { label: ws.navBooking, desc: ws.navBookingDesc, value: showBooking, set: setShowBooking },
-                        { label: ws.navAbout, desc: ws.navAboutDesc, value: showAbout, set: setShowAbout },
-                        { label: ws.navBlog, desc: ws.navBlogDesc, value: showBlog, set: setShowBlog },
-                        { label: ws.navContact, desc: ws.navContactDesc, value: showContact, set: setShowContact },
-                      ].map((item) => (
-                        <div key={item.label} className="flex items-center justify-between gap-4 border border-border px-4 py-3">
-                          <div>
-                            <p className="text-sm font-light">{item.label}</p>
-                            <p className="text-[11px] text-muted-foreground">{item.desc}</p>
-                          </div>
-                          <Switch checked={item.value} onCheckedChange={item.set} />
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  <Divider />
-
                   {/* ── 7. SEO ── */}
                   <section className="flex flex-col gap-5">
                     <SectionHeading title={ws.seoTitle} description={ws.seoDesc} />
