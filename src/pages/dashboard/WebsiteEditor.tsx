@@ -770,7 +770,7 @@ const PagesPanel = ({
     const current = allP.find((p) => p.id === id);
     if (current) {
       const merged = { ...current, ...patch };
-      dbPatch.page_content = {
+      dbPatch.page_content = JSON.parse(JSON.stringify({
         type: merged.type,
         icon: merged.icon,
         status: merged.status,
@@ -781,7 +781,7 @@ const PagesPanel = ({
         pageDescription: merged.pageDescription,
         hideFromSearch: merged.hideFromSearch,
         socialImage: merged.socialImage,
-      };
+      }));
     }
 
     persistUpdate(id, dbPatch);
