@@ -1955,6 +1955,15 @@ export const translations = {
       dayBlocked: "This day is blocked",
       blockedSlot: "Blocked",
     },
+    websiteEditor: {
+      addPage: "Add Page",
+      page: "Page",
+      pageDesc: "Add a new page",
+      folder: "Folder",
+      folderDesc: "Use folder to show subpages in a dropdown menu",
+      link: "Link",
+      linkDesc: "Add a link to your menu",
+    },
   },
 
 
@@ -3856,6 +3865,15 @@ export const translations = {
       conflictsWith: "Conflita com",
       dayBlocked: "Este dia está bloqueado",
       blockedSlot: "Bloqueado",
+    },
+    websiteEditor: {
+      addPage: "Adicionar Página",
+      page: "Página",
+      pageDesc: "Adicionar uma nova página",
+      folder: "Pasta",
+      folderDesc: "Use pastas para mostrar subpáginas em um menu dropdown",
+      link: "Link",
+      linkDesc: "Adicionar um link ao seu menu",
     },
   },
 
@@ -5833,6 +5851,15 @@ export const translations = {
       conflictsWith: "Conflicto con",
       dayBlocked: "Este día está bloqueado",
       blockedSlot: "Bloqueado",
+    },
+    websiteEditor: {
+      addPage: "Agregar Página",
+      page: "Página",
+      pageDesc: "Agregar una nueva página",
+      folder: "Carpeta",
+      folderDesc: "Use carpetas para mostrar subpáginas en un menú desplegable",
+      link: "Enlace",
+      linkDesc: "Agregar un enlace a tu menú",
     },
   },
 } as const;

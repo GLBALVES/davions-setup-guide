@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal, Plus } from "lucide-react";
+import { FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal, Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -16,47 +18,80 @@ const TABS: { id: EditorTab; icon: React.ElementType; label: string }[] = [
   { id: "settings", icon: Settings, label: "Settings" },
 ];
 
+const ADD_PAGE_OPTIONS = [
+  { key: "page" as const, icon: FileText },
+  { key: "folder" as const, icon: FolderOpen },
+  { key: "link" as const, icon: Link2 },
+];
+
 // ── Placeholder panels ───────────────────────────────────────────────────────
-const PagesPanel = () => (
-  <div className="flex flex-col h-full">
-    <div className="flex items-center justify-between px-4 py-3">
-      <h3 className="text-sm font-medium text-foreground">Pages</h3>
-      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary hover:text-primary">
-        <Plus className="h-3.5 w-3.5" />
-        Add Page
-      </Button>
-    </div>
+const PagesPanel = () => {
+  const [addOpen, setAddOpen] = useState(false);
+  const { t } = useLanguage();
 
-    <div className="px-4 pb-2">
-      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Site Menu</p>
-    </div>
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 py-3">
+        <h3 className="text-sm font-medium text-foreground">{t.websiteEditor.addPage.split(" ").pop()}</h3>
+        <Popover open={addOpen} onOpenChange={setAddOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary hover:text-primary">
+              <Plus className="h-3.5 w-3.5" />
+              {t.websiteEditor.addPage}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72 p-1.5 shadow-lg" sideOffset={6}>
+            {ADD_PAGE_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const label = t.websiteEditor[opt.key];
+              const desc = t.websiteEditor[`${opt.key}Desc` as keyof typeof t.websiteEditor];
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setAddOpen(false)}
+                  className="flex items-start gap-3 w-full rounded-md px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                >
+                  <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </PopoverContent>
+        </Popover>
+      </div>
 
-    <nav className="flex-1 overflow-y-auto px-2">
-      {/* Placeholder pages */}
-      <PageItem label="Home" icon="🏠" active />
-      <PageGroup label="The Experience">
-        <PageItem label="About" />
-        <PageItem label="The Studio" />
-      </PageGroup>
-      <PageGroup label="Investment">
-        <PageItem label="Sessions" />
-        <PageItem label="Online Booking" />
-      </PageGroup>
-      <PageItem label="Blog" icon="🔗" />
-      <PageItem label="Contact" />
-    </nav>
+      <div className="px-4 pb-2">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">Site Menu</p>
+      </div>
 
-    {/* Bottom actions */}
-    <div className="border-t border-border p-3 flex gap-2">
-      <Button variant="outline" size="sm" className="flex-1 text-xs">
-        Preview
-      </Button>
-      <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground">
-        Publish
-      </Button>
+      <nav className="flex-1 overflow-y-auto px-2">
+        <PageItem label="Home" icon="🏠" active />
+        <PageGroup label="The Experience">
+          <PageItem label="About" />
+          <PageItem label="The Studio" />
+        </PageGroup>
+        <PageGroup label="Investment">
+          <PageItem label="Sessions" />
+          <PageItem label="Online Booking" />
+        </PageGroup>
+        <PageItem label="Blog" icon="🔗" />
+        <PageItem label="Contact" />
+      </nav>
+
+      <div className="border-t border-border p-3 flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1 text-xs">
+          Preview
+        </Button>
+        <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground">
+          Publish
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const PageItem = ({ label, icon, active }: { label: string; icon?: string; active?: boolean }) => (
   <div
