@@ -1163,18 +1163,6 @@ const WebsiteSettings = () => {
                     </div>
                   </section>
 
-                  <Divider />
-
-                   {/* ── 9. Footer ── */}
-                  <section className="flex flex-col gap-5">
-                    <SectionHeading title={ws.footerTitle} description={ws.footerDesc} />
-                    <FieldRow label={ws.footerTextLabel}>
-                      <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder={ws.footerTextPlaceholder} className="h-9 text-sm font-light" />
-                    </FieldRow>
-                  </section>
-
-                  <Divider />
-
                   {/* ── 10. Store URL ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
