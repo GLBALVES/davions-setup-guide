@@ -1042,22 +1042,17 @@ const WebsiteSettings = () => {
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "favicon", "site-assets", setFaviconUrl, setUploadingFavicon, "Favicon"); }} />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label={ws.taglineLabel}>
-                        <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder={ws.taglinePlaceholder} className="h-9 text-sm font-light" />
-                      </FieldRow>
-                      <FieldRow label={ws.brandColorLabel}>
-                        <div className="flex items-center gap-2 h-9 border border-input px-3 bg-background">
-                          <input
-                            type="color"
-                            value={accentColor}
-                            onChange={(e) => setAccentColor(e.target.value)}
-                            className="h-5 w-5 cursor-pointer border-none bg-transparent p-0"
-                          />
-                          <span className="text-sm font-mono text-foreground/80 font-light">{accentColor}</span>
-                        </div>
-                      </FieldRow>
-                    </div>
+                    <FieldRow label={ws.brandColorLabel}>
+                      <div className="flex items-center gap-2 h-9 border border-input px-3 bg-background">
+                        <input
+                          type="color"
+                          value={accentColor}
+                          onChange={(e) => setAccentColor(e.target.value)}
+                          className="h-5 w-5 cursor-pointer border-none bg-transparent p-0"
+                        />
+                        <span className="text-sm font-mono text-foreground/80 font-light">{accentColor}</span>
+                      </div>
+                    </FieldRow>
                   </section>
 
 
