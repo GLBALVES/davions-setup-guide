@@ -855,11 +855,26 @@ const WebsiteEditor = () => {
 
         <div className="flex-1 relative">
           {storeSlug ? (
-            <iframe
-              src={`/store/${storeSlug}`}
-              className="absolute inset-0 w-full h-full border-0"
-              title="Site Preview"
-            />
+            <>
+              <iframe
+                src={`/store/${storeSlug}`}
+                className="absolute inset-0 w-full h-full border-0"
+                title="Site Preview"
+              />
+              {/* Clickable hero overlay to open Header Slider editor */}
+              <button
+                onClick={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
+                className="absolute top-0 left-0 right-0 h-[60%] cursor-pointer group z-10"
+                title="Edit Header Slider"
+              >
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/50 transition-colors rounded-sm">
+                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground/80 text-background text-[10px] px-2 py-1 rounded flex items-center gap-1.5">
+                    <Image className="h-3 w-3" />
+                    Header Slider
+                  </div>
+                </div>
+              </button>
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center h-full p-8">
               <div className="text-center space-y-3">
