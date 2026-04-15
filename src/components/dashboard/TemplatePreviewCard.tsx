@@ -333,7 +333,7 @@ export function TemplatePreviewCard({
       <button onClick={onClick} className="w-full text-left focus:outline-none">
         <div
           className="relative w-full overflow-hidden"
-          style={{ aspectRatio: "16/10" }}
+          style={{ aspectRatio: "4/3" }}
         >
           {/* Real photo */}
           <img
