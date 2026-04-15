@@ -335,6 +335,10 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
     ? "text-muted-foreground hover:text-foreground"
     : "text-white/70 hover:text-white";
 
+  // Split nav links into left and right halves for centered-logo layout (Pixieset style)
+  const leftLinks = navLinks.slice(0, Math.ceil(navLinks.length / 2));
+  const rightLinks = navLinks.slice(Math.ceil(navLinks.length / 2));
+
   return (
     <header
       data-block-key="header"
@@ -343,74 +347,63 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         !hasBg && scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : ""
       } ${!hasBg && !scrolled ? "bg-transparent" : ""}`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-14 grid grid-cols-3 items-center gap-4">
-        {/* Left: logo / studio name */}
-        <div className="flex items-center">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center gap-4">
+        {/* Left nav links */}
+        <nav className="hidden md:flex items-center gap-8 flex-1 justify-end">
+          {leftLinks.map((link) => (
+            <button
+              key={link.label}
+              onClick={() => onNavClick(link.href)}
+              style={textColor ? { color: textColor } : undefined}
+              className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+                textColor ? "hover:opacity-70" : textCls
+              }`}
+            >
+              {link.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Center: logo / studio name */}
+        <div className="flex items-center justify-center shrink-0 px-8">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={displayName}
-              className={`h-8 object-contain transition-all duration-300 ${logoFilter}`}
+              className={`h-12 object-contain transition-all duration-300 ${logoFilter}`}
             />
           ) : (
             <span
               style={textColor ? { color: textColor } : undefined}
-              className={`text-[10px] tracking-[0.4em] uppercase font-light transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/80" : ""}`}
+              className={`text-sm tracking-[0.4em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
             >
               {displayName}
             </span>
           )}
         </div>
 
-        {/* Center: nav links */}
-        {navLinks.length > 0 && (
-          <nav className="hidden md:flex items-center gap-6 justify-center">
-            {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => onNavClick(link.href)}
-                style={textColor ? { color: textColor } : undefined}
-                className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 ${
-                  textColor ? "hover:opacity-70" : textCls
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
-          </nav>
-        )}
-        {navLinks.length === 0 && <div />}
-
-        {/* Right: social icons */}
-        <div className="hidden md:flex items-center gap-3 justify-end shrink-0">
-          <SocialIcons
-            site={site}
-            scrolled={isOpaque}
-            size="xs"
-            forceColor={textColor}
-            filterKeys={visibleSocials}
-          />
-          {showBooking && (
+        {/* Right nav links */}
+        <nav className="hidden md:flex items-center gap-8 flex-1 justify-start">
+          {rightLinks.map((link) => (
             <button
-              onClick={() => onNavClick("#sessions")}
-              style={{
-                borderColor: textColor ?? (isOpaque ? accentColor : "rgba(255,255,255,0.6)"),
-                color: textColor ?? undefined,
-              }}
-              className={`px-4 py-1.5 border text-[9px] tracking-[0.3em] uppercase transition-colors duration-300 ${
-                textColor ? "hover:opacity-70" : isOpaque ? "text-foreground hover:bg-foreground hover:text-background" : "text-white/80 hover:bg-white/10"
+              key={link.label}
+              onClick={() => onNavClick(link.href)}
+              style={textColor ? { color: textColor } : undefined}
+              className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+                textColor ? "hover:opacity-70" : textCls
               }`}
             >
-              {ctaText}
+              {link.label}
             </button>
-          )}
-        </div>
+          ))}
+        </nav>
 
+        {/* Mobile toggle */}
         {navLinks.length > 0 && (
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             style={textColor ? { color: textColor } : undefined}
-            className={`md:hidden col-start-3 justify-self-end transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
+            className={`md:hidden absolute right-6 transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -418,13 +411,17 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         )}
       </div>
 
+      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-background/98 backdrop-blur-sm border-b border-border">
           <nav className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <button
                 key={link.label}
-                onClick={() => onNavClick(link.href)}
+                onClick={() => {
+                  onNavClick(link.href);
+                  setMobileMenuOpen(false);
+                }}
                 className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 last:border-0"
               >
                 {link.label}
@@ -432,17 +429,14 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
             ))}
             {showBooking && (
               <button
-                onClick={() => onNavClick("#sessions")}
+                onClick={() => {
+                  onNavClick("#sessions");
+                  setMobileMenuOpen(false);
+                }}
                 className="mt-2 text-left text-[11px] tracking-[0.3em] uppercase font-light text-foreground py-2.5"
               >
                 {ctaText} →
               </button>
-            )}
-            {/* Mobile social icons */}
-            {site && (
-              <div className="pt-3 border-t border-border/50 mt-1">
-                <SocialIcons site={site} scrolled={true} size="sm" filterKeys={visibleSocials} />
-              </div>
             )}
           </nav>
         </div>
