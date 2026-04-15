@@ -46,28 +46,11 @@ interface SitePage {
   socialImage?: string;
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── Default seed (only Home + Contact + Blog link) ───────────────────────────
 const INITIAL_PAGES: SitePage[] = [
   { id: "home", label: "Home", type: "page", icon: "🏠", inMenu: true, status: "online", showHeaderFooter: true },
-  {
-    id: "experience", label: "The Experience", type: "folder", inMenu: true, status: "online", showHeaderFooter: true,
-    children: [
-      { id: "about", label: "About", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
-      { id: "studio", label: "The Studio", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
-    ],
-  },
-  {
-    id: "investment", label: "Investment", type: "folder", inMenu: true, status: "online", showHeaderFooter: true,
-    children: [
-      { id: "sessions", label: "Sessions", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
-      { id: "booking", label: "Online Booking", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
-    ],
-  },
-  { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
   { id: "contact", label: "Contact", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
-  { id: "clients", label: "Clients", type: "page", inMenu: false, status: "online", showHeaderFooter: true },
-  { id: "thankyou", label: "Thank you!", type: "page", inMenu: false, status: "online", showHeaderFooter: false },
-  { id: "biolinks", label: "Bio Links", type: "page", inMenu: false, status: "online", showHeaderFooter: false },
+  { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
 ];
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
