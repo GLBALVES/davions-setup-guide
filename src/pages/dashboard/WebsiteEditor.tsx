@@ -685,29 +685,47 @@ const PagesPanel = ({
       if (error) { console.error("Failed to load site_pages", error); setLoaded(true); return; }
 
       if (!data || data.length === 0) {
-        // Seed defaults
-        const rows: any[] = [];
-        let order = 0;
-        for (const page of INITIAL_PAGES) {
-          const id = crypto.randomUUID();
-          rows.push(sitePageToDbFields({ ...page, id }, photographerId, order++));
-          if (page.children) {
-            for (const child of page.children) {
-              const childId = crypto.randomUUID();
-              rows.push(sitePageToDbFields({ ...child, id: childId }, photographerId, order++, id));
+        // Check if site was already initialized (user intentionally deleted all pages)
+        const { data: siteRow } = await supabase
+          .from("photographer_site")
+          .select("site_pages_initialized")
+          .eq("photographer_id", photographerId)
+          .maybeSingle();
+
+        if (siteRow?.site_pages_initialized) {
+          // User intentionally has no pages — don't re-seed
+          setPages([]);
+        } else {
+          // First time — seed defaults
+          const rows: any[] = [];
+          let order = 0;
+          for (const page of INITIAL_PAGES) {
+            const id = crypto.randomUUID();
+            rows.push(sitePageToDbFields({ ...page, id }, photographerId, order++));
+            if (page.children) {
+              for (const child of page.children) {
+                const childId = crypto.randomUUID();
+                rows.push(sitePageToDbFields({ ...child, id: childId }, photographerId, order++, id));
+              }
             }
           }
+          const { error: insertErr } = await supabase.from("site_pages").insert(rows);
+          if (insertErr) { console.error("Failed to seed site_pages", insertErr); }
+          // Mark as initialized
+          await supabase.from("photographer_site").update({ site_pages_initialized: true } as any).eq("photographer_id", photographerId);
+          // Re-fetch after seed
+          const { data: seeded } = await supabase
+            .from("site_pages")
+            .select("*")
+            .eq("photographer_id", photographerId)
+            .order("sort_order", { ascending: true });
+          buildTree(seeded || []);
         }
-        const { error: insertErr } = await supabase.from("site_pages").insert(rows);
-        if (insertErr) { console.error("Failed to seed site_pages", insertErr); }
-        // Re-fetch after seed
-        const { data: seeded } = await supabase
-          .from("site_pages")
-          .select("*")
-          .eq("photographer_id", photographerId)
-          .order("sort_order", { ascending: true });
-        buildTree(seeded || []);
       } else {
+        // Has pages — ensure flag is set
+        if (loaded === false) {
+          await supabase.from("photographer_site").update({ site_pages_initialized: true } as any).eq("photographer_id", photographerId);
+        }
         buildTree(data);
       }
       setLoaded(true);
