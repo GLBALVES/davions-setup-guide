@@ -644,6 +644,22 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     setPages((prev) => [...prev, newPage]);
   };
 
+  const addPage = (type: "page" | "folder" | "link") => {
+    const ts = Date.now();
+    const newPage: SitePage = {
+      id: `${type}-${ts}`,
+      label: type === "folder" ? "New Folder" : type === "link" ? "New Link" : "New Page",
+      type,
+      inMenu: false,
+      status: "online",
+      showHeaderFooter: type !== "link",
+      ...(type === "folder" ? { children: [] } : {}),
+    };
+    setPages((prev) => [...prev, newPage]);
+    setSettingsPage(newPage);
+    setAddOpen(false);
+  };
+
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
   // If editing a section (e.g. header slider)
