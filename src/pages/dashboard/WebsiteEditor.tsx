@@ -617,6 +617,22 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
   };
 
+  const deletePage = (id: string) => {
+    if (id === "home") return;
+    setPages((prev) => prev.filter((p) => p.id !== id).map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p));
+    if (activePage === id) setActivePage("home");
+    if (settingsPage?.id === id) setSettingsPage(null);
+  };
+
+  const duplicatePage = (id: string) => {
+    const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+    const source = allP.find((p) => p.id === id);
+    if (!source) return;
+    const newPage: SitePage = { ...source, id: `${id}-copy-${Date.now()}`, label: `${source.label} (copy)`, inMenu: false };
+    // If it was a child, add as top-level
+    setPages((prev) => [...prev, newPage]);
+  };
+
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
   // If editing a section (e.g. header slider)
