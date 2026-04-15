@@ -704,11 +704,11 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
               key={page.id}
               page={page}
               activePage={activePage}
-              onSelect={(id) => {
-                setActivePage(id);
-              }}
+              onSelect={(id) => setActivePage(id)}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
+              onDelete={deletePage}
+              onDuplicate={duplicatePage}
             />
           ) : (
             <PageItem
@@ -718,6 +718,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
               onSelect={() => setActivePage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
+              onDelete={() => deletePage(page.id)}
+              onDuplicate={() => duplicatePage(page.id)}
             />
           )
         )}
@@ -736,6 +738,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
                 onSelect={() => setActivePage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
+                onDelete={() => deletePage(page.id)}
+                onDuplicate={() => duplicatePage(page.id)}
               />
             ))}
           </>
