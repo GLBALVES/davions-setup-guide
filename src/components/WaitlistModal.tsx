@@ -191,7 +191,6 @@ export function WaitlistModal() {
             </div>
           </motion.div>
         </motion.div>
-      )}
     </AnimatePresence>
   );
 }
