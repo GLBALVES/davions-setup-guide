@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 
@@ -221,7 +221,7 @@ interface Props {
   /** For blog nav link */
   blogHref: string;
   /** Extra nav links injected from site_pages (multi-page) */
-  extraNavLinks?: { label: string; href: string }[];
+  extraNavLinks?: NavLinkItem[];
   /** Sub-page title (for non-home pages) */
   subPageTitle?: string;
   /** Sub-page content data */
@@ -250,6 +250,12 @@ function formatPrice(cents: number) {
 
 // ─── Shared Nav ─────────────────────────────────────────────────────────────
 
+export interface NavLinkItem {
+  label: string;
+  href: string;
+  children?: NavLinkItem[];
+}
+
 interface NavProps {
   scrolled: boolean;
   mobileMenuOpen: boolean;
@@ -257,7 +263,7 @@ interface NavProps {
   displayName: string;
   logoUrl: string | null;
   accentColor: string;
-  navLinks: { label: string; href: string }[];
+  navLinks: NavLinkItem[];
   showBooking: boolean;
   ctaText: string;
   onNavClick: (href: string) => void;
@@ -317,6 +323,63 @@ function SocialIcons({
   );
 }
 
+function NavItem({ link, textColor, textCls, onNavClick, isOpaque }: { link: NavLinkItem; textColor?: string; textCls: string; onNavClick: (href: string) => void; isOpaque: boolean }) {
+  const [open, setOpen] = useReactState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const hasChildren = link.children && link.children.length > 0;
+
+  const handleEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  };
+
+  if (!hasChildren) {
+    return (
+      <button
+        onClick={() => onNavClick(link.href)}
+        style={textColor ? { color: textColor } : undefined}
+        className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+          textColor ? "hover:opacity-70" : textCls
+        }`}
+      >
+        {link.label}
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <button
+        style={textColor ? { color: textColor } : undefined}
+        className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+          textColor ? "hover:opacity-70" : textCls
+        }`}
+      >
+        {link.label}
+      </button>
+      {open && (
+        <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50`}>
+          <div className={`min-w-[160px] py-1.5 rounded-md shadow-lg border border-border ${isOpaque ? "bg-background" : "bg-background/95 backdrop-blur-sm"}`}>
+            {link.children!.map((child) => (
+              <button
+                key={child.label}
+                onClick={() => { onNavClick(child.href); setOpen(false); }}
+                className="block w-full text-left px-4 py-2 text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                {child.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site }: NavProps) {
   const hasBg = !!site?.header_bg_color;
   const bgColor = site?.header_bg_color ?? undefined;
@@ -351,16 +414,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         {/* Left nav links */}
         <nav className="hidden md:flex items-center gap-8 flex-1 justify-end">
           {leftLinks.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => onNavClick(link.href)}
-              style={textColor ? { color: textColor } : undefined}
-              className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
-                textColor ? "hover:opacity-70" : textCls
-              }`}
-            >
-              {link.label}
-            </button>
+            <NavItem key={link.label} link={link} textColor={textColor} textCls={textCls} onNavClick={onNavClick} isOpaque={isOpaque} />
           ))}
         </nav>
 
@@ -385,16 +439,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         {/* Right nav links */}
         <nav className="hidden md:flex items-center gap-8 flex-1 justify-start">
           {rightLinks.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => onNavClick(link.href)}
-              style={textColor ? { color: textColor } : undefined}
-              className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
-                textColor ? "hover:opacity-70" : textCls
-              }`}
-            >
-              {link.label}
-            </button>
+            <NavItem key={link.label} link={link} textColor={textColor} textCls={textCls} onNavClick={onNavClick} isOpaque={isOpaque} />
           ))}
         </nav>
 
@@ -416,16 +461,25 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         <div className="md:hidden bg-background/98 backdrop-blur-sm border-b border-border">
           <nav className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => {
-                  onNavClick(link.href);
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 last:border-0"
-              >
-                {link.label}
-              </button>
+              <div key={link.label}>
+                <button
+                  onClick={() => {
+                    if (!link.children?.length) { onNavClick(link.href); setMobileMenuOpen(false); }
+                  }}
+                  className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 w-full"
+                >
+                  {link.label}
+                </button>
+                {link.children?.map((child) => (
+                  <button
+                    key={child.label}
+                    onClick={() => { onNavClick(child.href); setMobileMenuOpen(false); }}
+                    className="text-left text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground/70 hover:text-foreground transition-colors py-2 pl-4 border-b border-border/30 w-full"
+                  >
+                    {child.label}
+                  </button>
+                ))}
+              </div>
             ))}
             {showBooking && (
               <button
@@ -713,7 +767,7 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
+  const navLinks: NavLinkItem[] = extraNavLinks && extraNavLinks.length > 0
     ? extraNavLinks
     : [
         ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
