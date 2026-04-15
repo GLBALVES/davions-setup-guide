@@ -413,11 +413,18 @@ const PageSettingsView = ({
             <Home className="h-3.5 w-3.5" />
             {we.setAsHomepage}
           </button>
-          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+          <button onClick={onDuplicate} className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
             <Copy className="h-3.5 w-3.5" />
             {we.duplicatePage}
           </button>
-          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-destructive hover:bg-destructive/10 transition-colors">
+          <button
+            onClick={onDelete}
+            disabled={isHome}
+            className={cn(
+              "flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs transition-colors",
+              isHome ? "text-muted-foreground/40 cursor-not-allowed" : "text-destructive hover:bg-destructive/10"
+            )}
+          >
             <Trash2 className="h-3.5 w-3.5" />
             {we.deletePage}
           </button>
@@ -654,6 +661,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
         page={livePage}
         onBack={() => setSettingsPage(null)}
         onUpdate={(patch) => findAndUpdate(settingsPage.id, patch)}
+        onDelete={() => { deletePage(settingsPage.id); setSettingsPage(null); }}
+        onDuplicate={() => { duplicatePage(settingsPage.id); setSettingsPage(null); }}
       />
     );
   }
