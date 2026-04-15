@@ -71,7 +71,6 @@ const labels = {
 export function WaitlistModal() {
   const { lang } = useLanguage();
   const l = labels[lang];
-  const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", country: "" });
@@ -93,14 +92,10 @@ export function WaitlistModal() {
     }
     setSubmitted(true);
     toast.success(l.success);
-    setTimeout(() => setOpen(false), 2500);
   };
-
-  if (!open) return null;
 
   return (
     <AnimatePresence>
-      {open && (
         <motion.div
           key="waitlist-overlay"
           className="fixed inset-0 z-[9999] flex items-center justify-center"
