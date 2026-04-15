@@ -461,16 +461,25 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         <div className="md:hidden bg-background/98 backdrop-blur-sm border-b border-border">
           <nav className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => {
-                  onNavClick(link.href);
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 last:border-0"
-              >
-                {link.label}
-              </button>
+              <div key={link.label}>
+                <button
+                  onClick={() => {
+                    if (!link.children?.length) { onNavClick(link.href); setMobileMenuOpen(false); }
+                  }}
+                  className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 w-full"
+                >
+                  {link.label}
+                </button>
+                {link.children?.map((child) => (
+                  <button
+                    key={child.label}
+                    onClick={() => { onNavClick(child.href); setMobileMenuOpen(false); }}
+                    className="text-left text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground/70 hover:text-foreground transition-colors py-2 pl-4 border-b border-border/30 w-full"
+                  >
+                    {child.label}
+                  </button>
+                ))}
+              </div>
             ))}
             {showBooking && (
               <button
