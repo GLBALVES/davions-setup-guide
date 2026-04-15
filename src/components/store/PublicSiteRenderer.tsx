@@ -250,6 +250,12 @@ function formatPrice(cents: number) {
 
 // ─── Shared Nav ─────────────────────────────────────────────────────────────
 
+export interface NavLinkItem {
+  label: string;
+  href: string;
+  children?: NavLinkItem[];
+}
+
 interface NavProps {
   scrolled: boolean;
   mobileMenuOpen: boolean;
@@ -257,7 +263,7 @@ interface NavProps {
   displayName: string;
   logoUrl: string | null;
   accentColor: string;
-  navLinks: { label: string; href: string }[];
+  navLinks: NavLinkItem[];
   showBooking: boolean;
   ctaText: string;
   onNavClick: (href: string) => void;
