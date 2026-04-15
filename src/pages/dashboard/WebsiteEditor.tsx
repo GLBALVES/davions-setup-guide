@@ -131,11 +131,11 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs">
           <QrCode className="h-3.5 w-3.5" /> {we.getQrCode}
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2 text-xs">
+        <DropdownMenuItem className="gap-2 text-xs" onClick={onDuplicate}>
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 text-xs text-destructive">
+        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.id === "home"}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
