@@ -976,39 +976,6 @@ const WebsiteSettings = () => {
                       <SectionHeading title={ws.brandingTitle} description={ws.brandingDesc} />
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.logoLabel}</Label>
-                      <div className="flex items-center gap-4">
-                        {logoUrl ? (
-                          <div className="relative h-14 w-32 border border-border bg-muted/20 flex items-center justify-center overflow-hidden">
-                            <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
-                            <button
-                              onClick={() => setLogoUrl("")}
-                              className="absolute top-1 right-1 bg-background/80 border border-border rounded-full p-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            onClick={() => logoInputRef.current?.click()}
-                            className="h-14 w-32 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-foreground/30 transition-colors"
-                          >
-                            {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <Upload className="h-4 w-4 text-muted-foreground/50" />}
-                            <span className="text-[9px] tracking-widest uppercase text-muted-foreground/50">Upload</span>
-                          </div>
-                        )}
-                        <div className="flex flex-col gap-1">
-                          <button onClick={() => logoInputRef.current?.click()} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors text-left">
-                            {logoUrl ? ws.replaceLogo : ws.uploadLogo}
-                          </button>
-                          <p className="text-[10px] text-muted-foreground/60">{ws.logoHint}</p>
-                        </div>
-                      </div>
-                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo", "site-assets", setLogoUrl, setUploadingLogo, "Logo"); }} />
-                    </div>
-
                     {/* Favicon */}
                     <div className="flex flex-col gap-2">
                       <Label className="text-[11px] tracking-wider uppercase font-light">Favicon</Label>
