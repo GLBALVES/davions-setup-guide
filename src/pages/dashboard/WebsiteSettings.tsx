@@ -968,16 +968,6 @@ const WebsiteSettings = () => {
                       )}
                     </AnimatePresence>
                   </section>
-
-                   {/* ── 1. Branding ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.brandingTitle} description={ws.brandingDesc} />
-                    </div>
-
-                  </section>
-
                   {/* ── 4. Social Media ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
