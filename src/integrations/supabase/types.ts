@@ -2496,6 +2496,7 @@ export type Database = {
           show_store: boolean | null
           site_headline: string | null
           site_hero_image_url: string | null
+          site_pages_initialized: boolean | null
           site_sections_order: Json | null
           site_subheadline: string | null
           site_template: string | null
@@ -2562,6 +2563,7 @@ export type Database = {
           show_store?: boolean | null
           site_headline?: string | null
           site_hero_image_url?: string | null
+          site_pages_initialized?: boolean | null
           site_sections_order?: Json | null
           site_subheadline?: string | null
           site_template?: string | null
@@ -2628,6 +2630,7 @@ export type Database = {
           show_store?: boolean | null
           site_headline?: string | null
           site_hero_image_url?: string | null
+          site_pages_initialized?: boolean | null
           site_sections_order?: Json | null
           site_subheadline?: string | null
           site_template?: string | null

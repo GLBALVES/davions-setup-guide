@@ -1,0 +1,1 @@
+ALTER TABLE photographer_site ADD COLUMN IF NOT EXISTS site_pages_initialized boolean DEFAULT false;
