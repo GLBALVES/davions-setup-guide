@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PageTemplatePickerModal from "@/components/website-editor/PageTemplatePickerModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -604,6 +605,7 @@ const PageSectionsPanel = ({
 // ── Pages Panel ───────────────────────────────────────────────────────────────
 const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: string | null; setEditingSection: (s: string | null) => void }) => {
   const [addOpen, setAddOpen] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [pages, setPages] = useState<SitePage[]>(INITIAL_PAGES);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
@@ -645,10 +647,15 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
   };
 
   const addPage = (type: "page" | "folder" | "link") => {
+    if (type === "page") {
+      setAddOpen(false);
+      setTemplatePickerOpen(true);
+      return;
+    }
     const ts = Date.now();
     const newPage: SitePage = {
       id: `${type}-${ts}`,
-      label: type === "folder" ? "New Folder" : type === "link" ? "New Link" : "New Page",
+      label: type === "folder" ? "New Folder" : "New Link",
       type,
       inMenu: false,
       status: "online",
@@ -658,6 +665,20 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
     setAddOpen(false);
+  };
+
+  const handleTemplateSelect = (templateId: string, title: string) => {
+    const ts = Date.now();
+    const newPage: SitePage = {
+      id: `page-${ts}`,
+      label: title,
+      type: "page",
+      inMenu: false,
+      status: "online",
+      showHeaderFooter: true,
+    };
+    setPages((prev) => [...prev, newPage]);
+    setSettingsPage(newPage);
   };
 
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
@@ -712,7 +733,7 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
                   <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium text-foreground">{label}</p>
-                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</p>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{String(desc ?? "")}</p>
                   </div>
                 </button>
               );
@@ -779,6 +800,12 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
         <Button variant="outline" size="sm" className="flex-1 text-xs">Preview</Button>
         <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground">Publish</Button>
       </div>
+
+      <PageTemplatePickerModal
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={handleTemplateSelect}
+      />
     </div>
   );
 };
