@@ -706,7 +706,7 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
               return (
                 <button
                   key={opt.key}
-                  onClick={() => setAddOpen(false)}
+                  onClick={() => addPage(opt.key)}
                   className="flex items-start gap-3 w-full rounded-md px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
                 >
                   <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
