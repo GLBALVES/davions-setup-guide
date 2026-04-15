@@ -21,7 +21,13 @@ export type SectionType =
   | "divider"
   | "video"
   | "columns-2"
-  | "columns-3";
+  | "columns-3"
+  | "slideshow"
+  | "carousel"
+  | "instagram-feed"
+  | "social-links"
+  | "embed"
+  | "logo-strip";
 
 export interface PageSection {
   id: string;
