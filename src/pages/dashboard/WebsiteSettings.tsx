@@ -1054,54 +1054,6 @@ const WebsiteSettings = () => {
                       </div>
                     </FieldRow>
                   </section>
-
-
-                  {/* ── 3. About Section ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.aboutTitle} description={ws.aboutDesc} />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label={ws.fullNameLabel}>
-                        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={ws.fullNamePlaceholder} className="h-9 text-sm font-light" />
-                      </FieldRow>
-                      <FieldRow label={ws.sectionTitleLabel}>
-                        <Input value={aboutTitle} onChange={(e) => setAboutTitle(e.target.value)} placeholder="About" className="h-9 text-sm font-light" />
-                      </FieldRow>
-                    </div>
-
-                    <FieldRow label={ws.bioLabel}>
-                      <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder={ws.bioPlaceholder} className="min-h-[100px] text-sm font-light resize-none" />
-                    </FieldRow>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.profilePhotoLabel}</Label>
-                      <div className="flex items-center gap-4">
-                        {aboutImageUrl ? (
-                          <div className="relative h-20 w-20 border border-border overflow-hidden rounded-sm bg-muted/10">
-                            <img src={aboutImageUrl} alt="About" className="w-full h-full object-cover" />
-                            <button onClick={() => setAboutImageUrl("")} className="absolute top-1 right-1 bg-background/80 border border-border rounded-full p-0.5 text-muted-foreground hover:text-destructive">
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div onClick={() => aboutInputRef.current?.click()} className="h-20 w-20 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-foreground/30 transition-colors rounded-sm">
-                            {uploadingAbout ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <Upload className="h-4 w-4 text-muted-foreground/40" />}
-                          </div>
-                        )}
-                        <button onClick={() => aboutInputRef.current?.click()} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
-                          {aboutImageUrl ? ws.replacePhoto : ws.uploadPhoto}
-                        </button>
-                      </div>
-                      <input ref={aboutInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "about", "site-assets", setAboutImageUrl, setUploadingAbout, "Profile photo"); }} />
-                    </div>
-                  </section>
-
-                  <Divider />
-
                   {/* ── 4. Social Media ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
