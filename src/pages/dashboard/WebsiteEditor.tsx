@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PageTemplatePickerModal from "@/components/website-editor/PageTemplatePickerModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -799,6 +800,12 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
         <Button variant="outline" size="sm" className="flex-1 text-xs">Preview</Button>
         <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground">Publish</Button>
       </div>
+
+      <PageTemplatePickerModal
+        open={templatePickerOpen}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={handleTemplateSelect}
+      />
     </div>
   );
 };
