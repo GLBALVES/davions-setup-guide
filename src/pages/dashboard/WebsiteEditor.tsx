@@ -200,12 +200,16 @@ const PageFolder = ({
   onSelect,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   activePage: string;
   onSelect: (id: string) => void;
   onSettings: (p: SitePage) => void;
   onToggleMenu: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -218,7 +222,7 @@ const PageFolder = ({
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate flex-1 text-left">{page.label}</span>
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} />
+        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
       </div>
       {open && page.children?.map((child) => (
         <PageItem
@@ -228,6 +232,8 @@ const PageFolder = ({
           onSelect={() => onSelect(child.id)}
           onSettings={() => onSettings(child)}
           onToggleMenu={() => onToggleMenu(child.id)}
+          onDelete={() => onDelete(child.id)}
+          onDuplicate={() => onDuplicate(child.id)}
           indent
         />
       ))}
