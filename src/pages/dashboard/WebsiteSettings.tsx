@@ -1060,55 +1060,6 @@ const WebsiteSettings = () => {
                     </div>
                   </section>
 
-                  <Divider />
-
-                  {/* ── 2. Hero Section ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Image className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.heroTitle} description={ws.heroDesc} />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.coverImage}</Label>
-                      {heroImageUrl ? (
-                        <div className="relative w-full h-36 border border-border overflow-hidden bg-muted/10">
-                          <img src={heroImageUrl} alt="Hero" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                          <button onClick={() => setHeroImageUrl("")} className="absolute top-2 right-2 bg-background/80 border border-border rounded-full p-1 text-muted-foreground hover:text-destructive">
-                            <X className="h-3 w-3" />
-                          </button>
-                          <button onClick={() => heroInputRef.current?.click()} className="absolute bottom-2 right-2 flex items-center gap-1.5 text-[10px] tracking-widest uppercase bg-background/80 border border-border px-2.5 py-1.5 text-foreground hover:bg-background transition-colors">
-                            <Upload className="h-3 w-3" />{ws.replaceHero}
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => heroInputRef.current?.click()} className="w-full h-24 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-foreground/30 transition-colors">
-                          {uploadingHero ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground/40" />}
-                          <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">{ws.uploadHero}</span>
-                        </div>
-                      )}
-                       <input ref={heroInputRef} type="file" accept="image/*" className="hidden"
-                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "hero", "site-assets", setHeroImageUrl, setUploadingHero, "Hero image"); }} />
-                    </div>
-
-                    <FieldRow label={ws.headlineLabel}>
-                      <Input value={siteHeadline} onChange={(e) => setSiteHeadline(e.target.value)} placeholder={ws.headlinePlaceholder} className="h-9 text-sm font-light" />
-                    </FieldRow>
-                    <FieldRow label={ws.subheadlineLabel}>
-                      <Input value={siteSubheadline} onChange={(e) => setSiteSubheadline(e.target.value)} placeholder={ws.subheadlinePlaceholder} className="h-9 text-sm font-light" />
-                    </FieldRow>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label={ws.ctaTextLabel}>
-                        <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} placeholder={ws.ctaTextPlaceholder} className="h-9 text-sm font-light" />
-                      </FieldRow>
-                      <FieldRow label={ws.ctaLinkLabel}>
-                        <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} placeholder={ws.ctaLinkPlaceholder} className="h-9 text-sm font-light" />
-                      </FieldRow>
-                    </div>
-                  </section>
-
-                  <Divider />
 
                   {/* ── 2b. Quote & Experience ── */}
                   <section className="flex flex-col gap-5">
