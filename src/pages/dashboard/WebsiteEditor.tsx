@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal,
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
-  ChevronDown, ChevronRight, ArrowLeft,
+  ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,10 @@ interface SitePage {
   slug?: string;
   status?: "online" | "offline";
   showHeaderFooter?: boolean;
+  pageTitle?: string;
+  pageDescription?: string;
+  hideFromSearch?: boolean;
+  socialImage?: string;
 }
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -232,9 +237,14 @@ const PageSettingsView = ({
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
+  const isHome = page.id === "home";
+  const displaySlug = page.slug || page.label.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const displayTitle = page.pageTitle || page.label;
+  const displayDesc = page.pageDescription || "";
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <button onClick={onBack} className="p-1 rounded hover:bg-muted/50 transition-colors">
           <ArrowLeft className="h-4 w-4 text-muted-foreground" />
@@ -242,58 +252,155 @@ const PageSettingsView = ({
         <h3 className="text-sm font-medium text-foreground">{we.pageSettings}</h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-5">
-        {/* Page Name */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{we.pageName}</label>
-          <Input
-            value={page.label}
-            onChange={(e) => onUpdate({ label: e.target.value })}
-            className="h-9 text-sm"
-          />
+      <div className="flex-1 overflow-y-auto">
+        {/* ── BASICS ── */}
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.basics}</p>
+        </div>
+        <div className="px-4 space-y-4 pb-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.pageName}</label>
+            <Input value={page.label} onChange={(e) => onUpdate({ label: e.target.value })} className="h-9 text-sm" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.pageStatus}</label>
+            <Select value={page.status || "online"} onValueChange={(v) => onUpdate({ status: v as "online" | "offline" })}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">{we.online}</SelectItem>
+                <SelectItem value="offline">{we.offline}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-muted-foreground pr-2">{we.showHeaderFooter}</label>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">{page.showHeaderFooter !== false ? we.on : we.off}</span>
+              <Switch checked={page.showHeaderFooter ?? true} onCheckedChange={(v) => onUpdate({ showHeaderFooter: v })} />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.menuVisibility}</label>
+            <Select value={page.inMenu ? "visible" : "hidden"} onValueChange={(v) => onUpdate({ inMenu: v === "visible" })}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visible">{we.visible}</SelectItem>
+                <SelectItem value="hidden">{we.hidden}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Page Status */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{we.pageStatus}</label>
-          <Select
-            value={page.status || "online"}
-            onValueChange={(v) => onUpdate({ status: v as "online" | "offline" })}
+        <div className="border-t border-border" />
+
+        {/* ── SEO ── */}
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.seo}</p>
+        </div>
+        <div className="px-4 space-y-4 pb-5">
+          {/* Search Preview (Google SERP card) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.searchPreview}</label>
+            <div className="border border-border rounded-lg p-3 bg-muted/20 space-y-1">
+              <p className="text-sm text-[hsl(var(--primary))] truncate leading-tight">{displayTitle}</p>
+              <p className="text-[11px] text-green-700 dark:text-green-400 truncate">yoursite.com/{displaySlug}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">{displayDesc || "—"}</p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.urlSlug}</label>
+            <Input
+              value={page.slug ?? displaySlug}
+              onChange={(e) => onUpdate({ slug: e.target.value })}
+              className="h-9 text-sm"
+            />
+            <p className="text-[10px] text-muted-foreground/70">{we.urlSlugHelper}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.pageTitleSeo}</label>
+            <Input
+              value={page.pageTitle ?? ""}
+              onChange={(e) => onUpdate({ pageTitle: e.target.value })}
+              className="h-9 text-sm"
+              placeholder={page.label}
+            />
+            <p className="text-[10px] text-muted-foreground/70">{we.pageTitleSeoHelper}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.pageDescriptionSeo}</label>
+            <Textarea
+              value={page.pageDescription ?? ""}
+              onChange={(e) => onUpdate({ pageDescription: e.target.value })}
+              className="text-sm min-h-[60px] resize-none"
+              rows={3}
+            />
+            <p className="text-[10px] text-muted-foreground/70">{we.pageDescriptionSeoHelper}</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-muted-foreground pr-2">{we.hideFromSearchEngines}</label>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">{page.hideFromSearch ? we.on : we.off}</span>
+              <Switch checked={page.hideFromSearch ?? false} onCheckedChange={(v) => onUpdate({ hideFromSearch: v })} />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border" />
+
+        {/* ── SOCIAL ── */}
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.social}</p>
+        </div>
+        <div className="px-4 space-y-2 pb-5">
+          <label className="text-xs font-medium text-muted-foreground">{we.socialImage}</label>
+          <div className="border border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center gap-2 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
+            {page.socialImage ? (
+              <img src={page.socialImage} alt="Social" className="w-full h-24 object-cover rounded" />
+            ) : (
+              <>
+                <ImagePlus className="h-6 w-6 text-muted-foreground/50" />
+                <span className="text-[11px] text-muted-foreground">{we.uploadImage}</span>
+              </>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70">{we.socialImageHelper}</p>
+        </div>
+
+        <div className="border-t border-border" />
+
+        {/* ── Bottom Actions ── */}
+        <div className="px-4 py-3 space-y-1">
+          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+            <Shuffle className="h-3.5 w-3.5" />
+            {we.switchPageTemplate}
+          </button>
+          <button
+            disabled={isHome}
+            className={cn(
+              "flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs transition-colors",
+              isHome
+                ? "text-muted-foreground/40 cursor-not-allowed"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            )}
           >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="online">{we.online}</SelectItem>
-              <SelectItem value="offline">{we.offline}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Show Header Footer */}
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground pr-2">{we.showHeaderFooter}</label>
-          <Switch
-            checked={page.showHeaderFooter ?? true}
-            onCheckedChange={(v) => onUpdate({ showHeaderFooter: v })}
-          />
-        </div>
-
-        {/* Menu Visibility */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground">{we.menuVisibility}</label>
-          <Select
-            value={page.inMenu ? "visible" : "hidden"}
-            onValueChange={(v) => onUpdate({ inMenu: v === "visible" })}
-          >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="visible">{we.visible}</SelectItem>
-              <SelectItem value="hidden">{we.hidden}</SelectItem>
-            </SelectContent>
-          </Select>
+            <Home className="h-3.5 w-3.5" />
+            {we.setAsHomepage}
+          </button>
+          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+            <Copy className="h-3.5 w-3.5" />
+            {we.duplicatePage}
+          </button>
+          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-destructive hover:bg-destructive/10 transition-colors">
+            <Trash2 className="h-3.5 w-3.5" />
+            {we.deletePage}
+          </button>
         </div>
       </div>
     </div>
