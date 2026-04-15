@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal from "@/components/website-editor/PageTemplatePickerModal";
+import { getTemplateSections, type PageSection } from "@/components/website-editor/page-templates";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -37,6 +38,8 @@ interface SitePage {
   slug?: string;
   status?: "online" | "offline";
   showHeaderFooter?: boolean;
+  templateId?: string;
+  sections?: PageSection[];
   pageTitle?: string;
   pageDescription?: string;
   hideFromSearch?: boolean;
@@ -669,6 +672,7 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
 
   const handleTemplateSelect = (templateId: string, title: string) => {
     const ts = Date.now();
+    const sections = getTemplateSections(templateId);
     const newPage: SitePage = {
       id: `page-${ts}`,
       label: title,
@@ -676,6 +680,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
       inMenu: false,
       status: "online",
       showHeaderFooter: true,
+      templateId,
+      sections,
     };
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
