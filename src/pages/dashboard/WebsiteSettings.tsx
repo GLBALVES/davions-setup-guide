@@ -921,7 +921,7 @@ const WebsiteSettings = () => {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="relative max-w-xs group"
+                          className="relative w-full max-w-[240px] group"
                         >
                           {(() => {
                             const current = TEMPLATES.find(t => t.value === siteTemplate) ?? TEMPLATES[0];
@@ -951,7 +951,7 @@ const WebsiteSettings = () => {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
-                          className="grid grid-cols-3 gap-2"
+                          className="grid grid-cols-3 gap-3 max-w-4xl"
                         >
                           {TEMPLATES.map((tmpl) => (
                             <TemplatePreviewCard
