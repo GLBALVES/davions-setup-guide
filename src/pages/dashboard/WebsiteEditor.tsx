@@ -605,15 +605,147 @@ const PageSectionsPanel = ({
   );
 };
 
+// ── DB helpers ────────────────────────────────────────────────────────────────
+function slugify(text: string) {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+}
+
+interface DbSitePage {
+  id: string;
+  photographer_id: string;
+  title: string;
+  slug: string;
+  parent_id: string | null;
+  sort_order: number;
+  is_home: boolean;
+  is_visible: boolean;
+  sections_order: any;
+  page_content: any;
+}
+
+function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
+  const content = (row.page_content || {}) as Record<string, any>;
+  return {
+    id: row.id,
+    label: row.title,
+    type: content.type || "page",
+    icon: content.icon,
+    inMenu: row.is_visible,
+    status: content.status || "online",
+    showHeaderFooter: content.showHeaderFooter ?? true,
+    slug: row.slug,
+    templateId: content.templateId,
+    sections: content.sections,
+    pageTitle: content.pageTitle,
+    pageDescription: content.pageDescription,
+    hideFromSearch: content.hideFromSearch,
+    socialImage: content.socialImage,
+    ...(children && children.length > 0 ? { children } : {}),
+  };
+}
+
+function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: number, parentId: string | null = null) {
+  return {
+    id: page.id,
+    photographer_id: photographerId,
+    title: page.label,
+    slug: page.slug || slugify(page.label),
+    parent_id: parentId,
+    sort_order: sortOrder,
+    is_home: page.id === "home" || (page as any).isHome === true,
+    is_visible: page.inMenu,
+    sections_order: JSON.parse(JSON.stringify(page.sections ? page.sections.map((s) => s.type) : [])),
+    page_content: JSON.parse(JSON.stringify({
+      type: page.type,
+      icon: page.icon,
+      status: page.status,
+      showHeaderFooter: page.showHeaderFooter,
+      templateId: page.templateId,
+      sections: page.sections,
+      pageTitle: page.pageTitle,
+      pageDescription: page.pageDescription,
+      hideFromSearch: page.hideFromSearch,
+      socialImage: page.socialImage,
+    })),
+  };
+}
+
 // ── Pages Panel ───────────────────────────────────────────────────────────────
-const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: string | null; setEditingSection: (s: string | null) => void }) => {
+const PagesPanel = ({
+  editingSection,
+  setEditingSection,
+  photographerId,
+}: {
+  editingSection: string | null;
+  setEditingSection: (s: string | null) => void;
+  photographerId: string | null;
+}) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
-  const [pages, setPages] = useState<SitePage[]>(INITIAL_PAGES);
+  const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const { t } = useLanguage();
   const we = t.websiteEditor;
+
+  // ── Load from DB ──
+  useEffect(() => {
+    if (!photographerId) return;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("site_pages")
+        .select("*")
+        .eq("photographer_id", photographerId)
+        .order("sort_order", { ascending: true });
+
+      if (error) { console.error("Failed to load site_pages", error); setLoaded(true); return; }
+
+      if (!data || data.length === 0) {
+        // Seed defaults
+        const rows: any[] = [];
+        let order = 0;
+        for (const page of INITIAL_PAGES) {
+          const id = crypto.randomUUID();
+          rows.push(sitePageToDbFields({ ...page, id }, photographerId, order++));
+          if (page.children) {
+            for (const child of page.children) {
+              const childId = crypto.randomUUID();
+              rows.push(sitePageToDbFields({ ...child, id: childId }, photographerId, order++, id));
+            }
+          }
+        }
+        const { error: insertErr } = await supabase.from("site_pages").insert(rows);
+        if (insertErr) { console.error("Failed to seed site_pages", insertErr); }
+        // Re-fetch after seed
+        const { data: seeded } = await supabase
+          .from("site_pages")
+          .select("*")
+          .eq("photographer_id", photographerId)
+          .order("sort_order", { ascending: true });
+        buildTree(seeded || []);
+      } else {
+        buildTree(data);
+      }
+      setLoaded(true);
+    };
+
+    const buildTree = (rows: any[]) => {
+      const topLevel = rows.filter((r: any) => !r.parent_id);
+      const result: SitePage[] = topLevel.map((row: any) => {
+        const children = rows.filter((r: any) => r.parent_id === row.id);
+        return dbRowToSitePage(row, children.map((c: any) => dbRowToSitePage(c)));
+      });
+      setPages(result);
+    };
+
+    load();
+  }, [photographerId]);
+
+  // ── Persist helpers ──
+  const persistUpdate = async (id: string, patch: Record<string, any>) => {
+    await supabase.from("site_pages").update(patch).eq("id", id);
+  };
 
   const findAndUpdate = (id: string, patch: Partial<SitePage>) => {
     setPages((prev) =>
@@ -626,6 +758,33 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
       })
     );
     if (settingsPage?.id === id) setSettingsPage((prev) => (prev ? { ...prev, ...patch } : null));
+
+    // Build DB patch
+    const dbPatch: Record<string, any> = {};
+    if (patch.label !== undefined) { dbPatch.title = patch.label; dbPatch.slug = slugify(patch.label); }
+    if (patch.inMenu !== undefined) dbPatch.is_visible = patch.inMenu;
+    if (patch.slug !== undefined) dbPatch.slug = patch.slug;
+
+    // Always update page_content with the full merged content
+    const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+    const current = allP.find((p) => p.id === id);
+    if (current) {
+      const merged = { ...current, ...patch };
+      dbPatch.page_content = JSON.parse(JSON.stringify({
+        type: merged.type,
+        icon: merged.icon,
+        status: merged.status,
+        showHeaderFooter: merged.showHeaderFooter,
+        templateId: merged.templateId,
+        sections: merged.sections,
+        pageTitle: merged.pageTitle,
+        pageDescription: merged.pageDescription,
+        hideFromSearch: merged.hideFromSearch,
+        socialImage: merged.socialImage,
+      }));
+    }
+
+    persistUpdate(id, dbPatch);
   };
 
   const toggleMenu = (id: string) => {
@@ -633,31 +792,37 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
   };
 
-  const deletePage = (id: string) => {
+  const deletePage = async (id: string) => {
     if (id === "home") return;
     setPages((prev) => prev.filter((p) => p.id !== id).map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p));
     if (activePage === id) setActivePage("home");
     if (settingsPage?.id === id) setSettingsPage(null);
+    await supabase.from("site_pages").delete().eq("id", id);
   };
 
-  const duplicatePage = (id: string) => {
+  const duplicatePage = async (id: string) => {
+    if (!photographerId) return;
     const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
     const source = allP.find((p) => p.id === id);
     if (!source) return;
-    const newPage: SitePage = { ...source, id: `${id}-copy-${Date.now()}`, label: `${source.label} (copy)`, inMenu: false };
-    // If it was a child, add as top-level
+    const newId = crypto.randomUUID();
+    const newPage: SitePage = { ...source, id: newId, label: `${source.label} (copy)`, inMenu: false, children: undefined };
     setPages((prev) => [...prev, newPage]);
+
+    const row = sitePageToDbFields(newPage, photographerId, pages.length);
+    await supabase.from("site_pages").insert([row]);
   };
 
-  const addPage = (type: "page" | "folder" | "link") => {
+  const addPage = async (type: "page" | "folder" | "link") => {
     if (type === "page") {
       setAddOpen(false);
       setTemplatePickerOpen(true);
       return;
     }
-    const ts = Date.now();
+    if (!photographerId) return;
+    const newId = crypto.randomUUID();
     const newPage: SitePage = {
-      id: `${type}-${ts}`,
+      id: newId,
       label: type === "folder" ? "New Folder" : "New Link",
       type,
       inMenu: false,
@@ -668,13 +833,17 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
     setAddOpen(false);
+
+    const row = sitePageToDbFields(newPage, photographerId, pages.length);
+    await supabase.from("site_pages").insert([row]);
   };
 
-  const handleTemplateSelect = (templateId: string, title: string) => {
-    const ts = Date.now();
+  const handleTemplateSelect = async (templateId: string, title: string) => {
+    if (!photographerId) return;
+    const newId = crypto.randomUUID();
     const sections = getTemplateSections(templateId);
     const newPage: SitePage = {
-      id: `page-${ts}`,
+      id: newId,
       label: title,
       type: "page",
       inMenu: false,
@@ -685,6 +854,9 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     };
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
+
+    const row = sitePageToDbFields(newPage, photographerId, pages.length);
+    await supabase.from("site_pages").insert([row]);
   };
 
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
@@ -693,8 +865,6 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
   if (editingSection === "header-slider") {
     return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
   }
-
-  // (PageSectionsPanel removed — header slider is accessed from preview click)
 
   // If settings is open, show that view
   if (settingsPage) {
@@ -712,6 +882,14 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
 
   const menuPages = pages.filter((p) => p.inMenu);
   const nonMenuPages = pages.filter((p) => !p.inMenu);
+
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -880,7 +1058,7 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} />,
+    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} photographerId={user?.id ?? null} />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
