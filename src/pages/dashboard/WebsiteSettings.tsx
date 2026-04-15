@@ -1020,25 +1020,6 @@ const WebsiteSettings = () => {
                     </div>
                   </section>
 
-                  {/* ── 7. SEO ── */}
-                  <section className="flex flex-col gap-5">
-                    <SectionHeading title={ws.seoTitle} description={ws.seoDesc} />
-                    <FieldRow label={ws.pageTitleLabel}>
-                      <Input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="Jane Doe Photography — New York" className="h-9 text-sm font-light" />
-                    </FieldRow>
-                    <FieldRow label={ws.metaDescLabel}>
-                      <Textarea
-                        value={seoDescription}
-                        onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
-                        placeholder="Professional photography studio based in New York…"
-                        className="min-h-[72px] text-sm font-light resize-none"
-                      />
-                      <p className="text-[10px] text-muted-foreground/60 -mt-1">{seoDescription.length}/160 characters</p>
-                    </FieldRow>
-                  </section>
-
-                  <Divider />
-
                   {/* ── 8. Analytics ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
