@@ -246,10 +246,14 @@ const PageSettingsView = ({
   page,
   onBack,
   onUpdate,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   onBack: () => void;
   onUpdate: (updated: Partial<SitePage>) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
