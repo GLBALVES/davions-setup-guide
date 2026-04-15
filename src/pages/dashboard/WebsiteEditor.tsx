@@ -577,13 +577,11 @@ const PageSectionsPanel = ({
 };
 
 // ── Pages Panel ───────────────────────────────────────────────────────────────
-const PagesPanel = () => {
+const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: string | null; setEditingSection: (s: string | null) => void }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [pages, setPages] = useState<SitePage[]>(INITIAL_PAGES);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
-  const [sectionsPage, setSectionsPage] = useState<SitePage | null>(null);
-  const [editingSection, setEditingSection] = useState<string | null>(null);
   const { t } = useLanguage();
   const we = t.websiteEditor;
 
@@ -612,16 +610,7 @@ const PagesPanel = () => {
     return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
   }
 
-  // If viewing page sections
-  if (sectionsPage) {
-    return (
-      <PageSectionsPanel
-        pageLabel={sectionsPage.label}
-        onBack={() => setSectionsPage(null)}
-        onEditSection={(section) => setEditingSection(section)}
-      />
-    );
-  }
+  // (PageSectionsPanel removed — header slider is accessed from preview click)
 
   // If settings is open, show that view
   if (settingsPage) {
@@ -687,8 +676,6 @@ const PagesPanel = () => {
               activePage={activePage}
               onSelect={(id) => {
                 setActivePage(id);
-                const target = page.children?.find((c) => c.id === id) || page;
-                setSectionsPage(target);
               }}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
@@ -698,7 +685,7 @@ const PagesPanel = () => {
               key={page.id}
               page={page}
               active={activePage === page.id}
-              onSelect={() => { setActivePage(page.id); setSectionsPage(page); }}
+              onSelect={() => setActivePage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
             />
@@ -716,7 +703,7 @@ const PagesPanel = () => {
                 key={page.id}
                 page={page}
                 active={activePage === page.id}
-                onSelect={() => { setActivePage(page.id); setSectionsPage(page); }}
+                onSelect={() => setActivePage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
               />
@@ -780,6 +767,7 @@ const SettingsPanel = () => (
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -796,7 +784,7 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel />,
+    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
@@ -867,11 +855,26 @@ const WebsiteEditor = () => {
 
         <div className="flex-1 relative">
           {storeSlug ? (
-            <iframe
-              src={`/store/${storeSlug}`}
-              className="absolute inset-0 w-full h-full border-0"
-              title="Site Preview"
-            />
+            <>
+              <iframe
+                src={`/store/${storeSlug}`}
+                className="absolute inset-0 w-full h-full border-0"
+                title="Site Preview"
+              />
+              {/* Clickable hero overlay to open Header Slider editor */}
+              <button
+                onClick={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
+                className="absolute top-0 left-0 right-0 h-[60%] cursor-pointer group z-10"
+                title="Edit Header Slider"
+              >
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/50 transition-colors rounded-sm">
+                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground/80 text-background text-[10px] px-2 py-1 rounded flex items-center gap-1.5">
+                    <Image className="h-3 w-3" />
+                    Header Slider
+                  </div>
+                </div>
+              </button>
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center h-full p-8">
               <div className="text-center space-y-3">
