@@ -611,16 +611,7 @@ const PagesPanel = () => {
     return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
   }
 
-  // If viewing page sections
-  if (sectionsPage) {
-    return (
-      <PageSectionsPanel
-        pageLabel={sectionsPage.label}
-        onBack={() => setSectionsPage(null)}
-        onEditSection={(section) => setEditingSection(section)}
-      />
-    );
-  }
+  // (PageSectionsPanel removed — header slider is accessed from preview click)
 
   // If settings is open, show that view
   if (settingsPage) {
@@ -686,8 +677,6 @@ const PagesPanel = () => {
               activePage={activePage}
               onSelect={(id) => {
                 setActivePage(id);
-                const target = page.children?.find((c) => c.id === id) || page;
-                setSectionsPage(target);
               }}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
@@ -697,7 +686,7 @@ const PagesPanel = () => {
               key={page.id}
               page={page}
               active={activePage === page.id}
-              onSelect={() => { setActivePage(page.id); setSectionsPage(page); }}
+              onSelect={() => setActivePage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
             />
@@ -715,7 +704,7 @@ const PagesPanel = () => {
                 key={page.id}
                 page={page}
                 active={activePage === page.id}
-                onSelect={() => { setActivePage(page.id); setSectionsPage(page); }}
+                onSelect={() => setActivePage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
               />
