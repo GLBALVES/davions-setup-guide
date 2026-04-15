@@ -1,68 +1,42 @@
 
 
-## Plan: Enhanced Pages Panel (Pixieset-style)
+## Plan: Expand Page Settings to match Pixieset
 
 ### What changes
-Rebuild the `PagesPanel` in `WebsiteEditor.tsx` to closely mirror Pixieset's page management structure with two sections, context menus, and a page settings side-panel.
+Update the `PageSettingsView` component in `WebsiteEditor.tsx` to include all three sections and bottom actions shown in the reference screenshots.
 
 ### Structure
 
-**Two sections in the page list:**
-1. **SITE MENU** — Pages visible in the navigation menu (top-level items and folders with subpages)
-2. **NOT IN MENU** — Pages that exist but are hidden from the menu
+**BASICS** (already exists — minor tweaks)
+- Page Name, Page Status, Show Header/Footer (add "On"/"Off" label next to toggle), Menu Visibility
 
-**Page types with distinct icons:**
-- **Page** (`FileText`) — standard page
-- **Folder** (`FolderOpen`) — collapsible group containing subpages, shows chevron `▾`/`▸`
-- **Link** (`Link2` icon) — external/internal link item (e.g. Blog, Store)
-- **Home** (`Home` icon) — special first item
+**SEO** (new section)
+- Search Preview — Google SERP-style card showing page title, URL, and description
+- URL Slug — input with helper text ("Unique url address slug for this page")
+- Page Title — input with helper text ("Title of the page as it appears in search engine results")
+- Page Description — textarea with helper text ("This description appears in search engine results")
+- Hide Page from Search Engines — toggle with "On"/"Off" label
 
-**Context menu (MoreHorizontal "..." on hover):**
-Each page item shows a `...` button on hover that opens a `DropdownMenu` with:
-- Get direct link (`Link2`)
-- Settings (`Settings`)
-- Rename (`Type`)
-- Switch template (`Paintbrush`)
-- Show on Menu / Hide from Menu (`Globe`/`EyeOff`)
-- Get QR Code (`QrCode`)
-- Duplicate (`Copy`)
-- Delete (`Trash2`)
+**SOCIAL** (new section)
+- Social Image — placeholder/upload area with helper text ("Choose the image used when this page is shared on social networks")
 
-**Page Settings panel:**
-When "Settings" is clicked from the context menu, the sidebar content switches to a Page Settings view (with back arrow) containing:
-- Page Name (input)
-- Page Status (select: Online / Offline)
-- Show Page Header and Footer (toggle switch)
-- Menu Visibility (select: Visible / Hidden)
+**Bottom actions** (new)
+- Switch Page Template (icon + text button)
+- Set as Homepage (disabled/greyed if already home)
+- Duplicate Page
+- Delete Page (destructive style)
 
-**Drag-and-drop:** Not in this iteration — placeholder only. Pages are reorderable conceptually but we use static mock data for now.
-
-### Data model (local state for now)
+### Data model update
+Add fields to `SitePage`:
 ```typescript
-type PageType = "page" | "folder" | "link";
-interface SitePage {
-  id: string;
-  label: string;
-  type: PageType;
-  icon?: string; // emoji override (e.g. Home 🏠)
-  inMenu: boolean;
-  children?: SitePage[]; // only for folders
-  slug?: string;
-  status?: "online" | "offline";
-  showHeaderFooter?: boolean;
-}
+slug?: string;
+pageTitle?: string;
+pageDescription?: string;
+hideFromSearch?: boolean;
+socialImage?: string;
 ```
 
-Initial mock data mirrors the Pixieset screenshots (Home, The Experience folder with subpages, Investment folder, Blog link, Contact, plus NOT IN MENU items like Clients, Thank you!, Bio Links, etc.).
-
-### Technical details
-- All new code stays in `WebsiteEditor.tsx` (PagesPanel, PageItem, PageGroup components)
-- Use `DropdownMenu` from shadcn/ui for the context menu
-- Use local `useState` for pages array and selected page settings
-- Add i18n keys in `translations.ts` for section headers, context menu items, and settings labels
-- The "..." button appears on hover via `group` / `group-hover` Tailwind classes
-
 ### Files to modify
-1. **`src/pages/dashboard/WebsiteEditor.tsx`** — Rebuild PagesPanel with two sections, context menus, page settings view
-2. **`src/lib/i18n/translations.ts`** — Add keys for "Site Menu", "Not in Menu", context menu labels, page settings labels
+1. **`src/pages/dashboard/WebsiteEditor.tsx`** — Expand `PageSettingsView` with SEO, Social sections and bottom actions; update `SitePage` interface and mock data
+2. **`src/lib/i18n/translations.ts`** — Add keys for section headers, field labels, helper texts, and action buttons (EN/PT/ES)
 
