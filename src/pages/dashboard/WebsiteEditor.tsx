@@ -5,6 +5,7 @@ import {
   FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal,
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
+  Image, Play, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
