@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal,
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
-  ChevronDown, ChevronRight, ArrowLeft,
+  ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,10 @@ interface SitePage {
   slug?: string;
   status?: "online" | "offline";
   showHeaderFooter?: boolean;
+  pageTitle?: string;
+  pageDescription?: string;
+  hideFromSearch?: boolean;
+  socialImage?: string;
 }
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
