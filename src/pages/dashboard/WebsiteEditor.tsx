@@ -150,6 +150,8 @@ const PageItem = ({
   onSelect,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
   indent = false,
 }: {
   page: SitePage;
@@ -157,6 +159,8 @@ const PageItem = ({
   onSelect: () => void;
   onSettings: () => void;
   onToggleMenu: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -184,7 +188,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <span className="truncate flex-1">{page.label}</span>
-      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} />
+      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
     </div>
   );
 };
