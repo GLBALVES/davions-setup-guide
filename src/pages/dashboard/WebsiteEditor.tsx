@@ -767,6 +767,7 @@ const SettingsPanel = () => (
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -783,7 +784,7 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel />,
+    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
