@@ -654,8 +654,8 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
     sort_order: sortOrder,
     is_home: page.id === "home" || (page as any).isHome === true,
     is_visible: page.inMenu,
-    sections_order: page.sections ? page.sections.map((s) => s.type) : [],
-    page_content: {
+    sections_order: JSON.parse(JSON.stringify(page.sections ? page.sections.map((s) => s.type) : [])),
+    page_content: JSON.parse(JSON.stringify({
       type: page.type,
       icon: page.icon,
       status: page.status,
@@ -666,7 +666,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
       pageDescription: page.pageDescription,
       hideFromSearch: page.hideFromSearch,
       socialImage: page.socialImage,
-    },
+    })),
   };
 }
 
