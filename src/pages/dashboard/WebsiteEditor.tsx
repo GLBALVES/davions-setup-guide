@@ -677,7 +677,7 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
         <h3 className="text-sm font-medium text-foreground">Pages</h3>
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary hover:text-primary">
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary hover:text-primary-foreground">
               <Plus className="h-3.5 w-3.5" />
               {we.addPage}
             </Button>
