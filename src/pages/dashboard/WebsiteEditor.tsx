@@ -85,10 +85,14 @@ const PageContextMenu = ({
   page,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   onSettings: () => void;
   onToggleMenu: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -127,11 +131,11 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs">
           <QrCode className="h-3.5 w-3.5" /> {we.getQrCode}
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2 text-xs">
+        <DropdownMenuItem className="gap-2 text-xs" onClick={onDuplicate}>
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 text-xs text-destructive">
+        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.id === "home"}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -146,6 +150,8 @@ const PageItem = ({
   onSelect,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
   indent = false,
 }: {
   page: SitePage;
@@ -153,6 +159,8 @@ const PageItem = ({
   onSelect: () => void;
   onSettings: () => void;
   onToggleMenu: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -180,7 +188,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <span className="truncate flex-1">{page.label}</span>
-      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} />
+      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
     </div>
   );
 };
@@ -192,12 +200,16 @@ const PageFolder = ({
   onSelect,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   activePage: string;
   onSelect: (id: string) => void;
   onSettings: (p: SitePage) => void;
   onToggleMenu: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -210,7 +222,7 @@ const PageFolder = ({
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
         <span className="truncate flex-1 text-left">{page.label}</span>
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} />
+        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
       </div>
       {open && page.children?.map((child) => (
         <PageItem
@@ -220,6 +232,8 @@ const PageFolder = ({
           onSelect={() => onSelect(child.id)}
           onSettings={() => onSettings(child)}
           onToggleMenu={() => onToggleMenu(child.id)}
+          onDelete={() => onDelete(child.id)}
+          onDuplicate={() => onDuplicate(child.id)}
           indent
         />
       ))}
@@ -232,10 +246,14 @@ const PageSettingsView = ({
   page,
   onBack,
   onUpdate,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   onBack: () => void;
   onUpdate: (updated: Partial<SitePage>) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -395,11 +413,18 @@ const PageSettingsView = ({
             <Home className="h-3.5 w-3.5" />
             {we.setAsHomepage}
           </button>
-          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+          <button onClick={onDuplicate} className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
             <Copy className="h-3.5 w-3.5" />
             {we.duplicatePage}
           </button>
-          <button className="flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs text-destructive hover:bg-destructive/10 transition-colors">
+          <button
+            onClick={onDelete}
+            disabled={isHome}
+            className={cn(
+              "flex items-center gap-2.5 w-full px-2 py-2 rounded-md text-xs transition-colors",
+              isHome ? "text-muted-foreground/40 cursor-not-allowed" : "text-destructive hover:bg-destructive/10"
+            )}
+          >
             <Trash2 className="h-3.5 w-3.5" />
             {we.deletePage}
           </button>
@@ -603,6 +628,22 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
   };
 
+  const deletePage = (id: string) => {
+    if (id === "home") return;
+    setPages((prev) => prev.filter((p) => p.id !== id).map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p));
+    if (activePage === id) setActivePage("home");
+    if (settingsPage?.id === id) setSettingsPage(null);
+  };
+
+  const duplicatePage = (id: string) => {
+    const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+    const source = allP.find((p) => p.id === id);
+    if (!source) return;
+    const newPage: SitePage = { ...source, id: `${id}-copy-${Date.now()}`, label: `${source.label} (copy)`, inMenu: false };
+    // If it was a child, add as top-level
+    setPages((prev) => [...prev, newPage]);
+  };
+
   const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
   // If editing a section (e.g. header slider)
@@ -620,6 +661,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
         page={livePage}
         onBack={() => setSettingsPage(null)}
         onUpdate={(patch) => findAndUpdate(settingsPage.id, patch)}
+        onDelete={() => { deletePage(settingsPage.id); setSettingsPage(null); }}
+        onDuplicate={() => { duplicatePage(settingsPage.id); setSettingsPage(null); }}
       />
     );
   }
@@ -674,11 +717,11 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
               key={page.id}
               page={page}
               activePage={activePage}
-              onSelect={(id) => {
-                setActivePage(id);
-              }}
+              onSelect={(id) => setActivePage(id)}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
+              onDelete={deletePage}
+              onDuplicate={duplicatePage}
             />
           ) : (
             <PageItem
@@ -688,6 +731,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
               onSelect={() => setActivePage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
+              onDelete={() => deletePage(page.id)}
+              onDuplicate={() => duplicatePage(page.id)}
             />
           )
         )}
@@ -706,6 +751,8 @@ const PagesPanel = ({ editingSection, setEditingSection }: { editingSection: str
                 onSelect={() => setActivePage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
+                onDelete={() => deletePage(page.id)}
+                onDuplicate={() => duplicatePage(page.id)}
               />
             ))}
           </>
