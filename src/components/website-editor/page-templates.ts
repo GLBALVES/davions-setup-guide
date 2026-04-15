@@ -211,7 +211,50 @@ const columns3 = (): PageSection => ({
   props: { col1: "", col2: "", col3: "" },
 });
 
+const slideshow = (label = "Slideshow"): PageSection => ({
+  id: uid(),
+  type: "slideshow",
+  label,
+  props: { images: [], autoplay: true, interval: 5000, variant: "fullwidth" },
+});
+
+const carouselSection = (label = "Carousel"): PageSection => ({
+  id: uid(),
+  type: "carousel",
+  label,
+  props: { images: [], itemsVisible: 3, variant: "scroll" },
+});
+
+const instagramFeed = (): PageSection => ({
+  id: uid(),
+  type: "instagram-feed",
+  label: "Instagram Feed",
+  props: { count: 9, columns: 3, clickAction: "open-instagram", variant: "grid-3x3" },
+});
+
+const socialLinks = (): PageSection => ({
+  id: uid(),
+  type: "social-links",
+  label: "Social Links",
+  props: { links: [], style: "icons" },
+});
+
+const embed = (): PageSection => ({
+  id: uid(),
+  type: "embed",
+  label: "Custom Code",
+  props: { code: "", height: 400 },
+});
+
+const logoStrip = (): PageSection => ({
+  id: uid(),
+  type: "logo-strip",
+  label: "Logo Strip",
+  props: { title: "As Seen On", logos: [] },
+});
+
 // ── Template Definitions ─────────────────────────────────────────────────────
+
 
 export function getTemplateSections(templateId: string): PageSection[] {
   _counter = 0; // reset for deterministic IDs within a call
