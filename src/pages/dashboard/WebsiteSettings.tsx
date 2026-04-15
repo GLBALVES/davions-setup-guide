@@ -1045,28 +1045,6 @@ const WebsiteSettings = () => {
                       />
                       <p className="text-[10px] text-muted-foreground/60 -mt-1">{seoDescription.length}/160 characters</p>
                     </FieldRow>
-                    <div className="flex flex-col gap-2">
-                      <Label className="text-[11px] tracking-wider uppercase font-light">{ws.ogImageLabel}</Label>
-                      <p className="text-[11px] text-muted-foreground -mt-1">{ws.ogImageHint}</p>
-                      {ogImageUrl ? (
-                        <div className="relative w-full h-24 border border-border overflow-hidden bg-muted/10">
-                          <img src={ogImageUrl} alt="OG" className="w-full h-full object-cover" />
-                          <button onClick={() => setOgImageUrl("")} className="absolute top-2 right-2 bg-background/80 border border-border rounded-full p-1 text-muted-foreground hover:text-destructive">
-                            <X className="h-3 w-3" />
-                          </button>
-                          <button onClick={() => ogInputRef.current?.click()} className="absolute bottom-2 right-2 flex items-center gap-1.5 text-[10px] tracking-widest uppercase bg-background/80 border border-border px-2.5 py-1.5 text-foreground hover:bg-background transition-colors">
-                            <Upload className="h-3 w-3" />Replace
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => ogInputRef.current?.click()} className="w-full h-16 border border-dashed border-border bg-muted/10 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-foreground/30 transition-colors">
-                          {uploadingOg ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <Upload className="h-4 w-4 text-muted-foreground/40" />}
-                          <span className="text-[10px] tracking-widest uppercase text-muted-foreground/50">Upload OG image (1200×630)</span>
-                        </div>
-                      )}
-                      <input ref={ogInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f, "og", "site-assets", setOgImageUrl, setUploadingOg, "OG image"); }} />
-                    </div>
                   </section>
 
                   <Divider />
