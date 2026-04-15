@@ -25,10 +25,20 @@ export default function AdminApprovals() {
   const [acting, setActing] = useState<string | null>(null);
 
   const load = async () => {
-    const { data } = await (supabase as any)
+    setLoading(true);
+
+    const { data, error } = await (supabase as any)
       .from("photographers")
       .select("id, email, full_name, business_name, approval_status, created_at")
       .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error(error.message || "Failed to load approvals");
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
+
     setUsers(data || []);
     setLoading(false);
   };
@@ -37,19 +47,29 @@ export default function AdminApprovals() {
 
   const updateStatus = async (userId: string, status: "approved" | "rejected") => {
     setActing(userId);
-    const { error } = await (supabase as any)
+
+    const { data, error } = await (supabase as any)
       .from("photographers")
       .update({ approval_status: status })
-      .eq("id", userId);
+      .eq("id", userId)
+      .select("id, approval_status")
+      .maybeSingle();
 
     if (error) {
-      toast.error("Failed to update status");
-    } else {
-      toast.success(status === "approved" ? "User approved" : "User rejected");
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, approval_status: status } : u))
-      );
+      toast.error(error.message || "Failed to update status");
+      setActing(null);
+      return;
     }
+
+    if (!data || data.approval_status !== status) {
+      toast.error("Status was not saved. Please try again.");
+      await load();
+      setActing(null);
+      return;
+    }
+
+    await load();
+    toast.success(status === "approved" ? "User approved" : "User rejected");
     setActing(null);
   };
 
