@@ -85,10 +85,14 @@ const PageContextMenu = ({
   page,
   onSettings,
   onToggleMenu,
+  onDelete,
+  onDuplicate,
 }: {
   page: SitePage;
   onSettings: () => void;
   onToggleMenu: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
