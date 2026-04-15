@@ -719,7 +719,7 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
-  const navLinks: { label: string; href: string }[] = extraNavLinks && extraNavLinks.length > 0
+  const navLinks: NavLinkItem[] = extraNavLinks && extraNavLinks.length > 0
     ? extraNavLinks
     : [
         ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
