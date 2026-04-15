@@ -582,6 +582,8 @@ const PagesPanel = () => {
   const [pages, setPages] = useState<SitePage[]>(INITIAL_PAGES);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
+  const [sectionsPage, setSectionsPage] = useState<SitePage | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const { t } = useLanguage();
   const we = t.websiteEditor;
 
