@@ -1,39 +1,31 @@
 
 
-## Problem
+## Limpar o site — Remover páginas extras e resetar
 
-Pages in the Website Editor are stored only in React state (`useState(INITIAL_PAGES)`). Every reload resets to the hardcoded list, discarding any additions or deletions.
+### Problema
+O site tem páginas acumuladas no banco de dados (`site_pages`) que estão bagunçando a renderização:
+- **Home** (ok, manter)
+- **The Experience** — página avulsa sem conteúdo real
+- **New Page** — página de teste sem conteúdo
 
-A `site_pages` table already exists in the database with the right schema (`id`, `photographer_id`, `title`, `slug`, `parent_id`, `sort_order`, `is_home`, `is_visible`, `sections_order`, `page_content`).
+Essas páginas extras com `is_visible: true` podem estar aparecendo na navegação do site público e causando confusão visual.
 
-## Plan
+### Plano
 
-### 1. Load pages from database on mount
+**1. Deletar páginas extras do banco de dados**
+- Remover "The Experience" e "New Page" da tabela `site_pages` para este fotógrafo
+- Manter apenas a página "Home"
 
-In the `PagesPanel` component, replace `useState(INITIAL_PAGES)` with a `useEffect` that fetches from `site_pages` filtered by `photographer_id`. Map DB rows to the `SitePage` interface (e.g. `title` → `label`, `is_visible` → `inMenu`, `is_home` → flag for Home page). Build the parent/children tree using `parent_id`. Fall back to `INITIAL_PAGES` only if no rows exist (first-time setup).
+**2. Garantir que o seed não recrie páginas indesejadas**
+- Ajustar o `INITIAL_PAGES` padrão para ser mais limpo — começar apenas com Home, sem pastas e páginas genéricas que o usuário não configurou
+- As páginas extras (Experience, Investment, etc.) só devem existir se o usuário as criar explicitamente via template picker
 
-### 2. Persist changes on every mutation
+**3. Simplificar o INITIAL_PAGES**
+- Reduzir para apenas: Home, Blog (link), Contact
+- Remover as pastas "The Experience" e "Investment" com seus filhos do seed padrão, já que são placeholders não preenchidos
 
-Wrap the three mutation functions (`deletePage`, `findAndUpdate`, `addPage`/`handleTemplateSelect`, `duplicatePage`) so they also write to the database:
-
-- **Delete**: `supabase.from('site_pages').delete().eq('id', pageId)`
-- **Add / Duplicate**: `supabase.from('site_pages').insert(...)` with mapped fields
-- **Update** (rename, toggle menu, toggle status): `supabase.from('site_pages').update(...)` matching by `id`
-
-### 3. Lift photographer_id into PagesPanel
-
-The `PagesPanel` currently has no access to `photographer_id`. Pass it down from the parent `WebsiteEditor` component (which already has auth context) as a prop.
-
-### 4. Seed default pages on first use
-
-When the DB query returns zero rows for a photographer, insert the `INITIAL_PAGES` set into `site_pages` so the user starts with the default structure and all future edits persist.
-
-### Technical details
-
-- The `SitePage.id` will use the DB UUID (or the existing string ID for seeded pages).
-- `parent_id` maps to folder membership (children).
-- `sort_order` preserves drag-and-drop ordering.
-- `sections_order` and `page_content` store the template sections data (already JSONB columns).
-- `slug` will be auto-generated from the label using the existing `slugify` pattern.
-- No new tables or migrations needed — `site_pages` already exists with RLS.
+### Detalhes técnicos
+- Executar `DELETE FROM site_pages WHERE photographer_id = 'b57d5abc-...' AND is_home = false` via migration
+- Alterar `INITIAL_PAGES` no `WebsiteEditor.tsx` para conter apenas Home + Contact + Blog link
+- Nenhuma mudança na tabela ou RLS necessária
 
