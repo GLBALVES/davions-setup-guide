@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal,
@@ -588,8 +589,21 @@ const SettingsPanel = () => (
 // ── Main Editor ──────────────────────────────────────────────────────────────
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("photographers")
+      .select("store_slug")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setStoreSlug((data as any).store_slug ?? null);
+      });
+  }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
     pages: <PagesPanel />,
@@ -653,8 +667,7 @@ const WebsiteEditor = () => {
             size="sm"
             className="h-7 text-[11px] gap-1.5"
             onClick={() => {
-              const slug = (user as any)?.user_metadata?.store_slug;
-              if (slug) window.open(`/store/${slug}`, "_blank");
+              if (storeSlug) window.open(`/store/${storeSlug}`, "_blank");
             }}
           >
             <Eye className="h-3 w-3" />
@@ -663,26 +676,23 @@ const WebsiteEditor = () => {
         </div>
 
         <div className="flex-1 relative">
-          {(() => {
-            const slug = (user as any)?.user_metadata?.store_slug;
-            return slug ? (
-              <iframe
-                src={`/store/${slug}`}
-                className="absolute inset-0 w-full h-full border-0"
-                title="Site Preview"
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center h-full p-8">
-                <div className="text-center space-y-3">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-muted/60 flex items-center justify-center">
-                    <Eye className="h-6 w-6 text-muted-foreground/60" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Live preview will appear here</p>
-                  <p className="text-xs text-muted-foreground/60">Configure your store slug in Settings to see the preview</p>
+          {storeSlug ? (
+            <iframe
+              src={`/store/${storeSlug}`}
+              className="absolute inset-0 w-full h-full border-0"
+              title="Site Preview"
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center h-full p-8">
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 mx-auto rounded-full bg-muted/60 flex items-center justify-center">
+                  <Eye className="h-6 w-6 text-muted-foreground/60" />
                 </div>
+                <p className="text-sm text-muted-foreground">Live preview will appear here</p>
+                <p className="text-xs text-muted-foreground/60">Configure your store slug in Settings to see the preview</p>
               </div>
-            );
-          })()}
+            </div>
+          )}
         </div>
       </div>
     </div>
