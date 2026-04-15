@@ -1,31 +1,39 @@
 
 
-## Limpar o site — Remover páginas extras e resetar
+## Correção: Permitir site sem páginas (sem re-seed automático)
 
 ### Problema
-O site tem páginas acumuladas no banco de dados (`site_pages`) que estão bagunçando a renderização:
-- **Home** (ok, manter)
-- **The Experience** — página avulsa sem conteúdo real
-- **New Page** — página de teste sem conteúdo
+Quando todas as páginas são deletadas, o sistema re-insere INITIAL_PAGES porque `data.length === 0` dispara o seed. O usuário não consegue ter um estado "limpo".
 
-Essas páginas extras com `is_visible: true` podem estar aparecendo na navegação do site público e causando confusão visual.
+### Solução
+Adicionar um flag `site_pages_initialized` na tabela `photographer_site` (que já existe). Quando o seed roda pela primeira vez, marca `true`. Nas próximas vezes, se não há páginas mas o flag é `true`, não faz seed.
 
-### Plano
+### Passos
 
-**1. Deletar páginas extras do banco de dados**
-- Remover "The Experience" e "New Page" da tabela `site_pages` para este fotógrafo
-- Manter apenas a página "Home"
+**1. Migration — adicionar coluna `site_pages_initialized`**
+```sql
+ALTER TABLE photographer_site 
+ADD COLUMN IF NOT EXISTS site_pages_initialized boolean DEFAULT false;
+```
 
-**2. Garantir que o seed não recrie páginas indesejadas**
-- Ajustar o `INITIAL_PAGES` padrão para ser mais limpo — começar apenas com Home, sem pastas e páginas genéricas que o usuário não configurou
-- As páginas extras (Experience, Investment, etc.) só devem existir se o usuário as criar explicitamente via template picker
+**2. Alterar lógica de load no WebsiteEditor.tsx**
+- Após buscar `site_pages`, se `data.length === 0`, verificar `photographer_site.site_pages_initialized`
+- Se `false` → fazer seed + marcar `site_pages_initialized = true`
+- Se `true` → não fazer seed, deixar lista vazia
 
-**3. Simplificar o INITIAL_PAGES**
-- Reduzir para apenas: Home, Blog (link), Contact
-- Remover as pastas "The Experience" e "Investment" com seus filhos do seed padrão, já que são placeholders não preenchidos
+**3. Marcar flag no seed existente**
+Após inserir as páginas padrão com sucesso, executar:
+```typescript
+await supabase.from("photographer_site")
+  .update({ site_pages_initialized: true })
+  .eq("photographer_id", photographerId);
+```
 
-### Detalhes técnicos
-- Executar `DELETE FROM site_pages WHERE photographer_id = 'b57d5abc-...' AND is_home = false` via migration
-- Alterar `INITIAL_PAGES` no `WebsiteEditor.tsx` para conter apenas Home + Contact + Blog link
-- Nenhuma mudança na tabela ou RLS necessária
+### Alternativa mais simples (sem migration)
+Usar a própria existência de um registro em `photographer_site` como indicador. Mas isso já existe para todos os fotógrafos, então não funciona como diferenciador.
+
+**Abordagem mais simples ainda**: guardar o flag no `localStorage` por photographer_id. Desvantagem: não persiste entre dispositivos.
+
+### Recomendação
+A migration é a solução correta — uma coluna boolean simples, sem impacto em RLS.
 
