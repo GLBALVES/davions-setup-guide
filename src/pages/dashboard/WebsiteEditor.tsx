@@ -1058,7 +1058,7 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} />,
+    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} photographerId={user?.id ?? null} />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
