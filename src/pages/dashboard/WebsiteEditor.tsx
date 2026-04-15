@@ -1003,6 +1003,24 @@ const PagesPanel = ({
     return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
   }
 
+  // If editing page sections (blocks)
+  if (editingSectionsPageId) {
+    const targetPage = allPages.find((p) => p.id === editingSectionsPageId);
+    if (targetPage && targetPage.type === "page") {
+      return (
+        <PageSectionsPanel
+          pageLabel={targetPage.label}
+          sections={targetPage.sections || []}
+          onBack={() => setEditingSectionsPageId(null)}
+          onEditSection={setEditingSection}
+          onSectionsChange={(newSections) => {
+            findAndUpdate(editingSectionsPageId, { sections: newSections });
+          }}
+        />
+      );
+    }
+  }
+
   // If settings is open, show that view
   if (settingsPage) {
     const livePage = allPages.find((p) => p.id === settingsPage.id) || settingsPage;
