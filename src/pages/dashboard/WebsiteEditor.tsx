@@ -22,7 +22,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal from "@/components/website-editor/PageTemplatePickerModal";
-import { getTemplateSections, type PageSection } from "@/components/website-editor/page-templates";
+import { getTemplateSections, createSection, type PageSection, type SectionType } from "@/components/website-editor/page-templates";
+import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
+import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
+import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
