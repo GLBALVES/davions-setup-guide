@@ -21,7 +21,13 @@ export type SectionType =
   | "divider"
   | "video"
   | "columns-2"
-  | "columns-3";
+  | "columns-3"
+  | "slideshow"
+  | "carousel"
+  | "instagram-feed"
+  | "social-links"
+  | "embed"
+  | "logo-strip";
 
 export interface PageSection {
   id: string;
@@ -205,7 +211,50 @@ const columns3 = (): PageSection => ({
   props: { col1: "", col2: "", col3: "" },
 });
 
+const slideshow = (label = "Slideshow"): PageSection => ({
+  id: uid(),
+  type: "slideshow",
+  label,
+  props: { images: [], autoplay: true, interval: 5000, variant: "fullwidth" },
+});
+
+const carouselSection = (label = "Carousel"): PageSection => ({
+  id: uid(),
+  type: "carousel",
+  label,
+  props: { images: [], itemsVisible: 3, variant: "scroll" },
+});
+
+const instagramFeed = (): PageSection => ({
+  id: uid(),
+  type: "instagram-feed",
+  label: "Instagram Feed",
+  props: { count: 9, columns: 3, clickAction: "open-instagram", variant: "grid-3x3" },
+});
+
+const socialLinks = (): PageSection => ({
+  id: uid(),
+  type: "social-links",
+  label: "Social Links",
+  props: { links: [], style: "icons" },
+});
+
+const embed = (): PageSection => ({
+  id: uid(),
+  type: "embed",
+  label: "Custom Code",
+  props: { code: "", height: 400 },
+});
+
+const logoStrip = (): PageSection => ({
+  id: uid(),
+  type: "logo-strip",
+  label: "Logo Strip",
+  props: { title: "As Seen On", logos: [] },
+});
+
 // ── Template Definitions ─────────────────────────────────────────────────────
+
 
 export function getTemplateSections(templateId: string): PageSection[] {
   _counter = 0; // reset for deterministic IDs within a call
@@ -345,5 +394,38 @@ export function getTemplateSections(templateId: string): PageSection[] {
 
     default:
       return [text("Content", "Start writing here…")];
+  }
+}
+
+/** Factory: create a single section by type (used by AddBlockPicker) */
+export function createSection(type: SectionType): PageSection {
+  switch (type) {
+    case "hero": return hero("Headline", "Subtitle");
+    case "text": return text("Text", "");
+    case "image-text": return imageText("Image + Text");
+    case "text-image": return textImage("Text + Image");
+    case "gallery-grid": return galleryGrid();
+    case "gallery-masonry": return galleryMasonry();
+    case "contact-form": return contactForm();
+    case "map": return mapSection();
+    case "cta": return cta("Ready?", "Get Started");
+    case "pricing-table": return pricingTable();
+    case "faq-accordion": return faqAccordion();
+    case "timeline": return timeline();
+    case "testimonials": return testimonials();
+    case "stats": return stats();
+    case "team": return team();
+    case "spacer": return spacer();
+    case "divider": return divider();
+    case "video": return video();
+    case "columns-2": return columns2();
+    case "columns-3": return columns3();
+    case "slideshow": return slideshow();
+    case "carousel": return carouselSection();
+    case "instagram-feed": return instagramFeed();
+    case "social-links": return socialLinks();
+    case "embed": return embed();
+    case "logo-strip": return logoStrip();
+    default: return text("Content", "");
   }
 }
