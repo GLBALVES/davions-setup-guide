@@ -439,10 +439,12 @@ export const BlockSettingsPanel = ({
   onUpdateProps,
   onBack,
 }: BlockSettingsPanelProps) => {
+  const { user } = useAuth();
+  const photographerId = user?.id ?? null;
   const s = settings;
   const update = (patch: Partial<BlockSettings>) => onUpdate({ ...s, ...patch });
 
-  const contentEditor = getContentEditor(section.type, section.props, onUpdateProps);
+  const contentEditor = getContentEditor(section.type, section.props, onUpdateProps, photographerId);
 
   return (
     <div className="flex flex-col h-full">
