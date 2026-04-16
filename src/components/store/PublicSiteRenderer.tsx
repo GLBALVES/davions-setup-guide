@@ -1960,6 +1960,40 @@ export default function PublicSiteRenderer(props: Props) {
     );
   }
 
+  // ── Page sections rendering (site_pages system) ──
+  if (props.pageSections && props.pageSections.length > 0) {
+    const accentColor = site?.accent_color || "#000000";
+    const { navLinks, handleNavClick } = derived;
+    return (
+      <>
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          ogImage={site?.og_image_url || site?.site_hero_image_url || undefined}
+          ogUrl={seoUrl}
+          canonical={seoUrl}
+        />
+        <div className="min-h-screen bg-background">
+          <SharedNav
+            scrolled={props.scrolled}
+            mobileMenuOpen={props.mobileMenuOpen}
+            setMobileMenuOpen={props.setMobileMenuOpen}
+            displayName={displayName}
+            logoUrl={site?.logo_url ?? null}
+            accentColor={accentColor}
+            navLinks={navLinks}
+            showBooking={false}
+            ctaText=""
+            onNavClick={handleNavClick}
+            site={site}
+          />
+          <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+        </div>
+      </>
+    );
+  }
+
   const templateEl = (() => {
     switch (template) {
       case "grid":     return <GridTemplate props={props} derived={derived} />;
