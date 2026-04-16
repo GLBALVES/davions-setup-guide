@@ -835,6 +835,17 @@ const PagesPanel = ({
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
+  const selectPage = (id: string, pagesList?: SitePage[]) => {
+    setActivePage(id);
+    const allP = flattenPages(pagesList || pages);
+    const page = allP.find((p) => p.id === id);
+    if (page?.type === "page") {
+      setEditingSectionsPageId(id);
+      onActiveSectionsChange(page.sections || []);
+      onSelectBlock(null);
+    }
+  };
+
   const buildTree = (rows: any[]) => {
     const topLevel = rows.filter((r: any) => !r.parent_id);
     const result: SitePage[] = topLevel.map((row: any) => {
