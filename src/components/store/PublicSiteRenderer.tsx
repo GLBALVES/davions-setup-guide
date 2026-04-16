@@ -210,6 +210,10 @@ interface Props {
   site: SiteConfig | null;
   sessions: Session[];
   galleries: Gallery[];
+  emptyState?: {
+    title: string;
+    description: string;
+  } | null;
   scrolled: boolean;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (v: boolean) => void;
@@ -1818,7 +1822,7 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
-  const { photographer, site, subPageTitle, subPageData } = props;
+  const { photographer, site, subPageTitle, subPageData, emptyState } = props;
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
@@ -1891,6 +1895,49 @@ export default function PublicSiteRenderer(props: Props) {
               </p>
             )}
           </div>
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+        </div>
+      </>
+    );
+  }
+
+  if (emptyState) {
+    const accentColor = site?.accent_color || "#000000";
+    const { navLinks, handleNavClick } = derived;
+    return (
+      <>
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          ogImage={site?.og_image_url || undefined}
+          ogUrl={seoUrl}
+          canonical={seoUrl}
+        />
+        <div className="min-h-screen bg-background">
+          <SharedNav
+            scrolled={props.scrolled}
+            mobileMenuOpen={props.mobileMenuOpen}
+            setMobileMenuOpen={props.setMobileMenuOpen}
+            displayName={displayName}
+            logoUrl={site?.logo_url ?? null}
+            accentColor={accentColor}
+            navLinks={navLinks}
+            showBooking={false}
+            ctaText=""
+            onNavClick={handleNavClick}
+            site={site}
+          />
+          <main className="min-h-screen flex items-center justify-center px-6 pt-24 pb-16">
+            <section className="max-w-2xl text-center">
+              <div className="mx-auto mb-6 h-px w-12 bg-border" />
+              <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase text-foreground mb-4">
+                {emptyState.title}
+              </h1>
+              <p className="text-sm md:text-base font-light text-muted-foreground leading-relaxed">
+                {emptyState.description}
+              </p>
+            </section>
+          </main>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
       </>
