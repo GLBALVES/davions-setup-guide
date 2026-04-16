@@ -1,23 +1,26 @@
 
 
-## Problema: Header verde no preview
+## Problema
 
-O header do site está mostrando um fundo verde (#80ff80) porque esse valor está salvo na coluna `header_bg_color` da tabela `photographer_site` no banco de dados. Mesmo com todas as páginas deletadas, o `PublicSiteRenderer` ainda lê essa configuração global e aplica no `SharedNav`.
+Quando não há páginas, `homeSections` é setado como `null` (linha 104 do StorePage). No PublicSiteRenderer, a condição `visibleSections !== null` é `false`, então cai no fallback legado que monta os links Sessions/About/Blog/Contact.
 
 ## Solução
 
-Duas ações:
+Duas mudanças simples:
 
-### 1. Limpar o valor no banco
-Executar uma migration para resetar o `header_bg_color` do seu fotógrafo:
-```sql
-UPDATE photographer_site 
-SET header_bg_color = NULL 
-WHERE header_bg_color = '#80ff80';
+### 1. StorePage.tsx — usar array vazio em vez de null quando não há home
+Linha 104: mudar de `homePage ? orderedSections : null` para `orderedSections` (que já será `[]` quando não há home). Isso garante que `visibleSections` sempre seja um array quando o site_pages foi consultado, sinalizando ao renderer que o sistema novo está ativo.
+
+```typescript
+// antes
+setHomeSections(homePage ? orderedSections : null);
+
+// depois  
+setHomeSections(orderedSections); // [] quando não há home — sinaliza sistema ativo
 ```
 
-### 2. Adicionar reset de cores no editor
-No painel de configurações do site (WebsiteSettings ou HeaderSliderPanel), garantir que exista uma opção de "resetar cor" para o header — um botão que seta `header_bg_color` de volta para `NULL` (transparente/auto).
+### 2. Verificação no PublicSiteRenderer
+A condição na linha 779 já funciona corretamente com essa mudança — `visibleSections !== null` será `true` (porque é `[]`), e cairá na branch que retorna `[]` (nav vazio).
 
-Isso é simples e rápido — o verde é apenas um valor salvo que precisa ser limpo.
+Nenhuma outra mudança necessária. O nav ficará completamente vazio quando não houver páginas.
 
