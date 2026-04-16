@@ -931,6 +931,27 @@ const PagesPanel = ({
     load();
   }, [photographerId]);
 
+  // Emit nav links whenever pages change
+  useEffect(() => {
+    const links: PreviewNavLink[] = pages
+      .filter((p) => p.inMenu && p.type !== "folder")
+      .map((p) => ({ id: p.id, label: p.label, isHome: p.isHome }));
+    onNavLinksChange(links);
+  }, [pages, onNavLinksChange]);
+
+  // Register API for parent to update active sections (for preview toolbar actions)
+  useEffect(() => {
+    if (!editingSectionsPageId) { registerActivePageActions(null); return; }
+    registerActivePageActions({
+      setSections: (newSections: PageSection[]) => {
+        findAndUpdate(editingSectionsPageId, { sections: newSections });
+        onActiveSectionsChange(newSections);
+      },
+    });
+    return () => registerActivePageActions(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingSectionsPageId, pages]);
+
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
     await supabase.from("site_pages").update(patch).eq("id", id);
