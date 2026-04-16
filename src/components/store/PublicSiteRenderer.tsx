@@ -771,14 +771,19 @@ function deriveCommon(props: Props) {
 
   const hasSocials = site?.instagram_url || site?.facebook_url || site?.tiktok_url || site?.youtube_url || site?.linkedin_url || site?.pinterest_url || site?.whatsapp;
 
+  // When site_pages drives the site, extraNavLinks is the only source of nav items.
+  // The legacy show_* fallback links are only used when visibleSections is NOT provided
+  // (i.e. the site_pages system is not active yet for this photographer).
   const navLinks: NavLinkItem[] = extraNavLinks && extraNavLinks.length > 0
     ? extraNavLinks
-    : [
-        ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
-        ...(showAbout ? [{ label: "About", href: "#about" }] : []),
-        ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
-        ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
-      ];
+    : visibleSections !== undefined && visibleSections !== null
+      ? [] // site_pages is active but no visible nav pages exist — empty nav
+      : [
+          ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
+          ...(showAbout ? [{ label: "About", href: "#about" }] : []),
+          ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
+          ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
+        ];
 
   const handleNavClick = (href: string) => {
     if (editMode) return; // block navigation in edit mode
