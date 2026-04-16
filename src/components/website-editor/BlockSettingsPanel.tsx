@@ -405,12 +405,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ── Content editor router ──
-function getContentEditor(type: string, props: any, onChange: (p: any) => void) {
+function getContentEditor(type: string, props: any, onChange: (p: any) => void, photographerId?: string | null) {
   switch (type) {
-    case "hero": return <HeroContentEditor props={props} onChange={onChange} />;
+    case "hero": return <HeroContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "text": return <TextContentEditor props={props} onChange={onChange} />;
     case "image-text":
-    case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} />;
+    case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "cta": return <CtaContentEditor props={props} onChange={onChange} />;
     case "contact-form": return <ContactFormContentEditor props={props} onChange={onChange} />;
     case "video": return <VideoContentEditor props={props} onChange={onChange} />;
@@ -421,7 +421,7 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void) 
     case "testimonials": return <TestimonialsContentEditor props={props} onChange={onChange} />;
     case "spacer": return <SpacerContentEditor props={props} onChange={onChange} />;
     case "pricing-table": return <PricingContentEditor props={props} onChange={onChange} />;
-    case "team": return <TeamContentEditor props={props} onChange={onChange} />;
+    case "team": return <TeamContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "timeline": return <TimelineContentEditor props={props} onChange={onChange} />;
     case "embed": return <EmbedContentEditor props={props} onChange={onChange} />;
     case "columns-2": return <Columns2ContentEditor props={props} onChange={onChange} />;
