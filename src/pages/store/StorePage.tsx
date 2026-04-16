@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
+import type { PageSection } from "@/components/store/SectionRenderer";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RawPage {
@@ -27,6 +28,7 @@ const StorePage = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [homeSections, setHomeSections] = useState<string[] | null>(null);
+  const [pageSections, setPageSections] = useState<PageSection[]>([]);
   const [extraNavLinks, setExtraNavLinks] = useState<Array<{ label: string; href: string }>>([]);
   const [emptyState, setEmptyState] = useState<{ title: string; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +90,10 @@ const StorePage = () => {
         : Array.isArray(homePageContent.sections)
           ? homePageContent.sections.map((section: any) => section?.type).filter(Boolean)
           : [];
+      // Extract full PageSection[] from page_content.sections
+      const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
+        ? homePageContent.sections.filter((s: any) => s?.type)
+        : [];
       const visibleNavLinks = rawPages
         .filter((page) => page.is_visible && !page.is_home && !page.parent_id)
         .sort((a, b) => a.sort_order - b.sort_order)
@@ -102,6 +108,7 @@ const StorePage = () => {
       setGalleries(galleryData ?? []);
       setExtraNavLinks(visibleNavLinks);
       setHomeSections(orderedSections);
+      setPageSections(fullSections);
       setEmptyState(
         homePage
           ? null
@@ -148,6 +155,7 @@ const StorePage = () => {
       blogHref={`/store/${slug}/blog`}
       extraNavLinks={extraNavLinks}
       visibleSections={homeSections}
+      pageSections={pageSections}
       previewTemplate={previewTemplate}
     />
   );
