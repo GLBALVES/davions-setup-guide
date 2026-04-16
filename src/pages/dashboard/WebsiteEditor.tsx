@@ -1243,6 +1243,8 @@ const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
+  const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -1259,7 +1261,14 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} photographerId={user?.id ?? null} />,
+    pages: <PagesPanel
+      editingSection={editingSection}
+      setEditingSection={setEditingSection}
+      photographerId={user?.id ?? null}
+      selectedBlockIndex={selectedBlockIndex}
+      onSelectBlock={setSelectedBlockIndex}
+      onActiveSectionsChange={setActivePageSections}
+    />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
