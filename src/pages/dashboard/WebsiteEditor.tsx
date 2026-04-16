@@ -1025,8 +1025,12 @@ const PagesPanel = ({
   };
 
   const deletePage = async (id: string) => {
-    const page = flattenPages(pages).find((p) => p.id === id);
-    if (page?.isHome) return;
+    const allP = flattenPages(pages);
+    const page = allP.find((p) => p.id === id);
+    if (!page || page.isHome) return;
+
+    // Collect ids to delete: the page itself + its children (if it's a folder)
+    const idsToDelete = [id, ...((page.children ?? []).map((c) => c.id))];
 
     const nextPages = pages
       .filter((p) => p.id !== id)
@@ -1034,19 +1038,27 @@ const PagesPanel = ({
 
     setPages(nextPages);
 
-    if (activePage === id) {
+    if (idsToDelete.includes(activePage)) {
       const nextHomeId = getHomePageId(nextPages);
       const nextId = nextHomeId ?? nextPages[0]?.id ?? "";
       selectPage(nextId, nextPages);
     }
 
-    if (settingsPage?.id === id) setSettingsPage(null);
-    if (editingSectionsPageId === id) {
+    if (settingsPage && idsToDelete.includes(settingsPage.id)) setSettingsPage(null);
+    if (editingSectionsPageId && idsToDelete.includes(editingSectionsPageId)) {
       setEditingSectionsPageId(null);
       onActiveSectionsChange([]);
       onSelectBlock(null);
     }
-    await supabase.from("site_pages").delete().eq("id", id);
+
+    // Cascade delete: removes the page row + any child pages.
+    // page_content (which holds the section/block configs) is stored in the row itself,
+    // so deleting the row also cleans up all blocks linked to that page.
+    const { error } = await supabase.from("site_pages").delete().in("id", idsToDelete);
+    if (error) {
+      console.error("Failed to delete page(s)", error);
+      toast.error("Failed to delete page");
+    }
   };
 
   const duplicatePage = async (id: string) => {
