@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
@@ -232,6 +233,8 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** Full page sections data from site_pages.page_content.sections */
+  pageSections?: PageSection[];
   /** Override the saved site_template for live preview (from ?preview= URL param) */
   previewTemplate?: string | null;
   /** When true (editor mode), text nodes become contentEditable */
