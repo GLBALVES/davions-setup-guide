@@ -902,7 +902,7 @@ const PagesPanel = ({
         // Check if site was already initialized (user intentionally deleted all pages)
         const { data: siteRow } = await supabase
           .from("photographer_site")
-          .select("site_pages_initialized")
+          .select("site_pages_initialized, site_template")
           .eq("photographer_id", photographerId)
           .maybeSingle();
 
@@ -910,12 +910,17 @@ const PagesPanel = ({
           // User intentionally has no pages — don't re-seed
           setPages([]);
         } else {
-          // First time — seed defaults
+          // First time — seed defaults, with Home built from the chosen site template
+          const homeTemplateId = getHomeTemplateForSite((siteRow as any)?.site_template);
+          const homeSections = getTemplateSections(homeTemplateId);
           const rows: any[] = [];
           let order = 0;
           for (const page of INITIAL_PAGES) {
             const id = crypto.randomUUID();
-            rows.push(sitePageToDbFields({ ...page, id }, photographerId, order++));
+            const seeded: SitePage = page.isHome
+              ? { ...page, id, templateId: homeTemplateId, sections: homeSections }
+              : { ...page, id };
+            rows.push(sitePageToDbFields(seeded, photographerId, order++));
             if (page.children) {
               for (const child of page.children) {
                 const childId = crypto.randomUUID();
@@ -928,12 +933,12 @@ const PagesPanel = ({
           // Mark as initialized
           await supabase.from("photographer_site").update({ site_pages_initialized: true } as any).eq("photographer_id", photographerId);
           // Re-fetch after seed
-          const { data: seeded } = await supabase
+          const { data: seededRows } = await supabase
             .from("site_pages")
             .select("*")
             .eq("photographer_id", photographerId)
             .order("sort_order", { ascending: true });
-          buildTree(seeded || []);
+          buildTree(seededRows || []);
         }
       } else {
         // Has pages — ensure flag is set
