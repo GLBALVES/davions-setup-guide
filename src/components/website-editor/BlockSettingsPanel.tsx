@@ -290,7 +290,7 @@ function PricingContentEditor({ props, onChange }: { props: any; onChange: (p: a
   );
 }
 
-function TeamContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function TeamContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   const members: { name: string; role: string; photo: string }[] = props.members || [];
   const updateMember = (idx: number, field: string, value: string) => {
     const next = [...members];
@@ -310,7 +310,13 @@ function TeamContentEditor({ props, onChange }: { props: any; onChange: (p: any)
           </div>
           <Input value={m.name} onChange={(e) => updateMember(idx, "name", e.target.value)} className="h-8 text-xs" placeholder="Name" />
           <Input value={m.role} onChange={(e) => updateMember(idx, "role", e.target.value)} className="h-8 text-xs" placeholder="Role" />
-          <Input value={m.photo} onChange={(e) => updateMember(idx, "photo", e.target.value)} className="h-8 text-xs" placeholder="Photo URL" />
+          <ImageUploadField
+            value={m.photo}
+            onChange={(url) => updateMember(idx, "photo", url)}
+            photographerId={photographerId}
+            folder="team"
+            aspectClass="aspect-square"
+          />
         </div>
       ))}
       <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addMember}><Plus className="h-3 w-3" /> Add Member</Button>
