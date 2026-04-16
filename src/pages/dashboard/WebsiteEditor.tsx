@@ -549,12 +549,16 @@ const PageSectionsPanel = ({
   onBack,
   onEditSection,
   onSectionsChange,
+  selectedBlockIndex,
+  onSelectBlock,
 }: {
   pageLabel: string;
   sections: PageSection[];
   onBack: () => void;
   onEditSection: (section: string) => void;
   onSectionsChange: (sections: PageSection[]) => void;
+  selectedBlockIndex: number | null;
+  onSelectBlock: (idx: number | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
