@@ -26,6 +26,7 @@ import { getTemplateSections, createSection, type PageSection, type SectionType 
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
+import PreviewRenderer from "@/components/website-editor/PreviewRenderer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
