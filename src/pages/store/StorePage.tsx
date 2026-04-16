@@ -101,7 +101,7 @@ const StorePage = () => {
       })));
       setGalleries(galleryData ?? []);
       setExtraNavLinks(visibleNavLinks);
-      setHomeSections(homePage ? orderedSections : null);
+      setHomeSections(orderedSections);
       setEmptyState(
         homePage
           ? null
