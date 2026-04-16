@@ -55,10 +55,27 @@ interface SitePage {
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
 const INITIAL_PAGES: SitePage[] = [
-  { id: "home", label: "Home", type: "page", icon: "🏠", inMenu: true, status: "online", showHeaderFooter: true },
+  { id: "home", label: "Home", type: "page", icon: "🏠", isHome: true, inMenu: true, status: "online", showHeaderFooter: true },
   { id: "contact", label: "Contact", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
   { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
 ];
+
+// Map the visual site template (chosen in Website Settings) to a homepage page-template
+// so the Home page is born with content matching the chosen design.
+const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
+  editorial: "homepage-1",
+  sierra: "homepage-1",
+  canvas: "homepage-1",
+  seville: "homepage-1",
+  clean: "homepage-1",
+  grid: "homepage-2",
+  magazine: "homepage-2",
+  avery: "homepage-2",
+  milo: "homepage-2",
+};
+
+const getHomeTemplateForSite = (siteTemplate?: string | null) =>
+  SITE_TEMPLATE_TO_HOME_TEMPLATE[siteTemplate ?? ""] ?? "homepage-1";
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS: { id: EditorTab; icon: React.ElementType; label: string }[] = [
@@ -129,7 +146,7 @@ const PageContextMenu = ({
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.id === "home"}>
+        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.isHome}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -885,7 +902,7 @@ const PagesPanel = ({
         // Check if site was already initialized (user intentionally deleted all pages)
         const { data: siteRow } = await supabase
           .from("photographer_site")
-          .select("site_pages_initialized")
+          .select("site_pages_initialized, site_template")
           .eq("photographer_id", photographerId)
           .maybeSingle();
 
@@ -893,12 +910,17 @@ const PagesPanel = ({
           // User intentionally has no pages — don't re-seed
           setPages([]);
         } else {
-          // First time — seed defaults
+          // First time — seed defaults, with Home built from the chosen site template
+          const homeTemplateId = getHomeTemplateForSite((siteRow as any)?.site_template);
+          const homeSections = getTemplateSections(homeTemplateId);
           const rows: any[] = [];
           let order = 0;
           for (const page of INITIAL_PAGES) {
             const id = crypto.randomUUID();
-            rows.push(sitePageToDbFields({ ...page, id }, photographerId, order++));
+            const seeded: SitePage = page.isHome
+              ? { ...page, id, templateId: homeTemplateId, sections: homeSections }
+              : { ...page, id };
+            rows.push(sitePageToDbFields(seeded, photographerId, order++));
             if (page.children) {
               for (const child of page.children) {
                 const childId = crypto.randomUUID();
@@ -911,12 +933,12 @@ const PagesPanel = ({
           // Mark as initialized
           await supabase.from("photographer_site").update({ site_pages_initialized: true } as any).eq("photographer_id", photographerId);
           // Re-fetch after seed
-          const { data: seeded } = await supabase
+          const { data: seededRows } = await supabase
             .from("site_pages")
             .select("*")
             .eq("photographer_id", photographerId)
             .order("sort_order", { ascending: true });
-          buildTree(seeded || []);
+          buildTree(seededRows || []);
         }
       } else {
         // Has pages — ensure flag is set
@@ -1003,8 +1025,12 @@ const PagesPanel = ({
   };
 
   const deletePage = async (id: string) => {
-    const page = flattenPages(pages).find((p) => p.id === id);
-    if (page?.isHome) return;
+    const allP = flattenPages(pages);
+    const page = allP.find((p) => p.id === id);
+    if (!page || page.isHome) return;
+
+    // Collect ids to delete: the page itself + its children (if it's a folder)
+    const idsToDelete = [id, ...((page.children ?? []).map((c) => c.id))];
 
     const nextPages = pages
       .filter((p) => p.id !== id)
@@ -1012,19 +1038,27 @@ const PagesPanel = ({
 
     setPages(nextPages);
 
-    if (activePage === id) {
+    if (idsToDelete.includes(activePage)) {
       const nextHomeId = getHomePageId(nextPages);
       const nextId = nextHomeId ?? nextPages[0]?.id ?? "";
       selectPage(nextId, nextPages);
     }
 
-    if (settingsPage?.id === id) setSettingsPage(null);
-    if (editingSectionsPageId === id) {
+    if (settingsPage && idsToDelete.includes(settingsPage.id)) setSettingsPage(null);
+    if (editingSectionsPageId && idsToDelete.includes(editingSectionsPageId)) {
       setEditingSectionsPageId(null);
       onActiveSectionsChange([]);
       onSelectBlock(null);
     }
-    await supabase.from("site_pages").delete().eq("id", id);
+
+    // Cascade delete: removes the page row + any child pages.
+    // page_content (which holds the section/block configs) is stored in the row itself,
+    // so deleting the row also cleans up all blocks linked to that page.
+    const { error } = await supabase.from("site_pages").delete().in("id", idsToDelete);
+    if (error) {
+      console.error("Failed to delete page(s)", error);
+      toast.error("Failed to delete page");
+    }
   };
 
   const duplicatePage = async (id: string) => {
