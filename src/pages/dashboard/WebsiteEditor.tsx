@@ -604,8 +604,8 @@ const PageSectionsPanel = ({
   };
 
   // If block settings panel is open, show it
-  if (blockSettingsIdx !== null && sections[blockSettingsIdx]) {
-    const section = sections[blockSettingsIdx];
+  if (selectedBlockIndex !== null && sections[selectedBlockIndex]) {
+    const section = sections[selectedBlockIndex];
     const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
     return (
       <BlockSettingsPanel
@@ -613,15 +613,15 @@ const PageSectionsPanel = ({
         settings={blockSettings}
         onUpdate={(s) => {
           const next = [...sections];
-          next[blockSettingsIdx] = { ...section, props: { ...section.props, blockSettings: s } };
+          next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
           onSectionsChange(next);
         }}
         onUpdateProps={(newProps) => {
           const next = [...sections];
-          next[blockSettingsIdx] = { ...section, props: newProps };
+          next[selectedBlockIndex] = { ...section, props: newProps };
           onSectionsChange(next);
         }}
-        onBack={() => setBlockSettingsIdx(null)}
+        onBack={() => onSelectBlock(null)}
       />
     );
   }
@@ -659,7 +659,13 @@ const PageSectionsPanel = ({
             )}
 
             {/* Section item */}
-            <div className="group relative flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted/40 transition-colors">
+            <div
+              onClick={() => onSelectBlock(idx)}
+              className={cn(
+                "group relative flex items-center gap-2 px-2 py-2 rounded-md transition-colors cursor-pointer",
+                selectedBlockIndex === idx ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
+              )}
+            >
               {/* Drag handle placeholder */}
               <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
 
@@ -702,7 +708,7 @@ const PageSectionsPanel = ({
                   <Copy className="h-3 w-3" />
                 </button>
                 <button
-                  onClick={() => setBlockSettingsIdx(idx)}
+                  onClick={() => onSelectBlock(idx)}
                   className="p-1 rounded hover:bg-muted text-muted-foreground"
                   title="Block settings"
                 >
