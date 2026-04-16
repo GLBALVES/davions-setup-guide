@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { ArrowLeft, Upload, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { ImageUploadField } from "./ImageUploadField";
 import type { PageSection } from "./page-templates";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
