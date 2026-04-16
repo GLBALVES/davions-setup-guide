@@ -854,7 +854,8 @@ const PagesPanel = ({
     });
     setPages(result);
     const homeId = getHomePageId(result);
-    setActivePage(homeId ?? result[0]?.id ?? "");
+    const firstId = homeId ?? result[0]?.id ?? "";
+    selectPage(firstId, result);
   };
 
   // ── Load from DB ──
