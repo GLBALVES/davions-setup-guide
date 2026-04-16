@@ -1054,10 +1054,13 @@ const PagesPanel = ({
         <PageSectionsPanel
           pageLabel={targetPage.label}
           sections={targetPage.sections || []}
-          onBack={() => setEditingSectionsPageId(null)}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
           onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
           onSectionsChange={(newSections) => {
             findAndUpdate(editingSectionsPageId, { sections: newSections });
+            onActiveSectionsChange(newSections);
           }}
         />
       );
