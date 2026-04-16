@@ -35,6 +35,7 @@ interface SitePage {
   id: string;
   label: string;
   type: PageType;
+  isHome?: boolean;
   icon?: string;
   inMenu: boolean;
   children?: SitePage[];
@@ -747,6 +748,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
     id: row.id,
     label: row.title,
     type: content.type || "page",
+    isHome: row.is_home,
     icon: content.icon,
     inMenu: row.is_visible,
     status: content.status || "online",
@@ -770,7 +772,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
     slug: page.slug || slugify(page.label),
     parent_id: parentId,
     sort_order: sortOrder,
-    is_home: page.id === "home" || (page as any).isHome === true,
+    is_home: page.isHome === true,
     is_visible: page.inMenu,
     sections_order: JSON.parse(JSON.stringify(page.sections ? page.sections.map((s) => s.type) : [])),
     page_content: JSON.parse(JSON.stringify({
@@ -807,6 +809,21 @@ const PagesPanel = ({
   const [loaded, setLoaded] = useState(false);
   const { t } = useLanguage();
   const we = t.websiteEditor;
+
+  const flattenPages = (list: SitePage[]) => list.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+
+  const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
+
+  const buildTree = (rows: any[]) => {
+    const topLevel = rows.filter((r: any) => !r.parent_id);
+    const result: SitePage[] = topLevel.map((row: any) => {
+      const children = rows.filter((r: any) => r.parent_id === row.id);
+      return dbRowToSitePage(row, children.map((c: any) => dbRowToSitePage(c)));
+    });
+    setPages(result);
+    const homeId = getHomePageId(result);
+    setActivePage(homeId ?? result[0]?.id ?? "");
+  };
 
   // ── Load from DB ──
   useEffect(() => {
@@ -867,15 +884,6 @@ const PagesPanel = ({
       setLoaded(true);
     };
 
-    const buildTree = (rows: any[]) => {
-      const topLevel = rows.filter((r: any) => !r.parent_id);
-      const result: SitePage[] = topLevel.map((row: any) => {
-        const children = rows.filter((r: any) => r.parent_id === row.id);
-        return dbRowToSitePage(row, children.map((c: any) => dbRowToSitePage(c)));
-      });
-      setPages(result);
-    };
-
     load();
   }, [photographerId]);
 
@@ -903,7 +911,7 @@ const PagesPanel = ({
     if (patch.slug !== undefined) dbPatch.slug = patch.slug;
 
     // Always update page_content with the full merged content
-    const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+    const allP = flattenPages(pages);
     const current = allP.find((p) => p.id === id);
     if (current) {
       const merged = { ...current, ...patch };
@@ -930,20 +938,32 @@ const PagesPanel = ({
   };
 
   const deletePage = async (id: string) => {
-    if (id === "home") return;
-    setPages((prev) => prev.filter((p) => p.id !== id).map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p));
-    if (activePage === id) setActivePage("home");
+    const page = flattenPages(pages).find((p) => p.id === id);
+    if (page?.isHome) return;
+
+    const nextPages = pages
+      .filter((p) => p.id !== id)
+      .map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p);
+
+    setPages(nextPages);
+
+    if (activePage === id) {
+      const nextHomeId = getHomePageId(nextPages);
+      setActivePage(nextHomeId ?? nextPages[0]?.id ?? "");
+    }
+
     if (settingsPage?.id === id) setSettingsPage(null);
+    if (editingSectionsPageId === id) setEditingSectionsPageId(null);
     await supabase.from("site_pages").delete().eq("id", id);
   };
 
   const duplicatePage = async (id: string) => {
     if (!photographerId) return;
-    const allP = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+    const allP = flattenPages(pages);
     const source = allP.find((p) => p.id === id);
     if (!source) return;
     const newId = crypto.randomUUID();
-    const newPage: SitePage = { ...source, id: newId, label: `${source.label} (copy)`, inMenu: false, children: undefined };
+    const newPage: SitePage = { ...source, id: newId, label: `${source.label} (copy)`, inMenu: false, children: undefined, isHome: false };
     setPages((prev) => [...prev, newPage]);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
@@ -962,6 +982,7 @@ const PagesPanel = ({
       id: newId,
       label: type === "folder" ? "New Folder" : "New Link",
       type,
+      isHome: false,
       inMenu: false,
       status: "online",
       showHeaderFooter: type !== "link",
@@ -983,6 +1004,7 @@ const PagesPanel = ({
       id: newId,
       label: title,
       type: "page",
+      isHome: false,
       inMenu: false,
       status: "online",
       showHeaderFooter: true,
@@ -996,7 +1018,7 @@ const PagesPanel = ({
     await supabase.from("site_pages").insert([row]);
   };
 
-  const allPages = pages.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+  const allPages = flattenPages(pages);
 
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {

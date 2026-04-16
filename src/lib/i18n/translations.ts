@@ -2015,6 +2015,8 @@ export const translations = {
       sections: "Sections",
       removeSlide: "Remove",
       slideIndex: "Slide",
+      emptySiteTitle: "Your site is empty",
+      emptySiteDescription: "Add a page in the website editor to start building your public site.",
       pageTemplatePicker: {
         enterTitle: "Enter a page title",
         createPage: "Create Page",
@@ -3990,6 +3992,8 @@ export const translations = {
       sections: "Seções",
       removeSlide: "Remover",
       slideIndex: "Slide",
+      emptySiteTitle: "Seu site está vazio",
+      emptySiteDescription: "Adicione uma página no editor de website para começar a montar seu site público.",
       pageTemplatePicker: {
         enterTitle: "Digite o título da página",
         createPage: "Criar Página",
@@ -6040,6 +6044,8 @@ export const translations = {
       sections: "Secciones",
       removeSlide: "Eliminar",
       slideIndex: "Slide",
+      emptySiteTitle: "Tu sitio está vacío",
+      emptySiteDescription: "Agrega una página en el editor del sitio web para comenzar a construir tu sitio público.",
       pageTemplatePicker: {
         enterTitle: "Ingrese un título de página",
         createPage: "Crear Página",
