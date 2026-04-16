@@ -810,10 +810,16 @@ const PagesPanel = ({
   editingSection,
   setEditingSection,
   photographerId,
+  selectedBlockIndex,
+  onSelectBlock,
+  onActiveSectionsChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
   photographerId: string | null;
+  selectedBlockIndex: number | null;
+  onSelectBlock: (idx: number | null) => void;
+  onActiveSectionsChange: (sections: PageSection[]) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
