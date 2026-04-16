@@ -1869,6 +1869,7 @@ export default function PublicSiteRenderer(props: Props) {
   if (subPageTitle) {
     const accentColor = site?.accent_color || "#000000";
     const { navLinks, handleNavClick } = derived;
+    const subSections = (props.subPageSections as PageSection[] | undefined) ?? [];
     return (
       <>
         <SEOHead
@@ -1891,16 +1892,23 @@ export default function PublicSiteRenderer(props: Props) {
             ctaText=""
             onNavClick={handleNavClick}
           />
-          <div className="pt-24 max-w-4xl mx-auto px-6 pb-20">
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
-            {subPageData?.content ? (
-              <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
-                {subPageData.content}
+          <div className="pt-20">
+            {subSections.length > 0 ? (
+              <SectionRenderer sections={subSections} accentColor={accentColor} />
+            ) : subPageData?.content ? (
+              <div className="max-w-4xl mx-auto px-6 py-16">
+                <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+                <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {subPageData.content}
+                </div>
               </div>
             ) : (
-              <p className="text-sm font-light text-muted-foreground">
-                This page has no content yet. Edit it in the site editor.
-              </p>
+              <div className="max-w-4xl mx-auto px-6 py-16">
+                <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+                <p className="text-sm font-light text-muted-foreground">
+                  This page has no content yet. Edit it in the site editor.
+                </p>
+              </div>
             )}
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
