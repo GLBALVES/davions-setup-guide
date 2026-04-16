@@ -90,7 +90,7 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   );
 }
 
-function ImageTextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function ImageTextContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
       <Field label="Title">
@@ -99,8 +99,13 @@ function ImageTextContentEditor({ props, onChange }: { props: any; onChange: (p:
       <Field label="Body">
         <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[80px]" />
       </Field>
-      <Field label="Image URL">
-        <Input value={props.image || ""} onChange={(e) => onChange({ ...props, image: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+      <Field label="Image">
+        <ImageUploadField
+          value={props.image}
+          onChange={(url) => onChange({ ...props, image: url })}
+          photographerId={photographerId}
+          folder="image-text"
+        />
       </Field>
     </div>
   );
