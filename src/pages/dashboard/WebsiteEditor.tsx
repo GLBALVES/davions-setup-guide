@@ -1150,7 +1150,7 @@ const PagesPanel = ({
               key={page.id}
               page={page}
               activePage={activePage}
-              onSelect={(id) => { setActivePage(id); setEditingSectionsPageId(id); }}
+              onSelect={(id) => selectPage(id)}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
               onDelete={deletePage}
@@ -1161,7 +1161,7 @@ const PagesPanel = ({
               key={page.id}
               page={page}
               active={activePage === page.id}
-              onSelect={() => { setActivePage(page.id); if (page.type === "page") setEditingSectionsPageId(page.id); }}
+              onSelect={() => selectPage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
               onDelete={() => deletePage(page.id)}
@@ -1181,7 +1181,7 @@ const PagesPanel = ({
                 key={page.id}
                 page={page}
                 active={activePage === page.id}
-                onSelect={() => { setActivePage(page.id); if (page.type === "page") setEditingSectionsPageId(page.id); }}
+                onSelect={() => selectPage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
                 onDelete={() => deletePage(page.id)}
