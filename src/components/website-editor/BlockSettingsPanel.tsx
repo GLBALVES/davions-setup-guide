@@ -55,7 +55,7 @@ interface BlockSettingsPanelProps {
 
 // ── Per-type content editors ──────────────────────────────────────────────────
 
-function HeroContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function HeroContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
       <Field label="Headline">
@@ -64,8 +64,13 @@ function HeroContentEditor({ props, onChange }: { props: any; onChange: (p: any)
       <Field label="Subtitle">
         <Input value={props.subtitle || ""} onChange={(e) => onChange({ ...props, subtitle: e.target.value })} className="h-9 text-sm" placeholder="A short subtitle" />
       </Field>
-      <Field label="Background Image URL">
-        <Input value={props.backgroundImage || ""} onChange={(e) => onChange({ ...props, backgroundImage: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+      <Field label="Background Image">
+        <ImageUploadField
+          value={props.backgroundImage}
+          onChange={(url) => onChange({ ...props, backgroundImage: url })}
+          photographerId={photographerId}
+          folder="hero"
+        />
       </Field>
       <Field label="CTA Text">
         <Input value={props.ctaText || ""} onChange={(e) => onChange({ ...props, ctaText: e.target.value })} className="h-9 text-sm" placeholder="Book Now" />
