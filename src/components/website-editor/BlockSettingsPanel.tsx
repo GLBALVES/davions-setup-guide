@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { ArrowLeft, Upload, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { ImageUploadField } from "./ImageUploadField";
 import type { PageSection } from "./page-templates";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
@@ -53,7 +55,7 @@ interface BlockSettingsPanelProps {
 
 // ── Per-type content editors ──────────────────────────────────────────────────
 
-function HeroContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function HeroContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
       <Field label="Headline">
@@ -62,8 +64,13 @@ function HeroContentEditor({ props, onChange }: { props: any; onChange: (p: any)
       <Field label="Subtitle">
         <Input value={props.subtitle || ""} onChange={(e) => onChange({ ...props, subtitle: e.target.value })} className="h-9 text-sm" placeholder="A short subtitle" />
       </Field>
-      <Field label="Background Image URL">
-        <Input value={props.backgroundImage || ""} onChange={(e) => onChange({ ...props, backgroundImage: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+      <Field label="Background Image">
+        <ImageUploadField
+          value={props.backgroundImage}
+          onChange={(url) => onChange({ ...props, backgroundImage: url })}
+          photographerId={photographerId}
+          folder="hero"
+        />
       </Field>
       <Field label="CTA Text">
         <Input value={props.ctaText || ""} onChange={(e) => onChange({ ...props, ctaText: e.target.value })} className="h-9 text-sm" placeholder="Book Now" />
@@ -83,7 +90,7 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   );
 }
 
-function ImageTextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function ImageTextContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
       <Field label="Title">
@@ -92,8 +99,13 @@ function ImageTextContentEditor({ props, onChange }: { props: any; onChange: (p:
       <Field label="Body">
         <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[80px]" />
       </Field>
-      <Field label="Image URL">
-        <Input value={props.image || ""} onChange={(e) => onChange({ ...props, image: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+      <Field label="Image">
+        <ImageUploadField
+          value={props.image}
+          onChange={(url) => onChange({ ...props, image: url })}
+          photographerId={photographerId}
+          folder="image-text"
+        />
       </Field>
     </div>
   );
@@ -278,7 +290,7 @@ function PricingContentEditor({ props, onChange }: { props: any; onChange: (p: a
   );
 }
 
-function TeamContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function TeamContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   const members: { name: string; role: string; photo: string }[] = props.members || [];
   const updateMember = (idx: number, field: string, value: string) => {
     const next = [...members];
@@ -298,7 +310,13 @@ function TeamContentEditor({ props, onChange }: { props: any; onChange: (p: any)
           </div>
           <Input value={m.name} onChange={(e) => updateMember(idx, "name", e.target.value)} className="h-8 text-xs" placeholder="Name" />
           <Input value={m.role} onChange={(e) => updateMember(idx, "role", e.target.value)} className="h-8 text-xs" placeholder="Role" />
-          <Input value={m.photo} onChange={(e) => updateMember(idx, "photo", e.target.value)} className="h-8 text-xs" placeholder="Photo URL" />
+          <ImageUploadField
+            value={m.photo}
+            onChange={(url) => updateMember(idx, "photo", url)}
+            photographerId={photographerId}
+            folder="team"
+            aspectClass="aspect-square"
+          />
         </div>
       ))}
       <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addMember}><Plus className="h-3 w-3" /> Add Member</Button>
@@ -387,12 +405,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ── Content editor router ──
-function getContentEditor(type: string, props: any, onChange: (p: any) => void) {
+function getContentEditor(type: string, props: any, onChange: (p: any) => void, photographerId?: string | null) {
   switch (type) {
-    case "hero": return <HeroContentEditor props={props} onChange={onChange} />;
+    case "hero": return <HeroContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "text": return <TextContentEditor props={props} onChange={onChange} />;
     case "image-text":
-    case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} />;
+    case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "cta": return <CtaContentEditor props={props} onChange={onChange} />;
     case "contact-form": return <ContactFormContentEditor props={props} onChange={onChange} />;
     case "video": return <VideoContentEditor props={props} onChange={onChange} />;
@@ -403,7 +421,7 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void) 
     case "testimonials": return <TestimonialsContentEditor props={props} onChange={onChange} />;
     case "spacer": return <SpacerContentEditor props={props} onChange={onChange} />;
     case "pricing-table": return <PricingContentEditor props={props} onChange={onChange} />;
-    case "team": return <TeamContentEditor props={props} onChange={onChange} />;
+    case "team": return <TeamContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "timeline": return <TimelineContentEditor props={props} onChange={onChange} />;
     case "embed": return <EmbedContentEditor props={props} onChange={onChange} />;
     case "columns-2": return <Columns2ContentEditor props={props} onChange={onChange} />;
@@ -421,10 +439,12 @@ export const BlockSettingsPanel = ({
   onUpdateProps,
   onBack,
 }: BlockSettingsPanelProps) => {
+  const { user } = useAuth();
+  const photographerId = user?.id ?? null;
   const s = settings;
   const update = (patch: Partial<BlockSettings>) => onUpdate({ ...s, ...patch });
 
-  const contentEditor = getContentEditor(section.type, section.props, onUpdateProps);
+  const contentEditor = getContentEditor(section.type, section.props, onUpdateProps, photographerId);
 
   return (
     <div className="flex flex-col h-full">
@@ -478,10 +498,12 @@ export const BlockSettingsPanel = ({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Background Image</label>
-            <div className="border border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center gap-1.5 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
-              <Upload className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-[10px] text-muted-foreground">Upload Image</span>
-            </div>
+            <ImageUploadField
+              value={s.backgroundImage}
+              onChange={(url) => update({ backgroundImage: url })}
+              photographerId={photographerId}
+              folder="block-bg"
+            />
           </div>
 
           {s.backgroundImage && (

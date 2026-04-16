@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2 } from "lucide-react";
 
 type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -11,18 +11,163 @@ const VIEWPORT_WIDTHS: Record<Viewport, string> = {
   mobile: "375px",
 };
 
+export interface PreviewSiteConfig {
+  logoUrl?: string | null;
+  displayName?: string;
+  accentColor?: string;
+  headerBg?: string | null;
+  headerTextColor?: string | null;
+  footerBg?: string | null;
+  footerTextColor?: string | null;
+  footerText?: string | null;
+}
+
+export interface PreviewNavLink {
+  id: string;
+  label: string;
+  isHome?: boolean;
+}
+
 interface PreviewRendererProps {
   sections: PageSection[];
   selectedBlockIndex: number | null;
   onSelectBlock: (index: number) => void;
+  onMoveBlock?: (from: number, to: number) => void;
+  onDuplicateBlock?: (index: number) => void;
+  onDeleteBlock?: (index: number) => void;
   accentColor?: string;
+  site?: PreviewSiteConfig | null;
+  navLinks?: PreviewNavLink[];
+  activePageId?: string | null;
+  onNavigatePage?: (pageId: string) => void;
+  showHeaderFooter?: boolean;
+}
+
+// ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
+function PreviewNav({
+  site,
+  navLinks,
+  activePageId,
+  onNavigatePage,
+}: {
+  site?: PreviewSiteConfig | null;
+  navLinks: PreviewNavLink[];
+  activePageId?: string | null;
+  onNavigatePage?: (id: string) => void;
+}) {
+  const bg = site?.headerBg ?? undefined;
+  const fg = site?.headerTextColor ?? undefined;
+  const displayName = site?.displayName || "Studio";
+
+  return (
+    <header
+      className="border-b border-border/50 sticky top-0 z-10"
+      style={{ backgroundColor: bg ?? "hsl(var(--background))", color: fg ?? undefined }}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3">
+          {site?.logoUrl ? (
+            <img src={site.logoUrl} alt={displayName} className="h-8 w-auto object-contain" />
+          ) : (
+            <span className="text-sm font-light tracking-[0.25em] uppercase" style={{ color: fg ?? undefined }}>
+              {displayName}
+            </span>
+          )}
+        </div>
+        <nav className="hidden md:flex items-center gap-6">
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => onNavigatePage?.(link.id)}
+              className={cn(
+                "text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70",
+                activePageId === link.id && "underline underline-offset-4"
+              )}
+              style={{ color: fg ?? undefined }}
+            >
+              {link.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+// ── Inline preview Footer ────────────────────────────────────────────────────
+function PreviewFooter({ site }: { site?: PreviewSiteConfig | null }) {
+  const bg = site?.footerBg ?? "hsl(var(--foreground))";
+  const fg = site?.footerTextColor ?? "hsl(var(--background))";
+  const text = site?.footerText || `© ${new Date().getFullYear()} ${site?.displayName || "Studio"}`;
+
+  return (
+    <footer style={{ backgroundColor: bg, color: fg }} className="py-12 px-6">
+      <div className="max-w-7xl mx-auto text-center">
+        <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80">{text}</p>
+      </div>
+    </footer>
+  );
+}
+
+// ── Floating block toolbar (Pixieset style) ──────────────────────────────────
+function FloatingBlockToolbar({
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onSettings,
+  onDelete,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onSettings: () => void;
+  onDelete: () => void;
+}) {
+  const Btn = ({ onClick, disabled, title, children, danger }: any) => (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      disabled={disabled}
+      title={title}
+      className={cn(
+        "p-1.5 rounded text-background/80 hover:text-background hover:bg-background/15 transition-colors",
+        disabled && "opacity-30 cursor-not-allowed hover:bg-transparent",
+        danger && "hover:!text-red-400"
+      )}
+    >
+      {children}
+    </button>
+  );
+
+  return (
+    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-0.5 bg-foreground/95 backdrop-blur-sm rounded-md px-1 py-0.5 shadow-lg pointer-events-auto">
+      <Btn onClick={onMoveUp} disabled={isFirst} title="Move up"><ArrowUp className="h-3.5 w-3.5" /></Btn>
+      <Btn onClick={onMoveDown} disabled={isLast} title="Move down"><ArrowDown className="h-3.5 w-3.5" /></Btn>
+      <div className="w-px h-4 bg-background/20 mx-0.5" />
+      <Btn onClick={onDuplicate} title="Duplicate"><Copy className="h-3.5 w-3.5" /></Btn>
+      <Btn onClick={onSettings} title="Settings"><Settings2 className="h-3.5 w-3.5" /></Btn>
+      <div className="w-px h-4 bg-background/20 mx-0.5" />
+      <Btn onClick={onDelete} title="Delete" danger><Trash2 className="h-3.5 w-3.5" /></Btn>
+    </div>
+  );
 }
 
 export default function PreviewRenderer({
   sections,
   selectedBlockIndex,
   onSelectBlock,
+  onMoveBlock,
+  onDuplicateBlock,
+  onDeleteBlock,
   accentColor = "#000000",
+  site,
+  navLinks = [],
+  activePageId,
+  onNavigatePage,
+  showHeaderFooter = true,
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
@@ -52,44 +197,81 @@ export default function PreviewRenderer({
       </div>
 
       {/* Preview container */}
-      <div className="flex-1 overflow-y-auto bg-muted/10 flex justify-center">
+      <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4">
         <div
           className={cn(
-            "bg-background transition-all duration-300 min-h-full",
-            viewport !== "desktop" && "shadow-lg border-x border-border"
+            "bg-background transition-all duration-300 min-h-full shadow-lg",
+            "border border-border"
           )}
           style={{ width: VIEWPORT_WIDTHS[viewport], maxWidth: "100%" }}
         >
+          {/* Nav */}
+          {showHeaderFooter && (
+            <PreviewNav
+              site={site}
+              navLinks={navLinks}
+              activePageId={activePageId}
+              onNavigatePage={onNavigatePage}
+            />
+          )}
+
+          {/* Blocks */}
           {sections.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[400px]">
-              <p className="text-sm text-muted-foreground">Add blocks from the sidebar to start building your page</p>
+            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 px-6 text-center">
+              <p className="text-sm text-muted-foreground">This page is empty</p>
+              <p className="text-[11px] text-muted-foreground/70">Add blocks from the sidebar to start building.</p>
             </div>
           ) : (
-            sections.map((section, idx) => (
-              <div
-                key={section.id}
-                onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
-                className={cn(
-                  "relative cursor-pointer group/block transition-all",
-                  selectedBlockIndex === idx
-                    ? "ring-2 ring-primary ring-inset"
-                    : "hover:ring-2 hover:ring-primary/30 hover:ring-inset"
-                )}
-              >
-                {/* Block label overlay */}
-                <div className={cn(
-                  "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity",
-                  selectedBlockIndex === idx
-                    ? "opacity-100 bg-primary text-primary-foreground"
-                    : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
-                )}>
-                  {section.label}
+            sections.map((section, idx) => {
+              const isSelected = selectedBlockIndex === idx;
+              return (
+                <div
+                  key={section.id}
+                  onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
+                  className={cn(
+                    "relative cursor-pointer group/block transition-all",
+                    isSelected
+                      ? "ring-2 ring-primary ring-inset"
+                      : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+                  )}
+                >
+                  {/* Block label badge */}
+                  <div className={cn(
+                    "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
+                    isSelected
+                      ? "opacity-100 bg-primary text-primary-foreground"
+                      : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
+                  )}>
+                    {section.label}
+                  </div>
+
+                  {/* Floating toolbar (selected or hover) */}
+                  {(isSelected || true) && (
+                    <div className={cn(
+                      "transition-opacity",
+                      isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+                    )}>
+                      <FloatingBlockToolbar
+                        isFirst={idx === 0}
+                        isLast={idx === sections.length - 1}
+                        onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
+                        onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
+                        onDuplicate={() => onDuplicateBlock?.(idx)}
+                        onSettings={() => onSelectBlock(idx)}
+                        onDelete={() => onDeleteBlock?.(idx)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Block content */}
+                  <SectionRenderer sections={[section]} accentColor={accentColor} />
                 </div>
-                {/* Render the actual block */}
-                <SectionRenderer sections={[section]} accentColor={accentColor} />
-              </div>
-            ))
+              );
+            })
           )}
+
+          {/* Footer */}
+          {showHeaderFooter && <PreviewFooter site={site} />}
         </div>
       </div>
     </div>

@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   FileText, Link2, Paintbrush, Settings, ChevronLeft, Eye, MoreHorizontal,
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
-  Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical,
+  Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,8 @@ import { getTemplateSections, createSection, type PageSection, type SectionType 
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
-import PreviewRenderer from "@/components/website-editor/PreviewRenderer";
+import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/components/website-editor/PreviewRenderer";
+import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -813,6 +815,10 @@ const PagesPanel = ({
   selectedBlockIndex,
   onSelectBlock,
   onActiveSectionsChange,
+  onNavLinksChange,
+  onActivePageChange,
+  onUpdateActiveSections,
+  registerActivePageActions,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -820,6 +826,10 @@ const PagesPanel = ({
   selectedBlockIndex: number | null;
   onSelectBlock: (idx: number | null) => void;
   onActiveSectionsChange: (sections: PageSection[]) => void;
+  onNavLinksChange: (links: PreviewNavLink[]) => void;
+  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean }) => void;
+  onUpdateActiveSections: (sections: PageSection[]) => void;
+  registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -843,6 +853,7 @@ const PagesPanel = ({
       setEditingSectionsPageId(id);
       onActiveSectionsChange(page.sections || []);
       onSelectBlock(null);
+      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true });
     }
   };
 
@@ -919,6 +930,27 @@ const PagesPanel = ({
 
     load();
   }, [photographerId]);
+
+  // Emit nav links whenever pages change
+  useEffect(() => {
+    const links: PreviewNavLink[] = pages
+      .filter((p) => p.inMenu && p.type !== "folder")
+      .map((p) => ({ id: p.id, label: p.label, isHome: p.isHome }));
+    onNavLinksChange(links);
+  }, [pages, onNavLinksChange]);
+
+  // Register API for parent to update active sections (for preview toolbar actions)
+  useEffect(() => {
+    if (!editingSectionsPageId) { registerActivePageActions(null); return; }
+    registerActivePageActions({
+      setSections: (newSections: PageSection[]) => {
+        findAndUpdate(editingSectionsPageId, { sections: newSections });
+        onActiveSectionsChange(newSections);
+      },
+    });
+    return () => registerActivePageActions(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingSectionsPageId, pages]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
@@ -1227,19 +1259,102 @@ const BlogPanel = () => (
   </div>
 );
 
-const StylePanel = () => (
-  <div className="p-4 space-y-4">
-    <h3 className="text-sm font-medium text-foreground">Style</h3>
-    <p className="text-xs text-muted-foreground">Customize your site's appearance.</p>
-    <div className="space-y-2">
-      {["Template", "Colors", "Typography"].map((item) => (
-        <div key={item} className="p-3 border border-border rounded-md hover:bg-muted/30 cursor-pointer transition-colors">
-          <p className="text-xs font-medium">{item}</p>
+// ── Style Panel (functional) ─────────────────────────────────────────────────
+const FONT_OPTIONS = [
+  { value: "inter", label: "Inter (Default)" },
+  { value: "playfair", label: "Playfair Display" },
+  { value: "cormorant", label: "Cormorant Garamond" },
+  { value: "montserrat", label: "Montserrat" },
+  { value: "poppins", label: "Poppins" },
+];
+
+const StylePanel = ({ photographerId, site, onSiteChange }: {
+  photographerId: string | null;
+  site: PreviewSiteConfig | null;
+  onSiteChange: (patch: Partial<Record<string, any>>) => void;
+}) => {
+  return (
+    <div className="p-4 space-y-5 overflow-y-auto h-full">
+      <h3 className="text-sm font-medium text-foreground">Style</h3>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Logo</label>
+        <ImageUploadField
+          value={site?.logoUrl ?? ""}
+          onChange={(url) => onSiteChange({ logo_url: url || null })}
+          photographerId={photographerId}
+          folder="logo"
+          aspectClass="aspect-[3/1]"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Accent Color</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={site?.accentColor || "#000000"}
+            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+          />
+          <Input
+            value={site?.accentColor || "#000000"}
+            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+            className="h-9 text-sm flex-1"
+          />
         </div>
-      ))}
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Header Background</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={site?.headerBg || "#ffffff"}
+            onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
+            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+          />
+          <Input
+            value={site?.headerBg || ""}
+            onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
+            className="h-9 text-sm flex-1"
+            placeholder="#ffffff"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Footer Background</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={site?.footerBg || "#000000"}
+            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
+            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+          />
+          <Input
+            value={site?.footerBg || ""}
+            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
+            className="h-9 text-sm flex-1"
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Footer Text</label>
+        <Input
+          value={site?.footerText || ""}
+          onChange={(e) => onSiteChange({ footer_text: e.target.value })}
+          className="h-9 text-sm"
+          placeholder="© 2026 Studio Name"
+        />
+      </div>
+
+      <p className="text-[10px] text-muted-foreground/70 pt-2">Changes save automatically and reflect in the preview.</p>
     </div>
-  </div>
-);
+  );
+};
 
 const SettingsPanel = () => (
   <div className="p-4 space-y-4">
@@ -1262,20 +1377,120 @@ const WebsiteEditor = () => {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
+  const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
+  const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean }>({ id: null, showHeaderFooter: true });
+  const [site, setSite] = useState<PreviewSiteConfig | null>(null);
+  const [displayName, setDisplayName] = useState<string>("Studio");
+  const [publishing, setPublishing] = useState(false);
+  const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Load photographer + site config
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("photographers")
-      .select("store_slug")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setStoreSlug((data as any).store_slug ?? null);
-      });
+    (async () => {
+      const { data: ph } = await supabase
+        .from("photographers")
+        .select("store_slug, full_name, business_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (ph) {
+        setStoreSlug((ph as any).store_slug ?? null);
+        setDisplayName((ph as any).business_name || (ph as any).full_name || "Studio");
+      }
+      const { data: s } = await supabase
+        .from("photographer_site")
+        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text")
+        .eq("photographer_id", user.id)
+        .maybeSingle();
+      if (s) {
+        setSite({
+          logoUrl: (s as any).logo_url,
+          accentColor: (s as any).accent_color || "#000000",
+          headerBg: (s as any).header_bg_color,
+          headerTextColor: (s as any).header_text_color,
+          footerBg: (s as any).footer_bg_color,
+          footerTextColor: (s as any).footer_text_color,
+          footerText: (s as any).footer_text,
+          displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
+        });
+      } else {
+        setSite({ displayName: "Studio", accentColor: "#000000" });
+      }
+    })();
   }, [user]);
+
+  const updateSite = useCallback(async (patch: Record<string, any>) => {
+    if (!user) return;
+    // Optimistic local update
+    setSite((prev) => ({
+      ...(prev || {}),
+      logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
+      accentColor: patch.accent_color !== undefined ? patch.accent_color : prev?.accentColor,
+      headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
+      footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
+      footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
+      displayName: prev?.displayName ?? displayName,
+    }));
+    await supabase
+      .from("photographer_site")
+      .upsert({ photographer_id: user.id, ...patch } as any, { onConflict: "photographer_id" });
+  }, [user, displayName]);
+
+  const handleNavLinksChange = useCallback((links: PreviewNavLink[]) => {
+    setNavLinks(links);
+  }, []);
+
+  const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean }) => {
+    setActivePageInfo(info);
+  }, []);
+
+  const handleRegisterActions = useCallback((api: { setSections: (s: PageSection[]) => void } | null) => {
+    setPageActions(() => api);
+  }, []);
+
+  // Toolbar actions on the preview blocks
+  const moveBlock = (from: number, to: number) => {
+    if (!pageActions) return;
+    if (to < 0 || to >= activePageSections.length) return;
+    const next = [...activePageSections];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    pageActions.setSections(next);
+    if (selectedBlockIndex === from) setSelectedBlockIndex(to);
+  };
+  const duplicateBlock = (idx: number) => {
+    if (!pageActions) return;
+    const src = activePageSections[idx];
+    if (!src) return;
+    const dup: PageSection = JSON.parse(JSON.stringify(src));
+    dup.id = crypto.randomUUID();
+    const next = [...activePageSections];
+    next.splice(idx + 1, 0, dup);
+    pageActions.setSections(next);
+  };
+  const deleteBlock = (idx: number) => {
+    if (!pageActions) return;
+    const next = activePageSections.filter((_, i) => i !== idx);
+    pageActions.setSections(next);
+    if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
+  };
+
+  const handlePublish = async () => {
+    if (!storeSlug) {
+      toast.error("Set up your store URL first in Personalize.");
+      return;
+    }
+    setPublishing(true);
+    try {
+      // All page edits already persist via PagesPanel.findAndUpdate.
+      toast.success("Site published");
+      window.open(`/store/${storeSlug}`, "_blank");
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
     pages: <PagesPanel
@@ -1285,9 +1500,13 @@ const WebsiteEditor = () => {
       selectedBlockIndex={selectedBlockIndex}
       onSelectBlock={setSelectedBlockIndex}
       onActiveSectionsChange={setActivePageSections}
+      onNavLinksChange={handleNavLinksChange}
+      onActivePageChange={handleActivePageChange}
+      onUpdateActiveSections={setActivePageSections}
+      registerActivePageActions={handleRegisterActions}
     />,
     blog: <BlogPanel />,
-    style: <StylePanel />,
+    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
     settings: <SettingsPanel />,
   };
 
@@ -1341,17 +1560,28 @@ const WebsiteEditor = () => {
       <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
         <div className="h-12 border-b border-border bg-card flex items-center justify-between px-4 shrink-0">
           <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-[11px] gap-1.5"
-            onClick={() => {
-              if (storeSlug) window.open(`/store/${storeSlug}`, "_blank");
-            }}
-          >
-            <Eye className="h-3 w-3" />
-            Preview
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[11px] gap-1.5"
+              onClick={() => {
+                if (storeSlug) window.open(`/store/${storeSlug}`, "_blank");
+              }}
+            >
+              <Eye className="h-3 w-3" />
+              Preview
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 text-[11px] gap-1.5"
+              onClick={handlePublish}
+              disabled={publishing}
+            >
+              {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+              Publish
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 min-h-0">
@@ -1362,6 +1592,14 @@ const WebsiteEditor = () => {
               setSelectedBlockIndex(idx);
               setActiveTab("pages");
             }}
+            onMoveBlock={moveBlock}
+            onDuplicateBlock={duplicateBlock}
+            onDeleteBlock={deleteBlock}
+            accentColor={site?.accentColor || "#000000"}
+            site={site}
+            navLinks={navLinks}
+            activePageId={activePageInfo.id}
+            showHeaderFooter={activePageInfo.showHeaderFooter}
           />
         </div>
       </div>
