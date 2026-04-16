@@ -982,11 +982,16 @@ const PagesPanel = ({
 
     if (activePage === id) {
       const nextHomeId = getHomePageId(nextPages);
-      setActivePage(nextHomeId ?? nextPages[0]?.id ?? "");
+      const nextId = nextHomeId ?? nextPages[0]?.id ?? "";
+      selectPage(nextId, nextPages);
     }
 
     if (settingsPage?.id === id) setSettingsPage(null);
-    if (editingSectionsPageId === id) setEditingSectionsPageId(null);
+    if (editingSectionsPageId === id) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange([]);
+      onSelectBlock(null);
+    }
     await supabase.from("site_pages").delete().eq("id", id);
   };
 
