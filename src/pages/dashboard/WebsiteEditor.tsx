@@ -146,7 +146,7 @@ const PageContextMenu = ({
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.id === "home"}>
+        <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.isHome}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
         </DropdownMenuItem>
       </DropdownMenuContent>
