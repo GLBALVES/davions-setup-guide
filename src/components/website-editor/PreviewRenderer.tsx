@@ -26,6 +26,9 @@ export interface PreviewNavLink {
   id: string;
   label: string;
   isHome?: boolean;
+  type?: "page" | "folder" | "link";
+  url?: string;
+  children?: PreviewNavLink[];
 }
 
 interface PreviewRendererProps {
@@ -75,19 +78,87 @@ function PreviewNav({
           )}
         </div>
         <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => onNavigatePage?.(link.id)}
-              className={cn(
-                "text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70",
-                activePageId === link.id && "underline underline-offset-4"
-              )}
-              style={{ color: fg ?? undefined }}
-            >
-              {link.label}
-            </button>
-          ))}
+          {navLinks.map((link) => {
+            if (link.type === "link") {
+              return (
+                <a
+                  key={link.id}
+                  href={link.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70"
+                  style={{ color: fg ?? undefined }}
+                >
+                  {link.label}
+                </a>
+              );
+            }
+            if (link.type === "folder" && link.children && link.children.length > 0) {
+              return (
+                <div key={link.id} className="relative group">
+                  <button
+                    className="text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70 inline-flex items-center gap-1"
+                    style={{ color: fg ?? undefined }}
+                  >
+                    {link.label}
+                    <span className="text-[8px] opacity-60">▼</span>
+                  </button>
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all min-w-[180px] z-20"
+                  >
+                    <div
+                      className="border border-border/40 shadow-lg py-2"
+                      style={{ backgroundColor: bg ?? "hsl(var(--background))" }}
+                    >
+                      {link.children.map((child) => {
+                        if (child.type === "link") {
+                          return (
+                            <a
+                              key={child.id}
+                              href={child.url || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block px-4 py-2 text-[11px] tracking-[0.2em] uppercase font-light hover:opacity-70 text-left"
+                              style={{ color: fg ?? undefined }}
+                            >
+                              {child.label}
+                            </a>
+                          );
+                        }
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => onNavigatePage?.(child.id)}
+                            className={cn(
+                              "block w-full px-4 py-2 text-[11px] tracking-[0.2em] uppercase font-light hover:opacity-70 text-left",
+                              activePageId === child.id && "underline underline-offset-4"
+                            )}
+                            style={{ color: fg ?? undefined }}
+                          >
+                            {child.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            // Default: page
+            return (
+              <button
+                key={link.id}
+                onClick={() => onNavigatePage?.(link.id)}
+                className={cn(
+                  "text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70",
+                  activePageId === link.id && "underline underline-offset-4"
+                )}
+                style={{ color: fg ?? undefined }}
+              >
+                {link.label}
+              </button>
+            );
+          })}
         </nav>
       </div>
     </header>

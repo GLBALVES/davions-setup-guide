@@ -953,11 +953,20 @@ const PagesPanel = ({
     load();
   }, [photographerId]);
 
-  // Emit nav links whenever pages change
+  // Emit nav links whenever pages change — every item with inMenu becomes a menu entry
   useEffect(() => {
-    const links: PreviewNavLink[] = pages
-      .filter((p) => p.inMenu && p.type !== "folder")
-      .map((p) => ({ id: p.id, label: p.label, isHome: p.isHome }));
+    const toNavLink = (p: SitePage): PreviewNavLink => ({
+      id: p.id,
+      label: p.label,
+      isHome: p.isHome,
+      type: p.type,
+      url: p.type === "link" ? p.slug : undefined,
+      children:
+        p.type === "folder" && p.children
+          ? p.children.filter((c) => c.inMenu).map(toNavLink)
+          : undefined,
+    });
+    const links: PreviewNavLink[] = pages.filter((p) => p.inMenu).map(toNavLink);
     onNavLinksChange(links);
   }, [pages, onNavLinksChange]);
 
