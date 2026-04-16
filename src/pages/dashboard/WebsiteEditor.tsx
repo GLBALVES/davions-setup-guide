@@ -55,10 +55,27 @@ interface SitePage {
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
 const INITIAL_PAGES: SitePage[] = [
-  { id: "home", label: "Home", type: "page", icon: "🏠", inMenu: true, status: "online", showHeaderFooter: true },
+  { id: "home", label: "Home", type: "page", icon: "🏠", isHome: true, inMenu: true, status: "online", showHeaderFooter: true },
   { id: "contact", label: "Contact", type: "page", inMenu: true, status: "online", showHeaderFooter: true },
   { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
 ];
+
+// Map the visual site template (chosen in Website Settings) to a homepage page-template
+// so the Home page is born with content matching the chosen design.
+const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
+  editorial: "homepage-1",
+  sierra: "homepage-1",
+  canvas: "homepage-1",
+  seville: "homepage-1",
+  clean: "homepage-1",
+  grid: "homepage-2",
+  magazine: "homepage-2",
+  avery: "homepage-2",
+  milo: "homepage-2",
+};
+
+const getHomeTemplateForSite = (siteTemplate?: string | null) =>
+  SITE_TEMPLATE_TO_HOME_TEMPLATE[siteTemplate ?? ""] ?? "homepage-1";
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS: { id: EditorTab; icon: React.ElementType; label: string }[] = [
