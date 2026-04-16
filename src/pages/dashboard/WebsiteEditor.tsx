@@ -815,6 +815,10 @@ const PagesPanel = ({
   selectedBlockIndex,
   onSelectBlock,
   onActiveSectionsChange,
+  onNavLinksChange,
+  onActivePageChange,
+  onUpdateActiveSections,
+  registerActivePageActions,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -822,6 +826,10 @@ const PagesPanel = ({
   selectedBlockIndex: number | null;
   onSelectBlock: (idx: number | null) => void;
   onActiveSectionsChange: (sections: PageSection[]) => void;
+  onNavLinksChange: (links: PreviewNavLink[]) => void;
+  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean }) => void;
+  onUpdateActiveSections: (sections: PageSection[]) => void;
+  registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -845,6 +853,7 @@ const PagesPanel = ({
       setEditingSectionsPageId(id);
       onActiveSectionsChange(page.sections || []);
       onSelectBlock(null);
+      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true });
     }
   };
 
