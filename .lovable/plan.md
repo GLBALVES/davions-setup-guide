@@ -1,87 +1,81 @@
 
 
-# Plano: Tornar o Editor de Website Funcional
+# Plano: Editor de Website Funcional (Estilo Pixieset)
 
-## Problema atual
+## Problema Central
 
-O editor tem toda a infraestrutura de sidebar (páginas, blocos, reordenar, configurar), mas o **preview não renderiza os blocos**. O `PublicSiteRenderer` ainda usa o sistema legado de templates (editorial, grid, etc.) com seções hardcoded vindas de `photographer_site`. Os dados de `site_pages.page_content.sections` são ignorados.
+O editor tem **três desconexões críticas**:
 
-## Arquitetura proposta
+1. **Preview é um iframe estático** — carrega `/store/:slug` uma vez e nunca atualiza quando blocos são editados na sidebar
+2. **Sem edição inline** — não dá para clicar num bloco no preview e editar texto/imagens diretamente
+3. **Sem sincronização bidirecional** — sidebar e preview são mundos separados
+
+O resultado: você adiciona blocos, reordena, configura... e nada muda no preview ao lado.
+
+## Solução: Preview Direto (sem iframe)
+
+A mudança fundamental é **eliminar o iframe** e renderizar o preview diretamente dentro do componente `WebsiteEditor`, usando os mesmos dados do estado React da sidebar.
 
 ```text
-┌─ Editor Sidebar ─┐     ┌─ Preview (iframe) ─────────────────┐
-│  Pages list       │     │                                     │
-│  Block list       │────▶│  PublicSiteRenderer                 │
-│  Block settings   │     │    ├─ SharedNav                     │
-│  Add/remove/move  │     │    ├─ SectionRenderer (NEW)         │
-│                   │     │    │   ├─ HeroBlock                 │
-│                   │     │    │   ├─ TextBlock                 │
-│                   │     │    │   ├─ GalleryGridBlock          │
-│                   │     │    │   ├─ ContactFormBlock          │
-│                   │     │    │   └─ ... (all 25 types)        │
-│                   │     │    └─ SharedFooter                  │
-└───────────────────┘     └─────────────────────────────────────┘
+┌─ Sidebar ─────────┐  ┌─ Preview (mesmo React tree) ──────┐
+│  Pages / Blocks    │  │                                    │
+│  [state: sections] │──│  SectionRenderer(sections)         │
+│  add/move/delete   │  │  ← renderiza direto do state       │
+│  block settings    │  │  ← mudanças refletem instantâneo   │
+└────────────────────┘  └────────────────────────────────────┘
 ```
 
 ## Etapas
 
-### 1. Criar `SectionRenderer` — componente que renderiza blocos do editor
-Novo arquivo `src/components/store/SectionRenderer.tsx` com um componente para cada `SectionType`:
-- **Hero**: imagem de fundo, headline, subtitle, CTA
-- **Text**: corpo de texto com markdown básico
-- **Image+Text / Text+Image**: layout 2 colunas com imagem e texto
-- **Gallery Grid / Masonry**: grid de imagens (placeholder quando vazio)
-- **Contact Form**: formulário funcional (nome, email, mensagem)
-- **CTA**: bloco de call-to-action
-- **FAQ Accordion**: perguntas com accordion nativo
-- **Pricing Table**: cards de planos
-- **Timeline**: eventos em linha vertical
-- **Testimonials**: quotes de clientes
-- **Stats**: números lado a lado
-- **Team**: membros com foto
-- **Video**: embed de vídeo (YouTube/Vimeo)
-- **Carousel / Slideshow**: slider de imagens
-- **Instagram Feed**: grid de fotos do IG
-- **Columns 2/3**: layouts multi-coluna
-- **Map**: embed Google Maps
-- **Social Links / Logo Strip / Embed / Spacer / Divider**: utilitários
+### 1. Substituir iframe por preview inline no WebsiteEditor
+- Remover o `<iframe src="/store/...">` (linhas 1308-1328)
+- No lugar, renderizar `<SectionRenderer sections={activePageSections} />` envolvido por SharedNav + SharedFooter
+- Usar um container com `overflow-y-auto` e fundo branco para simular a página
+- Os dados de `site`, `photographer`, etc. são carregados uma vez via query ao montar o editor
 
-Cada bloco lê de `section.props` e aplica `blockSettings` (bg, padding, animation).
+### 2. Atualização instantânea
+- Como o `SectionRenderer` lê diretamente do state `sections` da página ativa, qualquer mudança (add, delete, reorder, edit props) reflete **imediatamente** no preview — zero delay
+- Não precisa de `postMessage`, polling, nem reload
 
-### 2. Integrar no `PublicSiteRenderer`
-- Quando `visibleSections` é um array de section types (vindo do `site_pages`), em vez de renderizar o template legado, renderizar cada seção via `SectionRenderer`
-- Manter SharedNav + SharedFooter wrapping
-- O `StorePage.tsx` já passa `homeSections` — agora precisamos também passar os dados completos das sections (não só os types)
+### 3. Edição inline de blocos no preview
+- Ao clicar num bloco no preview, abrir o painel de configurações desse bloco na sidebar (BlockSettingsPanel)
+- Cada bloco renderizado ganha um wrapper com hover outline + click handler que identifica o índice do bloco
+- Similar ao `BlockWrapper` que já existe, mas agora no contexto do preview inline
 
-### 3. Ajustar `StorePage.tsx` para passar sections completas
-- Em vez de passar apenas `sections_order` (array de strings), passar o array completo de `PageSection[]` do `page_content.sections`
-- Novo prop no `PublicSiteRenderer`: `pageSections?: PageSection[]`
-- Quando `pageSections` existe, renderizar via `SectionRenderer`; senão, fallback para template legado
+### 4. Edição de propriedades dos blocos na sidebar
+- O `BlockSettingsPanel` já existe mas só tem configurações genéricas (bg, padding, animation)
+- Expandir para incluir campos específicos por tipo:
+  - **Hero**: headline, subtitle, imagem de fundo, CTA text/link
+  - **Text**: corpo de texto (textarea)
+  - **Image+Text**: upload de imagem, título, corpo
+  - **Gallery Grid**: seleção de imagens do storage, número de colunas
+  - **Contact Form**: campos do formulário, email de destino
+  - **CTA**: título, texto do botão, link
+  - **FAQ**: lista de perguntas/respostas (add/remove)
+  - **Stats**: lista de estatísticas (número + label)
+  - **Testimonials**: lista de depoimentos
+  - **Video**: URL do vídeo
 
-### 4. Auto-refresh do preview
-- Adicionar `key` no iframe baseado em hash dos sections para forçar reload quando blocos mudam
-- Alternativa: usar `postMessage` para comunicação editor→preview (mais fluido)
+### 5. Upload de imagens nos blocos
+- Integrar com o storage existente (`site-assets` bucket ou similar)
+- Nos campos de imagem do BlockSettingsPanel, adicionar botão de upload que salva no storage e retorna a URL pública
+- Atualizar `section.props.image` / `section.props.backgroundImage` etc.
 
-### 5. Sub-páginas também renderizam blocos
-- O bloco de sub-página no `PublicSiteRenderer` (linha 1866) atualmente mostra só texto estático
-- Mudar para renderizar as `sections` da página via `SectionRenderer`
-
-## Escopo do SectionRenderer (prioridade)
-
-Fase 1 (essencial — esta implementação):
-- Hero, Text, Image+Text, Text+Image, CTA, Gallery Grid, Gallery Masonry, Contact Form, Spacer, Divider, Video, FAQ, Stats, Testimonials
-
-Fase 2 (próxima iteração):
-- Pricing Table, Timeline, Team, Carousel, Slideshow, Instagram Feed, Map, Social Links, Logo Strip, Embed, Columns 2/3
+### 6. Responsividade do preview
+- Adicionar botões de viewport na toolbar (Desktop / Tablet / Mobile)
+- Aplicar `max-width` ao container do preview: `100%` / `768px` / `375px`
 
 ## Arquivos modificados
-- **Novo**: `src/components/store/SectionRenderer.tsx`
-- **Editado**: `src/components/store/PublicSiteRenderer.tsx` — integrar SectionRenderer
-- **Editado**: `src/pages/store/StorePage.tsx` — passar sections completas
-- **Editado**: `src/pages/store/SiteSubPage.tsx` — renderizar blocos em sub-páginas
+
+- **Editado**: `src/pages/dashboard/WebsiteEditor.tsx` — substituir iframe por preview inline, conectar estado
+- **Editado**: `src/components/website-editor/BlockSettingsPanel.tsx` — expandir com campos específicos por tipo de bloco
+- **Novo**: `src/components/website-editor/PreviewRenderer.tsx` — wrapper do preview com click handlers nos blocos
+- **Editado**: `src/components/store/SectionRenderer.tsx` — adicionar suporte a `onClick` / wrapper mode para edição
 
 ## Resultado esperado
-- Criar uma página com template "About 1" → preview mostra Hero + Image/Text + Stats + Testimonials + CTA renderizados de verdade
-- Reordenar blocos na sidebar → preview reflete a nova ordem
-- Adicionar/remover blocos → preview atualiza
+
+- Editar texto do Hero na sidebar → preview atualiza em tempo real
+- Clicar num bloco no preview → abre configurações dele na sidebar
+- Adicionar/remover/reordenar blocos → preview reflete instantaneamente
+- Upload de imagem num bloco → aparece no preview imediatamente
 
