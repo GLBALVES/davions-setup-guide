@@ -26,6 +26,7 @@ import { getTemplateSections, createSection, type PageSection, type SectionType 
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
+import PreviewRenderer from "@/components/website-editor/PreviewRenderer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -548,18 +549,21 @@ const PageSectionsPanel = ({
   onBack,
   onEditSection,
   onSectionsChange,
+  selectedBlockIndex,
+  onSelectBlock,
 }: {
   pageLabel: string;
   sections: PageSection[];
   onBack: () => void;
   onEditSection: (section: string) => void;
   onSectionsChange: (sections: PageSection[]) => void;
+  selectedBlockIndex: number | null;
+  onSelectBlock: (idx: number | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState<number>(0);
-  const [blockSettingsIdx, setBlockSettingsIdx] = useState<number | null>(null);
 
   const moveSection = (from: number, dir: -1 | 1) => {
     const to = from + dir;
@@ -578,7 +582,7 @@ const PageSectionsPanel = ({
 
   const deleteSection = (idx: number) => {
     onSectionsChange(sections.filter((_, i) => i !== idx));
-    if (blockSettingsIdx === idx) setBlockSettingsIdx(null);
+    if (selectedBlockIndex === idx) onSelectBlock(null);
   };
 
   const updateVariant = (idx: number, variant: string) => {
@@ -600,8 +604,8 @@ const PageSectionsPanel = ({
   };
 
   // If block settings panel is open, show it
-  if (blockSettingsIdx !== null && sections[blockSettingsIdx]) {
-    const section = sections[blockSettingsIdx];
+  if (selectedBlockIndex !== null && sections[selectedBlockIndex]) {
+    const section = sections[selectedBlockIndex];
     const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
     return (
       <BlockSettingsPanel
@@ -609,10 +613,15 @@ const PageSectionsPanel = ({
         settings={blockSettings}
         onUpdate={(s) => {
           const next = [...sections];
-          next[blockSettingsIdx] = { ...section, props: { ...section.props, blockSettings: s } };
+          next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
           onSectionsChange(next);
         }}
-        onBack={() => setBlockSettingsIdx(null)}
+        onUpdateProps={(newProps) => {
+          const next = [...sections];
+          next[selectedBlockIndex] = { ...section, props: newProps };
+          onSectionsChange(next);
+        }}
+        onBack={() => onSelectBlock(null)}
       />
     );
   }
@@ -650,7 +659,13 @@ const PageSectionsPanel = ({
             )}
 
             {/* Section item */}
-            <div className="group relative flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted/40 transition-colors">
+            <div
+              onClick={() => onSelectBlock(idx)}
+              className={cn(
+                "group relative flex items-center gap-2 px-2 py-2 rounded-md transition-colors cursor-pointer",
+                selectedBlockIndex === idx ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
+              )}
+            >
               {/* Drag handle placeholder */}
               <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
 
@@ -693,7 +708,7 @@ const PageSectionsPanel = ({
                   <Copy className="h-3 w-3" />
                 </button>
                 <button
-                  onClick={() => setBlockSettingsIdx(idx)}
+                  onClick={() => onSelectBlock(idx)}
                   className="p-1 rounded hover:bg-muted text-muted-foreground"
                   title="Block settings"
                 >
@@ -795,10 +810,16 @@ const PagesPanel = ({
   editingSection,
   setEditingSection,
   photographerId,
+  selectedBlockIndex,
+  onSelectBlock,
+  onActiveSectionsChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
   photographerId: string | null;
+  selectedBlockIndex: number | null;
+  onSelectBlock: (idx: number | null) => void;
+  onActiveSectionsChange: (sections: PageSection[]) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -814,6 +835,17 @@ const PagesPanel = ({
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
+  const selectPage = (id: string, pagesList?: SitePage[]) => {
+    setActivePage(id);
+    const allP = flattenPages(pagesList || pages);
+    const page = allP.find((p) => p.id === id);
+    if (page?.type === "page") {
+      setEditingSectionsPageId(id);
+      onActiveSectionsChange(page.sections || []);
+      onSelectBlock(null);
+    }
+  };
+
   const buildTree = (rows: any[]) => {
     const topLevel = rows.filter((r: any) => !r.parent_id);
     const result: SitePage[] = topLevel.map((row: any) => {
@@ -822,7 +854,8 @@ const PagesPanel = ({
     });
     setPages(result);
     const homeId = getHomePageId(result);
-    setActivePage(homeId ?? result[0]?.id ?? "");
+    const firstId = homeId ?? result[0]?.id ?? "";
+    selectPage(firstId, result);
   };
 
   // ── Load from DB ──
@@ -949,11 +982,16 @@ const PagesPanel = ({
 
     if (activePage === id) {
       const nextHomeId = getHomePageId(nextPages);
-      setActivePage(nextHomeId ?? nextPages[0]?.id ?? "");
+      const nextId = nextHomeId ?? nextPages[0]?.id ?? "";
+      selectPage(nextId, nextPages);
     }
 
     if (settingsPage?.id === id) setSettingsPage(null);
-    if (editingSectionsPageId === id) setEditingSectionsPageId(null);
+    if (editingSectionsPageId === id) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange([]);
+      onSelectBlock(null);
+    }
     await supabase.from("site_pages").delete().eq("id", id);
   };
 
@@ -1033,10 +1071,13 @@ const PagesPanel = ({
         <PageSectionsPanel
           pageLabel={targetPage.label}
           sections={targetPage.sections || []}
-          onBack={() => setEditingSectionsPageId(null)}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
           onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
           onSectionsChange={(newSections) => {
             findAndUpdate(editingSectionsPageId, { sections: newSections });
+            onActiveSectionsChange(newSections);
           }}
         />
       );
@@ -1115,7 +1156,7 @@ const PagesPanel = ({
               key={page.id}
               page={page}
               activePage={activePage}
-              onSelect={(id) => { setActivePage(id); setEditingSectionsPageId(id); }}
+              onSelect={(id) => selectPage(id)}
               onSettings={setSettingsPage}
               onToggleMenu={toggleMenu}
               onDelete={deletePage}
@@ -1126,7 +1167,7 @@ const PagesPanel = ({
               key={page.id}
               page={page}
               active={activePage === page.id}
-              onSelect={() => { setActivePage(page.id); if (page.type === "page") setEditingSectionsPageId(page.id); }}
+              onSelect={() => selectPage(page.id)}
               onSettings={() => setSettingsPage(page)}
               onToggleMenu={() => toggleMenu(page.id)}
               onDelete={() => deletePage(page.id)}
@@ -1146,7 +1187,7 @@ const PagesPanel = ({
                 key={page.id}
                 page={page}
                 active={activePage === page.id}
-                onSelect={() => { setActivePage(page.id); if (page.type === "page") setEditingSectionsPageId(page.id); }}
+                onSelect={() => selectPage(page.id)}
                 onSettings={() => setSettingsPage(page)}
                 onToggleMenu={() => toggleMenu(page.id)}
                 onDelete={() => deletePage(page.id)}
@@ -1219,6 +1260,8 @@ const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
+  const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -1235,7 +1278,14 @@ const WebsiteEditor = () => {
   }, [user]);
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
-    pages: <PagesPanel editingSection={editingSection} setEditingSection={setEditingSection} photographerId={user?.id ?? null} />,
+    pages: <PagesPanel
+      editingSection={editingSection}
+      setEditingSection={setEditingSection}
+      photographerId={user?.id ?? null}
+      selectedBlockIndex={selectedBlockIndex}
+      onSelectBlock={setSelectedBlockIndex}
+      onActiveSectionsChange={setActivePageSections}
+    />,
     blog: <BlogPanel />,
     style: <StylePanel />,
     settings: <SettingsPanel />,
@@ -1304,39 +1354,15 @@ const WebsiteEditor = () => {
           </Button>
         </div>
 
-        <div className="flex-1 relative">
-          {storeSlug ? (
-            <>
-              <iframe
-                src={`/store/${storeSlug}`}
-                className="absolute inset-0 w-full h-full border-0"
-                title="Site Preview"
-              />
-              {/* Clickable hero overlay to open Header Slider editor */}
-              <button
-                onClick={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
-                className="absolute top-0 left-0 right-0 h-[60%] cursor-pointer group z-10"
-                title="Edit Header Slider"
-              >
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/50 transition-colors rounded-sm">
-                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground/80 text-background text-[10px] px-2 py-1 rounded flex items-center gap-1.5">
-                    <Image className="h-3 w-3" />
-                    Header Slider
-                  </div>
-                </div>
-              </button>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center h-full p-8">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 mx-auto rounded-full bg-muted/60 flex items-center justify-center">
-                  <Eye className="h-6 w-6 text-muted-foreground/60" />
-                </div>
-                <p className="text-sm text-muted-foreground">Live preview will appear here</p>
-                <p className="text-xs text-muted-foreground/60">Configure your store slug in Settings to see the preview</p>
-              </div>
-            </div>
-          )}
+        <div className="flex-1 min-h-0">
+          <PreviewRenderer
+            sections={activePageSections}
+            selectedBlockIndex={selectedBlockIndex}
+            onSelectBlock={(idx) => {
+              setSelectedBlockIndex(idx);
+              setActiveTab("pages");
+            }}
+          />
         </div>
       </div>
     </div>
