@@ -613,6 +613,11 @@ const PageSectionsPanel = ({
           next[blockSettingsIdx] = { ...section, props: { ...section.props, blockSettings: s } };
           onSectionsChange(next);
         }}
+        onUpdateProps={(newProps) => {
+          const next = [...sections];
+          next[blockSettingsIdx] = { ...section, props: newProps };
+          onSectionsChange(next);
+        }}
         onBack={() => setBlockSettingsIdx(null)}
       />
     );
