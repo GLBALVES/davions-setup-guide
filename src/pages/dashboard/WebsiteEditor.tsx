@@ -564,7 +564,6 @@ const PageSectionsPanel = ({
   const we = t.websiteEditor;
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState<number>(0);
-  const [blockSettingsIdx, setBlockSettingsIdx] = useState<number | null>(null);
 
   const moveSection = (from: number, dir: -1 | 1) => {
     const to = from + dir;
