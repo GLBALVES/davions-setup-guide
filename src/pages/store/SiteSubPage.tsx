@@ -98,7 +98,7 @@ const SiteSubPage = () => {
     .map((p) => ({ label: p.title, href: `/store/${slug}/page/${p.slug}` }));
 
   const pageContent = (page.page_content as Record<string, any>) ?? {};
-  const sections = (page.sections_order as any[]) ?? [];
+  const sections = Array.isArray(pageContent.sections) ? pageContent.sections.filter((s: any) => s?.type) : [];
 
   return (
     <PublicSiteRenderer
