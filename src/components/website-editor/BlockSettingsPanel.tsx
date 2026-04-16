@@ -498,10 +498,12 @@ export const BlockSettingsPanel = ({
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Background Image</label>
-            <div className="border border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center gap-1.5 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer">
-              <Upload className="h-4 w-4 text-muted-foreground/50" />
-              <span className="text-[10px] text-muted-foreground">Upload Image</span>
-            </div>
+            <ImageUploadField
+              value={s.backgroundImage}
+              onChange={(url) => update({ backgroundImage: url })}
+              photographerId={photographerId}
+              folder="block-bg"
+            />
           </div>
 
           {s.backgroundImage && (
