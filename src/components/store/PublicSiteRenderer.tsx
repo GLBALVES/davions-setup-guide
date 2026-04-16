@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
@@ -232,6 +233,8 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** Full page sections data from site_pages.page_content.sections */
+  pageSections?: PageSection[];
   /** Override the saved site_template for live preview (from ?preview= URL param) */
   previewTemplate?: string | null;
   /** When true (editor mode), text nodes become contentEditable */
@@ -1866,6 +1869,7 @@ export default function PublicSiteRenderer(props: Props) {
   if (subPageTitle) {
     const accentColor = site?.accent_color || "#000000";
     const { navLinks, handleNavClick } = derived;
+    const subSections = (props.subPageSections as PageSection[] | undefined) ?? [];
     return (
       <>
         <SEOHead
@@ -1888,16 +1892,23 @@ export default function PublicSiteRenderer(props: Props) {
             ctaText=""
             onNavClick={handleNavClick}
           />
-          <div className="pt-24 max-w-4xl mx-auto px-6 pb-20">
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
-            {subPageData?.content ? (
-              <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
-                {subPageData.content}
+          <div className="pt-20">
+            {subSections.length > 0 ? (
+              <SectionRenderer sections={subSections} accentColor={accentColor} />
+            ) : subPageData?.content ? (
+              <div className="max-w-4xl mx-auto px-6 py-16">
+                <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+                <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {subPageData.content}
+                </div>
               </div>
             ) : (
-              <p className="text-sm font-light text-muted-foreground">
-                This page has no content yet. Edit it in the site editor.
-              </p>
+              <div className="max-w-4xl mx-auto px-6 py-16">
+                <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
+                <p className="text-sm font-light text-muted-foreground">
+                  This page has no content yet. Edit it in the site editor.
+                </p>
+              </div>
             )}
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
@@ -1943,6 +1954,40 @@ export default function PublicSiteRenderer(props: Props) {
               </p>
             </section>
           </main>
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+        </div>
+      </>
+    );
+  }
+
+  // ── Page sections rendering (site_pages system) ──
+  if (props.pageSections && props.pageSections.length > 0) {
+    const accentColor = site?.accent_color || "#000000";
+    const { navLinks, handleNavClick } = derived;
+    return (
+      <>
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          ogImage={site?.og_image_url || site?.site_hero_image_url || undefined}
+          ogUrl={seoUrl}
+          canonical={seoUrl}
+        />
+        <div className="min-h-screen bg-background">
+          <SharedNav
+            scrolled={props.scrolled}
+            mobileMenuOpen={props.mobileMenuOpen}
+            setMobileMenuOpen={props.setMobileMenuOpen}
+            displayName={displayName}
+            logoUrl={site?.logo_url ?? null}
+            accentColor={accentColor}
+            navLinks={navLinks}
+            showBooking={false}
+            ctaText=""
+            onNavClick={handleNavClick}
+            site={site}
+          />
+          <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
       </>
