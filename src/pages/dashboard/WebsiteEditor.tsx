@@ -582,7 +582,7 @@ const PageSectionsPanel = ({
 
   const deleteSection = (idx: number) => {
     onSectionsChange(sections.filter((_, i) => i !== idx));
-    if (blockSettingsIdx === idx) setBlockSettingsIdx(null);
+    if (selectedBlockIndex === idx) onSelectBlock(null);
   };
 
   const updateVariant = (idx: number, variant: string) => {
