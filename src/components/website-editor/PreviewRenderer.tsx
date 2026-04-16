@@ -26,6 +26,9 @@ export interface PreviewNavLink {
   id: string;
   label: string;
   isHome?: boolean;
+  type?: "page" | "folder" | "link";
+  url?: string;
+  children?: PreviewNavLink[];
 }
 
 interface PreviewRendererProps {
