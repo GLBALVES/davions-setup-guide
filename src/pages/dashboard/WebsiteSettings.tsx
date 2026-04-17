@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
@@ -914,71 +915,58 @@ const WebsiteSettings = () => {
                       <SectionHeading title="Template" description="Change your site layout template." />
                     </div>
 
-                    <AnimatePresence mode="wait">
-                      {!showTemplateGrid ? (
-                        <motion.div
-                          key="single"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="relative w-full max-w-[240px] group"
-                        >
-                          {(() => {
-                            const current = TEMPLATES.find(t => t.value === siteTemplate) ?? TEMPLATES[0];
-                            return (
-                              <>
-                                <TemplatePreviewCard
-                                  value={current.value}
-                                  label={current.label}
-                                  description={current.description}
-                                  selected
-                                  onClick={() => setShowTemplateGrid(true)}
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-                                  onClick={() => setShowTemplateGrid(true)}
-                                >
-                                  <Button variant="outline" size="sm" className="pointer-events-none">
-                                    Change template
-                                  </Button>
-                                </div>
-                              </>
-                            );
-                          })()}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="grid"
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          className="flex flex-col gap-3 max-w-4xl"
-                        >
-                          <div className="flex justify-end">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowTemplateGrid(false)}
-                              className="h-8 text-[11px] tracking-[0.15em] uppercase"
+                    <div className="relative w-full max-w-[240px] group">
+                      {(() => {
+                        const current = TEMPLATES.find(t => t.value === siteTemplate) ?? TEMPLATES[0];
+                        return (
+                          <>
+                            <TemplatePreviewCard
+                              value={current.value}
+                              label={current.label}
+                              description={current.description}
+                              selected
+                              onClick={() => setShowTemplateGrid(true)}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                              onClick={() => setShowTemplateGrid(true)}
                             >
-                              Cancel
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-3 gap-3">
-                            {TEMPLATES.map((tmpl) => (
-                              <TemplatePreviewCard
-                                key={tmpl.value}
-                                value={tmpl.value}
-                                label={tmpl.label}
-                                description={tmpl.description}
-                                selected={siteTemplate === tmpl.value}
-                                onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
-                                onPreview={() => setPreviewModalTemplate(tmpl.value)}
-                              />
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                              <Button variant="outline" size="sm" className="pointer-events-none">
+                                Change template
+                              </Button>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <Dialog open={showTemplateGrid} onOpenChange={setShowTemplateGrid}>
+                      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Choose a template</DialogTitle>
+                          <DialogDescription>
+                            Pick a layout for your site. You can preview each option before applying.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 py-2">
+                          {TEMPLATES.map((tmpl) => (
+                            <TemplatePreviewCard
+                              key={tmpl.value}
+                              value={tmpl.value}
+                              label={tmpl.label}
+                              description={tmpl.description}
+                              selected={siteTemplate === tmpl.value}
+                              onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
+                              onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                            />
+                          ))}
+                        </div>
+                        <DialogFooter>
+                          <Button variant="ghost" onClick={() => setShowTemplateGrid(false)}>
+                            Cancel
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </section>
                   {/* ── 4. Social Media ── */}
                   <section className="flex flex-col gap-5">
