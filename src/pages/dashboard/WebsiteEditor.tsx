@@ -1557,21 +1557,48 @@ const PagesPanel = ({
       setTemplatePickerOpen(true);
       return;
     }
+    if (type === "folder") {
+      setAddOpen(false);
+      setFolderName("");
+      setFolderModalOpen(true);
+      return;
+    }
     if (!photographerId) return;
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
-      label: type === "folder" ? "New Folder" : "New Link",
+      label: "New Link",
       type,
       isHome: false,
       inMenu: false,
       status: "online",
-      showHeaderFooter: type !== "link",
-      ...(type === "folder" ? { children: [] } : {}),
+      showHeaderFooter: false,
     };
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
     setAddOpen(false);
+
+    const row = sitePageToDbFields(newPage, photographerId, pages.length);
+    await supabase.from("site_pages").insert([row]);
+  };
+
+  const confirmCreateFolder = async () => {
+    if (!photographerId) return;
+    const label = folderName.trim() || "New Folder";
+    const newId = crypto.randomUUID();
+    const newPage: SitePage = {
+      id: newId,
+      label,
+      type: "folder",
+      isHome: false,
+      inMenu: true,
+      status: "online",
+      showHeaderFooter: true,
+      children: [],
+    };
+    setPages((prev) => [...prev, newPage]);
+    setFolderModalOpen(false);
+    setFolderName("");
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
     await supabase.from("site_pages").insert([row]);
