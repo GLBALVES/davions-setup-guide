@@ -53,6 +53,7 @@ interface SitePage {
   pageDescription?: string;
   hideFromSearch?: boolean;
   socialImage?: string;
+  headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
 }
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
