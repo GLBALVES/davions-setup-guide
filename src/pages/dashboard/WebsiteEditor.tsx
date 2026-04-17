@@ -1002,7 +1002,7 @@ const PagesPanel = ({
       setEditingSectionsPageId(null);
       onActiveSectionsChange(page.sections || []);
       onSelectBlock(null);
-      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true });
+      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true, headerConfig: page.headerConfig ?? null });
     }
   };
 
@@ -1606,7 +1606,7 @@ const WebsiteEditor = () => {
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
-  const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean }>({ id: null, showHeaderFooter: true });
+  const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }>({ id: null, showHeaderFooter: true, headerConfig: null });
   const [site, setSite] = useState<PreviewSiteConfig | null>(null);
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
@@ -1691,7 +1691,7 @@ const WebsiteEditor = () => {
     setNavLinks(links);
   }, []);
 
-  const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean }) => {
+  const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => {
     setActivePageInfo(info);
   }, []);
 
