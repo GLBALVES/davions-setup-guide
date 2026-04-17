@@ -2452,6 +2452,8 @@ const WebsiteEditor = () => {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
+  const sidebarPanel = (
+    <>
       {/* Icon tab strip */}
       <div className="w-12 border-r border-border bg-card flex flex-col items-center shrink-0">
         <Tooltip>
@@ -2492,7 +2494,7 @@ const WebsiteEditor = () => {
       </div>
 
       {/* Sidebar panel */}
-      <div className="w-[260px] border-r border-border bg-card flex flex-col shrink-0 overflow-hidden">
+      <div className="w-[260px] flex-1 sm:flex-none border-r border-border bg-card flex flex-col shrink-0 overflow-hidden">
         <div className="flex-1 min-h-0 overflow-hidden">
           {panelMap[activeTab]}
         </div>
@@ -2518,10 +2520,33 @@ const WebsiteEditor = () => {
           </Button>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen w-full bg-background overflow-hidden">
+      {!isMobile && sidebarPanel}
+
+      {isMobile && (
+        <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
+          <SheetContent side="left" className="p-0 w-[300px] flex flex-row">
+            {sidebarPanel}
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Preview area */}
       <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
-        <div className="h-12 border-b border-border bg-card flex items-center px-4 shrink-0">
+        <div className="h-12 border-b border-border bg-card flex items-center px-3 sm:px-4 shrink-0 gap-2">
+          {isMobile && (
+            <button
+              onClick={() => setMobilePanelOpen(true)}
+              className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              aria-label="Open menu"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          )}
           <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
         </div>
 
