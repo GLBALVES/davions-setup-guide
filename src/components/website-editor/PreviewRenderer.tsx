@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
+import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2 } from "lucide-react";
 
 type Viewport = "desktop" | "tablet" | "mobile";
