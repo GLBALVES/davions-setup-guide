@@ -1252,11 +1252,22 @@ const DndPagesArea = ({
     const fromZone = zoneOf(activeId);
     if (!fromZone) return;
 
-    // Drop onto a folder header → make subpage
+    const activeP = allPages.find((p) => p.id === activeId);
+    const isActiveFolder = activeP?.type === "folder";
+
+    // Drop onto a folder header explicit droppable → make subpage
     if (overId.startsWith("folder:")) {
       const folderId = overId.slice("folder:".length);
-      if (folderId === activeId) return; // can't drop folder on itself
+      if (folderId === activeId) return;
+      if (isActiveFolder) return;
       onMoveToFolder(activeId, folderId);
+      return;
+    }
+
+    // Drop onto a folder row id (sortable wraps the folder) → also nest as subpage
+    const overIsFolder = folders.some((f) => f.id === overId);
+    if (overIsFolder && !isActiveFolder && overId !== activeId) {
+      onMoveToFolder(activeId, overId);
       return;
     }
 
