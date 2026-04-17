@@ -1736,6 +1736,7 @@ const WebsiteEditor = () => {
             onMoveBlock={moveBlock}
             onDuplicateBlock={duplicateBlock}
             onDeleteBlock={deleteBlock}
+            onAddBlockAt={(idx) => { setInsertIndex(idx); setAddBlockOpen(true); }}
             accentColor={site?.accentColor || "#000000"}
             site={site}
             navLinks={navLinks}
@@ -1747,6 +1748,19 @@ const WebsiteEditor = () => {
           />
         </div>
       </div>
+
+      <AddBlockPicker
+        open={addBlockOpen}
+        onOpenChange={setAddBlockOpen}
+        onSelect={(type) => {
+          if (!pageActions) return;
+          const newSection = createSection(type);
+          const next = [...activePageSections];
+          next.splice(insertIndex, 0, newSection);
+          pageActions.setSections(next);
+          setSelectedBlockIndex(insertIndex);
+        }}
+      />
     </div>
   );
 };
