@@ -260,6 +260,8 @@ export default function PreviewRenderer({
   editMode = false,
   onPropChange,
   photographerId,
+  headerConfig,
+  onEditHeader,
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
@@ -309,13 +311,16 @@ export default function PreviewRenderer({
             fontFamily: site?.bodyFont || undefined,
           }}
         >
-          {/* Nav */}
+          {/* Header */}
           {showHeaderFooter && (
-            <PreviewNav
+            <PreviewHeader
               site={site}
               navLinks={navLinks}
               activePageId={activePageId}
               onNavigatePage={onNavigatePage}
+              config={headerConfig}
+              editMode={editMode}
+              onEditHeader={onEditHeader}
             />
           )}
 
