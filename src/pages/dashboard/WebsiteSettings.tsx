@@ -951,19 +951,31 @@ const WebsiteSettings = () => {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
-                          className="grid grid-cols-3 gap-3 max-w-4xl"
+                          className="flex flex-col gap-3 max-w-4xl"
                         >
-                          {TEMPLATES.map((tmpl) => (
-                            <TemplatePreviewCard
-                              key={tmpl.value}
-                              value={tmpl.value}
-                              label={tmpl.label}
-                              description={tmpl.description}
-                              selected={siteTemplate === tmpl.value}
-                              onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
-                              onPreview={() => setPreviewModalTemplate(tmpl.value)}
-                            />
-                          ))}
+                          <div className="flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowTemplateGrid(false)}
+                              className="h-8 text-[11px] tracking-[0.15em] uppercase"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            {TEMPLATES.map((tmpl) => (
+                              <TemplatePreviewCard
+                                key={tmpl.value}
+                                value={tmpl.value}
+                                label={tmpl.label}
+                                description={tmpl.description}
+                                selected={siteTemplate === tmpl.value}
+                                onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
+                                onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                              />
+                            ))}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
