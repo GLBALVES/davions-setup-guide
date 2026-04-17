@@ -292,7 +292,15 @@ export default function PreviewRenderer({
             "bg-background transition-all duration-300 min-h-full shadow-lg",
             "border border-border"
           )}
-          style={{ width: VIEWPORT_WIDTHS[viewport], maxWidth: "100%" }}
+          style={{
+            width: VIEWPORT_WIDTHS[viewport],
+            maxWidth: "100%",
+            // Apply site typography live in the preview
+            ["--site-heading-font" as any]: site?.headingFont
+              ? `'${site.headingFont}'`
+              : undefined,
+            fontFamily: site?.bodyFont || undefined,
+          }}
         >
           {/* Nav */}
           {showHeaderFooter && (
