@@ -1,5 +1,7 @@
 import { Camera, Images, Mail, MapPin, Clock, ArrowRight, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import EditableText from "@/components/website-editor/inline/EditableText";
+import EditableImage from "@/components/website-editor/inline/EditableImage";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -10,55 +12,88 @@ export interface PageSection {
   props: Record<string, any>;
 }
 
+export interface EditContext {
+  /** Update a single prop path on the section (path = "headline" or "items.0.question") */
+  onPropChange: (sectionId: string, path: string, value: any) => void;
+  photographerId?: string | null;
+}
+
 interface SectionRendererProps {
   sections: PageSection[];
   accentColor?: string;
+  /** When true, blocks render with inline editable handles. */
+  editMode?: boolean;
+  edit?: EditContext;
 }
 
 // ─── Section Renderer (routes to block components) ──────────────────────────
 
-export default function SectionRenderer({ sections, accentColor = "#000000" }: SectionRendererProps) {
+export default function SectionRenderer({
+  sections,
+  accentColor = "#000000",
+  editMode = false,
+  edit,
+}: SectionRendererProps) {
   return (
     <>
       {sections.map((section) => (
-        <SectionBlock key={section.id} section={section} accentColor={accentColor} />
+        <SectionBlock
+          key={section.id}
+          section={section}
+          accentColor={accentColor}
+          editMode={editMode}
+          edit={edit}
+        />
       ))}
     </>
   );
 }
 
-function SectionBlock({ section, accentColor }: { section: PageSection; accentColor: string }) {
+function SectionBlock({
+  section,
+  accentColor,
+  editMode,
+  edit,
+}: {
+  section: PageSection;
+  accentColor: string;
+  editMode: boolean;
+  edit?: EditContext;
+}) {
   const p = section.props || {};
+  // bound setter for this section
+  const set = (path: string, value: any) => edit?.onPropChange(section.id, path, value);
+  const ctx = { editMode, set, photographerId: edit?.photographerId };
 
   switch (section.type) {
     case "hero":
-      return <HeroBlock {...p} accentColor={accentColor} />;
+      return <HeroBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "text":
-      return <TextBlock {...p} />;
+      return <TextBlock {...p} ctx={ctx} />;
     case "image-text":
-      return <ImageTextBlock {...p} />;
+      return <ImageTextBlock {...p} ctx={ctx} />;
     case "text-image":
-      return <TextImageBlock {...p} />;
+      return <TextImageBlock {...p} ctx={ctx} />;
     case "gallery-grid":
       return <GalleryGridBlock {...p} label={section.label} />;
     case "gallery-masonry":
       return <GalleryMasonryBlock {...p} label={section.label} />;
     case "contact-form":
-      return <ContactFormBlock {...p} accentColor={accentColor} />;
+      return <ContactFormBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "cta":
-      return <CtaBlock {...p} accentColor={accentColor} />;
+      return <CtaBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "faq-accordion":
-      return <FaqBlock {...p} />;
+      return <FaqBlock {...p} ctx={ctx} />;
     case "pricing-table":
-      return <PricingBlock {...p} accentColor={accentColor} />;
+      return <PricingBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "timeline":
-      return <TimelineBlock {...p} accentColor={accentColor} />;
+      return <TimelineBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "testimonials":
-      return <TestimonialsBlock {...p} />;
+      return <TestimonialsBlock {...p} ctx={ctx} />;
     case "stats":
-      return <StatsBlock {...p} accentColor={accentColor} />;
+      return <StatsBlock {...p} accentColor={accentColor} ctx={ctx} />;
     case "team":
-      return <TeamBlock {...p} />;
+      return <TeamBlock {...p} ctx={ctx} />;
     case "video":
       return <VideoBlock {...p} />;
     case "spacer":
@@ -66,9 +101,9 @@ function SectionBlock({ section, accentColor }: { section: PageSection; accentCo
     case "divider":
       return <DividerBlock />;
     case "columns-2":
-      return <Columns2Block {...p} />;
+      return <Columns2Block {...p} ctx={ctx} />;
     case "columns-3":
-      return <Columns3Block {...p} />;
+      return <Columns3Block {...p} ctx={ctx} />;
     case "slideshow":
       return <SlideshowBlock {...p} />;
     case "carousel":
@@ -94,51 +129,102 @@ function SectionBlock({ section, accentColor }: { section: PageSection; accentCo
   }
 }
 
+type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photographerId?: string | null };
+
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
-function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, accentColor }: any) {
+function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const hasImage = !!backgroundImage;
+  const heroInner = (
+    <>
+      {hasImage && <div className="absolute inset-0 bg-black/40" />}
+      {!hasImage && <div className="absolute inset-0 bg-foreground/5" />}
+      <div className="relative z-10 text-center px-6 py-20 max-w-3xl mx-auto">
+        <EditableText
+          as="h1"
+          editMode={c.editMode}
+          value={headline || ""}
+          placeholder="Headline"
+          onChange={(v) => c.set("headline", v)}
+          className={`text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
+        />
+        {(c.editMode || subtitle) && (
+          <EditableText
+            as="p"
+            editMode={c.editMode}
+            value={subtitle || ""}
+            placeholder="Add a subtitle"
+            multiline
+            onChange={(v) => c.set("subtitle", v)}
+            className={`mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto block ${hasImage ? "text-white/80" : "text-muted-foreground"}`}
+          />
+        )}
+        {(c.editMode || ctaText) && (
+          <a
+            href={c.editMode ? undefined : (ctaLink || "#")}
+            onClick={(e) => c.editMode && e.preventDefault()}
+            style={{ borderColor: hasImage ? "white" : accentColor, color: hasImage ? "white" : accentColor }}
+            className="inline-block mt-8 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+          >
+            <EditableText
+              as="span"
+              editMode={c.editMode}
+              value={ctaText || ""}
+              placeholder="Button text"
+              onChange={(v) => c.set("ctaText", v)}
+              className="inline-block"
+            />
+          </a>
+        )}
+      </div>
+    </>
+  );
+
+  if (c.editMode) {
+    return (
+      <EditableImage
+        value={backgroundImage}
+        onChange={(url) => c.set("backgroundImage", url)}
+        photographerId={c.photographerId}
+        folder="hero"
+      >
+        <section
+          className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden"
+          style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          {heroInner}
+        </section>
+      </EditableImage>
+    );
+  }
+
   return (
     <section
       className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden"
       style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
-      {hasImage && <div className="absolute inset-0 bg-black/40" />}
-      {!hasImage && <div className="absolute inset-0 bg-foreground/5" />}
-      <div className="relative z-10 text-center px-6 py-20 max-w-3xl">
-        <h1
-          className={`text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
-        >
-          {headline || "Headline"}
-        </h1>
-        {subtitle && (
-          <p className={`mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto ${hasImage ? "text-white/80" : "text-muted-foreground"}`}>
-            {subtitle}
-          </p>
-        )}
-        {ctaText && (
-          <a
-            href={ctaLink || "#"}
-            style={{ borderColor: hasImage ? "white" : accentColor, color: hasImage ? "white" : accentColor }}
-            className="inline-block mt-8 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
-          >
-            {ctaText}
-          </a>
-        )}
-      </div>
+      {heroInner}
     </section>
   );
 }
 
 // ─── Text ───────────────────────────────────────────────────────────────────
 
-function TextBlock({ body }: any) {
+function TextBlock({ body, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6">
       <div className="max-w-3xl mx-auto">
-        <div className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line">
-          {body || "Start writing here…"}
-        </div>
+        <EditableText
+          as="div"
+          editMode={c.editMode}
+          value={body || ""}
+          placeholder="Start writing here…"
+          multiline
+          onChange={(v) => c.set("body", v)}
+          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+        />
       </div>
     </section>
   );
@@ -146,22 +232,50 @@ function TextBlock({ body }: any) {
 
 // ─── Image + Text ───────────────────────────────────────────────────────────
 
-function ImageTextBlock({ image, title, body }: any) {
+function ImageTextBlock({ image, title, body, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
-        <div className="w-full md:w-1/2 aspect-[4/3] bg-muted/30 overflow-hidden rounded">
-          {image ? (
-            <img src={image} alt={title || ""} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Camera className="h-8 w-8 text-muted-foreground/30" />
+        <div className="w-full md:w-1/2">
+          <EditableImage
+            value={image}
+            onChange={(url) => c.set("image", url)}
+            photographerId={c.photographerId}
+            folder="image-text"
+            editMode={c.editMode}
+          >
+            <div className="aspect-[4/3] bg-muted/30 overflow-hidden rounded">
+              {image ? (
+                <img src={image} alt={title || ""} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-muted-foreground/30" />
+                </div>
+              )}
             </div>
-          )}
+          </EditableImage>
         </div>
         <div className="w-full md:w-1/2">
-          {title && <h2 className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground">{title}</h2>}
-          <p className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{body || ""}</p>
+          {(c.editMode || title) && (
+            <EditableText
+              as="h2"
+              editMode={c.editMode}
+              value={title || ""}
+              placeholder="Add a title"
+              onChange={(v) => c.set("title", v)}
+              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+            />
+          )}
+          <EditableText
+            as="p"
+            editMode={c.editMode}
+            value={body || ""}
+            placeholder="Add body text"
+            multiline
+            onChange={(v) => c.set("body", v)}
+            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+          />
         </div>
       </div>
     </section>
@@ -170,22 +284,50 @@ function ImageTextBlock({ image, title, body }: any) {
 
 // ─── Text + Image ───────────────────────────────────────────────────────────
 
-function TextImageBlock({ image, title, body }: any) {
+function TextImageBlock({ image, title, body, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row-reverse gap-10 items-center">
-        <div className="w-full md:w-1/2 aspect-[4/3] bg-muted/30 overflow-hidden rounded">
-          {image ? (
-            <img src={image} alt={title || ""} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Camera className="h-8 w-8 text-muted-foreground/30" />
+        <div className="w-full md:w-1/2">
+          <EditableImage
+            value={image}
+            onChange={(url) => c.set("image", url)}
+            photographerId={c.photographerId}
+            folder="text-image"
+            editMode={c.editMode}
+          >
+            <div className="aspect-[4/3] bg-muted/30 overflow-hidden rounded">
+              {image ? (
+                <img src={image} alt={title || ""} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-muted-foreground/30" />
+                </div>
+              )}
             </div>
-          )}
+          </EditableImage>
         </div>
         <div className="w-full md:w-1/2">
-          {title && <h2 className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground">{title}</h2>}
-          <p className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{body || ""}</p>
+          {(c.editMode || title) && (
+            <EditableText
+              as="h2"
+              editMode={c.editMode}
+              value={title || ""}
+              placeholder="Add a title"
+              onChange={(v) => c.set("title", v)}
+              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+            />
+          )}
+          <EditableText
+            as="p"
+            editMode={c.editMode}
+            value={body || ""}
+            placeholder="Add body text"
+            multiline
+            onChange={(v) => c.set("body", v)}
+            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+          />
         </div>
       </div>
     </section>
@@ -271,7 +413,8 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
 
 // ─── Contact Form ───────────────────────────────────────────────────────────
 
-function ContactFormBlock({ submitLabel = "Send", accentColor }: any) {
+function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6" id="contact">
       <div className="max-w-xl mx-auto">
@@ -281,11 +424,17 @@ function ContactFormBlock({ submitLabel = "Send", accentColor }: any) {
           <input type="email" placeholder="Your email" className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors" />
           <textarea rows={4} placeholder="Your message" className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors resize-none" />
           <button
-            type="submit"
+            type="button"
             style={{ borderColor: accentColor, color: accentColor }}
             className="w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
           >
-            {submitLabel}
+            <EditableText
+              as="span"
+              editMode={c.editMode}
+              value={submitLabel}
+              placeholder="Send"
+              onChange={(v) => c.set("submitLabel", v)}
+            />
           </button>
         </form>
       </div>
@@ -295,17 +444,32 @@ function ContactFormBlock({ submitLabel = "Send", accentColor }: any) {
 
 // ─── CTA ────────────────────────────────────────────────────────────────────
 
-function CtaBlock({ headline, buttonText, buttonLink, accentColor }: any) {
+function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-20 px-6 bg-muted/20">
       <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground">{headline || "Ready?"}</h2>
+        <EditableText
+          as="h2"
+          editMode={c.editMode}
+          value={headline || ""}
+          placeholder="Ready?"
+          onChange={(v) => c.set("headline", v)}
+          className="text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground block"
+        />
         <a
-          href={buttonLink || "#"}
+          href={c.editMode ? undefined : (buttonLink || "#")}
+          onClick={(e) => c.editMode && e.preventDefault()}
           style={{ borderColor: accentColor, color: accentColor }}
           className="inline-block px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
         >
-          {buttonText || "Get Started"}
+          <EditableText
+            as="span"
+            editMode={c.editMode}
+            value={buttonText || ""}
+            placeholder="Get Started"
+            onChange={(v) => c.set("buttonText", v)}
+          />
         </a>
       </div>
     </section>
@@ -314,7 +478,8 @@ function CtaBlock({ headline, buttonText, buttonLink, accentColor }: any) {
 
 // ─── FAQ Accordion ──────────────────────────────────────────────────────────
 
-function FaqBlock({ items = [] }: any) {
+function FaqBlock({ items = [], ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqItems = items.length > 0 ? items : [
     { question: "What is included?", answer: "Details about what's included…" },
@@ -328,15 +493,34 @@ function FaqBlock({ items = [] }: any) {
         <div className="divide-y divide-border">
           {faqItems.map((item: any, i: number) => (
             <div key={i}>
-              <button
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full flex items-center justify-between py-4 text-left text-sm font-light text-foreground hover:text-muted-foreground transition-colors"
-              >
-                {item.question}
-                <ChevronDown className={`h-4 w-4 transition-transform ${openIndex === i ? "rotate-180" : ""}`} />
-              </button>
-              {openIndex === i && (
-                <p className="pb-4 text-sm font-light text-muted-foreground leading-relaxed">{item.answer}</p>
+              <div className="w-full flex items-center justify-between py-4 text-left">
+                <EditableText
+                  as="span"
+                  editMode={c.editMode}
+                  value={item.question || ""}
+                  placeholder="Question"
+                  onChange={(v) => c.set(`items.${i}.question`, v)}
+                  className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                />
+                {!c.editMode && (
+                  <button
+                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                    className="ml-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${openIndex === i ? "rotate-180" : ""}`} />
+                  </button>
+                )}
+              </div>
+              {(c.editMode || openIndex === i) && (
+                <EditableText
+                  as="p"
+                  editMode={c.editMode}
+                  value={item.answer || ""}
+                  placeholder="Answer"
+                  multiline
+                  onChange={(v) => c.set(`items.${i}.answer`, v)}
+                  className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                />
               )}
             </div>
           ))}
@@ -348,7 +532,8 @@ function FaqBlock({ items = [] }: any) {
 
 // ─── Pricing Table ──────────────────────────────────────────────────────────
 
-function PricingBlock({ plans = [], accentColor }: any) {
+function PricingBlock({ plans = [], accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayPlans = plans.length > 0 ? plans : [
     { name: "Basic", price: "$199", features: ["1 hour", "10 photos"] },
     { name: "Standard", price: "$399", features: ["2 hours", "25 photos"] },
@@ -362,11 +547,34 @@ function PricingBlock({ plans = [], accentColor }: any) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayPlans.map((plan: any, i: number) => (
             <div key={i} className="border border-border rounded-lg p-6 text-center hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-light tracking-wide mb-2 text-foreground">{plan.name}</h3>
-              <p className="text-2xl font-extralight mb-4" style={{ color: accentColor }}>{plan.price || "—"}</p>
+              <EditableText
+                as="h3"
+                editMode={c.editMode}
+                value={plan.name || ""}
+                placeholder="Plan"
+                onChange={(v) => c.set(`plans.${i}.name`, v)}
+                className="text-lg font-light tracking-wide mb-2 text-foreground block"
+              />
+              <EditableText
+                as="p"
+                editMode={c.editMode}
+                value={plan.price || ""}
+                placeholder="$0"
+                onChange={(v) => c.set(`plans.${i}.price`, v)}
+                className="text-2xl font-extralight mb-4 block"
+                style={{ color: accentColor }}
+              />
               <ul className="space-y-2 text-sm font-light text-muted-foreground">
                 {(plan.features || []).map((f: string, fi: number) => (
-                  <li key={fi}>{f}</li>
+                  <li key={fi}>
+                    <EditableText
+                      as="span"
+                      editMode={c.editMode}
+                      value={f}
+                      placeholder="Feature"
+                      onChange={(v) => c.set(`plans.${i}.features.${fi}`, v)}
+                    />
+                  </li>
                 ))}
               </ul>
             </div>
@@ -379,7 +587,8 @@ function PricingBlock({ plans = [], accentColor }: any) {
 
 // ─── Timeline ───────────────────────────────────────────────────────────────
 
-function TimelineBlock({ events = [], accentColor }: any) {
+function TimelineBlock({ events = [], accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayEvents = events.length > 0 ? events : [
     { year: "2020", title: "Started", description: "The journey began" },
     { year: "2022", title: "Grew", description: "Expanded the studio" },
@@ -393,9 +602,28 @@ function TimelineBlock({ events = [], accentColor }: any) {
           {displayEvents.map((event: any, i: number) => (
             <div key={i} className="relative">
               <div className="absolute -left-[41px] w-4 h-4 rounded-full border-2 bg-background" style={{ borderColor: accentColor }} />
-              <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{event.year}</p>
-              <h3 className="text-lg font-light text-foreground mb-1">{event.title}</h3>
-              <p className="text-sm font-light text-muted-foreground">{event.description}</p>
+              <EditableText
+                as="p"
+                editMode={c.editMode}
+                value={event.year || ""}
+                onChange={(v) => c.set(`events.${i}.year`, v)}
+                className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1 block"
+              />
+              <EditableText
+                as="h3"
+                editMode={c.editMode}
+                value={event.title || ""}
+                onChange={(v) => c.set(`events.${i}.title`, v)}
+                className="text-lg font-light text-foreground mb-1 block"
+              />
+              <EditableText
+                as="p"
+                editMode={c.editMode}
+                value={event.description || ""}
+                multiline
+                onChange={(v) => c.set(`events.${i}.description`, v)}
+                className="text-sm font-light text-muted-foreground block"
+              />
             </div>
           ))}
         </div>
@@ -406,7 +634,8 @@ function TimelineBlock({ events = [], accentColor }: any) {
 
 // ─── Testimonials ───────────────────────────────────────────────────────────
 
-function TestimonialsBlock({ items = [] }: any) {
+function TestimonialsBlock({ items = [], ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayItems = items.length > 0 ? items : [
     { quote: "An incredible experience from start to finish.", author: "Client", role: "" },
     { quote: "The photos exceeded all our expectations.", author: "Client", role: "" },
@@ -419,9 +648,21 @@ function TestimonialsBlock({ items = [] }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
-              <p className="text-sm font-light text-muted-foreground leading-relaxed italic mb-3">"{item.quote}"</p>
+              <EditableText
+                as="p"
+                editMode={c.editMode}
+                value={item.quote || ""}
+                multiline
+                onChange={(v) => c.set(`items.${i}.quote`, v)}
+                className="text-sm font-light text-muted-foreground leading-relaxed italic mb-3 block"
+              />
               <footer className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                — {item.author}{item.role ? `, ${item.role}` : ""}
+                — <EditableText as="span" editMode={c.editMode} value={item.author || ""} onChange={(v) => c.set(`items.${i}.author`, v)} />
+                {(c.editMode || item.role) && (
+                  <>
+                    , <EditableText as="span" editMode={c.editMode} value={item.role || ""} placeholder="role" onChange={(v) => c.set(`items.${i}.role`, v)} />
+                  </>
+                )}
               </footer>
             </blockquote>
           ))}
@@ -433,7 +674,8 @@ function TestimonialsBlock({ items = [] }: any) {
 
 // ─── Stats ──────────────────────────────────────────────────────────────────
 
-function StatsBlock({ items = [], accentColor }: any) {
+function StatsBlock({ items = [], accentColor, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayItems = items.length > 0 ? items : [
     { value: "500+", label: "Sessions" },
     { value: "10+", label: "Years" },
@@ -445,8 +687,21 @@ function StatsBlock({ items = [], accentColor }: any) {
       <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
         {displayItems.map((item: any, i: number) => (
           <div key={i}>
-            <p className="text-3xl md:text-4xl font-extralight mb-1" style={{ color: accentColor }}>{item.value}</p>
-            <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{item.label}</p>
+            <EditableText
+              as="p"
+              editMode={c.editMode}
+              value={item.value || ""}
+              onChange={(v) => c.set(`items.${i}.value`, v)}
+              className="text-3xl md:text-4xl font-extralight mb-1 block"
+              style={{ color: accentColor }}
+            />
+            <EditableText
+              as="p"
+              editMode={c.editMode}
+              value={item.label || ""}
+              onChange={(v) => c.set(`items.${i}.label`, v)}
+              className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground block"
+            />
           </div>
         ))}
       </div>
@@ -456,7 +711,8 @@ function StatsBlock({ items = [], accentColor }: any) {
 
 // ─── Team ───────────────────────────────────────────────────────────────────
 
-function TeamBlock({ members = [] }: any) {
+function TeamBlock({ members = [], ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayMembers = members.length > 0 ? members : [
     { name: "Team Member", role: "Photographer", photo: "" },
   ];
@@ -468,17 +724,42 @@ function TeamBlock({ members = [] }: any) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {displayMembers.map((m: any, i: number) => (
             <div key={i} className="text-center">
-              <div className="w-28 h-28 mx-auto mb-4 rounded-full bg-muted/30 overflow-hidden">
-                {m.photo ? (
-                  <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Camera className="h-6 w-6 text-muted-foreground/30" />
-                  </div>
-                )}
-              </div>
-              <h3 className="text-sm font-light text-foreground">{m.name}</h3>
-              {m.role && <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1">{m.role}</p>}
+              <EditableImage
+                value={m.photo}
+                onChange={(url) => c.set(`members.${i}.photo`, url)}
+                photographerId={c.photographerId}
+                folder="team"
+                editMode={c.editMode}
+                className="w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden"
+              >
+                <div className="w-28 h-28 rounded-full bg-muted/30 overflow-hidden">
+                  {m.photo ? (
+                    <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+              </EditableImage>
+              <EditableText
+                as="h3"
+                editMode={c.editMode}
+                value={m.name || ""}
+                placeholder="Name"
+                onChange={(v) => c.set(`members.${i}.name`, v)}
+                className="text-sm font-light text-foreground block"
+              />
+              {(c.editMode || m.role) && (
+                <EditableText
+                  as="p"
+                  editMode={c.editMode}
+                  value={m.role || ""}
+                  placeholder="Role"
+                  onChange={(v) => c.set(`members.${i}.role`, v)}
+                  className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1 block"
+                />
+              )}
             </div>
           ))}
         </div>
@@ -534,12 +815,29 @@ function DividerBlock() {
 
 // ─── Columns 2 ──────────────────────────────────────────────────────────────
 
-function Columns2Block({ left, right }: any) {
+function Columns2Block({ left, right, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{left || "Left column"}</div>
-        <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{right || "Right column"}</div>
+        <EditableText
+          as="div"
+          editMode={c.editMode}
+          value={left || ""}
+          placeholder="Left column"
+          multiline
+          onChange={(v) => c.set("left", v)}
+          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+        />
+        <EditableText
+          as="div"
+          editMode={c.editMode}
+          value={right || ""}
+          placeholder="Right column"
+          multiline
+          onChange={(v) => c.set("right", v)}
+          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+        />
       </div>
     </section>
   );
@@ -547,13 +845,23 @@ function Columns2Block({ left, right }: any) {
 
 // ─── Columns 3 ──────────────────────────────────────────────────────────────
 
-function Columns3Block({ col1, col2, col3 }: any) {
+function Columns3Block({ col1, col2, col3, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
     <section className="py-16 px-6">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{col1 || "Column 1"}</div>
-        <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{col2 || "Column 2"}</div>
-        <div className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line">{col3 || "Column 3"}</div>
+        {(["col1", "col2", "col3"] as const).map((key, i) => (
+          <EditableText
+            key={key}
+            as="div"
+            editMode={c.editMode}
+            value={(({ col1, col2, col3 }: any) => ({ col1, col2, col3 } as any))({ col1, col2, col3 })[key] || ""}
+            placeholder={`Column ${i + 1}`}
+            multiline
+            onChange={(v) => c.set(key, v)}
+            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          />
+        ))}
       </div>
     </section>
   );
