@@ -83,7 +83,9 @@ export default function PageTemplatePickerModal({ open, onOpenChange, onSelect }
     : TEMPLATES.filter((t) => t.category === activeCategory || t.id === "blank");
 
   const handleCreate = () => {
-    const pageName = title.trim() || "New Page";
+    const tpl = TEMPLATES.find((t) => t.id === selectedTemplate);
+    const fallbackName = tpl && tpl.id !== "blank" ? tpl.name : "New Page";
+    const pageName = title.trim() || fallbackName;
     onSelect(selectedTemplate, pageName);
     setTitle("");
     setSelectedTemplate("blank");
