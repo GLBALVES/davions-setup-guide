@@ -1203,6 +1203,7 @@ const DndPagesArea = ({
   onRename,
   onMove,
   onReorder,
+  onMoveToFolder,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
