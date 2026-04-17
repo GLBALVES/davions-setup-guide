@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2 } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus } from "lucide-react";
+import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 
 type Viewport = "desktop" | "tablet" | "mobile";
 
