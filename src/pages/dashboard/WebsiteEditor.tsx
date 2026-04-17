@@ -1351,20 +1351,37 @@ const DndPagesArea = ({
         <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
           <SortableContext items={notMenuIds} strategy={verticalListSortingStrategy}>
             {nonMenuPages.map((page) => (
-              <SortableRow key={page.id} id={page.id}>
-                <PageItem
-                  page={page}
-                  active={activePage === page.id}
-                  folders={folders}
-                  onSelect={() => onSelect(page.id)}
-                  onSettings={() => onSettings(page)}
-                  onToggleMenu={() => onToggleMenu(page.id)}
-                  onDelete={() => onDelete(page.id)}
-                  onDuplicate={() => onDuplicate(page.id)}
-                  onRename={(label) => onRename(page.id, label)}
-                  onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
-                />
-              </SortableRow>
+              page.type === "folder" ? (
+                <SortableRow key={page.id} id={page.id}>
+                  <PageFolder
+                    page={page}
+                    activePage={activePage}
+                    folders={folders}
+                    onSelect={onSelect}
+                    onSettings={onSettings}
+                    onToggleMenu={onToggleMenu}
+                    onDelete={onDelete}
+                    onDuplicate={onDuplicate}
+                    onRename={onRename}
+                    onMoveToFolder={onMoveToFolder}
+                  />
+                </SortableRow>
+              ) : (
+                <SortableRow key={page.id} id={page.id}>
+                  <PageItem
+                    page={page}
+                    active={activePage === page.id}
+                    folders={folders}
+                    onSelect={() => onSelect(page.id)}
+                    onSettings={() => onSettings(page)}
+                    onToggleMenu={() => onToggleMenu(page.id)}
+                    onDelete={() => onDelete(page.id)}
+                    onDuplicate={() => onDuplicate(page.id)}
+                    onRename={(label) => onRename(page.id, label)}
+                    onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
+                  />
+                </SortableRow>
+              )
             ))}
           </SortableContext>
         </DroppableZone>
