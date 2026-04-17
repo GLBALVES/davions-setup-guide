@@ -1987,6 +1987,8 @@ export const translations = {
       rename: "Rename",
       switchTemplate: "Switch template",
       subpage: "Subpage",
+      noFolders: "No folders available",
+      removeFromFolder: "Remove from folder",
       showOnMenu: "Show on Menu",
       hideFromMenu: "Hide from Menu",
       getQrCode: "Get QR Code",
