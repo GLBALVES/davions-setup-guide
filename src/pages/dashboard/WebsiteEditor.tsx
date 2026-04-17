@@ -1885,6 +1885,8 @@ const WebsiteEditor = () => {
             editMode={true}
             onPropChange={handleBlockPropChange}
             photographerId={user?.id ?? null}
+            headerConfig={activePageInfo.headerConfig ?? null}
+            onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
           />
         </div>
       </div>
