@@ -533,6 +533,7 @@ const WebsiteSettings = () => {
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
   const [showTemplateGrid, setShowTemplateGrid] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -952,32 +953,59 @@ const WebsiteSettings = () => {
                       })()}
                     </div>
 
-                    <Dialog open={showTemplateGrid} onOpenChange={setShowTemplateGrid}>
-                      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Choose a template</DialogTitle>
-                          <DialogDescription>
-                            Pick a layout for your site. You can preview each option before applying.
-                          </DialogDescription>
+                    <Dialog
+                      open={showTemplateGrid}
+                      onOpenChange={(open) => {
+                        setShowTemplateGrid(open);
+                        if (open) setPendingTemplate(siteTemplate);
+                      }}
+                    >
+                      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col gap-0 overflow-hidden">
+                        {/* Sticky header */}
+                        <DialogHeader className="sticky top-0 z-10 bg-background border-b border-border px-6 py-4 flex-row items-center justify-between gap-4 space-y-0">
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <DialogTitle className="text-base">Choose a template</DialogTitle>
+                            <DialogDescription className="text-xs">
+                              Pick a layout for your site. Preview before applying.
+                            </DialogDescription>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 mr-8">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowTemplateGrid(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={!pendingTemplate || pendingTemplate === siteTemplate}
+                              onClick={() => {
+                                if (pendingTemplate) setSiteTemplate(pendingTemplate);
+                                setShowTemplateGrid(false);
+                              }}
+                            >
+                              Confirm
+                            </Button>
+                          </div>
                         </DialogHeader>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 py-2">
-                          {TEMPLATES.map((tmpl) => (
-                            <TemplatePreviewCard
-                              key={tmpl.value}
-                              value={tmpl.value}
-                              label={tmpl.label}
-                              description={tmpl.description}
-                              selected={siteTemplate === tmpl.value}
-                              onClick={() => { setSiteTemplate(tmpl.value); setShowTemplateGrid(false); }}
-                              onPreview={() => setPreviewModalTemplate(tmpl.value)}
-                            />
-                          ))}
+
+                        {/* Scrollable grid */}
+                        <div className="flex-1 overflow-y-auto px-6 py-5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {TEMPLATES.map((tmpl) => (
+                              <TemplatePreviewCard
+                                key={tmpl.value}
+                                value={tmpl.value}
+                                label={tmpl.label}
+                                description={tmpl.description}
+                                selected={(pendingTemplate ?? siteTemplate) === tmpl.value}
+                                onClick={() => setPendingTemplate(tmpl.value)}
+                                onPreview={() => setPreviewModalTemplate(tmpl.value)}
+                              />
+                            ))}
+                          </div>
                         </div>
-                        <DialogFooter>
-                          <Button variant="ghost" onClick={() => setShowTemplateGrid(false)}>
-                            Cancel
-                          </Button>
-                        </DialogFooter>
                       </DialogContent>
                     </Dialog>
                   </section>
