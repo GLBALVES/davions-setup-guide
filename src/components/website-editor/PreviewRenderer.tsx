@@ -254,6 +254,8 @@ export default function PreviewRenderer({
   onDuplicateBlock,
   onDeleteBlock,
   onAddBlockAt,
+  viewport: viewportProp,
+  onViewportChange,
   accentColor = "#000000",
   site,
   navLinks = [],
@@ -266,7 +268,12 @@ export default function PreviewRenderer({
   headerConfig,
   onEditHeader,
 }: PreviewRendererProps) {
-  const [viewport, setViewport] = useState<Viewport>("desktop");
+  const [viewportInternal, setViewportInternal] = useState<Viewport>("desktop");
+  const viewport = viewportProp ?? viewportInternal;
+  const setViewport = (v: Viewport) => {
+    if (onViewportChange) onViewportChange(v);
+    else setViewportInternal(v);
+  };
 
   const editCtx: EditContext | undefined = editMode && onPropChange
     ? { onPropChange, photographerId }
