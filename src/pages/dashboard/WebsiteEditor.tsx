@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -1312,6 +1313,8 @@ const PagesPanel = ({
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
+  const [folderName, setFolderName] = useState("");
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
@@ -1554,21 +1557,48 @@ const PagesPanel = ({
       setTemplatePickerOpen(true);
       return;
     }
+    if (type === "folder") {
+      setAddOpen(false);
+      setFolderName("");
+      setFolderModalOpen(true);
+      return;
+    }
     if (!photographerId) return;
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
-      label: type === "folder" ? "New Folder" : "New Link",
+      label: "New Link",
       type,
       isHome: false,
       inMenu: false,
       status: "online",
-      showHeaderFooter: type !== "link",
-      ...(type === "folder" ? { children: [] } : {}),
+      showHeaderFooter: false,
     };
     setPages((prev) => [...prev, newPage]);
     setSettingsPage(newPage);
     setAddOpen(false);
+
+    const row = sitePageToDbFields(newPage, photographerId, pages.length);
+    await supabase.from("site_pages").insert([row]);
+  };
+
+  const confirmCreateFolder = async () => {
+    if (!photographerId) return;
+    const label = folderName.trim() || "New Folder";
+    const newId = crypto.randomUUID();
+    const newPage: SitePage = {
+      id: newId,
+      label,
+      type: "folder",
+      isHome: false,
+      inMenu: true,
+      status: "online",
+      showHeaderFooter: true,
+      children: [],
+    };
+    setPages((prev) => [...prev, newPage]);
+    setFolderModalOpen(false);
+    setFolderName("");
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
     await supabase.from("site_pages").insert([row]);
@@ -1743,6 +1773,36 @@ const PagesPanel = ({
         onOpenChange={setTemplatePickerOpen}
         onSelect={handleTemplateSelect}
       />
+
+      <Dialog open={folderModalOpen} onOpenChange={setFolderModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{we.folder ?? "Folder"}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              autoFocus
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              placeholder="New Folder"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  confirmCreateFolder();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFolderModalOpen(false)}>
+              {t.common?.cancel ?? "Cancel"}
+            </Button>
+            <Button onClick={confirmCreateFolder}>
+              {t.common?.create ?? "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
