@@ -140,13 +140,32 @@ const StorePage = () => {
     );
   }
 
+  // Clean preview mode: ignore all live site_pages, extra nav links and live config content.
+  // Only the chosen template (visual layout) is shown with sanitized demo data.
+  const renderSite = cleanPreview
+    ? ({
+        site_hero_image_url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80",
+        site_headline: "Your Story, Beautifully Told",
+        site_subheadline: "Timeless photography for life's most meaningful moments.",
+        cta_text: "Book a Session",
+        cta_link: "#sessions",
+        about_title: "About",
+        about_image_url: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80",
+        show_about: true, show_store: true, show_booking: true, show_blog: false, show_contact: true,
+        quote_text: "Every photograph is a memory crafted to last forever.",
+        quote_author: "— Studio",
+        experience_title: "The Experience",
+        experience_text: "From the first conversation to your final gallery, every detail is handled with care.",
+      } as unknown as SiteConfig)
+    : site;
+
   return (
     <PublicSiteRenderer
-      photographer={photographer}
-      site={site}
-      sessions={sessions}
-      galleries={galleries}
-      emptyState={emptyState}
+      photographer={cleanPreview ? { ...photographer, full_name: "Studio", bio: null, business_name: "Studio" } : photographer}
+      site={renderSite}
+      sessions={cleanPreview ? [] : sessions}
+      galleries={cleanPreview ? [] : galleries}
+      emptyState={cleanPreview ? null : emptyState}
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
@@ -154,9 +173,9 @@ const StorePage = () => {
       sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={`/store/${slug}/blog`}
-      extraNavLinks={extraNavLinks}
-      visibleSections={homeSections}
-      pageSections={pageSections}
+      extraNavLinks={cleanPreview ? [] : extraNavLinks}
+      visibleSections={cleanPreview ? null : homeSections}
+      pageSections={cleanPreview ? [] : pageSections}
       previewTemplate={previewTemplate}
     />
   );
