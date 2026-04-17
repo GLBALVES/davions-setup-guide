@@ -1539,6 +1539,7 @@ const PagesPanel = ({
                 onToggleMenu={() => toggleMenu(page.id)}
                 onDelete={() => deletePage(page.id)}
                 onDuplicate={() => duplicatePage(page.id)}
+                onRename={(label) => findAndUpdate(page.id, { label })}
               />
             ))}
           </>
