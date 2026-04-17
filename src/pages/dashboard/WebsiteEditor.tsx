@@ -1144,6 +1144,7 @@ const DndPagesArea = ({
   onDuplicate,
   onRename,
   onMove,
+  onReorder,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
@@ -1156,48 +1157,105 @@ const DndPagesArea = ({
   onDuplicate: (id: string) => void;
   onRename: (id: string, label: string) => void;
   onMove: (id: string, target: DndZone) => void;
+  onReorder: (zone: DndZone, orderedIds: string[]) => void;
 }) => {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const [dragId, setDragId] = useState<string | null>(null);
 
   const allPages = [...menuPages, ...nonMenuPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
+  const menuIds = menuPages.map((p) => p.id);
+  const notMenuIds = nonMenuPages.map((p) => p.id);
+
+  const zoneOf = (id: string): DndZone | null => {
+    if (menuIds.includes(id)) return "menu";
+    if (notMenuIds.includes(id)) return "notmenu";
+    return null;
+  };
+
   const handleDragEnd = (e: DragEndEvent) => {
     setDragId(null);
-    const id = String(e.active.id);
-    const overId = e.over?.id ? String(e.over.id) as DndZone : null;
-    if (!overId) return;
-    const inMenuList = menuPages.some((p) => p.id === id);
-    if (overId === "menu" && !inMenuList) onMove(id, "menu");
-    else if (overId === "notmenu" && inMenuList) onMove(id, "notmenu");
+    const activeId = String(e.active.id);
+    if (!e.over) return;
+    const overId = String(e.over.id);
+
+    const fromZone = zoneOf(activeId);
+    if (!fromZone) return;
+
+    // Determine target zone: either dropping on a row (use its zone) or on a zone droppable
+    let toZone: DndZone | null = null;
+    if (overId === "menu" || overId === "notmenu") toZone = overId as DndZone;
+    else toZone = zoneOf(overId);
+    if (!toZone) return;
+
+    if (fromZone === toZone) {
+      // Reorder within the same zone
+      if (activeId === overId) return;
+      const list = toZone === "menu" ? menuIds : notMenuIds;
+      const oldIdx = list.indexOf(activeId);
+      const newIdx = list.indexOf(overId);
+      if (oldIdx < 0 || newIdx < 0) return;
+      onReorder(toZone, arrayMove(list, oldIdx, newIdx));
+    } else {
+      // Cross-zone move (visibility toggle)
+      onMove(activeId, toZone);
+    }
   };
 
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       onDragStart={(e: DragStartEvent) => setDragId(String(e.active.id))}
       onDragCancel={() => setDragId(null)}
       onDragEnd={handleDragEnd}
     >
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
         <DroppableZone id="menu" emptyHint={menuPages.length === 0 ? "Drop here to show in menu" : undefined}>
-          {menuPages.map((page) =>
-            page.type === "folder" ? (
-              <DraggablePageRow key={page.id} id={page.id}>
-                <PageFolder
-                  page={page}
-                  activePage={activePage}
-                  onSelect={onSelect}
-                  onSettings={onSettings}
-                  onToggleMenu={onToggleMenu}
-                  onDelete={onDelete}
-                  onDuplicate={onDuplicate}
-                  onRename={onRename}
-                />
-              </DraggablePageRow>
-            ) : (
-              <DraggablePageRow key={page.id} id={page.id}>
+          <SortableContext items={menuIds} strategy={verticalListSortingStrategy}>
+            {menuPages.map((page) =>
+              page.type === "folder" ? (
+                <SortableRow key={page.id} id={page.id}>
+                  <PageFolder
+                    page={page}
+                    activePage={activePage}
+                    onSelect={onSelect}
+                    onSettings={onSettings}
+                    onToggleMenu={onToggleMenu}
+                    onDelete={onDelete}
+                    onDuplicate={onDuplicate}
+                    onRename={onRename}
+                  />
+                </SortableRow>
+              ) : (
+                <SortableRow key={page.id} id={page.id}>
+                  <PageItem
+                    page={page}
+                    active={activePage === page.id}
+                    onSelect={() => onSelect(page.id)}
+                    onSettings={() => onSettings(page)}
+                    onToggleMenu={() => onToggleMenu(page.id)}
+                    onDelete={() => onDelete(page.id)}
+                    onDuplicate={() => onDuplicate(page.id)}
+                    onRename={(label) => onRename(page.id, label)}
+                  />
+                </SortableRow>
+              )
+            )}
+          </SortableContext>
+        </DroppableZone>
+
+        <div className="px-2 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{notInMenuLabel}</p>
+        </div>
+        <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
+          <SortableContext items={notMenuIds} strategy={verticalListSortingStrategy}>
+            {nonMenuPages.map((page) => (
+              <SortableRow key={page.id} id={page.id}>
                 <PageItem
                   page={page}
                   active={activePage === page.id}
@@ -1208,29 +1266,9 @@ const DndPagesArea = ({
                   onDuplicate={() => onDuplicate(page.id)}
                   onRename={(label) => onRename(page.id, label)}
                 />
-              </DraggablePageRow>
-            )
-          )}
-        </DroppableZone>
-
-        <div className="px-2 pt-4 pb-2">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{notInMenuLabel}</p>
-        </div>
-        <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
-          {nonMenuPages.map((page) => (
-            <DraggablePageRow key={page.id} id={page.id}>
-              <PageItem
-                page={page}
-                active={activePage === page.id}
-                onSelect={() => onSelect(page.id)}
-                onSettings={() => onSettings(page)}
-                onToggleMenu={() => onToggleMenu(page.id)}
-                onDelete={() => onDelete(page.id)}
-                onDuplicate={() => onDuplicate(page.id)}
-                onRename={(label) => onRename(page.id, label)}
-              />
-            </DraggablePageRow>
-          ))}
+              </SortableRow>
+            ))}
+          </SortableContext>
         </DroppableZone>
       </nav>
 
