@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getTemplateSections, type SectionType } from "./page-templates";
+import { getTemplateSections, type PageSection } from "./page-templates";
+import SectionRenderer from "@/components/store/SectionRenderer";
 
 // ── Template categories & items ──────────────────────────────────────────────
 interface PageTemplate {
