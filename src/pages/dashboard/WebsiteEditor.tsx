@@ -1520,6 +1520,32 @@ const WebsiteEditor = () => {
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
   };
 
+  // Inline edit: update a single prop path on a section, persist via pageActions
+  const handleBlockPropChange = useCallback((sectionId: string, path: string, value: any) => {
+    if (!pageActions) return;
+    const idx = activePageSections.findIndex((s) => s.id === sectionId);
+    if (idx === -1) return;
+    const next = activePageSections.map((s, i) => {
+      if (i !== idx) return s;
+      // deep-clone props and apply path
+      const newProps = JSON.parse(JSON.stringify(s.props || {}));
+      const parts = path.split(".");
+      let cursor: any = newProps;
+      for (let p = 0; p < parts.length - 1; p++) {
+        const key = parts[p];
+        const nextKey = parts[p + 1];
+        const nextIsIndex = /^\d+$/.test(nextKey);
+        if (cursor[key] === undefined || cursor[key] === null) {
+          cursor[key] = nextIsIndex ? [] : {};
+        }
+        cursor = cursor[key];
+      }
+      cursor[parts[parts.length - 1]] = value;
+      return { ...s, props: newProps };
+    });
+    pageActions.setSections(next);
+  }, [pageActions, activePageSections]);
+
   const handlePublish = async () => {
     if (!storeSlug) {
       toast.error("Set up your store URL first in Personalize.");
