@@ -533,6 +533,7 @@ const WebsiteSettings = () => {
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
   const [showTemplateGrid, setShowTemplateGrid] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
