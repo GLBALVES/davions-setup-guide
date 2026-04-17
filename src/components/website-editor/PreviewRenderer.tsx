@@ -44,6 +44,11 @@ interface PreviewRendererProps {
   activePageId?: string | null;
   onNavigatePage?: (pageId: string) => void;
   showHeaderFooter?: boolean;
+  /** Enables inline editing handles inside each block */
+  editMode?: boolean;
+  /** Called when an inline editor changes a prop on a section */
+  onPropChange?: (sectionId: string, path: string, value: any) => void;
+  photographerId?: string | null;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
