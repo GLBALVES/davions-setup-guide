@@ -37,7 +37,7 @@ import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
   PointerSensor, KeyboardSensor, useSensor, useSensors,
-  closestCenter, type DragEndEvent, type DragStartEvent,
+  closestCenter, pointerWithin, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, arrayMove,
@@ -345,12 +345,17 @@ const PageFolder = ({
   onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
   const [open, setOpen] = useState(true);
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
 
   return (
     <div>
       <div
+        ref={setDropRef}
         onClick={() => setOpen(!open)}
-        className="group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50"
+        className={cn(
+          "group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50",
+          isOver && "bg-primary/10 ring-1 ring-primary/40"
+        )}
       >
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
         <EditableLabel
@@ -1247,6 +1252,14 @@ const DndPagesArea = ({
     const fromZone = zoneOf(activeId);
     if (!fromZone) return;
 
+    // Drop onto a folder header → make subpage
+    if (overId.startsWith("folder:")) {
+      const folderId = overId.slice("folder:".length);
+      if (folderId === activeId) return; // can't drop folder on itself
+      onMoveToFolder(activeId, folderId);
+      return;
+    }
+
     // Determine target zone: either dropping on a row (use its zone) or on a zone droppable
     let toZone: DndZone | null = null;
     if (overId === "menu" || overId === "notmenu") toZone = overId as DndZone;
@@ -1270,7 +1283,7 @@ const DndPagesArea = ({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       onDragStart={(e: DragStartEvent) => setDragId(String(e.active.id))}
       onDragCancel={() => setDragId(null)}
       onDragEnd={handleDragEnd}
