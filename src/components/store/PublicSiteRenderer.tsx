@@ -843,9 +843,9 @@ function buildBlockMap(
                 : <div className="absolute inset-0 bg-foreground" />
               }
             </div>
-            <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-14 py-14 gap-5 bg-background">
+            <div className="w-full md:w-1/2 flex flex-col justify-center px-5 sm:px-8 md:px-14 py-10 md:py-14 gap-4 md:gap-5 bg-background">
               {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-muted-foreground">Photography by</p>}
-              <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight">{ed("site_headline", headline)}</h1>
               {(subheadline || editMode) && <p className="text-sm font-light text-muted-foreground leading-relaxed max-w-sm">{ed("site_subheadline", subheadline)}</p>}
               {showBooking && (site?.cta_link
                 ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor, color: accentColor }} className="self-start mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity">{ed("cta_text", ctaText)}</a>
@@ -862,9 +862,9 @@ function buildBlockMap(
               : <div className="absolute inset-0 bg-foreground" />
             }
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/75" />
-            <div className="relative z-10 h-full flex flex-col items-center justify-end pb-16 px-6 text-center">
+          <div className="relative z-10 h-full flex flex-col items-center justify-end pb-10 md:pb-16 px-5 sm:px-6 text-center">
               {!site?.logo_url && <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-3">Photography by</p>}
-              <h1 className="text-4xl md:text-6xl font-extralight tracking-[0.12em] uppercase text-white mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-6xl font-extralight tracking-[0.08em] md:tracking-[0.12em] uppercase text-white mb-3 md:mb-4" style={{ lineHeight: 1.1 }}>{ed("site_headline", headline)}</h1>
               {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-md leading-relaxed mb-7">{ed("site_subheadline", subheadline)}</p>}
               {showBooking && (site?.cta_link
                 ? <a href={editMode ? undefined : site.cta_link} style={{ borderColor: accentColor }} className="mt-2 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase bg-white/10 hover:bg-white/20 transition-colors text-white">{ed("cta_text", ctaText)}</a>
@@ -882,8 +882,8 @@ function buildBlockMap(
             : <div className="absolute inset-0 bg-foreground" />
           }
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
-          <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-3xl">
-            <h1 className="text-3xl md:text-4xl font-light tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
+          <div className="relative z-10 h-full flex flex-col justify-center px-5 sm:px-8 md:px-16 max-w-3xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-[0.08em] md:tracking-[0.1em] uppercase text-white mb-3 leading-tight">{ed("site_headline", headline)}</h1>
             {(subheadline || editMode) && <p className="text-sm font-light text-white/65 max-w-sm leading-relaxed mb-5">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (
               site?.cta_link
@@ -901,12 +901,12 @@ function buildBlockMap(
             : <div className="absolute inset-0 bg-foreground" />
           }
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-          <div className="relative z-10 h-full flex flex-col justify-end pb-12 px-8 md:px-16">
-            <div className="flex items-start gap-5 max-w-2xl">
-              <div className="w-0.5 h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
+          <div className="relative z-10 h-full flex flex-col justify-end pb-10 md:pb-12 px-5 sm:px-8 md:px-16">
+            <div className="flex items-start gap-4 md:gap-5 max-w-2xl">
+              <div className="w-0.5 h-12 md:h-16 mt-1 shrink-0" style={{ backgroundColor: accentColor }} />
               <div>
                 <p className="text-[9px] tracking-[0.5em] uppercase text-white/50 mb-2">Photography</p>
-                <h1 className="text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{ed("site_headline", headline)}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-light text-white leading-tight mb-3" style={{ letterSpacing: "0.05em" }}>{ed("site_headline", headline)}</h1>
                 {(subheadline || editMode) && <p className="text-sm font-light text-white/65 leading-relaxed max-w-md">{ed("site_subheadline", subheadline)}</p>}
                 {showBooking && (
                   <div className="mt-5">
@@ -930,9 +930,9 @@ function buildBlockMap(
             : <div className="absolute inset-0 bg-foreground" />
           }
           <div className="absolute inset-0 bg-black/55" />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-4">
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-5 sm:px-6 text-center gap-3 md:gap-4">
             <div className="w-10 h-px bg-white/40 mb-2" />
-            <h1 className="text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-extralight text-white leading-none tracking-wide">{ed("site_headline", headline)}</h1>
             {(subheadline || editMode) && <p className="text-base font-light text-white/60 max-w-lg leading-relaxed mt-2">{ed("site_subheadline", subheadline)}</p>}
             {showBooking && (
               <div className="mt-4">
@@ -1546,8 +1546,8 @@ function SierraTemplate({ props, derived }: { props: Props; derived: ReturnType<
           <span>03</span>
         </div>
         {/* Center: large serif title */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
-          <h1 className="text-4xl md:text-7xl font-extralight tracking-[0.15em] uppercase text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        <div className="relative z-10 h-full flex flex-col items-center justify-center px-5 sm:px-6 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-7xl font-extralight tracking-[0.1em] md:tracking-[0.15em] uppercase text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
             {ed("site_headline", headline)}
           </h1>
           {(subheadline || editMode) && (
@@ -1617,8 +1617,8 @@ function CanvasTemplate({ props, derived }: { props: Props; derived: ReturnType<
           </div>
         </div>
         {/* Center italic title */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
-          <h1 className="text-3xl md:text-6xl font-extralight tracking-wide text-white italic leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        <div className="relative z-10 h-full flex flex-col items-center justify-center px-5 sm:px-6 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-6xl font-extralight tracking-wide text-white italic leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
             {ed("site_headline", headline)}
           </h1>
           {(subheadline || editMode) && (
@@ -1727,15 +1727,15 @@ function SevilleTemplate({ props, derived }: { props: Props; derived: ReturnType
   // Override hero with Seville contained design
   if (showBlock("hero")) {
     blocks.hero = (
-      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="pt-20 px-6 md:px-12">
-        <div className="relative w-full max-w-6xl mx-auto overflow-hidden" style={{ aspectRatio: "16/7" }}>
+      <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="pt-20 px-4 sm:px-6 md:px-12">
+        <div className="relative w-full max-w-6xl mx-auto overflow-hidden min-h-[280px] sm:min-h-0" style={{ aspectRatio: "16/7" }}>
           {site?.site_hero_image_url
             ? <img src={site.site_hero_image_url} alt={headline} className="absolute inset-0 w-full h-full object-cover" />
             : <div className="absolute inset-0 bg-muted" />
           }
           <div className="absolute inset-0 bg-black/25" />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
-            <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-5 sm:px-6 text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] text-white leading-tight" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
               {ed("site_headline", headline)}
             </h1>
             {(subheadline || editMode) && (
@@ -1788,8 +1788,8 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
     blocks.hero = (
       <div key="hero" data-block-key="hero" style={getSectionStyle(site, "hero")} className="pt-20">
         {/* Text hero */}
-        <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
-          <h1 className="text-4xl md:text-7xl font-extralight tracking-[0.08em] leading-tight text-foreground" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        <div className="max-w-4xl mx-auto px-5 sm:px-6 py-12 sm:py-16 md:py-24 text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-7xl font-extralight tracking-[0.06em] md:tracking-[0.08em] leading-tight text-foreground" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
             {ed("site_headline", headline)}
           </h1>
           {(subheadline || editMode) && (
@@ -1803,7 +1803,7 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         </div>
         {/* Asymmetric photos */}
         {coverImages.length > 0 && (
-          <div className="max-w-6xl mx-auto px-6 pb-12 flex gap-4 items-stretch" style={{ height: "40vh", minHeight: 280 }}>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-10 sm:pb-12 flex gap-2 sm:gap-4 items-stretch" style={{ height: "32vh", minHeight: 220 }}>
             {coverImages[0] && <div className="w-[28%] overflow-hidden"><img src={coverImages[0]} alt="" className="w-full h-full object-cover" /></div>}
             {coverImages[1] && <div className="flex-1 overflow-hidden"><img src={coverImages[1]} alt="" className="w-full h-full object-cover" /></div>}
             {coverImages[2] && <div className="w-[28%] overflow-hidden"><img src={coverImages[2]} alt="" className="w-full h-full object-cover" /></div>}
