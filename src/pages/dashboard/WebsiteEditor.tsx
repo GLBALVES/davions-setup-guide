@@ -1773,6 +1773,36 @@ const PagesPanel = ({
         onOpenChange={setTemplatePickerOpen}
         onSelect={handleTemplateSelect}
       />
+
+      <Dialog open={folderModalOpen} onOpenChange={setFolderModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{we.folder ?? "Folder"}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              autoFocus
+              value={folderName}
+              onChange={(e) => setFolderName(e.target.value)}
+              placeholder="New Folder"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  confirmCreateFolder();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFolderModalOpen(false)}>
+              {t.common?.cancel ?? "Cancel"}
+            </Button>
+            <Button onClick={confirmCreateFolder}>
+              {t.common?.create ?? "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
