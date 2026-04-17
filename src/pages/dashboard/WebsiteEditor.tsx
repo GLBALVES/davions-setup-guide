@@ -1698,35 +1698,36 @@ const WebsiteEditor = () => {
 
       {/* Sidebar panel */}
       <div className="w-[260px] border-r border-border bg-card flex flex-col shrink-0 overflow-hidden">
-        {panelMap[activeTab]}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {panelMap[activeTab]}
+        </div>
+        {/* Fixed Preview/Publish footer */}
+        <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-8 text-xs gap-1.5"
+            onClick={() => { if (storeSlug) window.open(`/store/${storeSlug}`, "_blank"); }}
+          >
+            <Eye className="h-3 w-3" />
+            Preview
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 h-8 text-xs gap-1.5"
+            onClick={handlePublish}
+            disabled={publishing}
+          >
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            Publish
+          </Button>
+        </div>
       </div>
 
       {/* Preview area */}
       <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
-        <div className="h-12 border-b border-border bg-card flex items-center justify-between px-4 shrink-0">
+        <div className="h-12 border-b border-border bg-card flex items-center px-4 shrink-0">
           <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-[11px] gap-1.5"
-              onClick={() => {
-                if (storeSlug) window.open(`/store/${storeSlug}`, "_blank");
-              }}
-            >
-              <Eye className="h-3 w-3" />
-              Preview
-            </Button>
-            <Button
-              size="sm"
-              className="h-7 text-[11px] gap-1.5"
-              onClick={handlePublish}
-              disabled={publishing}
-            >
-              {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-              Publish
-            </Button>
-          </div>
         </div>
 
         <div className="flex-1 min-h-0">
