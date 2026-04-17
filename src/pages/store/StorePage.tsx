@@ -23,6 +23,7 @@ const StorePage = () => {
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const previewTemplate = searchParams.get("preview");
+  const cleanPreview = searchParams.get("clean") === "1";
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
