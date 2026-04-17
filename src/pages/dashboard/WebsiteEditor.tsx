@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
@@ -109,19 +110,27 @@ const ADD_PAGE_OPTIONS = [
 // ── Page context menu ─────────────────────────────────────────────────────────
 const PageContextMenu = ({
   page,
+  folders,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onMoveToFolder,
 }: {
   page: SitePage;
+  folders: SitePage[];
   onSettings: () => void;
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onMoveToFolder: (folderId: string | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
+
+  // Folders available as targets (exclude self if page is itself a folder)
+  const availableFolders = folders.filter((f) => f.id !== page.id);
+  const isInFolder = !!(page as any).parentId;
 
   return (
     <DropdownMenu>
@@ -146,9 +155,44 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs">
           <Paintbrush className="h-3.5 w-3.5" /> {we.switchTemplate}
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2 text-xs">
-          <ArrowRightToLine className="h-3.5 w-3.5" /> {we.subpage}
-        </DropdownMenuItem>
+        {page.type !== "folder" && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+              <ArrowRightToLine className="h-3.5 w-3.5" /> {we.subpage}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                {availableFolders.length === 0 ? (
+                  <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                    {we.noFolders}
+                  </DropdownMenuItem>
+                ) : (
+                  availableFolders.map((f) => (
+                    <DropdownMenuItem
+                      key={f.id}
+                      className="gap-2 text-xs"
+                      onClick={(e) => { e.stopPropagation(); onMoveToFolder(f.id); }}
+                    >
+                      <FolderOpen className="h-3.5 w-3.5" />
+                      <span className="truncate">{f.label}</span>
+                    </DropdownMenuItem>
+                  ))
+                )}
+                {isInFolder && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="gap-2 text-xs"
+                      onClick={(e) => { e.stopPropagation(); onMoveToFolder(null); }}
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" /> {we.removeFromFolder}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        )}
         <DropdownMenuItem className="gap-2 text-xs" onClick={onToggleMenu}>
           {page.inMenu ? (
             <><EyeOff className="h-3.5 w-3.5" /> {we.hideFromMenu}</>
@@ -224,22 +268,26 @@ const EditableLabel = ({
 const PageItem = ({
   page,
   active,
+  folders,
   onSelect,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
   onRename,
+  onMoveToFolder,
   indent = false,
 }: {
   page: SitePage;
   active?: boolean;
+  folders: SitePage[];
   onSelect: () => void;
   onSettings: () => void;
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onRename?: (label: string) => void;
+  onMoveToFolder: (folderId: string | null) => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -267,7 +315,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <EditableLabel value={page.label} onRename={onRename} />
-      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
+      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} />
     </div>
   );
 };
@@ -276,21 +324,25 @@ const PageItem = ({
 const PageFolder = ({
   page,
   activePage,
+  folders,
   onSelect,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
   onRename,
+  onMoveToFolder,
 }: {
   page: SitePage;
   activePage: string;
+  folders: SitePage[];
   onSelect: (id: string) => void;
   onSettings: (p: SitePage) => void;
   onToggleMenu: (id: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onRename?: (id: string, label: string) => void;
+  onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -307,19 +359,21 @@ const PageFolder = ({
           className="text-left"
         />
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
+        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
       {open && page.children?.map((child) => (
         <PageItem
           key={child.id}
           page={child}
           active={activePage === child.id}
+          folders={folders}
           onSelect={() => onSelect(child.id)}
           onSettings={() => onSettings(child)}
           onToggleMenu={() => onToggleMenu(child.id)}
           onDelete={() => onDelete(child.id)}
           onDuplicate={() => onDuplicate(child.id)}
           onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+          onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
           indent
         />
       ))}
@@ -1149,6 +1203,7 @@ const DndPagesArea = ({
   onRename,
   onMove,
   onReorder,
+  onMoveToFolder,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
@@ -1162,7 +1217,9 @@ const DndPagesArea = ({
   onRename: (id: string, label: string) => void;
   onMove: (id: string, target: DndZone) => void;
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
+  onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
+  const folders = menuPages.filter((p) => p.type === "folder");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -1227,12 +1284,14 @@ const DndPagesArea = ({
                   <PageFolder
                     page={page}
                     activePage={activePage}
+                    folders={folders}
                     onSelect={onSelect}
                     onSettings={onSettings}
                     onToggleMenu={onToggleMenu}
                     onDelete={onDelete}
                     onDuplicate={onDuplicate}
                     onRename={onRename}
+                    onMoveToFolder={onMoveToFolder}
                   />
                 </SortableRow>
               ) : (
@@ -1240,12 +1299,14 @@ const DndPagesArea = ({
                   <PageItem
                     page={page}
                     active={activePage === page.id}
+                    folders={folders}
                     onSelect={() => onSelect(page.id)}
                     onSettings={() => onSettings(page)}
                     onToggleMenu={() => onToggleMenu(page.id)}
                     onDelete={() => onDelete(page.id)}
                     onDuplicate={() => onDuplicate(page.id)}
                     onRename={(label) => onRename(page.id, label)}
+                    onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
               )
@@ -1263,12 +1324,14 @@ const DndPagesArea = ({
                 <PageItem
                   page={page}
                   active={activePage === page.id}
+                  folders={folders}
                   onSelect={() => onSelect(page.id)}
                   onSettings={() => onSettings(page)}
                   onToggleMenu={() => onToggleMenu(page.id)}
                   onDelete={() => onDelete(page.id)}
                   onDuplicate={() => onDuplicate(page.id)}
                   onRename={(label) => onRename(page.id, label)}
+                  onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                 />
               </SortableRow>
             ))}
@@ -1768,6 +1831,35 @@ const PagesPanel = ({
             });
             return next;
           });
+        }}
+        onMoveToFolder={async (id, folderId) => {
+          // Optimistic local update: rebuild tree with new parent
+          setPages((prev) => {
+            const flat = flattenPages(prev);
+            const moving = flat.find((p) => p.id === id);
+            if (!moving) return prev;
+            // Remove from any current location
+            const stripped = prev
+              .filter((p) => p.id !== id)
+              .map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p);
+            if (folderId === null) {
+              // Promote to top-level
+              return [...stripped, { ...moving, children: undefined }];
+            }
+            // Attach under target folder
+            return stripped.map((p) =>
+              p.id === folderId && p.type === "folder"
+                ? { ...p, children: [...(p.children ?? []), { ...moving, children: undefined }] }
+                : p
+            );
+          });
+          const { error } = await supabase.from("site_pages").update({ parent_id: folderId }).eq("id", id);
+          if (error) {
+            console.error("Failed to move page to folder", error);
+            toast.error("Failed to move page");
+          } else {
+            toast.success(folderId ? "Moved to folder" : "Removed from folder");
+          }
         }}
       />
 
