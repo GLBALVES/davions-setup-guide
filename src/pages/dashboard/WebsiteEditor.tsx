@@ -868,7 +868,10 @@ const PagesPanel = ({
     const allP = flattenPages(pagesList || pages);
     const page = allP.find((p) => p.id === id);
     if (page?.type === "page") {
-      setEditingSectionsPageId(id);
+      // Pixieset behavior: switching pages updates the preview content but
+      // keeps the sidebar on the page list. The user must explicitly enter
+      // block-editing mode to see PageSectionsPanel.
+      setEditingSectionsPageId(null);
       onActiveSectionsChange(page.sections || []);
       onSelectBlock(null);
       onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true });
