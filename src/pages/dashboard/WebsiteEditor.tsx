@@ -519,14 +519,72 @@ const HeaderSliderPanel = ({
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
         </div>
         <div className="px-4 pb-4">
-          <Select value={cfg.layout || "logo-center"} onValueChange={(v) => updateCfg({ layout: v as any })}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="logo-left">{we.logoLeft}</SelectItem>
-              <SelectItem value="logo-center">{we.logoCenter}</SelectItem>
-              <SelectItem value="logo-right">{we.logoRight}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { id: "logo-left", label: we.logoLeft, dotPos: "start" },
+              { id: "logo-center", label: we.logoCenter, dotPos: "center" },
+              { id: "logo-right", label: we.logoRight, dotPos: "end" },
+            ] as const).map((opt) => {
+              const active = (cfg.layout || "logo-center") === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => updateCfg({ layout: opt.id as any })}
+                  title={opt.label}
+                  aria-label={opt.label}
+                  className={cn(
+                    "group flex flex-col items-center gap-1.5 p-2 rounded-md border transition-colors",
+                    active
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-foreground/30 hover:bg-muted/40"
+                  )}
+                >
+                  {/* Mini header preview */}
+                  <div className={cn(
+                    "w-full h-8 rounded border flex items-center px-1.5 gap-1",
+                    active ? "border-primary/60 bg-background" : "border-border bg-muted/30"
+                  )}>
+                    <div className={cn(
+                      "flex items-center w-full",
+                      opt.dotPos === "start" && "justify-start gap-1",
+                      opt.dotPos === "center" && "justify-between",
+                      opt.dotPos === "end" && "justify-end gap-1 flex-row-reverse",
+                    )}>
+                      {opt.dotPos === "center" ? (
+                        <>
+                          <div className="flex gap-0.5">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                          <span className={cn("w-2.5 h-2.5 rounded-full", active ? "bg-primary" : "bg-foreground/70")} />
+                          <div className="flex gap-0.5">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", active ? "bg-primary" : "bg-foreground/70")} />
+                          <div className={cn("flex gap-0.5", opt.dotPos === "end" ? "mr-auto" : "ml-auto")}>
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <span className={cn(
+                    "text-[10px] font-medium truncate w-full text-center",
+                    active ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="border-t border-border" />
