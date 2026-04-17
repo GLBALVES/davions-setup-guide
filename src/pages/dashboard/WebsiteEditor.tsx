@@ -157,6 +157,55 @@ const PageContextMenu = ({
   );
 };
 
+// ── Inline-editable label (double-click to rename) ───────────────────────────
+const EditableLabel = ({
+  value,
+  onRename,
+  className,
+}: {
+  value: string;
+  onRename?: (next: string) => void;
+  className?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onRename?.(trimmed);
+    else setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(); }
+          else if (e.key === "Escape") { e.preventDefault(); setDraft(value); setEditing(false); }
+        }}
+        className={cn("flex-1 min-w-0 bg-background border border-primary/60 rounded px-1.5 py-0.5 text-sm outline-none focus:ring-1 focus:ring-primary", className)}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={cn("truncate flex-1 select-none", className)}
+      onDoubleClick={(e) => { e.stopPropagation(); if (onRename) setEditing(true); }}
+      title={onRename ? "Double-click to rename" : undefined}
+    >
+      {value}
+    </span>
+  );
+};
+
 // ── Page item ─────────────────────────────────────────────────────────────────
 const PageItem = ({
   page,
@@ -166,6 +215,7 @@ const PageItem = ({
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onRename,
   indent = false,
 }: {
   page: SitePage;
@@ -175,6 +225,7 @@ const PageItem = ({
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onRename?: (label: string) => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -201,7 +252,7 @@ const PageItem = ({
       ) : IconEl ? (
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
-      <span className="truncate flex-1">{page.label}</span>
+      <EditableLabel value={page.label} onRename={onRename} />
       <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
     </div>
   );
@@ -216,6 +267,7 @@ const PageFolder = ({
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onRename,
 }: {
   page: SitePage;
   activePage: string;
@@ -224,6 +276,7 @@ const PageFolder = ({
   onToggleMenu: (id: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onRename?: (id: string, label: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -234,7 +287,11 @@ const PageFolder = ({
         className="group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50"
       >
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate flex-1 text-left">{page.label}</span>
+        <EditableLabel
+          value={page.label}
+          onRename={onRename ? (label) => onRename(page.id, label) : undefined}
+          className="text-left"
+        />
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
         <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
       </div>
@@ -248,6 +305,7 @@ const PageFolder = ({
           onToggleMenu={() => onToggleMenu(child.id)}
           onDelete={() => onDelete(child.id)}
           onDuplicate={() => onDuplicate(child.id)}
+          onRename={onRename ? (label) => onRename(child.id, label) : undefined}
           indent
         />
       ))}
@@ -1448,6 +1506,7 @@ const PagesPanel = ({
               onToggleMenu={toggleMenu}
               onDelete={deletePage}
               onDuplicate={duplicatePage}
+              onRename={(id, label) => findAndUpdate(id, { label })}
             />
           ) : (
             <PageItem
@@ -1459,6 +1518,7 @@ const PagesPanel = ({
               onToggleMenu={() => toggleMenu(page.id)}
               onDelete={() => deletePage(page.id)}
               onDuplicate={() => duplicatePage(page.id)}
+              onRename={(label) => findAndUpdate(page.id, { label })}
             />
           )
         )}
@@ -1479,6 +1539,7 @@ const PagesPanel = ({
                 onToggleMenu={() => toggleMenu(page.id)}
                 onDelete={() => deletePage(page.id)}
                 onDuplicate={() => duplicatePage(page.id)}
+                onRename={(label) => findAndUpdate(page.id, { label })}
               />
             ))}
           </>
