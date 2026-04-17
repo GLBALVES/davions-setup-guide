@@ -267,6 +267,7 @@ const PageFolder = ({
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onRename,
 }: {
   page: SitePage;
   activePage: string;
@@ -275,6 +276,7 @@ const PageFolder = ({
   onToggleMenu: (id: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onRename?: (id: string, label: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -285,7 +287,11 @@ const PageFolder = ({
         className="group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50"
       >
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate flex-1 text-left">{page.label}</span>
+        <EditableLabel
+          value={page.label}
+          onRename={onRename ? (label) => onRename(page.id, label) : undefined}
+          className="text-left"
+        />
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
         <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
       </div>
@@ -299,6 +305,7 @@ const PageFolder = ({
           onToggleMenu={() => onToggleMenu(child.id)}
           onDelete={() => onDelete(child.id)}
           onDuplicate={() => onDuplicate(child.id)}
+          onRename={onRename ? (label) => onRename(child.id, label) : undefined}
           indent
         />
       ))}
