@@ -519,10 +519,12 @@ const HeaderSliderPanel = ({
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
         </div>
         <div className="px-4 pb-4">
-          <Select value={cfg.layout || "logo-center"} onValueChange={(v) => updateCfg({ layout: v as "logo-center" })}>
+          <Select value={cfg.layout || "logo-center"} onValueChange={(v) => updateCfg({ layout: v as any })}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="logo-left">{we.logoLeft}</SelectItem>
               <SelectItem value="logo-center">{we.logoCenter}</SelectItem>
+              <SelectItem value="logo-right">{we.logoRight}</SelectItem>
             </SelectContent>
           </Select>
         </div>
