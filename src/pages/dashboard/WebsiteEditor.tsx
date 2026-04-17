@@ -1779,6 +1779,7 @@ const WebsiteEditor = () => {
       onActivePageChange={handleActivePageChange}
       onUpdateActiveSections={setActivePageSections}
       registerActivePageActions={handleRegisterActions}
+      onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
     />,
     blog: <BlogPanel />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
@@ -1884,6 +1885,8 @@ const WebsiteEditor = () => {
             editMode={true}
             onPropChange={handleBlockPropChange}
             photographerId={user?.id ?? null}
+            headerConfig={activePageInfo.headerConfig ?? null}
+            onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
           />
         </div>
       </div>
