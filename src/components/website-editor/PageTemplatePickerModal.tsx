@@ -201,154 +201,152 @@ function TemplateCard({
   const sections = getTemplateSections(template.id);
 
   return (
-    <button onClick={onSelect} className="text-left group">
+    <button onClick={onSelect} className="text-left group w-full">
       <div
         className={cn(
-          "aspect-[4/3] rounded-xl border p-3 transition-all bg-card overflow-hidden",
+          "relative aspect-[4/5] rounded-lg border bg-background overflow-hidden transition-all",
           selected
-            ? "border-primary shadow-sm"
-            : "border-border hover:border-muted-foreground/40 hover:bg-muted/20"
+            ? "border-primary shadow-md ring-2 ring-primary/30"
+            : "border-border hover:border-foreground/40 hover:shadow-sm"
         )}
       >
-        <TemplatePreview templateId={template.id} sections={sections} />
+        <RealisticTemplatePreview templateId={template.id} sections={sections} />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors pointer-events-none" />
       </div>
-      <div className="mt-3 space-y-1">
-        <p className="text-xs text-foreground uppercase tracking-[0.24em]">{template.name}</p>
-        <p className="text-[11px] leading-relaxed text-muted-foreground">{template.description}</p>
+      <div className="mt-3 space-y-1 px-1">
+        <p className="text-[11px] text-foreground uppercase tracking-[0.22em]">{template.name}</p>
+        <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-2">{template.description}</p>
       </div>
     </button>
   );
 }
 
-function TemplatePreview({
+// ── Realistic, scaled-down preview (Pixieset-style) ───────────────────────────
+// Renders the actual SectionRenderer output at desktop width, then scales it
+// down into the card via CSS transform so users see a true miniature site.
+function RealisticTemplatePreview({
   templateId,
   sections,
 }: {
   templateId: string;
-  sections: Array<{ type: SectionType }>;
+  sections: PageSection[];
 }) {
-  if (templateId === "blank") {
+  if (templateId === "blank" || sections.length === 0) {
     return (
-      <div className="h-full w-full rounded-lg border border-dashed border-border bg-muted/30 flex flex-col items-center justify-center gap-2">
-        <div className="h-8 w-8 rounded-full border border-border bg-background" />
-        <div className="h-2 w-20 rounded-full bg-muted-foreground/20" />
-        <div className="h-2 w-12 rounded-full bg-muted-foreground/15" />
+      <div className="h-full w-full flex flex-col items-center justify-center gap-3 bg-muted/20">
+        <div className="h-10 w-10 rounded-full border border-border bg-background flex items-center justify-center">
+          <span className="text-muted-foreground text-lg leading-none">+</span>
+        </div>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Blank</p>
       </div>
     );
   }
 
+  // Inject demo content so the preview looks alive (no empty hero etc.)
+  const populated = sections.map((s) => withDemoProps(s));
+
+  // Render at "desktop" width (1280) and scale down to fit the card.
+  const SOURCE_WIDTH = 1280;
+
   return (
-    <div className="h-full w-full rounded-lg bg-background border border-border p-2 flex flex-col gap-1.5">
-      {sections.slice(0, 5).map((section, index) => (
-        <PreviewBlock key={`${templateId}-${index}`} type={section.type} index={index} />
-      ))}
+    <div className="absolute inset-0 overflow-hidden bg-background">
+      {/* Mock browser top-bar */}
+      <div className="h-4 bg-muted/60 border-b border-border flex items-center gap-1 px-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+      </div>
+      <div className="absolute inset-x-0 top-4 bottom-0 overflow-hidden">
+        <div
+          style={{
+            width: SOURCE_WIDTH,
+            transformOrigin: "top left",
+            // Scale so 1280px source fits the card width. Card is responsive,
+            // so we use a CSS calc on a wrapper instead.
+          }}
+          className="origin-top-left scale-[0.18] sm:scale-[0.2] pointer-events-none select-none"
+        >
+          <SectionRenderer sections={populated} accentColor="#000000" />
+        </div>
+      </div>
     </div>
   );
 }
 
-function PreviewBlock({ type, index }: { type: SectionType; index: number }) {
-  switch (type) {
+// ── Demo props injection ──────────────────────────────────────────────────────
+const DEMO_IMAGES = [
+  "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=70",
+  "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=1200&q=70",
+  "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1200&q=70",
+  "https://images.unsplash.com/photo-1525258946800-98cfd641d0de?w=1200&q=70",
+  "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&q=70",
+  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1200&q=70",
+];
+
+function withDemoProps(section: PageSection): PageSection {
+  const p: Record<string, any> = { ...(section.props as Record<string, any>) };
+  switch (section.type) {
     case "hero":
-      return (
-        <div className="h-16 rounded-md bg-gradient-to-br from-muted via-muted/70 to-background border border-border p-2 flex flex-col justify-end gap-1">
-          <div className="h-2.5 w-2/3 rounded-full bg-foreground/80" />
-          <div className="h-2 w-1/2 rounded-full bg-muted-foreground/35" />
-        </div>
-      );
+      p.headline = p.headline || "Capturing Timeless Stories";
+      p.subtitle = p.subtitle || "Wedding & Portrait Photography";
+      p.backgroundImage = p.backgroundImage || DEMO_IMAGES[0];
+      p.ctaText = p.ctaText || "Book a Session";
+      break;
+    case "image-text":
+    case "text-image":
+      p.image = p.image || DEMO_IMAGES[1];
+      p.title = p.title || "About the Studio";
+      p.body = p.body || "Crafted moments, honest emotions, and timeless imagery for every story we tell.";
+      break;
     case "gallery-grid":
     case "gallery-masonry":
     case "carousel":
     case "slideshow":
     case "instagram-feed":
-      return (
-        <div className="grid grid-cols-3 gap-1 h-12">
-          {Array.from({ length: 6 }).map((_, itemIndex) => (
-            <div
-              key={itemIndex}
-              className={cn(
-                "rounded-sm border border-border bg-muted/50",
-                type === "gallery-masonry" && itemIndex % 3 === 1 ? "row-span-2" : "h-full"
-              )}
-            />
-          ))}
-        </div>
-      );
-    case "image-text":
-    case "text-image":
-    case "columns-2":
-      return (
-        <div className="grid grid-cols-2 gap-1.5 h-11">
-          <div className={cn("rounded-sm border border-border bg-muted/50", type === "text-image" ? "order-2" : "")} />
-          <div className={cn("rounded-sm border border-border bg-background p-1.5 flex flex-col gap-1", type === "text-image" ? "order-1" : "") }>
-            <div className="h-2 w-3/4 rounded-full bg-foreground/70" />
-            <div className="h-1.5 w-full rounded-full bg-muted-foreground/25" />
-            <div className="h-1.5 w-2/3 rounded-full bg-muted-foreground/20" />
-          </div>
-        </div>
-      );
-    case "contact-form":
-    case "pricing-table":
-    case "faq-accordion":
-    case "timeline":
-    case "testimonials":
-    case "stats":
-    case "team":
-    case "logo-strip":
-    case "map":
-    case "video":
-    case "social-links":
-    case "embed":
+      if (!Array.isArray(p.images) || p.images.length === 0) p.images = DEMO_IMAGES;
+      break;
     case "cta":
+      p.headline = p.headline || "Let's create something beautiful.";
+      p.buttonText = p.buttonText || "Get in touch";
+      break;
     case "text":
-    case "columns-3":
-    case "spacer":
-    case "divider":
-    default:
-      return (
-        <div
-          className={cn(
-            "rounded-md border border-border bg-muted/30 p-1.5 flex items-center gap-1.5",
-            type === "cta" ? "bg-primary/10 border-primary/20" : "",
-            type === "divider" ? "h-2 p-0 bg-transparent border-0" : "",
-            type === "spacer" ? "h-3 bg-transparent border-dashed" : "",
-            type === "columns-3" ? "grid grid-cols-3" : "",
-            type === "map" ? "h-10" : "",
-            type === "video" ? "h-10" : "",
-            type === "timeline" ? "h-10" : "",
-            type === "pricing-table" ? "h-12" : "",
-            type === "faq-accordion" ? "h-10" : "",
-            type === "testimonials" ? "h-10" : "",
-            type === "team" ? "h-10" : "",
-            type === "stats" ? "h-8" : "",
-            type === "logo-strip" ? "h-8" : "",
-            type === "social-links" ? "h-8" : "",
-            index === 4 ? "mt-auto" : ""
-          )}
-        >
-          {type === "divider" ? (
-            <div className="h-px w-full bg-border" />
-          ) : type === "columns-3" ? (
-            <>
-              <div className="h-full rounded-sm bg-background border border-border" />
-              <div className="h-full rounded-sm bg-background border border-border" />
-              <div className="h-full rounded-sm bg-background border border-border" />
-            </>
-          ) : type === "stats" ? (
-            <>
-              <div className="h-full flex-1 rounded-sm bg-background border border-border" />
-              <div className="h-full flex-1 rounded-sm bg-background border border-border" />
-              <div className="h-full flex-1 rounded-sm bg-background border border-border" />
-            </>
-          ) : (
-            <>
-              <div className="h-2 w-2 rounded-full bg-primary/70 shrink-0" />
-              <div className="flex-1 space-y-1">
-                <div className="h-1.5 w-2/3 rounded-full bg-foreground/70" />
-                <div className="h-1.5 w-1/2 rounded-full bg-muted-foreground/25" />
-              </div>
-            </>
-          )}
-        </div>
-      );
+      p.body = p.body || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.";
+      break;
+    case "testimonials":
+      if (!Array.isArray(p.items) || p.items.length === 0) {
+        p.items = [
+          { quote: "Working with them was an unforgettable experience.", author: "Sarah & Tom" },
+          { quote: "Beautiful, honest and timeless photographs.", author: "Emma & Luke" },
+        ];
+      }
+      break;
+    case "stats":
+      if (!Array.isArray(p.items) || p.items.length === 0) {
+        p.items = [
+          { value: "150+", label: "Weddings" },
+          { value: "8", label: "Years" },
+          { value: "30+", label: "Awards" },
+        ];
+      }
+      break;
+    case "faq-accordion":
+      if (!Array.isArray(p.items) || p.items.length === 0) {
+        p.items = [
+          { question: "How do we book a session?", answer: "Reach out via the contact form." },
+          { question: "Do you travel?", answer: "Yes, worldwide." },
+        ];
+      }
+      break;
+    case "pricing-table":
+      if (!Array.isArray(p.plans) || p.plans.length === 0) {
+        p.plans = [
+          { name: "Essential", price: "$1,800", features: ["4h coverage", "Online gallery"] },
+          { name: "Signature", price: "$2,800", features: ["8h coverage", "Album"] },
+          { name: "Heirloom", price: "$4,200", features: ["Full day", "Premium album"] },
+        ];
+      }
+      break;
   }
+  return { ...section, props: p };
 }
