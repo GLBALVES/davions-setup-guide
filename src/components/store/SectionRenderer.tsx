@@ -140,14 +140,14 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
     <>
       {hasImage && <div className="absolute inset-0 bg-black/40" />}
       {!hasImage && <div className="absolute inset-0 bg-foreground/5" />}
-      <div className="relative z-10 text-center px-6 py-20 max-w-3xl mx-auto">
+      <div className="relative z-10 text-center px-5 sm:px-6 py-14 sm:py-20 max-w-3xl mx-auto">
         <EditableText
           as="h1"
           editMode={c.editMode}
           value={headline || ""}
           placeholder="Headline"
           onChange={(v) => c.set("headline", v)}
-          className={`text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
+          className={`text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
         />
         {(c.editMode || subtitle) && (
           <EditableText
@@ -338,7 +338,7 @@ function TextImageBlock({ image, title, body, ctx }: any) {
 
 function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   const cols = Number(columns) || 3;
-  const gridCls = cols === 2 ? "grid-cols-2" : cols === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
+  const gridCls = cols === 2 ? "grid-cols-1 sm:grid-cols-2" : cols === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
 
   if (!images || images.length === 0) {
     return (
@@ -935,7 +935,7 @@ function InstagramFeedBlock({ count = 9, columns = 3 }: any) {
     <section className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Instagram</h2>
-        <div className={`grid grid-cols-3 gap-2`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2`}>
           {Array.from({ length: count }).map((_, i) => (
             <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
               <Camera className="h-5 w-5 text-muted-foreground/20" />
