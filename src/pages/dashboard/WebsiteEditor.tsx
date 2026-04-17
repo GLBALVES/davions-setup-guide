@@ -29,6 +29,7 @@ import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
 import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/components/website-editor/PreviewRenderer";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
+import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -1303,14 +1304,6 @@ const BlogPanel = () => (
 );
 
 // ── Style Panel (functional) ─────────────────────────────────────────────────
-const FONT_OPTIONS = [
-  { value: "inter", label: "Inter (Default)" },
-  { value: "playfair", label: "Playfair Display" },
-  { value: "cormorant", label: "Cormorant Garamond" },
-  { value: "montserrat", label: "Montserrat" },
-  { value: "poppins", label: "Poppins" },
-];
-
 const StylePanel = ({ photographerId, site, onSiteChange }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
@@ -1331,70 +1324,128 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Accent Color</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.accentColor || "#000000"}
-            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.accentColor || "#000000"}
-            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-            className="h-9 text-sm flex-1"
-          />
+      {/* ── Typography ── */}
+      <div className="border-t border-border -mx-4 px-4 pt-4">
+        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
+          Typography
+        </p>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Heading font</label>
+            <Select
+              value={site?.headingFont || "inter"}
+              onValueChange={(v) => onSiteChange({ heading_font: v })}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_PRESETS.map((f) => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Body font</label>
+            <Select
+              value={site?.bodyFont || "inter"}
+              onValueChange={(v) => onSiteChange({ body_font: v })}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_PRESETS.map((f) => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Header Background</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.headerBg || "#ffffff"}
-            onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.headerBg || ""}
-            onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
-            className="h-9 text-sm flex-1"
-            placeholder="#ffffff"
-          />
+      {/* ── Colors ── */}
+      <div className="border-t border-border -mx-4 px-4 pt-4">
+        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
+          Colors
+        </p>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Accent</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.accentColor || "#000000"}
+                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.accentColor || "#000000"}
+                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+                className="h-9 text-sm flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Header background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.headerBg || "#ffffff"}
+                onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.headerBg || ""}
+                onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
+                className="h-9 text-sm flex-1"
+                placeholder="#ffffff"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Footer background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.footerBg || "#000000"}
+                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.footerBg || ""}
+                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
+                className="h-9 text-sm flex-1"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Footer text</label>
+            <Input
+              value={site?.footerText || ""}
+              onChange={(e) => onSiteChange({ footer_text: e.target.value })}
+              className="h-9 text-sm"
+              placeholder="© 2026 Studio Name"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Footer Background</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.footerBg || "#000000"}
-            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.footerBg || ""}
-            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
-            className="h-9 text-sm flex-1"
-            placeholder="#000000"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Footer Text</label>
-        <Input
-          value={site?.footerText || ""}
-          onChange={(e) => onSiteChange({ footer_text: e.target.value })}
-          className="h-9 text-sm"
-          placeholder="© 2026 Studio Name"
-        />
-      </div>
-
-      <p className="text-[10px] text-muted-foreground/70 pt-2">Changes save automatically and reflect in the preview.</p>
+      <p className="text-[10px] text-muted-foreground/70 pt-2">
+        Changes save automatically and reflect in the preview.
+      </p>
     </div>
   );
 };
@@ -1426,6 +1477,8 @@ const WebsiteEditor = () => {
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
+  const [addBlockOpen, setAddBlockOpen] = useState(false);
+  const [insertIndex, setInsertIndex] = useState(0);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -1444,7 +1497,7 @@ const WebsiteEditor = () => {
       }
       const { data: s } = await supabase
         .from("photographer_site")
-        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text")
+        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text, heading_font, body_font")
         .eq("photographer_id", user.id)
         .maybeSingle();
       if (s) {
@@ -1456,6 +1509,8 @@ const WebsiteEditor = () => {
           footerBg: (s as any).footer_bg_color,
           footerTextColor: (s as any).footer_text_color,
           footerText: (s as any).footer_text,
+          headingFont: (s as any).heading_font,
+          bodyFont: (s as any).body_font,
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
@@ -1463,6 +1518,21 @@ const WebsiteEditor = () => {
       }
     })();
   }, [user]);
+
+  // Inject the chosen Google Fonts into the page so the editor preview matches the published site.
+  useEffect(() => {
+    const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
+    if (!href) return;
+    const id = "lov-site-fonts";
+    let el = document.getElementById(id) as HTMLLinkElement | null;
+    if (!el) {
+      el = document.createElement("link");
+      el.id = id;
+      el.rel = "stylesheet";
+      document.head.appendChild(el);
+    }
+    if (el.href !== href) el.href = href;
+  }, [site?.headingFont, site?.bodyFont]);
 
   const updateSite = useCallback(async (patch: Record<string, any>) => {
     if (!user) return;
@@ -1474,6 +1544,8 @@ const WebsiteEditor = () => {
       headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
       footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
       footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
+      headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
+      bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
       displayName: prev?.displayName ?? displayName,
     }));
     await supabase
@@ -1664,6 +1736,7 @@ const WebsiteEditor = () => {
             onMoveBlock={moveBlock}
             onDuplicateBlock={duplicateBlock}
             onDeleteBlock={deleteBlock}
+            onAddBlockAt={(idx) => { setInsertIndex(idx); setAddBlockOpen(true); }}
             accentColor={site?.accentColor || "#000000"}
             site={site}
             navLinks={navLinks}
@@ -1675,6 +1748,19 @@ const WebsiteEditor = () => {
           />
         </div>
       </div>
+
+      <AddBlockPicker
+        open={addBlockOpen}
+        onOpenChange={setAddBlockOpen}
+        onSelect={(type) => {
+          if (!pageActions) return;
+          const newSection = createSection(type);
+          const next = [...activePageSections];
+          next.splice(insertIndex, 0, newSection);
+          pageActions.setSections(next);
+          setSelectedBlockIndex(insertIndex);
+        }}
+      />
     </div>
   );
 };

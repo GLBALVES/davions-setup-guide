@@ -2448,6 +2448,7 @@ export type Database = {
           about_text_color: string | null
           about_title: string | null
           accent_color: string | null
+          body_font: string | null
           contact_bg_color: string | null
           contact_text_color: string | null
           created_at: string
@@ -2471,6 +2472,7 @@ export type Database = {
           header_bg_color: string | null
           header_text_color: string | null
           header_visible_socials: Json | null
+          heading_font: string | null
           hero_bg_color: string | null
           hero_text_color: string | null
           instagram_url: string | null
@@ -2515,6 +2517,7 @@ export type Database = {
           about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          body_font?: string | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string
@@ -2538,6 +2541,7 @@ export type Database = {
           header_bg_color?: string | null
           header_text_color?: string | null
           header_visible_socials?: Json | null
+          heading_font?: string | null
           hero_bg_color?: string | null
           hero_text_color?: string | null
           instagram_url?: string | null
@@ -2582,6 +2586,7 @@ export type Database = {
           about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          body_font?: string | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string
@@ -2605,6 +2610,7 @@ export type Database = {
           header_bg_color?: string | null
           header_text_color?: string | null
           header_visible_socials?: Json | null
+          heading_font?: string | null
           hero_bg_color?: string | null
           hero_text_color?: string | null
           instagram_url?: string | null

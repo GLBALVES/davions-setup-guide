@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2 } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus } from "lucide-react";
+import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 
 type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -20,6 +21,8 @@ export interface PreviewSiteConfig {
   footerBg?: string | null;
   footerTextColor?: string | null;
   footerText?: string | null;
+  headingFont?: string | null;
+  bodyFont?: string | null;
 }
 
 export interface PreviewNavLink {
@@ -38,6 +41,8 @@ interface PreviewRendererProps {
   onMoveBlock?: (from: number, to: number) => void;
   onDuplicateBlock?: (index: number) => void;
   onDeleteBlock?: (index: number) => void;
+  /** Called when the user clicks a "+ Add Section" divider in the canvas. */
+  onAddBlockAt?: (index: number) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
@@ -238,6 +243,7 @@ export default function PreviewRenderer({
   onMoveBlock,
   onDuplicateBlock,
   onDeleteBlock,
+  onAddBlockAt,
   accentColor = "#000000",
   site,
   navLinks = [],
@@ -286,7 +292,15 @@ export default function PreviewRenderer({
             "bg-background transition-all duration-300 min-h-full shadow-lg",
             "border border-border"
           )}
-          style={{ width: VIEWPORT_WIDTHS[viewport], maxWidth: "100%" }}
+          style={{
+            width: VIEWPORT_WIDTHS[viewport],
+            maxWidth: "100%",
+            // Apply site typography live in the preview
+            ["--site-heading-font" as any]: site?.headingFont
+              ? `'${site.headingFont}'`
+              : undefined,
+            fontFamily: site?.bodyFont || undefined,
+          }}
         >
           {/* Nav */}
           {showHeaderFooter && (
@@ -300,60 +314,90 @@ export default function PreviewRenderer({
 
           {/* Blocks */}
           {sections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 px-6 text-center">
-              <p className="text-sm text-muted-foreground">This page is empty</p>
-              <p className="text-[11px] text-muted-foreground/70">Add blocks from the sidebar to start building.</p>
+            <div className="flex flex-col items-center justify-center min-h-[480px] gap-4 px-6 text-center">
+              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <Plus className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-medium text-foreground">This page is empty</p>
+                <p className="text-xs text-muted-foreground/80 max-w-xs">
+                  Start building by adding your first section.
+                </p>
+              </div>
+              {editMode && onAddBlockAt && (
+                <button
+                  type="button"
+                  onClick={() => onAddBlockAt(0)}
+                  className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add your first section
+                </button>
+              )}
             </div>
           ) : (
-            sections.map((section, idx) => {
-              const isSelected = selectedBlockIndex === idx;
-              return (
-                <div
-                  key={section.id}
-                  onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
-                  className={cn(
-                    "relative group/block transition-all",
-                    isSelected
-                      ? "ring-2 ring-primary ring-inset"
-                      : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
-                  )}
-                >
-                  {/* Block label badge */}
-                  <div className={cn(
-                    "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
-                    isSelected
-                      ? "opacity-100 bg-primary text-primary-foreground"
-                      : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
-                  )}>
-                    {section.label}
-                  </div>
+            <>
+              {/* + above the very first block */}
+              {editMode && onAddBlockAt && (
+                <CanvasAddSection onClick={() => onAddBlockAt(0)} />
+              )}
 
-                  {/* Floating toolbar (selected or hover) */}
-                  <div className={cn(
-                    "transition-opacity",
-                    isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
-                  )}>
-                    <FloatingBlockToolbar
-                      isFirst={idx === 0}
-                      isLast={idx === sections.length - 1}
-                      onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
-                      onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
-                      onDuplicate={() => onDuplicateBlock?.(idx)}
-                      onSettings={() => onSelectBlock(idx)}
-                      onDelete={() => onDeleteBlock?.(idx)}
-                    />
-                  </div>
+              {sections.map((section, idx) => {
+                const isSelected = selectedBlockIndex === idx;
+                return (
+                  <div key={section.id}>
+                    <div
+                      onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
+                      className={cn(
+                        "relative group/block transition-all",
+                        isSelected
+                          ? "ring-2 ring-primary ring-inset"
+                          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+                      )}
+                    >
+                      {/* Block label badge */}
+                      <div className={cn(
+                        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
+                        isSelected
+                          ? "opacity-100 bg-primary text-primary-foreground"
+                          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
+                      )}>
+                        {section.label}
+                      </div>
 
-                  {/* Block content */}
-                  <SectionRenderer
-                    sections={[section]}
-                    accentColor={accentColor}
-                    editMode={editMode}
-                    edit={editCtx}
-                  />
-                </div>
-              );
-            })
+                      {/* Floating toolbar (selected or hover) */}
+                      <div className={cn(
+                        "transition-opacity",
+                        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+                      )}>
+                        <FloatingBlockToolbar
+                          isFirst={idx === 0}
+                          isLast={idx === sections.length - 1}
+                          onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
+                          onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
+                          onDuplicate={() => onDuplicateBlock?.(idx)}
+                          onSettings={() => onSelectBlock(idx)}
+                          onDelete={() => onDeleteBlock?.(idx)}
+                        />
+                      </div>
+
+                      {/* Block content */}
+                      <SectionRenderer
+                        sections={[section]}
+                        accentColor={accentColor}
+                        editMode={editMode}
+                        edit={editCtx}
+                      />
+                    </div>
+
+                    {/* + between this block and the next (or after the last block) */}
+                    {editMode && onAddBlockAt && (
+                      <CanvasAddSection onClick={() => onAddBlockAt(idx + 1)} />
+                    )}
+                  </div>
+                );
+              })}
+            </>
           )}
 
           {/* Footer */}
