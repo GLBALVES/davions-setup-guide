@@ -284,7 +284,7 @@ const DEMO_IMAGES = [
   "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=1200&q=70",
 ];
 
-function withDemoProps(section: PageSection): PageSection {
+export function withDemoProps(section: PageSection): PageSection {
   const p: Record<string, any> = { ...(section.props as Record<string, any>) };
   switch (section.type) {
     case "hero":
