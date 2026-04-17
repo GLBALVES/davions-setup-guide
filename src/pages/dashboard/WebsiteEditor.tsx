@@ -2274,16 +2274,10 @@ const WebsiteEditor = () => {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  // Use a wider breakpoint (lg: 1024px) for the editor since the dual-panel layout
-  // (sidebar + preview) needs more horizontal room than typical mobile detection.
-  const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== "undefined" ? window.innerWidth < 1024 : false
-  );
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 1024);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+  // Mobile mode is driven by the preview's viewport selector (Desktop/Tablet/Mobile),
+  // not by the actual window size. The editor canvas itself simulates mobile.
+  const [previewViewport, setPreviewViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const isMobile = previewViewport === "mobile";
 
   // Load photographer + site config
   useEffect(() => {
