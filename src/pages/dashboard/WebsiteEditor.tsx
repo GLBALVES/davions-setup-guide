@@ -37,7 +37,7 @@ import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
   PointerSensor, KeyboardSensor, useSensor, useSensors,
-  closestCenter, type DragEndEvent, type DragStartEvent,
+  closestCenter, pointerWithin, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, arrayMove,
