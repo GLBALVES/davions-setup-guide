@@ -268,22 +268,26 @@ const EditableLabel = ({
 const PageItem = ({
   page,
   active,
+  folders,
   onSelect,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
   onRename,
+  onMoveToFolder,
   indent = false,
 }: {
   page: SitePage;
   active?: boolean;
+  folders: SitePage[];
   onSelect: () => void;
   onSettings: () => void;
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onRename?: (label: string) => void;
+  onMoveToFolder: (folderId: string | null) => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -311,7 +315,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <EditableLabel value={page.label} onRename={onRename} />
-      <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
+      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} />
     </div>
   );
 };
@@ -320,21 +324,25 @@ const PageItem = ({
 const PageFolder = ({
   page,
   activePage,
+  folders,
   onSelect,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
   onRename,
+  onMoveToFolder,
 }: {
   page: SitePage;
   activePage: string;
+  folders: SitePage[];
   onSelect: (id: string) => void;
   onSettings: (p: SitePage) => void;
   onToggleMenu: (id: string) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onRename?: (id: string, label: string) => void;
+  onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -351,19 +359,21 @@ const PageFolder = ({
           className="text-left"
         />
         {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} />
+        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
       {open && page.children?.map((child) => (
         <PageItem
           key={child.id}
           page={child}
           active={activePage === child.id}
+          folders={folders}
           onSelect={() => onSelect(child.id)}
           onSettings={() => onSettings(child)}
           onToggleMenu={() => onToggleMenu(child.id)}
           onDelete={() => onDelete(child.id)}
           onDuplicate={() => onDuplicate(child.id)}
           onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+          onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
           indent
         />
       ))}
