@@ -39,6 +39,8 @@ interface PreviewRendererProps {
   onMoveBlock?: (from: number, to: number) => void;
   onDuplicateBlock?: (index: number) => void;
   onDeleteBlock?: (index: number) => void;
+  /** Called when the user clicks a "+ Add Section" divider in the canvas. */
+  onAddBlockAt?: (index: number) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
