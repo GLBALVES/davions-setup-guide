@@ -1217,7 +1217,9 @@ const DndPagesArea = ({
   onRename: (id: string, label: string) => void;
   onMove: (id: string, target: DndZone) => void;
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
+  onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
+  const folders = menuPages.filter((p) => p.type === "folder");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -1282,12 +1284,14 @@ const DndPagesArea = ({
                   <PageFolder
                     page={page}
                     activePage={activePage}
+                    folders={folders}
                     onSelect={onSelect}
                     onSettings={onSettings}
                     onToggleMenu={onToggleMenu}
                     onDelete={onDelete}
                     onDuplicate={onDuplicate}
                     onRename={onRename}
+                    onMoveToFolder={onMoveToFolder}
                   />
                 </SortableRow>
               ) : (
@@ -1295,12 +1299,14 @@ const DndPagesArea = ({
                   <PageItem
                     page={page}
                     active={activePage === page.id}
+                    folders={folders}
                     onSelect={() => onSelect(page.id)}
                     onSettings={() => onSettings(page)}
                     onToggleMenu={() => onToggleMenu(page.id)}
                     onDelete={() => onDelete(page.id)}
                     onDuplicate={() => onDuplicate(page.id)}
                     onRename={(label) => onRename(page.id, label)}
+                    onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
               )
@@ -1318,12 +1324,14 @@ const DndPagesArea = ({
                 <PageItem
                   page={page}
                   active={activePage === page.id}
+                  folders={folders}
                   onSelect={() => onSelect(page.id)}
                   onSettings={() => onSettings(page)}
                   onToggleMenu={() => onToggleMenu(page.id)}
                   onDelete={() => onDelete(page.id)}
                   onDuplicate={() => onDuplicate(page.id)}
                   onRename={(label) => onRename(page.id, label)}
+                  onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                 />
               </SortableRow>
             ))}
