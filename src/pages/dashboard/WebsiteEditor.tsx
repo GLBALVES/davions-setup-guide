@@ -1224,7 +1224,7 @@ const DndPagesArea = ({
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
-  const folders = menuPages.filter((p) => p.type === "folder");
+  const folders = [...menuPages, ...nonMenuPages].filter((p) => p.type === "folder");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
