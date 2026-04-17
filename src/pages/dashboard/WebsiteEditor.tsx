@@ -1680,5 +1680,3 @@ const WebsiteEditor = () => {
 };
 
 export default WebsiteEditor;
-
-export default WebsiteEditor;
