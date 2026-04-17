@@ -85,10 +85,11 @@ export default function PreviewHeader({
     return () => clearInterval(t);
   }, [cfg.autoplay, cfg.speed, slides.length]);
 
-  // Split nav links roughly in half for left/right of central logo
+  // Split nav links roughly in half for left/right of central logo (only for logo-center)
+  const layout: HeaderLayout = (cfg.layout as HeaderLayout) || "logo-center";
   const half = Math.ceil(navLinks.length / 2);
-  const leftLinks = navLinks.slice(0, half);
-  const rightLinks = navLinks.slice(half);
+  const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
+  const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
   const displayName = site?.displayName || "Studio";
   const fg = "#ffffff";
 
