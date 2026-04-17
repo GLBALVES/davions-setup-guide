@@ -1506,6 +1506,7 @@ const PagesPanel = ({
               onToggleMenu={toggleMenu}
               onDelete={deletePage}
               onDuplicate={duplicatePage}
+              onRename={(id, label) => findAndUpdate(id, { label })}
             />
           ) : (
             <PageItem
@@ -1517,6 +1518,7 @@ const PagesPanel = ({
               onToggleMenu={() => toggleMenu(page.id)}
               onDelete={() => deletePage(page.id)}
               onDuplicate={() => duplicatePage(page.id)}
+              onRename={(label) => findAndUpdate(page.id, { label })}
             />
           )
         )}
