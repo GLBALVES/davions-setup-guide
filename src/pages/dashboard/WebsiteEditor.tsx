@@ -1082,16 +1082,17 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
 // ── DnD wrappers for moving pages between Site Menu and Not in Menu ──────────
 type DndZone = "menu" | "notmenu";
 
-const DraggablePageRow = ({ id, children }: { id: string; children: React.ReactNode }) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+const SortableRow = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    touchAction: "none",
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
   return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{ touchAction: "none" }}
-      className={cn("relative", isDragging && "opacity-40")}
-    >
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative">
       {children}
     </div>
   );
