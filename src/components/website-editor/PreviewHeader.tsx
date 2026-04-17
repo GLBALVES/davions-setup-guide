@@ -210,37 +210,43 @@ export default function PreviewHeader({
         </div>
       )}
 
-      {/* Nav with central logo */}
+      {/* Nav with configurable logo position */}
       <div className="absolute inset-x-0 top-0 z-10 px-6 py-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-3 items-center gap-4">
-          {/* Left links */}
-          <nav className="hidden md:flex items-center justify-end gap-6">
-            {leftLinks.map(renderLink)}
-          </nav>
-
-          {/* Center logo */}
-          <div className="flex items-center justify-center">
-            {site?.logoUrl ? (
-              <img
-                src={site.logoUrl}
-                alt={displayName}
-                className="h-10 w-auto object-contain"
-                style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }}
-              />
-            ) : (
-              <span
-                className="text-sm font-light tracking-[0.35em] uppercase whitespace-nowrap"
-                style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}
-              >
-                {displayName}
-              </span>
-            )}
-          </div>
-
-          {/* Right links */}
-          <nav className="hidden md:flex items-center justify-start gap-6">
-            {rightLinks.map(renderLink)}
-          </nav>
+        <div className="max-w-7xl mx-auto">
+          {layout === "logo-center" ? (
+            <div className="grid grid-cols-3 items-center gap-4">
+              <nav className="hidden md:flex items-center justify-end gap-6">
+                {leftLinks.map(renderLink)}
+              </nav>
+              <div className="flex items-center justify-center">
+                {site?.logoUrl ? (
+                  <img src={site.logoUrl} alt={displayName} className="h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                ) : (
+                  <span className="text-sm font-light tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                    {displayName}
+                  </span>
+                )}
+              </div>
+              <nav className="hidden md:flex items-center justify-start gap-6">
+                {rightLinks.map(renderLink)}
+              </nav>
+            </div>
+          ) : (
+            <div className={cn("flex items-center gap-6", layout === "logo-right" && "flex-row-reverse")}>
+              <div className="flex items-center">
+                {site?.logoUrl ? (
+                  <img src={site.logoUrl} alt={displayName} className="h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                ) : (
+                  <span className="text-sm font-light tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                    {displayName}
+                  </span>
+                )}
+              </div>
+              <nav className={cn("hidden md:flex items-center gap-6 flex-1", layout === "logo-right" ? "justify-start" : "justify-end")}>
+                {rightLinks.map(renderLink)}
+              </nav>
+            </div>
+          )}
         </div>
       </div>
 
