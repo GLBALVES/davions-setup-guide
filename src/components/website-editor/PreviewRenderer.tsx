@@ -241,6 +241,7 @@ export default function PreviewRenderer({
   onMoveBlock,
   onDuplicateBlock,
   onDeleteBlock,
+  onAddBlockAt,
   accentColor = "#000000",
   site,
   navLinks = [],
