@@ -30,6 +30,7 @@ import { BlockSettingsPanel, type BlockSettings } from "@/components/website-edi
 import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/components/website-editor/PreviewRenderer";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
+import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -1461,19 +1462,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
   );
 };
 
-const SettingsPanel = () => (
-  <div className="p-4 space-y-4">
-    <h3 className="text-sm font-medium text-foreground">Settings</h3>
-    <p className="text-xs text-muted-foreground">General website configuration.</p>
-    <div className="space-y-2">
-      {["Domain", "SEO", "Analytics", "Social Media"].map((item) => (
-        <div key={item} className="p-3 border border-border rounded-md hover:bg-muted/30 cursor-pointer transition-colors">
-          <p className="text-xs font-medium">{item}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+// SettingsPanel imported from "@/components/website-editor/settings/SettingsPanel"
 
 // ── Main Editor ──────────────────────────────────────────────────────────────
 const WebsiteEditor = () => {
@@ -1659,7 +1648,11 @@ const WebsiteEditor = () => {
     />,
     blog: <BlogPanel />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
-    settings: <SettingsPanel />,
+    settings: <SettingsPanel
+      photographerId={user?.id ?? null}
+      site={site as Record<string, any> | null}
+      onSiteChange={updateSite}
+    />,
   };
 
   return (
