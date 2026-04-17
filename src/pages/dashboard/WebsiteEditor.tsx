@@ -7,6 +7,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
+  ArrowRightToLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,7 +146,9 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs">
           <Paintbrush className="h-3.5 w-3.5" /> {we.switchTemplate}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuItem className="gap-2 text-xs">
+          <ArrowRightToLine className="h-3.5 w-3.5" /> {we.subpage}
+        </DropdownMenuItem>
         <DropdownMenuItem className="gap-2 text-xs" onClick={onToggleMenu}>
           {page.inMenu ? (
             <><EyeOff className="h-3.5 w-3.5" /> {we.hideFromMenu}</>
