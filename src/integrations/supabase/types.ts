@@ -1726,6 +1726,53 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submissions: {
+        Row: {
+          archived: boolean
+          created_at: string
+          data: Json
+          form_label: string
+          id: string
+          page_id: string | null
+          page_title: string
+          photographer_id: string
+          read_at: string | null
+          source_url: string | null
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          data?: Json
+          form_label?: string
+          id?: string
+          page_id?: string | null
+          page_title?: string
+          photographer_id: string
+          read_at?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          data?: Json
+          form_label?: string
+          id?: string
+          page_id?: string | null
+          page_title?: string
+          photographer_id?: string
+          read_at?: string | null
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       galleries: {
         Row: {
           access_code: string | null
@@ -2454,6 +2501,9 @@ export type Database = {
           created_at: string
           cta_link: string | null
           cta_text: string | null
+          custom_body_html: string | null
+          custom_css: string | null
+          custom_head_html: string | null
           experience_bg_color: string | null
           experience_text: string | null
           experience_text_color: string | null
@@ -2477,6 +2527,7 @@ export type Database = {
           hero_text_color: string | null
           instagram_url: string | null
           linkedin_url: string | null
+          logo_alt_url: string | null
           logo_url: string | null
           og_image_url: string | null
           photographer_id: string
@@ -2487,6 +2538,7 @@ export type Database = {
           quote_bg_color: string | null
           quote_text: string | null
           quote_text_color: string | null
+          redirects: Json | null
           seo_description: string | null
           seo_title: string | null
           sessions_bg_color: string | null
@@ -2523,6 +2575,9 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          custom_body_html?: string | null
+          custom_css?: string | null
+          custom_head_html?: string | null
           experience_bg_color?: string | null
           experience_text?: string | null
           experience_text_color?: string | null
@@ -2546,6 +2601,7 @@ export type Database = {
           hero_text_color?: string | null
           instagram_url?: string | null
           linkedin_url?: string | null
+          logo_alt_url?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id: string
@@ -2556,6 +2612,7 @@ export type Database = {
           quote_bg_color?: string | null
           quote_text?: string | null
           quote_text_color?: string | null
+          redirects?: Json | null
           seo_description?: string | null
           seo_title?: string | null
           sessions_bg_color?: string | null
@@ -2592,6 +2649,9 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          custom_body_html?: string | null
+          custom_css?: string | null
+          custom_head_html?: string | null
           experience_bg_color?: string | null
           experience_text?: string | null
           experience_text_color?: string | null
@@ -2615,6 +2675,7 @@ export type Database = {
           hero_text_color?: string | null
           instagram_url?: string | null
           linkedin_url?: string | null
+          logo_alt_url?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id?: string
@@ -2625,6 +2686,7 @@ export type Database = {
           quote_bg_color?: string | null
           quote_text?: string | null
           quote_text_color?: string | null
+          redirects?: Json | null
           seo_description?: string | null
           seo_title?: string | null
           sessions_bg_color?: string | null
@@ -3473,6 +3535,7 @@ export type Database = {
       site_pages: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
           is_home: boolean
           is_visible: boolean
@@ -3487,6 +3550,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_home?: boolean
           is_visible?: boolean
@@ -3501,6 +3565,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_home?: boolean
           is_visible?: boolean
