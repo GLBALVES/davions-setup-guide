@@ -1286,11 +1286,6 @@ const PagesPanel = ({
         )}
       </nav>
 
-      <div className="border-t border-border p-3 flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1 text-xs">Preview</Button>
-        <Button size="sm" className="flex-1 text-xs bg-primary text-primary-foreground">Publish</Button>
-      </div>
-
       <PageTemplatePickerModal
         open={templatePickerOpen}
         onOpenChange={setTemplatePickerOpen}
