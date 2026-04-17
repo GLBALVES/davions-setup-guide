@@ -7,7 +7,7 @@ import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/Pr
 
 export type { HeaderConfig, HeaderSlide } from "@/components/website-editor/PreviewHeader";
 
-export type Viewport = "desktop" | "tablet" | "mobile";
+type Viewport = "desktop" | "tablet" | "mobile";
 
 const VIEWPORT_WIDTHS: Record<Viewport, string> = {
   desktop: "100%",
@@ -46,9 +46,6 @@ interface PreviewRendererProps {
   onDeleteBlock?: (index: number) => void;
   /** Called when the user clicks a "+ Add Section" divider in the canvas. */
   onAddBlockAt?: (index: number) => void;
-  /** Optional controlled viewport (desktop/tablet/mobile). */
-  viewport?: Viewport;
-  onViewportChange?: (v: Viewport) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
@@ -254,8 +251,6 @@ export default function PreviewRenderer({
   onDuplicateBlock,
   onDeleteBlock,
   onAddBlockAt,
-  viewport: viewportProp,
-  onViewportChange,
   accentColor = "#000000",
   site,
   navLinks = [],
@@ -268,12 +263,7 @@ export default function PreviewRenderer({
   headerConfig,
   onEditHeader,
 }: PreviewRendererProps) {
-  const [viewportInternal, setViewportInternal] = useState<Viewport>("desktop");
-  const viewport = viewportProp ?? viewportInternal;
-  const setViewport = (v: Viewport) => {
-    if (onViewportChange) onViewportChange(v);
-    else setViewportInternal(v);
-  };
+  const [viewport, setViewport] = useState<Viewport>("desktop");
 
   const editCtx: EditContext | undefined = editMode && onPropChange
     ? { onPropChange, photographerId }

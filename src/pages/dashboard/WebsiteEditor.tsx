@@ -2274,10 +2274,16 @@ const WebsiteEditor = () => {
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  // Mobile mode is driven by the preview's viewport selector (Desktop/Tablet/Mobile),
-  // not by the actual window size. The editor canvas itself simulates mobile.
-  const [previewViewport, setPreviewViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
-  const isMobile = previewViewport === "mobile";
+  // Use a wider breakpoint (lg: 1024px) for the editor since the dual-panel layout
+  // (sidebar + preview) needs more horizontal room than typical mobile detection.
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Load photographer + site config
   useEffect(() => {
@@ -2615,8 +2621,6 @@ const WebsiteEditor = () => {
 
         <div className="flex-1 min-h-0">
           <PreviewRenderer
-            viewport={previewViewport}
-            onViewportChange={setPreviewViewport}
             sections={activePageSections}
             selectedBlockIndex={selectedBlockIndex}
             onSelectBlock={(idx) => {
