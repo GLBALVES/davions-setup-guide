@@ -110,19 +110,27 @@ const ADD_PAGE_OPTIONS = [
 // ── Page context menu ─────────────────────────────────────────────────────────
 const PageContextMenu = ({
   page,
+  folders,
   onSettings,
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onMoveToFolder,
 }: {
   page: SitePage;
+  folders: SitePage[];
   onSettings: () => void;
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onMoveToFolder: (folderId: string | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
+
+  // Folders available as targets (exclude self if page is itself a folder)
+  const availableFolders = folders.filter((f) => f.id !== page.id);
+  const isInFolder = !!(page as any).parentId;
 
   return (
     <DropdownMenu>
@@ -147,9 +155,44 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs">
           <Paintbrush className="h-3.5 w-3.5" /> {we.switchTemplate}
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2 text-xs">
-          <ArrowRightToLine className="h-3.5 w-3.5" /> {we.subpage}
-        </DropdownMenuItem>
+        {page.type !== "folder" && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+              <ArrowRightToLine className="h-3.5 w-3.5" /> {we.subpage}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                {availableFolders.length === 0 ? (
+                  <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                    {we.noFolders}
+                  </DropdownMenuItem>
+                ) : (
+                  availableFolders.map((f) => (
+                    <DropdownMenuItem
+                      key={f.id}
+                      className="gap-2 text-xs"
+                      onClick={(e) => { e.stopPropagation(); onMoveToFolder(f.id); }}
+                    >
+                      <FolderOpen className="h-3.5 w-3.5" />
+                      <span className="truncate">{f.label}</span>
+                    </DropdownMenuItem>
+                  ))
+                )}
+                {isInFolder && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="gap-2 text-xs"
+                      onClick={(e) => { e.stopPropagation(); onMoveToFolder(null); }}
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" /> {we.removeFromFolder}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        )}
         <DropdownMenuItem className="gap-2 text-xs" onClick={onToggleMenu}>
           {page.inMenu ? (
             <><EyeOff className="h-3.5 w-3.5" /> {we.hideFromMenu}</>
