@@ -3,6 +3,9 @@ import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus } from "lucide-react";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
+import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
+
+export type { HeaderConfig, HeaderSlide } from "@/components/website-editor/PreviewHeader";
 
 type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -54,6 +57,10 @@ interface PreviewRendererProps {
   /** Called when an inline editor changes a prop on a section */
   onPropChange?: (sectionId: string, path: string, value: any) => void;
   photographerId?: string | null;
+  /** Per-page header (slider) configuration */
+  headerConfig?: HeaderConfig | null;
+  /** Open the header settings panel in the sidebar */
+  onEditHeader?: () => void;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
