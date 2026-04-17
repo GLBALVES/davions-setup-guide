@@ -140,14 +140,14 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
     <>
       {hasImage && <div className="absolute inset-0 bg-black/40" />}
       {!hasImage && <div className="absolute inset-0 bg-foreground/5" />}
-      <div className="relative z-10 text-center px-6 py-20 max-w-3xl mx-auto">
+      <div className="relative z-10 text-center px-5 sm:px-6 py-14 sm:py-20 max-w-3xl mx-auto">
         <EditableText
           as="h1"
           editMode={c.editMode}
           value={headline || ""}
           placeholder="Headline"
           onChange={(v) => c.set("headline", v)}
-          className={`text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
+          className={`text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
         />
         {(c.editMode || subtitle) && (
           <EditableText
@@ -214,7 +214,7 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
 function TextBlock({ body, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-3xl mx-auto">
         <EditableText
           as="div"
@@ -235,7 +235,7 @@ function TextBlock({ body, ctx }: any) {
 function ImageTextBlock({ image, title, body, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
         <div className="w-full md:w-1/2">
           <EditableImage
@@ -287,7 +287,7 @@ function ImageTextBlock({ image, title, body, ctx }: any) {
 function TextImageBlock({ image, title, body, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row-reverse gap-10 items-center">
         <div className="w-full md:w-1/2">
           <EditableImage
@@ -338,11 +338,11 @@ function TextImageBlock({ image, title, body, ctx }: any) {
 
 function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   const cols = Number(columns) || 3;
-  const gridCls = cols === 2 ? "grid-cols-2" : cols === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
+  const gridCls = cols === 2 ? "grid-cols-1 sm:grid-cols-2" : cols === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
 
   if (!images || images.length === 0) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className={`grid ${gridCls} gap-3`}>
@@ -358,7 +358,7 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   }
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`grid ${gridCls} gap-3`}>
@@ -380,7 +380,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
 
   if (!images || images.length === 0) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
           {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className="columns-2 md:columns-3 gap-3 space-y-3">
@@ -396,7 +396,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
   }
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`columns-${cols} gap-3 space-y-3`}>
@@ -416,7 +416,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
 function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6" id="contact">
+    <section className="py-12 sm:py-16 px-5 sm:px-6" id="contact">
       <div className="max-w-xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
@@ -447,7 +447,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
 function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-20 px-6 bg-muted/20">
+    <section className="py-14 sm:py-20 px-5 sm:px-6 bg-muted/20">
       <div className="max-w-2xl mx-auto text-center">
         <EditableText
           as="h2"
@@ -487,7 +487,7 @@ function FaqBlock({ items = [], ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-2xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
         <div className="divide-y divide-border">
@@ -541,7 +541,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -596,7 +596,7 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-2xl mx-auto">
         <div className="relative border-l-2 border-border pl-8 space-y-10">
           {displayEvents.map((event: any, i: number) => (
@@ -642,7 +642,7 @@ function TestimonialsBlock({ items = [], ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6 bg-muted/10">
+    <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -683,7 +683,7 @@ function StatsBlock({ items = [], accentColor, ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6 border-y border-border">
+    <section className="py-12 sm:py-16 px-5 sm:px-6 border-y border-border">
       <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
         {displayItems.map((item: any, i: number) => (
           <div key={i}>
@@ -718,7 +718,7 @@ function TeamBlock({ members = [], ctx }: any) {
   ];
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Our Team</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
@@ -773,7 +773,7 @@ function TeamBlock({ members = [], ctx }: any) {
 function VideoBlock({ url }: any) {
   if (!url) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-4xl mx-auto aspect-video bg-muted/20 rounded flex items-center justify-center">
           <p className="text-sm text-muted-foreground font-light">Video URL not set</p>
         </div>
@@ -789,7 +789,7 @@ function VideoBlock({ url }: any) {
   if (vimeoMatch) embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto aspect-video overflow-hidden rounded">
         <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen allow="autoplay; encrypted-media" />
       </div>
@@ -818,7 +818,7 @@ function DividerBlock() {
 function Columns2Block({ left, right, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         <EditableText
           as="div"
@@ -848,7 +848,7 @@ function Columns2Block({ left, right, ctx }: any) {
 function Columns3Block({ col1, col2, col3, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {(["col1", "col2", "col3"] as const).map((key, i) => (
           <EditableText
@@ -874,7 +874,7 @@ function SlideshowBlock({ images = [] }: any) {
 
   if (!images || images.length === 0) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-4xl mx-auto aspect-[16/7] bg-muted/20 rounded flex items-center justify-center">
           <Images className="h-8 w-8 text-muted-foreground/20" />
         </div>
@@ -883,7 +883,7 @@ function SlideshowBlock({ images = [] }: any) {
   }
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded">
         <img src={images[current]} alt="" className="w-full h-full object-cover" />
         {images.length > 1 && (
@@ -903,7 +903,7 @@ function SlideshowBlock({ images = [] }: any) {
 function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
   if (!images || images.length === 0) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto flex gap-3 overflow-hidden">
           {Array.from({ length: itemsVisible }).map((_, i) => (
             <div key={i} className="flex-shrink-0 aspect-square bg-muted/20 rounded" style={{ width: `${100 / itemsVisible}%` }}>
@@ -916,7 +916,7 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
   }
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
         {images.map((img: string, i: number) => (
           <div key={i} className="flex-shrink-0 overflow-hidden rounded" style={{ width: `${100 / itemsVisible}%` }}>
@@ -932,10 +932,10 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
 
 function InstagramFeedBlock({ count = 9, columns = 3 }: any) {
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Instagram</h2>
-        <div className={`grid grid-cols-3 gap-2`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2`}>
           {Array.from({ length: count }).map((_, i) => (
             <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
               <Camera className="h-5 w-5 text-muted-foreground/20" />
@@ -972,7 +972,7 @@ function SocialLinksBlock({ links = [] }: any) {
 function EmbedBlock({ code, height = 400 }: any) {
   if (!code) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-4xl mx-auto bg-muted/20 rounded flex items-center justify-center" style={{ height }}>
           <p className="text-sm text-muted-foreground font-light">Custom embed — no code set</p>
         </div>
@@ -981,7 +981,7 @@ function EmbedBlock({ code, height = 400 }: any) {
   }
 
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto" style={{ height }} dangerouslySetInnerHTML={{ __html: code }} />
     </section>
   );
@@ -1013,7 +1013,7 @@ function LogoStripBlock({ title, logos = [] }: any) {
 function MapBlock({ address }: any) {
   if (!address) {
     return (
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-4xl mx-auto aspect-[16/9] bg-muted/20 rounded flex items-center justify-center">
           <MapPin className="h-8 w-8 text-muted-foreground/20" />
         </div>
@@ -1023,7 +1023,7 @@ function MapBlock({ address }: any) {
 
   const encodedAddress = encodeURIComponent(address);
   return (
-    <section className="py-16 px-6">
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto aspect-[16/9] overflow-hidden rounded">
         <iframe
           src={`https://maps.google.com/maps?q=${encodedAddress}&output=embed`}
