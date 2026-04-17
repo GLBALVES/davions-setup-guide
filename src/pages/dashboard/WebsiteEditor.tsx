@@ -1822,152 +1822,275 @@ const BlogPanel = () => (
   </div>
 );
 
-// ── Style Panel (functional) ─────────────────────────────────────────────────
+// ── Style Panel (Pixieset-style: Template + Template Options) ────────────────
+type StyleSubPanel =
+  | "logo"
+  | "fonts"
+  | "colors"
+  | "animations"
+  | "navigation"
+  | "spacing"
+  | "buttons";
+
+const SITE_TEMPLATES_LABELS: Record<string, string> = {
+  editorial: "Rosa",
+  grid: "Lírio",
+  magazine: "Orquídea",
+  clean: "Jasmim",
+  sierra: "Lavanda",
+  canvas: "Dália",
+  avery: "Camélia",
+  seville: "Magnólia",
+  milo: "Violeta",
+};
+
 const StylePanel = ({ photographerId, site, onSiteChange }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
 }) => {
-  return (
-    <div className="p-4 space-y-5 overflow-y-auto h-full">
-      <h3 className="text-sm font-medium text-foreground">Style</h3>
+  const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
+  const [sub, setSub] = useState<StyleSubPanel | null>(null);
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Logo</label>
-        <ImageUploadField
-          value={site?.logoUrl ?? ""}
-          onChange={(url) => onSiteChange({ logo_url: url || null })}
-          photographerId={photographerId}
-          folder="logo"
-          aspectClass="aspect-[3/1]"
-        />
-      </div>
+  // Load the chosen site_template (separate column from photographer_site we already read)
+  useEffect(() => {
+    if (!photographerId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("photographer_site")
+        .select("site_template")
+        .eq("photographer_id", photographerId)
+        .maybeSingle();
+      if ((data as any)?.site_template) setSiteTemplate((data as any).site_template);
+    })();
+  }, [photographerId]);
 
-      {/* ── Typography ── */}
-      <div className="border-t border-border -mx-4 px-4 pt-4">
-        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
-          Typography
-        </p>
+  const templateLabel = SITE_TEMPLATES_LABELS[siteTemplate] ?? siteTemplate;
 
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Heading font</label>
-            <Select
-              value={site?.headingFont || "inter"}
-              onValueChange={(v) => onSiteChange({ heading_font: v })}
-            >
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_PRESETS.map((f) => (
-                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+  const OPTIONS: { key: StyleSubPanel; label: string }[] = [
+    { key: "logo", label: "Logo & Branding" },
+    { key: "fonts", label: "Fonts" },
+    { key: "colors", label: "Colors" },
+    { key: "animations", label: "Animations" },
+    { key: "navigation", label: "Navigation" },
+    { key: "spacing", label: "Spacing" },
+    { key: "buttons", label: "Buttons" },
+  ];
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Body font</label>
-            <Select
-              value={site?.bodyFont || "inter"}
-              onValueChange={(v) => onSiteChange({ body_font: v })}
-            >
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FONT_PRESETS.map((f) => (
-                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                    {f.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+  // ── Sub-panel views ────────────────────────────────────────────────────────
+  if (sub) {
+    const current = OPTIONS.find((o) => o.key === sub);
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSub(null)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h3 className="text-sm font-medium text-foreground">{current?.label}</h3>
         </div>
-      </div>
-
-      {/* ── Colors ── */}
-      <div className="border-t border-border -mx-4 px-4 pt-4">
-        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
-          Colors
-        </p>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Accent</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={site?.accentColor || "#000000"}
-                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {sub === "logo" && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Logo</label>
+              <ImageUploadField
+                value={site?.logoUrl ?? ""}
+                onChange={(url) => onSiteChange({ logo_url: url || null })}
+                photographerId={photographerId}
+                folder="logo"
+                aspectClass="aspect-[3/1]"
               />
-              <Input
-                value={site?.accentColor || "#000000"}
-                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-                className="h-9 text-sm flex-1"
-              />
+              <p className="text-[11px] text-muted-foreground">
+                Recommended transparent PNG, ~600×200px.
+              </p>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Header background</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
+          {sub === "fonts" && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Heading font</label>
+                <Select
+                  value={site?.headingFont || "inter"}
+                  onValueChange={(v) => onSiteChange({ heading_font: v })}
+                >
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FONT_PRESETS.map((f) => (
+                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Body font</label>
+                <Select
+                  value={site?.bodyFont || "inter"}
+                  onValueChange={(v) => onSiteChange({ body_font: v })}
+                >
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FONT_PRESETS.map((f) => (
+                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {sub === "colors" && (
+            <div className="space-y-4">
+              <ColorRow
+                label="Accent"
+                value={site?.accentColor || "#000000"}
+                onChange={(v) => onSiteChange({ accent_color: v })}
+              />
+              <ColorRow
+                label="Header background"
                 value={site?.headerBg || "#ffffff"}
-                onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+                onChange={(v) => onSiteChange({ header_bg_color: v })}
               />
-              <Input
-                value={site?.headerBg || ""}
-                onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
-                className="h-9 text-sm flex-1"
-                placeholder="#ffffff"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Footer background</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <ColorRow
+                label="Footer background"
                 value={site?.footerBg || "#000000"}
-                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+                onChange={(v) => onSiteChange({ footer_bg_color: v })}
               />
-              <Input
-                value={site?.footerBg || ""}
-                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
-                className="h-9 text-sm flex-1"
-                placeholder="#000000"
-              />
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Footer text</label>
+                <Input
+                  value={site?.footerText || ""}
+                  onChange={(e) => onSiteChange({ footer_text: e.target.value })}
+                  className="h-9 text-sm"
+                  placeholder="© 2026 Studio Name"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Footer text</label>
-            <Input
-              value={site?.footerText || ""}
-              onChange={(e) => onSiteChange({ footer_text: e.target.value })}
-              className="h-9 text-sm"
-              placeholder="© 2026 Studio Name"
+          {sub === "animations" && (
+            <ComingSoon
+              title="Animations"
+              description="Choose how sections fade, slide, and reveal as visitors scroll. Coming soon."
             />
-          </div>
+          )}
+
+          {sub === "navigation" && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Logo position, alignment and link style are configured per-page in the
+                <span className="font-medium text-foreground"> header settings</span> of each page.
+              </p>
+              <p className="text-[11px] text-muted-foreground/80">
+                Open a page → click the header → adjust the logo position icons.
+              </p>
+            </div>
+          )}
+
+          {sub === "spacing" && (
+            <ComingSoon
+              title="Spacing"
+              description="Global section padding and rhythm controls. Coming soon."
+            />
+          )}
+
+          {sub === "buttons" && (
+            <ComingSoon
+              title="Buttons"
+              description="Button shape, size and style presets. Coming soon."
+            />
+          )}
         </div>
       </div>
+    );
+  }
 
-      <p className="text-[10px] text-muted-foreground/70 pt-2">
+  // ── Main view (Pixieset-style) ─────────────────────────────────────────────
+  return (
+    <div className="flex flex-col h-full overflow-y-auto">
+      <div className="px-4 py-3">
+        <h3 className="text-sm font-medium text-foreground">Design</h3>
+      </div>
+
+      {/* TEMPLATE */}
+      <div className="px-4 pt-2 pb-4 border-t border-border">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light mb-2">
+          Template
+        </p>
+        <p className="text-sm font-semibold tracking-wide uppercase text-foreground mb-3">
+          {templateLabel}
+        </p>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("open-template-picker"))}
+          className="block w-full overflow-hidden rounded-md border border-border hover:border-foreground/40 transition-colors"
+        >
+          <div className="aspect-[4/3] bg-muted flex items-center justify-center">
+            <span className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+              {templateLabel}
+            </span>
+          </div>
+        </button>
+      </div>
+
+      {/* TEMPLATE OPTIONS */}
+      <div className="border-t border-border px-4 py-4">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light mb-2">
+          Template Options
+        </p>
+        <ul className="-mx-2">
+          {OPTIONS.map((opt) => (
+            <li key={opt.key}>
+              <button
+                type="button"
+                onClick={() => setSub(opt.key)}
+                className="w-full flex items-center justify-between px-2 py-3 text-sm text-foreground hover:bg-muted/40 rounded-md transition-colors"
+              >
+                <span>{opt.label}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="text-[10px] text-muted-foreground/70 px-4 py-3 mt-auto">
         Changes save automatically and reflect in the preview.
       </p>
     </div>
   );
 };
+
+// Small helpers used inside StylePanel
+const ColorRow = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-medium text-muted-foreground">{label}</label>
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+      />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 text-sm flex-1"
+      />
+    </div>
+  </div>
+);
+
+const ComingSoon = ({ title, description }: { title: string; description: string }) => (
+  <div className="rounded-md border border-dashed border-border p-6 text-center">
+    <p className="text-sm font-medium text-foreground">{title}</p>
+    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{description}</p>
+  </div>
+);
+
 
 // SettingsPanel imported from "@/components/website-editor/settings/SettingsPanel"
 
