@@ -898,6 +898,7 @@ interface DbSitePage {
   is_visible: boolean;
   sections_order: any;
   page_content: any;
+  header_config?: any;
 }
 
 function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
@@ -918,6 +919,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
     pageDescription: content.pageDescription,
     hideFromSearch: content.hideFromSearch,
     socialImage: content.socialImage,
+    headerConfig: (row.header_config as any) ?? null,
     ...(children && children.length > 0 ? { children } : {}),
   };
 }
@@ -945,6 +947,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
       hideFromSearch: page.hideFromSearch,
       socialImage: page.socialImage,
     })),
+    header_config: page.headerConfig ? JSON.parse(JSON.stringify(page.headerConfig)) : null,
   };
 }
 
