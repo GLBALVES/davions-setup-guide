@@ -46,6 +46,9 @@ interface PreviewRendererProps {
   onDeleteBlock?: (index: number) => void;
   /** Called when the user clicks a "+ Add Section" divider in the canvas. */
   onAddBlockAt?: (index: number) => void;
+  /** Optional controlled viewport (desktop/tablet/mobile). */
+  viewport?: Viewport;
+  onViewportChange?: (v: Viewport) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
