@@ -1426,6 +1426,8 @@ const WebsiteEditor = () => {
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
+  const [addBlockOpen, setAddBlockOpen] = useState(false);
+  const [insertIndex, setInsertIndex] = useState(0);
   const navigate = useNavigate();
   const { user } = useAuth();
 
