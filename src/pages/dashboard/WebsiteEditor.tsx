@@ -157,6 +157,55 @@ const PageContextMenu = ({
   );
 };
 
+// ── Inline-editable label (double-click to rename) ───────────────────────────
+const EditableLabel = ({
+  value,
+  onRename,
+  className,
+}: {
+  value: string;
+  onRename?: (next: string) => void;
+  className?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onRename?.(trimmed);
+    else setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(); }
+          else if (e.key === "Escape") { e.preventDefault(); setDraft(value); setEditing(false); }
+        }}
+        className={cn("flex-1 min-w-0 bg-background border border-primary/60 rounded px-1.5 py-0.5 text-sm outline-none focus:ring-1 focus:ring-primary", className)}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={cn("truncate flex-1 select-none", className)}
+      onDoubleClick={(e) => { e.stopPropagation(); if (onRename) setEditing(true); }}
+      title={onRename ? "Double-click to rename" : undefined}
+    >
+      {value}
+    </span>
+  );
+};
+
 // ── Page item ─────────────────────────────────────────────────────────────────
 const PageItem = ({
   page,
@@ -166,6 +215,7 @@ const PageItem = ({
   onToggleMenu,
   onDelete,
   onDuplicate,
+  onRename,
   indent = false,
 }: {
   page: SitePage;
@@ -175,6 +225,7 @@ const PageItem = ({
   onToggleMenu: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onRename?: (label: string) => void;
   indent?: boolean;
 }) => {
   const IconEl = page.icon
@@ -201,7 +252,7 @@ const PageItem = ({
       ) : IconEl ? (
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
-      <span className="truncate flex-1">{page.label}</span>
+      <EditableLabel value={page.label} onRename={onRename} />
       <PageContextMenu page={page} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} />
     </div>
   );
