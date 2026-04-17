@@ -1669,7 +1669,17 @@ const WebsiteEditor = () => {
             navLinks={navLinks}
             activePageId={activePageInfo.id}
             showHeaderFooter={activePageInfo.showHeaderFooter}
+            editMode={true}
+            onPropChange={handleBlockPropChange}
+            photographerId={user?.id ?? null}
           />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WebsiteEditor;
         </div>
       </div>
     </div>
