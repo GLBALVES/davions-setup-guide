@@ -1,86 +1,45 @@
 
+O usuário quer alternativas para o menu lateral do Website Editor no mobile, que atualmente abre como drawer horizontal contendo a faixa de ícones (tabs) + o painel de configurações lado a lado — o que não cabe bem em telas pequenas.
 
-## Diagnóstico do header atual no preview
+## Opções de layout mobile
 
-**O que existe hoje (`PreviewRenderer.tsx` → `PreviewNav`):**
-- Header tradicional: logo à esquerda, menu à direita, fundo sólido (`headerBg`)
-- Sticky simples, sem altura definida (só padding `py-4`)
-- Sem slider, sem hover handles, sem botões Change Layout/Settings
-- `HeaderSliderPanel` existe mas usa `useState` local — não persiste, não emite nada pro preview, fica isolado
+### Opção 1 — Drawer vertical com abas no topo (recomendado)
+O drawer ocupa a largura quase total da tela (ex: `w-[90vw]` ou `w-full max-w-sm`). Em vez de mostrar a faixa de ícones na lateral esquerda, ela vira uma **barra horizontal de abas no topo** do drawer (Pages, Design, Settings, SEO, etc.), e abaixo aparece o painel de conteúdo da aba selecionada ocupando todo o espaço vertical restante.
 
-**Gap vs. spec aprovado:**
-1. Logo deve ser **central**, dividindo o menu (metade dos links à esquerda, metade à direita)
-2. Fundo deve ser **slider de imagens** (não cor sólida)
-3. Altura **auto ~60vh** (hero-like)
-4. **Hover** mostra botões "Change Layout" e "Settings"
-5. Clicar no slider abre o `HeaderSliderPanel` na sidebar
-6. **Placeholder Unsplash** + aviso "imagem demo" quando vazio
-7. **Por página**: cada página tem seu próprio config de header
-8. Slider configurável: autoplay on/off, velocidade, transição fade/slide
-
----
-
-## Plano de implementação
-
-### 1. Backend — persistência por página
-
-Migration: adicionar coluna `header_config jsonb` em `site_pages`:
-```json
-{
-  "layout": "logo-center",
-  "slides": [{ "id": "...", "title": "", "imageUrl": "..." }],
-  "autoplay": true,
-  "speed": 5000,
-  "transition": "fade",
-  "height": "60vh",
-  "overlayOpacity": 0.3
-}
+```text
+┌─────────────────────────┐
+│ [📄][🎨][⚙️][🔍][📊] ✕ │  ← tabs horizontais
+├─────────────────────────┤
+│                         │
+│   Painel da aba ativa   │
+│   (Pages, Design...)    │
+│                         │
+└─────────────────────────┘
 ```
-Default `null` → usa placeholder Unsplash.
 
-### 2. `PreviewRenderer.tsx` — novo `PreviewHeader`
+**Prós:** familiar, aproveita largura total, leitura confortável.
+**Contras:** se tiver muitas abas, scroll horizontal nos ícones.
 
-Substituir o `PreviewNav` atual por `PreviewHeader` com:
-- **Slider de fundo** (crossfade ou slide, baseado em `transition`), autoplay opcional
-- **Altura `60vh`** (configurável)
-- **Logo central** entre duas metades do menu (split do `navLinks` ao meio)
-- **Overlay** escuro pra contraste (opacity configurável)
-- **Texto branco** sobre o slider por padrão
-- Quando sem slides → placeholder Unsplash + badge `"imagem demo"` no canto
-- **Hover overlay** (só `editMode`) com 2 botões: `Change Layout` e `Settings` → ambos disparam `onEditHeader()` callback que abre o `HeaderSliderPanel` na sidebar
-- Click direto no fundo também abre o painel
+### Opção 2 — Bottom Sheet (estilo app nativo)
+Drawer sobe de baixo para cima, ocupa ~85% da altura. Ícones de aba ficam fixos no topo do sheet como pills, conteúdo abaixo. Gesto natural em mobile.
 
-### 3. `HeaderSliderPanel` — conectar ao preview e ao banco
+**Prós:** ergonômico (polegar alcança), moderno.
+**Contras:** cobre o preview enquanto aberto.
 
-- Receber `value: HeaderConfig` e `onChange` via props (controlled)
-- Adicionar controles: **Layout** (só "Logo Central" agora), **Speed** (slider 2-10s), **Transition** (fade/slide), **Height** (slider 40-100vh), **Overlay opacity**
-- Upload de imagem por slide via `EditableImage` no bucket `site-assets`
-- Persistir em `site_pages.header_config` via debounce (igual ao resto do editor)
+### Opção 3 — Duas etapas (lista de seções → painel)
+Primeiro o drawer abre uma **lista vertical** das seções (Pages, Design, Settings…). Ao tocar em uma, navega para uma segunda tela dentro do drawer com o painel completo + botão "Voltar".
 
-### 4. `WebsiteEditor.tsx` — wiring
+**Prós:** cada tela respira, zero competição por espaço.
+**Contras:** um toque a mais para chegar ao conteúdo.
 
-- Carregar `header_config` da página ativa e passar pro `PreviewRenderer`
-- Adicionar `onEditHeader` que seta `editingSection = "header-slider"` na sidebar
-- `HeaderSliderPanel` agora recebe `pageId` + `value` + `onChange`
-- Salvar via mesma rotina de debounce que salva sections
+### Opção 4 — Bottom navigation bar fixa + sheet por aba
+Barra fixa no rodapé com os ícones (igual Instagram/apps). Tocar em um ícone abre um bottom sheet apenas com o painel daquela seção.
 
-### 5. i18n
+**Prós:** acesso rápido, padrão mobile reconhecido.
+**Contras:** ocupa espaço permanente do preview.
 
-Adicionar nas 3 linguas: `changeLayout`, `headerSettings`, `slideSpeed`, `transition`, `fadeTransition`, `slideTransition`, `headerHeight`, `overlayOpacity`, `demoImage`, `logoCenter`.
+## Minha recomendação
+**Opção 1** — é a mudança mais simples sobre a estrutura atual (já existe o `Sheet`), mantém o mesmo modelo mental do desktop (tabs + painel), e resolve o problema de "horizontal apertado" virando as tabs para cima. Reaproveita os componentes `Tabs` do shadcn.
 
----
-
-## Arquivos afetados
-- **Migration nova**: adiciona `site_pages.header_config jsonb`
-- **`src/components/website-editor/PreviewRenderer.tsx`**: substitui `PreviewNav` por `PreviewHeader` com slider
-- **`src/pages/dashboard/WebsiteEditor.tsx`**: refatora `HeaderSliderPanel` (controlled + persistência), adiciona load/save do `header_config` por página, wiring do `onEditHeader`
-- **`src/lib/i18n/translations.ts`**: novas chaves EN/PT/ES
-
----
-
-## Detalhes técnicos
-- Placeholder Unsplash: `https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1920` (hero photography)
-- Split do menu: `navLinks.slice(0, Math.ceil(n/2))` à esquerda, resto à direita; logo central no meio
-- Slider: `useEffect` com `setInterval` baseado em `autoplay` + `speed`, transição CSS via `opacity` (fade) ou `transform: translateX` (slide)
-- Mobile: logo central sobre menu hamburger (escopo posterior se quiser)
-
+## Pergunta
+Qual opção você prefere que eu implemente?
