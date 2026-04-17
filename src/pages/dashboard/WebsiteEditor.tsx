@@ -2521,14 +2521,76 @@ const WebsiteEditor = () => {
     </>
   );
 
+  const mobilePanel = (
+    <div className="flex flex-col h-full w-full bg-card">
+      {/* Horizontal icon tab strip at top */}
+      <div className="flex items-center border-b border-border shrink-0 overflow-x-auto">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="h-12 w-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border-r border-border shrink-0"
+          aria-label="Dashboard"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <div className="flex flex-1 min-w-0">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex-1 h-12 flex flex-col items-center justify-center gap-0.5 transition-colors relative shrink-0 min-w-[56px] px-2",
+                  isActive ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                )}
+              >
+                {isActive && <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-t" />}
+                <Icon className="h-4 w-4" />
+                <span className="text-[9px] uppercase tracking-wider font-medium leading-none">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Active panel content */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {panelMap[activeTab]}
+      </div>
+
+      {/* Preview / Publish footer */}
+      <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 h-9 text-xs gap-1.5"
+          onClick={() => { if (storeSlug) window.open(`/store/${storeSlug}`, "_blank"); }}
+        >
+          <Eye className="h-3 w-3" />
+          Preview
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1 h-9 text-xs gap-1.5"
+          onClick={handlePublish}
+          disabled={publishing}
+        >
+          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          Publish
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {!isMobile && sidebarPanel}
 
       {isMobile && (
         <Sheet open={mobilePanelOpen} onOpenChange={setMobilePanelOpen}>
-          <SheetContent side="left" className="p-0 w-[300px] flex flex-row">
-            {sidebarPanel}
+          <SheetContent side="left" className="p-0 w-[92vw] max-w-sm flex flex-col">
+            {mobilePanel}
           </SheetContent>
         </Sheet>
       )}
