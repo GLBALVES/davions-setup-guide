@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
