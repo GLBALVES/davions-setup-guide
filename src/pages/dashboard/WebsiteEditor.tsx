@@ -31,6 +31,10 @@ import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import {
+  DndContext, useDraggable, useDroppable, DragOverlay,
+  PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent,
+} from "@dnd-kit/core";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
@@ -1069,6 +1073,172 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
   };
 }
 
+// ── DnD wrappers for moving pages between Site Menu and Not in Menu ──────────
+type DndZone = "menu" | "notmenu";
+
+const DraggablePageRow = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ touchAction: "none" }}
+      className={cn("relative", isDragging && "opacity-40")}
+    >
+      {children}
+    </div>
+  );
+};
+
+const DroppableZone = ({
+  id,
+  children,
+  className,
+  emptyHint,
+}: {
+  id: DndZone;
+  children: React.ReactNode;
+  className?: string;
+  emptyHint?: string;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-md transition-colors min-h-[8px]",
+        isOver && "bg-primary/5 ring-1 ring-primary/40 ring-inset",
+        className
+      )}
+    >
+      {children}
+      {emptyHint && (
+        <div className={cn(
+          "px-3 py-3 mx-2 my-1 rounded-md border border-dashed text-[11px] text-center text-muted-foreground/70 transition-colors",
+          isOver ? "border-primary/50 text-primary/70" : "border-border"
+        )}>
+          {emptyHint}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DndPagesArea = ({
+  menuPages,
+  nonMenuPages,
+  activePage,
+  notInMenuLabel,
+  onSelect,
+  onSettings,
+  onToggleMenu,
+  onDelete,
+  onDuplicate,
+  onRename,
+  onMove,
+}: {
+  menuPages: SitePage[];
+  nonMenuPages: SitePage[];
+  activePage: string;
+  notInMenuLabel: string;
+  onSelect: (id: string) => void;
+  onSettings: (p: SitePage) => void;
+  onToggleMenu: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onRename: (id: string, label: string) => void;
+  onMove: (id: string, target: DndZone) => void;
+}) => {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  const allPages = [...menuPages, ...nonMenuPages];
+  const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    setDragId(null);
+    const id = String(e.active.id);
+    const overId = e.over?.id ? String(e.over.id) as DndZone : null;
+    if (!overId) return;
+    const inMenuList = menuPages.some((p) => p.id === id);
+    if (overId === "menu" && !inMenuList) onMove(id, "menu");
+    else if (overId === "notmenu" && inMenuList) onMove(id, "notmenu");
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={(e: DragStartEvent) => setDragId(String(e.active.id))}
+      onDragCancel={() => setDragId(null)}
+      onDragEnd={handleDragEnd}
+    >
+      <nav className="flex-1 overflow-y-auto px-2 pb-4">
+        <DroppableZone id="menu" emptyHint={menuPages.length === 0 ? "Drop here to show in menu" : undefined}>
+          {menuPages.map((page) =>
+            page.type === "folder" ? (
+              <DraggablePageRow key={page.id} id={page.id}>
+                <PageFolder
+                  page={page}
+                  activePage={activePage}
+                  onSelect={onSelect}
+                  onSettings={onSettings}
+                  onToggleMenu={onToggleMenu}
+                  onDelete={onDelete}
+                  onDuplicate={onDuplicate}
+                  onRename={onRename}
+                />
+              </DraggablePageRow>
+            ) : (
+              <DraggablePageRow key={page.id} id={page.id}>
+                <PageItem
+                  page={page}
+                  active={activePage === page.id}
+                  onSelect={() => onSelect(page.id)}
+                  onSettings={() => onSettings(page)}
+                  onToggleMenu={() => onToggleMenu(page.id)}
+                  onDelete={() => onDelete(page.id)}
+                  onDuplicate={() => onDuplicate(page.id)}
+                  onRename={(label) => onRename(page.id, label)}
+                />
+              </DraggablePageRow>
+            )
+          )}
+        </DroppableZone>
+
+        <div className="px-2 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{notInMenuLabel}</p>
+        </div>
+        <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
+          {nonMenuPages.map((page) => (
+            <DraggablePageRow key={page.id} id={page.id}>
+              <PageItem
+                page={page}
+                active={activePage === page.id}
+                onSelect={() => onSelect(page.id)}
+                onSettings={() => onSettings(page)}
+                onToggleMenu={() => onToggleMenu(page.id)}
+                onDelete={() => onDelete(page.id)}
+                onDuplicate={() => onDuplicate(page.id)}
+                onRename={(label) => onRename(page.id, label)}
+              />
+            </DraggablePageRow>
+          ))}
+        </DroppableZone>
+      </nav>
+
+      <DragOverlay dropAnimation={null}>
+        {activeDrag ? (
+          <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="truncate">{activeDrag.label}</span>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+};
+
 // ── Pages Panel ───────────────────────────────────────────────────────────────
 const PagesPanel = ({
   editingSection,
@@ -1494,57 +1664,19 @@ const PagesPanel = ({
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.siteMenu}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2">
-        {menuPages.map((page) =>
-          page.type === "folder" ? (
-            <PageFolder
-              key={page.id}
-              page={page}
-              activePage={activePage}
-              onSelect={(id) => selectPage(id)}
-              onSettings={setSettingsPage}
-              onToggleMenu={toggleMenu}
-              onDelete={deletePage}
-              onDuplicate={duplicatePage}
-              onRename={(id, label) => findAndUpdate(id, { label })}
-            />
-          ) : (
-            <PageItem
-              key={page.id}
-              page={page}
-              active={activePage === page.id}
-              onSelect={() => selectPage(page.id)}
-              onSettings={() => setSettingsPage(page)}
-              onToggleMenu={() => toggleMenu(page.id)}
-              onDelete={() => deletePage(page.id)}
-              onDuplicate={() => duplicatePage(page.id)}
-              onRename={(label) => findAndUpdate(page.id, { label })}
-            />
-          )
-        )}
-
-        {/* NOT IN MENU section */}
-        {nonMenuPages.length > 0 && (
-          <>
-            <div className="px-2 pt-4 pb-2">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.notInMenu}</p>
-            </div>
-            {nonMenuPages.map((page) => (
-              <PageItem
-                key={page.id}
-                page={page}
-                active={activePage === page.id}
-                onSelect={() => selectPage(page.id)}
-                onSettings={() => setSettingsPage(page)}
-                onToggleMenu={() => toggleMenu(page.id)}
-                onDelete={() => deletePage(page.id)}
-                onDuplicate={() => duplicatePage(page.id)}
-                onRename={(label) => findAndUpdate(page.id, { label })}
-              />
-            ))}
-          </>
-        )}
-      </nav>
+      <DndPagesArea
+        menuPages={menuPages}
+        nonMenuPages={nonMenuPages}
+        activePage={activePage}
+        notInMenuLabel={we.notInMenu}
+        onSelect={selectPage}
+        onSettings={setSettingsPage}
+        onToggleMenu={toggleMenu}
+        onDelete={deletePage}
+        onDuplicate={duplicatePage}
+        onRename={(id, label) => findAndUpdate(id, { label })}
+        onMove={(id, target) => findAndUpdate(id, { inMenu: target === "menu" })}
+      />
 
       <PageTemplatePickerModal
         open={templatePickerOpen}
