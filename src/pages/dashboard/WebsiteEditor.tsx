@@ -1497,7 +1497,7 @@ const WebsiteEditor = () => {
       }
       const { data: s } = await supabase
         .from("photographer_site")
-        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text")
+        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text, heading_font, body_font")
         .eq("photographer_id", user.id)
         .maybeSingle();
       if (s) {
@@ -1509,6 +1509,8 @@ const WebsiteEditor = () => {
           footerBg: (s as any).footer_bg_color,
           footerTextColor: (s as any).footer_text_color,
           footerText: (s as any).footer_text,
+          headingFont: (s as any).heading_font,
+          bodyFont: (s as any).body_font,
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
@@ -1516,6 +1518,21 @@ const WebsiteEditor = () => {
       }
     })();
   }, [user]);
+
+  // Inject the chosen Google Fonts into the page so the editor preview matches the published site.
+  useEffect(() => {
+    const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
+    if (!href) return;
+    const id = "lov-site-fonts";
+    let el = document.getElementById(id) as HTMLLinkElement | null;
+    if (!el) {
+      el = document.createElement("link");
+      el.id = id;
+      el.rel = "stylesheet";
+      document.head.appendChild(el);
+    }
+    if (el.href !== href) el.href = href;
+  }, [site?.headingFont, site?.bodyFont]);
 
   const updateSite = useCallback(async (patch: Record<string, any>) => {
     if (!user) return;
@@ -1527,6 +1544,8 @@ const WebsiteEditor = () => {
       headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
       footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
       footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
+      headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
+      bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
       displayName: prev?.displayName ?? displayName,
     }));
     await supabase
