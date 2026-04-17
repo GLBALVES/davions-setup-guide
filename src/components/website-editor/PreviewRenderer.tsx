@@ -21,6 +21,8 @@ export interface PreviewSiteConfig {
   footerBg?: string | null;
   footerTextColor?: string | null;
   footerText?: string | null;
+  headingFont?: string | null;
+  bodyFont?: string | null;
 }
 
 export interface PreviewNavLink {
