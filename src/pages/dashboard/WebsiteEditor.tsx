@@ -31,6 +31,10 @@ import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import {
+  DndContext, useDraggable, useDroppable, DragOverlay,
+  PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent,
+} from "@dnd-kit/core";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EditorTab = "pages" | "blog" | "style" | "settings";
