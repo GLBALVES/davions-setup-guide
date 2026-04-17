@@ -3536,6 +3536,7 @@ export type Database = {
         Row: {
           created_at: string
           deleted_at: string | null
+          header_config: Json | null
           id: string
           is_home: boolean
           is_visible: boolean
@@ -3551,6 +3552,7 @@ export type Database = {
         Insert: {
           created_at?: string
           deleted_at?: string | null
+          header_config?: Json | null
           id?: string
           is_home?: boolean
           is_visible?: boolean
@@ -3566,6 +3568,7 @@ export type Database = {
         Update: {
           created_at?: string
           deleted_at?: string | null
+          header_config?: Json | null
           id?: string
           is_home?: boolean
           is_visible?: boolean
