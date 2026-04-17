@@ -7,7 +7,7 @@ import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/Pr
 
 export type { HeaderConfig, HeaderSlide } from "@/components/website-editor/PreviewHeader";
 
-type Viewport = "desktop" | "tablet" | "mobile";
+export type Viewport = "desktop" | "tablet" | "mobile";
 
 const VIEWPORT_WIDTHS: Record<Viewport, string> = {
   desktop: "100%",
