@@ -1498,57 +1498,19 @@ const PagesPanel = ({
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.siteMenu}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2">
-        {menuPages.map((page) =>
-          page.type === "folder" ? (
-            <PageFolder
-              key={page.id}
-              page={page}
-              activePage={activePage}
-              onSelect={(id) => selectPage(id)}
-              onSettings={setSettingsPage}
-              onToggleMenu={toggleMenu}
-              onDelete={deletePage}
-              onDuplicate={duplicatePage}
-              onRename={(id, label) => findAndUpdate(id, { label })}
-            />
-          ) : (
-            <PageItem
-              key={page.id}
-              page={page}
-              active={activePage === page.id}
-              onSelect={() => selectPage(page.id)}
-              onSettings={() => setSettingsPage(page)}
-              onToggleMenu={() => toggleMenu(page.id)}
-              onDelete={() => deletePage(page.id)}
-              onDuplicate={() => duplicatePage(page.id)}
-              onRename={(label) => findAndUpdate(page.id, { label })}
-            />
-          )
-        )}
-
-        {/* NOT IN MENU section */}
-        {nonMenuPages.length > 0 && (
-          <>
-            <div className="px-2 pt-4 pb-2">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.notInMenu}</p>
-            </div>
-            {nonMenuPages.map((page) => (
-              <PageItem
-                key={page.id}
-                page={page}
-                active={activePage === page.id}
-                onSelect={() => selectPage(page.id)}
-                onSettings={() => setSettingsPage(page)}
-                onToggleMenu={() => toggleMenu(page.id)}
-                onDelete={() => deletePage(page.id)}
-                onDuplicate={() => duplicatePage(page.id)}
-                onRename={(label) => findAndUpdate(page.id, { label })}
-              />
-            ))}
-          </>
-        )}
-      </nav>
+      <DndPagesArea
+        menuPages={menuPages}
+        nonMenuPages={nonMenuPages}
+        activePage={activePage}
+        notInMenuLabel={we.notInMenu}
+        onSelect={selectPage}
+        onSettings={setSettingsPage}
+        onToggleMenu={toggleMenu}
+        onDelete={deletePage}
+        onDuplicate={duplicatePage}
+        onRename={(id, label) => findAndUpdate(id, { label })}
+        onMove={(id, target) => findAndUpdate(id, { inMenu: target === "menu" })}
+      />
 
       <PageTemplatePickerModal
         open={templatePickerOpen}
