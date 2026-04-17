@@ -1,64 +1,54 @@
 
-Objetivo: corrigir o preview de templates para não herdar configurações antigas e, se necessário, oferecer uma limpeza real do site.
 
-Diagnóstico do problema
-- O preview de template em `WebsiteSettings` está sendo renderizado com `siteData` atual do site (`logo_url`, `accent_color`, `site_headline`, `site_subheadline`, `about_title`, `quote_text`, `experience_title`, links sociais etc.).
-- Em `TemplatePreviewModal`, esse `siteData` é passado para `PublicSiteRenderer`, então o template novo só troca `site_template`, mas continua usando branding/conteúdo antigo.
-- Além disso, o site público em `/store/:slug?preview=...` também carrega `site_pages` reais e `photographer_site` real, então o preview “Open Full” também pode refletir páginas/seções antigas.
+The user already approved the preview-isolation fix and it's implemented. They re-confirmed the questions answers, including **"Resetar o site inteiro deste fotógrafo (todas as páginas + config)"** as the desired scope. So the remaining work is the **destructive Reset Site action** that was deferred.
 
-O que vou implementar
-1. Corrigir o preview do template para ser isolado
-- Em `TemplatePreviewModal`, montar um `siteData` sanitizado para preview:
-  - manter apenas o mínimo necessário para renderizar o layout
-  - sobrescrever campos antigos com `null`, `""` ou defaults visuais
-  - não reutilizar headline, subheadline, quote, experience, about content, logo e links antigos no preview de template
-- Resultado: o preview mostrará o template “limpo”, sem herdar configuração anterior.
+## Plano: Adicionar ação "Resetar Site" em /dashboard/website
 
-2. Isolar também o “Open Full”
-- Ajustar o fluxo de preview full para usar um modo de preview isolado, não os dados persistidos do site atual.
-- Opções técnicas:
-  - preferencial: passar um estado de preview explícito via query params simples / flag e sanitizar na página pública
-  - alternativa: abrir o modal sempre inline e remover/limitar o “Open Full” até o preview público respeitar esse modo
-- Resultado: modal e preview full ficam consistentes.
+### O que falta (preview já está isolado)
 
-3. Impedir herança de páginas/seções antigas no preview
-- Hoje `StorePage` sempre lê `site_pages` reais.
-- Vou adicionar um modo “template preview” em que:
-  - o template visual é exibido sem `site_pages` reais
-  - nav/footer usam apenas placeholders/defaults
-  - nenhuma página antiga aparece no menu durante a prévia
-- Resultado: o template preview deixa de misturar estrutura antiga com template novo.
+O fix de preview foi feito na resposta anterior — `TemplatePreviewModal` e `StorePage?clean=1` já ignoram dados antigos. Falta o **reset real e explícito** que o usuário pediu, separado do preview.
 
-4. Adicionar ação de limpeza explícita no editor/site settings
-- Como “corrigir preview” e “apagar dados” são coisas diferentes, vou separar:
-  - “Preview limpo” = só bugfix visual, sem apagar nada
-  - “Resetar site” = ação explícita e destrutiva
-- A ação de reset poderá:
-  - limpar `photographer_site` para defaults seguros
-  - remover todas as `site_pages`
-  - opcionalmente recriar apenas a Home com o template atual
-- Isso exige mudança real no banco via migration/implementação controlada.
+### Implementação
 
-5. UX de segurança para limpeza
-- Adicionar modal de confirmação forte:
-  - explicar exatamente o que será apagado
-  - opção “resetar apenas conteúdo e páginas”
-  - opção de manter branding global, se desejado
-- Evita apagar trabalho por engano.
+**1. Edge function `reset-site`** (destrutiva, exige auth)
+- Deleta todas as `site_pages` do fotógrafo
+- Reseta `photographer_site` para defaults (mantém `photographer_id`, limpa headlines/cores/fontes/logo/quote/about/social/SEO)
+- Recria 1 página Home vazia com o template escolhido
+- Retorna sucesso/erro
 
-Arquivos que devo ajustar
-- `src/components/website-editor/TemplatePreviewModal.tsx`
-- `src/pages/dashboard/WebsiteSettings.tsx`
-- `src/pages/store/StorePage.tsx`
-- possivelmente `src/pages/store/SiteSubPage.tsx`
-- possivelmente `src/components/store/PublicSiteRenderer.tsx`
-- se aprovar reset real: migration + ação no dashboard/editor para limpar `photographer_site` e `site_pages`
+**2. Botão "Reset Site" em `WebsiteSettings.tsx`**
+- Localizado numa zona de perigo no fim da página (separada do "Change Template")
+- Texto: "Reset entire website" + descrição
+- Estilo: `variant="outline"` com texto vermelho/destructive
 
-Resultado esperado
-- Ao abrir preview de template, ele aparece limpo, sem headline/logo/cores/páginas antigas contaminando a visualização.
-- Ao clicar em “Open Full”, o comportamento bate com o modal.
-- Se você quiser, também deixamos um botão real de “Resetar site” para remover o legado definitivamente, em vez de só esconder no preview.
+**3. Modal de confirmação forte (AlertDialog)**
+- Título: "Reset entire website?"
+- Lista exata do que será apagado:
+  - Todas as páginas (Home, About, Contact, etc.)
+  - Headlines, subtítulos, sobre, citação, experiência
+  - Logo, cores, fontes, links sociais
+  - SEO e favicon
+- **NÃO apaga**: sessões, galerias, clientes, agendamentos, blog
+- Campo de confirmação: digitar `RESET` para habilitar o botão
+- Botão final: "Reset website" (destructive)
 
-Detalhe técnico
-- A causa raiz não é cache: é acoplamento do preview aos dados persistidos atuais (`photographer_site` + `site_pages`).
-- O fix correto é separar “template preview state” de “live site state”.
+**4. UX pós-reset**
+- Toast de sucesso
+- Reload da página de settings para refletir defaults
+- Template atual mantido (só zera o conteúdo, não o template escolhido)
+
+### Arquivos
+
+- **Novo**: `supabase/functions/reset-site/index.ts`
+- **Editar**: `src/pages/dashboard/WebsiteSettings.tsx` (botão + AlertDialog + handler)
+- **i18n**: adicionar strings EN/PT/ES em `src/lib/i18n/translations.ts`
+
+### Comportamento esperado
+
+1. Usuário vai em `/dashboard/website`
+2. Rola até "Danger zone" → clica "Reset entire website"
+3. Modal aparece listando o que será apagado
+4. Digita `RESET` → botão libera
+5. Confirma → edge function apaga tudo → toast → página recarrega limpa
+6. Próximo preview de template aparece naturalmente limpo (porque os dados realmente sumiram, não só foram ocultados)
+
