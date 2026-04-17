@@ -345,12 +345,17 @@ const PageFolder = ({
   onMoveToFolder: (id: string, folderId: string | null) => void;
 }) => {
   const [open, setOpen] = useState(true);
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
 
   return (
     <div>
       <div
+        ref={setDropRef}
         onClick={() => setOpen(!open)}
-        className="group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50"
+        className={cn(
+          "group flex items-center gap-2.5 px-3 py-2 w-full text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-md hover:bg-muted/50",
+          isOver && "bg-primary/10 ring-1 ring-primary/40"
+        )}
       >
         <FolderOpen className="h-3.5 w-3.5 shrink-0" />
         <EditableLabel
