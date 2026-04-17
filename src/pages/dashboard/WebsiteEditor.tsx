@@ -1119,17 +1119,23 @@ const PagesPanel = ({
       label: title,
       type: "page",
       isHome: false,
-      inMenu: false,
+      // Pixieset-style: new pages are added to the menu by default so the
+      // photographer sees them in the sidebar list immediately.
+      inMenu: true,
       status: "online",
       showHeaderFooter: true,
       templateId,
       sections,
     };
-    setPages((prev) => [...prev, newPage]);
-    setSettingsPage(newPage);
+    const nextPages = [...pages, newPage];
+    setPages(nextPages);
 
+    // Persist first, then activate the page so the preview loads the template
+    // content while the sidebar keeps showing the page list (no Settings detour).
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
     await supabase.from("site_pages").insert([row]);
+
+    selectPage(newId, nextPages);
   };
 
   const allPages = flattenPages(pages);
