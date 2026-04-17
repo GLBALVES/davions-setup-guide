@@ -370,10 +370,10 @@ const PageFolder = ({
           onRename={onRename ? (label) => onRename(page.id, label) : undefined}
           className="text-left"
         />
-        {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
+        {expanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
         <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
-      {open && page.children?.map((child) => (
+      {expanded && page.children?.map((child) => (
         <PageItem
           key={child.id}
           page={child}
