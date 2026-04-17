@@ -2417,24 +2417,15 @@ const WebsiteEditor = () => {
       toast.error("Set up your store URL first in Personalize.");
       return;
     }
-    if (!user?.id) {
-      toast.error("Not authenticated.");
-      return;
-    }
     setPublishing(true);
     try {
-      // Publish all non-deleted pages by marking them visible on the public site.
-      const { error } = await supabase
-        .from("site_pages")
-        .update({ is_visible: true })
-        .eq("photographer_id", user.id)
-        .is("deleted_at", null);
-      if (error) {
-        toast.error("Failed to publish site");
-        return;
-      }
+      // Site edits are already saved live to `site_pages` as the user works.
+      // "Publish" simply opens the public store; we add a cache-buster so the
+      // newly opened tab fetches fresh content (and bypasses any browser /
+      // service-worker cache that may be serving a stale version).
       toast.success("Site published");
-      window.open(`/store/${storeSlug}`, "_blank");
+      const cacheBuster = Date.now();
+      window.open(`/store/${storeSlug}?v=${cacheBuster}`, "_blank", "noopener");
     } finally {
       setPublishing(false);
     }
