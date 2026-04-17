@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
+import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2 } from "lucide-react";
 
 type Viewport = "desktop" | "tablet" | "mobile";
@@ -44,6 +44,11 @@ interface PreviewRendererProps {
   activePageId?: string | null;
   onNavigatePage?: (pageId: string) => void;
   showHeaderFooter?: boolean;
+  /** Enables inline editing handles inside each block */
+  editMode?: boolean;
+  /** Called when an inline editor changes a prop on a section */
+  onPropChange?: (sectionId: string, path: string, value: any) => void;
+  photographerId?: string | null;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
@@ -239,8 +244,15 @@ export default function PreviewRenderer({
   activePageId,
   onNavigatePage,
   showHeaderFooter = true,
+  editMode = false,
+  onPropChange,
+  photographerId,
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
+
+  const editCtx: EditContext | undefined = editMode && onPropChange
+    ? { onPropChange, photographerId }
+    : undefined;
 
   return (
     <div className="flex flex-col h-full">
@@ -300,7 +312,7 @@ export default function PreviewRenderer({
                   key={section.id}
                   onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
                   className={cn(
-                    "relative cursor-pointer group/block transition-all",
+                    "relative group/block transition-all",
                     isSelected
                       ? "ring-2 ring-primary ring-inset"
                       : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
@@ -317,25 +329,28 @@ export default function PreviewRenderer({
                   </div>
 
                   {/* Floating toolbar (selected or hover) */}
-                  {(isSelected || true) && (
-                    <div className={cn(
-                      "transition-opacity",
-                      isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
-                    )}>
-                      <FloatingBlockToolbar
-                        isFirst={idx === 0}
-                        isLast={idx === sections.length - 1}
-                        onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
-                        onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
-                        onDuplicate={() => onDuplicateBlock?.(idx)}
-                        onSettings={() => onSelectBlock(idx)}
-                        onDelete={() => onDeleteBlock?.(idx)}
-                      />
-                    </div>
-                  )}
+                  <div className={cn(
+                    "transition-opacity",
+                    isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+                  )}>
+                    <FloatingBlockToolbar
+                      isFirst={idx === 0}
+                      isLast={idx === sections.length - 1}
+                      onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
+                      onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
+                      onDuplicate={() => onDuplicateBlock?.(idx)}
+                      onSettings={() => onSelectBlock(idx)}
+                      onDelete={() => onDeleteBlock?.(idx)}
+                    />
+                  </div>
 
                   {/* Block content */}
-                  <SectionRenderer sections={[section]} accentColor={accentColor} />
+                  <SectionRenderer
+                    sections={[section]}
+                    accentColor={accentColor}
+                    editMode={editMode}
+                    edit={editCtx}
+                  />
                 </div>
               );
             })
