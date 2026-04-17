@@ -10,8 +10,10 @@ export interface HeaderSlide {
   imageUrl: string | null;
 }
 
+export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
+
 export interface HeaderConfig {
-  layout?: "logo-center";
+  layout?: HeaderLayout;
   slides?: HeaderSlide[];
   autoplay?: boolean;
   /** ms */
