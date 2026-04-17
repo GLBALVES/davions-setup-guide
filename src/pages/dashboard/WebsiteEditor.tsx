@@ -1252,6 +1252,14 @@ const DndPagesArea = ({
     const fromZone = zoneOf(activeId);
     if (!fromZone) return;
 
+    // Drop onto a folder header → make subpage
+    if (overId.startsWith("folder:")) {
+      const folderId = overId.slice("folder:".length);
+      if (folderId === activeId) return; // can't drop folder on itself
+      onMoveToFolder(activeId, folderId);
+      return;
+    }
+
     // Determine target zone: either dropping on a row (use its zone) or on a zone droppable
     let toZone: DndZone | null = null;
     if (overId === "menu" || overId === "notmenu") toZone = overId as DndZone;
@@ -1275,7 +1283,7 @@ const DndPagesArea = ({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       onDragStart={(e: DragStartEvent) => setDragId(String(e.active.id))}
       onDragCancel={() => setDragId(null)}
       onDragEnd={handleDragEnd}
