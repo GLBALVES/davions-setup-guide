@@ -1721,6 +1721,21 @@ const PagesPanel = ({
         onDuplicate={duplicatePage}
         onRename={(id, label) => findAndUpdate(id, { label })}
         onMove={(id, target) => findAndUpdate(id, { inMenu: target === "menu" })}
+        onReorder={(zone, orderedIds) => {
+          setPages((prev) => {
+            const inZone = (p: SitePage) => (zone === "menu" ? p.inMenu : !p.inMenu);
+            const others = prev.filter((p) => !inZone(p));
+            const map = new Map(prev.filter(inZone).map((p) => [p.id, p]));
+            const reordered = orderedIds.map((id) => map.get(id)).filter(Boolean) as SitePage[];
+            // Preserve original positions of "others" by interleaving: keep menu first then non-menu (matches existing render)
+            const next = zone === "menu" ? [...reordered, ...others] : [...others, ...reordered];
+            // Persist sort_order for all top-level pages
+            next.forEach((p, i) => {
+              supabase.from("site_pages").update({ sort_order: i }).eq("id", p.id);
+            });
+            return next;
+          });
+        }}
       />
 
       <PageTemplatePickerModal
