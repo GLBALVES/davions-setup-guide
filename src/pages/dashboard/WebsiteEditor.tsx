@@ -2450,8 +2450,6 @@ const WebsiteEditor = () => {
     />,
   };
 
-  return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
   const sidebarPanel = (
     <>
       {/* Icon tab strip */}
