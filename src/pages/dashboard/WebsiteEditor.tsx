@@ -1273,7 +1273,19 @@ const PagesPanel = ({
 
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
-    return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
+    const activeP = allPages.find((p) => p.id === activePage);
+    return (
+      <HeaderSliderPanel
+        onBack={() => setEditingSection(null)}
+        value={activeP?.headerConfig ?? null}
+        onChange={(next) => {
+          if (!activeP) return;
+          findAndUpdate(activeP.id, { headerConfig: next });
+          onHeaderConfigChange?.(next);
+        }}
+        photographerId={photographerId}
+      />
+    );
   }
 
   // If editing page sections (blocks)
