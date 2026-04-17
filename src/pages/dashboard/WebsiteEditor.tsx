@@ -963,6 +963,7 @@ const PagesPanel = ({
   onActivePageChange,
   onUpdateActiveSections,
   registerActivePageActions,
+  onHeaderConfigChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -971,9 +972,10 @@ const PagesPanel = ({
   onSelectBlock: (idx: number | null) => void;
   onActiveSectionsChange: (sections: PageSection[]) => void;
   onNavLinksChange: (links: PreviewNavLink[]) => void;
-  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean }) => void;
+  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => void;
   onUpdateActiveSections: (sections: PageSection[]) => void;
   registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
+  onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
