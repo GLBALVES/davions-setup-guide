@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -346,6 +346,13 @@ const PageFolder = ({
 }) => {
   const [open, setOpen] = useState(true);
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
+  const childCount = page.children?.length ?? 0;
+  const prevCountRef = useRef(childCount);
+  useEffect(() => {
+    if (childCount > prevCountRef.current) setOpen(true);
+    prevCountRef.current = childCount;
+  }, [childCount]);
+  const expanded = open || isOver;
 
   return (
     <div>
@@ -363,10 +370,10 @@ const PageFolder = ({
           onRename={onRename ? (label) => onRename(page.id, label) : undefined}
           className="text-left"
         />
-        {open ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
+        {expanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
         <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
-      {open && page.children?.map((child) => (
+      {expanded && page.children?.map((child) => (
         <PageItem
           key={child.id}
           page={child}
