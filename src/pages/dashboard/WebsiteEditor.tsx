@@ -53,6 +53,7 @@ interface SitePage {
   pageDescription?: string;
   hideFromSearch?: boolean;
   socialImage?: string;
+  headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
 }
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
@@ -448,40 +449,59 @@ const PageSettingsView = ({
 };
 
 // ── Header Slider types ───────────────────────────────────────────────────────
-interface HeaderSlide {
-  id: string;
-  title: string;
-  imageUrl: string | null;
-}
+import type { HeaderConfig, HeaderSlide } from "@/components/website-editor/PreviewRenderer";
+import { DEFAULT_HEADER_CONFIG } from "@/components/website-editor/PreviewHeader";
+import EditableImage from "@/components/website-editor/inline/EditableImage";
+import { Slider } from "@/components/ui/slider";
 
 // ── Header Slider Panel ──────────────────────────────────────────────────────
 const HeaderSliderPanel = ({
   onBack,
+  value,
+  onChange,
+  photographerId,
 }: {
   onBack: () => void;
+  value: HeaderConfig | null;
+  onChange: (next: HeaderConfig) => void;
+  photographerId: string | null;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
-  const [slides, setSlides] = useState<HeaderSlide[]>([
-    { id: "1", title: "", imageUrl: null },
-    { id: "2", title: "", imageUrl: null },
-    { id: "3", title: "", imageUrl: null },
-    { id: "4", title: "", imageUrl: null },
-    { id: "5", title: "", imageUrl: null },
-    { id: "6", title: "", imageUrl: null },
-  ]);
-  const [activeSlide, setActiveSlide] = useState<string>("1");
-  const [autoPlay, setAutoPlay] = useState(true);
+  const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(value || {}) };
+  const slides: HeaderSlide[] = cfg.slides && cfg.slides.length > 0
+    ? cfg.slides
+    : [{ id: crypto.randomUUID(), title: "", imageUrl: null }];
+  const [activeSlideId, setActiveSlideId] = useState<string>(slides[0].id);
+
+  // Make sure the panel always has at least one slide stub
+  useEffect(() => {
+    if (!cfg.slides || cfg.slides.length === 0) {
+      onChange({ ...cfg, slides });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateCfg = (patch: Partial<HeaderConfig>) => onChange({ ...cfg, ...patch });
+  const updateSlides = (next: HeaderSlide[]) => updateCfg({ slides: next });
 
   const addSlide = () => {
-    const newId = String(Date.now());
-    setSlides((prev) => [...prev, { id: newId, title: "", imageUrl: null }]);
+    const id = crypto.randomUUID();
+    updateSlides([...slides, { id, title: "", imageUrl: null }]);
+    setActiveSlideId(id);
   };
 
   const removeSlide = (id: string) => {
-    setSlides((prev) => prev.filter((s) => s.id !== id));
-    if (activeSlide === id) setActiveSlide(slides[0]?.id || "");
+    const next = slides.filter((s) => s.id !== id);
+    updateSlides(next);
+    if (activeSlideId === id) setActiveSlideId(next[0]?.id || "");
   };
+
+  const updateSlide = (id: string, patch: Partial<HeaderSlide>) => {
+    updateSlides(slides.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  };
+
+  const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
 
   return (
     <div className="flex flex-col h-full">
@@ -490,30 +510,41 @@ const HeaderSliderPanel = ({
         <button onClick={onBack} className="p-1 rounded hover:bg-muted/50 transition-colors">
           <ArrowLeft className="h-4 w-4 text-muted-foreground" />
         </button>
-        <h3 className="text-sm font-medium text-foreground">{we.headerSlider}</h3>
+        <h3 className="text-sm font-medium text-foreground">{we.headerSettings}</h3>
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* LAYOUT */}
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
+        </div>
+        <div className="px-4 pb-4">
+          <Select value={cfg.layout || "logo-center"} onValueChange={(v) => updateCfg({ layout: v as "logo-center" })}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="logo-center">{we.logoCenter}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="border-t border-border" />
+
         {/* SLIDES section */}
         <div className="px-4 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.slides}</p>
         </div>
 
-        <div className="px-4 pb-2">
-          <p className="text-xs font-medium text-foreground mb-3">{we.slides}</p>
+        <div className="px-4 pb-3">
           <div className="space-y-1">
-            {slides.map((slide, i) => (
+            {slides.map((slide) => (
               <div
                 key={slide.id}
-                onClick={() => setActiveSlide(slide.id)}
+                onClick={() => setActiveSlideId(slide.id)}
                 className={cn(
                   "flex items-center gap-3 px-2 py-2 rounded-md cursor-pointer transition-colors group",
-                  activeSlide === slide.id
-                    ? "bg-accent"
-                    : "hover:bg-muted/50"
+                  activeSlideId === slide.id ? "bg-accent" : "hover:bg-muted/50"
                 )}
               >
-                {/* Thumbnail */}
                 <div className="w-10 h-10 rounded bg-muted/60 shrink-0 overflow-hidden flex items-center justify-center">
                   {slide.imageUrl ? (
                     <img src={slide.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -543,19 +574,110 @@ const HeaderSliderPanel = ({
           </button>
         </div>
 
+        {/* Active slide editor */}
+        {activeSlide && (
+          <div className="px-4 pb-4 space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{we.slideTitle}</label>
+              <Input
+                value={activeSlide.title || ""}
+                onChange={(e) => updateSlide(activeSlide.id, { title: e.target.value })}
+                className="h-9 text-sm"
+                placeholder={we.untitled}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{we.uploadImage}</label>
+              <EditableImage
+                value={activeSlide.imageUrl || ""}
+                onChange={(url) => updateSlide(activeSlide.id, { imageUrl: url || null })}
+                photographerId={photographerId}
+                folder="header-slides"
+                editMode
+              >
+                <div className="aspect-[16/9] w-full rounded border border-border overflow-hidden bg-muted/30 flex items-center justify-center">
+                  {activeSlide.imageUrl ? (
+                    <img src={activeSlide.imageUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImagePlus className="h-6 w-6 text-muted-foreground/50" />
+                  )}
+                </div>
+              </EditableImage>
+            </div>
+          </div>
+        )}
+
         <div className="border-t border-border" />
 
         {/* OPTIONS section */}
         <div className="px-4 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.options}</p>
         </div>
-        <div className="px-4 pb-4 space-y-3">
-          <div>
-            <p className="text-sm text-foreground mb-2">{we.autoPlaySlides}</p>
+        <div className="px-4 pb-6 space-y-4">
+          {/* Autoplay */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-foreground">{we.autoPlaySlides}</p>
             <div className="flex items-center gap-2">
-              <Switch checked={autoPlay} onCheckedChange={setAutoPlay} />
-              <span className="text-xs text-muted-foreground">{autoPlay ? we.on : we.off}</span>
+              <span className="text-[11px] text-muted-foreground">{cfg.autoplay ? we.on : we.off}</span>
+              <Switch checked={!!cfg.autoplay} onCheckedChange={(v) => updateCfg({ autoplay: v })} />
             </div>
+          </div>
+
+          {/* Speed */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">{we.slideSpeed}</label>
+              <span className="text-[11px] text-muted-foreground">{Math.round((cfg.speed ?? 5000) / 1000)}{we.seconds}</span>
+            </div>
+            <Slider
+              min={2}
+              max={10}
+              step={1}
+              value={[Math.round((cfg.speed ?? 5000) / 1000)]}
+              onValueChange={(v) => updateCfg({ speed: (v[0] || 5) * 1000 })}
+            />
+          </div>
+
+          {/* Transition */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">{we.transition}</label>
+            <Select value={cfg.transition || "fade"} onValueChange={(v) => updateCfg({ transition: v as "fade" | "slide" })}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fade">{we.fadeTransition}</SelectItem>
+                <SelectItem value="slide">{we.slideTransition}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Height */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">{we.headerHeight}</label>
+              <span className="text-[11px] text-muted-foreground">{parseInt(cfg.height || "60", 10)}vh</span>
+            </div>
+            <Slider
+              min={40}
+              max={100}
+              step={5}
+              value={[parseInt(cfg.height || "60", 10)]}
+              onValueChange={(v) => updateCfg({ height: `${v[0]}vh` })}
+            />
+          </div>
+
+          {/* Overlay opacity */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">{we.overlayOpacity}</label>
+              <span className="text-[11px] text-muted-foreground">{Math.round((cfg.overlayOpacity ?? 0.3) * 100)}%</span>
+            </div>
+            <Slider
+              min={0}
+              max={80}
+              step={5}
+              value={[Math.round((cfg.overlayOpacity ?? 0.3) * 100)]}
+              onValueChange={(v) => updateCfg({ overlayOpacity: (v[0] || 0) / 100 })}
+            />
           </div>
         </div>
       </div>
@@ -776,6 +898,7 @@ interface DbSitePage {
   is_visible: boolean;
   sections_order: any;
   page_content: any;
+  header_config?: any;
 }
 
 function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
@@ -796,6 +919,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
     pageDescription: content.pageDescription,
     hideFromSearch: content.hideFromSearch,
     socialImage: content.socialImage,
+    headerConfig: (row.header_config as any) ?? null,
     ...(children && children.length > 0 ? { children } : {}),
   };
 }
@@ -823,6 +947,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
       hideFromSearch: page.hideFromSearch,
       socialImage: page.socialImage,
     })),
+    header_config: page.headerConfig ? JSON.parse(JSON.stringify(page.headerConfig)) : null,
   };
 }
 
@@ -838,6 +963,7 @@ const PagesPanel = ({
   onActivePageChange,
   onUpdateActiveSections,
   registerActivePageActions,
+  onHeaderConfigChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -846,9 +972,10 @@ const PagesPanel = ({
   onSelectBlock: (idx: number | null) => void;
   onActiveSectionsChange: (sections: PageSection[]) => void;
   onNavLinksChange: (links: PreviewNavLink[]) => void;
-  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean }) => void;
+  onActivePageChange: (info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => void;
   onUpdateActiveSections: (sections: PageSection[]) => void;
   registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
+  onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -875,7 +1002,7 @@ const PagesPanel = ({
       setEditingSectionsPageId(null);
       onActiveSectionsChange(page.sections || []);
       onSelectBlock(null);
-      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true });
+      onActivePageChange({ id: page.id, showHeaderFooter: page.showHeaderFooter ?? true, headerConfig: page.headerConfig ?? null });
     }
   };
 
@@ -1148,7 +1275,19 @@ const PagesPanel = ({
 
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
-    return <HeaderSliderPanel onBack={() => setEditingSection(null)} />;
+    const activeP = allPages.find((p) => p.id === activePage);
+    return (
+      <HeaderSliderPanel
+        onBack={() => setEditingSection(null)}
+        value={activeP?.headerConfig ?? null}
+        onChange={(next) => {
+          if (!activeP) return;
+          findAndUpdate(activeP.id, { headerConfig: next });
+          onHeaderConfigChange?.(next);
+        }}
+        photographerId={photographerId}
+      />
+    );
   }
 
   // If editing page sections (blocks)
@@ -1467,7 +1606,7 @@ const WebsiteEditor = () => {
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
-  const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean }>({ id: null, showHeaderFooter: true });
+  const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }>({ id: null, showHeaderFooter: true, headerConfig: null });
   const [site, setSite] = useState<PreviewSiteConfig | null>(null);
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
@@ -1552,7 +1691,7 @@ const WebsiteEditor = () => {
     setNavLinks(links);
   }, []);
 
-  const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean }) => {
+  const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => {
     setActivePageInfo(info);
   }, []);
 
