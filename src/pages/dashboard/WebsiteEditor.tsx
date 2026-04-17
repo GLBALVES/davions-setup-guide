@@ -346,6 +346,13 @@ const PageFolder = ({
 }) => {
   const [open, setOpen] = useState(true);
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
+  const childCount = page.children?.length ?? 0;
+  const prevCountRef = React.useRef(childCount);
+  React.useEffect(() => {
+    if (childCount > prevCountRef.current) setOpen(true);
+    prevCountRef.current = childCount;
+  }, [childCount]);
+  const expanded = open || isOver;
 
   return (
     <div>
