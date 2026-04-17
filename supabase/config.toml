@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.generate-background-image]
 verify_jwt = false
+
+[functions.reset-site]
+verify_jwt = false

@@ -26,6 +26,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ── Site templates ────────────────────────────────────────────────────────────
 const TEMPLATES = [
@@ -523,6 +533,9 @@ const WebsiteSettings = () => {
   // Template
   const [siteTemplate, setSiteTemplate] = useState("editorial");
   const [showTemplateGrid, setShowTemplateGrid] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   // SEO
   const [seoTitle, setSeoTitle] = useState("");
@@ -1233,6 +1246,29 @@ const WebsiteSettings = () => {
                     <p className="text-[10px] text-muted-foreground/60">{ws.saveDesc}</p>
                   </div>
 
+                  {/* ── Danger zone ── */}
+                  <section className="flex flex-col gap-3 mt-6 pt-6 border-t border-destructive/30">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                      <SectionHeading title={(ws as any).dangerZoneTitle ?? "Danger zone"} description={(ws as any).dangerZoneDesc} />
+                    </div>
+                    <div className="border border-destructive/30 bg-destructive/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+                      <p className="text-[11px] text-muted-foreground max-w-md">
+                        {(ws as any).resetSiteHint}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setResetConfirmText(""); setResetDialogOpen(true); }}
+                        className="gap-2 text-[11px] tracking-wider uppercase font-light text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/40 shrink-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {(ws as any).resetSiteButton ?? "Reset entire website"}
+                      </Button>
+                    </div>
+                  </section>
+
                 </div>
                 </div>
               )}
@@ -1241,6 +1277,83 @@ const WebsiteSettings = () => {
         </div>
       </div>
     </SidebarProvider>
+
+    {/* Reset Site confirmation */}
+    <AlertDialog open={resetDialogOpen} onOpenChange={(o) => { if (!resetting) setResetDialogOpen(o); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            {(ws as any).resetDialogTitle ?? "Reset entire website?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="flex flex-col gap-3 text-left">
+              <p className="text-sm text-muted-foreground">{(ws as any).resetDialogIntro}</p>
+              <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-1">
+                <li>{(ws as any).resetItemPages}</li>
+                <li>{(ws as any).resetItemContent}</li>
+                <li>{(ws as any).resetItemBranding}</li>
+                <li>{(ws as any).resetItemSeo}</li>
+              </ul>
+              <div className="border border-border bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                {(ws as any).resetKeepNote}
+              </div>
+              <div className="flex flex-col gap-1.5 pt-1">
+                <Label htmlFor="reset-confirm" className="text-[11px] tracking-wider uppercase font-light">
+                  {(ws as any).resetConfirmLabel}
+                </Label>
+                <Input
+                  id="reset-confirm"
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value)}
+                  placeholder="RESET"
+                  autoComplete="off"
+                  disabled={resetting}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={resetting}>{(ws as any).resetCancel ?? "Cancel"}</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={resetConfirmText.trim() !== "RESET" || resetting}
+            onClick={async (e) => {
+              e.preventDefault();
+              if (resetConfirmText.trim() !== "RESET") return;
+              setResetting(true);
+              try {
+                const { error } = await supabase.functions.invoke("reset-site", {
+                  body: { keep_template: siteTemplate },
+                });
+                if (error) throw error;
+                toast({
+                  title: (ws as any).resetSuccess ?? "Website reset",
+                  description: (ws as any).resetSuccessDesc,
+                });
+                setResetDialogOpen(false);
+                setTimeout(() => window.location.reload(), 400);
+              } catch (err) {
+                toast({
+                  title: (ws as any).resetFailed ?? "Failed to reset website",
+                  description: err instanceof Error ? err.message : String(err),
+                  variant: "destructive",
+                });
+                setResetting(false);
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {resetting ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />{(ws as any).resetting}</>
+            ) : (
+              (ws as any).resetConfirm ?? "Reset website"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     {/* Template preview modal */}
     {previewModalTemplate && (
