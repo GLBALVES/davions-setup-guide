@@ -1239,7 +1239,8 @@ const DndPagesArea = ({
   );
   const [dragId, setDragId] = useState<string | null>(null);
 
-  const allPages = [...menuPages, ...nonMenuPages];
+  const childPages = [...menuPages, ...nonMenuPages].flatMap((p) => p.children ?? []);
+  const allPages = [...menuPages, ...nonMenuPages, ...childPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
   const menuIds = menuPages.map((p) => p.id);
