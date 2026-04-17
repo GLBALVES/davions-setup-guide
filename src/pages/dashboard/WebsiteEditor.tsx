@@ -374,20 +374,21 @@ const PageFolder = ({
         <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
       {expanded && page.children?.map((child) => (
-        <PageItem
-          key={child.id}
-          page={child}
-          active={activePage === child.id}
-          folders={folders}
-          onSelect={() => onSelect(child.id)}
-          onSettings={() => onSettings(child)}
-          onToggleMenu={() => onToggleMenu(child.id)}
-          onDelete={() => onDelete(child.id)}
-          onDuplicate={() => onDuplicate(child.id)}
-          onRename={onRename ? (label) => onRename(child.id, label) : undefined}
-          onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
-          indent
-        />
+        <SortableRow key={child.id} id={child.id}>
+          <PageItem
+            page={child}
+            active={activePage === child.id}
+            folders={folders}
+            onSelect={() => onSelect(child.id)}
+            onSettings={() => onSettings(child)}
+            onToggleMenu={() => onToggleMenu(child.id)}
+            onDelete={() => onDelete(child.id)}
+            onDuplicate={() => onDuplicate(child.id)}
+            onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+            onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
+            indent
+          />
+        </SortableRow>
       ))}
     </div>
   );
