@@ -1832,6 +1832,35 @@ const PagesPanel = ({
             return next;
           });
         }}
+        onMoveToFolder={async (id, folderId) => {
+          // Optimistic local update: rebuild tree with new parent
+          setPages((prev) => {
+            const flat = flattenPages(prev);
+            const moving = flat.find((p) => p.id === id);
+            if (!moving) return prev;
+            // Remove from any current location
+            const stripped = prev
+              .filter((p) => p.id !== id)
+              .map((p) => p.children ? { ...p, children: p.children.filter((c) => c.id !== id) } : p);
+            if (folderId === null) {
+              // Promote to top-level
+              return [...stripped, { ...moving, children: undefined }];
+            }
+            // Attach under target folder
+            return stripped.map((p) =>
+              p.id === folderId && p.type === "folder"
+                ? { ...p, children: [...(p.children ?? []), { ...moving, children: undefined }] }
+                : p
+            );
+          });
+          const { error } = await supabase.from("site_pages").update({ parent_id: folderId }).eq("id", id);
+          if (error) {
+            console.error("Failed to move page to folder", error);
+            toast.error("Failed to move page");
+          } else {
+            toast.success(folderId ? "Moved to folder" : "Removed from folder");
+          }
+        }}
       />
 
       <PageTemplatePickerModal
