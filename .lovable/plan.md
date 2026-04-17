@@ -1,54 +1,86 @@
 
 
-The user already approved the preview-isolation fix and it's implemented. They re-confirmed the questions answers, including **"Resetar o site inteiro deste fotógrafo (todas as páginas + config)"** as the desired scope. So the remaining work is the **destructive Reset Site action** that was deferred.
+## Diagnóstico do header atual no preview
 
-## Plano: Adicionar ação "Resetar Site" em /dashboard/website
+**O que existe hoje (`PreviewRenderer.tsx` → `PreviewNav`):**
+- Header tradicional: logo à esquerda, menu à direita, fundo sólido (`headerBg`)
+- Sticky simples, sem altura definida (só padding `py-4`)
+- Sem slider, sem hover handles, sem botões Change Layout/Settings
+- `HeaderSliderPanel` existe mas usa `useState` local — não persiste, não emite nada pro preview, fica isolado
 
-### O que falta (preview já está isolado)
+**Gap vs. spec aprovado:**
+1. Logo deve ser **central**, dividindo o menu (metade dos links à esquerda, metade à direita)
+2. Fundo deve ser **slider de imagens** (não cor sólida)
+3. Altura **auto ~60vh** (hero-like)
+4. **Hover** mostra botões "Change Layout" e "Settings"
+5. Clicar no slider abre o `HeaderSliderPanel` na sidebar
+6. **Placeholder Unsplash** + aviso "imagem demo" quando vazio
+7. **Por página**: cada página tem seu próprio config de header
+8. Slider configurável: autoplay on/off, velocidade, transição fade/slide
 
-O fix de preview foi feito na resposta anterior — `TemplatePreviewModal` e `StorePage?clean=1` já ignoram dados antigos. Falta o **reset real e explícito** que o usuário pediu, separado do preview.
+---
 
-### Implementação
+## Plano de implementação
 
-**1. Edge function `reset-site`** (destrutiva, exige auth)
-- Deleta todas as `site_pages` do fotógrafo
-- Reseta `photographer_site` para defaults (mantém `photographer_id`, limpa headlines/cores/fontes/logo/quote/about/social/SEO)
-- Recria 1 página Home vazia com o template escolhido
-- Retorna sucesso/erro
+### 1. Backend — persistência por página
 
-**2. Botão "Reset Site" em `WebsiteSettings.tsx`**
-- Localizado numa zona de perigo no fim da página (separada do "Change Template")
-- Texto: "Reset entire website" + descrição
-- Estilo: `variant="outline"` com texto vermelho/destructive
+Migration: adicionar coluna `header_config jsonb` em `site_pages`:
+```json
+{
+  "layout": "logo-center",
+  "slides": [{ "id": "...", "title": "", "imageUrl": "..." }],
+  "autoplay": true,
+  "speed": 5000,
+  "transition": "fade",
+  "height": "60vh",
+  "overlayOpacity": 0.3
+}
+```
+Default `null` → usa placeholder Unsplash.
 
-**3. Modal de confirmação forte (AlertDialog)**
-- Título: "Reset entire website?"
-- Lista exata do que será apagado:
-  - Todas as páginas (Home, About, Contact, etc.)
-  - Headlines, subtítulos, sobre, citação, experiência
-  - Logo, cores, fontes, links sociais
-  - SEO e favicon
-- **NÃO apaga**: sessões, galerias, clientes, agendamentos, blog
-- Campo de confirmação: digitar `RESET` para habilitar o botão
-- Botão final: "Reset website" (destructive)
+### 2. `PreviewRenderer.tsx` — novo `PreviewHeader`
 
-**4. UX pós-reset**
-- Toast de sucesso
-- Reload da página de settings para refletir defaults
-- Template atual mantido (só zera o conteúdo, não o template escolhido)
+Substituir o `PreviewNav` atual por `PreviewHeader` com:
+- **Slider de fundo** (crossfade ou slide, baseado em `transition`), autoplay opcional
+- **Altura `60vh`** (configurável)
+- **Logo central** entre duas metades do menu (split do `navLinks` ao meio)
+- **Overlay** escuro pra contraste (opacity configurável)
+- **Texto branco** sobre o slider por padrão
+- Quando sem slides → placeholder Unsplash + badge `"imagem demo"` no canto
+- **Hover overlay** (só `editMode`) com 2 botões: `Change Layout` e `Settings` → ambos disparam `onEditHeader()` callback que abre o `HeaderSliderPanel` na sidebar
+- Click direto no fundo também abre o painel
 
-### Arquivos
+### 3. `HeaderSliderPanel` — conectar ao preview e ao banco
 
-- **Novo**: `supabase/functions/reset-site/index.ts`
-- **Editar**: `src/pages/dashboard/WebsiteSettings.tsx` (botão + AlertDialog + handler)
-- **i18n**: adicionar strings EN/PT/ES em `src/lib/i18n/translations.ts`
+- Receber `value: HeaderConfig` e `onChange` via props (controlled)
+- Adicionar controles: **Layout** (só "Logo Central" agora), **Speed** (slider 2-10s), **Transition** (fade/slide), **Height** (slider 40-100vh), **Overlay opacity**
+- Upload de imagem por slide via `EditableImage` no bucket `site-assets`
+- Persistir em `site_pages.header_config` via debounce (igual ao resto do editor)
 
-### Comportamento esperado
+### 4. `WebsiteEditor.tsx` — wiring
 
-1. Usuário vai em `/dashboard/website`
-2. Rola até "Danger zone" → clica "Reset entire website"
-3. Modal aparece listando o que será apagado
-4. Digita `RESET` → botão libera
-5. Confirma → edge function apaga tudo → toast → página recarrega limpa
-6. Próximo preview de template aparece naturalmente limpo (porque os dados realmente sumiram, não só foram ocultados)
+- Carregar `header_config` da página ativa e passar pro `PreviewRenderer`
+- Adicionar `onEditHeader` que seta `editingSection = "header-slider"` na sidebar
+- `HeaderSliderPanel` agora recebe `pageId` + `value` + `onChange`
+- Salvar via mesma rotina de debounce que salva sections
+
+### 5. i18n
+
+Adicionar nas 3 linguas: `changeLayout`, `headerSettings`, `slideSpeed`, `transition`, `fadeTransition`, `slideTransition`, `headerHeight`, `overlayOpacity`, `demoImage`, `logoCenter`.
+
+---
+
+## Arquivos afetados
+- **Migration nova**: adiciona `site_pages.header_config jsonb`
+- **`src/components/website-editor/PreviewRenderer.tsx`**: substitui `PreviewNav` por `PreviewHeader` com slider
+- **`src/pages/dashboard/WebsiteEditor.tsx`**: refatora `HeaderSliderPanel` (controlled + persistência), adiciona load/save do `header_config` por página, wiring do `onEditHeader`
+- **`src/lib/i18n/translations.ts`**: novas chaves EN/PT/ES
+
+---
+
+## Detalhes técnicos
+- Placeholder Unsplash: `https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1920` (hero photography)
+- Split do menu: `navLinks.slice(0, Math.ceil(n/2))` à esquerda, resto à direita; logo central no meio
+- Slider: `useEffect` com `setInterval` baseado em `autoplay` + `speed`, transição CSS via `opacity` (fade) ou `transform: translateX` (slide)
+- Mobile: logo central sobre menu hamburger (escopo posterior se quiser)
 
