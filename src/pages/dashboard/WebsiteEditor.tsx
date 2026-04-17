@@ -374,20 +374,21 @@ const PageFolder = ({
         <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
       </div>
       {expanded && page.children?.map((child) => (
-        <PageItem
-          key={child.id}
-          page={child}
-          active={activePage === child.id}
-          folders={folders}
-          onSelect={() => onSelect(child.id)}
-          onSettings={() => onSettings(child)}
-          onToggleMenu={() => onToggleMenu(child.id)}
-          onDelete={() => onDelete(child.id)}
-          onDuplicate={() => onDuplicate(child.id)}
-          onRename={onRename ? (label) => onRename(child.id, label) : undefined}
-          onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
-          indent
-        />
+        <SortableRow key={child.id} id={child.id}>
+          <PageItem
+            page={child}
+            active={activePage === child.id}
+            folders={folders}
+            onSelect={() => onSelect(child.id)}
+            onSettings={() => onSettings(child)}
+            onToggleMenu={() => onToggleMenu(child.id)}
+            onDelete={() => onDelete(child.id)}
+            onDuplicate={() => onDuplicate(child.id)}
+            onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+            onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
+            indent
+          />
+        </SortableRow>
       ))}
     </div>
   );
@@ -1255,28 +1256,44 @@ const DndPagesArea = ({
     const activeId = String(e.active.id);
     if (!e.over) return;
     const overId = String(e.over.id);
-
-    const fromZone = zoneOf(activeId);
-    if (!fromZone) return;
+    if (activeId === overId) return;
 
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
+    // A child page is one that is nested under a folder (not in either top-level zone)
+    const isActiveChild = !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
 
     // Drop onto a folder header explicit droppable → make subpage
     if (overId.startsWith("folder:")) {
       const folderId = overId.slice("folder:".length);
-      if (folderId === activeId) return;
-      if (isActiveFolder) return;
+      if (folderId === activeId || isActiveFolder) return;
       onMoveToFolder(activeId, folderId);
       return;
     }
 
-    // Drop onto a folder row id (sortable wraps the folder) → also nest as subpage
+    // Drop onto a folder row id (sortable wraps the folder) → nest as subpage
     const overIsFolder = folders.some((f) => f.id === overId);
-    if (overIsFolder && !isActiveFolder && overId !== activeId) {
+    if (overIsFolder && !isActiveFolder) {
       onMoveToFolder(activeId, overId);
       return;
     }
+
+    // Active is a child page being dropped outside any folder → promote to top-level
+    if (isActiveChild) {
+      let toZone: DndZone | null = null;
+      if (overId === "menu" || overId === "notmenu") toZone = overId as DndZone;
+      else toZone = zoneOf(overId);
+      if (!toZone) return;
+      // Promote out of folder; the move handler will also reset inMenu based on zone
+      onMoveToFolder(activeId, null);
+      // If dropped in non-menu zone, also hide from menu
+      if (toZone === "notmenu") onMove(activeId, "notmenu");
+      else onMove(activeId, "menu");
+      return;
+    }
+
+    const fromZone = zoneOf(activeId);
+    if (!fromZone) return;
 
     // Determine target zone: either dropping on a row (use its zone) or on a zone droppable
     let toZone: DndZone | null = null;
@@ -1286,7 +1303,6 @@ const DndPagesArea = ({
 
     if (fromZone === toZone) {
       // Reorder within the same zone
-      if (activeId === overId) return;
       const list = toZone === "menu" ? menuIds : notMenuIds;
       const oldIdx = list.indexOf(activeId);
       const newIdx = list.indexOf(overId);
