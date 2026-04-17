@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Settings2, LayoutTemplate } from "lucide-react";
+import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { PreviewSiteConfig, PreviewNavLink } from "./PreviewRenderer";
 
@@ -70,6 +70,7 @@ export default function PreviewHeader({
 
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Reset index when slide count changes
   useEffect(() => {
@@ -211,18 +212,18 @@ export default function PreviewHeader({
       )}
 
       {/* Nav with configurable logo position */}
-      <div className="absolute inset-x-0 top-0 z-10 px-6 py-6">
+      <div className="absolute inset-x-0 top-0 z-10 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto">
           {layout === "logo-center" ? (
-            <div className="grid grid-cols-3 items-center gap-4">
+            <div className="flex md:grid md:grid-cols-3 items-center justify-between gap-4">
               <nav className="hidden md:flex items-center justify-end gap-6">
                 {leftLinks.map(renderLink)}
               </nav>
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center order-1 md:order-none">
                 {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className="h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                  <img src={site.logoUrl} alt={displayName} className="h-8 sm:h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
-                  <span className="text-sm font-light tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                  <span className="text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
                   </span>
                 )}
@@ -230,14 +231,23 @@ export default function PreviewHeader({
               <nav className="hidden md:flex items-center justify-start gap-6">
                 {rightLinks.map(renderLink)}
               </nav>
+              {/* Mobile hamburger */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
+                className="md:hidden order-2 p-1.5 -mr-1.5 text-white/90 hover:text-white"
+                aria-label="Menu"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
           ) : (
-            <div className={cn("flex items-center gap-6", layout === "logo-right" && "flex-row-reverse")}>
+            <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
               <div className="flex items-center">
                 {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className="h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                  <img src={site.logoUrl} alt={displayName} className="h-8 sm:h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
-                  <span className="text-sm font-light tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                  <span className="text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
                   </span>
                 )}
@@ -245,9 +255,28 @@ export default function PreviewHeader({
               <nav className={cn("hidden md:flex items-center gap-6 flex-1", layout === "logo-right" ? "justify-start" : "justify-end")}>
                 {rightLinks.map(renderLink)}
               </nav>
+              {/* Mobile hamburger */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
+                className="md:hidden p-1.5 -mr-1.5 text-white/90 hover:text-white"
+                aria-label="Menu"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
           )}
         </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileOpen && (
+          <div
+            className="md:hidden mt-3 mx-auto max-w-7xl bg-black/70 backdrop-blur-sm rounded-md py-3 px-4 flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {navLinks.map(renderLink)}
+          </div>
+        )}
       </div>
 
       {/* Slide indicators */}
