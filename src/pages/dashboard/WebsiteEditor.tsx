@@ -22,7 +22,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PageTemplatePickerModal from "@/components/website-editor/PageTemplatePickerModal";
+import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
 import { getTemplateSections, createSection, type PageSection, type SectionType } from "@/components/website-editor/page-templates";
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
@@ -1116,7 +1116,9 @@ const PagesPanel = ({
   const handleTemplateSelect = async (templateId: string, title: string) => {
     if (!photographerId) return;
     const newId = crypto.randomUUID();
-    const sections = getTemplateSections(templateId);
+    // Populate sections with realistic demo content (images, copy) so the new
+    // page looks "alive" right after creation, mirroring Pixieset behavior.
+    const sections = getTemplateSections(templateId).map((s) => withDemoProps(s));
     const newPage: SitePage = {
       id: newId,
       label: title,
