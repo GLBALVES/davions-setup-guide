@@ -1304,14 +1304,6 @@ const BlogPanel = () => (
 );
 
 // ── Style Panel (functional) ─────────────────────────────────────────────────
-const FONT_OPTIONS = [
-  { value: "inter", label: "Inter (Default)" },
-  { value: "playfair", label: "Playfair Display" },
-  { value: "cormorant", label: "Cormorant Garamond" },
-  { value: "montserrat", label: "Montserrat" },
-  { value: "poppins", label: "Poppins" },
-];
-
 const StylePanel = ({ photographerId, site, onSiteChange }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
@@ -1332,70 +1324,128 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Accent Color</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.accentColor || "#000000"}
-            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.accentColor || "#000000"}
-            onChange={(e) => onSiteChange({ accent_color: e.target.value })}
-            className="h-9 text-sm flex-1"
-          />
+      {/* ── Typography ── */}
+      <div className="border-t border-border -mx-4 px-4 pt-4">
+        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
+          Typography
+        </p>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Heading font</label>
+            <Select
+              value={site?.headingFont || "inter"}
+              onValueChange={(v) => onSiteChange({ heading_font: v })}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_PRESETS.map((f) => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Body font</label>
+            <Select
+              value={site?.bodyFont || "inter"}
+              onValueChange={(v) => onSiteChange({ body_font: v })}
+            >
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_PRESETS.map((f) => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Header Background</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.headerBg || "#ffffff"}
-            onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.headerBg || ""}
-            onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
-            className="h-9 text-sm flex-1"
-            placeholder="#ffffff"
-          />
+      {/* ── Colors ── */}
+      <div className="border-t border-border -mx-4 px-4 pt-4">
+        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-3">
+          Colors
+        </p>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Accent</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.accentColor || "#000000"}
+                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.accentColor || "#000000"}
+                onChange={(e) => onSiteChange({ accent_color: e.target.value })}
+                className="h-9 text-sm flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Header background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.headerBg || "#ffffff"}
+                onChange={(e) => onSiteChange({ header_bg_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.headerBg || ""}
+                onChange={(e) => onSiteChange({ header_bg_color: e.target.value || null })}
+                className="h-9 text-sm flex-1"
+                placeholder="#ffffff"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Footer background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={site?.footerBg || "#000000"}
+                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <Input
+                value={site?.footerBg || ""}
+                onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
+                className="h-9 text-sm flex-1"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Footer text</label>
+            <Input
+              value={site?.footerText || ""}
+              onChange={(e) => onSiteChange({ footer_text: e.target.value })}
+              className="h-9 text-sm"
+              placeholder="© 2026 Studio Name"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Footer Background</label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={site?.footerBg || "#000000"}
-            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value })}
-            className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={site?.footerBg || ""}
-            onChange={(e) => onSiteChange({ footer_bg_color: e.target.value || null })}
-            className="h-9 text-sm flex-1"
-            placeholder="#000000"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Footer Text</label>
-        <Input
-          value={site?.footerText || ""}
-          onChange={(e) => onSiteChange({ footer_text: e.target.value })}
-          className="h-9 text-sm"
-          placeholder="© 2026 Studio Name"
-        />
-      </div>
-
-      <p className="text-[10px] text-muted-foreground/70 pt-2">Changes save automatically and reflect in the preview.</p>
+      <p className="text-[10px] text-muted-foreground/70 pt-2">
+        Changes save automatically and reflect in the preview.
+      </p>
     </div>
   );
 };
