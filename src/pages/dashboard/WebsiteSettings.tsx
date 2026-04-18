@@ -1398,9 +1398,8 @@ const WebsiteSettings = () => {
             Aplicar o template "{TEMPLATES.find((t) => t.value === confirmTemplate)?.label ?? confirmTemplate}"?
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Isso irá regenerar as páginas padrão (Home, About, Contact) com o layout do novo template.
-            Conteúdo personalizado dessas páginas será substituído. Páginas customizadas criadas por você
-            permanecerão intactas. Esta ação não pode ser desfeita.
+            O novo template será aplicado ao seu site, atualizando o estilo visual (fontes, cores e
+            variantes de layout). Seus textos, imagens e páginas existentes serão preservados.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -1427,10 +1426,7 @@ const WebsiteSettings = () => {
                 setSiteTemplate(tid);
                 toast({
                   title: "Template aplicado",
-                  description:
-                    count > 0
-                      ? `${count} página${count === 1 ? "" : "s"} padrão regenerada${count === 1 ? "" : "s"}.`
-                      : "Template aplicado ao site.",
+                  description: "Estilo visual atualizado. Seus textos, imagens e páginas foram preservados.",
                 });
                 setConfirmTemplate(null);
                 setShowTemplateGrid(false);
