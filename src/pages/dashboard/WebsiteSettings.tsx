@@ -534,6 +534,8 @@ const WebsiteSettings = () => {
   const [siteTemplate, setSiteTemplate] = useState("editorial");
   const [showTemplateGrid, setShowTemplateGrid] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState<string | null>(null);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -981,8 +983,9 @@ const WebsiteSettings = () => {
                               size="sm"
                               disabled={!pendingTemplate || pendingTemplate === siteTemplate}
                               onClick={() => {
-                                if (pendingTemplate) setSiteTemplate(pendingTemplate);
-                                setShowTemplateGrid(false);
+                                if (pendingTemplate && pendingTemplate !== siteTemplate) {
+                                  setConfirmTemplate(pendingTemplate);
+                                }
                               }}
                             >
                               Confirm
@@ -1391,7 +1394,7 @@ const WebsiteSettings = () => {
         templateId={previewModalTemplate}
         templateLabel={TEMPLATES.find((t) => t.value === previewModalTemplate)?.label ?? previewModalTemplate}
         storeSlug={storeSlug}
-        onApply={(tid) => { setSiteTemplate(tid); setPreviewModalTemplate(null); }}
+        onApply={(tid) => { setPreviewModalTemplate(null); setConfirmTemplate(tid); }}
         isCurrentTemplate={siteTemplate === previewModalTemplate}
         siteData={{
           logo_url: logoUrl || null,
