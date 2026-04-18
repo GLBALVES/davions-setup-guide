@@ -137,9 +137,8 @@ export default function SiteTemplatePickerModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Aplicar o template "{confirmedLabel}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso irá regenerar as páginas padrão (Home, About, Contact) com o layout do novo template.
-              Conteúdo personalizado dessas páginas será substituído. Páginas customizadas criadas por você
-              permanecerão intactas. Esta ação não pode ser desfeita.
+              O novo template será aplicado ao seu site, atualizando o estilo visual (fontes, cores e
+              variantes de layout). Seus textos, imagens e páginas existentes serão preservados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
