@@ -99,7 +99,10 @@ const SiteSubPage = () => {
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((p) => ({ label: p.title, href: `/store/${slug}/page/${p.slug}` }));
 
-  const pageContent = (page.page_content as Record<string, any>) ?? {};
+  const rawContent = isDraftPreview
+    ? (page.page_content as Record<string, any>)
+    : (((page as any).published_content ?? page.page_content) as Record<string, any>);
+  const pageContent = rawContent ?? {};
   const sections = Array.isArray(pageContent.sections) ? pageContent.sections.filter((s: any) => s?.type) : [];
 
   return (
