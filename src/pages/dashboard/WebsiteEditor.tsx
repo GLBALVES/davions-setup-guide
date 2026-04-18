@@ -29,6 +29,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
 import SiteTemplatePickerModal from "@/components/website-editor/SiteTemplatePickerModal";
+import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { getTemplateSections, createSection, type PageSection, type SectionType } from "@/components/website-editor/page-templates";
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
@@ -2186,20 +2187,13 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light mb-2">
           Template
         </p>
-        <p className="text-sm font-semibold tracking-wide uppercase text-foreground mb-3">
-          {templateLabel}
-        </p>
-        <button
-          type="button"
+        <TemplatePreviewCard
+          value={siteTemplate}
+          label={templateLabel}
+          description="Clique para trocar"
+          selected
           onClick={() => setPickerOpen(true)}
-          className="block w-full overflow-hidden rounded-md border border-border hover:border-foreground/40 transition-colors"
-        >
-          <div className="aspect-[4/3] bg-muted flex items-center justify-center">
-            <span className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-              {templateLabel}
-            </span>
-          </div>
-        </button>
+        />
       </div>
 
       <SiteTemplatePickerModal
