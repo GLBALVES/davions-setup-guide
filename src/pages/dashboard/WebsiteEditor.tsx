@@ -2197,17 +2197,12 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
           await onSiteChange({ site_template: id });
           if (photographerId) {
             try {
-              const count = await regenerateDefaultPagesForTemplate(photographerId, id);
-              toast.success(
-                count > 0
-                  ? `Template aplicado. ${count} página${count === 1 ? "" : "s"} padrão regenerada${count === 1 ? "" : "s"}.`
-                  : "Template aplicado ao site",
-              );
-              // Reload so the editor refetches site_pages with the new defaults.
+              await regenerateDefaultPagesForTemplate(photographerId, id);
+              toast.success("Template aplicado. Seus textos, imagens e páginas foram preservados.");
               setTimeout(() => window.location.reload(), 600);
             } catch (err) {
-              console.error("Failed to regenerate default pages", err);
-              toast.error("Template salvo, mas falhou ao regenerar páginas padrão");
+              console.error("Failed to update pages template reference", err);
+              toast.error("Template salvo, mas houve falha ao atualizar referências das páginas");
             }
           } else {
             toast.success("Template aplicado ao site");
