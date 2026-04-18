@@ -2283,10 +2283,26 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         currentTemplate={siteTemplate}
-        onApply={(id) => {
+        onApply={async (id) => {
           setSiteTemplate(id);
-          onSiteChange({ site_template: id });
-          toast.success("Template aplicado ao site");
+          await onSiteChange({ site_template: id });
+          if (photographerId) {
+            try {
+              const count = await regenerateDefaultPagesForTemplate(photographerId, id);
+              toast.success(
+                count > 0
+                  ? `Template aplicado. ${count} página${count === 1 ? "" : "s"} padrão regenerada${count === 1 ? "" : "s"}.`
+                  : "Template aplicado ao site",
+              );
+              // Reload so the editor refetches site_pages with the new defaults.
+              setTimeout(() => window.location.reload(), 600);
+            } catch (err) {
+              console.error("Failed to regenerate default pages", err);
+              toast.error("Template salvo, mas falhou ao regenerar páginas padrão");
+            }
+          } else {
+            toast.success("Template aplicado ao site");
+          }
         }}
       />
 
