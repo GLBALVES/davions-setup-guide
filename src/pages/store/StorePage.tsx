@@ -7,7 +7,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RawPage {
   id: string;
-  photographer_id: string;
   title: string;
   slug: string;
   parent_id: string | null;
@@ -16,6 +15,9 @@ interface RawPage {
   is_visible: boolean;
   sections_order: unknown;
   page_content: Record<string, any> | null;
+  published_sections_order?: unknown;
+  published_content?: Record<string, any> | null;
+  published_at?: string | null;
 }
 
 const StorePage = () => {
@@ -23,6 +25,7 @@ const StorePage = () => {
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const previewTemplate = searchParams.get("preview");
+  const isDraftPreview = searchParams.get("preview") === "1";
   const cleanPreview = searchParams.get("clean") === "1";
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
@@ -78,20 +81,30 @@ const StorePage = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, published_sections_order, published_content, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
 
       const rawPages = (pagesData ?? []) as RawPage[];
+      // Public site reads the published snapshot; ?preview=1 reads the live draft.
+      const pickContent = (p: RawPage): Record<string, any> => {
+        if (isDraftPreview) return (p.page_content ?? {}) as Record<string, any>;
+        return ((p.published_content ?? p.page_content) ?? {}) as Record<string, any>;
+      };
+      const pickOrder = (p: RawPage): unknown => {
+        if (isDraftPreview) return p.sections_order;
+        return p.published_sections_order ?? p.sections_order;
+      };
       const homePage = rawPages.find((page) => page.is_home && !page.parent_id) ?? null;
-      const homePageContent = (homePage?.page_content ?? {}) as Record<string, any>;
-      const orderedSections = Array.isArray(homePage?.sections_order)
-        ? (homePage?.sections_order as string[])
+      const homePageContent = homePage ? pickContent(homePage) : {};
+      const homeOrder = homePage ? pickOrder(homePage) : [];
+      const orderedSections = Array.isArray(homeOrder)
+        ? (homeOrder as string[])
         : Array.isArray(homePageContent.sections)
           ? homePageContent.sections.map((section: any) => section?.type).filter(Boolean)
           : [];
-      // Extract full PageSection[] from page_content.sections
+      // Extract full PageSection[] from selected content sections
       const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
@@ -122,7 +135,7 @@ const StorePage = () => {
     };
 
     load();
-  }, [slug, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
+  }, [slug, isDraftPreview, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
 
   if (loading) {
     return (

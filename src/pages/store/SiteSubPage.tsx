@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 
@@ -24,6 +24,8 @@ interface RawPage {
  */
 const SiteSubPage = () => {
   const { slug, pagePath } = useParams();
+  const [searchParams] = useSearchParams();
+  const isDraftPreview = searchParams.get("preview") === "1";
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [page, setPage] = useState<RawPage | null>(null);
@@ -73,7 +75,7 @@ const SiteSubPage = () => {
       setLoading(false);
     };
     load();
-  }, [slug, pagePath]);
+  }, [slug, pagePath, isDraftPreview]);
 
   if (loading) {
     return (
@@ -97,7 +99,10 @@ const SiteSubPage = () => {
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((p) => ({ label: p.title, href: `/store/${slug}/page/${p.slug}` }));
 
-  const pageContent = (page.page_content as Record<string, any>) ?? {};
+  const rawContent = isDraftPreview
+    ? (page.page_content as Record<string, any>)
+    : (((page as any).published_content ?? page.page_content) as Record<string, any>);
+  const pageContent = rawContent ?? {};
   const sections = Array.isArray(pageContent.sections) ? pageContent.sections.filter((s: any) => s?.type) : [];
 
   return (

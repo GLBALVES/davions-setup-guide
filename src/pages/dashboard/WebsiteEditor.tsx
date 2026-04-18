@@ -2454,11 +2454,38 @@ const WebsiteEditor = () => {
       toast.error(labels.needSlug);
       return;
     }
+    if (!user?.id) return;
     setPublishing(true);
     try {
+      // Promote current draft (page_content / sections_order) to the published
+      // columns so the public site reflects the editor's current state.
+      const { error } = await (supabase as any).rpc("publish_site_pages", {
+        _photographer_id: user.id,
+      });
+      if (error) {
+        // Fallback: do it client-side if RPC isn't available
+        const { data: rows } = await supabase
+          .from("site_pages")
+          .select("id, page_content, sections_order")
+          .eq("photographer_id", user.id)
+          .is("deleted_at", null);
+        await Promise.all(
+          (rows ?? []).map((r: any) =>
+            (supabase as any)
+              .from("site_pages")
+              .update({
+                published_content: r.page_content,
+                published_sections_order: r.sections_order,
+                published_at: new Date().toISOString(),
+              })
+              .eq("id", r.id)
+          )
+        );
+      }
       toast.success(labels.published);
-      const cacheBuster = Date.now();
-      window.open(`/store/${storeSlug}?v=${cacheBuster}`, "_blank", "noopener");
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === "pt" ? "Falha ao publicar" : lang === "es" ? "Error al publicar" : "Failed to publish");
     } finally {
       setPublishing(false);
     }
