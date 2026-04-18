@@ -98,7 +98,16 @@ const StorePage = () => {
         if (isDraftPreview) return p.sections_order;
         return p.published_sections_order ?? p.sections_order;
       };
-      const homePage = rawPages.find((page) => page.is_home && !page.parent_id) ?? null;
+      // Find the home page: prefer is_home flag, then a page named "home",
+      // otherwise fall back to the first top-level page so the site is never empty
+      // when the user clearly has content.
+      const topLevel = rawPages.filter((p) => !p.parent_id);
+      const homePage =
+        topLevel.find((p) => p.is_home) ??
+        topLevel.find((p) => (p.slug || "").toLowerCase() === "home") ??
+        topLevel.find((p) => (p.title || "").toLowerCase() === "home") ??
+        topLevel[0] ??
+        null;
       const homePageContent = homePage ? pickContent(homePage) : {};
       const homeOrder = homePage ? pickOrder(homePage) : [];
       const orderedSections = Array.isArray(homeOrder)
@@ -111,7 +120,7 @@ const StorePage = () => {
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
       const visibleNavLinks = rawPages
-        .filter((page) => page.is_visible && !page.is_home && !page.parent_id)
+        .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((page) => ({ label: page.title, href: `/store/${slug}/page/${page.slug}` }));
 
