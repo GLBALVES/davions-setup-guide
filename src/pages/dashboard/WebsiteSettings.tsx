@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { regenerateDefaultPagesForTemplate } from "@/lib/site-template-regen";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -534,6 +535,8 @@ const WebsiteSettings = () => {
   const [siteTemplate, setSiteTemplate] = useState("editorial");
   const [showTemplateGrid, setShowTemplateGrid] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState<string | null>(null);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -981,8 +984,9 @@ const WebsiteSettings = () => {
                               size="sm"
                               disabled={!pendingTemplate || pendingTemplate === siteTemplate}
                               onClick={() => {
-                                if (pendingTemplate) setSiteTemplate(pendingTemplate);
-                                setShowTemplateGrid(false);
+                                if (pendingTemplate && pendingTemplate !== siteTemplate) {
+                                  setConfirmTemplate(pendingTemplate);
+                                }
                               }}
                             >
                               Confirm
@@ -1383,7 +1387,70 @@ const WebsiteSettings = () => {
       </AlertDialogContent>
     </AlertDialog>
 
-    {/* Template preview modal */}
+    {/* Confirm template change */}
+    <AlertDialog
+      open={!!confirmTemplate}
+      onOpenChange={(o) => { if (!o && !applyingTemplate) setConfirmTemplate(null); }}
+    >
+      <AlertDialogContent className="z-[60]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            Aplicar o template "{TEMPLATES.find((t) => t.value === confirmTemplate)?.label ?? confirmTemplate}"?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Isso irá regenerar as páginas padrão (Home, About, Contact) com o layout do novo template.
+            Conteúdo personalizado dessas páginas será substituído. Páginas customizadas criadas por você
+            permanecerão intactas. Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={applyingTemplate}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={applyingTemplate}
+            onClick={async (e) => {
+              e.preventDefault();
+              const tid = confirmTemplate;
+              if (!tid || !user) return;
+              setApplyingTemplate(true);
+              try {
+                // Persist site_template immediately
+                const { error: upErr } = await (supabase as any)
+                  .from("photographer_site")
+                  .upsert(
+                    { photographer_id: user.id, site_template: tid },
+                    { onConflict: "photographer_id" },
+                  );
+                if (upErr) throw upErr;
+
+                // Regenerate default pages
+                const count = await regenerateDefaultPagesForTemplate(user.id, tid);
+                setSiteTemplate(tid);
+                toast({
+                  title: "Template aplicado",
+                  description:
+                    count > 0
+                      ? `${count} página${count === 1 ? "" : "s"} padrão regenerada${count === 1 ? "" : "s"}.`
+                      : "Template aplicado ao site.",
+                });
+                setConfirmTemplate(null);
+                setShowTemplateGrid(false);
+              } catch (err: any) {
+                toast({
+                  title: "Falha ao aplicar template",
+                  description: err?.message ?? String(err),
+                  variant: "destructive",
+                });
+              } finally {
+                setApplyingTemplate(false);
+              }
+            }}
+          >
+            {applyingTemplate ? "Aplicando..." : "Aplicar template"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
     {previewModalTemplate && (
       <TemplatePreviewModal
         open={!!previewModalTemplate}
@@ -1391,7 +1458,7 @@ const WebsiteSettings = () => {
         templateId={previewModalTemplate}
         templateLabel={TEMPLATES.find((t) => t.value === previewModalTemplate)?.label ?? previewModalTemplate}
         storeSlug={storeSlug}
-        onApply={(tid) => { setSiteTemplate(tid); setPreviewModalTemplate(null); }}
+        onApply={(tid) => { setPreviewModalTemplate(null); setConfirmTemplate(tid); }}
         isCurrentTemplate={siteTemplate === previewModalTemplate}
         siteData={{
           logo_url: logoUrl || null,

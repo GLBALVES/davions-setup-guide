@@ -80,42 +80,11 @@ const INITIAL_PAGES: SitePage[] = [
   { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
 ];
 
-// Map the visual site template (chosen in Website Settings) to a homepage page-template
-// so the Home page is born with content matching the chosen design.
-const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
-  editorial: "homepage-1",
-  sierra: "homepage-1",
-  canvas: "homepage-1",
-  seville: "homepage-1",
-  clean: "homepage-1",
-  grid: "homepage-2",
-  magazine: "homepage-2",
-  avery: "homepage-2",
-  milo: "homepage-2",
-};
-
-// Map the visual site template to a contact page-template variant.
-const SITE_TEMPLATE_TO_CONTACT_TEMPLATE: Record<string, string> = {
-  editorial: "contact-1",
-  sierra: "contact-1",
-  canvas: "contact-1",
-  seville: "contact-1",
-  clean: "contact-1",
-  grid: "contact-2",
-  magazine: "contact-2",
-  avery: "contact-2",
-  milo: "contact-2",
-};
-
-const getHomeTemplateForSite = (siteTemplate?: string | null) =>
-  SITE_TEMPLATE_TO_HOME_TEMPLATE[siteTemplate ?? ""] ?? "homepage-1";
-
-const getContactTemplateForSite = (siteTemplate?: string | null) =>
-  SITE_TEMPLATE_TO_CONTACT_TEMPLATE[siteTemplate ?? ""] ?? "contact-1";
-
-// Default page slugs that get regenerated when the site template changes.
-// Custom user pages (with other slugs) are preserved.
-const DEFAULT_PAGE_SLUGS = new Set(["home", "contact", "about"]);
+import {
+  getHomeTemplateForSite,
+  getContactTemplateForSite,
+  regenerateDefaultPagesForTemplate,
+} from "@/lib/site-template-regen";
 
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
@@ -1148,67 +1117,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
   };
 }
 
-/**
- * Regenerates the default pages (Home, Contact, About) using the page-template
- * variants mapped from the chosen visual site template. Custom user pages are
- * preserved. Returns the number of pages that were regenerated.
- */
-async function regenerateDefaultPagesForTemplate(
-  photographerId: string,
-  siteTemplate: string,
-): Promise<number> {
-  const homeTemplateId = getHomeTemplateForSite(siteTemplate);
-  const contactTemplateId = getContactTemplateForSite(siteTemplate);
-
-  // Find existing default pages by slug.
-  const { data: existing } = await supabase
-    .from("site_pages")
-    .select("id, slug, sort_order, is_home, is_visible, parent_id, title")
-    .eq("photographer_id", photographerId);
-
-  const defaults = (existing ?? []).filter((p: any) =>
-    DEFAULT_PAGE_SLUGS.has((p.slug ?? "").toLowerCase()),
-  );
-
-  // Replace each default page in place (keep id, sort_order, parent_id, is_visible).
-  for (const row of defaults as any[]) {
-    const slug = (row.slug ?? "").toLowerCase();
-    let templateId = "";
-    let label = row.title || "";
-    if (slug === "home") {
-      templateId = homeTemplateId;
-      label = label || "Home";
-    } else if (slug === "contact") {
-      templateId = contactTemplateId;
-      label = label || "Contact";
-    } else if (slug === "about") {
-      templateId = "about-1";
-      label = label || "About";
-    }
-    if (!templateId) continue;
-
-    const sections = getTemplateSections(templateId);
-    const page: SitePage = {
-      id: row.id,
-      label,
-      slug,
-      type: "page",
-      isHome: row.is_home === true,
-      inMenu: row.is_visible !== false,
-      status: "online",
-      showHeaderFooter: true,
-      templateId,
-      sections,
-    };
-
-    const dbFields = sitePageToDbFields(page, photographerId, row.sort_order ?? 0, row.parent_id ?? null);
-    // Don't overwrite the id; update the existing row by id.
-    const { id: _ignore, ...patch } = dbFields as any;
-    await supabase.from("site_pages").update(patch).eq("id", row.id);
-  }
-
-  return defaults.length;
-}
+// regenerateDefaultPagesForTemplate is imported from @/lib/site-template-regen
 
 function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: number, parentId: string | null = null) {
   return {
