@@ -7,7 +7,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RawPage {
   id: string;
-  photographer_id: string;
   title: string;
   slug: string;
   parent_id: string | null;
@@ -16,6 +15,9 @@ interface RawPage {
   is_visible: boolean;
   sections_order: unknown;
   page_content: Record<string, any> | null;
+  published_sections_order?: unknown;
+  published_content?: Record<string, any> | null;
+  published_at?: string | null;
 }
 
 const StorePage = () => {
