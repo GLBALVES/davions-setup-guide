@@ -2565,17 +2565,6 @@ const WebsiteEditor = () => {
             size="sm"
             variant="outline"
             className="flex-1 h-8 px-1 text-[10px] gap-1"
-            onClick={handleSave}
-            disabled={saving}
-            title={labels.save}
-          >
-            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            {labels.save}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 h-8 px-1 text-[10px] gap-1"
             onClick={handlePreview}
             title={labels.view}
           >
@@ -2636,16 +2625,6 @@ const WebsiteEditor = () => {
       </div>
 
       <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1 h-8 px-1 text-[10px] gap-1"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-          {labels.save}
-        </Button>
         <Button
           size="sm"
           variant="outline"
