@@ -120,7 +120,7 @@ const StorePage = () => {
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
       const visibleNavLinks = rawPages
-        .filter((page) => page.is_visible && !page.is_home && !page.parent_id)
+        .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((page) => ({ label: page.title, href: `/store/${slug}/page/${page.slug}` }));
 
