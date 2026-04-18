@@ -135,7 +135,7 @@ const StorePage = () => {
     };
 
     load();
-  }, [slug, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
+  }, [slug, isDraftPreview, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
 
   if (loading) {
     return (
