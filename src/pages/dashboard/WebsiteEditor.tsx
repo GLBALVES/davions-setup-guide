@@ -2503,18 +2503,6 @@ const WebsiteEditor = () => {
         <div className="flex-1 min-h-0 overflow-hidden">
           {panelMap[activeTab]}
         </div>
-        {/* Fixed Preview/Publish footer */}
-        <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
-          <Button
-            size="sm"
-            className="flex-1 h-8 text-xs gap-1.5"
-            onClick={handlePublish}
-            disabled={publishing}
-          >
-            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
-            {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
-          </Button>
-        </div>
       </div>
     </>
   );
@@ -2557,18 +2545,6 @@ const WebsiteEditor = () => {
         {panelMap[activeTab]}
       </div>
 
-      {/* Preview / Publish footer */}
-      <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
-        <Button
-          size="sm"
-          className="flex-1 h-9 text-xs gap-1.5"
-          onClick={handlePublish}
-          disabled={publishing}
-        >
-          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
-          {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
-        </Button>
-      </div>
     </div>
   );
 
