@@ -1590,43 +1590,45 @@ const PagesPanel = ({
   };
 
   const findAndUpdate = (id: string, patch: Partial<SitePage>) => {
-    setPages((prev) =>
-      prev.map((p) => {
+    setPages((prev) => {
+      const next = prev.map((p) => {
         if (p.id === id) return { ...p, ...patch };
         if (p.children) {
           return { ...p, children: p.children.map((c) => (c.id === id ? { ...c, ...patch } : c)) };
         }
         return p;
-      })
-    );
+      });
+
+      // Build DB patch from the FRESH next state (not stale `pages` closure)
+      const dbPatch: Record<string, any> = {};
+      if (patch.label !== undefined) { dbPatch.title = patch.label; dbPatch.slug = slugify(patch.label); }
+      if (patch.inMenu !== undefined) dbPatch.is_visible = patch.inMenu;
+      if (patch.slug !== undefined) dbPatch.slug = patch.slug;
+
+      const allP = flattenPages(next);
+      const merged = allP.find((p) => p.id === id);
+      if (merged) {
+        dbPatch.page_content = JSON.parse(JSON.stringify({
+          type: merged.type,
+          icon: merged.icon,
+          status: merged.status,
+          showHeaderFooter: merged.showHeaderFooter,
+          templateId: merged.templateId,
+          sections: merged.sections,
+          pageTitle: merged.pageTitle,
+          pageDescription: merged.pageDescription,
+          hideFromSearch: merged.hideFromSearch,
+          socialImage: merged.socialImage,
+        }));
+        dbPatch.sections_order = Array.isArray(merged.sections)
+          ? merged.sections.map((s: any) => s?.type).filter(Boolean)
+          : [];
+      }
+
+      persistUpdate(id, dbPatch);
+      return next;
+    });
     if (settingsPage?.id === id) setSettingsPage((prev) => (prev ? { ...prev, ...patch } : null));
-
-    // Build DB patch
-    const dbPatch: Record<string, any> = {};
-    if (patch.label !== undefined) { dbPatch.title = patch.label; dbPatch.slug = slugify(patch.label); }
-    if (patch.inMenu !== undefined) dbPatch.is_visible = patch.inMenu;
-    if (patch.slug !== undefined) dbPatch.slug = patch.slug;
-
-    // Always update page_content with the full merged content
-    const allP = flattenPages(pages);
-    const current = allP.find((p) => p.id === id);
-    if (current) {
-      const merged = { ...current, ...patch };
-      dbPatch.page_content = JSON.parse(JSON.stringify({
-        type: merged.type,
-        icon: merged.icon,
-        status: merged.status,
-        showHeaderFooter: merged.showHeaderFooter,
-        templateId: merged.templateId,
-        sections: merged.sections,
-        pageTitle: merged.pageTitle,
-        pageDescription: merged.pageDescription,
-        hideFromSearch: merged.hideFromSearch,
-        socialImage: merged.socialImage,
-      }));
-    }
-
-    persistUpdate(id, dbPatch);
   };
 
   const toggleMenu = (id: string) => {
