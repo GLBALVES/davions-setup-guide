@@ -1453,7 +1453,7 @@ const PagesPanel = ({
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
   const [editingSectionsPageId, setEditingSectionsPageId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const we = t.websiteEditor;
 
   const flattenPages = (list: SitePage[]) => list.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
@@ -2277,6 +2277,7 @@ const WebsiteEditor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { lang } = useLanguage();
 
   // Load photographer + site config
   useEffect(() => {
@@ -2519,8 +2520,8 @@ const WebsiteEditor = () => {
             onClick={handlePublish}
             disabled={publishing}
           >
-            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            Publish
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+            {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
           </Button>
         </div>
       </div>
@@ -2582,8 +2583,8 @@ const WebsiteEditor = () => {
           onClick={handlePublish}
           disabled={publishing}
         >
-          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-          Publish
+          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+          {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
         </Button>
       </div>
     </div>
