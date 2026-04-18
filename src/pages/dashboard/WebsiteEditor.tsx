@@ -1208,6 +1208,9 @@ async function regenerateDefaultPagesForTemplate(
   }
 
   return defaults.length;
+}
+
+function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: number, parentId: string | null = null) {
   return {
     id: page.id,
     photographer_id: photographerId,
