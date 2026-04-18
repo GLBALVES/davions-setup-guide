@@ -94,8 +94,29 @@ const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
   milo: "homepage-2",
 };
 
+// Map the visual site template to a contact page-template variant.
+const SITE_TEMPLATE_TO_CONTACT_TEMPLATE: Record<string, string> = {
+  editorial: "contact-1",
+  sierra: "contact-1",
+  canvas: "contact-1",
+  seville: "contact-1",
+  clean: "contact-1",
+  grid: "contact-2",
+  magazine: "contact-2",
+  avery: "contact-2",
+  milo: "contact-2",
+};
+
 const getHomeTemplateForSite = (siteTemplate?: string | null) =>
   SITE_TEMPLATE_TO_HOME_TEMPLATE[siteTemplate ?? ""] ?? "homepage-1";
+
+const getContactTemplateForSite = (siteTemplate?: string | null) =>
+  SITE_TEMPLATE_TO_CONTACT_TEMPLATE[siteTemplate ?? ""] ?? "contact-1";
+
+// Default page slugs that get regenerated when the site template changes.
+// Custom user pages (with other slugs) are preserved.
+const DEFAULT_PAGE_SLUGS = new Set(["home", "contact", "about"]);
+
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS: { id: EditorTab; icon: React.ElementType; label: string }[] = [
