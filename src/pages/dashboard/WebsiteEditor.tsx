@@ -2506,15 +2506,6 @@ const WebsiteEditor = () => {
         {/* Fixed Preview/Publish footer */}
         <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
           <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-8 text-xs gap-1.5"
-            onClick={() => { if (storeSlug) window.open(`/store/${storeSlug}`, "_blank"); }}
-          >
-            <Eye className="h-3 w-3" />
-            Preview
-          </Button>
-          <Button
             size="sm"
             className="flex-1 h-8 text-xs gap-1.5"
             onClick={handlePublish}
@@ -2568,15 +2559,6 @@ const WebsiteEditor = () => {
 
       {/* Preview / Publish footer */}
       <div className="border-t border-border p-2 flex gap-2 shrink-0 bg-card">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-9 text-xs gap-1.5"
-          onClick={() => { if (storeSlug) window.open(`/store/${storeSlug}`, "_blank"); }}
-        >
-          <Eye className="h-3 w-3" />
-          Preview
-        </Button>
         <Button
           size="sm"
           className="flex-1 h-9 text-xs gap-1.5"
