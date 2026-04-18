@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
+import SiteTemplatePickerModal from "@/components/website-editor/SiteTemplatePickerModal";
 import { getTemplateSections, createSection, type PageSection, type SectionType } from "@/components/website-editor/page-templates";
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
