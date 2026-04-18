@@ -2415,18 +2415,48 @@ const WebsiteEditor = () => {
     pageActions.setSections(next);
   }, [pageActions, activePageSections]);
 
+  const [saving, setSaving] = useState(false);
+
+  const labels = {
+    save: lang === "pt" ? "Salvar" : lang === "es" ? "Guardar" : "Save",
+    saved: lang === "pt" ? "Rascunho salvo" : lang === "es" ? "Borrador guardado" : "Draft saved",
+    view: lang === "pt" ? "Visualizar" : lang === "es" ? "Vista previa" : "Preview",
+    publish: lang === "pt" ? "Publicar" : lang === "es" ? "Publicar" : "Publish",
+    published: lang === "pt" ? "Site publicado" : lang === "es" ? "Sitio publicado" : "Site published",
+    needSlug: lang === "pt"
+      ? "Configure a URL da sua loja em Personalizar primeiro."
+      : lang === "es"
+        ? "Configura primero la URL de tu tienda en Personalizar."
+        : "Set up your store URL first in Personalize.",
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Edits are auto-persisted as the user works; this confirms the draft state.
+      toast.success(labels.saved);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePreview = () => {
+    if (!storeSlug) {
+      toast.error(labels.needSlug);
+      return;
+    }
+    const cacheBuster = Date.now();
+    window.open(`/store/${storeSlug}?preview=1&v=${cacheBuster}`, "_blank", "noopener");
+  };
+
   const handlePublish = async () => {
     if (!storeSlug) {
-      toast.error("Set up your store URL first in Personalize.");
+      toast.error(labels.needSlug);
       return;
     }
     setPublishing(true);
     try {
-      // Site edits are already saved live to `site_pages` as the user works.
-      // "Publish" simply opens the public store; we add a cache-buster so the
-      // newly opened tab fetches fresh content (and bypasses any browser /
-      // service-worker cache that may be serving a stale version).
-      toast.success("Site published");
+      toast.success(labels.published);
       const cacheBuster = Date.now();
       window.open(`/store/${storeSlug}?v=${cacheBuster}`, "_blank", "noopener");
     } finally {
@@ -2503,6 +2533,39 @@ const WebsiteEditor = () => {
         <div className="flex-1 min-h-0 overflow-hidden">
           {panelMap[activeTab]}
         </div>
+        <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            onClick={handleSave}
+            disabled={saving}
+            title={labels.save}
+          >
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            {labels.save}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            onClick={handlePreview}
+            title={labels.view}
+          >
+            <Eye className="h-3 w-3" />
+            {labels.view}
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            onClick={handlePublish}
+            disabled={publishing}
+            title={labels.publish}
+          >
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+            {labels.publish}
+          </Button>
+        </div>
       </div>
     </>
   );
@@ -2545,6 +2608,36 @@ const WebsiteEditor = () => {
         {panelMap[activeTab]}
       </div>
 
+      <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          {labels.save}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          onClick={handlePreview}
+        >
+          <Eye className="h-3 w-3" />
+          {labels.view}
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          onClick={handlePublish}
+          disabled={publishing}
+        >
+          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+          {labels.publish}
+        </Button>
+      </div>
     </div>
   );
 
