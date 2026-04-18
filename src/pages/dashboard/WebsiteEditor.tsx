@@ -2277,6 +2277,7 @@ const WebsiteEditor = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { lang } = useLanguage();
 
   // Load photographer + site config
   useEffect(() => {
