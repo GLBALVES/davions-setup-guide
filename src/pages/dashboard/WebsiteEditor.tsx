@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageTemplatePickerModal, { withDemoProps } from "@/components/website-editor/PageTemplatePickerModal";
+import SiteTemplatePickerModal from "@/components/website-editor/SiteTemplatePickerModal";
 import { getTemplateSections, createSection, type PageSection, type SectionType } from "@/components/website-editor/page-templates";
 import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
@@ -2015,6 +2016,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Load the chosen site_template (separate column from photographer_site we already read)
   useEffect(() => {
@@ -2189,7 +2191,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         </p>
         <button
           type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent("open-template-picker"))}
+          onClick={() => setPickerOpen(true)}
           className="block w-full overflow-hidden rounded-md border border-border hover:border-foreground/40 transition-colors"
         >
           <div className="aspect-[4/3] bg-muted flex items-center justify-center">
@@ -2199,6 +2201,17 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
           </div>
         </button>
       </div>
+
+      <SiteTemplatePickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        currentTemplate={siteTemplate}
+        onApply={(id) => {
+          setSiteTemplate(id);
+          onSiteChange({ site_template: id });
+          toast.success("Template aplicado ao site");
+        }}
+      />
 
       {/* TEMPLATE OPTIONS */}
       <div className="border-t border-border px-4 py-4">
