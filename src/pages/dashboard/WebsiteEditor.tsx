@@ -2521,7 +2521,7 @@ const WebsiteEditor = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/dashboard/website")}
               className="w-full h-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border-b border-border"
             >
               <ChevronLeft className="h-4 w-4" />
