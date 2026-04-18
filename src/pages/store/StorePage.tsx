@@ -24,8 +24,10 @@ const StorePage = () => {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const previewTemplate = searchParams.get("preview");
-  const isDraftPreview = searchParams.get("preview") === "1";
+  const rawPreview = searchParams.get("preview");
+  const isDraftPreview = rawPreview === "1";
+  // Only treat ?preview= as a template name override when it's NOT the draft flag.
+  const previewTemplate = isDraftPreview ? null : rawPreview;
   const cleanPreview = searchParams.get("clean") === "1";
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
