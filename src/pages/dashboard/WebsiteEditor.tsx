@@ -2016,6 +2016,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Load the chosen site_template (separate column from photographer_site we already read)
   useEffect(() => {
