@@ -75,7 +75,7 @@ const SiteSubPage = () => {
       setLoading(false);
     };
     load();
-  }, [slug, pagePath]);
+  }, [slug, pagePath, isDraftPreview]);
 
   if (loading) {
     return (
