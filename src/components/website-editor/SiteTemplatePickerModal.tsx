@@ -6,6 +6,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { TemplatePreviewCard } from "@/components/dashboard/TemplatePreviewCard";
 import { TemplatePreviewModal } from "@/components/website-editor/TemplatePreviewModal";
@@ -40,11 +50,20 @@ export default function SiteTemplatePickerModal({
 }: Props) {
   const [pendingTemplate, setPendingTemplate] = useState<string>(currentTemplate);
   const [previewModalTemplate, setPreviewModalTemplate] = useState<string | null>(null);
+  const [confirmTemplate, setConfirmTemplate] = useState<string | null>(null);
 
   // Reset pending selection whenever the modal is opened.
   useEffect(() => {
     if (open) setPendingTemplate(currentTemplate);
   }, [open, currentTemplate]);
+
+  const requestApply = (templateId: string | null) => {
+    if (!templateId || templateId === currentTemplate) return;
+    setConfirmTemplate(templateId);
+  };
+
+  const confirmedLabel =
+    TEMPLATES.find((t) => t.value === confirmTemplate)?.label ?? confirmTemplate ?? "";
 
   return (
     <>
@@ -65,10 +84,7 @@ export default function SiteTemplatePickerModal({
               <Button
                 size="sm"
                 disabled={!pendingTemplate || pendingTemplate === currentTemplate}
-                onClick={() => {
-                  if (pendingTemplate) onApply(pendingTemplate);
-                  onOpenChange(false);
-                }}
+                onClick={() => requestApply(pendingTemplate)}
               >
                 Confirm
               </Button>
@@ -105,13 +121,44 @@ export default function SiteTemplatePickerModal({
           }
           storeSlug={storeSlug}
           onApply={(tid) => {
-            onApply(tid);
             setPreviewModalTemplate(null);
-            onOpenChange(false);
+            requestApply(tid);
           }}
           isCurrentTemplate={currentTemplate === previewModalTemplate}
         />
       )}
+
+      {/* Confirmation alert */}
+      <AlertDialog
+        open={!!confirmTemplate}
+        onOpenChange={(o) => { if (!o) setConfirmTemplate(null); }}
+      >
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aplicar o template "{confirmedLabel}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso irá regenerar as páginas padrão (Home, About, Contact) com o layout do novo template.
+              Conteúdo personalizado dessas páginas será substituído. Páginas customizadas criadas por você
+              permanecerão intactas. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const tid = confirmTemplate;
+                setConfirmTemplate(null);
+                if (tid) {
+                  onApply(tid);
+                  onOpenChange(false);
+                }
+              }}
+            >
+              Aplicar template
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
