@@ -1426,10 +1426,7 @@ const WebsiteSettings = () => {
                 setSiteTemplate(tid);
                 toast({
                   title: "Template aplicado",
-                  description:
-                    count > 0
-                      ? `${count} página${count === 1 ? "" : "s"} padrão regenerada${count === 1 ? "" : "s"}.`
-                      : "Template aplicado ao site.",
+                  description: "Estilo visual atualizado. Seus textos, imagens e páginas foram preservados.",
                 });
                 setConfirmTemplate(null);
                 setShowTemplateGrid(false);
