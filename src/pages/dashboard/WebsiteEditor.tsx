@@ -2519,8 +2519,8 @@ const WebsiteEditor = () => {
             onClick={handlePublish}
             disabled={publishing}
           >
-            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            Publish
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+            {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
           </Button>
         </div>
       </div>
@@ -2582,8 +2582,8 @@ const WebsiteEditor = () => {
           onClick={handlePublish}
           disabled={publishing}
         >
-          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-          Publish
+          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+          {lang === "pt" ? "Ver site" : lang === "es" ? "Ver sitio" : "View site"}
         </Button>
       </div>
     </div>
