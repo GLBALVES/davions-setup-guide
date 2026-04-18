@@ -2521,7 +2521,7 @@ const WebsiteEditor = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/dashboard/website")}
               className="w-full h-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border-b border-border"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -2591,9 +2591,9 @@ const WebsiteEditor = () => {
       {/* Horizontal icon tab strip at top */}
       <div className="flex items-center border-b border-border shrink-0 overflow-x-auto">
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/dashboard/website")}
           className="h-12 w-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border-r border-border shrink-0"
-          aria-label="Dashboard"
+          aria-label="Website"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
