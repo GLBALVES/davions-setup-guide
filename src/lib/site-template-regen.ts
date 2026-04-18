@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getTemplateSections } from "@/components/website-editor/page-templates";
 
 // Map the visual site template (chosen in Website Settings) to a homepage page-template.
 const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
@@ -35,9 +34,17 @@ export const getContactTemplateForSite = (siteTemplate?: string | null) =>
 const DEFAULT_PAGE_SLUGS = new Set(["home", "contact", "about"]);
 
 /**
- * Regenerate Home / Contact / About pages so they match the chosen site template.
- * Custom user pages (any other slug) are preserved untouched.
- * Returns the number of pages regenerated.
+ * Apply the new site template to existing default pages WITHOUT destroying content.
+ *
+ * Strategy:
+ *  - Update only `page_content.templateId` so the page is tagged with the new visual template.
+ *  - Keep all existing `sections` (texts, images, props) intact.
+ *  - Custom user pages remain untouched.
+ *
+ * The visual style (fonts, colors, hero variant) comes from `photographer_site.site_template`,
+ * which is updated separately by the caller.
+ *
+ * Returns the number of pages touched.
  */
 export async function regenerateDefaultPagesForTemplate(
   photographerId: string,
@@ -48,55 +55,39 @@ export async function regenerateDefaultPagesForTemplate(
 
   const { data: existing } = await supabase
     .from("site_pages")
-    .select("id, slug, sort_order, is_home, is_visible, parent_id, title")
+    .select("id, slug, page_content")
     .eq("photographer_id", photographerId);
 
   const defaults = (existing ?? []).filter((p: any) =>
     DEFAULT_PAGE_SLUGS.has((p.slug ?? "").toLowerCase()),
   );
 
+  let touched = 0;
+
   for (const row of defaults as any[]) {
     const slug = (row.slug ?? "").toLowerCase();
     let templateId = "";
-    let label = row.title || "";
-    if (slug === "home") {
-      templateId = homeTemplateId;
-      label = label || "Home";
-    } else if (slug === "contact") {
-      templateId = contactTemplateId;
-      label = label || "Contact";
-    } else if (slug === "about") {
-      templateId = "about-1";
-      label = label || "About";
-    }
+    if (slug === "home") templateId = homeTemplateId;
+    else if (slug === "contact") templateId = contactTemplateId;
+    else if (slug === "about") templateId = "about-1";
     if (!templateId) continue;
 
-    const sections = getTemplateSections(templateId);
-    const sectionsOrder = sections.map((s: any) => s.type);
+    const currentContent =
+      row.page_content && typeof row.page_content === "object" ? row.page_content : {};
 
-    const patch = {
-      photographer_id: photographerId,
-      title: label,
-      slug,
-      parent_id: row.parent_id ?? null,
-      sort_order: row.sort_order ?? 0,
-      is_home: row.is_home === true,
-      is_visible: row.is_visible !== false,
-      sections_order: JSON.parse(JSON.stringify(sectionsOrder)),
-      page_content: JSON.parse(
-        JSON.stringify({
-          type: "page",
-          status: "online",
-          showHeaderFooter: true,
-          templateId,
-          sections,
-        }),
-      ),
-      header_config: null,
+    // Preserve everything (sections, status, header/footer flags, etc.) — only swap templateId.
+    const nextContent = {
+      ...currentContent,
+      templateId,
     };
 
-    await supabase.from("site_pages").update(patch).eq("id", row.id);
+    await supabase
+      .from("site_pages")
+      .update({ page_content: JSON.parse(JSON.stringify(nextContent)) })
+      .eq("id", row.id);
+
+    touched++;
   }
 
-  return defaults.length;
+  return touched;
 }
