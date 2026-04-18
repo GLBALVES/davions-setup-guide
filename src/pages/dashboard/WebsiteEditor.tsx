@@ -628,7 +628,7 @@ const HeaderSliderPanel = ({
 
   const addSlide = () => {
     const id = crypto.randomUUID();
-    updateSlides([...slides, { id, title: "", imageUrl: null }]);
+    updateSlides([...slides, { id, title: `Slide ${slides.length + 1}`, imageUrl: null }]);
     setActiveSlideId(id);
   };
 
