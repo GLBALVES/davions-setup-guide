@@ -2191,7 +2191,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         </p>
         <button
           type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent("open-template-picker"))}
+          onClick={() => setPickerOpen(true)}
           className="block w-full overflow-hidden rounded-md border border-border hover:border-foreground/40 transition-colors"
         >
           <div className="aspect-[4/3] bg-muted flex items-center justify-center">
@@ -2201,6 +2201,17 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
           </div>
         </button>
       </div>
+
+      <SiteTemplatePickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        currentTemplate={siteTemplate}
+        onApply={(id) => {
+          setSiteTemplate(id);
+          onSiteChange({ site_template: id });
+          toast.success("Template aplicado ao site");
+        }}
+      />
 
       {/* TEMPLATE OPTIONS */}
       <div className="border-t border-border px-4 py-4">
