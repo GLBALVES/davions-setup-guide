@@ -80,42 +80,11 @@ const INITIAL_PAGES: SitePage[] = [
   { id: "blog", label: "Blog", type: "link", inMenu: true, status: "online", showHeaderFooter: false },
 ];
 
-// Map the visual site template (chosen in Website Settings) to a homepage page-template
-// so the Home page is born with content matching the chosen design.
-const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
-  editorial: "homepage-1",
-  sierra: "homepage-1",
-  canvas: "homepage-1",
-  seville: "homepage-1",
-  clean: "homepage-1",
-  grid: "homepage-2",
-  magazine: "homepage-2",
-  avery: "homepage-2",
-  milo: "homepage-2",
-};
-
-// Map the visual site template to a contact page-template variant.
-const SITE_TEMPLATE_TO_CONTACT_TEMPLATE: Record<string, string> = {
-  editorial: "contact-1",
-  sierra: "contact-1",
-  canvas: "contact-1",
-  seville: "contact-1",
-  clean: "contact-1",
-  grid: "contact-2",
-  magazine: "contact-2",
-  avery: "contact-2",
-  milo: "contact-2",
-};
-
-const getHomeTemplateForSite = (siteTemplate?: string | null) =>
-  SITE_TEMPLATE_TO_HOME_TEMPLATE[siteTemplate ?? ""] ?? "homepage-1";
-
-const getContactTemplateForSite = (siteTemplate?: string | null) =>
-  SITE_TEMPLATE_TO_CONTACT_TEMPLATE[siteTemplate ?? ""] ?? "contact-1";
-
-// Default page slugs that get regenerated when the site template changes.
-// Custom user pages (with other slugs) are preserved.
-const DEFAULT_PAGE_SLUGS = new Set(["home", "contact", "about"]);
+import {
+  getHomeTemplateForSite,
+  getContactTemplateForSite,
+  regenerateDefaultPagesForTemplate,
+} from "@/lib/site-template-regen";
 
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
