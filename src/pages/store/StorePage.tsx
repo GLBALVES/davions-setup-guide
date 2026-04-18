@@ -79,7 +79,7 @@ const StorePage = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, published_sections_order, published_content, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
