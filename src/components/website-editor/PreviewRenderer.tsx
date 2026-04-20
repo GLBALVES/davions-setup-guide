@@ -34,6 +34,8 @@ export interface PreviewNavLink {
   isHome?: boolean;
   type?: "page" | "folder" | "link";
   url?: string;
+  /** When type === "link", whether to open the URL in a new tab. Defaults to true. */
+  openInNewTab?: boolean;
   children?: PreviewNavLink[];
 }
 
@@ -97,12 +99,13 @@ function PreviewNav({
         <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => {
             if (link.type === "link") {
+              const newTab = link.openInNewTab !== false;
               return (
                 <a
                   key={link.id}
                   href={link.url || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={newTab ? "_blank" : "_self"}
+                  rel={newTab ? "noopener noreferrer" : undefined}
                   className="text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70"
                   style={{ color: fg ?? undefined }}
                 >
@@ -129,12 +132,13 @@ function PreviewNav({
                     >
                       {link.children.map((child) => {
                         if (child.type === "link") {
+                          const newTab = child.openInNewTab !== false;
                           return (
                             <a
                               key={child.id}
                               href={child.url || "#"}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              target={newTab ? "_blank" : "_self"}
+                              rel={newTab ? "noopener noreferrer" : undefined}
                               className="block px-4 py-2 text-[11px] tracking-[0.2em] uppercase font-light hover:opacity-70 text-left"
                               style={{ color: fg ?? undefined }}
                             >

@@ -96,12 +96,13 @@ export default function PreviewHeader({
 
   const renderLink = (link: PreviewNavLink) => {
     if (link.type === "link") {
+      const newTab = link.openInNewTab !== false;
       return (
         <a
           key={link.id}
           href={link.url || "#"}
-          target="_blank"
-          rel="noopener noreferrer"
+          target={newTab ? "_blank" : "_self"}
+          rel={newTab ? "noopener noreferrer" : undefined}
           className="text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70"
           style={{ color: fg }}
         >

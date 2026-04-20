@@ -71,6 +71,8 @@ interface SitePage {
   hideFromSearch?: boolean;
   socialImage?: string;
   headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
+  /** For type === "link": open the URL in a new browser tab. */
+  openInNewTab?: boolean;
 }
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
@@ -1114,6 +1116,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
     hideFromSearch: content.hideFromSearch,
     socialImage: content.socialImage,
     headerConfig: (row.header_config as any) ?? null,
+    openInNewTab: content.openInNewTab ?? true,
     ...(children && children.length > 0 ? { children } : {}),
   };
 }
@@ -1142,6 +1145,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
       pageDescription: page.pageDescription,
       hideFromSearch: page.hideFromSearch,
       socialImage: page.socialImage,
+      openInNewTab: page.openInNewTab,
     })),
     header_config: page.headerConfig ? JSON.parse(JSON.stringify(page.headerConfig)) : null,
   };
@@ -1443,6 +1447,10 @@ const PagesPanel = ({
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkName, setLinkName] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(true);
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
@@ -1569,6 +1577,7 @@ const PagesPanel = ({
       isHome: p.isHome,
       type: p.type,
       url: p.type === "link" ? p.slug : undefined,
+      openInNewTab: p.type === "link" ? p.openInNewTab !== false : undefined,
       children:
         p.type === "folder" && p.children
           ? p.children.filter((c) => c.inMenu).map(toNavLink)
@@ -1626,6 +1635,7 @@ const PagesPanel = ({
           pageDescription: merged.pageDescription,
           hideFromSearch: merged.hideFromSearch,
           socialImage: merged.socialImage,
+          openInNewTab: merged.openInNewTab,
         }));
         dbPatch.sections_order = Array.isArray(merged.sections)
           ? merged.sections.map((s: any) => s?.type).filter(Boolean)
@@ -1705,20 +1715,38 @@ const PagesPanel = ({
       setFolderModalOpen(true);
       return;
     }
+    // type === "link" — open the Pixieset-style modal
+    setAddOpen(false);
+    setLinkName("");
+    setLinkUrl("");
+    setLinkOpenInNewTab(true);
+    setLinkModalOpen(true);
+  };
+
+  const confirmCreateLink = async () => {
     if (!photographerId) return;
+    const label = linkName.trim() || "New Link";
+    const rawUrl = linkUrl.trim();
+    // Allow plain "example.com" — prepend https:// if no protocol or relative path
+    const url = !rawUrl
+      ? ""
+      : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
+        ? rawUrl
+        : `https://${rawUrl}`;
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
-      label: "New Link",
-      type,
+      label,
+      type: "link",
       isHome: false,
-      inMenu: false,
+      inMenu: true,
       status: "online",
       showHeaderFooter: false,
+      slug: url, // link-type pages store the external URL in `slug`
+      openInNewTab: linkOpenInNewTab,
     };
     setPages((prev) => [...prev, newPage]);
-    setSettingsPage(newPage);
-    setAddOpen(false);
+    setLinkModalOpen(false);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
     await supabase.from("site_pages").insert([row]);
@@ -1969,6 +1997,62 @@ const PagesPanel = ({
               {t.common?.cancel ?? "Cancel"}
             </Button>
             <Button onClick={confirmCreateFolder}>
+              {t.common?.create ?? "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pixieset-style "Create New Link" modal */}
+      <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[11px] tracking-[0.25em] uppercase font-light">
+              Create New Link
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Link Name</label>
+              <Input
+                autoFocus
+                value={linkName}
+                onChange={(e) => setLinkName(e.target.value)}
+                placeholder="New Link"
+                maxLength={80}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Link URL</label>
+              <Input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://..."
+                type="url"
+                maxLength={2048}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    confirmCreateLink();
+                  }
+                }}
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={linkOpenInNewTab}
+                onChange={(e) => setLinkOpenInNewTab(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <span className="text-xs text-foreground">Open in New Window</span>
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setLinkModalOpen(false)}>
+              {t.common?.cancel ?? "Cancel"}
+            </Button>
+            <Button onClick={confirmCreateLink} disabled={!linkName.trim() || !linkUrl.trim()}>
               {t.common?.create ?? "Create"}
             </Button>
           </DialogFooter>
