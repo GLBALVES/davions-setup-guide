@@ -1430,6 +1430,8 @@ const PagesPanel = ({
   onUpdateActiveSections,
   registerActivePageActions,
   onHeaderConfigChange,
+  storeSlug,
+  showBlog,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1442,6 +1444,8 @@ const PagesPanel = ({
   onUpdateActiveSections: (sections: PageSection[]) => void;
   registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
+  storeSlug?: string | null;
+  showBlog?: boolean;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -1451,6 +1455,8 @@ const PagesPanel = ({
   const [linkName, setLinkName] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(true);
+  const [linkKind, setLinkKind] = useState<"external" | "internal">("external");
+  const [linkInternalTarget, setLinkInternalTarget] = useState<string>("");
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
@@ -1720,19 +1726,29 @@ const PagesPanel = ({
     setLinkName("");
     setLinkUrl("");
     setLinkOpenInNewTab(true);
+    setLinkKind("external");
+    setLinkInternalTarget("");
     setLinkModalOpen(true);
   };
 
   const confirmCreateLink = async () => {
     if (!photographerId) return;
     const label = linkName.trim() || "New Link";
-    const rawUrl = linkUrl.trim();
-    // Allow plain "example.com" — prepend https:// if no protocol or relative path
-    const url = !rawUrl
-      ? ""
-      : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
-        ? rawUrl
-        : `https://${rawUrl}`;
+    let url = "";
+    let openInNewTab = linkOpenInNewTab;
+    if (linkKind === "internal") {
+      url = linkInternalTarget.trim();
+      // Internal links default to same tab
+      openInNewTab = false;
+    } else {
+      const rawUrl = linkUrl.trim();
+      // Allow plain "example.com" — prepend https:// if no protocol or relative path
+      url = !rawUrl
+        ? ""
+        : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
+          ? rawUrl
+          : `https://${rawUrl}`;
+    }
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
@@ -1742,8 +1758,8 @@ const PagesPanel = ({
       inMenu: true,
       status: "online",
       showHeaderFooter: false,
-      slug: url, // link-type pages store the external URL in `slug`
-      openInNewTab: linkOpenInNewTab,
+      slug: url, // link-type pages store the URL (external or internal path) in `slug`
+      openInNewTab: openInNewTab,
     };
     setPages((prev) => [...prev, newPage]);
     setLinkModalOpen(false);
@@ -2022,37 +2038,104 @@ const PagesPanel = ({
                 maxLength={80}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Link URL</label>
-              <Input
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://..."
-                type="url"
-                maxLength={2048}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    confirmCreateLink();
-                  }
-                }}
-              />
+
+            {/* Link kind tabs */}
+            <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-md">
+              <button
+                type="button"
+                onClick={() => setLinkKind("external")}
+                className={cn(
+                  "text-[11px] tracking-wider uppercase font-light py-1.5 rounded transition-colors",
+                  linkKind === "external"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                External URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkKind("internal")}
+                className={cn(
+                  "text-[11px] tracking-wider uppercase font-light py-1.5 rounded transition-colors",
+                  linkKind === "internal"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Internal Page
+              </button>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={linkOpenInNewTab}
-                onChange={(e) => setLinkOpenInNewTab(e.target.checked)}
-                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
-              />
-              <span className="text-xs text-foreground">Open in New Window</span>
-            </label>
+
+            {linkKind === "external" ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Link URL</label>
+                <Input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://..."
+                  type="url"
+                  maxLength={2048}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      confirmCreateLink();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Destination</label>
+                <Select value={linkInternalTarget} onValueChange={setLinkInternalTarget}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storeSlug && (
+                      <SelectItem value={`/store/${storeSlug}`}>Home</SelectItem>
+                    )}
+                    {storeSlug && showBlog && (
+                      <SelectItem value={`/store/${storeSlug}/blog`}>Blog</SelectItem>
+                    )}
+                    {storeSlug && pages
+                      .filter((p) => p.type === "page" && !p.isHome && p.slug)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={`/store/${storeSlug}/page/${p.slug}`}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  Links to a page within your own site.
+                </p>
+              </div>
+            )}
+
+            {linkKind === "external" && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={linkOpenInNewTab}
+                  onChange={(e) => setLinkOpenInNewTab(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                />
+                <span className="text-xs text-foreground">Open in New Window</span>
+              </label>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setLinkModalOpen(false)}>
               {t.common?.cancel ?? "Cancel"}
             </Button>
-            <Button onClick={confirmCreateLink} disabled={!linkName.trim() || !linkUrl.trim()}>
+            <Button
+              onClick={confirmCreateLink}
+              disabled={
+                !linkName.trim() ||
+                (linkKind === "external" ? !linkUrl.trim() : !linkInternalTarget.trim())
+              }
+            >
               {t.common?.create ?? "Create"}
             </Button>
           </DialogFooter>
@@ -2611,6 +2694,8 @@ const WebsiteEditor = () => {
       onUpdateActiveSections={setActivePageSections}
       registerActivePageActions={handleRegisterActions}
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
+      storeSlug={storeSlug}
+      showBlog={Boolean((site as any)?.show_blog)}
     />,
     blog: <BlogPanel />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
