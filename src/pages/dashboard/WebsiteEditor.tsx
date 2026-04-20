@@ -2382,18 +2382,9 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         onApply={async (id) => {
           setSiteTemplate(id);
           await onSiteChange({ site_template: id });
-          if (photographerId) {
-            try {
-              await regenerateDefaultPagesForTemplate(photographerId, id);
-              toast.success("Template aplicado. Seus textos, imagens e páginas foram preservados.");
-              setTimeout(() => window.location.reload(), 600);
-            } catch (err) {
-              console.error("Failed to update pages template reference", err);
-              toast.error("Template salvo, mas houve falha ao atualizar referências das páginas");
-            }
-          } else {
-            toast.success("Template aplicado ao site");
-          }
+          // Apenas estilo visual: NÃO mexer nas páginas (Home/Sobre/Contato) — preserva tudo que o usuário editou.
+          toast.success("Estilo do site atualizado. Suas páginas e conteúdo foram preservados.");
+          setTimeout(() => window.location.reload(), 600);
         }}
       />
 
