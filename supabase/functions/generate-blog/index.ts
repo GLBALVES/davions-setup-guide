@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, keyword, secondaryKeywords, tone, articleSize, structure, cta } = await req.json();
+    const { title, keyword, secondaryKeywords, tone, articleSize, structure, cta, language } = await req.json();
 
     if (!title || !keyword) {
       return new Response(JSON.stringify({ error: "title and keyword are required" }), {
@@ -49,7 +49,13 @@ Article size: ${articleSize || "Médio (800-1200 palavras)"}
 Structure: ${structure || "Introdução + subtítulos + conclusão"}
 CTA: ${cta || "não incluir CTA"}
 
-Write the article in Portuguese (Brazil).`;
+Write the article in ${
+      language === "Inglês" || language === "English" || language === "en"
+        ? "English (US)"
+        : language === "Espanhol" || language === "Español" || language === "Spanish" || language === "es"
+        ? "Spanish (neutral Latin American)"
+        : "Portuguese (Brazil)"
+    }. All fields (title, slug, content, meta_title, meta_description, og_title, og_description, alt texts, secondary_keywords) MUST be in this language.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
