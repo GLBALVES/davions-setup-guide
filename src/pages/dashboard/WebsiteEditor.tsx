@@ -1451,6 +1451,8 @@ const PagesPanel = ({
   const [linkName, setLinkName] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [linkOpenInNewTab, setLinkOpenInNewTab] = useState(true);
+  const [linkKind, setLinkKind] = useState<"external" | "internal">("external");
+  const [linkInternalTarget, setLinkInternalTarget] = useState<string>("");
   const [pages, setPages] = useState<SitePage[]>([]);
   const [activePage, setActivePage] = useState("home");
   const [settingsPage, setSettingsPage] = useState<SitePage | null>(null);
@@ -1720,19 +1722,29 @@ const PagesPanel = ({
     setLinkName("");
     setLinkUrl("");
     setLinkOpenInNewTab(true);
+    setLinkKind("external");
+    setLinkInternalTarget("");
     setLinkModalOpen(true);
   };
 
   const confirmCreateLink = async () => {
     if (!photographerId) return;
     const label = linkName.trim() || "New Link";
-    const rawUrl = linkUrl.trim();
-    // Allow plain "example.com" — prepend https:// if no protocol or relative path
-    const url = !rawUrl
-      ? ""
-      : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
-        ? rawUrl
-        : `https://${rawUrl}`;
+    let url = "";
+    let openInNewTab = linkOpenInNewTab;
+    if (linkKind === "internal") {
+      url = linkInternalTarget.trim();
+      // Internal links default to same tab
+      openInNewTab = false;
+    } else {
+      const rawUrl = linkUrl.trim();
+      // Allow plain "example.com" — prepend https:// if no protocol or relative path
+      url = !rawUrl
+        ? ""
+        : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
+          ? rawUrl
+          : `https://${rawUrl}`;
+    }
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
@@ -1742,8 +1754,8 @@ const PagesPanel = ({
       inMenu: true,
       status: "online",
       showHeaderFooter: false,
-      slug: url, // link-type pages store the external URL in `slug`
-      openInNewTab: linkOpenInNewTab,
+      slug: url, // link-type pages store the URL (external or internal path) in `slug`
+      openInNewTab: openInNewTab,
     };
     setPages((prev) => [...prev, newPage]);
     setLinkModalOpen(false);
