@@ -81,106 +81,114 @@ export const GeradorPage = () => {
 
   const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+  const generateOne = async (lang: "Português" | "Inglês" | "Espanhol") => {
+    const ctaValue = includeCta === "Sim — usar CTA padrão" ? config.defaultCta : "não incluir CTA";
+    const { data, error } = await supabase.functions.invoke("generate-blog", {
+      body: {
+        title: activeTheme.title,
+        keyword: activeTheme.keyword,
+        secondaryKeywords: activeTheme.secondary_keywords?.join(", "),
+        tone, articleSize, structure, cta: ctaValue, language: lang,
+      },
+    });
+    if (error) throw error;
+    const parsed = data;
+    if (!parsed.title || !parsed.content) throw new Error("Invalid AI response");
+
+    const slugSuffix = lang === "Inglês" ? "-en" : lang === "Espanhol" ? "-es" : "";
+    const finalSlug = slugSuffix && !parsed.slug?.endsWith(slugSuffix) ? `${parsed.slug}${slugSuffix}` : parsed.slug;
+
+    const { data: newBlog, error: blogErr } = await supabase
+      .from("blogs")
+      .insert({
+        theme_id: activeTheme.id,
+        title: parsed.title, slug: finalSlug, content: parsed.content,
+        keyword: activeTheme.keyword, secondary_keywords: parsed.secondary_keywords,
+        mode: "auto", status: "draft",
+        word_count: parsed.word_count, reading_time_minutes: parsed.reading_time_minutes,
+        cta_text: includeCta === "Sim — usar CTA padrão" ? config.defaultCta : null,
+        cover_image_alt: parsed.cover_image_alt ?? null,
+        middle_image_alt: parsed.middle_image_alt ?? null,
+        photographer_id: photographerId,
+      })
+      .select().single();
+    if (blogErr) throw blogErr;
+
+    const kw = activeTheme.keyword?.toLowerCase() ?? "";
+    const seoChecks = [
+      !!(parsed.title?.toLowerCase().includes(kw) && kw),
+      !!(finalSlug?.toLowerCase().includes(kw.replace(/\s+/g, "-")) && kw),
+      parsed.meta_title?.length >= 30 && parsed.meta_title?.length <= 60,
+      parsed.meta_description?.length >= 80 && parsed.meta_description?.length <= 155,
+      !!finalSlug && finalSlug === finalSlug.toLowerCase() && !finalSlug.includes(" "),
+      !!(parsed.og_title && parsed.og_description),
+      (parsed.secondary_keywords?.length ?? 0) >= 3,
+      false,
+      !!(parsed.cover_image_alt && parsed.middle_image_alt),
+      (parsed.word_count ?? 0) >= 600,
+    ];
+    const seoScore = Math.round((seoChecks.filter(Boolean).length / seoChecks.length) * 100);
+
+    await supabase.from("ai_blog_seo").insert({
+      blog_id: newBlog.id,
+      meta_title: parsed.meta_title, meta_description: parsed.meta_description,
+      slug: finalSlug, secondary_keywords: parsed.secondary_keywords,
+      og_title: parsed.og_title ?? parsed.meta_title,
+      og_description: parsed.og_description ?? parsed.meta_description,
+      score: seoScore,
+      checklist: {
+        keyword_in_title: seoChecks[0], keyword_in_slug: seoChecks[1],
+        meta_title_length: seoChecks[2], meta_description_length: seoChecks[3],
+        has_slug: seoChecks[4], has_og: seoChecks[5],
+        has_secondary_keywords: seoChecks[6], has_cover_image: seoChecks[7],
+        has_alt_texts: seoChecks[8], word_count: seoChecks[9],
+      },
+      photographer_id: photographerId,
+    });
+
+    return { ...newBlog, _language: lang };
+  };
+
   const handleGenerate = async () => {
     if (!photographerId) return;
     setIsGenerating(true);
     setCurrentLoadingStep(0);
     setGeneratedBlog(null);
+    setTranslatedBlogs([]);
 
     try {
-      const ctaValue = includeCta === "Sim — usar CTA padrão" ? config.defaultCta : "não incluir CTA";
+      const extraLangs = (Object.keys(translateTo) as Array<"Português" | "Inglês" | "Espanhol">)
+        .filter((l) => translateTo[l] && l !== primaryLanguage);
 
-      const { data, error } = await supabase.functions.invoke("generate-blog", {
-        body: {
-          title: activeTheme.title,
-          keyword: activeTheme.keyword,
-          secondaryKeywords: activeTheme.secondary_keywords?.join(", "),
-          tone,
-          articleSize,
-          structure,
-          cta: ctaValue,
-        },
-      });
-
-      if (error) throw error;
-
-      const parsed = data;
-      if (!parsed.title || !parsed.content) throw new Error("Invalid AI response");
+      setGenerationProgress(`Gerando versão em ${primaryLanguage}...`);
+      const primaryBlog = await generateOne(primaryLanguage);
 
       setCurrentLoadingStep(1);
-      await delay(800);
+      await delay(400);
       setCurrentLoadingStep(2);
-      await delay(600);
+
+      const translations: any[] = [];
+      for (const lang of extraLangs) {
+        setGenerationProgress(`Gerando tradução em ${lang}...`);
+        const translated = await generateOne(lang);
+        translations.push(translated);
+      }
+
       setCurrentLoadingStep(3);
-
-      const { data: newBlog, error: blogErr } = await supabase
-        .from("blogs")
-        .insert({
-          theme_id: activeTheme.id,
-          title: parsed.title,
-          slug: parsed.slug,
-          content: parsed.content,
-          keyword: activeTheme.keyword,
-          secondary_keywords: parsed.secondary_keywords,
-          mode: "auto",
-          status: "draft",
-          word_count: parsed.word_count,
-          reading_time_minutes: parsed.reading_time_minutes,
-          cta_text: includeCta === "Sim — usar CTA padrão" ? config.defaultCta : null,
-          cover_image_alt: parsed.cover_image_alt ?? null,
-          middle_image_alt: parsed.middle_image_alt ?? null,
-          photographer_id: photographerId,
-        })
-        .select()
-        .single();
-
-      if (blogErr) throw blogErr;
-
-      const kw = activeTheme.keyword?.toLowerCase() ?? "";
-      const seoChecks = [
-        !!(parsed.title?.toLowerCase().includes(kw) && kw),
-        !!(parsed.slug?.toLowerCase().includes(kw.replace(/\s+/g, "-")) && kw),
-        parsed.meta_title?.length >= 30 && parsed.meta_title?.length <= 60,
-        parsed.meta_description?.length >= 80 && parsed.meta_description?.length <= 155,
-        !!parsed.slug && parsed.slug === parsed.slug.toLowerCase() && !parsed.slug.includes(" "),
-        !!(parsed.og_title && parsed.og_description),
-        (parsed.secondary_keywords?.length ?? 0) >= 3,
-        false,
-        !!(parsed.cover_image_alt && parsed.middle_image_alt),
-        (parsed.word_count ?? 0) >= 600,
-      ];
-      const seoScore = Math.round((seoChecks.filter(Boolean).length / seoChecks.length) * 100);
-
-      await supabase.from("ai_blog_seo").insert({
-        blog_id: newBlog.id,
-        meta_title: parsed.meta_title,
-        meta_description: parsed.meta_description,
-        slug: parsed.slug,
-        secondary_keywords: parsed.secondary_keywords,
-        og_title: parsed.og_title ?? parsed.meta_title,
-        og_description: parsed.og_description ?? parsed.meta_description,
-        score: seoScore,
-        checklist: {
-          keyword_in_title: seoChecks[0], keyword_in_slug: seoChecks[1],
-          meta_title_length: seoChecks[2], meta_description_length: seoChecks[3],
-          has_slug: seoChecks[4], has_og: seoChecks[5],
-          has_secondary_keywords: seoChecks[6], has_cover_image: seoChecks[7],
-          has_alt_texts: seoChecks[8], word_count: seoChecks[9],
-        },
-        photographer_id: photographerId,
-      });
-
-      await supabase.from("ai_themes").update({ blog_id: newBlog.id }).eq("id", activeTheme.id);
+      await supabase.from("ai_themes").update({ blog_id: primaryBlog.id }).eq("id", activeTheme.id);
 
       setCurrentLoadingStep(4);
-      setGeneratedBlog(newBlog);
+      setGeneratedBlog(primaryBlog);
+      setTranslatedBlogs(translations);
+      setGenerationProgress("");
 
       queryClient.invalidateQueries({ queryKey: ["blog-stats", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["recent-blogs", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["available-themes", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["theme-stats", photographerId] });
 
-      toast({ title: "Blog gerado e salvo com sucesso!" });
+      const total = 1 + translations.length;
+      toast({ title: total > 1 ? `${total} versões geradas (${primaryLanguage} + ${translations.length} tradução(ões))` : "Blog gerado e salvo!" });
     } catch (e: any) {
       console.error(e);
       toast({ title: "Erro ao gerar blog. Tente novamente.", variant: "destructive" });
