@@ -146,7 +146,8 @@ export const ConfigPage = () => {
                 <select value={defaultLanguage} onChange={(e) => setDefaultLanguage(e.target.value)} className={selectClass}>
                   <option value="Português">Português</option>
                   <option value="Inglês">Inglês</option>
-                  <option value="Bilíngue">Bilíngue</option>
+                  <option value="Espanhol">Espanhol</option>
+                  <option value="Multi-idioma (PT/EN/ES)">Multi-idioma (PT/EN/ES)</option>
                 </select>
               </div>
             </div>
