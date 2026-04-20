@@ -1642,9 +1642,14 @@ const PagesPanel = ({
           hideFromSearch: merged.hideFromSearch,
           socialImage: merged.socialImage,
           openInNewTab: merged.openInNewTab,
-          headerConfig: (merged as any).headerConfig,
           url: (merged as any).url,
         }));
+        // Persist per-page header config to its dedicated column so it survives reloads
+        if ((merged as any).headerConfig !== undefined) {
+          dbPatch.header_config = (merged as any).headerConfig
+            ? JSON.parse(JSON.stringify((merged as any).headerConfig))
+            : null;
+        }
         dbPatch.sections_order = Array.isArray(merged.sections)
           ? merged.sections.map((s: any) => s?.type).filter(Boolean)
           : [];
