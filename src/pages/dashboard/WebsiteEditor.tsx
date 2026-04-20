@@ -2484,20 +2484,22 @@ const WebsiteEditor = () => {
       }
       const { data: s } = await supabase
         .from("photographer_site")
-        .select("logo_url, accent_color, header_bg_color, header_text_color, footer_bg_color, footer_text_color, footer_text, heading_font, body_font")
+        .select("*")
         .eq("photographer_id", user.id)
         .maybeSingle();
       if (s) {
+        const raw = s as any;
         setSite({
-          logoUrl: (s as any).logo_url,
-          accentColor: (s as any).accent_color || "#000000",
-          headerBg: (s as any).header_bg_color,
-          headerTextColor: (s as any).header_text_color,
-          footerBg: (s as any).footer_bg_color,
-          footerTextColor: (s as any).footer_text_color,
-          footerText: (s as any).footer_text,
-          headingFont: (s as any).heading_font,
-          bodyFont: (s as any).body_font,
+          ...raw, // keep all snake_case columns so downstream panels (blog, social, tracking, advanced…) survive reloads
+          logoUrl: raw.logo_url,
+          accentColor: raw.accent_color || "#000000",
+          headerBg: raw.header_bg_color,
+          headerTextColor: raw.header_text_color,
+          footerBg: raw.footer_bg_color,
+          footerTextColor: raw.footer_text_color,
+          footerText: raw.footer_text,
+          headingFont: raw.heading_font,
+          bodyFont: raw.body_font,
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
