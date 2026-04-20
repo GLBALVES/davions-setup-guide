@@ -1,52 +1,82 @@
 
 
-## Fix Blog Settings Sub-Panel (Toggle + Layout)
+## Auditoria Ponta-a-Ponta do Editor de Site
 
-### Problems
-1. **Toggle doesn't visually update** — `updateSite` in `WebsiteEditor.tsx` rebuilds local `site` state from a fixed list of known fields (logo, fonts, colors…). `show_blog` isn't preserved, so after `onSiteChange({ show_blog: true })` the local state loses the new value and the `Switch` snaps back to off. (DB does get written, but UI lies.)
-2. **Layout is poor**: buttons render in ALL CAPS with wide letter-spacing (likely inheriting site's heading font/tracking from the editor preview context), the panel feels cramped, and the helper text is awkwardly placed.
+Vou rodar uma varredura sistemática do `/dashboard/website/editor` no preview real (logado), testando cada superfície e produzindo um **relatório consolidado** com bugs, severidade e arquivo responsável. Sem editar código nesta rodada — só diagnóstico.
 
-### Fix 1 — `updateSite` in `src/pages/dashboard/WebsiteEditor.tsx`
-Make the optimistic merge generic so any patched key (including `show_blog`, `show_about`, `show_store`, etc.) is reflected immediately:
+### Escopo da auditoria
 
-```ts
-setSite((prev) => ({
-  ...(prev || {}),
-  ...patch,                       // ← merge all raw DB keys (snake_case)
-  // keep camelCase aliases used elsewhere in the editor:
-  logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
-  accentColor: ...,
-  // ... (existing aliases unchanged)
-}));
-```
+**1. Persistência (`updateSite`)**
+- Testar se cada toggle/campo novo (show_blog, fontes, cores, header/footer bg) persiste após reload
+- Confirmar suspeita do merge restrito em `WebsiteEditor.tsx`
 
-This preserves backward compatibility while ensuring any `show_*` / SEO / tracking flag updates flow back to the UI.
+**2. Blocos (Sections)**
+- Selecionar, mover ↑↓, duplicar, excluir, inserir entre blocos
+- Verificar se ordem persiste após reload
+- Editar props no `BlockSettingsPanel` direito e confirmar render
 
-### Fix 2 — Redesign `src/components/website-editor/settings/BlogSubPanel.tsx`
-Cleaner Pixieset-style layout (matches the rest of `SettingsPanel`):
+**3. Edição inline**
+- `EditableText` em cada tipo de bloco (Hero, Sobre, CTA, Footer)
+- `EditableImage` (upload + URL externa)
+- Validar que `onPropChange` grava no path correto
 
-- Replace the boxed card with a flush row using the same visual style as other sub-panels (SeoSubPanel pattern).
-- Use `normal-case tracking-normal` explicitly on buttons to override any inherited heading-font tracking from preview context.
-- Trilingual labels via `useLanguage` (EN/PT/ES) — project is multi-language.
-- Tighter spacing, clearer hierarchy:
-  - Section header "Blog"
-  - Toggle row (label + description on left, switch on right) — borderless, subtle divider
-  - Two ghost-style action buttons stacked
-  - Footnote in muted text
+**4. Páginas & Navegação**
+- Criar página, renomear, excluir, marcar como home
+- Criar pasta (dropdown), link externo (com/sem nova aba)
+- Reordenar páginas
+- Aplicar template de página (`PageTemplatePickerModal`)
 
-Translation keys to add to `src/lib/i18n/translations.ts`:
-- `editor.settings.blog.title` → "Blog"
-- `editor.settings.blog.toggleLabel` → "Show blog on site" / "Mostrar blog no site" / "Mostrar blog en el sitio"
-- `editor.settings.blog.toggleDesc` → "Adds a /blog section to your public website."
-- `editor.settings.blog.managePosts` → "Manage blog posts"
-- `editor.settings.blog.settings` → "Blog settings & themes"
-- `editor.settings.blog.footnote` → "Full blog management (posts, AI generation, SEO) lives in the Blog module."
+**5. Header por página (`PreviewHeader` + `headerConfig`)**
+- Editar slides, logo, navegação
+- Verificar se salva por página, não global
 
-### Files to edit
-- `src/pages/dashboard/WebsiteEditor.tsx` — generic patch merge in `updateSite`
-- `src/components/website-editor/settings/BlogSubPanel.tsx` — layout rewrite + i18n + `normal-case tracking-normal` overrides
-- `src/lib/i18n/translations.ts` — new keys (EN/PT/ES)
+**6. Templates de site inteiro**
+- Aplicar `SiteTemplatePickerModal` e checar se sobrescreve corretamente
+- Testar reset
 
-### Out of scope
-- The unrelated React `forwardRef` warnings for `AdvancedModal` / `SettingsPanel` (separate issue, not blocking the toggle).
+**7. Sub-painéis de Settings**
+- SEO Manager (save + SERP preview)
+- Blog (toggle já corrigido — revalidar)
+- Social (links salvam)
+- Tracking (GA, Pixel, head HTML)
+- Advanced (CSS, body HTML, favicon, redirects)
+- Form Submissions (lista carrega)
+- Drafts (lista + restore)
+- Trash (lista + restore + purge)
+
+**8. Tipografia & Cores**
+- Trocar heading/body font e accent color → confirmar aplicação live em todos os blocos
+
+**9. Viewports (Desktop/Tablet/Mobile)**
+- Confirmar que largura muda; documentar limitação se não simula media queries reais
+
+**10. Console & Network**
+- Capturar warnings (`forwardRef` do AdvancedModal/SettingsPanel já conhecido)
+- Erros 4xx/5xx em saves
+- Requisições duplicadas/N+1
+
+### Entregável
+
+Relatório em **tabela markdown** com colunas:
+- **Área** • **O que testei** • **Resultado** • **Severidade** (🔴 quebrado / 🟡 parcial / 🟢 ok) • **Arquivo + linha suspeita** • **Correção sugerida**
+
+Mais um **resumo executivo** no topo agrupando bugs por prioridade e estimando ordem de ataque.
+
+### Ferramentas usadas
+- `browser--navigate_to_sandbox`, `observe`, `act`, `screenshot`, `read_console_logs`, `list_network_requests` (preview real, logado)
+- `code--view` para confirmar suspeitas no código
+- `supabase--read_query` para validar persistência no DB quando necessário
+
+### Pré-requisitos
+- Você precisa estar **logado no preview** (https://id-preview--da311b7e-...lovable.app). Se eu cair em tela de login, paro e te aviso.
+- Vou tocar apenas no **seu próprio site** (sem ações destrutivas em outras contas).
+- Testes destrutivos (excluir página, esvaziar lixeira) eu **pulo** e marco como "não validado — destrutivo" a menos que você autorize.
+
+### Fora de escopo
+- Implementar correções nesta rodada (próximo passo, após você priorizar o relatório)
+- Reescrever blocos ou adicionar novos tipos
+- Mexer no site público (`/store/`)
+
+### Próximo passo após aprovação
+Você aprova → eu rodo a auditoria → entrego relatório → você marca prioridades → abro plano de correção por área.
 
