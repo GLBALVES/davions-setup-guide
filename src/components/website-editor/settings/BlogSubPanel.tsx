@@ -1,7 +1,6 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const STR = {
@@ -9,6 +8,8 @@ const STR = {
     title: "Blog",
     toggleLabel: "Show blog on site",
     toggleDesc: "Adds a /blog section to your public website.",
+    createPost: "Create new post with AI",
+    createPostDesc: "Opens the AI blog generator in a new tab.",
     managePosts: "Manage blog posts",
     settings: "Blog settings & themes",
     footnote: "Full blog management (posts, AI generation, SEO) lives in the Blog module.",
@@ -17,6 +18,8 @@ const STR = {
     title: "Blog",
     toggleLabel: "Mostrar blog no site",
     toggleDesc: "Adiciona uma seção /blog ao seu site público.",
+    createPost: "Criar novo post com IA",
+    createPostDesc: "Abre o gerador de blog com IA em uma nova aba.",
     managePosts: "Gerenciar posts do blog",
     settings: "Configurações e temas do blog",
     footnote: "A gestão completa do blog (posts, IA, SEO) fica no módulo Blog.",
@@ -25,6 +28,8 @@ const STR = {
     title: "Blog",
     toggleLabel: "Mostrar blog en el sitio",
     toggleDesc: "Agrega una sección /blog a tu sitio público.",
+    createPost: "Crear nueva entrada con IA",
+    createPostDesc: "Abre el generador de blog con IA en una nueva pestaña.",
     managePosts: "Gestionar entradas del blog",
     settings: "Configuración y temas del blog",
     footnote: "La gestión completa del blog (entradas, IA, SEO) está en el módulo Blog.",
@@ -38,10 +43,13 @@ export default function BlogSubPanel({
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
 }) {
-  const navigate = useNavigate();
   const { lang } = useLanguage();
   const t = STR[lang as keyof typeof STR] ?? STR.en;
   const enabled = site?.show_blog ?? false;
+
+  const openInNewTab = (path: string) => {
+    window.open(path, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="p-4 space-y-4 overflow-y-auto h-full normal-case tracking-normal">
@@ -62,12 +70,28 @@ export default function BlogSubPanel({
         />
       </div>
 
-      <div className="space-y-2">
+      {/* Primary CTA — Create new post (opens in new tab) */}
+      <Button
+        size="sm"
+        className="w-full justify-between text-xs normal-case tracking-normal font-medium h-10 px-3"
+        onClick={() => openInNewTab("/dashboard/blog/temas")}
+      >
+        <span className="flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5" />
+          {t.createPost}
+        </span>
+        <ExternalLink className="h-3.5 w-3.5 opacity-80" />
+      </Button>
+      <p className="text-[10px] text-muted-foreground -mt-2 normal-case tracking-normal leading-relaxed">
+        {t.createPostDesc}
+      </p>
+
+      <div className="space-y-2 pt-2 border-t border-border">
         <Button
           variant="ghost"
           size="sm"
           className="w-full justify-between text-xs normal-case tracking-normal font-normal h-9 px-3"
-          onClick={() => navigate("/dashboard/blog")}
+          onClick={() => openInNewTab("/dashboard/blog")}
         >
           <span>{t.managePosts}</span>
           <ExternalLink className="h-3.5 w-3.5 opacity-60" />
@@ -76,7 +100,7 @@ export default function BlogSubPanel({
           variant="ghost"
           size="sm"
           className="w-full justify-between text-xs normal-case tracking-normal font-normal h-9 px-3"
-          onClick={() => navigate("/dashboard/blog/config")}
+          onClick={() => openInNewTab("/dashboard/blog/config")}
         >
           <span>{t.settings}</span>
           <ExternalLink className="h-3.5 w-3.5 opacity-60" />
