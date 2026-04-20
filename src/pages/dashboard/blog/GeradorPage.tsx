@@ -42,9 +42,15 @@ export const GeradorPage = () => {
   const [includeCta, setIncludeCta] = useState("Sim — usar CTA padrão");
   const [tone, setTone] = useState(config.defaultTone);
   const [structure, setStructure] = useState("Introdução + subtítulos + conclusão");
+  const [primaryLanguage, setPrimaryLanguage] = useState<"Português" | "Inglês" | "Espanhol">("Português");
+  const [translateTo, setTranslateTo] = useState<Record<"Português" | "Inglês" | "Espanhol", boolean>>({
+    "Português": false, "Inglês": false, "Espanhol": false,
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
+  const [generationProgress, setGenerationProgress] = useState<string>("");
   const [generatedBlog, setGeneratedBlog] = useState<any>(null);
+  const [translatedBlogs, setTranslatedBlogs] = useState<any[]>([]);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imageModalPosition, setImageModalPosition] = useState<"cover" | "middle">("cover");
 
