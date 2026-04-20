@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useBlogContext } from "@/contexts/BlogContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BlogOnboardingWizard, isBlogOnboardingCompleted, resetBlogOnboarding } from "@/components/blog/BlogOnboardingWizard";
+import { Sparkles } from "lucide-react";
 
 function formatRelativeDate(dateStr: string) {
   const now = Date.now();
@@ -21,6 +24,13 @@ function formatRelativeDate(dateStr: string) {
 export const BlogDashboardPage = () => {
   const { config, photographerId } = useBlogContext();
   const navigate = useNavigate();
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (photographerId && !isBlogOnboardingCompleted(photographerId)) {
+      setWizardOpen(true);
+    }
+  }, [photographerId]);
 
   const { data: blogStats, isLoading: loadingBlogs } = useQuery({
     queryKey: ["blog-stats", photographerId],
@@ -121,12 +131,23 @@ export const BlogDashboardPage = () => {
 
   return (
     <>
+      <BlogOnboardingWizard open={wizardOpen} onOpenChange={setWizardOpen} />
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-lg font-medium">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Visão geral — {config.companyName}
           </p>
+          <button
+            onClick={() => {
+              resetBlogOnboarding(photographerId);
+              setWizardOpen(true);
+            }}
+            className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
+          >
+            <Sparkles className="h-3 w-3" />
+            Refazer tour de boas-vindas
+          </button>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/blog/temas")}>
