@@ -381,7 +381,12 @@ export const GeradorPage = () => {
           <div className="bg-background border border-border rounded-lg p-4 mb-4">
             <div className="flex justify-between items-start mb-3">
               <p className="text-sm font-medium line-clamp-2 flex-1 mr-2">{generatedBlog.title}</p>
-              <span className="bg-green-50 text-green-700 border-green-200 text-[10px] px-2 py-0.5 rounded-full border shrink-0">Gerado</span>
+              <div className="flex gap-1.5 shrink-0">
+                <span className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-2 py-0.5 rounded-full border">
+                  {primaryLanguage === "Português" ? "🇧🇷 PT" : primaryLanguage === "Inglês" ? "🇺🇸 EN" : "🇪🇸 ES"}
+                </span>
+                <span className="bg-green-50 text-green-700 border-green-200 text-[10px] px-2 py-0.5 rounded-full border">Principal</span>
+              </div>
             </div>
             <div className="flex gap-4 text-xs text-muted-foreground mb-3">
               <span>{generatedBlog.word_count} palavras</span>
@@ -394,6 +399,35 @@ export const GeradorPage = () => {
               </p>
             </div>
           </div>
+
+          {translatedBlogs.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Versões traduzidas ({translatedBlogs.length})
+              </p>
+              <div className="space-y-2">
+                {translatedBlogs.map((tb) => (
+                  <div key={tb.id} className="bg-background border border-border rounded-lg p-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <p className="text-xs font-medium line-clamp-2 flex-1">{tb.title}</p>
+                      <span className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-2 py-0.5 rounded-full border shrink-0">
+                        {tb._language === "Português" ? "🇧🇷 PT" : tb._language === "Inglês" ? "🇺🇸 EN" : "🇪🇸 ES"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {tb.word_count} palavras · Slug: <span className="font-mono">{tb.slug}</span>
+                    </p>
+                    <button
+                      onClick={() => { sessionStorage.setItem("current_blog_id", tb.id); navigate("/dashboard/blog/seo"); }}
+                      className="text-[11px] text-blue-600 mt-1.5 cursor-pointer"
+                    >
+                      Abrir SEO desta versão →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {(["cover", "middle"] as const).map((pos) => {
