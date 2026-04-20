@@ -1714,20 +1714,38 @@ const PagesPanel = ({
       setFolderModalOpen(true);
       return;
     }
+    // type === "link" — open the Pixieset-style modal
+    setAddOpen(false);
+    setLinkName("");
+    setLinkUrl("");
+    setLinkOpenInNewTab(true);
+    setLinkModalOpen(true);
+  };
+
+  const confirmCreateLink = async () => {
     if (!photographerId) return;
+    const label = linkName.trim() || "New Link";
+    const rawUrl = linkUrl.trim();
+    // Allow plain "example.com" — prepend https:// if no protocol or relative path
+    const url = !rawUrl
+      ? ""
+      : /^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith("/") || rawUrl.startsWith("#") || rawUrl.startsWith("mailto:") || rawUrl.startsWith("tel:")
+        ? rawUrl
+        : `https://${rawUrl}`;
     const newId = crypto.randomUUID();
     const newPage: SitePage = {
       id: newId,
-      label: "New Link",
-      type,
+      label,
+      type: "link",
       isHome: false,
-      inMenu: false,
+      inMenu: true,
       status: "online",
       showHeaderFooter: false,
+      slug: url, // link-type pages store the external URL in `slug`
+      openInNewTab: linkOpenInNewTab,
     };
     setPages((prev) => [...prev, newPage]);
-    setSettingsPage(newPage);
-    setAddOpen(false);
+    setLinkModalOpen(false);
 
     const row = sitePageToDbFields(newPage, photographerId, pages.length);
     await supabase.from("site_pages").insert([row]);
