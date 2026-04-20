@@ -85,6 +85,7 @@ import {
   getContactTemplateForSite,
   regenerateDefaultPagesForTemplate,
 } from "@/lib/site-template-regen";
+import { loadStudioContent, enrichSectionsWithContent } from "@/lib/site-template-content";
 
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
@@ -1507,14 +1508,26 @@ const PagesPanel = ({
         } else {
           // First time — seed defaults, with Home built from the chosen site template
           const homeTemplateId = getHomeTemplateForSite((siteRow as any)?.site_template);
-          const homeSections = getTemplateSections(homeTemplateId);
+          const contactTemplateId = getContactTemplateForSite((siteRow as any)?.site_template);
+          // Pull real studio content (name, hero image, bio, gallery covers, testimonials…)
+          const studioContent = await loadStudioContent(photographerId);
           const rows: any[] = [];
           let order = 0;
           for (const page of INITIAL_PAGES) {
             const id = crypto.randomUUID();
-            const seeded: SitePage = page.isHome
-              ? { ...page, id, templateId: homeTemplateId, sections: homeSections }
-              : { ...page, id };
+            let seeded: SitePage = { ...page, id };
+            if (page.isHome) {
+              const sections = enrichSectionsWithContent(getTemplateSections(homeTemplateId), studioContent);
+              seeded = { ...seeded, templateId: homeTemplateId, sections };
+            } else if ((page.slug ?? "").toLowerCase() === "contact") {
+              const sections = enrichSectionsWithContent(getTemplateSections(contactTemplateId), studioContent);
+              seeded = { ...seeded, templateId: contactTemplateId, sections };
+            } else if ((page.slug ?? "").toLowerCase() === "about") {
+              const sections = enrichSectionsWithContent(getTemplateSections("about-1"), studioContent);
+              seeded = { ...seeded, templateId: "about-1", sections };
+            } else if (Array.isArray(page.sections)) {
+              seeded = { ...seeded, sections: enrichSectionsWithContent(page.sections, studioContent) };
+            }
             rows.push(sitePageToDbFields(seeded, photographerId, order++));
             if (page.children) {
               for (const child of page.children) {

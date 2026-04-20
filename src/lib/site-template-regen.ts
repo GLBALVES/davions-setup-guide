@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { loadStudioContent, enrichSectionsWithContent } from "@/lib/site-template-content";
+import type { PageSection } from "@/components/website-editor/page-templates";
 
 // Map the visual site template (chosen in Website Settings) to a homepage page-template.
 const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
@@ -64,6 +66,9 @@ export async function regenerateDefaultPagesForTemplate(
 
   let touched = 0;
 
+  // Load real studio content once for all default pages.
+  const studioContent = await loadStudioContent(photographerId);
+
   for (const row of defaults as any[]) {
     const slug = (row.slug ?? "").toLowerCase();
     let templateId = "";
@@ -75,10 +80,17 @@ export async function regenerateDefaultPagesForTemplate(
     const currentContent =
       row.page_content && typeof row.page_content === "object" ? row.page_content : {};
 
-    // Preserve everything (sections, status, header/footer flags, etc.) — only swap templateId.
+    // Enrich existing sections: only fills props that are still empty —
+    // user-edited texts/images are always preserved.
+    const currentSections: PageSection[] = Array.isArray((currentContent as any).sections)
+      ? ((currentContent as any).sections as PageSection[])
+      : [];
+    const enrichedSections = enrichSectionsWithContent(currentSections, studioContent);
+
     const nextContent = {
       ...currentContent,
       templateId,
+      sections: enrichedSections,
     };
 
     await supabase
