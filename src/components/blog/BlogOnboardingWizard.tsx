@@ -88,7 +88,7 @@ interface BlogOnboardingWizardProps {
 }
 
 export const BlogOnboardingWizard = ({ open, onOpenChange }: BlogOnboardingWizardProps) => {
-  const { language } = useLanguage();
+  const { lang: language } = useLanguage();
   const { photographerId } = useBlogContext();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
