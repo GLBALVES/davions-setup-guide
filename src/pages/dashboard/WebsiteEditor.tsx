@@ -1642,6 +1642,8 @@ const PagesPanel = ({
           hideFromSearch: merged.hideFromSearch,
           socialImage: merged.socialImage,
           openInNewTab: merged.openInNewTab,
+          headerConfig: (merged as any).headerConfig,
+          url: (merged as any).url,
         }));
         dbPatch.sections_order = Array.isArray(merged.sections)
           ? merged.sections.map((s: any) => s?.type).filter(Boolean)
