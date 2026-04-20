@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { loadStudioContent, enrichSectionsWithContent } from "@/lib/site-template-content";
+import type { PageSection } from "@/components/website-editor/page-templates";
 
 // Map the visual site template (chosen in Website Settings) to a homepage page-template.
 const SITE_TEMPLATE_TO_HOME_TEMPLATE: Record<string, string> = {
