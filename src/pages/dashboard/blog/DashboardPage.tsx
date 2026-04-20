@@ -131,12 +131,23 @@ export const BlogDashboardPage = () => {
 
   return (
     <>
+      <BlogOnboardingWizard open={wizardOpen} onOpenChange={setWizardOpen} />
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-lg font-medium">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Visão geral — {config.companyName}
           </p>
+          <button
+            onClick={() => {
+              resetBlogOnboarding(photographerId);
+              setWizardOpen(true);
+            }}
+            className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
+          >
+            <Sparkles className="h-3 w-3" />
+            Refazer tour de boas-vindas
+          </button>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/blog/temas")}>
