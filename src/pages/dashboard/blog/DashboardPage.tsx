@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useBlogContext } from "@/contexts/BlogContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BlogOnboardingWizard, isBlogOnboardingCompleted, resetBlogOnboarding } from "@/components/blog/BlogOnboardingWizard";
+import { Sparkles } from "lucide-react";
 
 function formatRelativeDate(dateStr: string) {
   const now = Date.now();
