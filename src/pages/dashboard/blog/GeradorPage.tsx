@@ -42,9 +42,15 @@ export const GeradorPage = () => {
   const [includeCta, setIncludeCta] = useState("Sim — usar CTA padrão");
   const [tone, setTone] = useState(config.defaultTone);
   const [structure, setStructure] = useState("Introdução + subtítulos + conclusão");
+  const [primaryLanguage, setPrimaryLanguage] = useState<"Português" | "Inglês" | "Espanhol">("Português");
+  const [translateTo, setTranslateTo] = useState<Record<"Português" | "Inglês" | "Espanhol", boolean>>({
+    "Português": false, "Inglês": false, "Espanhol": false,
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
+  const [generationProgress, setGenerationProgress] = useState<string>("");
   const [generatedBlog, setGeneratedBlog] = useState<any>(null);
+  const [translatedBlogs, setTranslatedBlogs] = useState<any[]>([]);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [imageModalPosition, setImageModalPosition] = useState<"cover" | "middle">("cover");
 
@@ -75,106 +81,114 @@ export const GeradorPage = () => {
 
   const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+  const generateOne = async (lang: "Português" | "Inglês" | "Espanhol") => {
+    const ctaValue = includeCta === "Sim — usar CTA padrão" ? config.defaultCta : "não incluir CTA";
+    const { data, error } = await supabase.functions.invoke("generate-blog", {
+      body: {
+        title: activeTheme.title,
+        keyword: activeTheme.keyword,
+        secondaryKeywords: activeTheme.secondary_keywords?.join(", "),
+        tone, articleSize, structure, cta: ctaValue, language: lang,
+      },
+    });
+    if (error) throw error;
+    const parsed = data;
+    if (!parsed.title || !parsed.content) throw new Error("Invalid AI response");
+
+    const slugSuffix = lang === "Inglês" ? "-en" : lang === "Espanhol" ? "-es" : "";
+    const finalSlug = slugSuffix && !parsed.slug?.endsWith(slugSuffix) ? `${parsed.slug}${slugSuffix}` : parsed.slug;
+
+    const { data: newBlog, error: blogErr } = await supabase
+      .from("blogs")
+      .insert({
+        theme_id: activeTheme.id,
+        title: parsed.title, slug: finalSlug, content: parsed.content,
+        keyword: activeTheme.keyword, secondary_keywords: parsed.secondary_keywords,
+        mode: "auto", status: "draft",
+        word_count: parsed.word_count, reading_time_minutes: parsed.reading_time_minutes,
+        cta_text: includeCta === "Sim — usar CTA padrão" ? config.defaultCta : null,
+        cover_image_alt: parsed.cover_image_alt ?? null,
+        middle_image_alt: parsed.middle_image_alt ?? null,
+        photographer_id: photographerId,
+      })
+      .select().single();
+    if (blogErr) throw blogErr;
+
+    const kw = activeTheme.keyword?.toLowerCase() ?? "";
+    const seoChecks = [
+      !!(parsed.title?.toLowerCase().includes(kw) && kw),
+      !!(finalSlug?.toLowerCase().includes(kw.replace(/\s+/g, "-")) && kw),
+      parsed.meta_title?.length >= 30 && parsed.meta_title?.length <= 60,
+      parsed.meta_description?.length >= 80 && parsed.meta_description?.length <= 155,
+      !!finalSlug && finalSlug === finalSlug.toLowerCase() && !finalSlug.includes(" "),
+      !!(parsed.og_title && parsed.og_description),
+      (parsed.secondary_keywords?.length ?? 0) >= 3,
+      false,
+      !!(parsed.cover_image_alt && parsed.middle_image_alt),
+      (parsed.word_count ?? 0) >= 600,
+    ];
+    const seoScore = Math.round((seoChecks.filter(Boolean).length / seoChecks.length) * 100);
+
+    await supabase.from("ai_blog_seo").insert({
+      blog_id: newBlog.id,
+      meta_title: parsed.meta_title, meta_description: parsed.meta_description,
+      slug: finalSlug, secondary_keywords: parsed.secondary_keywords,
+      og_title: parsed.og_title ?? parsed.meta_title,
+      og_description: parsed.og_description ?? parsed.meta_description,
+      score: seoScore,
+      checklist: {
+        keyword_in_title: seoChecks[0], keyword_in_slug: seoChecks[1],
+        meta_title_length: seoChecks[2], meta_description_length: seoChecks[3],
+        has_slug: seoChecks[4], has_og: seoChecks[5],
+        has_secondary_keywords: seoChecks[6], has_cover_image: seoChecks[7],
+        has_alt_texts: seoChecks[8], word_count: seoChecks[9],
+      },
+      photographer_id: photographerId,
+    });
+
+    return { ...newBlog, _language: lang };
+  };
+
   const handleGenerate = async () => {
     if (!photographerId) return;
     setIsGenerating(true);
     setCurrentLoadingStep(0);
     setGeneratedBlog(null);
+    setTranslatedBlogs([]);
 
     try {
-      const ctaValue = includeCta === "Sim — usar CTA padrão" ? config.defaultCta : "não incluir CTA";
+      const extraLangs = (Object.keys(translateTo) as Array<"Português" | "Inglês" | "Espanhol">)
+        .filter((l) => translateTo[l] && l !== primaryLanguage);
 
-      const { data, error } = await supabase.functions.invoke("generate-blog", {
-        body: {
-          title: activeTheme.title,
-          keyword: activeTheme.keyword,
-          secondaryKeywords: activeTheme.secondary_keywords?.join(", "),
-          tone,
-          articleSize,
-          structure,
-          cta: ctaValue,
-        },
-      });
-
-      if (error) throw error;
-
-      const parsed = data;
-      if (!parsed.title || !parsed.content) throw new Error("Invalid AI response");
+      setGenerationProgress(`Gerando versão em ${primaryLanguage}...`);
+      const primaryBlog = await generateOne(primaryLanguage);
 
       setCurrentLoadingStep(1);
-      await delay(800);
+      await delay(400);
       setCurrentLoadingStep(2);
-      await delay(600);
+
+      const translations: any[] = [];
+      for (const lang of extraLangs) {
+        setGenerationProgress(`Gerando tradução em ${lang}...`);
+        const translated = await generateOne(lang);
+        translations.push(translated);
+      }
+
       setCurrentLoadingStep(3);
-
-      const { data: newBlog, error: blogErr } = await supabase
-        .from("blogs")
-        .insert({
-          theme_id: activeTheme.id,
-          title: parsed.title,
-          slug: parsed.slug,
-          content: parsed.content,
-          keyword: activeTheme.keyword,
-          secondary_keywords: parsed.secondary_keywords,
-          mode: "auto",
-          status: "draft",
-          word_count: parsed.word_count,
-          reading_time_minutes: parsed.reading_time_minutes,
-          cta_text: includeCta === "Sim — usar CTA padrão" ? config.defaultCta : null,
-          cover_image_alt: parsed.cover_image_alt ?? null,
-          middle_image_alt: parsed.middle_image_alt ?? null,
-          photographer_id: photographerId,
-        })
-        .select()
-        .single();
-
-      if (blogErr) throw blogErr;
-
-      const kw = activeTheme.keyword?.toLowerCase() ?? "";
-      const seoChecks = [
-        !!(parsed.title?.toLowerCase().includes(kw) && kw),
-        !!(parsed.slug?.toLowerCase().includes(kw.replace(/\s+/g, "-")) && kw),
-        parsed.meta_title?.length >= 30 && parsed.meta_title?.length <= 60,
-        parsed.meta_description?.length >= 80 && parsed.meta_description?.length <= 155,
-        !!parsed.slug && parsed.slug === parsed.slug.toLowerCase() && !parsed.slug.includes(" "),
-        !!(parsed.og_title && parsed.og_description),
-        (parsed.secondary_keywords?.length ?? 0) >= 3,
-        false,
-        !!(parsed.cover_image_alt && parsed.middle_image_alt),
-        (parsed.word_count ?? 0) >= 600,
-      ];
-      const seoScore = Math.round((seoChecks.filter(Boolean).length / seoChecks.length) * 100);
-
-      await supabase.from("ai_blog_seo").insert({
-        blog_id: newBlog.id,
-        meta_title: parsed.meta_title,
-        meta_description: parsed.meta_description,
-        slug: parsed.slug,
-        secondary_keywords: parsed.secondary_keywords,
-        og_title: parsed.og_title ?? parsed.meta_title,
-        og_description: parsed.og_description ?? parsed.meta_description,
-        score: seoScore,
-        checklist: {
-          keyword_in_title: seoChecks[0], keyword_in_slug: seoChecks[1],
-          meta_title_length: seoChecks[2], meta_description_length: seoChecks[3],
-          has_slug: seoChecks[4], has_og: seoChecks[5],
-          has_secondary_keywords: seoChecks[6], has_cover_image: seoChecks[7],
-          has_alt_texts: seoChecks[8], word_count: seoChecks[9],
-        },
-        photographer_id: photographerId,
-      });
-
-      await supabase.from("ai_themes").update({ blog_id: newBlog.id }).eq("id", activeTheme.id);
+      await supabase.from("ai_themes").update({ blog_id: primaryBlog.id }).eq("id", activeTheme.id);
 
       setCurrentLoadingStep(4);
-      setGeneratedBlog(newBlog);
+      setGeneratedBlog(primaryBlog);
+      setTranslatedBlogs(translations);
+      setGenerationProgress("");
 
       queryClient.invalidateQueries({ queryKey: ["blog-stats", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["recent-blogs", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["available-themes", photographerId] });
       queryClient.invalidateQueries({ queryKey: ["theme-stats", photographerId] });
 
-      toast({ title: "Blog gerado e salvo com sucesso!" });
+      const total = 1 + translations.length;
+      toast({ title: total > 1 ? `${total} versões geradas (${primaryLanguage} + ${translations.length} tradução(ões))` : "Blog gerado e salvo!" });
     } catch (e: any) {
       console.error(e);
       toast({ title: "Erro ao gerar blog. Tente novamente.", variant: "destructive" });
@@ -299,14 +313,65 @@ export const GeradorPage = () => {
           </div>
         </div>
 
+        {/* Multi-language section */}
+        <div className="mt-4 border-t border-border pt-4">
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Idioma principal do post</label>
+          <div className="flex gap-2 mb-3">
+            {(["Português", "Inglês", "Espanhol"] as const).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => {
+                  setPrimaryLanguage(lang);
+                  setTranslateTo((prev) => ({ ...prev, [lang]: false }));
+                }}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  primaryLanguage === lang
+                    ? "bg-blue-50 border-blue-400 text-blue-700 font-medium"
+                    : "bg-background border-border text-muted-foreground hover:border-blue-300"
+                }`}
+              >
+                {lang === "Português" ? "🇧🇷 Português" : lang === "Inglês" ? "🇺🇸 Inglês" : "🇪🇸 Espanhol"}
+              </button>
+            ))}
+          </div>
+
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Gerar versões traduzidas (opcional)</label>
+          <div className="flex flex-wrap gap-3">
+            {(["Português", "Inglês", "Espanhol"] as const)
+              .filter((l) => l !== primaryLanguage)
+              .map((lang) => (
+                <label key={lang} className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={translateTo[lang]}
+                    onChange={(e) => setTranslateTo((prev) => ({ ...prev, [lang]: e.target.checked }))}
+                    className="rounded border-border"
+                  />
+                  <span className="text-foreground">
+                    {lang === "Português" ? "🇧🇷 Português" : lang === "Inglês" ? "🇺🇸 Inglês" : "🇪🇸 Espanhol"}
+                  </span>
+                </label>
+              ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            A IA criará versões traduzidas independentes do post no mesmo tema, cada uma como um draft separado.
+          </p>
+        </div>
+
         {isGenerating ? (
           <div className="bg-muted/50 rounded-lg p-4 mt-4">
             <p className="text-sm font-medium mb-3">Gerando seu blog...</p>
+            {generationProgress && (
+              <p className="text-xs text-blue-600 mb-2">{generationProgress}</p>
+            )}
             {LOADING_LABELS.map((_, i) => renderLoadingStep(i))}
           </div>
         ) : (
           <Button onClick={handleGenerate} disabled={isGenerating || !activeTheme} className="mt-4 w-full">
-            Gerar blog com IA
+            {Object.values(translateTo).some(Boolean)
+              ? `Gerar blog + ${Object.values(translateTo).filter(Boolean).length} tradução(ões)`
+              : "Gerar blog com IA"}
           </Button>
         )}
       </div>
@@ -316,7 +381,12 @@ export const GeradorPage = () => {
           <div className="bg-background border border-border rounded-lg p-4 mb-4">
             <div className="flex justify-between items-start mb-3">
               <p className="text-sm font-medium line-clamp-2 flex-1 mr-2">{generatedBlog.title}</p>
-              <span className="bg-green-50 text-green-700 border-green-200 text-[10px] px-2 py-0.5 rounded-full border shrink-0">Gerado</span>
+              <div className="flex gap-1.5 shrink-0">
+                <span className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] px-2 py-0.5 rounded-full border">
+                  {primaryLanguage === "Português" ? "🇧🇷 PT" : primaryLanguage === "Inglês" ? "🇺🇸 EN" : "🇪🇸 ES"}
+                </span>
+                <span className="bg-green-50 text-green-700 border-green-200 text-[10px] px-2 py-0.5 rounded-full border">Principal</span>
+              </div>
             </div>
             <div className="flex gap-4 text-xs text-muted-foreground mb-3">
               <span>{generatedBlog.word_count} palavras</span>
@@ -329,6 +399,35 @@ export const GeradorPage = () => {
               </p>
             </div>
           </div>
+
+          {translatedBlogs.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                Versões traduzidas ({translatedBlogs.length})
+              </p>
+              <div className="space-y-2">
+                {translatedBlogs.map((tb) => (
+                  <div key={tb.id} className="bg-background border border-border rounded-lg p-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <p className="text-xs font-medium line-clamp-2 flex-1">{tb.title}</p>
+                      <span className="bg-purple-50 text-purple-700 border-purple-200 text-[10px] px-2 py-0.5 rounded-full border shrink-0">
+                        {tb._language === "Português" ? "🇧🇷 PT" : tb._language === "Inglês" ? "🇺🇸 EN" : "🇪🇸 ES"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {tb.word_count} palavras · Slug: <span className="font-mono">{tb.slug}</span>
+                    </p>
+                    <button
+                      onClick={() => { sessionStorage.setItem("current_blog_id", tb.id); navigate("/dashboard/blog/seo"); }}
+                      className="text-[11px] text-blue-600 mt-1.5 cursor-pointer"
+                    >
+                      Abrir SEO desta versão →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {(["cover", "middle"] as const).map((pos) => {

@@ -186,7 +186,7 @@ export const TemasPage = () => {
               <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
                 <option>Português</option>
                 <option>Inglês</option>
-                <option>Bilíngue</option>
+                <option>Espanhol</option>
               </select>
             </div>
           </div>
