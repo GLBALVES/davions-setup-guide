@@ -2526,6 +2526,7 @@ const WebsiteEditor = () => {
     // Optimistic local update
     setSite((prev) => ({
       ...(prev || {}),
+      ...patch, // merge all raw DB keys (snake_case) so flags like show_blog reflect immediately
       logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
       accentColor: patch.accent_color !== undefined ? patch.accent_color : prev?.accentColor,
       headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
