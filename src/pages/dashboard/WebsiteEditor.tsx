@@ -1430,6 +1430,8 @@ const PagesPanel = ({
   onUpdateActiveSections,
   registerActivePageActions,
   onHeaderConfigChange,
+  storeSlug,
+  showBlog,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1442,6 +1444,8 @@ const PagesPanel = ({
   onUpdateActiveSections: (sections: PageSection[]) => void;
   registerActivePageActions: (api: { setSections: (s: PageSection[]) => void } | null) => void;
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
+  storeSlug?: string | null;
+  showBlog?: boolean;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -2623,6 +2627,8 @@ const WebsiteEditor = () => {
       onUpdateActiveSections={setActivePageSections}
       registerActivePageActions={handleRegisterActions}
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
+      storeSlug={storeSlug}
+      showBlog={Boolean((site as any)?.show_blog)}
     />,
     blog: <BlogPanel />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
