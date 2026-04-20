@@ -605,21 +605,25 @@ const HeaderSliderPanel = ({
   const { t } = useLanguage();
   const we = t.websiteEditor;
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(value || {}) };
+  // Stable stub slide id so re-renders don't generate new ids and break selection/persistence.
+  const stubIdRef = useRef<string>(crypto.randomUUID());
   const slides: HeaderSlide[] = cfg.slides && cfg.slides.length > 0
     ? cfg.slides
-    : [{ id: crypto.randomUUID(), title: "", imageUrl: null }];
+    : [{ id: stubIdRef.current, title: "", imageUrl: null }];
   const [activeSlideId, setActiveSlideId] = useState<string>(slides[0].id);
 
-  // Make sure the panel always has at least one slide stub
-  useEffect(() => {
-    if (!cfg.slides || cfg.slides.length === 0) {
-      onChange({ ...cfg, slides });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // NOTE: We intentionally do NOT auto-persist a stub slide on mount. The previous
+  // implementation triggered an `onChange` write every time the panel opened, which
+  // could race with other findAndUpdate calls and overwrite real header config.
+  // Stub slide is purely visual until the user actually edits something.
 
-  const updateCfg = (patch: Partial<HeaderConfig>) => onChange({ ...cfg, ...patch });
-  const updateSlides = (next: HeaderSlide[]) => updateCfg({ slides: next });
+  const updateCfg = (patch: Partial<HeaderConfig>) => {
+    // Ensure slides array is always materialized when persisting (so "stub" gets saved
+    // the moment the user interacts with the panel).
+    const currentSlides = cfg.slides && cfg.slides.length > 0 ? cfg.slides : slides;
+    onChange({ ...cfg, slides: currentSlides, ...patch });
+  };
+  const updateSlides = (next: HeaderSlide[]) => onChange({ ...cfg, slides: next });
 
   const addSlide = () => {
     const id = crypto.randomUUID();
