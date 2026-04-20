@@ -71,6 +71,8 @@ interface SitePage {
   hideFromSearch?: boolean;
   socialImage?: string;
   headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
+  /** For type === "link": open the URL in a new browser tab. */
+  openInNewTab?: boolean;
 }
 
 // ── Default seed (only Home + Contact + Blog link) ───────────────────────────
@@ -1114,6 +1116,7 @@ function dbRowToSitePage(row: DbSitePage, children?: SitePage[]): SitePage {
     hideFromSearch: content.hideFromSearch,
     socialImage: content.socialImage,
     headerConfig: (row.header_config as any) ?? null,
+    openInNewTab: content.openInNewTab ?? true,
     ...(children && children.length > 0 ? { children } : {}),
   };
 }
@@ -1142,6 +1145,7 @@ function sitePageToDbFields(page: SitePage, photographerId: string, sortOrder: n
       pageDescription: page.pageDescription,
       hideFromSearch: page.hideFromSearch,
       socialImage: page.socialImage,
+      openInNewTab: page.openInNewTab,
     })),
     header_config: page.headerConfig ? JSON.parse(JSON.stringify(page.headerConfig)) : null,
   };
@@ -1626,6 +1630,7 @@ const PagesPanel = ({
           pageDescription: merged.pageDescription,
           hideFromSearch: merged.hideFromSearch,
           socialImage: merged.socialImage,
+          openInNewTab: merged.openInNewTab,
         }));
         dbPatch.sections_order = Array.isArray(merged.sections)
           ? merged.sections.map((s: any) => s?.type).filter(Boolean)
