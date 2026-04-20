@@ -24,6 +24,13 @@ function formatRelativeDate(dateStr: string) {
 export const BlogDashboardPage = () => {
   const { config, photographerId } = useBlogContext();
   const navigate = useNavigate();
+  const [wizardOpen, setWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (photographerId && !isBlogOnboardingCompleted(photographerId)) {
+      setWizardOpen(true);
+    }
+  }, [photographerId]);
 
   const { data: blogStats, isLoading: loadingBlogs } = useQuery({
     queryKey: ["blog-stats", photographerId],
