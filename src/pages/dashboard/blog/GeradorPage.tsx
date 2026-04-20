@@ -313,14 +313,65 @@ export const GeradorPage = () => {
           </div>
         </div>
 
+        {/* Multi-language section */}
+        <div className="mt-4 border-t border-border pt-4">
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Idioma principal do post</label>
+          <div className="flex gap-2 mb-3">
+            {(["Português", "Inglês", "Espanhol"] as const).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => {
+                  setPrimaryLanguage(lang);
+                  setTranslateTo((prev) => ({ ...prev, [lang]: false }));
+                }}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  primaryLanguage === lang
+                    ? "bg-blue-50 border-blue-400 text-blue-700 font-medium"
+                    : "bg-background border-border text-muted-foreground hover:border-blue-300"
+                }`}
+              >
+                {lang === "Português" ? "🇧🇷 Português" : lang === "Inglês" ? "🇺🇸 Inglês" : "🇪🇸 Espanhol"}
+              </button>
+            ))}
+          </div>
+
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Gerar versões traduzidas (opcional)</label>
+          <div className="flex flex-wrap gap-3">
+            {(["Português", "Inglês", "Espanhol"] as const)
+              .filter((l) => l !== primaryLanguage)
+              .map((lang) => (
+                <label key={lang} className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={translateTo[lang]}
+                    onChange={(e) => setTranslateTo((prev) => ({ ...prev, [lang]: e.target.checked }))}
+                    className="rounded border-border"
+                  />
+                  <span className="text-foreground">
+                    {lang === "Português" ? "🇧🇷 Português" : lang === "Inglês" ? "🇺🇸 Inglês" : "🇪🇸 Espanhol"}
+                  </span>
+                </label>
+              ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            A IA criará versões traduzidas independentes do post no mesmo tema, cada uma como um draft separado.
+          </p>
+        </div>
+
         {isGenerating ? (
           <div className="bg-muted/50 rounded-lg p-4 mt-4">
             <p className="text-sm font-medium mb-3">Gerando seu blog...</p>
+            {generationProgress && (
+              <p className="text-xs text-blue-600 mb-2">{generationProgress}</p>
+            )}
             {LOADING_LABELS.map((_, i) => renderLoadingStep(i))}
           </div>
         ) : (
           <Button onClick={handleGenerate} disabled={isGenerating || !activeTheme} className="mt-4 w-full">
-            Gerar blog com IA
+            {Object.values(translateTo).some(Boolean)
+              ? `Gerar blog + ${Object.values(translateTo).filter(Boolean).length} tradução(ões)`
+              : "Gerar blog com IA"}
           </Button>
         )}
       </div>
