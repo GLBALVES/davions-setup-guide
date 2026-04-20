@@ -2038,37 +2038,104 @@ const PagesPanel = ({
                 maxLength={80}
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Link URL</label>
-              <Input
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://..."
-                type="url"
-                maxLength={2048}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    confirmCreateLink();
-                  }
-                }}
-              />
+
+            {/* Link kind tabs */}
+            <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-md">
+              <button
+                type="button"
+                onClick={() => setLinkKind("external")}
+                className={cn(
+                  "text-[11px] tracking-wider uppercase font-light py-1.5 rounded transition-colors",
+                  linkKind === "external"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                External URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkKind("internal")}
+                className={cn(
+                  "text-[11px] tracking-wider uppercase font-light py-1.5 rounded transition-colors",
+                  linkKind === "internal"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Internal Page
+              </button>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={linkOpenInNewTab}
-                onChange={(e) => setLinkOpenInNewTab(e.target.checked)}
-                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
-              />
-              <span className="text-xs text-foreground">Open in New Window</span>
-            </label>
+
+            {linkKind === "external" ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Link URL</label>
+                <Input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://..."
+                  type="url"
+                  maxLength={2048}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      confirmCreateLink();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Destination</label>
+                <Select value={linkInternalTarget} onValueChange={setLinkInternalTarget}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storeSlug && (
+                      <SelectItem value={`/store/${storeSlug}`}>Home</SelectItem>
+                    )}
+                    {storeSlug && showBlog && (
+                      <SelectItem value={`/store/${storeSlug}/blog`}>Blog</SelectItem>
+                    )}
+                    {storeSlug && pages
+                      .filter((p) => p.type === "page" && !p.isHome && p.slug)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={`/store/${storeSlug}/page/${p.slug}`}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  Links to a page within your own site.
+                </p>
+              </div>
+            )}
+
+            {linkKind === "external" && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={linkOpenInNewTab}
+                  onChange={(e) => setLinkOpenInNewTab(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                />
+                <span className="text-xs text-foreground">Open in New Window</span>
+              </label>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setLinkModalOpen(false)}>
               {t.common?.cancel ?? "Cancel"}
             </Button>
-            <Button onClick={confirmCreateLink} disabled={!linkName.trim() || !linkUrl.trim()}>
+            <Button
+              onClick={confirmCreateLink}
+              disabled={
+                !linkName.trim() ||
+                (linkKind === "external" ? !linkUrl.trim() : !linkInternalTarget.trim())
+              }
+            >
               {t.common?.create ?? "Create"}
             </Button>
           </DialogFooter>
