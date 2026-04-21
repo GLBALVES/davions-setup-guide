@@ -44,6 +44,12 @@ export interface PreviewSiteConfig {
   footerText?: string | null;
   headingFont?: string | null;
   bodyFont?: string | null;
+  /** Button design tokens (Style → Buttons) */
+  buttonStyle?: "solid" | "outline" | "underline" | null;
+  buttonShape?: "square" | "rounded" | "pill" | null;
+  buttonSize?: "small" | "medium" | "large" | "custom" | null;
+  buttonHeight?: number | null;
+  buttonWidth?: number | null;
 }
 
 export interface PreviewNavLink {

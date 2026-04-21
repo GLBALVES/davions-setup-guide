@@ -2496,6 +2496,11 @@ export type Database = {
           about_title: string | null
           accent_color: string | null
           body_font: string | null
+          button_height: number | null
+          button_shape: string | null
+          button_size: string | null
+          button_style: string | null
+          button_width: number | null
           contact_bg_color: string | null
           contact_text_color: string | null
           created_at: string
@@ -2573,6 +2578,11 @@ export type Database = {
           about_title?: string | null
           accent_color?: string | null
           body_font?: string | null
+          button_height?: number | null
+          button_shape?: string | null
+          button_size?: string | null
+          button_style?: string | null
+          button_width?: number | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string
@@ -2650,6 +2660,11 @@ export type Database = {
           about_title?: string | null
           accent_color?: string | null
           body_font?: string | null
+          button_height?: number | null
+          button_shape?: string | null
+          button_size?: string | null
+          button_style?: string | null
+          button_width?: number | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string

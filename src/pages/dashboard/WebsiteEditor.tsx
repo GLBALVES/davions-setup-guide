@@ -2289,6 +2289,162 @@ type StyleSubPanel =
   | "spacing"
   | "buttons";
 
+// ── Buttons Sub Panel ────────────────────────────────────────────────────────
+const ButtonsSubPanel = ({
+  site,
+  onSiteChange,
+}: {
+  site: PreviewSiteConfig | null;
+  onSiteChange: (patch: Partial<Record<string, any>>) => void;
+}) => {
+  const s = site as any;
+  const style: "solid" | "outline" | "underline" = s?.buttonStyle || "solid";
+  const shape: "square" | "rounded" | "pill" = s?.buttonShape || "square";
+  const size: "small" | "medium" | "large" | "custom" = s?.buttonSize || "medium";
+  const height: number = typeof s?.buttonHeight === "number" ? s.buttonHeight : 14;
+  const width: number = typeof s?.buttonWidth === "number" ? s.buttonWidth : 30;
+
+  const radiusFor = (sh: string) =>
+    sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
+
+  const Swatch = ({
+    sh,
+    active,
+    variant,
+    onClick,
+  }: {
+    sh: "square" | "rounded" | "pill";
+    active: boolean;
+    variant: "solid" | "outline";
+    onClick: () => void;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-10 w-full transition-all ${
+        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+      }`}
+      style={{
+        backgroundColor: variant === "solid" ? "#d4d4d4" : "transparent",
+        border: variant === "outline" ? "1px solid #d4d4d4" : "none",
+        borderRadius: radiusFor(sh),
+      }}
+      aria-label={`${variant} ${sh}`}
+    />
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Button Style */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-foreground">Button Style</label>
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Solid</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["square", "rounded", "pill"] as const).map((sh) => (
+              <Swatch
+                key={`solid-${sh}`}
+                sh={sh}
+                variant="solid"
+                active={style === "solid" && shape === sh}
+                onClick={() => onSiteChange({ button_style: "solid", button_shape: sh })}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Outline</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["square", "rounded", "pill"] as const).map((sh) => (
+              <Swatch
+                key={`outline-${sh}`}
+                sh={sh}
+                variant="outline"
+                active={style === "outline" && shape === sh}
+                onClick={() => onSiteChange({ button_style: "outline", button_shape: sh })}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Underline</p>
+          <button
+            type="button"
+            onClick={() => onSiteChange({ button_style: "underline" })}
+            className={`h-10 w-1/3 flex items-end justify-center transition-all ${
+              style === "underline" ? "opacity-100" : "opacity-60 hover:opacity-100"
+            }`}
+          >
+            <span
+              className="block w-full h-px"
+              style={{
+                backgroundColor: "#d4d4d4",
+                outline: style === "underline" ? "1px solid hsl(var(--foreground))" : "none",
+                outlineOffset: 4,
+              }}
+            />
+          </button>
+        </div>
+      </div>
+
+      <div className="h-px bg-border" />
+
+      {/* Button Size */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">Button Size</label>
+        <Select
+          value={size}
+          onValueChange={(v) => onSiteChange({ button_size: v })}
+        >
+          <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="small">Small</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="large">Large</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {size === "custom" && (
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Height</label>
+            <div className="flex items-center gap-3">
+              <Slider
+                min={8}
+                max={64}
+                step={1}
+                value={[height]}
+                onValueChange={([v]) => onSiteChange({ button_height: v })}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-10 text-right">{height}px</span>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Width</label>
+            <div className="flex items-center gap-3">
+              <Slider
+                min={16}
+                max={200}
+                step={1}
+                value={[width]}
+                onValueChange={([v]) => onSiteChange({ button_width: v })}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-10 text-right">{width}px</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SITE_TEMPLATES_LABELS: Record<string, string> = {
   editorial: "Rosa",
   grid: "Lírio",
@@ -2574,10 +2730,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
           )}
 
           {sub === "buttons" && (
-            <ComingSoon
-              title="Buttons"
-              description="Button shape, size and style presets. Coming soon."
-            />
+            <ButtonsSubPanel site={site} onSiteChange={onSiteChange} />
           )}
         </div>
       </div>
@@ -2909,6 +3062,11 @@ const WebsiteEditor = () => {
           footerText: raw.footer_text,
           headingFont: raw.heading_font,
           bodyFont: raw.body_font,
+          buttonStyle: raw.button_style || "solid",
+          buttonShape: raw.button_shape || "square",
+          buttonSize: raw.button_size || "medium",
+          buttonHeight: raw.button_height ?? 14,
+          buttonWidth: raw.button_width ?? 30,
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
@@ -2931,6 +3089,27 @@ const WebsiteEditor = () => {
     }
     if (el.href !== href) el.href = href;
   }, [site?.headingFont, site?.bodyFont]);
+
+  // Inject button design tokens (style/shape/size/dimensions) as CSS variables.
+  useEffect(() => {
+    const s: any = site ?? {};
+    const shape = s.buttonShape || "square";
+    const size = s.buttonSize || "medium";
+    const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
+    let height = "40px";
+    let padX = "20px";
+    if (size === "small") { height = "32px"; padX = "14px"; }
+    else if (size === "large") { height = "52px"; padX = "28px"; }
+    else if (size === "custom") {
+      height = `${s.buttonHeight ?? 14}px`;
+      padX = `${s.buttonWidth ?? 30}px`;
+    }
+    const root = document.documentElement;
+    root.style.setProperty("--site-btn-radius", radius);
+    root.style.setProperty("--site-btn-height", height);
+    root.style.setProperty("--site-btn-pad-x", padX);
+    root.style.setProperty("--site-btn-style", s.buttonStyle || "solid");
+  }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth]);
 
   // Debounced batch of pending DB writes — coalesces rapid edits (e.g. typing in
   // the Logo Text field) into a single upsert so we don't hammer the database.
@@ -2955,6 +3134,11 @@ const WebsiteEditor = () => {
     footer_text: "footerText",
     heading_font: "headingFont",
     body_font: "bodyFont",
+    button_style: "buttonStyle",
+    button_shape: "buttonShape",
+    button_size: "buttonSize",
+    button_height: "buttonHeight",
+    button_width: "buttonWidth",
   };
 
   const flushPatch = useCallback(async () => {
