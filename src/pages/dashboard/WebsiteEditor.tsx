@@ -2687,10 +2687,27 @@ const WebsiteEditor = () => {
   const confirmDeleteBlock = () => {
     if (pendingDeleteIdx === null || !pageActions) { setPendingDeleteIdx(null); return; }
     const idx = pendingDeleteIdx;
+    const removed = activePageSections[idx];
+    const prevSections = activePageSections;
     const next = activePageSections.filter((_, i) => i !== idx);
-    pageActions.setSections(next);
+    const actions = pageActions;
+    actions.setSections(next);
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
     setPendingDeleteIdx(null);
+
+    if (removed) {
+      toast.success(`"${removed.label}" deleted`, {
+        duration: 8000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            actions.setSections(prevSections);
+            setSelectedBlockIndex(idx);
+            toast.success(`"${removed.label}" restored`);
+          },
+        },
+      });
+    }
   };
 
   // Inline edit: update a single prop path on a section, persist via pageActions
