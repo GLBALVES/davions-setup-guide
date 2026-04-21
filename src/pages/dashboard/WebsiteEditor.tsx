@@ -3300,6 +3300,11 @@ const WebsiteEditor = () => {
         footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
         headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
         bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
+        buttonStyle: patch.button_style !== undefined ? patch.button_style : prev?.buttonStyle,
+        buttonShape: patch.button_shape !== undefined ? patch.button_shape : prev?.buttonShape,
+        buttonSize: patch.button_size !== undefined ? patch.button_size : prev?.buttonSize,
+        buttonHeight: patch.button_height !== undefined ? patch.button_height : prev?.buttonHeight,
+        buttonWidth: patch.button_width !== undefined ? patch.button_width : prev?.buttonWidth,
         displayName: prev?.displayName ?? displayName,
       };
       return next;
