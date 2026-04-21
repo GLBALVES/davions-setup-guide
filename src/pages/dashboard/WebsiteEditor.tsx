@@ -2412,25 +2412,35 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 </Select>
               </div>
 
-              {/* Logo Image */}
+              {/* Logo Image — accepts PNG/JPG/WEBP/SVG, up to 5MB, min 200px wide */}
               <BrandRow
                 label="Logo Image"
                 value={site?.logoUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_url: url || null })}
                 photographerId={photographerId}
                 folder="logo"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                maxSizeMB={5}
+                minWidth={200}
+                helperText="PNG, JPG, WEBP or SVG · ≤5MB · min 200px wide"
               />
 
-              {/* Alternative Logo */}
+              {/* Alternative Logo — same rules as primary logo */}
               <BrandRow
                 label="Alternative Logo"
                 value={(site as any)?.logoAltUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_alt_url: url || null })}
                 photographerId={photographerId}
                 folder="logo-alt"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                maxSizeMB={5}
+                minWidth={200}
+                helperText="Used on dark backgrounds · same format rules as Logo"
               />
 
-              {/* Favicon */}
+              {/* Favicon — strict square, small file, browser-safe formats only */}
               <BrandRow
                 label="Favicon"
                 value={(site as any)?.faviconUrl ?? ""}
@@ -2438,6 +2448,18 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 photographerId={photographerId}
                 folder="favicon"
                 rounded
+                allowedTypes={[
+                  "image/png",
+                  "image/svg+xml",
+                  "image/x-icon",
+                  "image/vnd.microsoft.icon",
+                ]}
+                allowedTypesLabel="PNG, SVG, ICO"
+                maxSizeMB={1}
+                requireSquare
+                minWidth={32}
+                maxWidth={512}
+                helperText="PNG, SVG or ICO · ≤1MB · square (32–512px)"
               />
 
               {/* Pixieset Badge */}
@@ -2706,6 +2728,15 @@ const BrandRow = ({
   photographerId,
   folder,
   rounded,
+  allowedTypes,
+  allowedTypesLabel,
+  maxSizeMB,
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
+  requireSquare,
+  helperText,
 }: {
   label: string;
   value: string;
@@ -2713,17 +2744,37 @@ const BrandRow = ({
   photographerId: string | null;
   folder: string;
   rounded?: boolean;
+  allowedTypes?: string[];
+  allowedTypesLabel?: string;
+  maxSizeMB?: number;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  requireSquare?: boolean;
+  helperText?: string;
 }) => (
-  <div className="flex items-center justify-between gap-3 py-1">
-    <label className="text-sm font-medium text-foreground">{label}</label>
-    <div className={cn("w-20 shrink-0", rounded && "rounded-full overflow-hidden")}>
-      <ImageUploadField
-        value={value}
-        onChange={onChange}
-        photographerId={photographerId}
-        folder={folder}
-        aspectClass="aspect-square"
-      />
+  <div className="flex items-start justify-between gap-3 py-1">
+    <label className="text-sm font-medium text-foreground pt-1">{label}</label>
+    <div className="w-32 shrink-0">
+      <div className={cn(rounded && "rounded-full overflow-hidden")}>
+        <ImageUploadField
+          value={value}
+          onChange={onChange}
+          photographerId={photographerId}
+          folder={folder}
+          aspectClass="aspect-square"
+          allowedTypes={allowedTypes}
+          allowedTypesLabel={allowedTypesLabel}
+          maxSizeMB={maxSizeMB}
+          minWidth={minWidth}
+          minHeight={minHeight}
+          maxWidth={maxWidth}
+          maxHeight={maxHeight}
+          requireSquare={requireSquare}
+          helperText={helperText}
+        />
+      </div>
     </div>
   </div>
 );
