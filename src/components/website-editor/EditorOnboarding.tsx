@@ -297,29 +297,44 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
                   width: 260,
                 }}
               >
-                <div className="relative rounded-xl bg-background border border-border shadow-2xl p-4">
+                <div
+                  ref={dialogRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="editor-onboarding-step2-title"
+                  aria-describedby="editor-onboarding-step2-desc"
+                  className="relative rounded-xl bg-background border border-border shadow-2xl p-4 focus:outline-none"
+                >
                   <button
                     type="button"
                     onClick={finish}
-                    aria-label="Close"
-                    className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    aria-label={t.skip}
+                    className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
 
-                  <h3 className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
+                  <h3 id="editor-onboarding-step2-title" className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
+                  <p id="editor-onboarding-step2-desc" className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
 
-                  <div className="flex items-center gap-1.5 mt-3">
+                  <div
+                    className="flex items-center gap-1.5 mt-3"
+                    role="progressbar"
+                    aria-valuemin={1}
+                    aria-valuemax={2}
+                    aria-valuenow={2}
+                    aria-label="Onboarding progress"
+                  >
                     <div className="h-1 flex-1 rounded-full bg-muted" />
                     <div className="h-1 flex-1 rounded-full bg-primary" />
                   </div>
 
                   <div className="flex justify-end mt-3">
                     <button
+                      ref={primaryBtnRef}
                       type="button"
                       onClick={finish}
-                      className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
+                      className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {t.step2Cta}
                     </button>
