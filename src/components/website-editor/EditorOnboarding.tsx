@@ -137,6 +137,58 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
   // Closing step 1 (X or backdrop) auto-advances to step 2 instead of dismissing
   const closeStep1 = () => setStep(2);
 
+  // Refs for focus management (autofocus + focus-trap fallback + restore)
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  // Save/restore focus on open/close
+  useEffect(() => {
+    if (step !== null) {
+      previouslyFocusedRef.current = (document.activeElement as HTMLElement) ?? null;
+    } else if (previouslyFocusedRef.current) {
+      try { previouslyFocusedRef.current.focus(); } catch {}
+      previouslyFocusedRef.current = null;
+    }
+  }, [step]);
+
+  // Autofocus the primary action when a step renders
+  useEffect(() => {
+    if (step === null) return;
+    const id = requestAnimationFrame(() => primaryBtnRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [step]);
+
+  // Global Escape to dismiss + simple Tab focus trap inside the dialog
+  useEffect(() => {
+    if (step === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finish();
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && activeEl === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && activeEl === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [step]);
+
   if (!active || step === null) return null;
 
   return createPortal(
@@ -152,28 +204,42 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
           />
           {/* Centered card */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-            <div className="relative w-[340px] rounded-xl bg-background border border-border shadow-2xl p-5">
+            <div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="editor-onboarding-step1-title"
+              aria-describedby="editor-onboarding-step1-desc"
+              className="relative w-[340px] rounded-xl bg-background border border-border shadow-2xl p-5 focus:outline-none"
+            >
               <button
                 type="button"
                 onClick={closeStep1}
-                aria-label="Close"
-                className="absolute top-2.5 right-2.5 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                aria-label={t.skip}
+                className="absolute top-2.5 right-2.5 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
 
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Sparkles className="h-4 w-4 text-primary" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-foreground mb-1">{t.step1Title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{t.step1Desc}</p>
+                  <h3 id="editor-onboarding-step1-title" className="text-sm font-medium text-foreground mb-1">{t.step1Title}</h3>
+                  <p id="editor-onboarding-step1-desc" className="text-xs text-muted-foreground leading-relaxed">{t.step1Desc}</p>
                 </div>
               </div>
 
               {/* Step dots */}
-              <div className="flex items-center gap-1.5 mt-4">
+              <div
+                className="flex items-center gap-1.5 mt-4"
+                role="progressbar"
+                aria-valuemin={1}
+                aria-valuemax={2}
+                aria-valuenow={1}
+                aria-label="Onboarding progress"
+              >
                 <div className="h-1 flex-1 rounded-full bg-primary" />
                 <div className="h-1 flex-1 rounded-full bg-muted" />
               </div>
@@ -182,17 +248,18 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
                 <button
                   type="button"
                   onClick={finish}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-1"
                 >
                   {t.skip}
                 </button>
                 <button
+                  ref={primaryBtnRef}
                   type="button"
                   onClick={() => setStep(2)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {t.step1Cta}
-                  <MousePointerClick className="h-3 w-3" />
+                  <MousePointerClick className="h-3 w-3" aria-hidden />
                 </button>
               </div>
             </div>
@@ -205,7 +272,7 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
           {/* Backdrop — click outside to dismiss */}
           <button
             type="button"
-            aria-label="Dismiss"
+            aria-label={t.skip}
             onClick={finish}
             className="absolute inset-0 pointer-events-auto"
           />
@@ -240,29 +307,44 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
                   width: 260,
                 }}
               >
-                <div className="relative rounded-xl bg-background border border-border shadow-2xl p-4">
+                <div
+                  ref={dialogRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="editor-onboarding-step2-title"
+                  aria-describedby="editor-onboarding-step2-desc"
+                  className="relative rounded-xl bg-background border border-border shadow-2xl p-4 focus:outline-none"
+                >
                   <button
                     type="button"
                     onClick={finish}
-                    aria-label="Close"
-                    className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    aria-label={t.skip}
+                    className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
 
-                  <h3 className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
+                  <h3 id="editor-onboarding-step2-title" className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
+                  <p id="editor-onboarding-step2-desc" className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
 
-                  <div className="flex items-center gap-1.5 mt-3">
+                  <div
+                    className="flex items-center gap-1.5 mt-3"
+                    role="progressbar"
+                    aria-valuemin={1}
+                    aria-valuemax={2}
+                    aria-valuenow={2}
+                    aria-label="Onboarding progress"
+                  >
                     <div className="h-1 flex-1 rounded-full bg-muted" />
                     <div className="h-1 flex-1 rounded-full bg-primary" />
                   </div>
 
                   <div className="flex justify-end mt-3">
                     <button
+                      ref={primaryBtnRef}
                       type="button"
                       onClick={finish}
-                      className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
+                      className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {t.step2Cta}
                     </button>
