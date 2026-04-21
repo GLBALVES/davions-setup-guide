@@ -93,7 +93,7 @@ export default function QuickAddPopover({
           </p>
           {hasFavorites && (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-medium tracking-wider uppercase text-amber-600 dark:text-amber-400"
+              className="inline-flex items-center gap-1 text-[9px] font-medium tracking-wider uppercase text-primary"
               title="Favorites appear first"
             >
               <Star className="h-2.5 w-2.5 fill-current" />
@@ -113,7 +113,7 @@ export default function QuickAddPopover({
                     "w-full flex flex-col items-center justify-center gap-1.5 p-2 rounded-md",
                     "border transition-colors text-center group",
                     isFav
-                      ? "border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60 hover:bg-amber-500/10"
+                      ? "border-primary/50 bg-primary/5 hover:border-primary/70 hover:bg-primary/10"
                       : "border-transparent hover:border-primary/30 hover:bg-primary/5"
                   )}
                 >
@@ -121,7 +121,7 @@ export default function QuickAddPopover({
                     className={cn(
                       "w-8 h-8 rounded-md flex items-center justify-center transition-colors",
                       isFav
-                        ? "bg-amber-500/15 group-hover:bg-amber-500/25"
+                        ? "bg-primary/15 group-hover:bg-primary/20"
                         : "bg-muted/60 group-hover:bg-primary/10"
                     )}
                   >
@@ -129,7 +129,7 @@ export default function QuickAddPopover({
                       className={cn(
                         "h-4 w-4 transition-colors",
                         isFav
-                          ? "text-amber-600 dark:text-amber-400"
+                          ? "text-primary"
                           : "text-muted-foreground group-hover:text-primary"
                       )}
                     />
@@ -149,8 +149,8 @@ export default function QuickAddPopover({
                   className={cn(
                     "absolute top-0.5 right-0.5 p-0.5 rounded transition-opacity",
                     isFav
-                      ? "opacity-100 text-amber-500 hover:text-amber-600"
-                      : "opacity-0 group-hover/tile:opacity-100 text-muted-foreground hover:text-amber-500"
+                      ? "opacity-100 text-primary hover:text-primary/80"
+                      : "opacity-0 group-hover/tile:opacity-100 text-muted-foreground hover:text-primary"
                   )}
                 >
                   <Star className={cn("h-3 w-3", isFav && "fill-current")} />
