@@ -366,6 +366,7 @@ export default function PreviewRenderer({
   onDuplicateBlock,
   onDeleteBlock,
   onAddBlockAt,
+  onReorderBlocks,
   accentColor = "#000000",
   site,
   navLinks = [],
@@ -383,6 +384,25 @@ export default function PreviewRenderer({
   const editCtx: EditContext | undefined = editMode && onPropChange
     ? { onPropChange, photographerId }
     : undefined;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = sections.findIndex((s) => s.id === active.id);
+    const to = sections.findIndex((s) => s.id === over.id);
+    if (from < 0 || to < 0) return;
+    const next = arrayMove(sections, from, to);
+    if (onReorderBlocks) {
+      onReorderBlocks(next);
+    } else if (onMoveBlock) {
+      onMoveBlock(from, to);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
