@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { siteButtonProps } from "@/components/store/SectionRenderer";
 import type { PreviewSiteConfig, PreviewNavLink } from "./PreviewRenderer";
 
 export interface HeaderSlide {
@@ -212,14 +213,22 @@ export default function PreviewHeader({
             )}
             {showSlideCta && (
               <div className="pt-1">
-                <a
-                  href={activeSlide.buttonUrl || "#"}
-                  target={activeSlide.openInNewTab === false ? "_self" : "_blank"}
-                  rel={activeSlide.openInNewTab === false ? undefined : "noopener noreferrer"}
-                  className="pointer-events-auto inline-flex min-h-11 items-center justify-center border border-white/70 bg-white/10 px-6 text-sm uppercase tracking-[0.18em] text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-foreground"
-                >
-                  {activeSlide.buttonText}
-                </a>
+                {(() => {
+                  const variant: "primary" | "secondary" =
+                    (activeSlide as any)?.buttonVariant === "secondary" ? "secondary" : "primary";
+                  const btn = siteButtonProps(variant);
+                  return (
+                    <a
+                      href={activeSlide.buttonUrl || "#"}
+                      target={activeSlide.openInNewTab === false ? "_self" : "_blank"}
+                      rel={activeSlide.openInNewTab === false ? undefined : "noopener noreferrer"}
+                      {...btn}
+                      className={`pointer-events-auto ${btn.className}`}
+                    >
+                      {activeSlide.buttonText}
+                    </a>
+                  );
+                })()}
               </div>
             )}
           </div>
