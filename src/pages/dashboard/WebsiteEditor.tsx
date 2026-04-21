@@ -937,6 +937,12 @@ const PageSectionsPanel = ({
     setPendingDelete(null);
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
   const updateVariant = (idx: number, variant: string) => {
     const next = [...sections];
     next[idx] = { ...next[idx], props: { ...next[idx].props, variant } };
