@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical } from "lucide-react";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
+import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
