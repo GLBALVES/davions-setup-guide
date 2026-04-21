@@ -339,8 +339,10 @@ function TextBlock({ body, ctx }: any) {
 
 // ─── Image + Text ───────────────────────────────────────────────────────────
 
-function ImageTextBlock({ image, title, body, ctx }: any) {
+function ImageTextBlock({ image, title, body, ctaText, ctaLink, buttonVariant, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
+  const btn = siteButtonProps(variant);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
@@ -383,6 +385,22 @@ function ImageTextBlock({ image, title, body, ctx }: any) {
             onChange={(v) => c.set("body", v)}
             className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
           />
+          {(c.editMode || ctaText) && (
+            <a
+              href={c.editMode ? undefined : (ctaLink || "#")}
+              onClick={(e) => c.editMode && e.preventDefault()}
+              {...btn}
+              style={{ ...btn.style, marginTop: "1.5rem" }}
+            >
+              <EditableText
+                as="span"
+                editMode={c.editMode}
+                value={ctaText || ""}
+                placeholder="Button text"
+                onChange={(v) => c.set("ctaText", v)}
+              />
+            </a>
+          )}
         </div>
       </div>
     </section>
