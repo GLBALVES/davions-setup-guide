@@ -441,13 +441,13 @@ export default function PreviewRenderer({
 
       {/* Preview container */}
       <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative">
-        {/* Floating Add Section button — visible when page is empty */}
-        {editMode && onAddBlockAt && sections.length === 0 && (
+        {/* Floating Add Section button — always visible while editing */}
+        {editMode && onAddBlockAt && (
           <QuickAddPopover
             side="top"
             align="end"
-            onPick={(type) => onAddBlockAt(0, type)}
-            onMore={() => onAddBlockAt(0)}
+            onPick={(type) => onAddBlockAt(sections.length, type)}
+            onMore={() => onAddBlockAt(sections.length)}
           >
             <button
               type="button"
