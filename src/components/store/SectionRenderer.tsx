@@ -26,7 +26,40 @@ interface SectionRendererProps {
   edit?: EditContext;
 }
 
-// ─── Section Renderer (routes to block components) ──────────────────────────
+// ─── Site button variant helper ────────────────────────────────────────────
+// Reads CSS vars set by WebsiteEditor (Style → Buttons → Variants) so blocks
+// render buttons consistently across the site. The actual style mode
+// (solid/outline/underline) is read from the DOM CSS var at render time.
+function getVariantStyleMode(variant: "primary" | "secondary"): "solid" | "outline" | "underline" {
+  if (typeof window === "undefined") return variant === "primary" ? "solid" : "outline";
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--site-btn-${variant}-style`)
+    .trim();
+  if (v === "outline" || v === "underline") return v;
+  return "solid";
+}
+
+export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
+  style: React.CSSProperties;
+  className: string;
+  "data-style": "solid" | "outline" | "underline";
+} {
+  const mode = getVariantStyleMode(variant);
+  const v = variant;
+  const bgVar = `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`;
+  const fgVar = `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`;
+  return {
+    style: {
+      backgroundColor: bgVar,
+      color: fgVar,
+      borderColor: bgVar,
+      borderRadius: `var(--site-btn-${v}-radius, 2px)`,
+    },
+    className: `site-btn site-btn-${v}`,
+    "data-style": mode,
+  };
+}
+
 
 export default function SectionRenderer({
   sections,
@@ -198,9 +231,11 @@ type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photogr
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
-function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, accentColor, ctx }: any) {
+function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, buttonVariant, accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const hasImage = !!backgroundImage;
+  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
+  const btn = siteButtonProps(variant);
   const heroInner = (
     <>
       {hasImage && <div className="absolute inset-0 bg-black/40" />}
@@ -229,8 +264,8 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
           <a
             href={c.editMode ? undefined : (ctaLink || "#")}
             onClick={(e) => c.editMode && e.preventDefault()}
-            style={{ borderColor: hasImage ? "white" : accentColor, color: hasImage ? "white" : accentColor }}
-            className="inline-block mt-8 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+            {...btn}
+            style={{ ...btn.style, marginTop: "2rem" }}
           >
             <EditableText
               as="span"
@@ -550,8 +585,10 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
 
 // ─── CTA ────────────────────────────────────────────────────────────────────
 
-function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
+function CtaBlock({ headline, buttonText, buttonLink, buttonVariant, accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
+  const btn = siteButtonProps(variant);
   return (
     <section className="py-14 sm:py-20 px-5 sm:px-6 bg-muted/20">
       <div className="max-w-2xl mx-auto text-center">
@@ -566,8 +603,7 @@ function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
         <a
           href={c.editMode ? undefined : (buttonLink || "#")}
           onClick={(e) => c.editMode && e.preventDefault()}
-          style={{ borderColor: accentColor, color: accentColor }}
-          className="inline-block px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+          {...btn}
         >
           <EditableText
             as="span"
