@@ -94,11 +94,20 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
   // 2-step tour replays from the beginning.
   const hadSectionsRef = useRef(false);
 
-  // Initialize from localStorage on mount / when becoming active.
-  // If the page just transitioned from "has sections" → empty, clear the
-  // completed flag so the tour shows again.
+  // Tracks the previous `active` state so we can detect the "empty → has sections"
+  // transition and auto-mark the onboarding as completed.
+  const wasActiveRef = useRef(false);
+
   useEffect(() => {
     if (!active) {
+      // Transition: empty page → user just added their first section.
+      // Persist completion so the tour does not appear again.
+      if (wasActiveRef.current) {
+        try {
+          localStorage.setItem(STORAGE_KEY, "1");
+        } catch {}
+      }
+      wasActiveRef.current = false;
       // Page is non-empty (or editor closed) → remember it for next transition
       hadSectionsRef.current = true;
       setStep(null);
@@ -115,6 +124,7 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
     } catch {
       setStep(1);
     }
+    wasActiveRef.current = true;
   }, [active]);
 
   const finish = () => {
