@@ -187,21 +187,27 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
   );
 }
 
-function SlideshowContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }: { props: any; onChange: (p: any) => void; photographerId?: string | null; isCarousel?: boolean }) {
   const images: string[] = props.images || [];
   return (
     <div className="space-y-3">
-      <Field label={`Interval: ${(props.interval ?? 5000) / 1000}s`}>
-        <Slider value={[props.interval ?? 5000]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
-      </Field>
-      <Field label="Images">
+      {isCarousel ? (
+        <Field label={`Visible items: ${props.itemsVisible ?? 3}`}>
+          <Slider value={[props.itemsVisible ?? 3]} min={1} max={6} step={1} onValueChange={([v]) => onChange({ ...props, itemsVisible: v })} />
+        </Field>
+      ) : (
+        <Field label={`Interval: ${(props.interval ?? 5000) / 1000}s`}>
+          <Slider value={[props.interval ?? 5000]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
+        </Field>
+      )}
+      <Field label="Slides">
         <ItemListEditor
           items={images}
           onChange={(next) => onChange({ ...props, images: next })}
-          itemLabel="Slide"
-          addLabel="Add Slide"
+          itemLabel={isCarousel ? "Item" : "Slide"}
+          addLabel={isCarousel ? "Add Item" : "Add Slide"}
           newItem={() => ""}
-          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty slide")}
+          renderLabel={(it) => (it ? it.split("/").pop() || it : isCarousel ? "Empty item" : "Empty slide")}
           renderDetail={(item, _u) => (
             <ImageUploadField
               value={item as string}
@@ -214,7 +220,7 @@ function SlideshowContentEditor({ props, onChange, photographerId }: { props: an
                 }
               }}
               photographerId={photographerId}
-              folder="slideshow"
+              folder={isCarousel ? "carousel" : "slideshow"}
             />
           )}
         />
