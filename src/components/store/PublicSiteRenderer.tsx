@@ -1967,6 +1967,12 @@ export default function PublicSiteRenderer(props: Props) {
   if (props.pageSections && props.pageSections.length > 0) {
     const accentColor = site?.accent_color || "#000000";
     const { navLinks, handleNavClick } = derived;
+    // If the first section isn't a full-bleed hero/image, the header would sit
+    // on a light background and become invisible. Force its opaque state.
+    const firstType = (props.pageSections[0] as any)?.type as string | undefined;
+    const HERO_TYPES = new Set(["hero", "hero-image", "hero-split", "image", "cover", "banner", "slideshow"]);
+    const headerOnDarkHero = !!firstType && HERO_TYPES.has(firstType);
+    const forceOpaque = !headerOnDarkHero;
     return (
       <>
         <SEOHead
@@ -1989,8 +1995,11 @@ export default function PublicSiteRenderer(props: Props) {
             ctaText=""
             onNavClick={handleNavClick}
             site={site}
+            forceOpaque={forceOpaque}
           />
-          <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
+          <div className={forceOpaque ? "pt-16" : ""}>
+            <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
+          </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
       </>
