@@ -26,7 +26,46 @@ interface SectionRendererProps {
   edit?: EditContext;
 }
 
-// ─── Section Renderer (routes to block components) ──────────────────────────
+// ─── Site button variant helper ────────────────────────────────────────────
+// Reads CSS vars set by WebsiteEditor (Style → Buttons → Variants) so blocks
+// render buttons consistently across the site. Falls back to sensible defaults.
+export function siteButtonStyle(variant: "primary" | "secondary" = "primary"): React.CSSProperties {
+  const v = variant;
+  const styleVar = `var(--site-btn-${v}-style, ${v === "primary" ? "solid" : "outline"})`;
+  const bg = `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`;
+  const fg = `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`;
+  const radius = `var(--site-btn-${v}-radius, 2px)`;
+  // CSS variables can't drive ternaries directly, so we resolve via custom props
+  // by always setting both bg/border/text, and letting the inline style choose
+  // based on a data-attribute approach. Keep it simple: emit a style object that
+  // works for solid (most common); outline/underline are handled by data attr.
+  return {
+    backgroundColor: `var(--site-btn-${v}-resolved-bg, ${bg})`,
+    color: fg,
+    borderColor: bg,
+    borderRadius: radius,
+    // expose for downstream conditional CSS
+    ["--btn-style" as any]: styleVar,
+  };
+}
+
+// Returns inline style + className based on variant + style mode.
+export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
+  style: React.CSSProperties;
+  className: string;
+} {
+  const v = variant;
+  return {
+    style: {
+      backgroundColor: `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`,
+      color: `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`,
+      borderColor: `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`,
+      borderRadius: `var(--site-btn-${v}-radius, 2px)`,
+    },
+    className: `site-btn site-btn-${v}`,
+  };
+}
+
 
 export default function SectionRenderer({
   sections,
