@@ -62,6 +62,40 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
   };
 }
 
+// ─── Reusable site CTA link ────────────────────────────────────────────────
+// Renders an <a> styled with the global Style → Buttons tokens (variant,
+// shape, size, colors, border, hover). Use everywhere a CTA links out so
+// hard-coded Tailwind buttons never diverge from the design system.
+export function SiteCtaLink({
+  href,
+  variant = "primary",
+  newTab,
+  className,
+  children,
+  onClick,
+}: {
+  href?: string;
+  variant?: "primary" | "secondary";
+  newTab?: boolean;
+  className?: string;
+  children: React.ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}) {
+  const btn = siteButtonProps(variant);
+  return (
+    <a
+      href={href || "#"}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noopener noreferrer" : undefined}
+      onClick={onClick}
+      style={btn.style}
+      className={className ? `${btn.className} ${className}` : btn.className}
+    >
+      {children}
+    </a>
+  );
+}
+
 // ─── Block Button schema ────────────────────────────────────────────────────
 // Multi-button per item with backwards-compatible fallback to legacy fields
 // (ctaText/ctaLink for Hero/Image+Text/Text+Image; buttonText/buttonLink for CTA).
