@@ -535,10 +535,14 @@ export default function PreviewRenderer({
           {/* Blocks */}
           {sections.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[480px] gap-5 px-6 text-center">
-              <div className="space-y-1">
+              <div className="space-y-1.5 max-w-md">
                 <p className="text-base font-medium text-foreground">This page is empty</p>
-                <p className="text-xs text-muted-foreground/80 max-w-xs">
-                  Pick a section type to get started.
+                <p className="text-xs text-muted-foreground/80">
+                  Click <span className="font-medium text-foreground">Add section</span> to open the quick picker.
+                  Choose a template like <span className="text-foreground">Header</span>, <span className="text-foreground">Text</span>,
+                  {" "}<span className="text-foreground">Gallery</span>, <span className="text-foreground">Image</span>,
+                  {" "}<span className="text-foreground">CTA</span> or <span className="text-foreground">Contact</span> —
+                  or hit <span className="font-medium text-foreground">More blocks…</span> for the full catalog.
                 </p>
               </div>
               {editMode && onAddBlockAt && (
@@ -555,6 +559,9 @@ export default function PreviewRenderer({
                   </button>
                 </QuickAddPopover>
               )}
+              <p className="text-[10px] text-muted-foreground/70 tracking-wide">
+                Tip: hover between blocks later to insert a new section anywhere.
+              </p>
             </div>
           ) : (
             <>
