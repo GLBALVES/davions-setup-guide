@@ -2909,6 +2909,11 @@ const WebsiteEditor = () => {
           footerText: raw.footer_text,
           headingFont: raw.heading_font,
           bodyFont: raw.body_font,
+          buttonStyle: raw.button_style || "solid",
+          buttonShape: raw.button_shape || "square",
+          buttonSize: raw.button_size || "medium",
+          buttonHeight: raw.button_height ?? 14,
+          buttonWidth: raw.button_width ?? 30,
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
@@ -2955,6 +2960,11 @@ const WebsiteEditor = () => {
     footer_text: "footerText",
     heading_font: "headingFont",
     body_font: "bodyFont",
+    button_style: "buttonStyle",
+    button_shape: "buttonShape",
+    button_size: "buttonSize",
+    button_height: "buttonHeight",
+    button_width: "buttonWidth",
   };
 
   const flushPatch = useCallback(async () => {
