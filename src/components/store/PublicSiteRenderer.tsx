@@ -275,6 +275,8 @@ interface NavProps {
   ctaText: string;
   onNavClick: (href: string) => void;
   site?: SiteConfig | null;
+  /** Force the header to render in its opaque (light bg) state regardless of scroll. */
+  forceOpaque?: boolean;
 }
 
 const ALL_SOCIALS = ["instagram", "facebook", "youtube", "tiktok", "pinterest", "linkedin", "whatsapp"] as const;
@@ -387,20 +389,21 @@ function NavItem({ link, textColor, textCls, onNavClick, isOpaque }: { link: Nav
   );
 }
 
-function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site }: NavProps) {
+function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, logoUrl, accentColor, navLinks, showBooking, ctaText, onNavClick, site, forceOpaque }: NavProps) {
   const hasBg = !!site?.header_bg_color;
   const bgColor = site?.header_bg_color ?? undefined;
   const textColor = site?.header_text_color ?? undefined;
   const visibleSocials = site?.header_visible_socials ?? null;
 
-  // When a custom bg color is set we always show as "scrolled" visually (opaque)
-  const isOpaque = hasBg || scrolled;
+  // When a custom bg color is set we always show as "scrolled" visually (opaque).
+  // forceOpaque is used when the page's first section is light (no dark hero behind the header).
+  const isOpaque = hasBg || scrolled || !!forceOpaque;
 
   const headerStyle: React.CSSProperties = hasBg
     ? { backgroundColor: bgColor, borderBottom: "1px solid rgba(0,0,0,0.08)" }
     : undefined as any;
 
-  const logoFilter = !hasBg && !scrolled ? "brightness-0 invert" : "";
+  const logoFilter = !hasBg && !scrolled && !forceOpaque ? "brightness-0 invert" : "";
   const textCls = isOpaque
     ? "text-muted-foreground hover:text-foreground"
     : "text-white/70 hover:text-white";
@@ -414,8 +417,8 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
       data-block-key="header"
       style={headerStyle}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        !hasBg && scrolled ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : ""
-      } ${!hasBg && !scrolled ? "bg-transparent" : ""}`}
+        !hasBg && (scrolled || forceOpaque) ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : ""
+      } ${!hasBg && !scrolled && !forceOpaque ? "bg-transparent" : ""}`}
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center gap-4">
         {/* Left nav links */}
