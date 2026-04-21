@@ -3199,7 +3199,18 @@ const WebsiteEditor = () => {
     root.style.setProperty("--site-btn-height", height);
     root.style.setProperty("--site-btn-pad-x", padX);
     root.style.setProperty("--site-btn-style", s.buttonStyle || "solid");
-  }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth]);
+
+    // Per-variant tokens (Primary / Secondary)
+    const variants = s.buttonVariants || {};
+    const radiusFor = (sh?: string) => sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
+    (["primary", "secondary"] as const).forEach((key) => {
+      const v = variants[key] || {};
+      root.style.setProperty(`--site-btn-${key}-bg`, v.bg || (key === "primary" ? "#000000" : "#ffffff"));
+      root.style.setProperty(`--site-btn-${key}-fg`, v.fg || (key === "primary" ? "#ffffff" : "#000000"));
+      root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
+      root.style.setProperty(`--site-btn-${key}-style`, v.style || (key === "primary" ? "solid" : "outline"));
+    });
+  }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth, site?.buttonVariants]);
 
   // Debounced batch of pending DB writes — coalesces rapid edits (e.g. typing in
   // the Logo Text field) into a single upsert so we don't hammer the database.
