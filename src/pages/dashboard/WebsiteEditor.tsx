@@ -2696,6 +2696,7 @@ const WebsiteEditor = () => {
     const actions = pageActions;
     actions.setSections(next);
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
+    if (removed && editingSection === removed.id) setEditingSection(null);
     setPendingDeleteIdx(null);
 
     if (removed) {
