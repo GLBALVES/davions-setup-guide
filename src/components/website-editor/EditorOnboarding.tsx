@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, MousePointerClick, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
