@@ -1702,18 +1702,21 @@ const PagesPanel = ({
     onNavLinksChange(links);
   }, [pages, onNavLinksChange]);
 
-  // Register API for parent to update active sections (for preview toolbar actions)
+  // Register API for parent to update active sections (for preview toolbar actions).
+  // Scope to the currently previewed page so canvas actions (delete/duplicate/move/reorder/+add)
+  // work even when the sidebar is on the page list (not in "Edit Sections" mode).
   useEffect(() => {
-    if (!editingSectionsPageId) { registerActivePageActions(null); return; }
+    const targetId = editingSectionsPageId ?? activePage;
+    if (!targetId) { registerActivePageActions(null); return; }
     registerActivePageActions({
       setSections: (newSections: PageSection[]) => {
-        findAndUpdate(editingSectionsPageId, { sections: newSections });
+        findAndUpdate(targetId, { sections: newSections });
         onActiveSectionsChange(newSections);
       },
     });
     return () => registerActivePageActions(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingSectionsPageId, pages]);
+  }, [editingSectionsPageId, activePage, pages]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
@@ -2693,6 +2696,7 @@ const WebsiteEditor = () => {
     const actions = pageActions;
     actions.setSections(next);
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
+    if (removed && editingSection === removed.id) setEditingSection(null);
     setPendingDeleteIdx(null);
 
     if (removed) {
