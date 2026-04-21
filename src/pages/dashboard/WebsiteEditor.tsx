@@ -927,9 +927,14 @@ const PageSectionsPanel = ({
     onSectionsChange(next);
   };
 
-  const deleteSection = (idx: number) => {
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
+  const requestDelete = (idx: number) => setPendingDelete(idx);
+  const confirmDelete = () => {
+    if (pendingDelete === null) return;
+    const idx = pendingDelete;
     onSectionsChange(sections.filter((_, i) => i !== idx));
     if (selectedBlockIndex === idx) onSelectBlock(null);
+    setPendingDelete(null);
   };
 
   const updateVariant = (idx: number, variant: string) => {
