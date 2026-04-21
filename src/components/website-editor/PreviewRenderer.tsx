@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical } from "lucide-react";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
+import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
@@ -55,8 +56,8 @@ interface PreviewRendererProps {
   onMoveBlock?: (from: number, to: number) => void;
   onDuplicateBlock?: (index: number) => void;
   onDeleteBlock?: (index: number) => void;
-  /** Called when the user clicks a "+ Add Section" divider in the canvas. */
-  onAddBlockAt?: (index: number) => void;
+  /** Called when the user clicks a "+ Add Section" divider in the canvas. When `type` is provided, insert that block directly (quick-add); otherwise open the full picker. */
+  onAddBlockAt?: (index: number, type?: import("./page-templates").SectionType) => void;
   /** Called with the new full ordered list when the user drags a block to a new position. */
   onReorderBlocks?: (next: PageSection[]) => void;
   accentColor?: string;
@@ -442,15 +443,21 @@ export default function PreviewRenderer({
       <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative">
         {/* Floating Add Section button — visible when page is empty */}
         {editMode && onAddBlockAt && sections.length === 0 && (
-          <button
-            type="button"
-            onClick={() => onAddBlockAt(0)}
-            className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
-            title="Add section"
+          <QuickAddPopover
+            side="top"
+            align="end"
+            onPick={(type) => onAddBlockAt(0, type)}
+            onMore={() => onAddBlockAt(0)}
           >
-            <Plus className="h-4 w-4" />
-            Add section
-          </button>
+            <button
+              type="button"
+              className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
+              title="Add section"
+            >
+              <Plus className="h-4 w-4" />
+              Add section
+            </button>
+          </QuickAddPopover>
         )}
         <div
           className={cn(
@@ -486,18 +493,22 @@ export default function PreviewRenderer({
               <div className="space-y-1">
                 <p className="text-base font-medium text-foreground">This page is empty</p>
                 <p className="text-xs text-muted-foreground/80 max-w-xs">
-                  Start building by adding your first section.
+                  Pick a section type to get started.
                 </p>
               </div>
               {editMode && onAddBlockAt && (
-                <button
-                  type="button"
-                  onClick={() => onAddBlockAt(0)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                <QuickAddPopover
+                  onPick={(type) => onAddBlockAt(0, type)}
+                  onMore={() => onAddBlockAt(0)}
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Add your first section
-                </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add your first section
+                  </button>
+                </QuickAddPopover>
               )}
             </div>
           ) : (
