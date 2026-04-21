@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
 import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical } from "lucide-react";
@@ -397,6 +397,40 @@ export default function PreviewRenderer({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const activeDragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
 
+  // Track which block is closest to the viewport center to use as the
+  // insertion target for the floating "Add section" button.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const blockRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [nearestBlockIdx, setNearestBlockIdx] = useState<number | null>(null);
+
+  const recomputeNearest = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container || sections.length === 0) {
+      setNearestBlockIdx(null);
+      return;
+    }
+    const centerY = container.getBoundingClientRect().top + container.clientHeight / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    blockRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const blockCenter = r.top + r.height / 2;
+      const d = Math.abs(blockCenter - centerY);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    setNearestBlockIdx(bestIdx);
+  }, [sections.length]);
+
+  useEffect(() => {
+    recomputeNearest();
+  }, [sections, recomputeNearest]);
+
+  // Insertion index for the floating button: just after the nearest block.
+  const fabInsertIndex = nearestBlockIdx !== null
+    ? Math.min(nearestBlockIdx + 1, sections.length)
+    : sections.length;
+
   const handleDragStart = (e: DragStartEvent) => setActiveDragId(String(e.active.id));
   const handleDragCancel = () => setActiveDragId(null);
   const handleDragEnd = (e: DragEndEvent) => {
@@ -440,19 +474,30 @@ export default function PreviewRenderer({
       </div>
 
       {/* Preview container */}
-      <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative">
-        {/* Floating Add Section button — always visible while editing */}
+      <div
+        ref={scrollRef}
+        onScroll={recomputeNearest}
+        className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative"
+      >
+        {/* Floating Add Section button — always visible while editing.
+            Inserts after the block currently nearest to the viewport center. */}
         {editMode && onAddBlockAt && (
           <QuickAddPopover
             side="top"
             align="end"
-            onPick={(type) => onAddBlockAt(sections.length, type)}
-            onMore={() => onAddBlockAt(sections.length)}
+            onPick={(type) => onAddBlockAt(fabInsertIndex, type)}
+            onMore={() => onAddBlockAt(fabInsertIndex)}
           >
             <button
               type="button"
               className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
-              title="Add section"
+              title={
+                sections.length === 0
+                  ? "Add section"
+                  : nearestBlockIdx !== null
+                    ? `Insert after "${sections[nearestBlockIdx]?.label ?? "section"}"`
+                    : "Add section at end"
+              }
             >
               <Plus className="h-4 w-4" />
               Add section
@@ -529,7 +574,7 @@ export default function PreviewRenderer({
                   {sections.map((section, idx) => {
                     const isSelected = selectedBlockIndex === idx;
                     return (
-                      <div key={section.id}>
+                      <div key={section.id} ref={(el) => { blockRefs.current[idx] = el; }}>
                         <SortableBlock
                           section={section}
                           idx={idx}
