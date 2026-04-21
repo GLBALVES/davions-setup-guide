@@ -1013,58 +1013,6 @@ const WebsiteSettings = () => {
                       </DialogContent>
                     </Dialog>
                   </section>
-                  {/* ── 4. Social Media ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.socialTitle} description={ws.socialDesc} />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label="Instagram">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0"><Instagram className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                          <input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="instagram.com/yourstudio" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="Facebook">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0"><Facebook className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                          <input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="facebook.com/yourstudio" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="Pinterest">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0 text-[10px] tracking-widest text-muted-foreground font-light">P</span>
-                          <input value={pinterestUrl} onChange={(e) => setPinterestUrl(e.target.value)} placeholder="pinterest.com/yourstudio" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="TikTok">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0 text-[10px] tracking-widest text-muted-foreground font-light">Tk</span>
-                          <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="tiktok.com/@yourstudio" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="YouTube">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0"><Youtube className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                          <input value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} placeholder="youtube.com/@yourstudio" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="LinkedIn">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0"><Linkedin className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                          <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="linkedin.com/in/yourname" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                      <FieldRow label="WhatsApp">
-                        <div className="flex items-center border border-input overflow-hidden h-9 bg-background">
-                          <span className="px-2.5 flex items-center bg-muted/40 border-r border-border h-full shrink-0"><Phone className="h-3.5 w-3.5 text-muted-foreground" /></span>
-                          <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+1 555 000 0000" className="flex-1 h-full px-3 text-sm font-light bg-transparent outline-none" />
-                        </div>
-                      </FieldRow>
-                    </div>
-                  </section>
-
                   {/* ── 8. Analytics ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
