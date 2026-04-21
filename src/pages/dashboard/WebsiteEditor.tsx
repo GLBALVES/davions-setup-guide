@@ -969,6 +969,21 @@ const PageSectionsPanel = ({
     );
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = sections.findIndex((s) => s.id === active.id);
+    const to = sections.findIndex((s) => s.id === over.id);
+    if (from < 0 || to < 0) return;
+    onSectionsChange(arrayMove(sections, from, to));
+    if (selectedBlockIndex === from) onSelectBlock(to);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
@@ -994,83 +1009,27 @@ const PageSectionsPanel = ({
           </div>
         )}
 
-        {sections.map((section, idx) => (
-          <div key={section.id}>
-            {/* Add block divider before first */}
-            {idx === 0 && (
-              <AddBlockDivider onClick={() => openAddBlock(0)} />
-            )}
-
-            {/* Section item */}
-            <div
-              onClick={() => onSelectBlock(idx)}
-              className={cn(
-                "group relative flex items-center gap-2 px-2 py-2 rounded-md transition-colors cursor-pointer",
-                selectedBlockIndex === idx ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
-              )}
-            >
-              {/* Drag handle placeholder */}
-              <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
-
-              {/* Section type icon */}
-              <div className="w-7 h-7 rounded bg-muted/60 flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase">
-                  {section.type.slice(0, 3)}
-                </span>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            {sections.map((section, idx) => (
+              <div key={section.id}>
+                {idx === 0 && <AddBlockDivider onClick={() => openAddBlock(0)} />}
+                <SortableSectionItem
+                  section={section}
+                  idx={idx}
+                  total={sections.length}
+                  selected={selectedBlockIndex === idx}
+                  onSelect={() => onSelectBlock(idx)}
+                  onMoveUp={() => moveSection(idx, -1)}
+                  onMoveDown={() => moveSection(idx, 1)}
+                  onDuplicate={() => duplicateSection(idx)}
+                  onDelete={() => deleteSection(idx)}
+                />
+                <AddBlockDivider onClick={() => openAddBlock(idx + 1)} />
               </div>
-
-              {/* Label */}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">{section.label}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{section.type}</p>
-              </div>
-
-              {/* Inline actions (visible on hover) */}
-              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => moveSection(idx, -1)}
-                  disabled={idx === 0}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30"
-                  title="Move up"
-                >
-                  <ArrowUp className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => moveSection(idx, 1)}
-                  disabled={idx === sections.length - 1}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30"
-                  title="Move down"
-                >
-                  <ArrowDown className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => duplicateSection(idx)}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground"
-                  title="Duplicate"
-                >
-                  <Copy className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => onSelectBlock(idx)}
-                  className="p-1 rounded hover:bg-muted text-muted-foreground"
-                  title="Block settings"
-                >
-                  <Settings2 className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => deleteSection(idx)}
-                  className="p-1 rounded hover:bg-muted text-destructive"
-                  title="Delete"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
-
-            {/* Add block divider after each */}
-            <AddBlockDivider onClick={() => openAddBlock(idx + 1)} />
-          </div>
-        ))}
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
 
       <AddBlockPicker
@@ -1078,6 +1037,92 @@ const PageSectionsPanel = ({
         onOpenChange={setAddBlockOpen}
         onSelect={handleAddBlock}
       />
+    </div>
+  );
+};
+
+// ── Sortable Section Item ─────────────────────────────────────────────────────
+const SortableSectionItem = ({
+  section,
+  idx,
+  total,
+  selected,
+  onSelect,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+}: {
+  section: PageSection;
+  idx: number;
+  total: number;
+  selected: boolean;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onSelect}
+      className={cn(
+        "group relative flex items-center gap-2 px-2 py-2 rounded-md transition-colors cursor-pointer",
+        selected ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
+      )}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+        className="cursor-grab active:cursor-grabbing touch-none p-0.5 -ml-0.5"
+        title="Drag to reorder"
+      >
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground" />
+      </button>
+
+      <div className="w-7 h-7 rounded bg-muted/60 flex items-center justify-center shrink-0">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase">
+          {section.type.slice(0, 3)}
+        </span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-foreground truncate">{section.label}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{section.type}</p>
+      </div>
+
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={stop(onMoveUp)} disabled={idx === 0} className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30" title="Move up">
+          <ArrowUp className="h-3 w-3" />
+        </button>
+        <button onClick={stop(onMoveDown)} disabled={idx === total - 1} className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30" title="Move down">
+          <ArrowDown className="h-3 w-3" />
+        </button>
+        <button onClick={stop(onDuplicate)} className="p-1 rounded hover:bg-muted text-muted-foreground" title="Duplicate">
+          <Copy className="h-3 w-3" />
+        </button>
+        <button onClick={stop(onSelect)} className="p-1 rounded hover:bg-muted text-muted-foreground" title="Block settings">
+          <Settings2 className="h-3 w-3" />
+        </button>
+        <button onClick={stop(onDelete)} className="p-1 rounded hover:bg-muted text-destructive" title="Delete">
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 };
