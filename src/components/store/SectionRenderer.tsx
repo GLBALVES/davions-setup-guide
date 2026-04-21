@@ -408,11 +408,44 @@ function TextImageBlock({ image, title, body, ctx }: any) {
 
 // ─── Gallery Grid ───────────────────────────────────────────────────────────
 
+type GalleryItem = { image: string; title?: string; caption?: string; link?: string };
+
+function normalizeGalleryItems(raw: any[]): GalleryItem[] {
+  return (raw || []).map((s) =>
+    typeof s === "string" ? { image: s } : { image: s?.image ?? "", title: s?.title, caption: s?.caption, link: s?.link }
+  );
+}
+
+function GalleryItemFigure({ item, aspect }: { item: GalleryItem; aspect?: string }) {
+  const hasOverlay = !!(item.title || item.caption);
+  const inner = (
+    <>
+      <img src={item.image} alt={item.title || ""} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+      {hasOverlay && (
+        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/30 to-transparent text-white pointer-events-none">
+          {item.title && <div className="text-sm font-medium leading-tight">{item.title}</div>}
+          {item.caption && <div className="text-xs opacity-90 mt-0.5 leading-snug">{item.caption}</div>}
+        </div>
+      )}
+    </>
+  );
+  const cls = `relative ${aspect || ""} overflow-hidden rounded group`;
+  if (item.link) {
+    return (
+      <a href={item.link} target="_blank" rel="noopener noreferrer" className={cls}>
+        {inner}
+      </a>
+    );
+  }
+  return <div className={cls}>{inner}</div>;
+}
+
 function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   const cols = Number(columns) || 3;
+  const items = normalizeGalleryItems(images);
   const gridCls = cols === 2 ? "grid-cols-1 sm:grid-cols-2" : cols === 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
 
-  if (!images || images.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
@@ -434,10 +467,8 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
       <div className="max-w-6xl mx-auto">
         {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`grid ${gridCls} gap-3`}>
-          {images.map((img: string, i: number) => (
-            <div key={i} className="aspect-square overflow-hidden rounded">
-              <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-            </div>
+          {items.map((it, i) => (
+            <GalleryItemFigure key={i} item={it} aspect="aspect-square" />
           ))}
         </div>
       </div>
@@ -449,8 +480,9 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
 
 function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
   const cols = Number(columns) || 3;
+  const items = normalizeGalleryItems(images);
 
-  if (!images || images.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
@@ -467,14 +499,16 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
     );
   }
 
+  const colsCls = cols === 2 ? "columns-1 sm:columns-2" : cols === 4 ? "columns-2 md:columns-4" : "columns-2 md:columns-3";
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
-        <div className={`columns-${cols} gap-3 space-y-3`}>
-          {images.map((img: string, i: number) => (
-            <div key={i} className="overflow-hidden rounded break-inside-avoid">
-              <img src={img} alt="" className="w-full object-cover hover:scale-105 transition-transform duration-500" />
+        <div className={`${colsCls} gap-3 space-y-3`}>
+          {items.map((it, i) => (
+            <div key={i} className="break-inside-avoid mb-3">
+              <GalleryItemFigure item={it} />
             </div>
           ))}
         </div>

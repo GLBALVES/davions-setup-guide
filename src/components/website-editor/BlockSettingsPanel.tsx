@@ -144,8 +144,16 @@ function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any
   );
 }
 
+type GalleryItem = { image: string; title?: string; caption?: string; link?: string };
+
+function normalizeGalleryItems(raw: any[]): GalleryItem[] {
+  return (raw || []).map((s) =>
+    typeof s === "string" ? { image: s } : { image: s?.image ?? "", title: s?.title, caption: s?.caption, link: s?.link }
+  );
+}
+
 function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
-  const images: string[] = props.images || [];
+  const items: GalleryItem[] = normalizeGalleryItems(props.images || []);
   return (
     <div className="space-y-3">
       <Field label="Columns">
@@ -160,26 +168,30 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
       </Field>
       <Field label="Images">
         <ItemListEditor
-          items={images}
+          items={items}
           onChange={(next) => onChange({ ...props, images: next })}
           itemLabel="Image"
           addLabel="Add Image"
-          newItem={() => ""}
-          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty image")}
-          renderDetail={(item, _u) => (
-            <ImageUploadField
-              value={item as string}
-              onChange={(url) => {
-                const next = [...images];
-                const idx = images.indexOf(item as string);
-                if (idx >= 0) {
-                  next[idx] = url ?? "";
-                  onChange({ ...props, images: next });
-                }
-              }}
-              photographerId={photographerId}
-              folder="gallery"
-            />
+          newItem={() => ({ image: "", title: "", caption: "", link: "" })}
+          renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : "Empty image")}
+          renderDetail={(item, update) => (
+            <div className="space-y-3">
+              <ImageUploadField
+                value={item.image}
+                onChange={(url) => update({ image: url ?? "" })}
+                photographerId={photographerId}
+                folder="gallery"
+              />
+              <Field label="Title (optional)">
+                <Input value={item.title || ""} onChange={(e) => update({ title: e.target.value })} className="h-9 text-sm" placeholder="Image title" />
+              </Field>
+              <Field label="Caption (optional)">
+                <Textarea value={item.caption || ""} onChange={(e) => update({ caption: e.target.value })} className="text-sm min-h-[60px]" placeholder="Short description" />
+              </Field>
+              <Field label="Link URL (optional)">
+                <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+              </Field>
+            </div>
           )}
         />
       </Field>
