@@ -2349,6 +2349,42 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {sub === "logo" && (
             <div className="space-y-6">
+              {/* Quick Presets */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Quick Presets</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <PresetButton
+                    label="Compact"
+                    description="Small · no badge"
+                    active={(site as any)?.logoSize === "small" && (site as any)?.hideBranding === true}
+                    onClick={() => onSiteChange({ logo_size: "small", hide_branding: true })}
+                  />
+                  <PresetButton
+                    label="Balanced"
+                    description="Medium · with badge"
+                    active={((site as any)?.logoSize ?? "medium") === "medium" && !((site as any)?.hideBranding ?? false)}
+                    onClick={() => onSiteChange({ logo_size: "medium", hide_branding: false })}
+                  />
+                  <PresetButton
+                    label="Bold"
+                    description="Large · no badge"
+                    active={(site as any)?.logoSize === "large" && (site as any)?.hideBranding === true}
+                    onClick={() => onSiteChange({ logo_size: "large", hide_branding: true })}
+                  />
+                  <PresetButton
+                    label="Showcase"
+                    description="Large · with badge"
+                    active={(site as any)?.logoSize === "large" && !((site as any)?.hideBranding ?? false)}
+                    onClick={() => onSiteChange({ logo_size: "large", hide_branding: false })}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Apply a size + badge combo in one click. Logo image and text stay the same.
+                </p>
+              </div>
+
+              <div className="h-px bg-border" />
+
               {/* Logo Text */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Logo Text</label>
@@ -2606,6 +2642,34 @@ const ColorRow = ({ label, value, onChange }: { label: string; value: string; on
       />
     </div>
   </div>
+);
+
+// Quick preset card used in Logo & Branding sub-panel.
+const PresetButton = ({
+  label,
+  description,
+  active,
+  onClick,
+}: {
+  label: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "text-left rounded-md border px-3 py-2.5 transition-colors",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
+      active
+        ? "border-foreground bg-foreground/5"
+        : "border-border hover:border-foreground/40 hover:bg-muted/40"
+    )}
+  >
+    <div className="text-xs font-medium text-foreground">{label}</div>
+    <div className="text-[10px] text-muted-foreground mt-0.5">{description}</div>
+  </button>
 );
 
 const ComingSoon = ({ title, description }: { title: string; description: string }) => (
