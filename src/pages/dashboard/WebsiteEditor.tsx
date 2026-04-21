@@ -2929,7 +2929,7 @@ const WebsiteEditor = () => {
             onDeleteBlock={deleteBlock}
             onReorderBlocks={(next) => {
               if (!pageActions) return;
-              pageActions.setSections(next);
+              pageActions.setSections(next as unknown as PageSection[]);
               if (selectedBlockIndex !== null) {
                 const sel = activePageSections[selectedBlockIndex];
                 if (sel) {
