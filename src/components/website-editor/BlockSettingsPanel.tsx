@@ -225,21 +225,7 @@ function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) 
       <Field label="Headline">
         <Input value={props.headline || ""} onChange={(e) => onChange({ ...props, headline: e.target.value })} className="h-9 text-sm" />
       </Field>
-      <Field label="Button Text">
-        <Input value={props.buttonText || ""} onChange={(e) => onChange({ ...props, buttonText: e.target.value })} className="h-9 text-sm" />
-      </Field>
-      <Field label="Button Link">
-        <Input value={props.buttonLink || ""} onChange={(e) => onChange({ ...props, buttonLink: e.target.value })} className="h-9 text-sm" placeholder="#contact" />
-      </Field>
-      <Field label="Button Variant">
-        <Select value={props.buttonVariant || "primary"} onValueChange={(v) => onChange({ ...props, buttonVariant: v })}>
-          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="primary">Primary</SelectItem>
-            <SelectItem value="secondary">Secondary</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
+      <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
 }
