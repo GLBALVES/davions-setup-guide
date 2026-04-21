@@ -2626,11 +2626,15 @@ const WebsiteEditor = () => {
     next.splice(idx + 1, 0, dup);
     pageActions.setSections(next);
   };
-  const deleteBlock = (idx: number) => {
-    if (!pageActions) return;
+  const [pendingDeleteIdx, setPendingDeleteIdx] = useState<number | null>(null);
+  const requestDeleteBlock = (idx: number) => setPendingDeleteIdx(idx);
+  const confirmDeleteBlock = () => {
+    if (pendingDeleteIdx === null || !pageActions) { setPendingDeleteIdx(null); return; }
+    const idx = pendingDeleteIdx;
     const next = activePageSections.filter((_, i) => i !== idx);
     pageActions.setSections(next);
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
+    setPendingDeleteIdx(null);
   };
 
   // Inline edit: update a single prop path on a section, persist via pageActions
