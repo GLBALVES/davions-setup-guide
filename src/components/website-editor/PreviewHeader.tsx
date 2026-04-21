@@ -213,22 +213,14 @@ export default function PreviewHeader({
             )}
             {showSlideCta && (
               <div className="pt-1">
-                {(() => {
-                  const variant: "primary" | "secondary" =
-                    (activeSlide as any)?.buttonVariant === "secondary" ? "secondary" : "primary";
-                  const btn = siteButtonProps(variant);
-                  return (
-                    <a
-                      href={activeSlide.buttonUrl || "#"}
-                      target={activeSlide.openInNewTab === false ? "_self" : "_blank"}
-                      rel={activeSlide.openInNewTab === false ? undefined : "noopener noreferrer"}
-                      {...btn}
-                      className={`pointer-events-auto ${btn.className}`}
-                    >
-                      {activeSlide.buttonText}
-                    </a>
-                  );
-                })()}
+                <SiteCtaLink
+                  href={activeSlide.buttonUrl}
+                  variant={(activeSlide as any)?.buttonVariant === "secondary" ? "secondary" : "primary"}
+                  newTab={activeSlide.openInNewTab !== false}
+                  className="pointer-events-auto"
+                >
+                  {activeSlide.buttonText}
+                </SiteCtaLink>
               </div>
             )}
           </div>
