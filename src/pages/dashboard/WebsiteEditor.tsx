@@ -2621,29 +2621,78 @@ const VariantPresets = ({
 
         <div className="h-px bg-border/60" />
 
+        {/* Shape swatches — same pattern as Default Shape, but per-variant */}
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground">Solid</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["square", "rounded", "pill"] as const).map((sh) => {
+              const active = style === "solid" && shape === sh;
+              return (
+                <button
+                  key={`v-solid-${sh}`}
+                  type="button"
+                  onClick={() => updateVariant(vKey, { style: "solid", shape: sh })}
+                  className={`h-10 w-full transition-all ${
+                    active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+                  }`}
+                  style={{
+                    backgroundColor: bg,
+                    border: "none",
+                    borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
+                  }}
+                  aria-label={`Solid ${sh}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground">Outline</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["square", "rounded", "pill"] as const).map((sh) => {
+              const active = style === "outline" && shape === sh;
+              return (
+                <button
+                  key={`v-outline-${sh}`}
+                  type="button"
+                  onClick={() => updateVariant(vKey, { style: "outline", shape: sh })}
+                  className={`h-10 w-full transition-all ${
+                    active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+                  }`}
+                  style={{
+                    backgroundColor: "transparent",
+                    border: `1px solid ${bg}`,
+                    borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
+                  }}
+                  aria-label={`Outline ${sh}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground">Underline</p>
+          <button
+            type="button"
+            onClick={() => updateVariant(vKey, { style: "underline" })}
+            className={`h-10 w-1/3 flex items-end justify-center transition-all ${
+              style === "underline" ? "opacity-100" : "opacity-60 hover:opacity-100"
+            }`}
+          >
+            <span
+              className="block w-full h-px"
+              style={{
+                backgroundColor: bg,
+                outline: style === "underline" ? "1px solid hsl(var(--foreground))" : "none",
+                outlineOffset: 4,
+              }}
+            />
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Style</p>
-            <Select value={style} onValueChange={(val) => updateVariant(vKey, { style: val })}>
-              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="solid">Solid</SelectItem>
-                <SelectItem value="outline">Outline</SelectItem>
-                <SelectItem value="underline">Underline</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Shape</p>
-            <Select value={shape} onValueChange={(val) => updateVariant(vKey, { shape: val })}>
-              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="square">Square</SelectItem>
-                <SelectItem value="rounded">Rounded</SelectItem>
-                <SelectItem value="pill">Pill</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
             <div className="flex items-center gap-2">
