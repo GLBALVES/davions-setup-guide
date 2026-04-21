@@ -395,7 +395,13 @@ export default function PreviewRenderer({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const activeDragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
+
+  const handleDragStart = (e: DragStartEvent) => setActiveDragId(String(e.active.id));
+  const handleDragCancel = () => setActiveDragId(null);
   const handleDragEnd = (e: DragEndEvent) => {
+    setActiveDragId(null);
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     const from = sections.findIndex((s) => s.id === active.id);
