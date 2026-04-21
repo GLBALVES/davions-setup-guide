@@ -3023,7 +3023,19 @@ const WebsiteEditor = () => {
                 }
               }
             }}
-            onAddBlockAt={(idx) => { setInsertIndex(idx); setAddBlockOpen(true); }}
+            onAddBlockAt={(idx, type) => {
+              if (type) {
+                if (!pageActions) return;
+                const newSection = createSection(type);
+                const next = [...activePageSections];
+                next.splice(idx, 0, newSection);
+                pageActions.setSections(next);
+                setSelectedBlockIndex(idx);
+                return;
+              }
+              setInsertIndex(idx);
+              setAddBlockOpen(true);
+            }}
             accentColor={site?.accentColor || "#000000"}
             site={site}
             navLinks={navLinks}
