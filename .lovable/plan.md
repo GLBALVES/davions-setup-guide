@@ -1,82 +1,42 @@
 
 
-## Auditoria Ponta-a-Ponta do Editor de Site
+## Bug: Canvas "Delete Section" silently no-ops
 
-Vou rodar uma varredura sistemática do `/dashboard/website/editor` no preview real (logado), testando cada superfície e produzindo um **relatório consolidado** com bugs, severidade e arquivo responsável. Sem editar código nesta rodada — só diagnóstico.
+### Root cause
 
-### Escopo da auditoria
+In `src/pages/dashboard/WebsiteEditor.tsx`, the canvas toolbar actions (Delete, Duplicate, Move, Reorder) all flow through `pageActions.setSections(...)`. But `pageActions` is only registered when `editingSectionsPageId` is non-null — which **only happens after the user explicitly enters "Edit Sections" mode in the sidebar** (line 1707).
 
-**1. Persistência (`updateSite`)**
-- Testar se cada toggle/campo novo (show_blog, fontes, cores, header/footer bg) persiste após reload
-- Confirmar suspeita do merge restrito em `WebsiteEditor.tsx`
+When the user is browsing pages normally (Pixieset behavior keeps the sidebar on the page list — line 1589 explicitly sets `editingSectionsPageId` to `null`), `pageActions` is `null`, so:
 
-**2. Blocos (Sections)**
-- Selecionar, mover ↑↓, duplicar, excluir, inserir entre blocos
-- Verificar se ordem persiste após reload
-- Editar props no `BlockSettingsPanel` direito e confirmar render
+- `confirmDeleteBlock` exits early at the `!pageActions` guard → **section is never removed**
+- `moveBlock`, `duplicateBlock`, reorder via DnD, and "+ Add Section" all fail the same way
 
-**3. Edição inline**
-- `EditableText` em cada tipo de bloco (Hero, Sobre, CTA, Footer)
-- `EditableImage` (upload + URL externa)
-- Validar que `onPropChange` grava no path correto
+The deletion confirmation dialog opens and closes correctly — but nothing happens after "Delete" because the action silently no-ops.
 
-**4. Páginas & Navegação**
-- Criar página, renomear, excluir, marcar como home
-- Criar pasta (dropdown), link externo (com/sem nova aba)
-- Reordenar páginas
-- Aplicar template de página (`PageTemplatePickerModal`)
+### Fix
 
-**5. Header por página (`PreviewHeader` + `headerConfig`)**
-- Editar slides, logo, navegação
-- Verificar se salva por página, não global
+Register `pageActions` against the **currently previewed page**, not against `editingSectionsPageId`. The preview always has an active page (`activePage`), and that's the page the canvas is editing.
 
-**6. Templates de site inteiro**
-- Aplicar `SiteTemplatePickerModal` e checar se sobrescreve corretamente
-- Testar reset
+**Changes in `src/pages/dashboard/WebsiteEditor.tsx`:**
 
-**7. Sub-painéis de Settings**
-- SEO Manager (save + SERP preview)
-- Blog (toggle já corrigido — revalidar)
-- Social (links salvam)
-- Tracking (GA, Pixel, head HTML)
-- Advanced (CSS, body HTML, favicon, redirects)
-- Form Submissions (lista carrega)
-- Drafts (lista + restore)
-- Trash (lista + restore + purge)
+1. **`PagesSidebar` effect (around line 1705-1716)** — change the dependency from `editingSectionsPageId` to the active preview page. Resolve the active page id from `activePage` (the slug/id used by the preview), and register `setSections` against that id. The setter still calls `findAndUpdate(activePageId, { sections })` so persistence to `site_pages` is unchanged.
 
-**8. Tipografia & Cores**
-- Trocar heading/body font e accent color → confirmar aplicação live em todos os blocos
+2. Keep `PageSectionsPanel`'s own local actions intact (it already uses `findAndUpdate(editingSectionsPageId, ...)` directly via its `onSectionsChange` prop on line 1970-1972) — no change needed there.
 
-**9. Viewports (Desktop/Tablet/Mobile)**
-- Confirmar que largura muda; documentar limitação se não simula media queries reais
+3. **Sanity guard in `confirmDeleteBlock`** — after calling `actions.setSections(next)`, also clear `editingSection` if it pointed to the removed section, to avoid the right-side editor staying open on a ghost block.
 
-**10. Console & Network**
-- Capturar warnings (`forwardRef` do AdvancedModal/SettingsPanel já conhecido)
-- Erros 4xx/5xx em saves
-- Requisições duplicadas/N+1
+### Secondary cleanup (same file)
 
-### Entregável
+- The console warning `Function components cannot be given refs` originates from the `AlertDialog` portal interacting with `AlertDialogFooter`. It's caused by a stray `forwardRef` issue in the local `Btn` helper inside `PreviewRenderer.tsx` (`React.forwardRef<HTMLButtonElement, any>` rendering a function child without ref forwarding). Wrap properly or drop the `forwardRef` since the ref isn't used. Cosmetic but worth fixing while we're here.
 
-Relatório em **tabela markdown** com colunas:
-- **Área** • **O que testei** • **Resultado** • **Severidade** (🔴 quebrado / 🟡 parcial / 🟢 ok) • **Arquivo + linha suspeita** • **Correção sugerida**
+### Files touched
 
-Mais um **resumo executivo** no topo agrupando bugs por prioridade e estimando ordem de ataque.
+- `src/pages/dashboard/WebsiteEditor.tsx` — re-scope `registerActivePageActions` to the active preview page
+- `src/components/website-editor/PreviewRenderer.tsx` — minor: remove unused `forwardRef` on toolbar `Btn`
 
-### Ferramentas usadas
-- `browser--navigate_to_sandbox`, `observe`, `act`, `screenshot`, `read_console_logs`, `list_network_requests` (preview real, logado)
-- `code--view` para confirmar suspeitas no código
-- `supabase--read_query` para validar persistência no DB quando necessário
+### Verification after fix
 
-### Pré-requisitos
-- Você precisa estar **logado no preview** (https://id-preview--da311b7e-...lovable.app). Se eu cair em tela de login, paro e te aviso.
-- Vou tocar apenas no **seu próprio site** (sem ações destrutivas em outras contas).
-- Testes destrutivos (excluir página, esvaziar lixeira) eu **pulo** e marco como "não validado — destrutivo" a menos que você autorize.
-
-### Fora de escopo
-- Implementar correções nesta rodada (próximo passo, após você priorizar o relatório)
-- Reescrever blocos ou adicionar novos tipos
-- Mexer no site público (`/store/`)
-
-### Próximo passo após aprovação
-Você aprova → eu rodo a auditoria → entrego relatório → você marca prioridades → abro plano de correção por área.
+- Click a page in the sidebar → preview shows it
+- Hover a block in the canvas → click trash → confirm "Delete" → block disappears, toast with Undo appears, change persists on reload
+- Same for Duplicate, Move up/down, drag reorder, and "+ Add Section" directly from the canvas
 
