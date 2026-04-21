@@ -59,6 +59,36 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
   const t = COPY[lang];
 
   const [step, setStep] = useState<1 | 2 | null>(null);
+  const [fabRect, setFabRect] = useState<DOMRect | null>(null);
+
+  // Measure the FAB position whenever step 2 is active so the spotlight + tooltip
+  // anchor precisely to it, regardless of viewport size or layout changes.
+  useEffect(() => {
+    if (step !== 2) {
+      setFabRect(null);
+      return;
+    }
+    const measure = () => {
+      const el = document.querySelector<HTMLElement>(
+        '[data-onboarding-target="add-section-fab"]'
+      );
+      if (el) setFabRect(el.getBoundingClientRect());
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    const ro = new ResizeObserver(measure);
+    const target = document.querySelector('[data-onboarding-target="add-section-fab"]');
+    if (target) ro.observe(target);
+    // Re-measure once on next frame in case layout settles after mount
+    const raf = requestAnimationFrame(measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [step]);
   // Tracks whether we've previously seen the page in a "has sections" state.
   // When the user empties the page again, we reset the onboarding flag so the
   // 2-step tour replays from the beginning.
