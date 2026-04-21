@@ -181,6 +181,13 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
     </>
   );
 
+  // Only enforce a tall min-height when there's a background image to showcase.
+  // Without an image, let the inner padding define a natural, compact height
+  // so the hero doesn't create a large empty gap below a slider header.
+  const sectionClass = hasImage
+    ? "relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden"
+    : "relative w-full flex items-center justify-center overflow-hidden";
+
   if (c.editMode) {
     return (
       <EditableImage
@@ -190,7 +197,7 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
         folder="hero"
       >
         <section
-          className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden"
+          className={sectionClass}
           style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
         >
           {heroInner}
@@ -201,7 +208,7 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, acce
 
   return (
     <section
-      className="relative w-full min-h-[70vh] flex items-center justify-center overflow-hidden"
+      className={sectionClass}
       style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
     >
       {heroInner}
