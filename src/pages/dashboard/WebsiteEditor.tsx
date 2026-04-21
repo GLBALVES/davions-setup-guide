@@ -2013,6 +2013,37 @@ const PagesPanel = ({
     );
   }
 
+  // If a block is selected from the canvas (regardless of current sub-screen),
+  // show its settings panel directly in the sidebar.
+  if (selectedBlockIndex !== null) {
+    const targetPageId = editingSectionsPageId ?? activePage;
+    const targetPage = allPages.find((p) => p.id === targetPageId);
+    const sections = targetPage?.sections || [];
+    const section = sections[selectedBlockIndex];
+    if (targetPage && section) {
+      const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
+      return (
+        <BlockSettingsPanel
+          section={section}
+          settings={blockSettings}
+          onUpdate={(s) => {
+            const next = [...sections];
+            next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
+            findAndUpdate(targetPage.id, { sections: next });
+            onActiveSectionsChange(next);
+          }}
+          onUpdateProps={(newProps) => {
+            const next = [...sections];
+            next[selectedBlockIndex] = { ...section, props: newProps };
+            findAndUpdate(targetPage.id, { sections: next });
+            onActiveSectionsChange(next);
+          }}
+          onBack={() => onSelectBlock(null)}
+        />
+      );
+    }
+  }
+
   // If editing page sections (blocks)
   if (editingSectionsPageId) {
     const targetPage = allPages.find((p) => p.id === editingSectionsPageId);
