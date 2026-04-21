@@ -2412,25 +2412,35 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 </Select>
               </div>
 
-              {/* Logo Image */}
+              {/* Logo Image — accepts PNG/JPG/WEBP/SVG, up to 5MB, min 200px wide */}
               <BrandRow
                 label="Logo Image"
                 value={site?.logoUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_url: url || null })}
                 photographerId={photographerId}
                 folder="logo"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                maxSizeMB={5}
+                minWidth={200}
+                helperText="PNG, JPG, WEBP or SVG · ≤5MB · min 200px wide"
               />
 
-              {/* Alternative Logo */}
+              {/* Alternative Logo — same rules as primary logo */}
               <BrandRow
                 label="Alternative Logo"
                 value={(site as any)?.logoAltUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_alt_url: url || null })}
                 photographerId={photographerId}
                 folder="logo-alt"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                maxSizeMB={5}
+                minWidth={200}
+                helperText="Used on dark backgrounds · same format rules as Logo"
               />
 
-              {/* Favicon */}
+              {/* Favicon — strict square, small file, browser-safe formats only */}
               <BrandRow
                 label="Favicon"
                 value={(site as any)?.faviconUrl ?? ""}
@@ -2438,6 +2448,18 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 photographerId={photographerId}
                 folder="favicon"
                 rounded
+                allowedTypes={[
+                  "image/png",
+                  "image/svg+xml",
+                  "image/x-icon",
+                  "image/vnd.microsoft.icon",
+                ]}
+                allowedTypesLabel="PNG, SVG, ICO"
+                maxSizeMB={1}
+                requireSquare
+                minWidth={32}
+                maxWidth={512}
+                helperText="PNG, SVG or ICO · ≤1MB · square (32–512px)"
               />
 
               {/* Pixieset Badge */}
