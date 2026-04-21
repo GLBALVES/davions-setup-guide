@@ -1013,6 +1013,210 @@ const WebsiteSettings = () => {
                       </DialogContent>
                     </Dialog>
                   </section>
+                  {/* ── 8. Analytics ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <BarChart2 className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title={ws.analyticsTitle} description={ws.analyticsDesc} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FieldRow label={ws.gaIdLabel}>
+                        <Input value={googleAnalyticsId} onChange={(e) => setGoogleAnalyticsId(e.target.value)} placeholder="G-XXXXXXXXXX" className="h-9 text-sm font-mono font-light" />
+                      </FieldRow>
+                      <FieldRow label={ws.fbPixelLabel}>
+                        <Input value={facebookPixelId} onChange={(e) => setFacebookPixelId(e.target.value)} placeholder="123456789012345" className="h-9 text-sm font-mono font-light" />
+                      </FieldRow>
+                    </div>
+                  </section>
+
+                  {/* ── 10. Store URL ── */}
+                  <section className="flex flex-col gap-5">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SectionHeading title={ws.storeUrlTitle} description={ws.storeUrlDesc} />
+                    </div>
+                    <FieldRow label={ws.storeSlugLabel}>
+                       <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                         <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
+                           davions.com/store/
+                         </span>
+                         <input
+                           value={slugInput}
+                           onChange={(e) => { setSlugInput(e.target.value.toLowerCase().replace(/\s/g, "-")); setSlugError(null); }}
+                           placeholder={ws.storeSlugPlaceholder}
+                           className="flex-1 h-9 px-1 text-sm font-light bg-transparent outline-none text-foreground placeholder:text-muted-foreground/50"
+                         />
+                       </div>
+                       {slugError && (
+                         <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+                           <AlertCircle className="h-3 w-3" />{slugError}
+                         </p>
+                       )}
+                     </FieldRow>
+                      {storeSlug && (
+                        <StoreSharePanel url={`https://davions.com/store/${storeSlug}`} />
+                      )}
+                    <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                      {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveStoreUrl}
+                    </Button>
+                  </section>
+
+                  <Divider />
+
+                  {/* ── 11. Custom Domain ── */}
+                   <section className="flex flex-col gap-5">
+                     <div className="flex items-center gap-2">
+                       <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                       <SectionHeading title={ws.customDomainTitle} description={ws.customDomainDesc} />
+                     </div>
+
+                      {/* Current domain display or empty state */}
+                      {customDomain ? (
+                         <div className="flex flex-col gap-3">
+                           <StoreSharePanel url={`https://${customDomain}`} />
+                           {(() => {
+                            const DAVIONS_VPS_IP = import.meta.env.VITE_VPS_IP || "147.93.112.182";
+                            const parts = customDomain.split(".");
+                            const lastTwo = parts.slice(-2).join(".");
+                            const compoundTlds = ["com.br","net.br","org.br","edu.br","gov.br","co.uk","com.au","co.nz","com.ar","com.mx","com.co"];
+                            const isSubdomain = parts.length > (compoundTlds.includes(lastTwo) ? 3 : 2);
+                            const subName = isSubdomain ? parts[0] : null;
+                            const dnsRecords = isSubdomain
+                              ? [{ type: "A", name: subName!, value: DAVIONS_VPS_IP }]
+                              : [
+                                  { type: "A", name: "@",   value: DAVIONS_VPS_IP },
+                                  { type: "A", name: "www", value: DAVIONS_VPS_IP },
+                                ];
+                            return (
+                              <div className="flex flex-col gap-3">
+                                <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground">DNS Records</p>
+                                <div className="border border-border overflow-hidden">
+                                  <table className="w-full text-[11px]">
+                                    <thead>
+                                      <tr className="border-b border-border bg-muted/40">
+                                        <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Type</th>
+                                        <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Name</th>
+                                        <th className="text-left px-3 py-2.5 font-light text-muted-foreground tracking-wide">Value</th>
+                                        <th className="px-2 py-2.5 w-8" />
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {dnsRecords.map((r, i) => (
+                                        <DnsRow key={i} type={r.type} name={r.name} value={r.value} />
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                <RegistrarGuide domain={customDomain} vpsIp={DAVIONS_VPS_IP} />
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground">
+                          No custom domain connected yet. Click below to set one up with the step-by-step wizard.
+                        </p>
+                      )}
+
+                       {/* Domain Status Panel */}
+                       {customDomain && (
+                         <div className="flex flex-col gap-2">
+                           {(() => {
+                             const allOk = domainChecks.every((c) => c.status === "ok");
+                             const anyError = domainChecks.some((c) => c.status === "error");
+                             const anyChecking = domainChecks.some((c) => c.status === "checking");
+                             const allIdle = domainChecks.every((c) => c.status === "idle");
+                             if (allIdle) return null;
+                             if (anyChecking) return (
+                               <div className="flex items-center gap-2 px-3 py-2.5 border border-border bg-muted/20">
+                                 <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                                 <span className="text-[11px] text-muted-foreground">Running checks…</span>
+                               </div>
+                             );
+                             if (allOk) return (
+                               <div className="flex items-center gap-2 px-3 py-2.5 border border-primary/20 bg-primary/5">
+                                 <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                                 <span className="text-[11px] text-primary">Domain fully active — DNS propagated, SSL valid, routing correctly.</span>
+                               </div>
+                             );
+                             if (anyError) return (
+                               <div className="flex items-center gap-2 px-3 py-2.5 border border-destructive/20 bg-destructive/5">
+                                 <XCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                 <span className="text-[11px] text-destructive">One or more checks failed — review DNS records.</span>
+                               </div>
+                             );
+                             return (
+                               <div className="flex items-center gap-2 px-3 py-2.5 border border-border bg-muted/20">
+                                 <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                 <span className="text-[11px] text-muted-foreground">Some checks returned warnings. DNS may still be propagating.</span>
+                               </div>
+                             );
+                           })()}
+                           <div className="flex flex-col border border-border divide-y divide-border">
+                             {domainChecks.map((check, i) => {
+                               const icons: Record<string, React.ElementType> = { dns: Wifi, ssl: ShieldCheck, routing: Globe };
+                               return (
+                                 <motion.div key={check.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.2 }} className="flex items-start gap-3 px-3 py-3">
+                                   <div className="mt-0.5 shrink-0">
+                                     {check.status === "checking" && <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                                     {check.status === "ok"       && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                                     {check.status === "error"    && <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                                     {check.status === "warning"  && <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />}
+                                     {check.status === "idle"     && <Clock className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                                   </div>
+                                   <div className="flex-1 min-w-0">
+                                     <div className="flex items-center gap-2">
+                                       <span className="text-[11px] font-medium tracking-wide">{check.label}</span>
+                                       <span className={`text-[9px] tracking-wider uppercase font-medium px-1.5 py-0.5 rounded-sm ${check.status === "ok" ? "bg-primary/10 text-primary border border-primary/20" : check.status === "error" ? "bg-destructive/10 text-destructive border border-destructive/20" : check.status === "checking" ? "bg-muted text-muted-foreground animate-pulse" : check.status === "warning" ? "bg-secondary/40 text-secondary-foreground border border-secondary/30" : "bg-muted text-muted-foreground"}`}>
+                                         {check.status === "ok" ? "OK" : check.status === "error" ? "Failed" : check.status === "warning" ? "Warning" : check.status === "checking" ? "Checking…" : "Waiting"}
+                                       </span>
+                                     </div>
+                                     <p className="text-[10px] text-muted-foreground mt-0.5">{check.description}</p>
+                                     {check.detail && <p className={`text-[10px] mt-0.5 font-mono ${check.status === "error" ? "text-destructive" : check.status === "ok" ? "text-primary" : "text-muted-foreground"}`}>{check.detail}</p>}
+                                   </div>
+                                 </motion.div>
+                               );
+                             })}
+                           </div>
+                           <div className="flex items-center gap-3">
+                             <Button type="button" size="sm" variant="ghost" disabled={domainChecks.some((c) => c.status === "checking")} onClick={() => checkDomainConnectivity()} className="h-7 px-3 text-[11px] tracking-wider uppercase font-light shrink-0 gap-1.5">
+                               <RefreshCw className={`h-3 w-3 ${domainChecks.some((c) => c.status === "checking") ? "animate-spin" : ""}`} />
+                               {domainChecks.some((c) => c.status === "checking") ? "Checking…" : "Refresh Status"}
+                             </Button>
+                             {domainLastChecked && <span className="text-[10px] text-muted-foreground/50">Last checked: {domainLastChecked.toLocaleTimeString()}</span>}
+                           </div>
+                         </div>
+                       )}
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button type="button" onClick={() => setDomainSetupOpen(true)} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
+                          <Globe className="h-3.5 w-3.5" />
+                          {customDomain ? "Edit Domain Setup" : "Connect Domain"}
+                        </Button>
+                        {customDomain && (
+                          <Button onClick={handleRemoveDomain} disabled={removingDomain} size="sm" variant="ghost" className="gap-2 text-xs tracking-wider uppercase font-light w-fit text-destructive hover:text-destructive hover:bg-destructive/10">
+                            {removingDomain ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Removing…</> : <><Trash2 className="h-3.5 w-3.5" />Remove Domain</>}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Setup wizard modal */}
+                      <CustomDomainSetupModal
+                        open={domainSetupOpen}
+                        onOpenChange={setDomainSetupOpen}
+                        initialDomain={customDomain}
+                        onSaved={(saved) => {
+                          setCustomDomain(saved);
+                          setCustomDomainInput(saved);
+                          setDomainChecks((prev) => prev.map((c) => ({ ...c, status: "idle" as const, detail: undefined })));
+                          setDomainLastChecked(null);
+                          checkDomainConnectivity(saved);
+                        }}
+                      />
+                    </section>
+
+
 
                   {/* ── Save ── */}
                   <div className="flex items-center gap-3 pt-2 border-t border-border">
