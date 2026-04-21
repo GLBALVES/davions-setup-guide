@@ -55,8 +55,8 @@ interface PreviewRendererProps {
   onMoveBlock?: (from: number, to: number) => void;
   onDuplicateBlock?: (index: number) => void;
   onDeleteBlock?: (index: number) => void;
-  /** Called when the user clicks a "+ Add Section" divider in the canvas. */
-  onAddBlockAt?: (index: number) => void;
+  /** Called when the user clicks a "+ Add Section" divider in the canvas. When `type` is provided, insert that block directly (quick-add); otherwise open the full picker. */
+  onAddBlockAt?: (index: number, type?: import("./page-templates").SectionType) => void;
   /** Called with the new full ordered list when the user drags a block to a new position. */
   onReorderBlocks?: (next: PageSection[]) => void;
   accentColor?: string;
