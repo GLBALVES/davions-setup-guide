@@ -2794,6 +2794,8 @@ const WebsiteEditor = () => {
   const [site, setSite] = useState<PreviewSiteConfig | null>(null);
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
+  // Tracks the live save state for the auto-save indicator (Style → Logo & Branding etc.)
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState(0);
