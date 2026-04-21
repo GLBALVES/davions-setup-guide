@@ -3321,6 +3321,7 @@ const WebsiteEditor = () => {
         buttonSize: patch.button_size !== undefined ? patch.button_size : prev?.buttonSize,
         buttonHeight: patch.button_height !== undefined ? patch.button_height : prev?.buttonHeight,
         buttonWidth: patch.button_width !== undefined ? patch.button_width : prev?.buttonWidth,
+        buttonVariants: patch.button_variants !== undefined ? patch.button_variants : (prev as any)?.buttonVariants,
         displayName: prev?.displayName ?? displayName,
       };
       return next;
