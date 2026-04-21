@@ -13,6 +13,28 @@ interface ImageUploadFieldProps {
   className?: string;
   /** Aspect ratio class for the preview area */
   aspectClass?: string;
+  /**
+   * Validation options. All optional — when omitted, defaults preserve previous
+   * behavior (any image up to 10MB).
+   */
+  /** Allowed MIME types, e.g. ["image/png","image/svg+xml","image/x-icon"] */
+  allowedTypes?: string[];
+  /** Friendly label for allowed formats shown in error toasts (e.g. "PNG, SVG, ICO") */
+  allowedTypesLabel?: string;
+  /** Max file size in MB (default 10) */
+  maxSizeMB?: number;
+  /** Min width in pixels (validated against decoded image) */
+  minWidth?: number;
+  /** Min height in pixels */
+  minHeight?: number;
+  /** Max width in pixels */
+  maxWidth?: number;
+  /** Max height in pixels */
+  maxHeight?: number;
+  /** Require exact square (width === height) */
+  requireSquare?: boolean;
+  /** Helper text shown under the upload area */
+  helperText?: string;
 }
 
 const BUCKET = "site-assets";
@@ -24,24 +46,91 @@ export function ImageUploadField({
   folder = "blocks",
   className,
   aspectClass = "aspect-video",
+  allowedTypes,
+  allowedTypesLabel,
+  maxSizeMB = 10,
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
+  requireSquare,
+  helperText,
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  /** Decode the file to get intrinsic pixel dimensions (skipped for SVG). */
+  const readImageSize = (file: File): Promise<{ width: number; height: number } | null> =>
+    new Promise((resolve) => {
+      if (file.type === "image/svg+xml") return resolve(null);
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    });
+
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+
+    // Format validation
+    if (allowedTypes && allowedTypes.length > 0) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(
+          `Invalid format. Allowed: ${allowedTypesLabel || allowedTypes.join(", ")}`
+        );
+        return;
+      }
+    } else if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be smaller than 10MB");
+
+    // Size validation
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`Image must be smaller than ${maxSizeMB}MB`);
       return;
     }
+
     if (!photographerId) {
       toast.error("Not signed in");
       return;
+    }
+
+    // Dimension validation (skipped silently for SVG / non-decodable)
+    if (minWidth || minHeight || maxWidth || maxHeight || requireSquare) {
+      const dims = await readImageSize(file);
+      if (dims) {
+        if (requireSquare && dims.width !== dims.height) {
+          toast.error(
+            `Image must be square (got ${dims.width}×${dims.height}px)`
+          );
+          return;
+        }
+        if (minWidth && dims.width < minWidth) {
+          toast.error(`Image width must be at least ${minWidth}px (got ${dims.width}px)`);
+          return;
+        }
+        if (minHeight && dims.height < minHeight) {
+          toast.error(`Image height must be at least ${minHeight}px (got ${dims.height}px)`);
+          return;
+        }
+        if (maxWidth && dims.width > maxWidth) {
+          toast.error(`Image width must be at most ${maxWidth}px (got ${dims.width}px)`);
+          return;
+        }
+        if (maxHeight && dims.height > maxHeight) {
+          toast.error(`Image height must be at most ${maxHeight}px (got ${dims.height}px)`);
+          return;
+        }
+      }
     }
 
     setUploading(true);
@@ -69,6 +158,8 @@ export function ImageUploadField({
     e.preventDefault();
     handleFiles(e.dataTransfer.files);
   };
+
+  const acceptAttr = allowedTypes && allowedTypes.length > 0 ? allowedTypes.join(",") : "image/*";
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -119,10 +210,13 @@ export function ImageUploadField({
           </span>
         </button>
       )}
+      {helperText && (
+        <p className="text-[10px] text-muted-foreground leading-tight">{helperText}</p>
+      )}
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={acceptAttr}
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
