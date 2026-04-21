@@ -51,6 +51,11 @@ export interface PreviewSiteConfig {
   buttonSize?: "small" | "medium" | "large" | "custom" | null;
   buttonHeight?: number | null;
   buttonWidth?: number | null;
+  /** Per-variant overrides (Primary / Secondary) configured in Style → Buttons */
+  buttonVariants?: {
+    primary?: { style?: "solid" | "outline" | "underline"; shape?: "square" | "rounded" | "pill"; bg?: string; fg?: string };
+    secondary?: { style?: "solid" | "outline" | "underline"; shape?: "square" | "rounded" | "pill"; bg?: string; fg?: string };
+  } | null;
 }
 
 export interface PreviewNavLink {
