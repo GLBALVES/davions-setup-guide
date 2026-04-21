@@ -14,6 +14,7 @@ interface RawPage {
   is_visible: boolean;
   sections_order: unknown;
   page_content: unknown;
+  header_config?: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -122,6 +123,7 @@ const SiteSubPage = () => {
       subPageData={pageContent}
       subPageTitle={page.title}
       subPageSections={sections}
+      pageHeaderConfig={(page.header_config as any) ?? null}
     />
   );
 };

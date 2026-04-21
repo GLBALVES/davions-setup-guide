@@ -36,6 +36,7 @@ const StorePage = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [homeSections, setHomeSections] = useState<string[] | null>(null);
   const [pageSections, setPageSections] = useState<PageSection[]>([]);
+  const [homeHeaderConfig, setHomeHeaderConfig] = useState<unknown | null>(null);
   const [extraNavLinks, setExtraNavLinks] = useState<Array<{ label: string; href: string }>>([]);
   const [emptyState, setEmptyState] = useState<{ title: string; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,6 +136,7 @@ const StorePage = () => {
       setExtraNavLinks(visibleNavLinks);
       setHomeSections(orderedSections);
       setPageSections(fullSections);
+      setHomeHeaderConfig((homePage?.header_config as unknown) ?? null);
       setEmptyState(
         homePage
           ? null
@@ -201,7 +203,7 @@ const StorePage = () => {
       extraNavLinks={cleanPreview ? [] : extraNavLinks}
       visibleSections={cleanPreview ? null : homeSections}
       pageSections={cleanPreview ? [] : pageSections}
-      pageHeaderConfig={cleanPreview ? null : ((homePage as RawPage | null)?.header_config as any) ?? null}
+      pageHeaderConfig={cleanPreview ? null : (homeHeaderConfig as any) ?? null}
       previewTemplate={previewTemplate}
     />
   );
