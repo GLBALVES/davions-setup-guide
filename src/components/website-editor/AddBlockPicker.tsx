@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SectionType } from "./page-templates";
+import BlockThumbnail from "./BlockThumbnail";
 
 // ── Block categories ──────────────────────────────────────────────────────────
 
@@ -218,17 +219,22 @@ export const AddBlockPicker = ({ open, onOpenChange, onSelect }: AddBlockPickerP
                     <button
                       key={block.type}
                       onClick={() => { onSelect(block.type); handleClose(false); }}
-                      className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors text-center group"
+                      className="flex flex-col gap-2 p-2.5 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors text-left group"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-muted/60 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-foreground">{block.label}</p>
-                        <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{block.description}</p>
-                        {activeCategory === "all" && (
-                          <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider mt-1">{(block as any)._cat}</p>
-                        )}
+                      {/* Visual wireframe preview */}
+                      <BlockThumbnail type={block.type} className="group-hover:bg-primary/5 transition-colors" />
+
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 rounded-md bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                          <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{block.label}</p>
+                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{block.description}</p>
+                          {activeCategory === "all" && (
+                            <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider mt-1">{(block as any)._cat}</p>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
