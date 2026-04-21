@@ -585,8 +585,10 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
 
 // ─── CTA ────────────────────────────────────────────────────────────────────
 
-function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
+function CtaBlock({ headline, buttonText, buttonLink, buttonVariant, accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
+  const btn = siteButtonProps(variant);
   return (
     <section className="py-14 sm:py-20 px-5 sm:px-6 bg-muted/20">
       <div className="max-w-2xl mx-auto text-center">
@@ -601,8 +603,7 @@ function CtaBlock({ headline, buttonText, buttonLink, accentColor, ctx }: any) {
         <a
           href={c.editMode ? undefined : (buttonLink || "#")}
           onClick={(e) => c.editMode && e.preventDefault()}
-          style={{ borderColor: accentColor, color: accentColor }}
-          className="inline-block px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+          {...btn}
         >
           <EditableText
             as="span"
