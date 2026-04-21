@@ -3153,6 +3153,10 @@ const WebsiteEditor = () => {
           buttonSize: raw.button_size || "medium",
           buttonHeight: raw.button_height ?? 14,
           buttonWidth: raw.button_width ?? 30,
+          buttonVariants: raw.button_variants || {
+            primary: { style: "solid", shape: "square", bg: "#000000", fg: "#ffffff" },
+            secondary: { style: "outline", shape: "square", bg: "#ffffff", fg: "#000000" },
+          },
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
       } else {
