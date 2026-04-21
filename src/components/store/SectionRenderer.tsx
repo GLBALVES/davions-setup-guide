@@ -1082,12 +1082,20 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
 
 // ─── Instagram Feed (placeholder) ───────────────────────────────────────────
 
-function InstagramFeedBlock({ count = 9, columns = 3 }: any) {
+function InstagramFeedBlock({ count = 9, columns = 3, username }: any) {
+  const cols = Number(columns) || 3;
+  const gridCls =
+    cols === 6 ? "grid-cols-3 sm:grid-cols-6"
+    : cols === 4 ? "grid-cols-2 sm:grid-cols-4"
+    : "grid-cols-2 sm:grid-cols-3";
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Instagram</h2>
-        <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2`}>
+        <h2 className="text-2xl font-extralight tracking-wide text-center mb-2 text-foreground">Instagram</h2>
+        {username && (
+          <p className="text-center text-xs text-muted-foreground mb-6">@{username}</p>
+        )}
+        <div className={`grid ${gridCls} gap-2`}>
           {Array.from({ length: count }).map((_, i) => (
             <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
               <Camera className="h-5 w-5 text-muted-foreground/20" />
@@ -1102,15 +1110,25 @@ function InstagramFeedBlock({ count = 9, columns = 3 }: any) {
 // ─── Social Links ───────────────────────────────────────────────────────────
 
 function SocialLinksBlock({ links = [] }: any) {
+  const labelFor = (l: any) =>
+    l.platform
+      ? l.platform.charAt(0).toUpperCase() + l.platform.slice(1)
+      : l.label || l.url;
   return (
     <section className="py-12 px-6">
-      <div className="max-w-xl mx-auto flex items-center justify-center gap-6">
+      <div className="max-w-xl mx-auto flex items-center justify-center gap-6 flex-wrap">
         {links.length === 0 ? (
           <p className="text-sm text-muted-foreground font-light">No social links configured</p>
         ) : (
           links.map((link: any, i: number) => (
-            <a key={i} href={link.url || "#"} target="_blank" rel="noopener noreferrer" className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors">
-              {link.label || link.url}
+            <a
+              key={i}
+              href={link.url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors capitalize"
+            >
+              {labelFor(link)}
             </a>
           ))
         )}
@@ -1142,14 +1160,22 @@ function EmbedBlock({ code, height = 400 }: any) {
 // ─── Logo Strip ─────────────────────────────────────────────────────────────
 
 function LogoStripBlock({ title, logos = [] }: any) {
+  const normalize = (l: any) =>
+    typeof l === "string" ? { url: l, alt: "" } : { url: l?.url ?? "", alt: l?.alt ?? "" };
+  const items = (logos || []).map(normalize).filter((l: any) => l.url);
   return (
     <section className="py-12 px-6 border-y border-border">
       <div className="max-w-5xl mx-auto text-center">
         {title && <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-6">{title}</p>}
-        {logos.length > 0 ? (
+        {items.length > 0 ? (
           <div className="flex items-center justify-center gap-10 flex-wrap">
-            {logos.map((logo: string, i: number) => (
-              <img key={i} src={logo} alt="" className="h-8 grayscale opacity-50 hover:opacity-100 hover:grayscale-0 transition-all" />
+            {items.map((logo: any, i: number) => (
+              <img
+                key={i}
+                src={logo.url}
+                alt={logo.alt || ""}
+                className="h-8 grayscale opacity-50 hover:opacity-100 hover:grayscale-0 transition-all"
+              />
             ))}
           </div>
         ) : (
@@ -1162,11 +1188,11 @@ function LogoStripBlock({ title, logos = [] }: any) {
 
 // ─── Map ────────────────────────────────────────────────────────────────────
 
-function MapBlock({ address }: any) {
+function MapBlock({ address, height = 400 }: any) {
   if (!address) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
-        <div className="max-w-4xl mx-auto aspect-[16/9] bg-muted/20 rounded flex items-center justify-center">
+        <div className="max-w-4xl mx-auto bg-muted/20 rounded flex items-center justify-center" style={{ height }}>
           <MapPin className="h-8 w-8 text-muted-foreground/20" />
         </div>
       </section>
@@ -1176,7 +1202,7 @@ function MapBlock({ address }: any) {
   const encodedAddress = encodeURIComponent(address);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-4xl mx-auto aspect-[16/9] overflow-hidden rounded">
+      <div className="max-w-4xl mx-auto overflow-hidden rounded" style={{ height }}>
         <iframe
           src={`https://maps.google.com/maps?q=${encodedAddress}&output=embed`}
           className="w-full h-full border-0"
