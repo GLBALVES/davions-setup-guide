@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, MousePointerClick, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -59,14 +59,27 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
   const t = COPY[lang];
 
   const [step, setStep] = useState<1 | 2 | null>(null);
+  // Tracks whether we've previously seen the page in a "has sections" state.
+  // When the user empties the page again, we reset the onboarding flag so the
+  // 2-step tour replays from the beginning.
+  const hadSectionsRef = useRef(false);
 
-  // Initialize from localStorage on mount / when becoming active
+  // Initialize from localStorage on mount / when becoming active.
+  // If the page just transitioned from "has sections" → empty, clear the
+  // completed flag so the tour shows again.
   useEffect(() => {
     if (!active) {
+      // Page is non-empty (or editor closed) → remember it for next transition
+      hadSectionsRef.current = true;
       setStep(null);
       return;
     }
     try {
+      // Coming back to an empty page after having sections: reset progress
+      if (hadSectionsRef.current) {
+        localStorage.removeItem(STORAGE_KEY);
+        hadSectionsRef.current = false;
+      }
       const completed = localStorage.getItem(STORAGE_KEY) === "1";
       if (!completed) setStep(1);
     } catch {
