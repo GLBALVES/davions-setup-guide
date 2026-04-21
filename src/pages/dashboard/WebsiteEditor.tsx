@@ -2890,30 +2890,69 @@ const WebsiteEditor = () => {
     if (el.href !== href) el.href = href;
   }, [site?.headingFont, site?.bodyFont]);
 
-  const updateSite = useCallback(async (patch: Record<string, any>) => {
+  // Debounced batch of pending DB writes — coalesces rapid edits (e.g. typing in
+  // the Logo Text field) into a single upsert so we don't hammer the database.
+  const pendingPatchRef = useRef<Record<string, any>>({});
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevSiteRef = useRef<PreviewSiteConfig | null>(null);
+
+  const flushPatch = useCallback(async () => {
     if (!user) return;
-    // Optimistic local update
-    setSite((prev) => ({
-      ...(prev || {}),
-      ...patch, // merge all raw DB keys (snake_case) so flags like show_blog reflect immediately
-      logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
-      logoAltUrl: patch.logo_alt_url !== undefined ? patch.logo_alt_url : prev?.logoAltUrl,
-      faviconUrl: patch.favicon_url !== undefined ? patch.favicon_url : prev?.faviconUrl,
-      logoText: patch.logo_text !== undefined ? patch.logo_text : prev?.logoText,
-      logoSize: patch.logo_size !== undefined ? patch.logo_size : prev?.logoSize,
-      hideBranding: patch.hide_branding !== undefined ? patch.hide_branding : prev?.hideBranding,
-      accentColor: patch.accent_color !== undefined ? patch.accent_color : prev?.accentColor,
-      headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
-      footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
-      footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
-      headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
-      bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
-      displayName: prev?.displayName ?? displayName,
-    }));
-    await supabase
+    const patch = pendingPatchRef.current;
+    pendingPatchRef.current = {};
+    saveTimerRef.current = null;
+    if (Object.keys(patch).length === 0) return;
+    setSaveStatus("saving");
+    const { error } = await supabase
       .from("photographer_site")
       .upsert({ photographer_id: user.id, ...patch } as any, { onConflict: "photographer_id" });
-  }, [user, displayName]);
+    if (error) {
+      // Roll back optimistic update on failure
+      console.error("Failed to save site changes", error);
+      if (prevSiteRef.current) setSite(prevSiteRef.current);
+      setSaveStatus("error");
+      toast.error("Couldn't save changes. Please try again.");
+    } else {
+      setSaveStatus("saved");
+      // Auto-clear the "Saved" badge after a short delay
+      window.setTimeout(() => setSaveStatus((s) => (s === "saved" ? "idle" : s)), 1500);
+    }
+  }, [user]);
+
+  const updateSite = useCallback((patch: Record<string, any>) => {
+    if (!user) return;
+    // Snapshot for rollback (only first edit in a debounced burst)
+    setSite((prev) => {
+      if (!prevSiteRef.current) prevSiteRef.current = prev;
+      const next = {
+        ...(prev || {}),
+        ...patch, // merge all raw DB keys (snake_case) so flags like show_blog reflect immediately
+        logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
+        logoAltUrl: patch.logo_alt_url !== undefined ? patch.logo_alt_url : prev?.logoAltUrl,
+        faviconUrl: patch.favicon_url !== undefined ? patch.favicon_url : prev?.faviconUrl,
+        logoText: patch.logo_text !== undefined ? patch.logo_text : prev?.logoText,
+        logoSize: patch.logo_size !== undefined ? patch.logo_size : prev?.logoSize,
+        hideBranding: patch.hide_branding !== undefined ? patch.hide_branding : prev?.hideBranding,
+        accentColor: patch.accent_color !== undefined ? patch.accent_color : prev?.accentColor,
+        headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
+        footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
+        footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
+        headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
+        bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
+        displayName: prev?.displayName ?? displayName,
+      };
+      return next;
+    });
+
+    // Coalesce keys (last-write-wins) and debounce the actual upsert
+    pendingPatchRef.current = { ...pendingPatchRef.current, ...patch };
+    setSaveStatus("saving");
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      prevSiteRef.current = null; // burst settled, drop snapshot
+      flushPatch();
+    }, 500);
+  }, [user, displayName, flushPatch]);
 
   const handleNavLinksChange = useCallback((links: PreviewNavLink[]) => {
     setNavLinks(links);
