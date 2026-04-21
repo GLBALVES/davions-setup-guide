@@ -28,6 +28,13 @@ const VIEWPORT_WIDTHS: Record<Viewport, string> = {
 
 export interface PreviewSiteConfig {
   logoUrl?: string | null;
+  logoAltUrl?: string | null;
+  faviconUrl?: string | null;
+  logoText?: string | null;
+  /** "small" | "medium" | "large" — controls logo size in the navbar */
+  logoSize?: string | null;
+  /** When true, hides the "Made with Davions" badge on the public site */
+  hideBranding?: boolean | null;
   displayName?: string;
   accentColor?: string;
   headerBg?: string | null;
@@ -92,7 +99,16 @@ function PreviewNav({
 }) {
   const bg = site?.headerBg ?? undefined;
   const fg = site?.headerTextColor ?? undefined;
-  const displayName = site?.displayName || "Studio";
+  const logoText = site?.logoText || site?.displayName || "Studio";
+  const logoSize = site?.logoSize || "medium";
+  const logoImgClass =
+    logoSize === "small" ? "h-6 w-auto object-contain"
+    : logoSize === "large" ? "h-12 w-auto object-contain"
+    : "h-8 w-auto object-contain";
+  const logoTextClass =
+    logoSize === "small" ? "text-xs font-light tracking-[0.25em] uppercase"
+    : logoSize === "large" ? "text-base font-light tracking-[0.25em] uppercase"
+    : "text-sm font-light tracking-[0.25em] uppercase";
 
   return (
     <header
@@ -102,10 +118,10 @@ function PreviewNav({
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
           {site?.logoUrl ? (
-            <img src={site.logoUrl} alt={displayName} className="h-8 w-auto object-contain" />
+            <img src={site.logoUrl} alt={logoText} className={logoImgClass} />
           ) : (
-            <span className="text-sm font-light tracking-[0.25em] uppercase" style={{ color: fg ?? undefined }}>
-              {displayName}
+            <span className={logoTextClass} style={{ color: fg ?? undefined }}>
+              {logoText}
             </span>
           )}
         </div>
