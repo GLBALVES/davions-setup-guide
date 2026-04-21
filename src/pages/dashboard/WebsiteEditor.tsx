@@ -2728,6 +2728,15 @@ const BrandRow = ({
   photographerId,
   folder,
   rounded,
+  allowedTypes,
+  allowedTypesLabel,
+  maxSizeMB,
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
+  requireSquare,
+  helperText,
 }: {
   label: string;
   value: string;
@@ -2735,17 +2744,37 @@ const BrandRow = ({
   photographerId: string | null;
   folder: string;
   rounded?: boolean;
+  allowedTypes?: string[];
+  allowedTypesLabel?: string;
+  maxSizeMB?: number;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  requireSquare?: boolean;
+  helperText?: string;
 }) => (
-  <div className="flex items-center justify-between gap-3 py-1">
-    <label className="text-sm font-medium text-foreground">{label}</label>
-    <div className={cn("w-20 shrink-0", rounded && "rounded-full overflow-hidden")}>
-      <ImageUploadField
-        value={value}
-        onChange={onChange}
-        photographerId={photographerId}
-        folder={folder}
-        aspectClass="aspect-square"
-      />
+  <div className="flex items-start justify-between gap-3 py-1">
+    <label className="text-sm font-medium text-foreground pt-1">{label}</label>
+    <div className="w-32 shrink-0">
+      <div className={cn(rounded && "rounded-full overflow-hidden")}>
+        <ImageUploadField
+          value={value}
+          onChange={onChange}
+          photographerId={photographerId}
+          folder={folder}
+          aspectClass="aspect-square"
+          allowedTypes={allowedTypes}
+          allowedTypesLabel={allowedTypesLabel}
+          maxSizeMB={maxSizeMB}
+          minWidth={minWidth}
+          minHeight={minHeight}
+          maxWidth={maxWidth}
+          maxHeight={maxHeight}
+          requireSquare={requireSquare}
+          helperText={helperText}
+        />
+      </div>
     </div>
   </div>
 );
