@@ -162,6 +162,12 @@ export interface SiteConfig {
   contact_text_color?: string | null;
   testimonials_bg_color?: string | null;
   testimonials_text_color?: string | null;
+  /** Global button design tokens */
+  button_style?: "solid" | "outline" | "underline" | null;
+  button_shape?: "square" | "rounded" | "pill" | null;
+  button_size?: "small" | "medium" | "large" | "custom" | null;
+  button_height?: number | null;
+  button_width?: number | null;
 }
 
 /** Helper: returns inline style for a section's custom bg/text colors */

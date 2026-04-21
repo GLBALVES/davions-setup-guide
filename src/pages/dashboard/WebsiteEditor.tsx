@@ -3090,6 +3090,27 @@ const WebsiteEditor = () => {
     if (el.href !== href) el.href = href;
   }, [site?.headingFont, site?.bodyFont]);
 
+  // Inject button design tokens (style/shape/size/dimensions) as CSS variables.
+  useEffect(() => {
+    const s: any = site ?? {};
+    const shape = s.buttonShape || "square";
+    const size = s.buttonSize || "medium";
+    const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
+    let height = "40px";
+    let padX = "20px";
+    if (size === "small") { height = "32px"; padX = "14px"; }
+    else if (size === "large") { height = "52px"; padX = "28px"; }
+    else if (size === "custom") {
+      height = `${s.buttonHeight ?? 14}px`;
+      padX = `${s.buttonWidth ?? 30}px`;
+    }
+    const root = document.documentElement;
+    root.style.setProperty("--site-btn-radius", radius);
+    root.style.setProperty("--site-btn-height", height);
+    root.style.setProperty("--site-btn-pad-x", padX);
+    root.style.setProperty("--site-btn-style", s.buttonStyle || "solid");
+  }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth]);
+
   // Debounced batch of pending DB writes — coalesces rapid edits (e.g. typing in
   // the Logo Text field) into a single upsert so we don't hammer the database.
   const pendingPatchRef = useRef<Record<string, any>>({});
