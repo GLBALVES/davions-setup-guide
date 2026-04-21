@@ -3240,6 +3240,7 @@ const WebsiteEditor = () => {
     button_size: "buttonSize",
     button_height: "buttonHeight",
     button_width: "buttonWidth",
+    button_variants: "buttonVariants",
   };
 
   const flushPatch = useCallback(async () => {
