@@ -1024,7 +1024,13 @@ const PageSectionsPanel = ({
           </div>
         )}
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
           <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             {sections.map((section, idx) => (
               <div key={section.id}>
@@ -1044,6 +1050,22 @@ const PageSectionsPanel = ({
               </div>
             ))}
           </SortableContext>
+          <DragOverlay dropAnimation={null}>
+            {activeDragSection ? (
+              <div className="flex items-center gap-2 px-2 py-2 rounded-md bg-background border border-primary shadow-xl ring-2 ring-primary/20 cursor-grabbing">
+                <GripVertical className="h-3.5 w-3.5 text-primary" />
+                <div className="w-7 h-7 rounded bg-primary/15 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-medium text-primary uppercase">
+                    {activeDragSection.type.slice(0, 3)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">{activeDragSection.label}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{activeDragSection.type}</p>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </div>
 
