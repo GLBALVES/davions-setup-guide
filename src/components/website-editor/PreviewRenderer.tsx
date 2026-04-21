@@ -305,19 +305,21 @@ function SortableBlock({
       onClick={(e) => { e.stopPropagation(); onSelect(); }}
       className={cn(
         "relative group/block transition-all",
-        isSelected
-          ? "ring-2 ring-primary ring-inset"
-          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+        isDragging
+          ? "ring-2 ring-primary border-2 border-dashed border-primary/60 bg-primary/5"
+          : isSelected
+            ? "ring-2 ring-primary ring-inset"
+            : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
       )}
     >
       {/* Block label badge */}
       <div className={cn(
         "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
-        isSelected
+        isSelected || isDragging
           ? "opacity-100 bg-primary text-primary-foreground"
           : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
       )}>
-        {section.label}
+        {section.label}{isDragging && " — moving…"}
       </div>
 
       {/* Drag handle (left side, edit mode only) */}
@@ -328,7 +330,7 @@ function SortableBlock({
           onClick={(e) => e.stopPropagation()}
           className={cn(
             "absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-10 rounded bg-foreground/90 text-background flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing touch-none transition-opacity",
-            isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+            isSelected || isDragging ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
           )}
           title="Drag to reorder"
         >
@@ -336,23 +338,27 @@ function SortableBlock({
         </button>
       )}
 
-      {/* Floating toolbar (selected or hover) */}
-      <div className={cn(
-        "transition-opacity",
-        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
-      )}>
-        <FloatingBlockToolbar
-          isFirst={idx === 0}
-          isLast={isLast}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          onDuplicate={onDuplicate}
-          onSettings={onSelect}
-          onDelete={onDelete}
-        />
-      </div>
+      {/* Floating toolbar (selected or hover) — hidden during drag */}
+      {!isDragging && (
+        <div className={cn(
+          "transition-opacity",
+          isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+        )}>
+          <FloatingBlockToolbar
+            isFirst={idx === 0}
+            isLast={isLast}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onDuplicate={onDuplicate}
+            onSettings={onSelect}
+            onDelete={onDelete}
+          />
+        </div>
+      )}
 
-      {children}
+      <div className={cn(isDragging && "opacity-30 pointer-events-none")}>
+        {children}
+      </div>
     </div>
   );
 }
