@@ -494,6 +494,7 @@ export default function PreviewRenderer({
           >
             <button
               type="button"
+              data-onboarding-target="add-section-fab"
               className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
               title={
                 sections.length === 0
