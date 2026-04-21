@@ -61,10 +61,6 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
     className: `site-btn site-btn-${v}`,
   };
 }
-    },
-    className: `site-btn site-btn-${v}`,
-  };
-}
 
 // ─── Block Button schema ────────────────────────────────────────────────────
 // Multi-button per item with backwards-compatible fallback to legacy fields
