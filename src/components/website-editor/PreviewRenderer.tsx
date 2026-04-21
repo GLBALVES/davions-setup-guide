@@ -397,6 +397,40 @@ export default function PreviewRenderer({
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const activeDragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
 
+  // Track which block is closest to the viewport center to use as the
+  // insertion target for the floating "Add section" button.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const blockRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [nearestBlockIdx, setNearestBlockIdx] = useState<number | null>(null);
+
+  const recomputeNearest = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container || sections.length === 0) {
+      setNearestBlockIdx(null);
+      return;
+    }
+    const centerY = container.getBoundingClientRect().top + container.clientHeight / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    blockRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const blockCenter = r.top + r.height / 2;
+      const d = Math.abs(blockCenter - centerY);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    setNearestBlockIdx(bestIdx);
+  }, [sections.length]);
+
+  useEffect(() => {
+    recomputeNearest();
+  }, [sections, recomputeNearest]);
+
+  // Insertion index for the floating button: just after the nearest block.
+  const fabInsertIndex = nearestBlockIdx !== null
+    ? Math.min(nearestBlockIdx + 1, sections.length)
+    : sections.length;
+
   const handleDragStart = (e: DragStartEvent) => setActiveDragId(String(e.active.id));
   const handleDragCancel = () => setActiveDragId(null);
   const handleDragEnd = (e: DragEndEvent) => {
