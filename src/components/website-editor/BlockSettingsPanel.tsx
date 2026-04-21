@@ -540,8 +540,8 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void, 
     case "video": return <VideoContentEditor props={props} onChange={onChange} />;
     case "gallery-grid":
     case "gallery-masonry": return <GalleryContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
-    case "slideshow":
-    case "carousel": return <SlideshowContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
+    case "slideshow": return <SlideshowContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
+    case "carousel": return <SlideshowContentEditor props={props} onChange={onChange} photographerId={photographerId} isCarousel />;
     case "social-links": return <SocialLinksContentEditor props={props} onChange={onChange} />;
     case "logo-strip": return <LogoStripContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "faq-accordion": return <FaqContentEditor props={props} onChange={onChange} />;
