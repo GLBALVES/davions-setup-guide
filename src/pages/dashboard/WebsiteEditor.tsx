@@ -2644,6 +2644,34 @@ const ColorRow = ({ label, value, onChange }: { label: string; value: string; on
   </div>
 );
 
+// Quick preset card used in Logo & Branding sub-panel.
+const PresetButton = ({
+  label,
+  description,
+  active,
+  onClick,
+}: {
+  label: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "text-left rounded-md border px-3 py-2.5 transition-colors",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
+      active
+        ? "border-foreground bg-foreground/5"
+        : "border-border hover:border-foreground/40 hover:bg-muted/40"
+    )}
+  >
+    <div className="text-xs font-medium text-foreground">{label}</div>
+    <div className="text-[10px] text-muted-foreground mt-0.5">{description}</div>
+  </button>
+);
+
 const ComingSoon = ({ title, description }: { title: string; description: string }) => (
   <div className="rounded-md border border-dashed border-border p-6 text-center">
     <p className="text-sm font-medium text-foreground">{title}</p>
