@@ -127,6 +127,58 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
   // Closing step 1 (X or backdrop) auto-advances to step 2 instead of dismissing
   const closeStep1 = () => setStep(2);
 
+  // Refs for focus management (autofocus + focus-trap fallback + restore)
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const primaryBtnRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  // Save/restore focus on open/close
+  useEffect(() => {
+    if (step !== null) {
+      previouslyFocusedRef.current = (document.activeElement as HTMLElement) ?? null;
+    } else if (previouslyFocusedRef.current) {
+      try { previouslyFocusedRef.current.focus(); } catch {}
+      previouslyFocusedRef.current = null;
+    }
+  }, [step]);
+
+  // Autofocus the primary action when a step renders
+  useEffect(() => {
+    if (step === null) return;
+    const id = requestAnimationFrame(() => primaryBtnRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [step]);
+
+  // Global Escape to dismiss + simple Tab focus trap inside the dialog
+  useEffect(() => {
+    if (step === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finish();
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && activeEl === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && activeEl === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [step]);
+
   if (!active || step === null) return null;
 
   return createPortal(
