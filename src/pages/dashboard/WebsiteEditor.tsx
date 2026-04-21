@@ -3165,6 +3165,12 @@ const WebsiteEditor = () => {
           <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
         </div>
 
+        {/* Simulated browser tab — shows favicon + title in real time */}
+        <BrowserTabBar
+          faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
+          title={(site as any)?.logoText || site?.displayName || "Studio"}
+        />
+
         <div className="flex-1 min-h-0">
           <PreviewRenderer
             sections={activePageSections}
