@@ -439,7 +439,19 @@ export default function PreviewRenderer({
       </div>
 
       {/* Preview container */}
-      <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4">
+      <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative">
+        {/* Floating Add Section button — visible when page is empty */}
+        {editMode && onAddBlockAt && sections.length === 0 && (
+          <button
+            type="button"
+            onClick={() => onAddBlockAt(0)}
+            className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
+            title="Add section"
+          >
+            <Plus className="h-4 w-4" />
+            Add section
+          </button>
+        )}
         <div
           className={cn(
             "bg-background transition-all duration-300 min-h-full shadow-lg",
