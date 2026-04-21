@@ -3328,10 +3328,15 @@ const WebsiteEditor = () => {
     const radiusFor = (sh?: string) => sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
     (["primary", "secondary"] as const).forEach((key) => {
       const v = variants[key] || {};
+      const styleMode = v.style || (key === "primary" ? "solid" : "outline");
       root.style.setProperty(`--site-btn-${key}-bg`, v.bg || (key === "primary" ? "#000000" : "#ffffff"));
       root.style.setProperty(`--site-btn-${key}-fg`, v.fg || (key === "primary" ? "#ffffff" : "#000000"));
       root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
-      root.style.setProperty(`--site-btn-${key}-style`, v.style || (key === "primary" ? "solid" : "outline"));
+      root.style.setProperty(`--site-btn-${key}-style`, styleMode);
+      // Mirror style mode as a data attribute on <html> so CSS rules can
+      // react instantly to Solid/Outline/Underline changes without React
+      // having to re-render every block.
+      root.setAttribute(`data-site-btn-${key}-style`, styleMode);
     });
   }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth, site?.buttonVariants]);
 

@@ -53,7 +53,12 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
       backgroundColor: bgVar,
       color: fgVar,
       borderColor: bgVar,
-      borderRadius: `var(--site-btn-${v}-radius, 2px)`,
+      // Per-variant shape wins; falls back to global default shape token.
+      borderRadius: `var(--site-btn-${v}-radius, var(--site-btn-radius, 2px))`,
+      // Global size tokens — sync from Style → Buttons → Size.
+      height: "var(--site-btn-height, auto)",
+      paddingLeft: "var(--site-btn-pad-x, 1.5rem)",
+      paddingRight: "var(--site-btn-pad-x, 1.5rem)",
     },
     className: `site-btn site-btn-${v}`,
     "data-style": mode,
