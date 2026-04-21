@@ -984,12 +984,6 @@ const PageSectionsPanel = ({
     );
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const activeDragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
 
   const handleDragStart = (e: DragStartEvent) => setActiveDragId(String(e.active.id));
