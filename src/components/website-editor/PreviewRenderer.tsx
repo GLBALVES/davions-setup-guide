@@ -643,6 +643,21 @@ export default function PreviewRenderer({
                           onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
                           onDuplicate={() => onDuplicateBlock?.(idx)}
                           onDelete={() => onDeleteBlock?.(idx)}
+                          hidden={!!(section.props as any)?.hidden}
+                          onToggleVisibility={() => {
+                            const next = !(section.props as any)?.hidden;
+                            onPropChange?.(section.id, "hidden", next);
+                            toast.success(next ? "Section hidden on public site" : "Section visible on public site");
+                          }}
+                          onCopyAnchor={async () => {
+                            const anchor = `#${section.id}`;
+                            try {
+                              await navigator.clipboard.writeText(anchor);
+                              toast.success(`Copied ${anchor}`);
+                            } catch {
+                              toast.error("Could not copy link");
+                            }
+                          }}
                         >
                           <SectionRenderer
                             sections={[section]}
