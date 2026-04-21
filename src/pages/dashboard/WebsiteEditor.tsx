@@ -983,7 +983,12 @@ const PageSectionsPanel = ({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const activeDragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
+
+  const handleDragStart = (e: DragStartEvent) => setActiveDragId(String(e.active.id));
   const handleDragEnd = (e: DragEndEvent) => {
+    setActiveDragId(null);
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     const from = sections.findIndex((s) => s.id === active.id);
@@ -992,6 +997,7 @@ const PageSectionsPanel = ({
     onSectionsChange(arrayMove(sections, from, to));
     if (selectedBlockIndex === from) onSelectBlock(to);
   };
+  const handleDragCancel = () => setActiveDragId(null);
 
   return (
     <div className="flex flex-col h-full">
