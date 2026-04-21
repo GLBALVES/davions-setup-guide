@@ -941,10 +941,20 @@ function Columns3Block({ col1, col2, col3, ctx }: any) {
 
 // ─── Slideshow ──────────────────────────────────────────────────────────────
 
+type SlideItemNorm = { image: string; title?: string; caption?: string; link?: string };
+function normalizeSlideItems(raw: any[]): SlideItemNorm[] {
+  return (raw || []).map((s) =>
+    typeof s === "string"
+      ? { image: s }
+      : { image: s?.image ?? "", title: s?.title, caption: s?.caption, link: s?.link }
+  );
+}
+
 function SlideshowBlock({ images = [] }: any) {
+  const slides = normalizeSlideItems(images);
   const [current, setCurrent] = useState(0);
 
-  if (!images || images.length === 0) {
+  if (slides.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-4xl mx-auto aspect-[16/7] bg-muted/20 rounded flex items-center justify-center">
@@ -954,13 +964,28 @@ function SlideshowBlock({ images = [] }: any) {
     );
   }
 
+  const slide = slides[current];
+  const hasOverlay = !!(slide.title || slide.caption);
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded">
-        <img src={images[current]} alt="" className="w-full h-full object-cover" />
-        {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_: any, i: number) => (
+        {slide.link ? (
+          <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+            <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover" />
+          </a>
+        ) : (
+          <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover" />
+        )}
+        {hasOverlay && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-10 pointer-events-none">
+            {slide.title && <h3 className="text-white text-xl sm:text-2xl font-light tracking-wide">{slide.title}</h3>}
+            {slide.caption && <p className="text-white/80 text-sm mt-2 max-w-xl">{slide.caption}</p>}
+          </div>
+        )}
+        {slides.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {slides.map((_, i) => (
               <button key={i} onClick={() => setCurrent(i)} className={`w-2 h-2 rounded-full transition-colors ${i === current ? "bg-white" : "bg-white/40"}`} />
             ))}
           </div>
@@ -973,7 +998,8 @@ function SlideshowBlock({ images = [] }: any) {
 // ─── Carousel ───────────────────────────────────────────────────────────────
 
 function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
-  if (!images || images.length === 0) {
+  const slides = normalizeSlideItems(images);
+  if (slides.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto flex gap-3 overflow-hidden">
@@ -990,11 +1016,26 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
-        {images.map((img: string, i: number) => (
-          <div key={i} className="flex-shrink-0 overflow-hidden rounded" style={{ width: `${100 / itemsVisible}%` }}>
-            <img src={img} alt="" className="w-full aspect-square object-cover" />
-          </div>
-        ))}
+        {slides.map((slide, i) => {
+          const inner = (
+            <div className="relative w-full aspect-square overflow-hidden rounded group">
+              <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              {(slide.title || slide.caption) && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col justify-end p-3 sm:p-4">
+                  {slide.title && <p className="text-white text-sm font-medium tracking-wide truncate">{slide.title}</p>}
+                  {slide.caption && <p className="text-white/80 text-xs mt-1 line-clamp-2">{slide.caption}</p>}
+                </div>
+              )}
+            </div>
+          );
+          return (
+            <div key={i} className="flex-shrink-0" style={{ width: `${100 / itemsVisible}%` }}>
+              {slide.link ? (
+                <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block">{inner}</a>
+              ) : inner}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
