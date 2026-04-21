@@ -2679,6 +2679,25 @@ const ComingSoon = ({ title, description }: { title: string; description: string
   </div>
 );
 
+// Simulated browser tab bar shown above the live preview so users see the
+// favicon and page title exactly like in a real browser tab.
+const BrowserTabBar = ({ faviconUrl, title }: { faviconUrl: string | null; title: string }) => (
+  <div className="h-8 border-b border-border bg-muted/30 flex items-end px-3 shrink-0">
+    <div className="flex items-center gap-2 max-w-[260px] h-7 px-3 rounded-t-md bg-background border-t border-x border-border">
+      {faviconUrl ? (
+        <img
+          src={faviconUrl}
+          alt=""
+          className="h-3.5 w-3.5 rounded-sm object-cover shrink-0"
+        />
+      ) : (
+        <div className="h-3.5 w-3.5 rounded-sm bg-muted-foreground/30 shrink-0" />
+      )}
+      <span className="text-[11px] text-foreground truncate">{title}</span>
+    </div>
+  </div>
+);
+
 // Row used in Logo & Branding sub-panel: label on the left, image thumbnail on the right.
 const BrandRow = ({
   label,
@@ -2732,6 +2751,34 @@ const WebsiteEditor = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { lang } = useLanguage();
+
+  // Live-sync favicon to the actual browser tab while editing.
+  // Restores the original favicon when leaving the editor.
+  useEffect(() => {
+    const previewFavicon =
+      (site as any)?.faviconUrl ||
+      (site as any)?.logoUrl ||
+      null;
+    if (!previewFavicon) return;
+
+    const head = document.head;
+    const previous = Array.from(head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]'));
+    const previousHrefs = previous.map((el) => ({ el, href: el.href }));
+
+    let live = head.querySelector<HTMLLinkElement>('link[data-lov-live-favicon="1"]');
+    if (!live) {
+      live = document.createElement("link");
+      live.rel = "icon";
+      live.setAttribute("data-lov-live-favicon", "1");
+      head.appendChild(live);
+    }
+    live.href = previewFavicon;
+
+    return () => {
+      live?.remove();
+      previousHrefs.forEach(({ el, href }) => { el.href = href; });
+    };
+  }, [(site as any)?.faviconUrl, (site as any)?.logoUrl]);
 
   // Load photographer + site config
   useEffect(() => {
@@ -3164,6 +3211,12 @@ const WebsiteEditor = () => {
           )}
           <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
         </div>
+
+        {/* Simulated browser tab — shows favicon + title in real time */}
+        <BrowserTabBar
+          faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
+          title={(site as any)?.logoText || site?.displayName || "Studio"}
+        />
 
         <div className="flex-1 min-h-0">
           <PreviewRenderer
