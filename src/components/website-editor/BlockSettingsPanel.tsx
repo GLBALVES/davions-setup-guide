@@ -117,6 +117,21 @@ function ImageTextContentEditor({ props, onChange, photographerId }: { props: an
           folder="image-text"
         />
       </Field>
+      <Field label="CTA Text">
+        <Input value={props.ctaText || ""} onChange={(e) => onChange({ ...props, ctaText: e.target.value })} className="h-9 text-sm" placeholder="Learn more" />
+      </Field>
+      <Field label="CTA Link">
+        <Input value={props.ctaLink || ""} onChange={(e) => onChange({ ...props, ctaLink: e.target.value })} className="h-9 text-sm" placeholder="#" />
+      </Field>
+      <Field label="Button Variant">
+        <Select value={props.buttonVariant || "primary"} onValueChange={(v) => onChange({ ...props, buttonVariant: v })}>
+          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="primary">Primary</SelectItem>
+            <SelectItem value="secondary">Secondary</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
     </div>
   );
 }
