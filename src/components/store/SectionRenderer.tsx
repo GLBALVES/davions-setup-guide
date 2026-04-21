@@ -28,23 +28,15 @@ interface SectionRendererProps {
 
 // ─── Site button variant helper ────────────────────────────────────────────
 // Reads CSS vars set by WebsiteEditor (Style → Buttons → Variants) so blocks
-// render buttons consistently across the site. The actual style mode
-// (solid/outline/underline) is read from the DOM CSS var at render time.
-function getVariantStyleMode(variant: "primary" | "secondary"): "solid" | "outline" | "underline" {
-  if (typeof window === "undefined") return variant === "primary" ? "solid" : "outline";
-  const v = getComputedStyle(document.documentElement)
-    .getPropertyValue(`--site-btn-${variant}-style`)
-    .trim();
-  if (v === "outline" || v === "underline") return v;
-  return "solid";
-}
+// render buttons consistently across the site. Style mode (solid/outline/
+// underline) is driven 100% by CSS vars + html[data-site-btn-*-style] rules
+// in index.css — no per-element data-style is needed, so changes reflect
+// instantly without React re-rendering each block.
 
 export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
   style: React.CSSProperties;
   className: string;
-  "data-style": "solid" | "outline" | "underline";
 } {
-  const mode = getVariantStyleMode(variant);
   const v = variant;
   const bgVar = `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`;
   const fgVar = `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`;
@@ -52,7 +44,9 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
     style: {
       backgroundColor: bgVar,
       color: fgVar,
-      borderColor: bgVar,
+      // Always render a 1px border in the variant color so Outline mode is
+      // visible (CSS rules override background to transparent for outline).
+      border: `1px solid ${bgVar}`,
       // Per-variant shape wins; falls back to global default shape token.
       borderRadius: `var(--site-btn-${v}-radius, var(--site-btn-radius, 2px))`,
       // Global size tokens — sync from Style → Buttons → Size.
@@ -61,7 +55,6 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
       paddingRight: "var(--site-btn-pad-x, 1.5rem)",
     },
     className: `site-btn site-btn-${v}`,
-    "data-style": mode,
   };
 }
 
