@@ -22,24 +22,23 @@ export default function CanvasAddSection({
   return (
     <div
       className={cn(
-        "relative h-0 z-20",
-        alwaysVisible ? "opacity-100" : "opacity-0 hover:opacity-100 focus-within:opacity-100",
-        "transition-opacity"
+        "relative group/add z-20",
+        alwaysVisible ? "py-8" : "h-3 -my-1.5"
       )}
-      // Increase hit area so it's easy to discover.
-      style={{ height: alwaysVisible ? "auto" : 0 }}
     >
+      {/* Larger invisible hit zone to make hover easy */}
+      {!alwaysVisible && (
+        <div className="absolute inset-x-0 -top-3 -bottom-3" aria-hidden />
+      )}
+
       <div
         className={cn(
-          "absolute left-0 right-0 flex items-center justify-center",
-          alwaysVisible ? "static py-8" : "-top-3"
+          "absolute left-0 right-0 top-1/2 -translate-y-1/2 flex items-center justify-center transition-opacity",
+          alwaysVisible
+            ? "opacity-100 static translate-y-0"
+            : "opacity-0 group-hover/add:opacity-100 focus-within:opacity-100"
         )}
       >
-        {/* Hover hit zone (taller than the visible line) */}
-        {!alwaysVisible && (
-          <div className="absolute inset-x-0 -top-4 h-8" aria-hidden />
-        )}
-
         <div className="relative flex items-center w-full max-w-3xl px-6">
           <div className="flex-1 h-px bg-primary/40" />
           <button
