@@ -3308,6 +3308,7 @@ const WebsiteEditor = () => {
         <BrowserTabBar
           faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
           title={(site as any)?.logoText || site?.displayName || "Studio"}
+          saveStatus={saveStatus}
         />
 
         <div className="flex-1 min-h-0">
