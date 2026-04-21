@@ -231,9 +231,11 @@ type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photogr
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
-function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, accentColor, ctx }: any) {
+function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, buttonVariant, accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const hasImage = !!backgroundImage;
+  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
+  const btn = siteButtonProps(variant);
   const heroInner = (
     <>
       {hasImage && <div className="absolute inset-0 bg-black/40" />}
