@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { ImageUploadField } from "./ImageUploadField";
+import { ItemListEditor } from "./ItemListEditor";
 import type { PageSection } from "./page-templates";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
@@ -143,7 +144,8 @@ function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any
   );
 }
 
-function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const images: string[] = props.images || [];
   return (
     <div className="space-y-3">
       <Field label="Columns">
@@ -156,12 +158,137 @@ function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: a
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Images (one URL per line)">
-        <Textarea
-          value={(props.images || []).join("\n")}
-          onChange={(e) => onChange({ ...props, images: e.target.value.split("\n").filter(Boolean) })}
-          className="text-sm min-h-[80px]"
-          placeholder="https://image1.jpg&#10;https://image2.jpg"
+      <Field label="Images">
+        <ItemListEditor
+          items={images}
+          onChange={(next) => onChange({ ...props, images: next })}
+          itemLabel="Image"
+          addLabel="Add Image"
+          newItem={() => ""}
+          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty image")}
+          renderDetail={(item, _u) => (
+            <ImageUploadField
+              value={item as string}
+              onChange={(url) => {
+                const next = [...images];
+                const idx = images.indexOf(item as string);
+                if (idx >= 0) {
+                  next[idx] = url ?? "";
+                  onChange({ ...props, images: next });
+                }
+              }}
+              photographerId={photographerId}
+              folder="gallery"
+            />
+          )}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function SlideshowContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const images: string[] = props.images || [];
+  return (
+    <div className="space-y-3">
+      <Field label={`Interval: ${(props.interval ?? 5000) / 1000}s`}>
+        <Slider value={[props.interval ?? 5000]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
+      </Field>
+      <Field label="Images">
+        <ItemListEditor
+          items={images}
+          onChange={(next) => onChange({ ...props, images: next })}
+          itemLabel="Slide"
+          addLabel="Add Slide"
+          newItem={() => ""}
+          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty slide")}
+          renderDetail={(item, _u) => (
+            <ImageUploadField
+              value={item as string}
+              onChange={(url) => {
+                const next = [...images];
+                const idx = images.indexOf(item as string);
+                if (idx >= 0) {
+                  next[idx] = url ?? "";
+                  onChange({ ...props, images: next });
+                }
+              }}
+              photographerId={photographerId}
+              folder="slideshow"
+            />
+          )}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function SocialLinksContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  const links: { platform: string; url: string }[] = props.links || [];
+  return (
+    <ItemListEditor
+      items={links}
+      onChange={(next) => onChange({ ...props, links: next })}
+      itemLabel="Link"
+      addLabel="Add Link"
+      newItem={() => ({ platform: "instagram", url: "" })}
+      renderLabel={(it) => `${it.platform || "?"} — ${it.url || ""}`}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Platform">
+            <Select value={item.platform || "instagram"} onValueChange={(v) => update({ platform: v })}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="twitter">X / Twitter</SelectItem>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
+                <SelectItem value="pinterest">Pinterest</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="URL">
+            <Input value={item.url} onChange={(e) => update({ url: e.target.value })} className="h-9 text-sm" placeholder="https://…" />
+          </Field>
+        </div>
+      )}
+    />
+  );
+}
+
+function LogoStripContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const logos: { url: string; alt?: string }[] = props.logos || [];
+  return (
+    <div className="space-y-3">
+      <Field label="Title">
+        <Input value={props.title || ""} onChange={(e) => onChange({ ...props, title: e.target.value })} className="h-9 text-sm" placeholder="As Seen On" />
+      </Field>
+      <Field label="Logos">
+        <ItemListEditor
+          items={logos}
+          onChange={(next) => onChange({ ...props, logos: next })}
+          itemLabel="Logo"
+          addLabel="Add Logo"
+          newItem={() => ({ url: "", alt: "" })}
+          renderLabel={(it) => it.alt || (it.url ? it.url.split("/").pop() || it.url : "Empty")}
+          renderDetail={(item, update) => (
+            <div className="space-y-2">
+              <Field label="Image">
+                <ImageUploadField
+                  value={item.url}
+                  onChange={(url) => update({ url: url ?? "" })}
+                  photographerId={photographerId}
+                  folder="logos"
+                  aspectClass="aspect-[3/1]"
+                />
+              </Field>
+              <Field label="Alt text">
+                <Input value={item.alt || ""} onChange={(e) => update({ alt: e.target.value })} className="h-9 text-sm" placeholder="Brand name" />
+              </Field>
+            </div>
+          )}
         />
       </Field>
     </div>
@@ -170,82 +297,76 @@ function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: a
 
 function FaqContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const items: { question: string; answer: string }[] = props.items || [];
-  const updateItem = (idx: number, field: string, value: string) => {
-    const next = [...items];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, items: next });
-  };
-  const addItem = () => onChange({ ...props, items: [...items, { question: "", answer: "" }] });
-  const removeItem = (idx: number) => onChange({ ...props, items: items.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {items.map((item, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">Q{idx + 1}</span>
-            <button onClick={() => removeItem(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Input value={item.question} onChange={(e) => updateItem(idx, "question", e.target.value)} className="h-8 text-xs" placeholder="Question" />
-          <Textarea value={item.answer} onChange={(e) => updateItem(idx, "answer", e.target.value)} className="text-xs min-h-[50px]" placeholder="Answer" />
+    <ItemListEditor
+      items={items}
+      onChange={(next) => onChange({ ...props, items: next })}
+      itemLabel="Question"
+      addLabel="Add Question"
+      newItem={() => ({ question: "", answer: "" })}
+      renderLabel={(it) => it.question || ""}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Question">
+            <Input value={item.question} onChange={(e) => update({ question: e.target.value })} className="h-9 text-sm" placeholder="Question" />
+          </Field>
+          <Field label="Answer">
+            <Textarea value={item.answer} onChange={(e) => update({ answer: e.target.value })} className="text-sm min-h-[100px]" placeholder="Answer" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addItem}><Plus className="h-3 w-3" /> Add Question</Button>
-    </div>
+      )}
+    />
   );
 }
 
 function StatsContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const items: { value: string; label: string }[] = props.items || [];
-  const updateItem = (idx: number, field: string, value: string) => {
-    const next = [...items];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, items: next });
-  };
-  const addItem = () => onChange({ ...props, items: [...items, { value: "", label: "" }] });
-  const removeItem = (idx: number) => onChange({ ...props, items: items.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {items.map((item, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input value={item.value} onChange={(e) => updateItem(idx, "value", e.target.value)} className="h-8 text-xs flex-1" placeholder="500+" />
-          <Input value={item.label} onChange={(e) => updateItem(idx, "label", e.target.value)} className="h-8 text-xs flex-1" placeholder="Sessions" />
-          <button onClick={() => removeItem(idx)} className="p-1 text-destructive hover:bg-destructive/10 rounded shrink-0"><Trash2 className="h-3 w-3" /></button>
+    <ItemListEditor
+      items={items}
+      onChange={(next) => onChange({ ...props, items: next })}
+      itemLabel="Stat"
+      addLabel="Add Stat"
+      newItem={() => ({ value: "", label: "" })}
+      renderLabel={(it) => [it.value, it.label].filter(Boolean).join(" — ")}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Value">
+            <Input value={item.value} onChange={(e) => update({ value: e.target.value })} className="h-9 text-sm" placeholder="500+" />
+          </Field>
+          <Field label="Label">
+            <Input value={item.label} onChange={(e) => update({ label: e.target.value })} className="h-9 text-sm" placeholder="Sessions" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addItem}><Plus className="h-3 w-3" /> Add Stat</Button>
-    </div>
+      )}
+    />
   );
 }
 
 function TestimonialsContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const items: { quote: string; author: string; role: string }[] = props.items || [];
-  const updateItem = (idx: number, field: string, value: string) => {
-    const next = [...items];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, items: next });
-  };
-  const addItem = () => onChange({ ...props, items: [...items, { quote: "", author: "", role: "" }] });
-  const removeItem = (idx: number) => onChange({ ...props, items: items.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {items.map((item, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">#{idx + 1}</span>
-            <button onClick={() => removeItem(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Textarea value={item.quote} onChange={(e) => updateItem(idx, "quote", e.target.value)} className="text-xs min-h-[50px]" placeholder="Testimonial quote..." />
-          <div className="flex gap-2">
-            <Input value={item.author} onChange={(e) => updateItem(idx, "author", e.target.value)} className="h-8 text-xs" placeholder="Name" />
-            <Input value={item.role} onChange={(e) => updateItem(idx, "role", e.target.value)} className="h-8 text-xs" placeholder="Role" />
-          </div>
+    <ItemListEditor
+      items={items}
+      onChange={(next) => onChange({ ...props, items: next })}
+      itemLabel="Testimonial"
+      addLabel="Add Testimonial"
+      newItem={() => ({ quote: "", author: "", role: "" })}
+      renderLabel={(it) => it.author || it.quote.slice(0, 40)}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Quote">
+            <Textarea value={item.quote} onChange={(e) => update({ quote: e.target.value })} className="text-sm min-h-[100px]" placeholder="Testimonial quote..." />
+          </Field>
+          <Field label="Author">
+            <Input value={item.author} onChange={(e) => update({ author: e.target.value })} className="h-9 text-sm" placeholder="Name" />
+          </Field>
+          <Field label="Role">
+            <Input value={item.role} onChange={(e) => update({ role: e.target.value })} className="h-9 text-sm" placeholder="Role / Company" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addItem}><Plus className="h-3 w-3" /> Add Testimonial</Button>
-    </div>
+      )}
+    />
   );
 }
 
@@ -259,96 +380,93 @@ function SpacerContentEditor({ props, onChange }: { props: any; onChange: (p: an
 
 function PricingContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const plans: { name: string; price: string; features: string[] }[] = props.plans || [];
-  const updatePlan = (idx: number, field: string, value: any) => {
-    const next = [...plans];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, plans: next });
-  };
-  const addPlan = () => onChange({ ...props, plans: [...plans, { name: "", price: "", features: [""] }] });
-  const removePlan = (idx: number) => onChange({ ...props, plans: plans.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {plans.map((plan, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">Plan {idx + 1}</span>
-            <button onClick={() => removePlan(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Input value={plan.name} onChange={(e) => updatePlan(idx, "name", e.target.value)} className="h-8 text-xs" placeholder="Plan name" />
-          <Input value={plan.price} onChange={(e) => updatePlan(idx, "price", e.target.value)} className="h-8 text-xs" placeholder="$199" />
-          <Textarea
-            value={(plan.features || []).join("\n")}
-            onChange={(e) => updatePlan(idx, "features", e.target.value.split("\n"))}
-            className="text-xs min-h-[50px]"
-            placeholder="Feature 1&#10;Feature 2"
-          />
+    <ItemListEditor
+      items={plans}
+      onChange={(next) => onChange({ ...props, plans: next })}
+      itemLabel="Plan"
+      addLabel="Add Plan"
+      newItem={() => ({ name: "", price: "", features: [""] })}
+      renderLabel={(it) => [it.name, it.price].filter(Boolean).join(" — ")}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Plan Name">
+            <Input value={item.name} onChange={(e) => update({ name: e.target.value })} className="h-9 text-sm" placeholder="Standard" />
+          </Field>
+          <Field label="Price">
+            <Input value={item.price} onChange={(e) => update({ price: e.target.value })} className="h-9 text-sm" placeholder="$199" />
+          </Field>
+          <Field label="Features (one per line)">
+            <Textarea
+              value={(item.features || []).join("\n")}
+              onChange={(e) => update({ features: e.target.value.split("\n") })}
+              className="text-sm min-h-[100px]"
+              placeholder="Feature 1&#10;Feature 2"
+            />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addPlan}><Plus className="h-3 w-3" /> Add Plan</Button>
-    </div>
+      )}
+    />
   );
 }
 
 function TeamContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   const members: { name: string; role: string; photo: string }[] = props.members || [];
-  const updateMember = (idx: number, field: string, value: string) => {
-    const next = [...members];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, members: next });
-  };
-  const addMember = () => onChange({ ...props, members: [...members, { name: "", role: "", photo: "" }] });
-  const removeMember = (idx: number) => onChange({ ...props, members: members.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {members.map((m, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">Member {idx + 1}</span>
-            <button onClick={() => removeMember(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Input value={m.name} onChange={(e) => updateMember(idx, "name", e.target.value)} className="h-8 text-xs" placeholder="Name" />
-          <Input value={m.role} onChange={(e) => updateMember(idx, "role", e.target.value)} className="h-8 text-xs" placeholder="Role" />
-          <ImageUploadField
-            value={m.photo}
-            onChange={(url) => updateMember(idx, "photo", url)}
-            photographerId={photographerId}
-            folder="team"
-            aspectClass="aspect-square"
-          />
+    <ItemListEditor
+      items={members}
+      onChange={(next) => onChange({ ...props, members: next })}
+      itemLabel="Member"
+      addLabel="Add Member"
+      newItem={() => ({ name: "", role: "", photo: "" })}
+      renderLabel={(it) => [it.name, it.role].filter(Boolean).join(" — ")}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Name">
+            <Input value={item.name} onChange={(e) => update({ name: e.target.value })} className="h-9 text-sm" placeholder="Full name" />
+          </Field>
+          <Field label="Role">
+            <Input value={item.role} onChange={(e) => update({ role: e.target.value })} className="h-9 text-sm" placeholder="Photographer" />
+          </Field>
+          <Field label="Photo">
+            <ImageUploadField
+              value={item.photo}
+              onChange={(url) => update({ photo: url })}
+              photographerId={photographerId}
+              folder="team"
+              aspectClass="aspect-square"
+            />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addMember}><Plus className="h-3 w-3" /> Add Member</Button>
-    </div>
+      )}
+    />
   );
 }
 
 function TimelineContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const events: { year: string; title: string; description: string }[] = props.events || [];
-  const updateEvent = (idx: number, field: string, value: string) => {
-    const next = [...events];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, events: next });
-  };
-  const addEvent = () => onChange({ ...props, events: [...events, { year: "", title: "", description: "" }] });
-  const removeEvent = (idx: number) => onChange({ ...props, events: events.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {events.map((ev, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">Event {idx + 1}</span>
-            <button onClick={() => removeEvent(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Input value={ev.year} onChange={(e) => updateEvent(idx, "year", e.target.value)} className="h-8 text-xs" placeholder="2024" />
-          <Input value={ev.title} onChange={(e) => updateEvent(idx, "title", e.target.value)} className="h-8 text-xs" placeholder="Title" />
-          <Textarea value={ev.description} onChange={(e) => updateEvent(idx, "description", e.target.value)} className="text-xs min-h-[40px]" placeholder="Description" />
+    <ItemListEditor
+      items={events}
+      onChange={(next) => onChange({ ...props, events: next })}
+      itemLabel="Event"
+      addLabel="Add Event"
+      newItem={() => ({ year: "", title: "", description: "" })}
+      renderLabel={(it) => [it.year, it.title].filter(Boolean).join(" — ")}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Year">
+            <Input value={item.year} onChange={(e) => update({ year: e.target.value })} className="h-9 text-sm" placeholder="2024" />
+          </Field>
+          <Field label="Title">
+            <Input value={item.title} onChange={(e) => update({ title: e.target.value })} className="h-9 text-sm" placeholder="Milestone" />
+          </Field>
+          <Field label="Description">
+            <Textarea value={item.description} onChange={(e) => update({ description: e.target.value })} className="text-sm min-h-[80px]" placeholder="What happened…" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addEvent}><Plus className="h-3 w-3" /> Add Event</Button>
-    </div>
+      )}
+    />
   );
 }
 
@@ -415,7 +533,11 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void, 
     case "contact-form": return <ContactFormContentEditor props={props} onChange={onChange} />;
     case "video": return <VideoContentEditor props={props} onChange={onChange} />;
     case "gallery-grid":
-    case "gallery-masonry": return <GalleryContentEditor props={props} onChange={onChange} />;
+    case "gallery-masonry": return <GalleryContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
+    case "slideshow":
+    case "carousel": return <SlideshowContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
+    case "social-links": return <SocialLinksContentEditor props={props} onChange={onChange} />;
+    case "logo-strip": return <LogoStripContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "faq-accordion": return <FaqContentEditor props={props} onChange={onChange} />;
     case "stats": return <StatsContentEditor props={props} onChange={onChange} />;
     case "testimonials": return <TestimonialsContentEditor props={props} onChange={onChange} />;
