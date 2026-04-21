@@ -6,7 +6,7 @@ import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
-  closestCenter, type DragEndEvent,
+  closestCenter, DragOverlay, type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, arrayMove,
@@ -294,7 +294,6 @@ function SortableBlock({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
     position: "relative",
     zIndex: isDragging ? 40 : undefined,
   };
