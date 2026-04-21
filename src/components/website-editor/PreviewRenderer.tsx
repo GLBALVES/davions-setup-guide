@@ -584,7 +584,7 @@ export default function PreviewRenderer({
 
           {/* Blocks */}
           {sections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[480px] gap-5 px-6 text-center">
+            <div className="flex flex-col items-center justify-center py-16 gap-5 px-6 text-center">
               <div className="space-y-1.5 max-w-md">
                 <p className="text-base font-medium text-foreground">This page is empty</p>
                 <p className="text-xs text-muted-foreground/80">
