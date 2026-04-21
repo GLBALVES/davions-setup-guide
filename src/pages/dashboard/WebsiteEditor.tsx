@@ -2574,10 +2574,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
           )}
 
           {sub === "buttons" && (
-            <ComingSoon
-              title="Buttons"
-              description="Button shape, size and style presets. Coming soon."
-            />
+            <ButtonsSubPanel site={site} onSiteChange={onSiteChange} />
           )}
         </div>
       </div>
