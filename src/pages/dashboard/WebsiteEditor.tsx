@@ -2973,6 +2973,28 @@ const WebsiteEditor = () => {
           setSelectedBlockIndex(insertIndex);
         }}
       />
+
+      <AlertDialog open={pendingDeleteIdx !== null} onOpenChange={(o) => !o && setPendingDeleteIdx(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this section?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteIdx !== null && activePageSections[pendingDeleteIdx]
+                ? `"${activePageSections[pendingDeleteIdx].label}" will be removed from this page. This action cannot be undone.`
+                : "This section will be removed. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteBlock}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
