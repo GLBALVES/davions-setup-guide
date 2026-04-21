@@ -57,6 +57,8 @@ interface PreviewRendererProps {
   onDeleteBlock?: (index: number) => void;
   /** Called when the user clicks a "+ Add Section" divider in the canvas. */
   onAddBlockAt?: (index: number) => void;
+  /** Called with the new full ordered list when the user drags a block to a new position. */
+  onReorderBlocks?: (next: PageSection[]) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
