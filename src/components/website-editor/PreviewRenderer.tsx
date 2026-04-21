@@ -489,61 +489,41 @@ export default function PreviewRenderer({
                 <CanvasAddSection onClick={() => onAddBlockAt(0)} />
               )}
 
-              {sections.map((section, idx) => {
-                const isSelected = selectedBlockIndex === idx;
-                return (
-                  <div key={section.id}>
-                    <div
-                      onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
-                      className={cn(
-                        "relative group/block transition-all",
-                        isSelected
-                          ? "ring-2 ring-primary ring-inset"
-                          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
-                      )}
-                    >
-                      {/* Block label badge */}
-                      <div className={cn(
-                        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
-                        isSelected
-                          ? "opacity-100 bg-primary text-primary-foreground"
-                          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
-                      )}>
-                        {section.label}
-                      </div>
-
-                      {/* Floating toolbar (selected or hover) */}
-                      <div className={cn(
-                        "transition-opacity",
-                        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
-                      )}>
-                        <FloatingBlockToolbar
-                          isFirst={idx === 0}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  {sections.map((section, idx) => {
+                    const isSelected = selectedBlockIndex === idx;
+                    return (
+                      <div key={section.id}>
+                        <SortableBlock
+                          section={section}
+                          idx={idx}
+                          isSelected={isSelected}
                           isLast={idx === sections.length - 1}
+                          editMode={editMode}
+                          onSelect={() => onSelectBlock(idx)}
                           onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
                           onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
                           onDuplicate={() => onDuplicateBlock?.(idx)}
-                          onSettings={() => onSelectBlock(idx)}
                           onDelete={() => onDeleteBlock?.(idx)}
-                        />
+                        >
+                          <SectionRenderer
+                            sections={[section]}
+                            accentColor={accentColor}
+                            editMode={editMode}
+                            edit={editCtx}
+                          />
+                        </SortableBlock>
+
+                        {editMode && onAddBlockAt && (
+                          <CanvasAddSection onClick={() => onAddBlockAt(idx + 1)} />
+                        )}
                       </div>
+                    );
+                  })}
+                </SortableContext>
+              </DndContext>
 
-                      {/* Block content */}
-                      <SectionRenderer
-                        sections={[section]}
-                        accentColor={accentColor}
-                        editMode={editMode}
-                        edit={editCtx}
-                      />
-                    </div>
-
-                    {/* + between this block and the next (or after the last block) */}
-                    {editMode && onAddBlockAt && (
-                      <CanvasAddSection onClick={() => onAddBlockAt(idx + 1)} />
-                    )}
-                  </div>
-                );
-              })}
             </>
           )}
 
