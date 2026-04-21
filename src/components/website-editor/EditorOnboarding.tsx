@@ -192,7 +192,7 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
 
       {step === 2 && (
         <>
-          {/* Dim backdrop with a "hole" around the FAB via a giant outer ring */}
+          {/* Backdrop — click outside to dismiss */}
           <button
             type="button"
             aria-label="Dismiss"
@@ -200,46 +200,85 @@ export default function EditorOnboarding({ active }: EditorOnboardingProps) {
             className="absolute inset-0 pointer-events-auto"
           />
 
-          {/* Spotlight ring around the FAB ("bottom-6 right-8") */}
-          <div
-            aria-hidden
-            className="absolute bottom-3 right-5 h-16 w-44 rounded-full ring-4 ring-primary/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] animate-pulse pointer-events-none"
-          />
+          {fabRect && (
+            <>
+              {/* Spotlight ring anchored to the actual FAB rect (with 8px padding) */}
+              <div
+                aria-hidden
+                className="absolute rounded-full ring-4 ring-primary/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] animate-pulse pointer-events-none"
+                style={{
+                  top: fabRect.top - 8,
+                  left: fabRect.left - 8,
+                  width: fabRect.width + 16,
+                  height: fabRect.height + 16,
+                }}
+              />
 
-          {/* Tooltip pointing to the FAB */}
-          <div className="absolute bottom-28 right-8 pointer-events-auto">
-            <div className="relative w-[260px] rounded-xl bg-background border border-border shadow-2xl p-4">
-              <button
-                type="button"
-                onClick={finish}
-                aria-label="Close"
-                className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              {/* Tooltip — placed above the FAB, right-aligned to it */}
+              <div
+                className="absolute pointer-events-auto"
+                style={{
+                  // 16px gap above the FAB; clamp so it never overflows the viewport
+                  top: Math.max(8, fabRect.top - 16 - 150),
+                  left: Math.max(
+                    8,
+                    Math.min(
+                      window.innerWidth - 268,
+                      fabRect.right - 260
+                    )
+                  ),
+                  width: 260,
+                }}
               >
-                <X className="h-3.5 w-3.5" />
-              </button>
+                <div className="relative rounded-xl bg-background border border-border shadow-2xl p-4">
+                  <button
+                    type="button"
+                    onClick={finish}
+                    aria-label="Close"
+                    className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
 
-              <h3 className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
+                  <h3 className="text-xs font-medium text-foreground mb-1 pr-5">{t.step2Title}</h3>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{t.step2Desc}</p>
 
-              <div className="flex items-center gap-1.5 mt-3">
-                <div className="h-1 flex-1 rounded-full bg-muted" />
-                <div className="h-1 flex-1 rounded-full bg-primary" />
+                  <div className="flex items-center gap-1.5 mt-3">
+                    <div className="h-1 flex-1 rounded-full bg-muted" />
+                    <div className="h-1 flex-1 rounded-full bg-primary" />
+                  </div>
+
+                  <div className="flex justify-end mt-3">
+                    <button
+                      type="button"
+                      onClick={finish}
+                      className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      {t.step2Cta}
+                    </button>
+                  </div>
+
+                  {/* Pointer arrow — anchored to the FAB's horizontal center */}
+                  <div
+                    className="absolute -bottom-1.5 w-3 h-3 rotate-45 bg-background border-r border-b border-border"
+                    style={{
+                      left: Math.max(
+                        12,
+                        Math.min(
+                          260 - 24,
+                          fabRect.left + fabRect.width / 2 -
+                            Math.max(
+                              8,
+                              Math.min(window.innerWidth - 268, fabRect.right - 260)
+                            ) - 6
+                        )
+                      ),
+                    }}
+                  />
+                </div>
               </div>
-
-              <div className="flex justify-end mt-3">
-                <button
-                  type="button"
-                  onClick={finish}
-                  className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors"
-                >
-                  {t.step2Cta}
-                </button>
-              </div>
-
-              {/* Pointer arrow toward FAB */}
-              <div className="absolute -bottom-1.5 right-10 w-3 h-3 rotate-45 bg-background border-r border-b border-border" />
-            </div>
-          </div>
+            </>
+          )}
         </>
       )}
     </div>,
