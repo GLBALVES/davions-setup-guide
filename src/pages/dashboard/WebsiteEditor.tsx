@@ -2615,6 +2615,36 @@ const ComingSoon = ({ title, description }: { title: string; description: string
   </div>
 );
 
+// Row used in Logo & Branding sub-panel: label on the left, image thumbnail on the right.
+const BrandRow = ({
+  label,
+  value,
+  onChange,
+  photographerId,
+  folder,
+  rounded,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  photographerId: string | null;
+  folder: string;
+  rounded?: boolean;
+}) => (
+  <div className="flex items-center justify-between gap-3 py-1">
+    <label className="text-sm font-medium text-foreground">{label}</label>
+    <div className={cn("w-20 shrink-0", rounded && "rounded-full overflow-hidden")}>
+      <ImageUploadField
+        value={value}
+        onChange={onChange}
+        photographerId={photographerId}
+        folder={folder}
+        aspectClass="aspect-square"
+      />
+    </div>
+  </div>
+);
+
 
 // SettingsPanel imported from "@/components/website-editor/settings/SettingsPanel"
 
