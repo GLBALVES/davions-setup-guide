@@ -911,10 +911,15 @@ function SpacerBlock({ height = 60 }: any) {
 
 // ─── Divider ────────────────────────────────────────────────────────────────
 
-function DividerBlock() {
+function DividerBlock({ style = "line" }: { style?: string } = {}) {
+  const cls =
+    style === "dashed" ? "border-border border-dashed"
+    : style === "dotted" ? "border-border border-dotted"
+    : style === "thick" ? "border-foreground/40 border-t-2"
+    : "border-border";
   return (
     <div className="max-w-6xl mx-auto px-6">
-      <hr className="border-border" />
+      <hr className={cls} />
     </div>
   );
 }
