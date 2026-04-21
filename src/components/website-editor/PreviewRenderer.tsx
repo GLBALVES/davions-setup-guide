@@ -556,7 +556,7 @@ export default function PreviewRenderer({
         )}
         <div
           className={cn(
-            "bg-background transition-all duration-300 min-h-full shadow-lg",
+            "bg-background transition-all duration-300 shadow-lg self-start",
             "border border-border"
           )}
           style={{
