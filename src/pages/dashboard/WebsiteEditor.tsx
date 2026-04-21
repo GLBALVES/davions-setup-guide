@@ -2527,6 +2527,109 @@ const ButtonsSubPanel = ({
           </div>
         </div>
       )}
+
+      <div className="h-px bg-border" />
+
+      {/* Variants: Primary / Secondary */}
+      <VariantPresets site={site} onSiteChange={onSiteChange} />
+    </div>
+  );
+};
+
+// Two-tone preset editor: Primary & Secondary buttons
+const VariantPresets = ({
+  site,
+  onSiteChange,
+}: {
+  site: PreviewSiteConfig | null;
+  onSiteChange: (patch: Partial<Record<string, any>>) => void;
+}) => {
+  const variants = ((site as any)?.buttonVariants as any) || {};
+  const updateVariant = (key: "primary" | "secondary", patch: Record<string, any>) => {
+    const next = {
+      primary: { style: "solid", shape: "square", bg: "#000000", fg: "#ffffff", ...(variants.primary || {}) },
+      secondary: { style: "outline", shape: "square", bg: "#ffffff", fg: "#000000", ...(variants.secondary || {}) },
+    };
+    next[key] = { ...next[key], ...patch };
+    onSiteChange({ button_variants: next });
+  };
+
+  const VariantBlock = ({ label, vKey }: { label: string; vKey: "primary" | "secondary" }) => {
+    const v = variants[vKey] || {};
+    const style = v.style || (vKey === "primary" ? "solid" : "outline");
+    const shape = v.shape || "square";
+    const bg = v.bg || (vKey === "primary" ? "#000000" : "#ffffff");
+    const fg = v.fg || (vKey === "primary" ? "#ffffff" : "#000000");
+    const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-foreground">{label}</label>
+          <span
+            className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase"
+            style={{
+              backgroundColor: style === "solid" ? bg : "transparent",
+              color: style === "solid" ? fg : bg,
+              border: style === "outline" ? `1px solid ${bg}` : "none",
+              borderBottom: style === "underline" ? `1px solid ${bg}` : undefined,
+              borderRadius: style === "underline" ? 0 : radius,
+            }}
+          >
+            Sample
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Style</p>
+            <Select value={style} onValueChange={(val) => updateVariant(vKey, { style: val })}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="solid">Solid</SelectItem>
+                <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="underline">Underline</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Shape</p>
+            <Select value={shape} onValueChange={(val) => updateVariant(vKey, { shape: val })}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="square">Square</SelectItem>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="pill">Pill</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
+            <div className="flex items-center gap-2">
+              <input type="color" value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 w-10 rounded border border-border cursor-pointer" />
+              <Input value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 text-xs flex-1" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
+            <div className="flex items-center gap-2">
+              <input type="color" value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 w-10 rounded border border-border cursor-pointer" />
+              <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <label className="text-sm font-medium text-foreground">Button Variants</label>
+      <p className="text-xs text-muted-foreground">
+        Define two reusable presets. Each block with a button can choose Primary or Secondary.
+      </p>
+      <VariantBlock label="Primary" vKey="primary" />
+      <div className="h-px bg-border" />
+      <VariantBlock label="Secondary" vKey="secondary" />
     </div>
   );
 };
