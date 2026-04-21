@@ -7,6 +7,11 @@ import type { PreviewSiteConfig, PreviewNavLink } from "./PreviewRenderer";
 export interface HeaderSlide {
   id: string;
   title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+  openInNewTab?: boolean;
+  backgroundTint?: number;
   imageUrl: string | null;
 }
 
@@ -71,6 +76,9 @@ export default function PreviewHeader({
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const activeSlide = slides[index] || slides[0];
+  const showSlideCta = !!activeSlide?.buttonText;
+  const activeSlideTint = activeSlide?.backgroundTint ?? 0;
 
   // Reset index when slide count changes
   useEffect(() => {
@@ -175,6 +183,48 @@ export default function PreviewHeader({
         className="absolute inset-0 bg-black pointer-events-none"
         style={{ opacity: cfg.overlayOpacity ?? 0.3 }}
       />
+
+      {activeSlideTint > 0 && (
+        <div
+          className="absolute inset-0 bg-black pointer-events-none"
+          style={{ opacity: activeSlideTint }}
+        />
+      )}
+
+      {(activeSlide?.title || activeSlide?.subtitle || showSlideCta) && (
+        <div className="absolute inset-0 z-[5] flex items-center justify-center px-6 text-center">
+          <div className="max-w-3xl space-y-4 sm:space-y-5">
+            {activeSlide?.title && (
+              <h1
+                className="text-3xl sm:text-5xl md:text-6xl font-light leading-tight"
+                style={{ color: fg, textShadow: "0 2px 16px rgba(0,0,0,0.28)" }}
+              >
+                {activeSlide.title}
+              </h1>
+            )}
+            {activeSlide?.subtitle && (
+              <p
+                className="mx-auto max-w-2xl text-sm sm:text-base md:text-lg font-light"
+                style={{ color: fg, textShadow: "0 1px 10px rgba(0,0,0,0.24)" }}
+              >
+                {activeSlide.subtitle}
+              </p>
+            )}
+            {showSlideCta && (
+              <div className="pt-1">
+                <a
+                  href={activeSlide.buttonUrl || "#"}
+                  target={activeSlide.openInNewTab === false ? "_self" : "_blank"}
+                  rel={activeSlide.openInNewTab === false ? undefined : "noopener noreferrer"}
+                  className="pointer-events-auto inline-flex min-h-11 items-center justify-center border border-white/70 bg-white/10 px-6 text-sm uppercase tracking-[0.18em] text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-foreground"
+                >
+                  {activeSlide.buttonText}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Demo badge */}
       {usingPlaceholder && (
