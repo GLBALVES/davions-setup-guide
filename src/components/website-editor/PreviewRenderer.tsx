@@ -470,10 +470,7 @@ export default function PreviewRenderer({
 
           {/* Blocks */}
           {sections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[480px] gap-4 px-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <Plus className="h-6 w-6" />
-              </div>
+            <div className="flex flex-col items-center justify-center min-h-[480px] gap-5 px-6 text-center">
               <div className="space-y-1">
                 <p className="text-base font-medium text-foreground">This page is empty</p>
                 <p className="text-xs text-muted-foreground/80 max-w-xs">
@@ -484,7 +481,7 @@ export default function PreviewRenderer({
                 <button
                   type="button"
                   onClick={() => onAddBlockAt(0)}
-                  className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add your first section
