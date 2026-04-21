@@ -56,6 +56,117 @@ interface BlockSettingsPanelProps {
 
 // ── Per-type content editors ──────────────────────────────────────────────────
 
+type BlockBtn = { id?: string; text: string; link?: string; variant?: "primary" | "secondary"; newTab?: boolean };
+
+/** Migrate legacy ctaText/ctaLink/buttonText/buttonLink/buttonVariant fields
+ *  into the new buttons[] array on first edit, so the renderer always sees
+ *  the canonical schema and the editor UI stays consistent. */
+function migrateLegacyToButtons(props: any): BlockBtn[] {
+  if (Array.isArray(props?.buttons)) return props.buttons;
+  const text = props?.ctaText || props?.buttonText;
+  const link = props?.ctaLink || props?.buttonLink;
+  if (!text && !link) return [];
+  return [{
+    text: text || "",
+    link: link || "",
+    variant: props?.buttonVariant === "secondary" ? "secondary" : "primary",
+    newTab: false,
+  }];
+}
+
+function ButtonsListEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  const buttons: BlockBtn[] = Array.isArray(props?.buttons)
+    ? props.buttons
+    : migrateLegacyToButtons(props);
+
+  const apply = (next: BlockBtn[]) => {
+    // Persist new schema and strip legacy fields on first save.
+    const cleaned = { ...props, buttons: next };
+    delete cleaned.ctaText;
+    delete cleaned.ctaLink;
+    delete cleaned.buttonText;
+    delete cleaned.buttonLink;
+    delete cleaned.buttonVariant;
+    onChange(cleaned);
+  };
+
+  const updateAt = (i: number, patch: Partial<BlockBtn>) => {
+    const next = [...buttons];
+    next[i] = { ...next[i], ...patch };
+    apply(next);
+  };
+
+  const addButton = () => {
+    apply([...buttons, { text: "", link: "", variant: buttons.length === 0 ? "primary" : "secondary", newTab: false }]);
+  };
+
+  const removeAt = (i: number) => {
+    const next = buttons.filter((_, idx) => idx !== i);
+    apply(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Buttons</label>
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={addButton}>
+          <Plus className="h-3 w-3 mr-1" /> Add
+        </Button>
+      </div>
+      {buttons.length === 0 && (
+        <p className="text-[11px] text-muted-foreground/70 italic">No buttons. Click Add to create one.</p>
+      )}
+      <div className="space-y-3">
+        {buttons.map((b, i) => (
+          <div key={i} className="rounded border border-border bg-muted/20 p-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Button {i + 1}</span>
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="text-muted-foreground hover:text-destructive p-1 rounded"
+                aria-label="Remove button"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+            <Input
+              value={b.text || ""}
+              onChange={(e) => updateAt(i, { text: e.target.value })}
+              className="h-8 text-xs"
+              placeholder="Button text"
+            />
+            <Input
+              value={b.link || ""}
+              onChange={(e) => updateAt(i, { link: e.target.value })}
+              className="h-8 text-xs"
+              placeholder="https:// or #section"
+            />
+            <div className="flex items-center gap-2">
+              <Select value={b.variant || "primary"} onValueChange={(v) => updateAt(i, { variant: v as any })}>
+                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="primary">Primary</SelectItem>
+                  <SelectItem value="secondary">Secondary</SelectItem>
+                </SelectContent>
+              </Select>
+              <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={!!b.newTab}
+                  onChange={(e) => updateAt(i, { newTab: e.target.checked })}
+                  className="h-3 w-3"
+                />
+                New tab
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HeroContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
@@ -73,21 +184,7 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
           folder="hero"
         />
       </Field>
-      <Field label="CTA Text">
-        <Input value={props.ctaText || ""} onChange={(e) => onChange({ ...props, ctaText: e.target.value })} className="h-9 text-sm" placeholder="Book Now" />
-      </Field>
-      <Field label="CTA Link">
-        <Input value={props.ctaLink || ""} onChange={(e) => onChange({ ...props, ctaLink: e.target.value })} className="h-9 text-sm" placeholder="#contact" />
-      </Field>
-      <Field label="Button Variant">
-        <Select value={props.buttonVariant || "primary"} onValueChange={(v) => onChange({ ...props, buttonVariant: v })}>
-          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="primary">Primary</SelectItem>
-            <SelectItem value="secondary">Secondary</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
+      <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
 }
