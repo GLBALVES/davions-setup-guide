@@ -2679,6 +2679,25 @@ const ComingSoon = ({ title, description }: { title: string; description: string
   </div>
 );
 
+// Simulated browser tab bar shown above the live preview so users see the
+// favicon and page title exactly like in a real browser tab.
+const BrowserTabBar = ({ faviconUrl, title }: { faviconUrl: string | null; title: string }) => (
+  <div className="h-8 border-b border-border bg-muted/30 flex items-end px-3 shrink-0">
+    <div className="flex items-center gap-2 max-w-[260px] h-7 px-3 rounded-t-md bg-background border-t border-x border-border">
+      {faviconUrl ? (
+        <img
+          src={faviconUrl}
+          alt=""
+          className="h-3.5 w-3.5 rounded-sm object-cover shrink-0"
+        />
+      ) : (
+        <div className="h-3.5 w-3.5 rounded-sm bg-muted-foreground/30 shrink-0" />
+      )}
+      <span className="text-[11px] text-foreground truncate">{title}</span>
+    </div>
+  </div>
+);
+
 // Row used in Logo & Branding sub-panel: label on the left, image thumbnail on the right.
 const BrandRow = ({
   label,
