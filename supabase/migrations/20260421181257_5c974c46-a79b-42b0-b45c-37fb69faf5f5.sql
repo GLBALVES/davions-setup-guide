@@ -1,0 +1,1 @@
+ALTER TABLE public.photographer_site ADD COLUMN IF NOT EXISTS button_variants JSONB NOT NULL DEFAULT '{"primary":{"style":"solid","shape":"square","bg":"#000000","fg":"#ffffff"},"secondary":{"style":"outline","shape":"square","bg":"#ffffff","fg":"#000000"}}'::jsonb;

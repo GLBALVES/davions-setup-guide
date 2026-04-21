@@ -2500,6 +2500,7 @@ export type Database = {
           button_shape: string | null
           button_size: string | null
           button_style: string | null
+          button_variants: Json
           button_width: number | null
           contact_bg_color: string | null
           contact_text_color: string | null
@@ -2582,6 +2583,7 @@ export type Database = {
           button_shape?: string | null
           button_size?: string | null
           button_style?: string | null
+          button_variants?: Json
           button_width?: number | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
@@ -2664,6 +2666,7 @@ export type Database = {
           button_shape?: string | null
           button_size?: string | null
           button_style?: string | null
+          button_variants?: Json
           button_width?: number | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
