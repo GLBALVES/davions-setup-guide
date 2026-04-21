@@ -127,12 +127,25 @@
   letter-spacing: 0.3em;
   text-transform: uppercase;
   border: 1px solid transparent;
-  transition: opacity .2s, background .2s, color .2s;
+  transition: background-color .2s, color .2s, border-color .2s, opacity .2s;
   cursor: pointer;
   text-decoration: none;
   line-height: 1.2;
 }
-.site-btn:hover { opacity: 0.78; }
+/* Hover: per-variant background / text / border tokens. Use !important so
+   inline styles don't win on hover. */
+.site-btn-primary:hover {
+  background-color: var(--site-btn-primary-hover-bg, var(--site-btn-primary-bg, #000000)) !important;
+  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-fg, #ffffff)) !important;
+  border-color: var(--site-btn-primary-hover-border-color, var(--site-btn-primary-border-color, var(--site-btn-primary-bg, #000000))) !important;
+  opacity: 1;
+}
+.site-btn-secondary:hover {
+  background-color: var(--site-btn-secondary-hover-bg, var(--site-btn-secondary-bg, #ffffff)) !important;
+  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-fg, #000000)) !important;
+  border-color: var(--site-btn-secondary-hover-border-color, var(--site-btn-secondary-border-color, var(--site-btn-secondary-bg, #ffffff))) !important;
+  opacity: 1;
+}
 /* Solid is the default style emitted by siteButtonProps inline style. */
 /* Outline: transparent bg, colored border + text. Selectors include both
    the per-element data-style attribute (set on first render) AND the global
@@ -148,6 +161,15 @@ html[data-site-btn-primary-style="outline"] .site-btn-primary {
 html[data-site-btn-secondary-style="outline"] .site-btn-secondary {
   background-color: transparent !important;
   color: var(--site-btn-secondary-bg, #ffffff) !important;
+}
+/* Outline + hover: keep transparent unless user defined a hover BG. */
+html[data-site-btn-primary-style="outline"] .site-btn-primary:hover {
+  background-color: var(--site-btn-primary-hover-bg, transparent) !important;
+  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-bg, #000000)) !important;
+}
+html[data-site-btn-secondary-style="outline"] .site-btn-secondary:hover {
+  background-color: var(--site-btn-secondary-hover-bg, transparent) !important;
+  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-bg, #ffffff)) !important;
 }
 /* Underline: transparent bg, no border, underlined text */
 .site-btn-primary[data-style="underline"],
@@ -169,4 +191,13 @@ html[data-site-btn-primary-style="underline"] .site-btn-primary {
 .site-btn-secondary[data-style="underline"],
 html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
   color: var(--site-btn-secondary-bg, #ffffff) !important;
+}
+/* Underline hover: keep transparent BG; allow custom hover text color. */
+html[data-site-btn-primary-style="underline"] .site-btn-primary:hover {
+  background-color: transparent !important;
+  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-bg, #000000)) !important;
+}
+html[data-site-btn-secondary-style="underline"] .site-btn-secondary:hover {
+  background-color: transparent !important;
+  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-bg, #ffffff)) !important;
 }

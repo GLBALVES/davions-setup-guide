@@ -2561,8 +2561,20 @@ const VariantPresets = ({
   const variants = ((site as any)?.buttonVariants as any) || {};
   const updateVariant = (key: "primary" | "secondary", patch: Record<string, any>) => {
     const next = {
-      primary: { style: "solid", shape: "square", bg: "#000000", fg: "#ffffff", ...(variants.primary || {}) },
-      secondary: { style: "outline", shape: "square", bg: "#ffffff", fg: "#000000", ...(variants.secondary || {}) },
+      primary: {
+        style: "solid", shape: "square",
+        bg: "#000000", fg: "#ffffff",
+        borderColor: "", borderWidth: 1,
+        hoverBg: "", hoverFg: "", hoverBorderColor: "",
+        ...(variants.primary || {}),
+      },
+      secondary: {
+        style: "outline", shape: "square",
+        bg: "#ffffff", fg: "#000000",
+        borderColor: "", borderWidth: 1,
+        hoverBg: "", hoverFg: "", hoverBorderColor: "",
+        ...(variants.secondary || {}),
+      },
     };
     next[key] = { ...next[key], ...patch };
     onSiteChange({ button_variants: next });
@@ -2574,6 +2586,11 @@ const VariantPresets = ({
     const shape = v.shape || "square";
     const bg = v.bg || (vKey === "primary" ? "#000000" : "#ffffff");
     const fg = v.fg || (vKey === "primary" ? "#ffffff" : "#000000");
+    const borderColor = v.borderColor || bg;
+    const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
+    const hoverBg = v.hoverBg || "";
+    const hoverFg = v.hoverFg || "";
+    const hoverBorderColor = v.hoverBorderColor || "";
     const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
 
     return (
@@ -2593,8 +2610,8 @@ const VariantPresets = ({
             style={{
               backgroundColor: style === "solid" ? bg : "transparent",
               color: style === "solid" ? fg : bg,
-              border: style === "outline" ? `1px solid ${bg}` : "none",
-              borderBottom: style === "underline" ? `1px solid ${bg}` : undefined,
+              border: style === "outline" ? `${borderWidth}px solid ${borderColor}` : "none",
+              borderBottom: style === "underline" ? `${borderWidth}px solid ${borderColor}` : undefined,
               borderRadius: style === "underline" ? 0 : radius,
             }}
           >
@@ -2639,6 +2656,97 @@ const VariantPresets = ({
             <div className="flex items-center gap-2">
               <input type="color" value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 w-10 rounded border border-border cursor-pointer" />
               <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
+            </div>
+          </div>
+        </div>
+
+        {/* Border */}
+        <div className="h-px bg-border/60" />
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={borderColor}
+                onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
+                className="h-9 w-10 rounded border border-border cursor-pointer"
+              />
+              <Input
+                value={v.borderColor || ""}
+                placeholder="auto (uses BG)"
+                onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
+                className="h-9 text-xs flex-1"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Width (px)</p>
+            <Input
+              type="number"
+              min={0}
+              max={8}
+              value={borderWidth}
+              onChange={(e) => updateVariant(vKey, { borderWidth: Math.max(0, Number(e.target.value) || 0) })}
+              className="h-9 text-xs"
+            />
+          </div>
+        </div>
+
+        {/* Hover */}
+        <div className="h-px bg-border/60" />
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hover</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={hoverBg || bg}
+                onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
+                className="h-9 w-10 rounded border border-border cursor-pointer"
+              />
+              <Input
+                value={v.hoverBg || ""}
+                placeholder="auto"
+                onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
+                className="h-9 text-xs flex-1"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={hoverFg || fg}
+                onChange={(e) => updateVariant(vKey, { hoverFg: e.target.value })}
+                className="h-9 w-10 rounded border border-border cursor-pointer"
+              />
+              <Input
+                value={v.hoverFg || ""}
+                placeholder="auto"
+                onChange={(e) => updateVariant(vKey, { hoverFg: e.target.value })}
+                className="h-9 text-xs flex-1"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 col-span-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={hoverBorderColor || borderColor}
+                onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
+                className="h-9 w-10 rounded border border-border cursor-pointer"
+              />
+              <Input
+                value={v.hoverBorderColor || ""}
+                placeholder="auto"
+                onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
+                className="h-9 text-xs flex-1"
+              />
             </div>
           </div>
         </div>
@@ -3329,8 +3437,20 @@ const WebsiteEditor = () => {
     (["primary", "secondary"] as const).forEach((key) => {
       const v = variants[key] || {};
       const styleMode = v.style || (key === "primary" ? "solid" : "outline");
-      root.style.setProperty(`--site-btn-${key}-bg`, v.bg || (key === "primary" ? "#000000" : "#ffffff"));
-      root.style.setProperty(`--site-btn-${key}-fg`, v.fg || (key === "primary" ? "#ffffff" : "#000000"));
+      const bg = v.bg || (key === "primary" ? "#000000" : "#ffffff");
+      const fg = v.fg || (key === "primary" ? "#ffffff" : "#000000");
+      const borderColor = v.borderColor || bg;
+      const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
+      const hoverBg = v.hoverBg || bg;
+      const hoverFg = v.hoverFg || fg;
+      const hoverBorderColor = v.hoverBorderColor || borderColor;
+      root.style.setProperty(`--site-btn-${key}-bg`, bg);
+      root.style.setProperty(`--site-btn-${key}-fg`, fg);
+      root.style.setProperty(`--site-btn-${key}-border-color`, borderColor);
+      root.style.setProperty(`--site-btn-${key}-border-width`, `${borderWidth}px`);
+      root.style.setProperty(`--site-btn-${key}-hover-bg`, hoverBg);
+      root.style.setProperty(`--site-btn-${key}-hover-fg`, hoverFg);
+      root.style.setProperty(`--site-btn-${key}-hover-border-color`, hoverBorderColor);
       root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
       root.style.setProperty(`--site-btn-${key}-style`, styleMode);
       // Mirror style mode as a data attribute on <html> so CSS rules can

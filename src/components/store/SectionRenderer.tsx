@@ -40,13 +40,17 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
   const v = variant;
   const bgVar = `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`;
   const fgVar = `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`;
+  const borderColorVar = `var(--site-btn-${v}-border-color, ${v === "primary" ? "#000000" : "#ffffff"})`;
+  const borderWidthVar = `var(--site-btn-${v}-border-width, 1px)`;
   return {
     style: {
       backgroundColor: bgVar,
       color: fgVar,
-      // Always render a 1px border in the variant color so Outline mode is
+      // Always render a border in the configured color so Outline mode is
       // visible (CSS rules override background to transparent for outline).
-      border: `1px solid ${bgVar}`,
+      borderStyle: "solid",
+      borderWidth: borderWidthVar,
+      borderColor: borderColorVar,
       // Per-variant shape wins; falls back to global default shape token.
       borderRadius: `var(--site-btn-${v}-radius, var(--site-btn-radius, 2px))`,
       // Global size tokens — sync from Style → Buttons → Size.
