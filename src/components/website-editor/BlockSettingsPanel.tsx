@@ -144,7 +144,8 @@ function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any
   );
 }
 
-function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const images: string[] = props.images || [];
   return (
     <div className="space-y-3">
       <Field label="Columns">
@@ -157,12 +158,137 @@ function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: a
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Images (one URL per line)">
-        <Textarea
-          value={(props.images || []).join("\n")}
-          onChange={(e) => onChange({ ...props, images: e.target.value.split("\n").filter(Boolean) })}
-          className="text-sm min-h-[80px]"
-          placeholder="https://image1.jpg&#10;https://image2.jpg"
+      <Field label="Images">
+        <ItemListEditor
+          items={images}
+          onChange={(next) => onChange({ ...props, images: next })}
+          itemLabel="Image"
+          addLabel="Add Image"
+          newItem={() => ""}
+          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty image")}
+          renderDetail={(item, _u) => (
+            <ImageUploadField
+              value={item as string}
+              onChange={(url) => {
+                const next = [...images];
+                const idx = images.indexOf(item as string);
+                if (idx >= 0) {
+                  next[idx] = url ?? "";
+                  onChange({ ...props, images: next });
+                }
+              }}
+              photographerId={photographerId}
+              folder="gallery"
+            />
+          )}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function SlideshowContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const images: string[] = props.images || [];
+  return (
+    <div className="space-y-3">
+      <Field label={`Interval: ${(props.interval ?? 5000) / 1000}s`}>
+        <Slider value={[props.interval ?? 5000]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
+      </Field>
+      <Field label="Images">
+        <ItemListEditor
+          items={images}
+          onChange={(next) => onChange({ ...props, images: next })}
+          itemLabel="Slide"
+          addLabel="Add Slide"
+          newItem={() => ""}
+          renderLabel={(it) => (it ? it.split("/").pop() || it : "Empty slide")}
+          renderDetail={(item, _u) => (
+            <ImageUploadField
+              value={item as string}
+              onChange={(url) => {
+                const next = [...images];
+                const idx = images.indexOf(item as string);
+                if (idx >= 0) {
+                  next[idx] = url ?? "";
+                  onChange({ ...props, images: next });
+                }
+              }}
+              photographerId={photographerId}
+              folder="slideshow"
+            />
+          )}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function SocialLinksContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  const links: { platform: string; url: string }[] = props.links || [];
+  return (
+    <ItemListEditor
+      items={links}
+      onChange={(next) => onChange({ ...props, links: next })}
+      itemLabel="Link"
+      addLabel="Add Link"
+      newItem={() => ({ platform: "instagram", url: "" })}
+      renderLabel={(it) => `${it.platform || "?"} — ${it.url || ""}`}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Platform">
+            <Select value={item.platform || "instagram"} onValueChange={(v) => update({ platform: v })}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="twitter">X / Twitter</SelectItem>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
+                <SelectItem value="pinterest">Pinterest</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="URL">
+            <Input value={item.url} onChange={(e) => update({ url: e.target.value })} className="h-9 text-sm" placeholder="https://…" />
+          </Field>
+        </div>
+      )}
+    />
+  );
+}
+
+function LogoStripContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const logos: { url: string; alt?: string }[] = props.logos || [];
+  return (
+    <div className="space-y-3">
+      <Field label="Title">
+        <Input value={props.title || ""} onChange={(e) => onChange({ ...props, title: e.target.value })} className="h-9 text-sm" placeholder="As Seen On" />
+      </Field>
+      <Field label="Logos">
+        <ItemListEditor
+          items={logos}
+          onChange={(next) => onChange({ ...props, logos: next })}
+          itemLabel="Logo"
+          addLabel="Add Logo"
+          newItem={() => ({ url: "", alt: "" })}
+          renderLabel={(it) => it.alt || (it.url ? it.url.split("/").pop() || it.url : "Empty")}
+          renderDetail={(item, update) => (
+            <div className="space-y-2">
+              <Field label="Image">
+                <ImageUploadField
+                  value={item.url}
+                  onChange={(url) => update({ url: url ?? "" })}
+                  photographerId={photographerId}
+                  folder="logos"
+                  aspectClass="aspect-[3/1]"
+                />
+              </Field>
+              <Field label="Alt text">
+                <Input value={item.alt || ""} onChange={(e) => update({ alt: e.target.value })} className="h-9 text-sm" placeholder="Brand name" />
+              </Field>
+            </div>
+          )}
         />
       </Field>
     </div>
