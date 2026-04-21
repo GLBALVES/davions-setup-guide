@@ -261,6 +261,103 @@ function FloatingBlockToolbar({
   );
 }
 
+// ── Sortable wrapper for a block in the canvas ───────────────────────────────
+function SortableBlock({
+  section,
+  idx,
+  isSelected,
+  isLast,
+  editMode,
+  onSelect,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+  children,
+}: {
+  section: PageSection;
+  idx: number;
+  isSelected: boolean;
+  isLast: boolean;
+  editMode: boolean;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+    disabled: !editMode,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: "relative",
+    zIndex: isDragging ? 40 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+      className={cn(
+        "relative group/block transition-all",
+        isSelected
+          ? "ring-2 ring-primary ring-inset"
+          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+      )}
+    >
+      {/* Block label badge */}
+      <div className={cn(
+        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
+        isSelected
+          ? "opacity-100 bg-primary text-primary-foreground"
+          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
+      )}>
+        {section.label}
+      </div>
+
+      {/* Drag handle (left side, edit mode only) */}
+      {editMode && (
+        <button
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-10 rounded bg-foreground/90 text-background flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing touch-none transition-opacity",
+            isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+          )}
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Floating toolbar (selected or hover) */}
+      <div className={cn(
+        "transition-opacity",
+        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+      )}>
+        <FloatingBlockToolbar
+          isFirst={idx === 0}
+          isLast={isLast}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onDuplicate={onDuplicate}
+          onSettings={onSelect}
+          onDelete={onDelete}
+        />
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
 export default function PreviewRenderer({
   sections,
   selectedBlockIndex,
