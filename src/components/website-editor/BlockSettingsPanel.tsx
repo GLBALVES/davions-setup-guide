@@ -171,28 +171,25 @@ function GalleryContentEditor({ props, onChange }: { props: any; onChange: (p: a
 
 function FaqContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const items: { question: string; answer: string }[] = props.items || [];
-  const updateItem = (idx: number, field: string, value: string) => {
-    const next = [...items];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, items: next });
-  };
-  const addItem = () => onChange({ ...props, items: [...items, { question: "", answer: "" }] });
-  const removeItem = (idx: number) => onChange({ ...props, items: items.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {items.map((item, idx) => (
-        <div key={idx} className="space-y-1.5 p-2 border border-border rounded-md bg-muted/10">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground font-medium">Q{idx + 1}</span>
-            <button onClick={() => removeItem(idx)} className="p-0.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-3 w-3" /></button>
-          </div>
-          <Input value={item.question} onChange={(e) => updateItem(idx, "question", e.target.value)} className="h-8 text-xs" placeholder="Question" />
-          <Textarea value={item.answer} onChange={(e) => updateItem(idx, "answer", e.target.value)} className="text-xs min-h-[50px]" placeholder="Answer" />
+    <ItemListEditor
+      items={items}
+      onChange={(next) => onChange({ ...props, items: next })}
+      itemLabel="Question"
+      addLabel="Add Question"
+      newItem={() => ({ question: "", answer: "" })}
+      renderLabel={(it) => it.question || ""}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Question">
+            <Input value={item.question} onChange={(e) => update({ question: e.target.value })} className="h-9 text-sm" placeholder="Question" />
+          </Field>
+          <Field label="Answer">
+            <Textarea value={item.answer} onChange={(e) => update({ answer: e.target.value })} className="text-sm min-h-[100px]" placeholder="Answer" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addItem}><Plus className="h-3 w-3" /> Add Question</Button>
-    </div>
+      )}
+    />
   );
 }
 
