@@ -500,7 +500,13 @@ export default function PreviewRenderer({
                 <CanvasAddSection onClick={() => onAddBlockAt(0)} />
               )}
 
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
+              >
                 <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
                   {sections.map((section, idx) => {
                     const isSelected = selectedBlockIndex === idx;
@@ -533,6 +539,14 @@ export default function PreviewRenderer({
                     );
                   })}
                 </SortableContext>
+                <DragOverlay dropAnimation={null}>
+                  {activeDragSection ? (
+                    <div className="px-3 py-2 rounded-md bg-foreground text-background shadow-2xl border border-primary text-xs font-medium tracking-wide uppercase flex items-center gap-2 cursor-grabbing">
+                      <GripVertical className="h-3.5 w-3.5" />
+                      {activeDragSection.label}
+                    </div>
+                  ) : null}
+                </DragOverlay>
               </DndContext>
 
             </>
