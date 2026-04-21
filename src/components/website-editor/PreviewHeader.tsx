@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { siteButtonProps } from "@/components/store/SectionRenderer";
+import { SiteCtaLink } from "@/components/store/SectionRenderer";
 import type { PreviewSiteConfig, PreviewNavLink } from "./PreviewRenderer";
 
 export interface HeaderSlide {
