@@ -424,10 +424,10 @@ function TextBlock({ body, ctx }: any) {
 
 // ─── Image + Text ───────────────────────────────────────────────────────────
 
-function ImageTextBlock({ image, title, body, ctaText, ctaLink, buttonVariant, ctx }: any) {
+function ImageTextBlock(props: any) {
+  const { image, title, body, ctx } = props;
   const c: Ctx = ctx || { editMode: false, set: () => {} };
-  const variant: "primary" | "secondary" = buttonVariant === "secondary" ? "secondary" : "primary";
-  const btn = siteButtonProps(variant);
+  const buttons = resolveBlockButtons(props);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
@@ -470,22 +470,70 @@ function ImageTextBlock({ image, title, body, ctaText, ctaLink, buttonVariant, c
             onChange={(v) => c.set("body", v)}
             className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
           />
-          {(c.editMode || ctaText) && (
-            <a
-              href={c.editMode ? undefined : (ctaLink || "#")}
-              onClick={(e) => c.editMode && e.preventDefault()}
-              {...btn}
-              style={{ ...btn.style, marginTop: "1.5rem" }}
-            >
-              <EditableText
-                as="span"
-                editMode={c.editMode}
-                value={ctaText || ""}
-                placeholder="Button text"
-                onChange={(v) => c.set("ctaText", v)}
-              />
-            </a>
+          <BlockButtons
+            buttons={buttons}
+            editMode={c.editMode}
+            onChange={(next) => c.set("buttons", next)}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Text + Image ───────────────────────────────────────────────────────────
+
+function TextImageBlock(props: any) {
+  const { image, title, body, ctx } = props;
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const buttons = resolveBlockButtons(props);
+  return (
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row-reverse gap-10 items-center">
+        <div className="w-full md:w-1/2">
+          <EditableImage
+            value={image}
+            onChange={(url) => c.set("image", url)}
+            photographerId={c.photographerId}
+            folder="text-image"
+            editMode={c.editMode}
+          >
+            <div className="aspect-[4/3] bg-muted/30 overflow-hidden rounded">
+              {image ? (
+                <img src={image} alt={title || ""} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-muted-foreground/30" />
+                </div>
+              )}
+            </div>
+          </EditableImage>
+        </div>
+        <div className="w-full md:w-1/2">
+          {(c.editMode || title) && (
+            <EditableText
+              as="h2"
+              editMode={c.editMode}
+              value={title || ""}
+              placeholder="Add a title"
+              onChange={(v) => c.set("title", v)}
+              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+            />
           )}
+          <EditableText
+            as="p"
+            editMode={c.editMode}
+            value={body || ""}
+            placeholder="Add body text"
+            multiline
+            onChange={(v) => c.set("body", v)}
+            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+          />
+          <BlockButtons
+            buttons={buttons}
+            editMode={c.editMode}
+            onChange={(next) => c.set("buttons", next)}
+          />
         </div>
       </div>
     </section>
