@@ -195,25 +195,25 @@ function FaqContentEditor({ props, onChange }: { props: any; onChange: (p: any) 
 
 function StatsContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   const items: { value: string; label: string }[] = props.items || [];
-  const updateItem = (idx: number, field: string, value: string) => {
-    const next = [...items];
-    next[idx] = { ...next[idx], [field]: value };
-    onChange({ ...props, items: next });
-  };
-  const addItem = () => onChange({ ...props, items: [...items, { value: "", label: "" }] });
-  const removeItem = (idx: number) => onChange({ ...props, items: items.filter((_, i) => i !== idx) });
-
   return (
-    <div className="space-y-3">
-      {items.map((item, idx) => (
-        <div key={idx} className="flex gap-2 items-center">
-          <Input value={item.value} onChange={(e) => updateItem(idx, "value", e.target.value)} className="h-8 text-xs flex-1" placeholder="500+" />
-          <Input value={item.label} onChange={(e) => updateItem(idx, "label", e.target.value)} className="h-8 text-xs flex-1" placeholder="Sessions" />
-          <button onClick={() => removeItem(idx)} className="p-1 text-destructive hover:bg-destructive/10 rounded shrink-0"><Trash2 className="h-3 w-3" /></button>
+    <ItemListEditor
+      items={items}
+      onChange={(next) => onChange({ ...props, items: next })}
+      itemLabel="Stat"
+      addLabel="Add Stat"
+      newItem={() => ({ value: "", label: "" })}
+      renderLabel={(it) => [it.value, it.label].filter(Boolean).join(" — ")}
+      renderDetail={(item, update) => (
+        <div className="space-y-2">
+          <Field label="Value">
+            <Input value={item.value} onChange={(e) => update({ value: e.target.value })} className="h-9 text-sm" placeholder="500+" />
+          </Field>
+          <Field label="Label">
+            <Input value={item.label} onChange={(e) => update({ label: e.target.value })} className="h-9 text-sm" placeholder="Sessions" />
+          </Field>
         </div>
-      ))}
-      <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={addItem}><Plus className="h-3 w-3" /> Add Stat</Button>
-    </div>
+      )}
+    />
   );
 }
 
