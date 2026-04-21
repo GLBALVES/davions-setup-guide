@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Camera, Type, Briefcase, MessageSquare, Target,
   Image, LayoutGrid, SlidersHorizontal, Play,
   FileText, Columns2, Columns3, Minus, Video,
   DollarSign, HelpCircle, Quote, BarChart3, Users, Clock,
   Mail, Map, Instagram, Share2, Code, Award,
-  X,
+  Search, Sparkles, X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SectionType } from "./page-templates";
@@ -106,61 +107,134 @@ interface AddBlockPickerProps {
 }
 
 export const AddBlockPicker = ({ open, onOpenChange, onSelect }: AddBlockPickerProps) => {
-  const [activeCategory, setActiveCategory] = useState("photos");
-  const category = CATEGORIES.find((c) => c.id === activeCategory)!;
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [query, setQuery] = useState("");
+
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const filteredBlocks = useMemo(() => {
+    const pool = activeCategory === "all"
+      ? CATEGORIES.flatMap((c) => c.blocks.map((b) => ({ ...b, _cat: c.label })))
+      : (CATEGORIES.find((c) => c.id === activeCategory)?.blocks ?? []).map((b) => ({
+          ...b,
+          _cat: CATEGORIES.find((c) => c.id === activeCategory)?.label ?? "",
+        }));
+    if (!normalizedQuery) return pool;
+    return pool.filter((b) =>
+      b.label.toLowerCase().includes(normalizedQuery) ||
+      b.description.toLowerCase().includes(normalizedQuery) ||
+      b.type.toLowerCase().includes(normalizedQuery)
+    );
+  }, [activeCategory, normalizedQuery]);
+
+  const handleClose = (next: boolean) => {
+    if (!next) {
+      setQuery("");
+      setActiveCategory("all");
+    }
+    onOpenChange(next);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 py-3 border-b border-border">
           <DialogTitle className="text-sm font-medium">Add Block</DialogTitle>
         </DialogHeader>
 
-        <div className="flex min-h-[340px]">
+        {/* Search */}
+        <div className="px-3 py-2 border-b border-border bg-muted/10">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search blocks..."
+              className="h-8 pl-8 pr-8 text-xs"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted text-muted-foreground"
+                title="Clear"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex min-h-[340px] max-h-[60vh]">
           {/* Category tabs */}
-          <div className="w-[140px] border-r border-border bg-muted/20 p-1.5 space-y-0.5 shrink-0">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={cn(
-                    "flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-xs transition-colors text-left",
-                    activeCategory === cat.id
-                      ? "bg-accent text-accent-foreground font-medium"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  )}
-                >
-                  <span className="text-sm">{cat.emoji}</span>
-                  {cat.label}
-                </button>
-              );
-            })}
+          <div className="w-[140px] border-r border-border bg-muted/20 p-1.5 space-y-0.5 shrink-0 overflow-y-auto">
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={cn(
+                "flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-xs transition-colors text-left",
+                activeCategory === "all"
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              All
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={cn(
+                  "flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-xs transition-colors text-left",
+                  activeCategory === cat.id
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                )}
+              >
+                <span className="text-sm">{cat.emoji}</span>
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           {/* Blocks grid */}
           <div className="flex-1 p-3 overflow-y-auto">
-            <div className="grid grid-cols-2 gap-2">
-              {category.blocks.map((block) => {
-                const Icon = block.icon;
-                return (
-                  <button
-                    key={block.type}
-                    onClick={() => { onSelect(block.type); onOpenChange(false); }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors text-center group"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-muted/60 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{block.label}</p>
-                      <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{block.description}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            {filteredBlocks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full py-10 text-center">
+                <Search className="h-6 w-6 text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">No blocks match "{query}"</p>
+                <button
+                  onClick={() => { setQuery(""); setActiveCategory("all"); }}
+                  className="mt-2 text-[11px] text-primary hover:underline"
+                >
+                  Clear filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {filteredBlocks.map((block) => {
+                  const Icon = block.icon;
+                  return (
+                    <button
+                      key={block.type}
+                      onClick={() => { onSelect(block.type); handleClose(false); }}
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors text-center group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-muted/60 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{block.label}</p>
+                        <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{block.description}</p>
+                        {activeCategory === "all" && (
+                          <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider mt-1">{(block as any)._cat}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
