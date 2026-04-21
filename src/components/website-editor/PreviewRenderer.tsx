@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
@@ -245,6 +246,9 @@ function FloatingBlockToolbar({
   onDuplicate,
   onSettings,
   onDelete,
+  onToggleVisibility,
+  onCopyAnchor,
+  hidden,
 }: {
   isFirst: boolean;
   isLast: boolean;
@@ -253,6 +257,9 @@ function FloatingBlockToolbar({
   onDuplicate: () => void;
   onSettings: () => void;
   onDelete: () => void;
+  onToggleVisibility: () => void;
+  onCopyAnchor: () => void;
+  hidden?: boolean;
 }) {
   const Btn = ({ onClick, disabled, title, children, danger, ...rest }: any) => (
     <button
@@ -277,6 +284,10 @@ function FloatingBlockToolbar({
       <div className="w-px h-4 bg-background/20 mx-0.5" />
       <Btn onClick={onDuplicate} title="Duplicate"><Copy className="h-3.5 w-3.5" /></Btn>
       <Btn onClick={onSettings} title="Settings"><Settings2 className="h-3.5 w-3.5" /></Btn>
+      <Btn onClick={onToggleVisibility} title={hidden ? "Show on site" : "Hide on site"}>
+        {hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+      </Btn>
+      <Btn onClick={onCopyAnchor} title="Copy section link"><LinkIcon className="h-3.5 w-3.5" /></Btn>
       <div className="w-px h-4 bg-background/20 mx-0.5" />
       <Btn onClick={onDelete} title="Delete" danger><Trash2 className="h-3.5 w-3.5" /></Btn>
     </div>
@@ -295,6 +306,9 @@ function SortableBlock({
   onMoveDown,
   onDuplicate,
   onDelete,
+  onToggleVisibility,
+  onCopyAnchor,
+  hidden,
   children,
 }: {
   section: PageSection;
@@ -307,6 +321,9 @@ function SortableBlock({
   onMoveDown: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onToggleVisibility: () => void;
+  onCopyAnchor: () => void;
+  hidden?: boolean;
   children: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -374,11 +391,17 @@ function SortableBlock({
             onDuplicate={onDuplicate}
             onSettings={onSelect}
             onDelete={onDelete}
+            onToggleVisibility={onToggleVisibility}
+            onCopyAnchor={onCopyAnchor}
+            hidden={hidden}
           />
         </div>
       )}
 
-      <div className={cn(isDragging && "opacity-30 pointer-events-none")}>
+      <div className={cn(
+        isDragging && "opacity-30 pointer-events-none",
+        hidden && !isDragging && "opacity-40"
+      )}>
         {children}
       </div>
     </div>
@@ -620,6 +643,21 @@ export default function PreviewRenderer({
                           onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
                           onDuplicate={() => onDuplicateBlock?.(idx)}
                           onDelete={() => onDeleteBlock?.(idx)}
+                          hidden={!!(section.props as any)?.hidden}
+                          onToggleVisibility={() => {
+                            const next = !(section.props as any)?.hidden;
+                            onPropChange?.(section.id, "hidden", next);
+                            toast.success(next ? "Section hidden on public site" : "Section visible on public site");
+                          }}
+                          onCopyAnchor={async () => {
+                            const anchor = `#${section.id}`;
+                            try {
+                              await navigator.clipboard.writeText(anchor);
+                              toast.success(`Copied ${anchor}`);
+                            } catch {
+                              toast.error("Could not copy link");
+                            }
+                          }}
                         >
                           <SectionRenderer
                             sections={[section]}
