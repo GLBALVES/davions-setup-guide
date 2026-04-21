@@ -2703,8 +2703,18 @@ const ComingSoon = ({ title, description }: { title: string; description: string
 
 // Simulated browser tab bar shown above the live preview so users see the
 // favicon and page title exactly like in a real browser tab.
-const BrowserTabBar = ({ faviconUrl, title }: { faviconUrl: string | null; title: string }) => (
-  <div className="h-8 border-b border-border bg-muted/30 flex items-end px-3 shrink-0">
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+const BrowserTabBar = ({
+  faviconUrl,
+  title,
+  saveStatus = "idle",
+}: {
+  faviconUrl: string | null;
+  title: string;
+  saveStatus?: SaveStatus;
+}) => (
+  <div className="h-8 border-b border-border bg-muted/30 flex items-end justify-between px-3 shrink-0">
     <div className="flex items-center gap-2 max-w-[260px] h-7 px-3 rounded-t-md bg-background border-t border-x border-border">
       {faviconUrl ? (
         <img
@@ -2717,6 +2727,36 @@ const BrowserTabBar = ({ faviconUrl, title }: { faviconUrl: string | null; title
       )}
       <span className="text-[11px] text-foreground truncate">{title}</span>
     </div>
+    {/* Auto-save indicator — appears only when there's something to communicate */}
+    {saveStatus !== "idle" && (
+      <div
+        className={cn(
+          "flex items-center gap-1.5 h-5 px-2 mb-1 rounded-full text-[10px] font-medium transition-opacity",
+          saveStatus === "saving" && "bg-muted text-muted-foreground",
+          saveStatus === "saved" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          saveStatus === "error" && "bg-destructive/10 text-destructive"
+        )}
+      >
+        {saveStatus === "saving" && (
+          <>
+            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            Saving…
+          </>
+        )}
+        {saveStatus === "saved" && (
+          <>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Saved
+          </>
+        )}
+        {saveStatus === "error" && (
+          <>
+            <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+            Save failed
+          </>
+        )}
+      </div>
+    )}
   </div>
 );
 
