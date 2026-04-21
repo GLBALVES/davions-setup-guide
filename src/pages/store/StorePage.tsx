@@ -15,6 +15,7 @@ interface RawPage {
   is_visible: boolean;
   sections_order: unknown;
   page_content: Record<string, any> | null;
+  header_config?: unknown;
   published_sections_order?: unknown;
   published_content?: Record<string, any> | null;
   published_at?: string | null;
@@ -83,7 +84,7 @@ const StorePage = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, published_sections_order, published_content, published_at")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
@@ -200,6 +201,7 @@ const StorePage = () => {
       extraNavLinks={cleanPreview ? [] : extraNavLinks}
       visibleSections={cleanPreview ? null : homeSections}
       pageSections={cleanPreview ? [] : pageSections}
+      pageHeaderConfig={cleanPreview ? null : ((homePage as RawPage | null)?.header_config as any) ?? null}
       previewTemplate={previewTemplate}
     />
   );
