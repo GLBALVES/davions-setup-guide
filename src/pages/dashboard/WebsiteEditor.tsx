@@ -2420,13 +2420,30 @@ const ButtonsSubPanel = ({
   );
 
   return (
-    <div className="space-y-6">
-      {/* Button Style */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-foreground">Button Style</label>
+    <div className="space-y-5">
+      {/* ── Variants (Primary/Secondary) ──────────────────────────────── */}
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+            Variants
+          </h4>
+          <p className="text-xs text-muted-foreground/80 leading-relaxed">
+            Two reusable presets. Each block button can pick Primary or Secondary.
+          </p>
+        </div>
+        <VariantPresets site={site} onSiteChange={onSiteChange} />
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* ── Default Shape (legacy fallback) ───────────────────────────── */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Default Shape
+        </h4>
 
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Solid</p>
+          <p className="text-[11px] text-muted-foreground">Solid</p>
           <div className="grid grid-cols-3 gap-2">
             {(["square", "rounded", "pill"] as const).map((sh) => (
               <Swatch
@@ -2441,7 +2458,7 @@ const ButtonsSubPanel = ({
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Outline</p>
+          <p className="text-[11px] text-muted-foreground">Outline</p>
           <div className="grid grid-cols-3 gap-2">
             {(["square", "rounded", "pill"] as const).map((sh) => (
               <Swatch
@@ -2456,7 +2473,7 @@ const ButtonsSubPanel = ({
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Underline</p>
+          <p className="text-[11px] text-muted-foreground">Underline</p>
           <button
             type="button"
             onClick={() => onSiteChange({ button_style: "underline" })}
@@ -2474,13 +2491,15 @@ const ButtonsSubPanel = ({
             />
           </button>
         </div>
-      </div>
+      </section>
 
       <div className="h-px bg-border" />
 
-      {/* Button Size */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Button Size</label>
+      {/* ── Size ──────────────────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Size
+        </h4>
         <Select
           value={size}
           onValueChange={(v) => onSiteChange({ button_size: v })}
@@ -2493,45 +2512,40 @@ const ButtonsSubPanel = ({
             <SelectItem value="custom">Custom</SelectItem>
           </SelectContent>
         </Select>
-      </div>
 
-      {size === "custom" && (
-        <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Height</label>
-            <div className="flex items-center gap-3">
-              <Slider
-                min={8}
-                max={64}
-                step={1}
-                value={[height]}
-                onValueChange={([v]) => onSiteChange({ button_height: v })}
-                className="flex-1"
-              />
-              <span className="text-xs text-muted-foreground w-10 text-right">{height}px</span>
+        {size === "custom" && (
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Height</label>
+              <div className="flex items-center gap-3">
+                <Slider
+                  min={8}
+                  max={64}
+                  step={1}
+                  value={[height]}
+                  onValueChange={([v]) => onSiteChange({ button_height: v })}
+                  className="flex-1"
+                />
+                <span className="text-xs text-muted-foreground w-10 text-right">{height}px</span>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Width</label>
+              <div className="flex items-center gap-3">
+                <Slider
+                  min={16}
+                  max={200}
+                  step={1}
+                  value={[width]}
+                  onValueChange={([v]) => onSiteChange({ button_width: v })}
+                  className="flex-1"
+                />
+                <span className="text-xs text-muted-foreground w-10 text-right">{width}px</span>
+              </div>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Width</label>
-            <div className="flex items-center gap-3">
-              <Slider
-                min={16}
-                max={200}
-                step={1}
-                value={[width]}
-                onValueChange={([v]) => onSiteChange({ button_width: v })}
-                className="flex-1"
-              />
-              <span className="text-xs text-muted-foreground w-10 text-right">{width}px</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="h-px bg-border" />
-
-      {/* Variants: Primary / Secondary */}
-      <VariantPresets site={site} onSiteChange={onSiteChange} />
+        )}
+      </section>
     </div>
   );
 };
@@ -2554,7 +2568,7 @@ const VariantPresets = ({
     onSiteChange({ button_variants: next });
   };
 
-  const VariantBlock = ({ label, vKey }: { label: string; vKey: "primary" | "secondary" }) => {
+  const VariantBlock = ({ label, vKey, accent }: { label: string; vKey: "primary" | "secondary"; accent: string }) => {
     const v = variants[vKey] || {};
     const style = v.style || (vKey === "primary" ? "solid" : "outline");
     const shape = v.shape || "square";
@@ -2563,11 +2577,19 @@ const VariantPresets = ({
     const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
 
     return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-foreground">{label}</label>
+      <div className="rounded-md border border-border bg-card/30 p-3 space-y-3">
+        {/* Header with live preview */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="h-2 w-2 rounded-full shrink-0"
+              style={{ backgroundColor: accent }}
+              aria-hidden
+            />
+            <span className="text-xs font-medium text-foreground truncate">{label}</span>
+          </div>
           <span
-            className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase"
+            className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0"
             style={{
               backgroundColor: style === "solid" ? bg : "transparent",
               color: style === "solid" ? fg : bg,
@@ -2579,6 +2601,9 @@ const VariantPresets = ({
             Sample
           </span>
         </div>
+
+        <div className="h-px bg-border/60" />
+
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Style</p>
@@ -2622,14 +2647,9 @@ const VariantPresets = ({
   };
 
   return (
-    <div className="space-y-6">
-      <label className="text-sm font-medium text-foreground">Button Variants</label>
-      <p className="text-xs text-muted-foreground">
-        Define two reusable presets. Each block with a button can choose Primary or Secondary.
-      </p>
-      <VariantBlock label="Primary" vKey="primary" />
-      <div className="h-px bg-border" />
-      <VariantBlock label="Secondary" vKey="secondary" />
+    <div className="space-y-3">
+      <VariantBlock label="Primary" vKey="primary" accent="hsl(var(--foreground))" />
+      <VariantBlock label="Secondary" vKey="secondary" accent="hsl(var(--muted-foreground))" />
     </div>
   );
 };
