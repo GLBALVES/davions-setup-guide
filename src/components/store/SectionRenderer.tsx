@@ -60,6 +60,99 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
   };
 }
 
+// ─── Block Button schema ────────────────────────────────────────────────────
+// Multi-button per item with backwards-compatible fallback to legacy fields
+// (ctaText/ctaLink for Hero/Image+Text/Text+Image; buttonText/buttonLink for CTA).
+export type BlockButton = {
+  id?: string;
+  text: string;
+  link?: string;
+  variant?: "primary" | "secondary";
+  newTab?: boolean;
+};
+
+/** Normalize legacy single-button fields into a `buttons[]` array.
+ *  Order of precedence: explicit `buttons[]` > `ctaText`/`ctaLink` > `buttonText`/`buttonLink`.
+ *  Returns [] when nothing is configured (caller decides placeholder behavior). */
+export function resolveBlockButtons(props: any): BlockButton[] {
+  if (Array.isArray(props?.buttons) && props.buttons.length > 0) {
+    return props.buttons
+      .filter((b: any) => b && (b.text || b.link))
+      .map((b: any) => ({
+        id: b.id,
+        text: b.text || "",
+        link: b.link || "",
+        variant: b.variant === "secondary" ? "secondary" : "primary",
+        newTab: !!b.newTab,
+      }));
+  }
+  // Legacy single-button fallback.
+  const legacyText = props?.ctaText || props?.buttonText;
+  const legacyLink = props?.ctaLink || props?.buttonLink;
+  if (legacyText || legacyLink) {
+    return [{
+      text: legacyText || "",
+      link: legacyLink || "",
+      variant: props?.buttonVariant === "secondary" ? "secondary" : "primary",
+      newTab: false,
+    }];
+  }
+  return [];
+}
+
+/** Renders the configured button list. In edit mode, always shows at least one
+ *  placeholder so the editor can interact with it. */
+function BlockButtons({
+  buttons,
+  editMode,
+  onChange,
+  marginTop = "1.5rem",
+  align = "start",
+}: {
+  buttons: BlockButton[];
+  editMode: boolean;
+  onChange: (next: BlockButton[]) => void;
+  marginTop?: string | number;
+  align?: "start" | "center" | "end";
+}) {
+  const list = buttons.length > 0 ? buttons : (editMode ? [{ text: "", link: "", variant: "primary" as const }] : []);
+  if (list.length === 0) return null;
+  const justify = align === "center" ? "center" : align === "end" ? "flex-end" : "flex-start";
+  return (
+    <div
+      className="flex flex-wrap gap-3"
+      style={{ marginTop, justifyContent: justify }}
+    >
+      {list.map((b, i) => {
+        const variant: "primary" | "secondary" = b.variant === "secondary" ? "secondary" : "primary";
+        const btn = siteButtonProps(variant);
+        return (
+          <a
+            key={b.id || i}
+            href={editMode ? undefined : (b.link || "#")}
+            target={!editMode && b.newTab ? "_blank" : undefined}
+            rel={!editMode && b.newTab ? "noopener noreferrer" : undefined}
+            onClick={(e) => editMode && e.preventDefault()}
+            {...btn}
+          >
+            <EditableText
+              as="span"
+              editMode={editMode}
+              value={b.text || ""}
+              placeholder="Button text"
+              onChange={(v) => {
+                const next = [...list];
+                next[i] = { ...next[i], text: v };
+                onChange(next);
+              }}
+            />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
 
 export default function SectionRenderer({
   sections,
