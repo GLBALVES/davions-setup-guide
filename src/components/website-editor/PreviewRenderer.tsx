@@ -5,6 +5,7 @@ import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
+import EditorOnboarding from "@/components/website-editor/EditorOnboarding";
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
   closestCenter, DragOverlay, type DragEndEvent, type DragStartEvent,
