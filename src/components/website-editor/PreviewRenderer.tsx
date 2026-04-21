@@ -480,6 +480,9 @@ export default function PreviewRenderer({
         onScroll={recomputeNearest}
         className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative"
       >
+        {/* Mini onboarding (2 steps) for first-time editors on an empty page */}
+        <EditorOnboarding active={editMode && sections.length === 0} />
+
         {/* Floating Add Section button — always visible while editing.
             Inserts after the block currently nearest to the viewport center. */}
         {editMode && onAddBlockAt && (
