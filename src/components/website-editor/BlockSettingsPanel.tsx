@@ -632,6 +632,9 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void, 
     case "embed": return <EmbedContentEditor props={props} onChange={onChange} />;
     case "columns-2": return <Columns2ContentEditor props={props} onChange={onChange} />;
     case "columns-3": return <Columns3ContentEditor props={props} onChange={onChange} />;
+    case "map": return <MapContentEditor props={props} onChange={onChange} />;
+    case "divider": return <DividerContentEditor props={props} onChange={onChange} />;
+    case "instagram-feed": return <InstagramFeedContentEditor props={props} onChange={onChange} />;
     default: return null;
   }
 }
