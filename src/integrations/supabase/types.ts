@@ -2525,9 +2525,12 @@ export type Database = {
           heading_font: string | null
           hero_bg_color: string | null
           hero_text_color: string | null
+          hide_branding: boolean
           instagram_url: string | null
           linkedin_url: string | null
           logo_alt_url: string | null
+          logo_size: string
+          logo_text: string | null
           logo_url: string | null
           og_image_url: string | null
           photographer_id: string
@@ -2599,9 +2602,12 @@ export type Database = {
           heading_font?: string | null
           hero_bg_color?: string | null
           hero_text_color?: string | null
+          hide_branding?: boolean
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_alt_url?: string | null
+          logo_size?: string
+          logo_text?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id: string
@@ -2673,9 +2679,12 @@ export type Database = {
           heading_font?: string | null
           hero_bg_color?: string | null
           hero_text_color?: string | null
+          hide_branding?: boolean
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_alt_url?: string | null
+          logo_size?: string
+          logo_text?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           photographer_id?: string
