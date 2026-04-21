@@ -1032,7 +1032,7 @@ const PageSectionsPanel = ({
                   onMoveUp={() => moveSection(idx, -1)}
                   onMoveDown={() => moveSection(idx, 1)}
                   onDuplicate={() => duplicateSection(idx)}
-                  onDelete={() => deleteSection(idx)}
+                  onDelete={() => requestDelete(idx)}
                 />
                 <AddBlockDivider onClick={() => openAddBlock(idx + 1)} />
               </div>
@@ -1046,6 +1046,28 @@ const PageSectionsPanel = ({
         onOpenChange={setAddBlockOpen}
         onSelect={handleAddBlock}
       />
+
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this section?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete !== null && sections[pendingDelete]
+                ? `"${sections[pendingDelete].label}" will be removed from this page. This action cannot be undone.`
+                : "This section will be removed. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
