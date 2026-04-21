@@ -2348,18 +2348,78 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {sub === "logo" && (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Logo</label>
-              <ImageUploadField
+            <div className="space-y-6">
+              {/* Logo Text */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Logo Text</label>
+                <Input
+                  value={(site as any)?.logoText ?? ""}
+                  onChange={(e) => onSiteChange({ logo_text: e.target.value })}
+                  placeholder={site?.displayName || "Studio name"}
+                  className="h-10 text-sm"
+                />
+              </div>
+
+              {/* Logo Size */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Logo Size</label>
+                <Select
+                  value={(site as any)?.logoSize || "medium"}
+                  onValueChange={(v) => onSiteChange({ logo_size: v })}
+                >
+                  <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Logo Image */}
+              <BrandRow
+                label="Logo Image"
                 value={site?.logoUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_url: url || null })}
                 photographerId={photographerId}
                 folder="logo"
-                aspectClass="aspect-[3/1]"
               />
-              <p className="text-[11px] text-muted-foreground">
-                Recommended transparent PNG, ~600×200px.
-              </p>
+
+              {/* Alternative Logo */}
+              <BrandRow
+                label="Alternative Logo"
+                value={(site as any)?.logoAltUrl ?? ""}
+                onChange={(url) => onSiteChange({ logo_alt_url: url || null })}
+                photographerId={photographerId}
+                folder="logo-alt"
+              />
+
+              {/* Favicon */}
+              <BrandRow
+                label="Favicon"
+                value={(site as any)?.faviconUrl ?? ""}
+                onChange={(url) => onSiteChange({ favicon_url: url || null })}
+                photographerId={photographerId}
+                folder="favicon"
+                rounded
+              />
+
+              {/* Pixieset Badge */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-sm font-medium text-foreground">Davions Badge</label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={!((site as any)?.hideBranding ?? false)}
+                    onCheckedChange={(checked) => onSiteChange({ hide_branding: !checked })}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {(site as any)?.hideBranding ? "Off" : "On"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Hide or show a Davions badge on your website.
+                </p>
+              </div>
             </div>
           )}
 
