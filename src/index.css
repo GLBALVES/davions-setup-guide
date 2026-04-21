@@ -134,25 +134,39 @@
 }
 .site-btn:hover { opacity: 0.78; }
 /* Solid is the default style emitted by siteButtonProps inline style. */
-/* Outline: transparent bg, colored border + text */
+/* Outline: transparent bg, colored border + text. Selectors include both
+   the per-element data-style attribute (set on first render) AND the global
+   <html data-site-btn-*-style> attribute (updated live by the editor) so
+   variant changes reflect instantly without re-rendering each block. */
 .site-btn.site-btn-outline-primary,
-.site-btn-primary[data-style="outline"] {
+.site-btn-primary[data-style="outline"],
+html[data-site-btn-primary-style="outline"] .site-btn-primary {
   background-color: transparent !important;
   color: var(--site-btn-primary-bg, #000000) !important;
 }
-.site-btn-secondary[data-style="outline"] {
+.site-btn-secondary[data-style="outline"],
+html[data-site-btn-secondary-style="outline"] .site-btn-secondary {
   background-color: transparent !important;
   color: var(--site-btn-secondary-bg, #ffffff) !important;
 }
 /* Underline: transparent bg, no border, underlined text */
 .site-btn-primary[data-style="underline"],
-.site-btn-secondary[data-style="underline"] {
+.site-btn-secondary[data-style="underline"],
+html[data-site-btn-primary-style="underline"] .site-btn-primary,
+html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
   background-color: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   border-bottom: 1px solid currentColor !important;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  height: auto !important;
 }
-.site-btn-primary[data-style="underline"] { color: var(--site-btn-primary-bg, #000000) !important; }
-.site-btn-secondary[data-style="underline"] { color: var(--site-btn-secondary-bg, #ffffff) !important; }
+.site-btn-primary[data-style="underline"],
+html[data-site-btn-primary-style="underline"] .site-btn-primary {
+  color: var(--site-btn-primary-bg, #000000) !important;
+}
+.site-btn-secondary[data-style="underline"],
+html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
+  color: var(--site-btn-secondary-bg, #ffffff) !important;
+}
