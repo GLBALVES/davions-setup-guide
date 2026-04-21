@@ -22,6 +22,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal,
@@ -923,9 +927,14 @@ const PageSectionsPanel = ({
     onSectionsChange(next);
   };
 
-  const deleteSection = (idx: number) => {
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
+  const requestDelete = (idx: number) => setPendingDelete(idx);
+  const confirmDelete = () => {
+    if (pendingDelete === null) return;
+    const idx = pendingDelete;
     onSectionsChange(sections.filter((_, i) => i !== idx));
     if (selectedBlockIndex === idx) onSelectBlock(null);
+    setPendingDelete(null);
   };
 
   const updateVariant = (idx: number, variant: string) => {
@@ -1023,7 +1032,7 @@ const PageSectionsPanel = ({
                   onMoveUp={() => moveSection(idx, -1)}
                   onMoveDown={() => moveSection(idx, 1)}
                   onDuplicate={() => duplicateSection(idx)}
-                  onDelete={() => deleteSection(idx)}
+                  onDelete={() => requestDelete(idx)}
                 />
                 <AddBlockDivider onClick={() => openAddBlock(idx + 1)} />
               </div>
@@ -1037,6 +1046,28 @@ const PageSectionsPanel = ({
         onOpenChange={setAddBlockOpen}
         onSelect={handleAddBlock}
       />
+
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this section?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete !== null && sections[pendingDelete]
+                ? `"${sections[pendingDelete].label}" will be removed from this page. This action cannot be undone.`
+                : "This section will be removed. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -2622,11 +2653,15 @@ const WebsiteEditor = () => {
     next.splice(idx + 1, 0, dup);
     pageActions.setSections(next);
   };
-  const deleteBlock = (idx: number) => {
-    if (!pageActions) return;
+  const [pendingDeleteIdx, setPendingDeleteIdx] = useState<number | null>(null);
+  const requestDeleteBlock = (idx: number) => setPendingDeleteIdx(idx);
+  const confirmDeleteBlock = () => {
+    if (pendingDeleteIdx === null || !pageActions) { setPendingDeleteIdx(null); return; }
+    const idx = pendingDeleteIdx;
     const next = activePageSections.filter((_, i) => i !== idx);
     pageActions.setSections(next);
     if (selectedBlockIndex === idx) setSelectedBlockIndex(null);
+    setPendingDeleteIdx(null);
   };
 
   // Inline edit: update a single prop path on a section, persist via pageActions
@@ -2926,7 +2961,7 @@ const WebsiteEditor = () => {
             }}
             onMoveBlock={moveBlock}
             onDuplicateBlock={duplicateBlock}
-            onDeleteBlock={deleteBlock}
+            onDeleteBlock={requestDeleteBlock}
             onReorderBlocks={(next) => {
               if (!pageActions) return;
               pageActions.setSections(next as unknown as PageSection[]);
@@ -2965,6 +3000,28 @@ const WebsiteEditor = () => {
           setSelectedBlockIndex(insertIndex);
         }}
       />
+
+      <AlertDialog open={pendingDeleteIdx !== null} onOpenChange={(o) => !o && setPendingDeleteIdx(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this section?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteIdx !== null && activePageSections[pendingDeleteIdx]
+                ? `"${activePageSections[pendingDeleteIdx].label}" will be removed from this page. This action cannot be undone.`
+                : "This section will be removed. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteBlock}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
