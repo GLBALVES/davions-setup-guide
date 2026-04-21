@@ -264,8 +264,8 @@ function HeroBlock({ headline, subtitle, backgroundImage, ctaText, ctaLink, butt
           <a
             href={c.editMode ? undefined : (ctaLink || "#")}
             onClick={(e) => c.editMode && e.preventDefault()}
-            style={{ borderColor: hasImage ? "white" : accentColor, color: hasImage ? "white" : accentColor }}
-            className="inline-block mt-8 px-8 py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+            {...btn}
+            style={{ ...btn.style, marginTop: "2rem" }}
           >
             <EditableText
               as="span"
