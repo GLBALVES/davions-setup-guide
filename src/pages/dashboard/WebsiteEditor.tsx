@@ -3437,8 +3437,20 @@ const WebsiteEditor = () => {
     (["primary", "secondary"] as const).forEach((key) => {
       const v = variants[key] || {};
       const styleMode = v.style || (key === "primary" ? "solid" : "outline");
-      root.style.setProperty(`--site-btn-${key}-bg`, v.bg || (key === "primary" ? "#000000" : "#ffffff"));
-      root.style.setProperty(`--site-btn-${key}-fg`, v.fg || (key === "primary" ? "#ffffff" : "#000000"));
+      const bg = v.bg || (key === "primary" ? "#000000" : "#ffffff");
+      const fg = v.fg || (key === "primary" ? "#ffffff" : "#000000");
+      const borderColor = v.borderColor || bg;
+      const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
+      const hoverBg = v.hoverBg || bg;
+      const hoverFg = v.hoverFg || fg;
+      const hoverBorderColor = v.hoverBorderColor || borderColor;
+      root.style.setProperty(`--site-btn-${key}-bg`, bg);
+      root.style.setProperty(`--site-btn-${key}-fg`, fg);
+      root.style.setProperty(`--site-btn-${key}-border-color`, borderColor);
+      root.style.setProperty(`--site-btn-${key}-border-width`, `${borderWidth}px`);
+      root.style.setProperty(`--site-btn-${key}-hover-bg`, hoverBg);
+      root.style.setProperty(`--site-btn-${key}-hover-fg`, hoverFg);
+      root.style.setProperty(`--site-btn-${key}-hover-border-color`, hoverBorderColor);
       root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
       root.style.setProperty(`--site-btn-${key}-style`, styleMode);
       // Mirror style mode as a data attribute on <html> so CSS rules can
