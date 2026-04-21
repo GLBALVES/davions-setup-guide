@@ -2936,12 +2936,33 @@ const WebsiteEditor = () => {
   // the Logo Text field) into a single upsert so we don't hammer the database.
   const pendingPatchRef = useRef<Record<string, any>>({});
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevSiteRef = useRef<PreviewSiteConfig | null>(null);
+  // Per-field rollback snapshot: stores the ORIGINAL value (pre-edit) of each
+  // changed DB key. On upsert failure we restore ONLY these fields, leaving any
+  // unrelated state changes (other panels, sections, etc.) untouched.
+  const fieldRollbackRef = useRef<Record<string, any>>({});
+
+  // Maps snake_case DB column → camelCase key used in the local `site` state.
+  const DB_TO_STATE_KEY: Record<string, string> = {
+    logo_url: "logoUrl",
+    logo_alt_url: "logoAltUrl",
+    favicon_url: "faviconUrl",
+    logo_text: "logoText",
+    logo_size: "logoSize",
+    hide_branding: "hideBranding",
+    accent_color: "accentColor",
+    header_bg_color: "headerBg",
+    footer_bg_color: "footerBg",
+    footer_text: "footerText",
+    heading_font: "headingFont",
+    body_font: "bodyFont",
+  };
 
   const flushPatch = useCallback(async () => {
     if (!user) return;
     const patch = pendingPatchRef.current;
+    const rollback = fieldRollbackRef.current;
     pendingPatchRef.current = {};
+    fieldRollbackRef.current = {};
     saveTimerRef.current = null;
     if (Object.keys(patch).length === 0) return;
     setSaveStatus("saving");
@@ -2949,11 +2970,29 @@ const WebsiteEditor = () => {
       .from("photographer_site")
       .upsert({ photographer_id: user.id, ...patch } as any, { onConflict: "photographer_id" });
     if (error) {
-      // Roll back optimistic update on failure
+      // Per-field rollback: restore ONLY the keys that were in this batch,
+      // preserving any unrelated edits the user may have made elsewhere.
       console.error("Failed to save site changes", error);
-      if (prevSiteRef.current) setSite(prevSiteRef.current);
+      setSite((prev) => {
+        if (!prev) return prev;
+        const reverted: Record<string, any> = { ...prev };
+        for (const dbKey of Object.keys(rollback)) {
+          reverted[dbKey] = rollback[dbKey];
+          const stateKey = DB_TO_STATE_KEY[dbKey];
+          if (stateKey) reverted[stateKey] = rollback[dbKey];
+        }
+        return reverted as PreviewSiteConfig;
+      });
       setSaveStatus("error");
-      toast.error("Couldn't save changes. Please try again.");
+      // Identify which fields failed so the user knows what was reverted
+      const changedLabels = Object.keys(rollback)
+        .map((k) => DB_TO_STATE_KEY[k] || k)
+        .join(", ");
+      toast.error(
+        changedLabels
+          ? `Couldn't save changes (${changedLabels}). Reverted.`
+          : "Couldn't save changes. Please try again."
+      );
     } else {
       setSaveStatus("saved");
       // Auto-clear the "Saved" badge after a short delay
@@ -2963,11 +3002,21 @@ const WebsiteEditor = () => {
 
   const updateSite = useCallback((patch: Record<string, any>) => {
     if (!user) return;
-    // Snapshot for rollback (only first edit in a debounced burst)
+    // Capture the ORIGINAL value of each key being changed (only the first time
+    // it appears in the current debounced burst) for granular rollback.
     setSite((prev) => {
-      if (!prevSiteRef.current) prevSiteRef.current = prev;
+      const prevAny = (prev || {}) as Record<string, any>;
+      for (const dbKey of Object.keys(patch)) {
+        if (!(dbKey in fieldRollbackRef.current)) {
+          const stateKey = DB_TO_STATE_KEY[dbKey];
+          // Prefer the camelCase mirror (what the UI actually reads); fall back
+          // to the raw snake_case value if no mapping exists.
+          fieldRollbackRef.current[dbKey] =
+            stateKey && stateKey in prevAny ? prevAny[stateKey] : prevAny[dbKey];
+        }
+      }
       const next = {
-        ...(prev || {}),
+        ...prevAny,
         ...patch, // merge all raw DB keys (snake_case) so flags like show_blog reflect immediately
         logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
         logoAltUrl: patch.logo_alt_url !== undefined ? patch.logo_alt_url : prev?.logoAltUrl,
@@ -2991,7 +3040,6 @@ const WebsiteEditor = () => {
     setSaveStatus("saving");
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      prevSiteRef.current = null; // burst settled, drop snapshot
       flushPatch();
     }, 500);
   }, [user, displayName, flushPatch]);
