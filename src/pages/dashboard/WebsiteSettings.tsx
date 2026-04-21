@@ -1013,22 +1013,6 @@ const WebsiteSettings = () => {
                       </DialogContent>
                     </Dialog>
                   </section>
-                  {/* ── 8. Analytics ── */}
-                  <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                      <BarChart2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SectionHeading title={ws.analyticsTitle} description={ws.analyticsDesc} />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FieldRow label={ws.gaIdLabel}>
-                        <Input value={googleAnalyticsId} onChange={(e) => setGoogleAnalyticsId(e.target.value)} placeholder="G-XXXXXXXXXX" className="h-9 text-sm font-mono font-light" />
-                      </FieldRow>
-                      <FieldRow label={ws.fbPixelLabel}>
-                        <Input value={facebookPixelId} onChange={(e) => setFacebookPixelId(e.target.value)} placeholder="123456789012345" className="h-9 text-sm font-mono font-light" />
-                      </FieldRow>
-                    </div>
-                  </section>
-
                   {/* ── 10. Store URL ── */}
                   <section className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
