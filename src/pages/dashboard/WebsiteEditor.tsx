@@ -1126,7 +1126,6 @@ const SortableSectionItem = ({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
   };
 
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
@@ -1141,7 +1140,9 @@ const SortableSectionItem = ({
       onClick={onSelect}
       className={cn(
         "group relative flex items-center gap-2 px-2 py-2 rounded-md transition-colors cursor-pointer",
-        selected ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
+        isDragging
+          ? "bg-primary/5 border border-dashed border-primary/50 [&>*:not(:first-child)]:invisible"
+          : selected ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/40"
       )}
     >
       <button
