@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { SectionType } from "./page-templates";
+import BlockThumbnail from "./BlockThumbnail";
 
 // ── Block categories ──────────────────────────────────────────────────────────
 
