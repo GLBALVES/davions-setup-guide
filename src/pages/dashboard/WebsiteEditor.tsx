@@ -631,7 +631,7 @@ const HeaderSliderPanel = ({
 
   const addSlide = () => {
     const id = crypto.randomUUID();
-    updateSlides([...slides, { id, title: `Slide ${slides.length + 1}`, imageUrl: null }]);
+    updateSlides([...slides, { id, title: `Slide ${slides.length + 1}`, subtitle: "", buttonText: "", buttonUrl: "", openInNewTab: true, backgroundTint: 0.2, imageUrl: null }]);
     setActiveSlideId(id);
   };
 
@@ -646,6 +646,9 @@ const HeaderSliderPanel = ({
   };
 
   const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
+  const pageOptions = [
+    ...(photographerId ? [{ value: "__home__", label: "Home" }] : []),
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -781,17 +784,13 @@ const HeaderSliderPanel = ({
         {/* Active slide editor */}
         {activeSlide && (
           <div className="px-4 pb-4 space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{we.slideTitle}</label>
-              <Input
-                value={activeSlide.title || ""}
-                onChange={(e) => updateSlide(activeSlide.id, { title: e.target.value })}
-                className="h-9 text-sm"
-                placeholder={we.untitled}
-              />
+            <div className="flex items-center justify-between pb-1">
+              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
+                {we.slideIndex} {slides.findIndex((s) => s.id === activeSlide.id) + 1}
+              </p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">{we.uploadImage}</label>
+              <label className="text-xs font-medium text-muted-foreground">Image</label>
               <EditableImage
                 value={activeSlide.imageUrl || ""}
                 onChange={(url) => updateSlide(activeSlide.id, { imageUrl: url || null })}
@@ -807,6 +806,65 @@ const HeaderSliderPanel = ({
                   )}
                 </div>
               </EditableImage>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">{we.slideTitle}</label>
+              <Input
+                value={activeSlide.title || ""}
+                onChange={(e) => updateSlide(activeSlide.id, { title: e.target.value })}
+                className="h-9 text-sm"
+                placeholder={we.untitled}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Subtitle</label>
+              <Input
+                value={activeSlide.subtitle || ""}
+                onChange={(e) => updateSlide(activeSlide.id, { subtitle: e.target.value })}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Button text</label>
+              <Input
+                value={activeSlide.buttonText || ""}
+                onChange={(e) => updateSlide(activeSlide.id, { buttonText: e.target.value })}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">Button URL</label>
+              </div>
+              <Input
+                value={activeSlide.buttonUrl || ""}
+                onChange={(e) => updateSlide(activeSlide.id, { buttonUrl: e.target.value })}
+                className="h-9 text-sm"
+                placeholder="https://"
+                type="url"
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={activeSlide.openInNewTab !== false}
+                onChange={(e) => updateSlide(activeSlide.id, { openInNewTab: e.target.checked })}
+                className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <span className="text-xs text-foreground">Open link in new window</span>
+            </label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">Background Tint</label>
+                <span className="text-[11px] text-muted-foreground">{Math.round((activeSlide.backgroundTint ?? 0) * 100)}%</span>
+              </div>
+              <Slider
+                min={0}
+                max={60}
+                step={5}
+                value={[Math.round((activeSlide.backgroundTint ?? 0) * 100)]}
+                onValueChange={(v) => updateSlide(activeSlide.id, { backgroundTint: (v[0] || 0) / 100 })}
+              />
             </div>
           </div>
         )}
