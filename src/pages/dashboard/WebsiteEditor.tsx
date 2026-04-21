@@ -2927,6 +2927,17 @@ const WebsiteEditor = () => {
             onMoveBlock={moveBlock}
             onDuplicateBlock={duplicateBlock}
             onDeleteBlock={deleteBlock}
+            onReorderBlocks={(next) => {
+              if (!pageActions) return;
+              pageActions.setSections(next as unknown as PageSection[]);
+              if (selectedBlockIndex !== null) {
+                const sel = activePageSections[selectedBlockIndex];
+                if (sel) {
+                  const newIdx = next.findIndex((s) => s.id === sel.id);
+                  if (newIdx >= 0) setSelectedBlockIndex(newIdx);
+                }
+              }
+            }}
             onAddBlockAt={(idx) => { setInsertIndex(idx); setAddBlockOpen(true); }}
             accentColor={site?.accentColor || "#000000"}
             site={site}

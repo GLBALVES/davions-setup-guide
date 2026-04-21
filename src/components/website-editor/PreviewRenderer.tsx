@@ -1,9 +1,18 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical } from "lucide-react";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
+import {
+  DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
+  closestCenter, type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, useSortable, arrayMove,
+  verticalListSortingStrategy, sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export type { HeaderConfig, HeaderSlide } from "@/components/website-editor/PreviewHeader";
 
@@ -48,6 +57,8 @@ interface PreviewRendererProps {
   onDeleteBlock?: (index: number) => void;
   /** Called when the user clicks a "+ Add Section" divider in the canvas. */
   onAddBlockAt?: (index: number) => void;
+  /** Called with the new full ordered list when the user drags a block to a new position. */
+  onReorderBlocks?: (next: PageSection[]) => void;
   accentColor?: string;
   site?: PreviewSiteConfig | null;
   navLinks?: PreviewNavLink[];
@@ -250,6 +261,103 @@ function FloatingBlockToolbar({
   );
 }
 
+// ── Sortable wrapper for a block in the canvas ───────────────────────────────
+function SortableBlock({
+  section,
+  idx,
+  isSelected,
+  isLast,
+  editMode,
+  onSelect,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+  children,
+}: {
+  section: PageSection;
+  idx: number;
+  isSelected: boolean;
+  isLast: boolean;
+  editMode: boolean;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+    disabled: !editMode,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: "relative",
+    zIndex: isDragging ? 40 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+      className={cn(
+        "relative group/block transition-all",
+        isSelected
+          ? "ring-2 ring-primary ring-inset"
+          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+      )}
+    >
+      {/* Block label badge */}
+      <div className={cn(
+        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
+        isSelected
+          ? "opacity-100 bg-primary text-primary-foreground"
+          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
+      )}>
+        {section.label}
+      </div>
+
+      {/* Drag handle (left side, edit mode only) */}
+      {editMode && (
+        <button
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 -left-3 z-30 w-6 h-10 rounded bg-foreground/90 text-background flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing touch-none transition-opacity",
+            isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+          )}
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Floating toolbar (selected or hover) */}
+      <div className={cn(
+        "transition-opacity",
+        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+      )}>
+        <FloatingBlockToolbar
+          isFirst={idx === 0}
+          isLast={isLast}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onDuplicate={onDuplicate}
+          onSettings={onSelect}
+          onDelete={onDelete}
+        />
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
 export default function PreviewRenderer({
   sections,
   selectedBlockIndex,
@@ -258,6 +366,7 @@ export default function PreviewRenderer({
   onDuplicateBlock,
   onDeleteBlock,
   onAddBlockAt,
+  onReorderBlocks,
   accentColor = "#000000",
   site,
   navLinks = [],
@@ -275,6 +384,25 @@ export default function PreviewRenderer({
   const editCtx: EditContext | undefined = editMode && onPropChange
     ? { onPropChange, photographerId }
     : undefined;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = sections.findIndex((s) => s.id === active.id);
+    const to = sections.findIndex((s) => s.id === over.id);
+    if (from < 0 || to < 0) return;
+    const next = arrayMove(sections, from, to);
+    if (onReorderBlocks) {
+      onReorderBlocks(next);
+    } else if (onMoveBlock) {
+      onMoveBlock(from, to);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -361,61 +489,41 @@ export default function PreviewRenderer({
                 <CanvasAddSection onClick={() => onAddBlockAt(0)} />
               )}
 
-              {sections.map((section, idx) => {
-                const isSelected = selectedBlockIndex === idx;
-                return (
-                  <div key={section.id}>
-                    <div
-                      onClick={(e) => { e.stopPropagation(); onSelectBlock(idx); }}
-                      className={cn(
-                        "relative group/block transition-all",
-                        isSelected
-                          ? "ring-2 ring-primary ring-inset"
-                          : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
-                      )}
-                    >
-                      {/* Block label badge */}
-                      <div className={cn(
-                        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
-                        isSelected
-                          ? "opacity-100 bg-primary text-primary-foreground"
-                          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
-                      )}>
-                        {section.label}
-                      </div>
-
-                      {/* Floating toolbar (selected or hover) */}
-                      <div className={cn(
-                        "transition-opacity",
-                        isSelected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
-                      )}>
-                        <FloatingBlockToolbar
-                          isFirst={idx === 0}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  {sections.map((section, idx) => {
+                    const isSelected = selectedBlockIndex === idx;
+                    return (
+                      <div key={section.id}>
+                        <SortableBlock
+                          section={section}
+                          idx={idx}
+                          isSelected={isSelected}
                           isLast={idx === sections.length - 1}
+                          editMode={editMode}
+                          onSelect={() => onSelectBlock(idx)}
                           onMoveUp={() => onMoveBlock?.(idx, idx - 1)}
                           onMoveDown={() => onMoveBlock?.(idx, idx + 1)}
                           onDuplicate={() => onDuplicateBlock?.(idx)}
-                          onSettings={() => onSelectBlock(idx)}
                           onDelete={() => onDeleteBlock?.(idx)}
-                        />
+                        >
+                          <SectionRenderer
+                            sections={[section]}
+                            accentColor={accentColor}
+                            editMode={editMode}
+                            edit={editCtx}
+                          />
+                        </SortableBlock>
+
+                        {editMode && onAddBlockAt && (
+                          <CanvasAddSection onClick={() => onAddBlockAt(idx + 1)} />
+                        )}
                       </div>
+                    );
+                  })}
+                </SortableContext>
+              </DndContext>
 
-                      {/* Block content */}
-                      <SectionRenderer
-                        sections={[section]}
-                        accentColor={accentColor}
-                        editMode={editMode}
-                        edit={editCtx}
-                      />
-                    </div>
-
-                    {/* + between this block and the next (or after the last block) */}
-                    {editMode && onAddBlockAt && (
-                      <CanvasAddSection onClick={() => onAddBlockAt(idx + 1)} />
-                    )}
-                  </div>
-                );
-              })}
             </>
           )}
 
