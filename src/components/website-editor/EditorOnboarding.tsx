@@ -75,8 +75,8 @@ interface EditorOnboardingProps {
  * Auto-shown once per browser. User can skip or dismiss. Persists via localStorage.
  */
 export default function EditorOnboarding({ active }: EditorOnboardingProps) {
-  const { language } = useLanguage();
-  const lang = (["en", "pt", "es"].includes(language) ? language : "en") as Lang;
+  const { lang: ctxLang } = useLanguage();
+  const lang = (["en", "pt", "es"].includes(ctxLang) ? ctxLang : "en") as Lang;
   const t = COPY[lang];
 
   const [step, setStep] = useState<Step>(1);
