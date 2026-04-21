@@ -646,9 +646,6 @@ const HeaderSliderPanel = ({
   };
 
   const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
-  const pageOptions = [
-    ...(photographerId ? [{ value: "__home__", label: "Home" }] : []),
-  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -790,7 +787,7 @@ const HeaderSliderPanel = ({
               </p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Image</label>
+              <label className="text-xs font-medium text-muted-foreground">{we.uploadImage}</label>
               <EditableImage
                 value={activeSlide.imageUrl || ""}
                 onChange={(url) => updateSlide(activeSlide.id, { imageUrl: url || null })}
@@ -817,7 +814,7 @@ const HeaderSliderPanel = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Subtitle</label>
+              <label className="text-xs font-medium text-muted-foreground">{we.subtitleLabel}</label>
               <Input
                 value={activeSlide.subtitle || ""}
                 onChange={(e) => updateSlide(activeSlide.id, { subtitle: e.target.value })}
@@ -825,7 +822,7 @@ const HeaderSliderPanel = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Button text</label>
+              <label className="text-xs font-medium text-muted-foreground">{we.buttonTextLabel}</label>
               <Input
                 value={activeSlide.buttonText || ""}
                 onChange={(e) => updateSlide(activeSlide.id, { buttonText: e.target.value })}
@@ -834,7 +831,7 @@ const HeaderSliderPanel = ({
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Button URL</label>
+                <label className="text-xs font-medium text-muted-foreground">{we.buttonUrlLabel}</label>
               </div>
               <Input
                 value={activeSlide.buttonUrl || ""}
@@ -851,11 +848,11 @@ const HeaderSliderPanel = ({
                 onChange={(e) => updateSlide(activeSlide.id, { openInNewTab: e.target.checked })}
                 className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
               />
-              <span className="text-xs text-foreground">Open link in new window</span>
+              <span className="text-xs text-foreground">{we.openInNewWindow}</span>
             </label>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Background Tint</label>
+                <label className="text-xs font-medium text-muted-foreground">{we.backgroundTint}</label>
                 <span className="text-[11px] text-muted-foreground">{Math.round((activeSlide.backgroundTint ?? 0) * 100)}%</span>
               </div>
               <Slider
