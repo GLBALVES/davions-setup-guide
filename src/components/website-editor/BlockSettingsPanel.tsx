@@ -544,6 +544,58 @@ function Columns3ContentEditor({ props, onChange }: { props: any; onChange: (p: 
   );
 }
 
+function MapContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  return (
+    <div className="space-y-3">
+      <Field label="Address">
+        <Input value={props.address || ""} onChange={(e) => onChange({ ...props, address: e.target.value })} className="h-9 text-sm" placeholder="123 Main St, City" />
+      </Field>
+      <Field label={`Height: ${props.height || 400}px`}>
+        <Slider value={[props.height || 400]} min={200} max={800} step={20} onValueChange={([v]) => onChange({ ...props, height: v })} />
+      </Field>
+    </div>
+  );
+}
+
+function DividerContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  return (
+    <Field label="Style">
+      <Select value={props.style || "line"} onValueChange={(v) => onChange({ ...props, style: v })}>
+        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="line">Line</SelectItem>
+          <SelectItem value="dashed">Dashed</SelectItem>
+          <SelectItem value="dotted">Dotted</SelectItem>
+          <SelectItem value="thick">Thick</SelectItem>
+        </SelectContent>
+      </Select>
+    </Field>
+  );
+}
+
+function InstagramFeedContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  return (
+    <div className="space-y-3">
+      <Field label="Username (without @)">
+        <Input value={props.username || ""} onChange={(e) => onChange({ ...props, username: e.target.value })} className="h-9 text-sm" placeholder="yourstudio" />
+      </Field>
+      <Field label="Columns">
+        <Select value={String(props.columns || 3)} onValueChange={(v) => onChange({ ...props, columns: Number(v) })}>
+          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="3">3</SelectItem>
+            <SelectItem value="4">4</SelectItem>
+            <SelectItem value="6">6</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field label={`Posts: ${props.count || 9}`}>
+        <Slider value={[props.count || 9]} min={3} max={24} step={1} onValueChange={([v]) => onChange({ ...props, count: v })} />
+      </Field>
+    </div>
+  );
+}
+
 // ── Helper component ──
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
