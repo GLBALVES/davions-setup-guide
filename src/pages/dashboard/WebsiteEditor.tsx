@@ -2602,6 +2602,11 @@ const WebsiteEditor = () => {
         setSite({
           ...raw, // keep all snake_case columns so downstream panels (blog, social, tracking, advanced…) survive reloads
           logoUrl: raw.logo_url,
+          logoAltUrl: raw.logo_alt_url,
+          faviconUrl: raw.favicon_url,
+          logoText: raw.logo_text,
+          logoSize: raw.logo_size || "medium",
+          hideBranding: raw.hide_branding ?? false,
           accentColor: raw.accent_color || "#000000",
           headerBg: raw.header_bg_color,
           headerTextColor: raw.header_text_color,
@@ -2640,6 +2645,11 @@ const WebsiteEditor = () => {
       ...(prev || {}),
       ...patch, // merge all raw DB keys (snake_case) so flags like show_blog reflect immediately
       logoUrl: patch.logo_url !== undefined ? patch.logo_url : prev?.logoUrl,
+      logoAltUrl: patch.logo_alt_url !== undefined ? patch.logo_alt_url : prev?.logoAltUrl,
+      faviconUrl: patch.favicon_url !== undefined ? patch.favicon_url : prev?.faviconUrl,
+      logoText: patch.logo_text !== undefined ? patch.logo_text : prev?.logoText,
+      logoSize: patch.logo_size !== undefined ? patch.logo_size : prev?.logoSize,
+      hideBranding: patch.hide_branding !== undefined ? patch.hide_branding : prev?.hideBranding,
       accentColor: patch.accent_color !== undefined ? patch.accent_color : prev?.accentColor,
       headerBg: patch.header_bg_color !== undefined ? patch.header_bg_color : prev?.headerBg,
       footerBg: patch.footer_bg_color !== undefined ? patch.footer_bg_color : prev?.footerBg,
