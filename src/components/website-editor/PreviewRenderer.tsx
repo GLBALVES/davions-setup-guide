@@ -474,19 +474,30 @@ export default function PreviewRenderer({
       </div>
 
       {/* Preview container */}
-      <div className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative">
-        {/* Floating Add Section button — always visible while editing */}
+      <div
+        ref={scrollRef}
+        onScroll={recomputeNearest}
+        className="flex-1 overflow-y-auto bg-muted/20 flex justify-center py-4 relative"
+      >
+        {/* Floating Add Section button — always visible while editing.
+            Inserts after the block currently nearest to the viewport center. */}
         {editMode && onAddBlockAt && (
           <QuickAddPopover
             side="top"
             align="end"
-            onPick={(type) => onAddBlockAt(sections.length, type)}
-            onMore={() => onAddBlockAt(sections.length)}
+            onPick={(type) => onAddBlockAt(fabInsertIndex, type)}
+            onMore={() => onAddBlockAt(fabInsertIndex)}
           >
             <button
               type="button"
               className="fixed bottom-6 right-8 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground text-xs font-medium tracking-wide shadow-xl hover:bg-primary/90 hover:shadow-2xl transition-all"
-              title="Add section"
+              title={
+                sections.length === 0
+                  ? "Add section"
+                  : nearestBlockIdx !== null
+                    ? `Insert after "${sections[nearestBlockIdx]?.label ?? "section"}"`
+                    : "Add section at end"
+              }
             >
               <Plus className="h-4 w-4" />
               Add section
@@ -563,7 +574,7 @@ export default function PreviewRenderer({
                   {sections.map((section, idx) => {
                     const isSelected = selectedBlockIndex === idx;
                     return (
-                      <div key={section.id}>
+                      <div key={section.id} ref={(el) => { blockRefs.current[idx] = el; }}>
                         <SortableBlock
                           section={section}
                           idx={idx}
