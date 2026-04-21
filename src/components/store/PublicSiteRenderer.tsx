@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
@@ -247,6 +248,8 @@ interface Props {
    * null / undefined = render everything in default order.
    */
   visibleSections?: string[] | null;
+  /** Draft-only page header config from site_pages.header_config */
+  pageHeaderConfig?: HeaderConfig | null;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -277,6 +280,30 @@ interface NavProps {
   site?: SiteConfig | null;
   /** Force the header to render in its opaque (light bg) state regardless of scroll. */
   forceOpaque?: boolean;
+}
+
+function toPreviewHeaderSite(site: SiteConfig | null, displayName: string) {
+  return {
+    logoUrl: site?.logo_url ?? null,
+    displayName,
+  };
+}
+
+function toPreviewHeaderLinks(navLinks: NavLinkItem[]) {
+  return navLinks.map((link, index) => ({
+    id: `${link.label}-${link.href}-${index}`,
+    label: link.label,
+    type: "link" as const,
+    url: link.href,
+    openInNewTab: false,
+    children: link.children?.map((child, childIndex) => ({
+      id: `${child.label}-${child.href}-${index}-${childIndex}`,
+      label: child.label,
+      type: "link" as const,
+      url: child.href,
+      openInNewTab: false,
+    })),
+  }));
 }
 
 const ALL_SOCIALS = ["instagram", "facebook", "youtube", "tiktok", "pinterest", "linkedin", "whatsapp"] as const;
