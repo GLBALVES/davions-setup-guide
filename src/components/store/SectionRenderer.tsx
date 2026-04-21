@@ -95,6 +95,8 @@ export function SiteCtaLink({
     </a>
   );
 }
+
+// ─── Block Button schema ────────────────────────────────────────────────────
 // Multi-button per item with backwards-compatible fallback to legacy fields
 // (ctaText/ctaLink for Hero/Image+Text/Text+Image; buttonText/buttonLink for CTA).
 export type BlockButton = {
