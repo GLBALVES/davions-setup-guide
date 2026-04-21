@@ -65,69 +65,134 @@ function SectionBlock({
   const set = (path: string, value: any) => edit?.onPropChange(section.id, path, value);
   const ctx = { editMode, set, photographerId: edit?.photographerId };
 
-  switch (section.type) {
-    case "hero":
-      return <HeroBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "text":
-      return <TextBlock {...p} ctx={ctx} />;
-    case "image-text":
-      return <ImageTextBlock {...p} ctx={ctx} />;
-    case "text-image":
-      return <TextImageBlock {...p} ctx={ctx} />;
-    case "gallery-grid":
-      return <GalleryGridBlock {...p} label={section.label} />;
-    case "gallery-masonry":
-      return <GalleryMasonryBlock {...p} label={section.label} />;
-    case "contact-form":
-      return <ContactFormBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "cta":
-      return <CtaBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "faq-accordion":
-      return <FaqBlock {...p} ctx={ctx} />;
-    case "pricing-table":
-      return <PricingBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "timeline":
-      return <TimelineBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "testimonials":
-      return <TestimonialsBlock {...p} ctx={ctx} />;
-    case "stats":
-      return <StatsBlock {...p} accentColor={accentColor} ctx={ctx} />;
-    case "team":
-      return <TeamBlock {...p} ctx={ctx} />;
-    case "video":
-      return <VideoBlock {...p} />;
-    case "spacer":
-      return <SpacerBlock height={p.height} />;
-    case "divider":
-      return <DividerBlock />;
-    case "columns-2":
-      return <Columns2Block {...p} ctx={ctx} />;
-    case "columns-3":
-      return <Columns3Block {...p} ctx={ctx} />;
-    case "slideshow":
-      return <SlideshowBlock {...p} />;
-    case "carousel":
-      return <CarouselBlock {...p} />;
-    case "instagram-feed":
-      return <InstagramFeedBlock {...p} />;
-    case "social-links":
-      return <SocialLinksBlock {...p} />;
-    case "embed":
-      return <EmbedBlock {...p} />;
-    case "logo-strip":
-      return <LogoStripBlock {...p} />;
-    case "map":
-      return <MapBlock {...p} />;
-    default:
-      return (
-        <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground">
-            Unknown block: <strong>{section.type}</strong>
-          </div>
-        </section>
-      );
-  }
+  const inner = (() => {
+    switch (section.type) {
+      case "hero":
+        return <HeroBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "text":
+        return <TextBlock {...p} ctx={ctx} />;
+      case "image-text":
+        return <ImageTextBlock {...p} ctx={ctx} />;
+      case "text-image":
+        return <TextImageBlock {...p} ctx={ctx} />;
+      case "gallery-grid":
+        return <GalleryGridBlock {...p} label={section.label} />;
+      case "gallery-masonry":
+        return <GalleryMasonryBlock {...p} label={section.label} />;
+      case "contact-form":
+        return <ContactFormBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "cta":
+        return <CtaBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "faq-accordion":
+        return <FaqBlock {...p} ctx={ctx} />;
+      case "pricing-table":
+        return <PricingBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "timeline":
+        return <TimelineBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "testimonials":
+        return <TestimonialsBlock {...p} ctx={ctx} />;
+      case "stats":
+        return <StatsBlock {...p} accentColor={accentColor} ctx={ctx} />;
+      case "team":
+        return <TeamBlock {...p} ctx={ctx} />;
+      case "video":
+        return <VideoBlock {...p} />;
+      case "spacer":
+        return <SpacerBlock height={p.height} />;
+      case "divider":
+        return <DividerBlock />;
+      case "columns-2":
+        return <Columns2Block {...p} ctx={ctx} />;
+      case "columns-3":
+        return <Columns3Block {...p} ctx={ctx} />;
+      case "slideshow":
+        return <SlideshowBlock {...p} />;
+      case "carousel":
+        return <CarouselBlock {...p} />;
+      case "instagram-feed":
+        return <InstagramFeedBlock {...p} />;
+      case "social-links":
+        return <SocialLinksBlock {...p} />;
+      case "embed":
+        return <EmbedBlock {...p} />;
+      case "logo-strip":
+        return <LogoStripBlock {...p} />;
+      case "map":
+        return <MapBlock {...p} />;
+      default:
+        return (
+          <section className="py-12 px-6">
+            <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground">
+              Unknown block: <strong>{section.type}</strong>
+            </div>
+          </section>
+        );
+    }
+  })();
+
+  // ─── Apply BlockSettings (background, padding, animation, color scheme) ───
+  const bs = (p.blockSettings ?? {}) as {
+    backgroundColor?: string;
+    backgroundImage?: string;
+    backgroundOpacity?: number;
+    paddingTop?: number;
+    paddingBottom?: number;
+    colorScheme?: "light" | "dark" | "auto";
+    animation?: "none" | "fade-up" | "fade-in" | "slide-left";
+  };
+
+  const hasAny =
+    bs.backgroundColor ||
+    bs.backgroundImage ||
+    bs.paddingTop !== undefined ||
+    bs.paddingBottom !== undefined ||
+    (bs.colorScheme && bs.colorScheme !== "auto") ||
+    (bs.animation && bs.animation !== "none");
+
+  if (!hasAny) return inner;
+
+  const wrapperStyle: React.CSSProperties = {
+    backgroundColor: bs.backgroundColor || undefined,
+    paddingTop: bs.paddingTop !== undefined ? `${bs.paddingTop}px` : undefined,
+    paddingBottom: bs.paddingBottom !== undefined ? `${bs.paddingBottom}px` : undefined,
+    position: "relative",
+  };
+
+  const schemeClass =
+    bs.colorScheme === "dark"
+      ? "text-white [&_*]:!text-inherit"
+      : bs.colorScheme === "light"
+        ? "text-foreground"
+        : "";
+
+  const animClass =
+    bs.animation === "fade-up" ? "block-anim-fade-up"
+    : bs.animation === "fade-in" ? "block-anim-fade-in"
+    : bs.animation === "slide-left" ? "block-anim-slide-left"
+    : "";
+
+  return (
+    <div style={wrapperStyle} className={[schemeClass, animClass].filter(Boolean).join(" ")}>
+      {bs.backgroundImage && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${bs.backgroundImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: (bs.backgroundOpacity ?? 100) / 100,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      )}
+      <div style={{ position: "relative", zIndex: 1 }}>{inner}</div>
+    </div>
+  );
 }
+
 
 type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photographerId?: string | null };
 
