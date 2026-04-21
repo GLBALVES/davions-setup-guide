@@ -1,10 +1,9 @@
+import { useEffect, useState, useCallback } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Image as ImageIcon, Type, LayoutGrid, Columns2,
-  Target, Mail, MoreHorizontal,
-} from "lucide-react";
+import { MoreHorizontal, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SectionType } from "./page-templates";
+import BlockThumbnail from "./BlockThumbnail";
 
 interface QuickAddPopoverProps {
   /** Trigger button (must be a single React element) */
@@ -17,18 +16,63 @@ interface QuickAddPopoverProps {
   side?: "top" | "right" | "bottom" | "left";
 }
 
-const QUICK_BLOCKS: { type: SectionType; label: string; icon: React.ElementType }[] = [
-  { type: "hero",         label: "Header",   icon: ImageIcon },
-  { type: "text",         label: "Text",     icon: Type },
-  { type: "gallery-grid", label: "Gallery",  icon: LayoutGrid },
-  { type: "image-text",   label: "Image",    icon: Columns2 },
-  { type: "cta",          label: "CTA",      icon: Target },
-  { type: "contact-form", label: "Contact",  icon: Mail },
+const QUICK_BLOCKS: { type: SectionType; label: string }[] = [
+  { type: "hero",         label: "Header" },
+  { type: "text",         label: "Text" },
+  { type: "gallery-grid", label: "Gallery" },
+  { type: "image-text",   label: "Image" },
+  { type: "cta",          label: "CTA" },
+  { type: "contact-form", label: "Contact" },
 ];
+
+const FAVORITES_STORAGE_KEY = "davions_quickadd_favorites_v1";
+
+function readFavorites(): SectionType[] {
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as SectionType[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeFavorites(favs: SectionType[]) {
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favs));
+  } catch {
+    /* ignore */
+  }
+}
 
 export default function QuickAddPopover({
   children, onPick, onMore, align = "center", side = "bottom",
 }: QuickAddPopoverProps) {
+  const [favorites, setFavorites] = useState<SectionType[]>([]);
+
+  useEffect(() => {
+    setFavorites(readFavorites());
+  }, []);
+
+  const toggleFavorite = useCallback((type: SectionType) => {
+    setFavorites((prev) => {
+      const next = prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type];
+      writeFavorites(next);
+      return next;
+    });
+  }, []);
+
+  // Sort: favorited blocks first, then defaults.
+  const orderedBlocks = [
+    ...favorites
+      .map((fav) => QUICK_BLOCKS.find((b) => b.type === fav))
+      .filter((b): b is (typeof QUICK_BLOCKS)[number] => Boolean(b)),
+    ...QUICK_BLOCKS.filter((b) => !favorites.includes(b.type)),
+  ];
+
   return (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -36,30 +80,55 @@ export default function QuickAddPopover({
         align={align}
         side={side}
         sideOffset={8}
-        className="w-[260px] p-2"
+        className="w-[300px] p-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="px-2 pt-1 pb-2 text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-          Quick add
-        </p>
-        <div className="grid grid-cols-3 gap-1">
-          {QUICK_BLOCKS.map(({ type, label, icon: Icon }) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => onPick(type)}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1.5 p-2 rounded-md",
-                "border border-transparent hover:border-primary/30 hover:bg-primary/5",
-                "transition-colors text-center group"
-              )}
-            >
-              <div className="w-8 h-8 rounded-md bg-muted/60 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        <div className="flex items-center justify-between px-2 pt-1 pb-2">
+          <p className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
+            Quick add
+          </p>
+          {favorites.length > 0 && (
+            <span className="inline-flex items-center gap-1 text-[9px] font-medium tracking-wider uppercase text-primary">
+              <Star className="h-2.5 w-2.5 fill-current" />
+              {favorites.length}
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {orderedBlocks.map(({ type, label }) => {
+            const isFav = favorites.includes(type);
+            return (
+              <div key={type} className="relative group/tile">
+                <button
+                  type="button"
+                  onClick={() => onPick(type)}
+                  className={cn(
+                    "w-full flex flex-col items-center gap-1 p-1.5 rounded-md border transition-colors text-center",
+                    isFav
+                      ? "border-primary/40 bg-primary/5 hover:border-primary/60 hover:bg-primary/10"
+                      : "border-transparent hover:border-primary/30 hover:bg-primary/5"
+                  )}
+                >
+                  <BlockThumbnail type={type} />
+                  <span className="text-[10px] font-medium text-foreground leading-none mt-0.5">{label}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(type); }}
+                  title={isFav ? "Remove from favorites" : "Add to favorites"}
+                  aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+                  className={cn(
+                    "absolute top-0.5 right-0.5 p-0.5 rounded transition-opacity",
+                    isFav
+                      ? "opacity-100 text-primary hover:text-primary/80"
+                      : "opacity-0 group-hover/tile:opacity-100 text-muted-foreground hover:text-primary"
+                  )}
+                >
+                  <Star className={cn("h-3 w-3", isFav && "fill-current")} />
+                </button>
               </div>
-              <span className="text-[10px] font-medium text-foreground">{label}</span>
-            </button>
-          ))}
+            );
+          })}
         </div>
         <div className="mt-2 pt-2 border-t border-border">
           <button
