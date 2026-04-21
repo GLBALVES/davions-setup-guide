@@ -2934,7 +2934,7 @@ const WebsiteEditor = () => {
             }}
             onMoveBlock={moveBlock}
             onDuplicateBlock={duplicateBlock}
-            onDeleteBlock={deleteBlock}
+            onDeleteBlock={requestDeleteBlock}
             onReorderBlocks={(next) => {
               if (!pageActions) return;
               pageActions.setSections(next as unknown as PageSection[]);
