@@ -230,9 +230,8 @@ function FloatingBlockToolbar({
   onSettings: () => void;
   onDelete: () => void;
 }) {
-  const Btn = React.forwardRef<HTMLButtonElement, any>(({ onClick, disabled, title, children, danger, ...rest }, ref) => (
+  const Btn = ({ onClick, disabled, title, children, danger, ...rest }: any) => (
     <button
-      ref={ref}
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
       disabled={disabled}
       title={title}
@@ -245,8 +244,7 @@ function FloatingBlockToolbar({
     >
       {children}
     </button>
-  ));
-  Btn.displayName = "FloatingBlockToolbarBtn";
+  );
 
   return (
     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-0.5 bg-foreground/95 backdrop-blur-sm rounded-md px-1 py-0.5 shadow-lg pointer-events-auto">
