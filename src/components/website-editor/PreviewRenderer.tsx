@@ -345,18 +345,18 @@ function SortableBlock({
       className={cn(
         "relative group/block transition-all",
         isDragging
-          ? "ring-2 ring-primary border-2 border-dashed border-primary/60 bg-primary/5"
+          ? "outline outline-2 outline-dashed outline-primary/60 outline-offset-[-2px] bg-primary/5"
           : isSelected
-            ? "ring-2 ring-primary ring-inset"
-            : "hover:ring-2 hover:ring-primary/40 hover:ring-inset"
+            ? "outline outline-[3px] outline-primary outline-offset-[-3px] shadow-[0_0_0_1px_hsl(var(--primary)/0.3),0_8px_24px_-8px_hsl(var(--primary)/0.35)] bg-primary/[0.02]"
+            : "outline outline-2 outline-transparent outline-offset-[-2px] hover:outline-primary/50 hover:bg-primary/[0.015]"
       )}
     >
       {/* Block label badge */}
       <div className={cn(
-        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br transition-opacity pointer-events-none",
+        "absolute top-0 left-0 z-20 text-[10px] px-2 py-0.5 rounded-br font-medium tracking-wide transition-all pointer-events-none",
         isSelected || isDragging
-          ? "opacity-100 bg-primary text-primary-foreground"
-          : "opacity-0 group-hover/block:opacity-100 bg-foreground/80 text-background"
+          ? "opacity-100 bg-primary text-primary-foreground shadow-md"
+          : "opacity-0 group-hover/block:opacity-100 bg-foreground/85 text-background"
       )}>
         {section.label}{isDragging && " — moving…"}
       </div>
