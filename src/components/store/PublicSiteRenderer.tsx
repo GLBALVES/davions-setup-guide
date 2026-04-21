@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
@@ -247,6 +248,8 @@ interface Props {
    * null / undefined = render everything in default order.
    */
   visibleSections?: string[] | null;
+  /** Draft-only page header config from site_pages.header_config */
+  pageHeaderConfig?: HeaderConfig | null;
 }
 
 // ─── Shared helpers ─────────────────────────────────────────────────────────
@@ -277,6 +280,30 @@ interface NavProps {
   site?: SiteConfig | null;
   /** Force the header to render in its opaque (light bg) state regardless of scroll. */
   forceOpaque?: boolean;
+}
+
+function toPreviewHeaderSite(site: SiteConfig | null, displayName: string) {
+  return {
+    logoUrl: site?.logo_url ?? null,
+    displayName,
+  };
+}
+
+function toPreviewHeaderLinks(navLinks: NavLinkItem[]) {
+  return navLinks.map((link, index) => ({
+    id: `${link.label}-${link.href}-${index}`,
+    label: link.label,
+    type: "link" as const,
+    url: link.href,
+    openInNewTab: false,
+    children: link.children?.map((child, childIndex) => ({
+      id: `${child.label}-${child.href}-${index}-${childIndex}`,
+      label: child.label,
+      type: "link" as const,
+      url: child.href,
+      openInNewTab: false,
+    })),
+  }));
 }
 
 const ALL_SOCIALS = ["instagram", "facebook", "youtube", "tiktok", "pinterest", "linkedin", "whatsapp"] as const;
@@ -1873,6 +1900,7 @@ export default function PublicSiteRenderer(props: Props) {
     const accentColor = site?.accent_color || "#000000";
     const { navLinks, handleNavClick } = derived;
     const subSections = (props.subPageSections as PageSection[] | undefined) ?? [];
+    const headerConfig = props.pageHeaderConfig ?? null;
     return (
       <>
         <SEOHead
@@ -1883,19 +1911,27 @@ export default function PublicSiteRenderer(props: Props) {
           canonical={seoUrl}
         />
         <div className="min-h-screen bg-background">
-          <SharedNav
-            scrolled={props.scrolled}
-            mobileMenuOpen={props.mobileMenuOpen}
-            setMobileMenuOpen={props.setMobileMenuOpen}
-            displayName={displayName}
-            logoUrl={site?.logo_url ?? null}
-            accentColor={accentColor}
-            navLinks={navLinks}
-            showBooking={false}
-            ctaText=""
-            onNavClick={handleNavClick}
-          />
-          <div className="pt-20">
+          {headerConfig ? (
+            <PreviewHeader
+              site={toPreviewHeaderSite(site, displayName)}
+              navLinks={toPreviewHeaderLinks(navLinks)}
+              config={headerConfig}
+            />
+          ) : (
+            <SharedNav
+              scrolled={props.scrolled}
+              mobileMenuOpen={props.mobileMenuOpen}
+              setMobileMenuOpen={props.setMobileMenuOpen}
+              displayName={displayName}
+              logoUrl={site?.logo_url ?? null}
+              accentColor={accentColor}
+              navLinks={navLinks}
+              showBooking={false}
+              ctaText=""
+              onNavClick={handleNavClick}
+            />
+          )}
+          <div className={headerConfig ? "" : "pt-20"}>
             {subSections.length > 0 ? (
               <SectionRenderer sections={subSections} accentColor={accentColor} />
             ) : subPageData?.content ? (
@@ -1967,6 +2003,7 @@ export default function PublicSiteRenderer(props: Props) {
   if (props.pageSections && props.pageSections.length > 0) {
     const accentColor = site?.accent_color || "#000000";
     const { navLinks, handleNavClick } = derived;
+    const headerConfig = props.pageHeaderConfig ?? null;
     // If the first section isn't a full-bleed hero/image, the header would sit
     // on a light background and become invisible. Force its opaque state.
     const firstType = (props.pageSections[0] as any)?.type as string | undefined;
@@ -1983,21 +2020,29 @@ export default function PublicSiteRenderer(props: Props) {
           canonical={seoUrl}
         />
         <div className="min-h-screen bg-background">
-          <SharedNav
-            scrolled={props.scrolled}
-            mobileMenuOpen={props.mobileMenuOpen}
-            setMobileMenuOpen={props.setMobileMenuOpen}
-            displayName={displayName}
-            logoUrl={site?.logo_url ?? null}
-            accentColor={accentColor}
-            navLinks={navLinks}
-            showBooking={false}
-            ctaText=""
-            onNavClick={handleNavClick}
-            site={site}
-            forceOpaque={forceOpaque}
-          />
-          <div className={forceOpaque ? "pt-16" : ""}>
+          {headerConfig ? (
+            <PreviewHeader
+              site={toPreviewHeaderSite(site, displayName)}
+              navLinks={toPreviewHeaderLinks(navLinks)}
+              config={headerConfig}
+            />
+          ) : (
+            <SharedNav
+              scrolled={props.scrolled}
+              mobileMenuOpen={props.mobileMenuOpen}
+              setMobileMenuOpen={props.setMobileMenuOpen}
+              displayName={displayName}
+              logoUrl={site?.logo_url ?? null}
+              accentColor={accentColor}
+              navLinks={navLinks}
+              showBooking={false}
+              ctaText=""
+              onNavClick={handleNavClick}
+              site={site}
+              forceOpaque={forceOpaque}
+            />
+          )}
+          <div className={headerConfig ? "" : forceOpaque ? "pt-16" : ""}>
             <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />

@@ -15,6 +15,7 @@ interface RawPage {
   is_visible: boolean;
   sections_order: unknown;
   page_content: Record<string, any> | null;
+  header_config?: unknown;
   published_sections_order?: unknown;
   published_content?: Record<string, any> | null;
   published_at?: string | null;
@@ -35,6 +36,7 @@ const StorePage = () => {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [homeSections, setHomeSections] = useState<string[] | null>(null);
   const [pageSections, setPageSections] = useState<PageSection[]>([]);
+  const [homeHeaderConfig, setHomeHeaderConfig] = useState<unknown | null>(null);
   const [extraNavLinks, setExtraNavLinks] = useState<Array<{ label: string; href: string }>>([]);
   const [emptyState, setEmptyState] = useState<{ title: string; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ const StorePage = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, published_sections_order, published_content, published_at")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
@@ -134,6 +136,7 @@ const StorePage = () => {
       setExtraNavLinks(visibleNavLinks);
       setHomeSections(orderedSections);
       setPageSections(fullSections);
+      setHomeHeaderConfig((homePage?.header_config as unknown) ?? null);
       setEmptyState(
         homePage
           ? null
@@ -200,6 +203,7 @@ const StorePage = () => {
       extraNavLinks={cleanPreview ? [] : extraNavLinks}
       visibleSections={cleanPreview ? null : homeSections}
       pageSections={cleanPreview ? [] : pageSections}
+      pageHeaderConfig={cleanPreview ? null : (homeHeaderConfig as any) ?? null}
       previewTemplate={previewTemplate}
     />
   );
