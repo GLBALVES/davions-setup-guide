@@ -25,6 +25,11 @@ interface Options {
   liveHost: string | null;
   /** Bumping this number triggers a fresh polling cycle. */
   pollKey?: number;
+  /**
+   * Fired once per polling cycle the moment the live bundle matches the local
+   * one. Use this to refresh the in-editor preview / open a fresh live tab.
+   */
+  onSynced?: () => void;
 }
 
 const LOCAL_BUILD_ID =
@@ -50,7 +55,7 @@ async function fetchRemoteBuildId(host: string): Promise<string | null> {
   }
 }
 
-export function useDeployStatus({ liveHost, pollKey = 0 }: Options) {
+export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
   const [status, setStatus] = useState<DeployStatus>("idle");
   const [remoteBuildId, setRemoteBuildId] = useState<string | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
@@ -94,9 +99,29 @@ export function useDeployStatus({ liveHost, pollKey = 0 }: Options) {
       pollTimerRef.current = null;
     }
     pollStopAtRef.current = Date.now() + 2 * 60 * 1000; // 2 minutes
+    let firedSynced = false;
 
-    void check();
-    pollTimerRef.current = setInterval(async () => {
+    const fireSynced = () => {
+      if (firedSynced) return;
+      firedSynced = true;
+      // Tiny delay so the CDN edge for the live domain is ready to serve the
+      // new bundle to the soon-to-be-refreshed preview / live tab.
+      setTimeout(() => onSynced?.(), 1500);
+    };
+
+    const tick = async () => {
+      const next = await check();
+      if (next === "synced") {
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+        fireSynced();
+      }
+    };
+
+    void tick();
+    pollTimerRef.current = setInterval(() => {
       if (Date.now() > pollStopAtRef.current) {
         if (pollTimerRef.current) {
           clearInterval(pollTimerRef.current);
@@ -104,11 +129,7 @@ export function useDeployStatus({ liveHost, pollKey = 0 }: Options) {
         }
         return;
       }
-      const next = await check();
-      if (next === "synced" && pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
+      void tick();
     }, 15000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollKey, liveHost]);
