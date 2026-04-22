@@ -110,6 +110,10 @@ const CustomDomainStore = () => {
         if (isDraftPreview) return p.sections_order;
         return p.published_sections_order ?? p.sections_order;
       };
+      const pickHeader = (p: RawPage): unknown => {
+        if (isDraftPreview) return p.header_config ?? null;
+        return p.published_header_config ?? p.header_config ?? null;
+      };
 
       const topLevel = rawPages.filter((p) => !p.parent_id);
       const homePage =
