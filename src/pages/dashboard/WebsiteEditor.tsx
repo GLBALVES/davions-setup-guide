@@ -771,6 +771,13 @@ const HeaderSliderPanel = ({
         </div>
 
         <div className="px-4 pb-3">
+          {(!cfg.slides || cfg.slides.length === 0) && (
+            <div className="mb-3 px-3 py-2 rounded-md bg-muted/40 border border-border/60">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {(we as any).noSlidesHint || "Sem slides, esta página exibirá apenas o menu de navegação no topo."}
+              </p>
+            </div>
+          )}
           <div className="space-y-1">
             {slides.map((slide) => (
               <div
@@ -793,7 +800,8 @@ const HeaderSliderPanel = ({
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeSlide(slide.id); }}
-                  className="p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-0.5 rounded hover:bg-muted opacity-100 transition-opacity"
+                  title={(we as any).removeSlide || "Remover slide"}
                 >
                   <X className="h-3 w-3 text-muted-foreground" />
                 </button>

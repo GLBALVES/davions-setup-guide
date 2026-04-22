@@ -74,10 +74,17 @@ export default function PreviewHeader({
 
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(config || {}) };
   const validSlides = (cfg.slides || []).filter((s) => !!s.imageUrl);
-  const usingPlaceholder = validSlides.length === 0;
-  const slides: HeaderSlide[] = usingPlaceholder
-    ? [{ id: "placeholder", imageUrl: PLACEHOLDER_IMAGE }]
-    : validSlides;
+  // When the page has no slides at all:
+  //  - Live site: render a compact nav-only header (no hero, no placeholder).
+  //  - Edit mode: keep a placeholder image so the user still sees the hero area
+  //    and can access the edit handles to add/restore slides.
+  const navOnlyMode = validSlides.length === 0 && !editMode;
+  const usingPlaceholder = validSlides.length === 0 && editMode;
+  const slides: HeaderSlide[] = navOnlyMode
+    ? []
+    : usingPlaceholder
+      ? [{ id: "placeholder", imageUrl: PLACEHOLDER_IMAGE }]
+      : validSlides;
 
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
@@ -152,6 +159,102 @@ export default function PreviewHeader({
       </button>
     );
   };
+
+  // Helper to render link with arbitrary color (used by nav-only mode).
+  const renderLinkWithColor = (link: PreviewNavLink, color: string) => {
+    if (link.type === "link") {
+      const newTab = link.openInNewTab !== false;
+      return (
+        <a
+          key={link.id}
+          href={link.url || "#"}
+          target={newTab ? "_blank" : "_self"}
+          rel={newTab ? "noopener noreferrer" : undefined}
+          className="text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70"
+          style={{ color }}
+        >
+          {link.label}
+        </a>
+      );
+    }
+    return (
+      <button
+        key={link.id}
+        onClick={() => onNavigatePage?.(link.id)}
+        className={cn(
+          "text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70",
+          activePageId === link.id && "underline underline-offset-4"
+        )}
+        style={{ color }}
+      >
+        {link.label}
+      </button>
+    );
+  };
+
+  // Nav-only render: no slides on this page → render just a compact menu bar.
+  if (navOnlyMode) {
+    const navFg = "hsl(var(--foreground))";
+    return (
+      <header className="relative w-full bg-background border-b border-border">
+        <div className="px-4 sm:px-6 py-4 sm:py-5">
+          <div className="max-w-7xl mx-auto">
+            {layout === "logo-center" ? (
+              <div className="flex md:grid md:grid-cols-3 items-center justify-between gap-4">
+                <nav className="hidden md:flex items-center justify-end gap-6">
+                  {leftLinks.map((link) => renderLinkWithColor(link, navFg))}
+                </nav>
+                <div className="flex items-center justify-center order-1 md:order-none">
+                  {activeLogoUrl ? (
+                    <img src={activeLogoUrl} alt={displayName} className={logoImgClass} />
+                  ) : (
+                    <span className={logoTextClass} style={{ color: navFg }}>{displayName}</span>
+                  )}
+                </div>
+                <nav className="hidden md:flex items-center justify-start gap-6">
+                  {rightLinks.map((link) => renderLinkWithColor(link, navFg))}
+                </nav>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen((v) => !v)}
+                  className="md:hidden order-2 p-1.5 -mr-1.5 text-foreground/80 hover:text-foreground"
+                  aria-label="Menu"
+                >
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+            ) : (
+              <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
+                <div className="flex items-center">
+                  {activeLogoUrl ? (
+                    <img src={activeLogoUrl} alt={displayName} className={logoImgClass} />
+                  ) : (
+                    <span className={logoTextClass} style={{ color: navFg }}>{displayName}</span>
+                  )}
+                </div>
+                <nav className={cn("hidden md:flex items-center gap-6 flex-1", layout === "logo-right" ? "justify-start" : "justify-end")}>
+                  {rightLinks.map((link) => renderLinkWithColor(link, navFg))}
+                </nav>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen((v) => !v)}
+                  className="md:hidden p-1.5 -mr-1.5 text-foreground/80 hover:text-foreground"
+                  aria-label="Menu"
+                >
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+            )}
+            {mobileOpen && (
+              <div className="md:hidden mt-3 bg-background rounded-md py-3 px-4 flex flex-col gap-3 border border-border">
+                {navLinks.map((link) => renderLinkWithColor(link, navFg))}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
