@@ -694,23 +694,100 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
 
 function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const photographerId = c.photographerId;
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (c.editMode) return;
+    if (!photographerId) {
+      setStatus("error");
+      setErrorMsg("Form not configured");
+      return;
+    }
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setStatus("error");
+      setErrorMsg("Please fill in all fields");
+      return;
+    }
+    setStatus("sending");
+    setErrorMsg(null);
+    try {
+      const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
+      const url = `https://${projectId}.supabase.co/functions/v1/submit-contact-form`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          photographerId,
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+          sourceUrl: typeof window !== "undefined" ? window.location.href : null,
+          formLabel: "Contact Form",
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || "Failed to send");
+      }
+      setStatus("sent");
+      setName(""); setEmail(""); setMessage("");
+    } catch (err: any) {
+      setStatus("error");
+      setErrorMsg(err?.message || "Failed to send");
+    }
+  };
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6" id="contact">
       <div className="max-w-xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-          <input type="text" placeholder="Your name" className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors" />
-          <input type="email" placeholder="Your email" className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors" />
-          <textarea rows={4} placeholder="Your message" className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors resize-none" />
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={c.editMode || status === "sending"}
+            className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+          />
+          <input
+            type="email"
+            placeholder="Your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={c.editMode || status === "sending"}
+            className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+          />
+          <textarea
+            rows={4}
+            placeholder="Your message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={c.editMode || status === "sending"}
+            className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors resize-none"
+          />
+          {status === "sent" && (
+            <p className="text-xs text-center text-muted-foreground">Thanks — we received your message and sent you a copy.</p>
+          )}
+          {status === "error" && errorMsg && (
+            <p className="text-xs text-center text-destructive">{errorMsg}</p>
+          )}
           <button
-            type="button"
+            type="submit"
+            disabled={c.editMode || status === "sending"}
             style={{ borderColor: accentColor, color: accentColor }}
-            className="w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity"
+            className="w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity disabled:opacity-50"
           >
             <EditableText
               as="span"
               editMode={c.editMode}
-              value={submitLabel}
+              value={status === "sending" ? "Sending..." : submitLabel}
               placeholder="Send"
               onChange={(v) => c.set("submitLabel", v)}
             />
