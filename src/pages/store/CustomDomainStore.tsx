@@ -15,6 +15,7 @@ import logoPreto from "@/assets/logo_principal_preto.png";
 import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import type { PageSection } from "@/components/store/SectionRenderer";
+import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
 
 interface RawPage {
   id: string;
@@ -115,13 +116,7 @@ const CustomDomainStore = () => {
         return p.published_header_config ?? p.header_config ?? null;
       };
 
-      const topLevel = rawPages.filter((p) => !p.parent_id);
-      const homePage =
-        topLevel.find((p) => p.is_home) ??
-        topLevel.find((p) => (p.slug || "").toLowerCase() === "home") ??
-        topLevel.find((p) => (p.title || "").toLowerCase() === "home") ??
-        topLevel[0] ??
-        null;
+      const homePage = getTopLevelHomePage(rawPages);
       const homePageContent = homePage ? pickContent(homePage) : {};
       const homeOrder = homePage ? pickOrder(homePage) : [];
       const orderedSections = Array.isArray(homeOrder)
@@ -132,10 +127,11 @@ const CustomDomainStore = () => {
       const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
-      const visibleNavLinks = rawPages
-        .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((page) => ({ label: page.title, href: `/page/${page.slug}` }));
+      const visibleNavLinks = buildPublicSiteNavLinks({
+        pages: rawPages,
+        homeHref: "/",
+        makePageHref: (page) => `/page/${page.slug}`,
+      });
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);
