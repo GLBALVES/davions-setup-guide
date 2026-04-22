@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     {
       name: "html-build-id-replace",
-      transformIndexHtml(html) {
+      transformIndexHtml(html: string) {
         return html.replace(/%BUILD_ID%/g, BUILD_ID);
       },
     },
