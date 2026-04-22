@@ -565,7 +565,8 @@ function DividerContentEditor({ props, onChange }: { props: any; onChange: (p: a
   );
 }
 
-function InstagramFeedContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function InstagramFeedContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const posts: { image: string; link: string; caption?: string }[] = props.posts || [];
   return (
     <div className="space-y-3">
       <Field label="Username (without @)">
@@ -581,8 +582,34 @@ function InstagramFeedContentEditor({ props, onChange }: { props: any; onChange:
           </SelectContent>
         </Select>
       </Field>
-      <Field label={`Posts: ${props.count || 9}`}>
-        <Slider value={[props.count || 9]} min={3} max={24} step={1} onValueChange={([v]) => onChange({ ...props, count: v })} />
+      <Field label="Posts">
+        <ItemListEditor
+          items={posts}
+          onChange={(next) => onChange({ ...props, posts: next })}
+          itemLabel="Post"
+          addLabel="Add Post"
+          newItem={() => ({ image: "", link: "", caption: "" })}
+          renderLabel={(it) => it.caption || (it.link ? it.link.replace(/^https?:\/\//, "").slice(0, 30) : "Empty")}
+          renderDetail={(item, update) => (
+            <div className="space-y-2">
+              <Field label="Image">
+                <ImageUploadField
+                  value={item.image}
+                  onChange={(url) => update({ image: url ?? "" })}
+                  photographerId={photographerId}
+                  folder="instagram"
+                  aspectClass="aspect-square"
+                />
+              </Field>
+              <Field label="Post link (optional)">
+                <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://instagram.com/p/..." />
+              </Field>
+              <Field label="Caption (optional)">
+                <Input value={item.caption || ""} onChange={(e) => update({ caption: e.target.value })} className="h-9 text-sm" placeholder="Short description" />
+              </Field>
+            </div>
+          )}
+        />
       </Field>
     </div>
   );
