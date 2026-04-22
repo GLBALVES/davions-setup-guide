@@ -4028,6 +4028,7 @@ const WebsiteEditor = () => {
 
         <div className="flex-1 min-h-0">
           <PreviewRenderer
+            key={`preview-${previewVersion}`}
             sections={activePageSections}
             selectedBlockIndex={selectedBlockIndex}
             onSelectBlock={(idx) => {
