@@ -4103,6 +4103,13 @@ const WebsiteEditor = () => {
           saveStatus={saveStatus}
         />
 
+        <DeployStatusBanner
+          status={deploy.status}
+          labels={deployLabels}
+          onCheck={() => void deploy.check()}
+          liveHost={liveHostForDeploy}
+        />
+
         <div className="flex-1 min-h-0">
           <PreviewRenderer
             sections={activePageSections}
