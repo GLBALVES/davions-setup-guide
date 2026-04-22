@@ -3990,8 +3990,19 @@ const WebsiteEditor = () => {
 
       {/* Sidebar panel */}
       <div className="w-[260px] flex-1 sm:flex-none border-r border-border bg-card flex flex-col shrink-0 overflow-hidden">
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {panelMap[activeTab]}
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+          {(Object.keys(panelMap) as EditorTab[]).map((key) => (
+            <div
+              key={key}
+              className={cn(
+                "absolute inset-0 overflow-hidden",
+                activeTab === key ? "block" : "hidden"
+              )}
+              aria-hidden={activeTab !== key}
+            >
+              {panelMap[key]}
+            </div>
+          ))}
         </div>
         <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
           <Button
@@ -4064,8 +4075,19 @@ const WebsiteEditor = () => {
       </div>
 
       {/* Active panel content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {panelMap[activeTab]}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        {(Object.keys(panelMap) as EditorTab[]).map((key) => (
+          <div
+            key={key}
+            className={cn(
+              "absolute inset-0 overflow-hidden",
+              activeTab === key ? "block" : "hidden"
+            )}
+            aria-hidden={activeTab !== key}
+          >
+            {panelMap[key]}
+          </div>
+        ))}
       </div>
 
       <div className="border-t border-border px-2 pt-2 pb-1 shrink-0 bg-card flex items-center justify-between gap-2">
