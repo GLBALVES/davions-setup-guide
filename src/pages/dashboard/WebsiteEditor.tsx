@@ -3358,6 +3358,11 @@ const WebsiteEditor = () => {
   const [publishing, setPublishing] = useState(false);
   // Bump after a successful publish to trigger the deploy-status auto-poll
   const [deployPollKey, setDeployPollKey] = useState(0);
+  // Bump to remount <PreviewRenderer/> with fresh data after a deploy completes
+  const [previewVersion, setPreviewVersion] = useState(0);
+  // Holds the live-site tab opened by the "Abrir site ao vivo" button so we
+  // can refresh it (rather than open a duplicate) once the deploy is synced.
+  const liveTabRef = useRef<Window | null>(null);
   // Tracks the live save state for the auto-save indicator (Style → Logo & Branding etc.)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
@@ -3783,7 +3788,41 @@ const WebsiteEditor = () => {
   };
 
   const liveHostForDeploy = customDomain || null;
-  const deploy = useDeployStatus({ liveHost: liveHostForDeploy, pollKey: deployPollKey });
+
+  const handleDeploySynced = useCallback(() => {
+    // 1. Force the in-editor preview to remount so it re-fetches fresh data.
+    setPreviewVersion((v) => v + 1);
+    // 2. Refresh the live tab (or open one) with a fresh cache-buster so the
+    //    visitor sees the published preview=0 version of the new bundle.
+    const v = Date.now();
+    const liveUrl = customDomain
+      ? `https://${customDomain}/?v=${v}`
+      : storeSlug
+        ? `${window.location.origin}/store/${storeSlug}?v=${v}`
+        : null;
+    if (!liveUrl) return;
+    if (liveTabRef.current && !liveTabRef.current.closed) {
+      try {
+        liveTabRef.current.location.replace(liveUrl);
+      } catch {
+        // Cross-origin restriction — open a new tab as fallback
+        liveTabRef.current = window.open(liveUrl, "_blank", "noopener");
+      }
+    }
+    toast.success(
+      lang === "pt"
+        ? "Deploy concluído — preview e site ao vivo atualizados"
+        : lang === "es"
+          ? "Despliegue listo — vista previa y sitio en vivo actualizados"
+          : "Deploy complete — preview and live site refreshed",
+    );
+  }, [customDomain, storeSlug, lang]);
+
+  const deploy = useDeployStatus({
+    liveHost: liveHostForDeploy,
+    pollKey: deployPollKey,
+    onSynced: handleDeploySynced,
+  });
 
   const handleSave = async () => {
     setSaving(true);
