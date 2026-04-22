@@ -3747,6 +3747,44 @@ const WebsiteEditor = () => {
         : "Set up your store URL first in Personalize.",
   };
 
+  // ── Code-bundle deploy status ───────────────────────────────────────────────
+  // Compares the editor's running JS bundle against the bundle the live custom
+  // domain is currently serving. The "Update" button (top-right global publish)
+  // is what actually deploys the bundle — this indicator surfaces whether that
+  // step is still pending after a content publish.
+  const deployLabels = {
+    title: lang === "pt" ? "Deploy do código" : lang === "es" ? "Despliegue del código" : "Code deploy",
+    synced: lang === "pt" ? "Código sincronizado" : lang === "es" ? "Código sincronizado" : "Code in sync",
+    pending: lang === "pt" ? "Deploy pendente" : lang === "es" ? "Despliegue pendiente" : "Deploy pending",
+    error: lang === "pt" ? "Não verificado" : lang === "es" ? "No verificado" : "Not verified",
+    checking: lang === "pt" ? "Verificando…" : lang === "es" ? "Verificando…" : "Checking…",
+    idle: lang === "pt" ? "Verificar deploy" : lang === "es" ? "Verificar despliegue" : "Check deploy",
+    bannerPendingTitle: lang === "pt"
+      ? "O deploy do código ainda está em andamento"
+      : lang === "es"
+        ? "El despliegue del código aún está en curso"
+        : "Code deploy is still in progress",
+    bannerPendingBody: lang === "pt"
+      ? "O conteúdo foi publicado, mas o domínio ao vivo ainda está servindo a versão anterior do app. Clique em 'Update' no topo para enviar o novo bundle."
+      : lang === "es"
+        ? "El contenido se publicó, pero el dominio en vivo aún sirve la versión anterior. Haz clic en 'Update' arriba para enviar el nuevo paquete."
+        : "Your content was published, but the live domain is still serving the previous app version. Click 'Update' at the top to ship the new bundle.",
+    bannerErrorTitle: lang === "pt"
+      ? "Não foi possível verificar o deploy"
+      : lang === "es"
+        ? "No se pudo verificar el despliegue"
+        : "Couldn't verify deploy",
+    bannerErrorBody: lang === "pt"
+      ? "Não conseguimos ler o build atual do site ao vivo."
+      : lang === "es"
+        ? "No pudimos leer el build actual del sitio en vivo."
+        : "We couldn't read the current build from the live site.",
+    recheck: lang === "pt" ? "Verificar" : lang === "es" ? "Verificar" : "Recheck",
+  };
+
+  const liveHostForDeploy = customDomain || null;
+  const deploy = useDeployStatus({ liveHost: liveHostForDeploy, pollKey: deployPollKey });
+
   const handleSave = async () => {
     setSaving(true);
     try {
