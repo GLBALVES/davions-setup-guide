@@ -3398,12 +3398,13 @@ const WebsiteEditor = () => {
     (async () => {
       const { data: ph } = await supabase
         .from("photographers")
-        .select("store_slug, full_name, business_name")
+        .select("store_slug, full_name, business_name, custom_domain")
         .eq("id", user.id)
         .maybeSingle();
       if (ph) {
         setStoreSlug((ph as any).store_slug ?? null);
         setDisplayName((ph as any).business_name || (ph as any).full_name || "Studio");
+        setCustomDomain((ph as any).custom_domain ?? null);
       }
       const { data: s } = await supabase
         .from("photographer_site")
