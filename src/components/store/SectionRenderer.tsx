@@ -1250,12 +1250,17 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
 
 // ─── Instagram Feed (placeholder) ───────────────────────────────────────────
 
-function InstagramFeedBlock({ count = 9, columns = 3, username }: any) {
+function InstagramFeedBlock({ count = 9, columns = 3, username, posts = [] }: any) {
   const cols = Number(columns) || 3;
   const gridCls =
     cols === 6 ? "grid-cols-3 sm:grid-cols-6"
     : cols === 4 ? "grid-cols-2 sm:grid-cols-4"
     : "grid-cols-2 sm:grid-cols-3";
+
+  const list: { image?: string; link?: string; caption?: string }[] = Array.isArray(posts) ? posts : [];
+  const fallbackHref = username ? `https://instagram.com/${username}` : undefined;
+  const slots = list.length > 0 ? list.slice(0, count) : Array.from({ length: count }).map(() => ({} as any));
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto">
@@ -1264,11 +1269,35 @@ function InstagramFeedBlock({ count = 9, columns = 3, username }: any) {
           <p className="text-center text-xs text-muted-foreground mb-6">@{username}</p>
         )}
         <div className={`grid ${gridCls} gap-2`}>
-          {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
-              <Camera className="h-5 w-5 text-muted-foreground/20" />
-            </div>
-          ))}
+          {slots.map((item, i) => {
+            const href = item?.link || fallbackHref;
+            const inner = item?.image ? (
+              <img
+                src={item.image}
+                alt={item.caption || `Instagram post ${i + 1}`}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-muted/20 flex items-center justify-center">
+                <Camera className="h-5 w-5 text-muted-foreground/20" />
+              </div>
+            );
+            const wrapperCls = "aspect-square rounded overflow-hidden block";
+            return href ? (
+              <a
+                key={i}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${wrapperCls} group relative`}
+              >
+                {inner}
+              </a>
+            ) : (
+              <div key={i} className={wrapperCls}>{inner}</div>
+            );
+          })}
         </div>
       </div>
     </section>

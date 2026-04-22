@@ -229,7 +229,7 @@ const instagramFeed = (): PageSection => ({
   id: uid(),
   type: "instagram-feed",
   label: "Instagram Feed",
-  props: { count: 9, columns: 3, clickAction: "open-instagram", variant: "grid-3x3" },
+  props: { count: 9, columns: 3, clickAction: "open-instagram", variant: "grid-3x3", posts: [] },
 });
 
 const socialLinks = (): PageSection => ({
