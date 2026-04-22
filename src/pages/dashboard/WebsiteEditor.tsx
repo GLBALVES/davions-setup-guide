@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine,
+  ArrowRightToLine, Check, AlertCircle, Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
