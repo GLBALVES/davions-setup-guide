@@ -1879,10 +1879,27 @@ export default function PublicSiteRenderer(props: Props) {
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
 
-  // Inject photographer's custom favicon into <head>
+  // Inject photographer's custom favicon into <head> — only on the public-facing
+  // site (custom domain or /store/* route). Never on the dashboard preview,
+  // otherwise the photographer's favicon would override Davions' own favicon.
   useEffect(() => {
     const faviconUrl = site?.favicon_url;
     if (!faviconUrl) return;
+    const path = window.location.pathname;
+    const host = window.location.hostname;
+    const isPlatformHost =
+      host === "localhost" ||
+      host.endsWith(".lovable.app") ||
+      host.endsWith(".lovable.dev") ||
+      host.endsWith(".lovableproject.com") ||
+      host === "davions.com" ||
+      host === "www.davions.com" ||
+      host === "nevoxholding.com" ||
+      host === "www.nevoxholding.com";
+    const isPublicRoute = path.startsWith("/store/") || path === "/store" || path.startsWith("/page/") || path.startsWith("/book/") || path.startsWith("/gallery/") || path.startsWith("/blog");
+    const isCustomDomain = !isPlatformHost;
+    if (!isCustomDomain && !isPublicRoute) return;
+
     const setLink = (rel: string, type: string) => {
       let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
       if (!el) {
