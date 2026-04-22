@@ -3868,31 +3868,29 @@ const WebsiteEditor = () => {
     if (!user?.id) return;
     setPublishing(true);
     try {
-      // Promote current draft (page_content / sections_order) to the published
-      // columns so the public site reflects the editor's current state.
-      const { error } = await (supabase as any).rpc("publish_site_pages", {
-        _photographer_id: user.id,
-      });
-      if (error) {
-        // Fallback: do it client-side if RPC isn't available
-        const { data: rows } = await supabase
-          .from("site_pages")
-          .select("id, page_content, sections_order")
-          .eq("photographer_id", user.id)
-          .is("deleted_at", null);
-        await Promise.all(
-          (rows ?? []).map((r: any) =>
-            (supabase as any)
-              .from("site_pages")
-              .update({
-                published_content: r.page_content,
-                published_sections_order: r.sections_order,
-                published_at: new Date().toISOString(),
-              })
-              .eq("id", r.id)
-          )
-        );
-      }
+      // Promote current draft (page_content / sections_order / header_config)
+      // to the published columns so the public site reflects the editor's
+      // current state. We always run the client-side promotion so the
+      // `published_header_config` column (added later) gets snapshotted too,
+      // even when the legacy RPC exists and only handles content/order.
+      const { data: rows } = await supabase
+        .from("site_pages")
+        .select("id, page_content, sections_order, header_config")
+        .eq("photographer_id", user.id)
+        .is("deleted_at", null);
+      await Promise.all(
+        (rows ?? []).map((r: any) =>
+          (supabase as any)
+            .from("site_pages")
+            .update({
+              published_content: r.page_content,
+              published_sections_order: r.sections_order,
+              published_header_config: r.header_config,
+              published_at: new Date().toISOString(),
+            })
+            .eq("id", r.id)
+        )
+      );
       // Cache-buster forces CustomDomainStore / StorePage to re-fetch the
       // freshly published snapshot — avoids stale ?preview=0 view.
       const v = Date.now();

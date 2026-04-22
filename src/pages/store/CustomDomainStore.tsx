@@ -29,6 +29,7 @@ interface RawPage {
   header_config?: unknown;
   published_sections_order?: unknown;
   published_content?: Record<string, any> | null;
+  published_header_config?: unknown;
   published_at?: string | null;
 }
 
@@ -94,7 +95,7 @@ const CustomDomainStore = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_at")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_header_config, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
@@ -108,6 +109,10 @@ const CustomDomainStore = () => {
       const pickOrder = (p: RawPage): unknown => {
         if (isDraftPreview) return p.sections_order;
         return p.published_sections_order ?? p.sections_order;
+      };
+      const pickHeader = (p: RawPage): unknown => {
+        if (isDraftPreview) return p.header_config ?? null;
+        return p.published_header_config ?? p.header_config ?? null;
       };
 
       const topLevel = rawPages.filter((p) => !p.parent_id);
@@ -142,7 +147,7 @@ const CustomDomainStore = () => {
       setExtraNavLinks(visibleNavLinks);
       setHomeSections(orderedSections.length > 0 ? orderedSections : null);
       setPageSections(fullSections);
-      setHomeHeaderConfig((homePage?.header_config as unknown) ?? null);
+      setHomeHeaderConfig(homePage ? (pickHeader(homePage) as unknown) : null);
       setLoading(false);
     };
 
