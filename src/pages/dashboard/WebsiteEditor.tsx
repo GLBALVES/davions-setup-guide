@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
-import { DeployStatusBadge, DeployStatusBanner } from "@/components/website-editor/DeployStatusIndicator";
+import { DeployStatusBadge } from "@/components/website-editor/DeployStatusIndicator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -3987,14 +3987,6 @@ const WebsiteEditor = () => {
         <div className="flex-1 min-h-0 overflow-hidden">
           {panelMap[activeTab]}
         </div>
-        <div className="border-t border-border px-2 pt-2 pb-1 shrink-0 bg-card flex items-center justify-between gap-2">
-          <DeployStatusBadge
-            status={deploy.status}
-            labels={deployLabels}
-            onCheck={() => void deploy.check()}
-            liveHost={liveHostForDeploy}
-          />
-        </div>
         <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
           <Button
             size="sm"
@@ -4146,13 +4138,6 @@ const WebsiteEditor = () => {
           faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
           title={(site as any)?.logoText || site?.displayName || "Studio"}
           saveStatus={saveStatus}
-        />
-
-        <DeployStatusBanner
-          status={deploy.status}
-          labels={deployLabels}
-          onCheck={() => void deploy.check()}
-          liveHost={liveHostForDeploy}
         />
 
         <div className="flex-1 min-h-0">
