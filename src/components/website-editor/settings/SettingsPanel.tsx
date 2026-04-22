@@ -101,7 +101,7 @@ export default function SettingsPanel({
         initial={{
           custom_css: site?.custom_css ?? null,
           custom_body_html: site?.custom_body_html ?? null,
-          favicon_url: site?.favicon_url ?? null,
+          favicon_url: (site as any)?.faviconUrl ?? site?.favicon_url ?? null,
           redirects: site?.redirects ?? [],
         }}
         onSave={async (patch) => onSiteChange(patch)}
