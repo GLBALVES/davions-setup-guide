@@ -3345,6 +3345,7 @@ const BrandRow = ({
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
