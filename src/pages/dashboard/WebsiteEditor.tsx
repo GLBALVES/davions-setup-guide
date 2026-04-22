@@ -801,7 +801,7 @@ const HeaderSliderPanel = ({
                 <button
                   onClick={(e) => { e.stopPropagation(); removeSlide(slide.id); }}
                   className="p-0.5 rounded hover:bg-muted opacity-100 transition-opacity"
-                  title={we.removeSlide || "Remover slide"}
+                  title={(we as any).removeSlide || "Remover slide"}
                 >
                   <X className="h-3 w-3 text-muted-foreground" />
                 </button>
