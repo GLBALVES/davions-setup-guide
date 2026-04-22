@@ -168,23 +168,27 @@ export function ImageUploadField({
           <div className={cn("w-full overflow-hidden", aspectClass)}>
             <img src={value} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1.5">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
-              className="px-2 py-1 rounded text-[11px] bg-background text-foreground hover:bg-background/90 transition-colors flex items-center gap-1"
+              title="Replace"
+              aria-label="Replace"
+              className="w-full max-w-[7rem] px-2 py-1 rounded text-[10px] leading-none bg-background text-foreground hover:bg-background/90 transition-colors inline-flex items-center justify-center gap-1 shadow-sm"
             >
-              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-              Replace
+              {uploading ? <Loader2 className="h-3 w-3 animate-spin shrink-0" /> : <Upload className="h-3 w-3 shrink-0" />}
+              <span className="truncate">Replace</span>
             </button>
             <button
               type="button"
               onClick={() => onChange("")}
-              className="px-2 py-1 rounded text-[11px] bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors flex items-center gap-1"
+              title="Remove"
+              aria-label="Remove"
+              className="w-full max-w-[7rem] px-2 py-1 rounded text-[10px] leading-none bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors inline-flex items-center justify-center gap-1 shadow-sm"
             >
-              <X className="h-3 w-3" />
-              Remove
+              <X className="h-3 w-3 shrink-0" />
+              <span className="truncate">Remove</span>
             </button>
           </div>
         </div>
