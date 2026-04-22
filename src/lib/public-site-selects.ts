@@ -1,0 +1,7 @@
+export const PUBLIC_SITE_CONFIG_SELECT = "site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text, header_bg_color, header_text_color, header_visible_socials, footer_bg_color, footer_text_color, footer_show_logo, footer_show_socials, footer_visible_socials, footer_preset, hero_bg_color, hero_text_color, sessions_bg_color, sessions_text_color, portfolio_bg_color, portfolio_text_color, about_bg_color, about_text_color, quote_bg_color, quote_text_color, experience_bg_color, experience_text_color, contact_bg_color, contact_text_color, testimonials_bg_color, testimonials_text_color, button_style, button_shape, button_size, button_height, button_width";
+
+export const PUBLIC_SESSIONS_SELECT = "id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url, session_type_id, session_types ( name )";
+
+export const PUBLIC_GALLERIES_SELECT = "id, slug, title, category, cover_image_url";
+
+export const PUBLIC_SITE_PAGES_SELECT = "id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_at";
