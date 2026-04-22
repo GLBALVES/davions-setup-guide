@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import type { PageSection } from "@/components/store/SectionRenderer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
 
 interface RawPage {
   id: string;
@@ -103,13 +104,7 @@ const StorePage = () => {
       // Find the home page: prefer is_home flag, then a page named "home",
       // otherwise fall back to the first top-level page so the site is never empty
       // when the user clearly has content.
-      const topLevel = rawPages.filter((p) => !p.parent_id);
-      const homePage =
-        topLevel.find((p) => p.is_home) ??
-        topLevel.find((p) => (p.slug || "").toLowerCase() === "home") ??
-        topLevel.find((p) => (p.title || "").toLowerCase() === "home") ??
-        topLevel[0] ??
-        null;
+      const homePage = getTopLevelHomePage(rawPages);
       const homePageContent = homePage ? pickContent(homePage) : {};
       const homeOrder = homePage ? pickOrder(homePage) : [];
       const orderedSections = Array.isArray(homeOrder)
@@ -121,15 +116,11 @@ const StorePage = () => {
       const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
-      const otherPagesNav = rawPages
-        .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((page) => ({ label: page.title, href: `/store/${slug}/page/${page.slug}` }));
-      const homeIsVisible = homePage ? homePage.is_visible !== false : true;
-      const visibleNavLinks =
-        otherPagesNav.length > 0 && homeIsVisible
-          ? [{ label: homePage?.title || "Home", href: `/store/${slug}` }, ...otherPagesNav]
-          : otherPagesNav;
+      const visibleNavLinks = buildPublicSiteNavLinks({
+        pages: rawPages,
+        homeHref: `/store/${slug}`,
+        makePageHref: (page) => `/store/${slug}/page/${page.slug}`,
+      });
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);

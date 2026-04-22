@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
+import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 
 interface RawPage {
   id: string;
@@ -94,11 +95,11 @@ const SiteSubPage = () => {
     );
   }
 
-  // Build extra nav links from visible non-home top-level pages
-  const extraNavLinks = sitePages
-    .filter((p) => p.is_visible && !p.is_home && !p.parent_id)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((p) => ({ label: p.title, href: `/store/${slug}/page/${p.slug}` }));
+  const extraNavLinks = buildPublicSiteNavLinks({
+    pages: sitePages,
+    homeHref: `/store/${slug}`,
+    makePageHref: (pageItem) => `/store/${slug}/page/${pageItem.slug}`,
+  });
 
   const rawContent = isDraftPreview
     ? (page.page_content as Record<string, any>)
