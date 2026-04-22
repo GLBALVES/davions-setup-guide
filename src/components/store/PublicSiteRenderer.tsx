@@ -113,6 +113,12 @@ export interface SiteConfig {
   og_image_url: string | null;
   site_template: string | null;
   favicon_url: string | null;
+  /** Optional studio name override shown in the navbar when no logo image is set */
+  logo_text?: string | null;
+  /** "small" | "medium" | "large" — controls navbar logo height */
+  logo_size?: string | null;
+  /** When true, hides the "Powered by Davions" badge in the footer */
+  hide_branding?: boolean | null;
   quote_text?: string | null;
   quote_author?: string | null;
   experience_title?: string | null;
@@ -463,20 +469,32 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
 
         {/* Center: logo / studio name */}
         <div className="flex items-center justify-center shrink-0 px-8">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={displayName}
-              className={`h-12 object-contain transition-all duration-300 ${logoFilter}`}
-            />
-          ) : (
-            <span
-              style={textColor ? { color: textColor } : undefined}
-              className={`text-sm tracking-[0.4em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
-            >
-              {displayName}
-            </span>
-          )}
+          {(() => {
+            const logoSize = site?.logo_size || "medium";
+            const imgClass =
+              logoSize === "small" ? "h-8 object-contain"
+              : logoSize === "large" ? "h-16 object-contain"
+              : "h-12 object-contain";
+            const textClass =
+              logoSize === "small" ? "text-xs tracking-[0.4em] uppercase font-light whitespace-nowrap"
+              : logoSize === "large" ? "text-base tracking-[0.4em] uppercase font-light whitespace-nowrap"
+              : "text-sm tracking-[0.4em] uppercase font-light whitespace-nowrap";
+            const labelText = site?.logo_text || displayName;
+            return logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={labelText}
+                className={`${imgClass} transition-all duration-300 ${logoFilter}`}
+              />
+            ) : (
+              <span
+                style={textColor ? { color: textColor } : undefined}
+                className={`${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
+              >
+                {labelText}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Right nav links */}
@@ -622,7 +640,9 @@ function SharedFooter({ site, showContact, displayName, logoUrl }: { site: SiteC
           </p>
         )}
 
-        <p className="text-[9px] tracking-widest uppercase text-center" style={{ color: textColor ? textColor + "66" : undefined, opacity: textColor ? undefined : 0.4 }}>Powered by Davions</p>
+        {!site?.hide_branding && (
+          <p className="text-[9px] tracking-widest uppercase text-center" style={{ color: textColor ? textColor + "66" : undefined, opacity: textColor ? undefined : 0.4 }}>Powered by Davions</p>
+        )}
       </div>
     </footer>
   );
