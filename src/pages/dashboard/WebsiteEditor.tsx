@@ -3765,6 +3765,7 @@ const WebsiteEditor = () => {
     }
     if (!user?.id) return;
     setPublishing(true);
+    setPublishStatus("loading");
     try {
       // Promote current draft (page_content / sections_order) to the published
       // columns so the public site reflects the editor's current state.
@@ -3792,9 +3793,15 @@ const WebsiteEditor = () => {
         );
       }
       toast.success(labels.published);
+      setPublishStatus("success");
+      // Bump preview key so the internal renderer remounts with fresh data.
+      setPreviewVersion((v) => v + 1);
+      setTimeout(() => setPublishStatus("idle"), 2500);
     } catch (e) {
       console.error(e);
       toast.error(lang === "pt" ? "Falha ao publicar" : lang === "es" ? "Error al publicar" : "Failed to publish");
+      setPublishStatus("error");
+      setTimeout(() => setPublishStatus("idle"), 3000);
     } finally {
       setPublishing(false);
     }
