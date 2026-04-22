@@ -3789,7 +3789,18 @@ const WebsiteEditor = () => {
           )
         );
       }
-      toast.success(labels.published);
+      // Cache-buster forces CustomDomainStore / StorePage to re-fetch the
+      // freshly published snapshot — avoids stale ?preview=0 view.
+      const v = Date.now();
+      const liveUrl = customDomain
+        ? `https://${customDomain}/?v=${v}`
+        : storeSlug
+          ? `/store/${storeSlug}?v=${v}`
+          : null;
+      const openLabel = lang === "pt" ? "Abrir site" : lang === "es" ? "Abrir sitio" : "Open live site";
+      toast.success(labels.published, liveUrl ? {
+        action: { label: openLabel, onClick: () => window.open(liveUrl, "_blank", "noopener") },
+      } : undefined);
     } catch (e) {
       console.error(e);
       toast.error(lang === "pt" ? "Falha ao publicar" : lang === "es" ? "Error al publicar" : "Failed to publish");
