@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
-import { DeployStatusBadge, DeployStatusBanner } from "@/components/website-editor/DeployStatusIndicator";
+import { DeployStatusBadge } from "@/components/website-editor/DeployStatusIndicator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
