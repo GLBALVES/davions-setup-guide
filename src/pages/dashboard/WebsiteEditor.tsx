@@ -733,6 +733,36 @@ const HeaderSliderPanel = ({
           </div>
         </div>
 
+        {/* LOGO VARIANT */}
+        <div className="px-4 pt-2 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.logoVariant}</p>
+        </div>
+        <div className="px-4 pb-4">
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { id: "primary", label: we.logoVariantPrimary },
+              { id: "alt", label: we.logoVariantAlt },
+            ] as const).map((opt) => {
+              const active = (cfg.logoVariant || "primary") === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => updateCfg({ logoVariant: opt.id as any })}
+                  className={cn(
+                    "h-9 rounded-md border text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/40"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="border-t border-border" />
 
         {/* SLIDES section */}

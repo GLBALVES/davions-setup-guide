@@ -91,6 +91,7 @@ export interface SiteConfig {
   cta_text: string | null;
   cta_link: string | null;
   logo_url: string | null;
+  logo_alt_url?: string | null;
   tagline: string | null;
   accent_color: string | null;
   about_title: string | null;
@@ -297,6 +298,7 @@ interface NavProps {
 function toPreviewHeaderSite(site: SiteConfig | null, displayName: string) {
   return {
     logoUrl: site?.logo_url ?? null,
+    logoAltUrl: site?.logo_alt_url ?? null,
     logoText: site?.logo_text ?? null,
     logoSize: site?.logo_size ?? null,
     displayName,

@@ -18,8 +18,12 @@ export interface HeaderSlide {
 
 export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
 
+export type HeaderLogoVariant = "primary" | "alt";
+
 export interface HeaderConfig {
   layout?: HeaderLayout;
+  /** Which logo to use in the header: primary or alternative */
+  logoVariant?: HeaderLogoVariant;
   slides?: HeaderSlide[];
   autoplay?: boolean;
   /** ms */
@@ -33,6 +37,7 @@ export interface HeaderConfig {
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
   layout: "logo-center",
+  logoVariant: "primary",
   slides: [],
   autoplay: true,
   speed: 5000,
@@ -103,6 +108,11 @@ export default function PreviewHeader({
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
+  const logoVariant: HeaderLogoVariant = (cfg.logoVariant as HeaderLogoVariant) || "primary";
+  const altLogoUrl = (site as any)?.logoAltUrl as string | null | undefined;
+  const primaryLogoUrl = site?.logoUrl as string | null | undefined;
+  const activeLogoUrl =
+    logoVariant === "alt" ? (altLogoUrl || primaryLogoUrl || null) : (primaryLogoUrl || null);
   const logoImgClass =
     logoSize === "small" ? "h-6 sm:h-7 w-auto object-contain"
     : logoSize === "large" ? "h-12 sm:h-16 w-auto object-contain"
@@ -281,8 +291,8 @@ export default function PreviewHeader({
                 {leftLinks.map(renderLink)}
               </nav>
               <div className="flex items-center justify-center order-1 md:order-none">
-                {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                {activeLogoUrl ? (
+                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
                   <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
@@ -305,8 +315,8 @@ export default function PreviewHeader({
           ) : (
             <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
               <div className="flex items-center">
-                {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                {activeLogoUrl ? (
+                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
                   <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
