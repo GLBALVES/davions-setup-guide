@@ -95,7 +95,7 @@ const CustomDomainStore = () => {
           .order("sort_order", { ascending: true }),
         supabase
           .from("site_pages")
-          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_at")
+          .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_header_config, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
       ]);
