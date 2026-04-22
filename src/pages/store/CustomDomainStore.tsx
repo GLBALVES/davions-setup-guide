@@ -147,7 +147,7 @@ const CustomDomainStore = () => {
       setExtraNavLinks(visibleNavLinks);
       setHomeSections(orderedSections.length > 0 ? orderedSections : null);
       setPageSections(fullSections);
-      setHomeHeaderConfig((homePage?.header_config as unknown) ?? null);
+      setHomeHeaderConfig(homePage ? (pickHeader(homePage) as unknown) : null);
       setLoading(false);
     };
 
