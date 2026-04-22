@@ -29,6 +29,7 @@ interface RawPage {
   header_config?: unknown;
   published_sections_order?: unknown;
   published_content?: Record<string, any> | null;
+  published_header_config?: unknown;
   published_at?: string | null;
 }
 
