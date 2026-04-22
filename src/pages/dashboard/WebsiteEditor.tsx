@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine,
+  ArrowRightToLine, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -3730,6 +3730,12 @@ const WebsiteEditor = () => {
     view: lang === "pt" ? "Visualizar" : lang === "es" ? "Vista previa" : "Preview",
     publish: lang === "pt" ? "Publicar" : lang === "es" ? "Publicar" : "Publish",
     published: lang === "pt" ? "Site publicado" : lang === "es" ? "Sitio publicado" : "Site published",
+    openLive: lang === "pt" ? "Abrir site ao vivo" : lang === "es" ? "Abrir sitio en vivo" : "Open live site",
+    noLiveUrl: lang === "pt"
+      ? "Configure um domínio customizado ou URL da loja primeiro."
+      : lang === "es"
+        ? "Configura un dominio personalizado o la URL de la tienda primero."
+        : "Set up a custom domain or store URL first.",
     needSlug: lang === "pt"
       ? "Configure a URL da sua loja em Personalizar primeiro."
       : lang === "es"
@@ -3754,6 +3760,20 @@ const WebsiteEditor = () => {
     }
     const cacheBuster = Date.now();
     window.open(`/store/${storeSlug}?preview=1&v=${cacheBuster}`, "_blank", "noopener");
+  };
+
+  const handleOpenLive = () => {
+    const v = Date.now();
+    const liveUrl = customDomain
+      ? `https://${customDomain}/?v=${v}`
+      : storeSlug
+        ? `/store/${storeSlug}?v=${v}`
+        : null;
+    if (!liveUrl) {
+      toast.error(labels.noLiveUrl);
+      return;
+    }
+    window.open(liveUrl, "_blank", "noopener");
   };
 
   const handlePublish = async () => {
@@ -3893,6 +3913,17 @@ const WebsiteEditor = () => {
           </Button>
           <Button
             size="sm"
+            variant="outline"
+            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            onClick={handleOpenLive}
+            title={labels.openLive}
+            disabled={!customDomain && !storeSlug}
+          >
+            <ExternalLink className="h-3 w-3" />
+            {labels.openLive}
+          </Button>
+          <Button
+            size="sm"
             className="flex-1 h-8 px-1 text-[10px] gap-1"
             onClick={handlePublish}
             disabled={publishing}
@@ -3953,6 +3984,16 @@ const WebsiteEditor = () => {
         >
           <Eye className="h-3 w-3" />
           {labels.view}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          onClick={handleOpenLive}
+          disabled={!customDomain && !storeSlug}
+        >
+          <ExternalLink className="h-3 w-3" />
+          {labels.openLive}
         </Button>
         <Button
           size="sm"
