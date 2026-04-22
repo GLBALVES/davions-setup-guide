@@ -108,6 +108,11 @@ export default function PreviewHeader({
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
+  const logoVariant: HeaderLogoVariant = (cfg.logoVariant as HeaderLogoVariant) || "primary";
+  const altLogoUrl = (site as any)?.logoAltUrl as string | null | undefined;
+  const primaryLogoUrl = site?.logoUrl as string | null | undefined;
+  const activeLogoUrl =
+    logoVariant === "alt" ? (altLogoUrl || primaryLogoUrl || null) : (primaryLogoUrl || null);
   const logoImgClass =
     logoSize === "small" ? "h-6 sm:h-7 w-auto object-contain"
     : logoSize === "large" ? "h-12 sm:h-16 w-auto object-contain"
