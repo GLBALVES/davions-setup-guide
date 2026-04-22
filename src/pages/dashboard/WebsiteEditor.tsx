@@ -3854,7 +3854,9 @@ const WebsiteEditor = () => {
       toast.error(labels.noLiveUrl);
       return;
     }
-    window.open(liveUrl, "_blank", "noopener");
+    // Track the tab so the post-deploy hook can refresh it in place.
+    const opened = window.open(liveUrl, "_blank", "noopener");
+    if (opened) liveTabRef.current = opened;
   };
 
   const handlePublish = async () => {
@@ -4151,6 +4153,7 @@ const WebsiteEditor = () => {
 
         <div className="flex-1 min-h-0">
           <PreviewRenderer
+            key={`preview-${previewVersion}`}
             sections={activePageSections}
             selectedBlockIndex={selectedBlockIndex}
             onSelectBlock={(idx) => {
