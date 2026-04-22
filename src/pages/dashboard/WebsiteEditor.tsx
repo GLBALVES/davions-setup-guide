@@ -3728,6 +3728,9 @@ const WebsiteEditor = () => {
     saved: lang === "pt" ? "Rascunho salvo" : lang === "es" ? "Borrador guardado" : "Draft saved",
     view: lang === "pt" ? "Visualizar" : lang === "es" ? "Vista previa" : "Preview",
     publish: lang === "pt" ? "Publicar" : lang === "es" ? "Publicar" : "Publish",
+    publishing: lang === "pt" ? "Publicando…" : lang === "es" ? "Publicando…" : "Publishing…",
+    publishedShort: lang === "pt" ? "Publicado" : lang === "es" ? "Publicado" : "Published",
+    failedShort: lang === "pt" ? "Falhou" : lang === "es" ? "Falló" : "Failed",
     published: lang === "pt" ? "Site publicado" : lang === "es" ? "Sitio publicado" : "Site published",
     needSlug: lang === "pt"
       ? "Configure a URL da sua loja em Personalizar primeiro."
