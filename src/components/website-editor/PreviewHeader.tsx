@@ -291,8 +291,8 @@ export default function PreviewHeader({
                 {leftLinks.map(renderLink)}
               </nav>
               <div className="flex items-center justify-center order-1 md:order-none">
-                {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                {activeLogoUrl ? (
+                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
                   <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
@@ -315,8 +315,8 @@ export default function PreviewHeader({
           ) : (
             <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
               <div className="flex items-center">
-                {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                {activeLogoUrl ? (
+                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
                   <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
