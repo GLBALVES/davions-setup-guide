@@ -121,10 +121,15 @@ const StorePage = () => {
       const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
-      const visibleNavLinks = rawPages
+      const otherPagesNav = rawPages
         .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((page) => ({ label: page.title, href: `/store/${slug}/page/${page.slug}` }));
+      const homeIsVisible = homePage ? homePage.is_visible !== false : true;
+      const visibleNavLinks =
+        otherPagesNav.length > 0 && homeIsVisible
+          ? [{ label: homePage?.title || "Home", href: `/store/${slug}` }, ...otherPagesNav]
+          : otherPagesNav;
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);

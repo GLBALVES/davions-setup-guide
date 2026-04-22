@@ -132,10 +132,17 @@ const CustomDomainStore = () => {
       const fullSections: PageSection[] = Array.isArray(homePageContent.sections)
         ? homePageContent.sections.filter((s: any) => s?.type)
         : [];
-      const visibleNavLinks = rawPages
+      const otherPagesNav = rawPages
         .filter((page) => page.is_visible && !page.parent_id && page.id !== homePage?.id)
         .sort((a, b) => a.sort_order - b.sort_order)
         .map((page) => ({ label: page.title, href: `/page/${page.slug}` }));
+      // When the photographer has additional visible pages, surface a "Home"
+      // entry pointing back to the root so visitors on a sub-page can return.
+      const homeIsVisible = homePage ? homePage.is_visible !== false : true;
+      const visibleNavLinks =
+        otherPagesNav.length > 0 && homeIsVisible
+          ? [{ label: homePage?.title || "Home", href: "/" }, ...otherPagesNav]
+          : otherPagesNav;
 
       setPhotographer(photoData as Photographer);
       setSite(siteData as SiteConfig ?? null);
