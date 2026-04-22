@@ -114,9 +114,9 @@ export default function PreviewHeader({
   const activeLogoUrl =
     logoVariant === "alt" ? (altLogoUrl || primaryLogoUrl || null) : (primaryLogoUrl || null);
   const logoImgClass =
-    logoSize === "small" ? "h-6 sm:h-7 w-auto object-contain"
-    : logoSize === "large" ? "h-12 sm:h-16 w-auto object-contain"
-    : "h-8 sm:h-10 w-auto object-contain";
+    logoSize === "small" ? "h-12 sm:h-16 w-auto object-contain"
+    : logoSize === "large" ? "h-24 sm:h-32 w-auto object-contain"
+    : "h-16 sm:h-24 w-auto object-contain";
   const logoTextClass =
     logoSize === "small" ? "text-[10px] sm:text-xs font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
     : logoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
