@@ -18,8 +18,12 @@ export interface HeaderSlide {
 
 export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
 
+export type HeaderLogoVariant = "primary" | "alt";
+
 export interface HeaderConfig {
   layout?: HeaderLayout;
+  /** Which logo to use in the header: primary or alternative */
+  logoVariant?: HeaderLogoVariant;
   slides?: HeaderSlide[];
   autoplay?: boolean;
   /** ms */
@@ -33,6 +37,7 @@ export interface HeaderConfig {
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
   layout: "logo-center",
+  logoVariant: "primary",
   slides: [],
   autoplay: true,
   speed: 5000,
