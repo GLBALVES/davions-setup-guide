@@ -1,6 +1,7 @@
 import { Camera, Images, Mail, MapPin, Clock, ArrowRight, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import EditableText from "@/components/website-editor/inline/EditableText";
+import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -441,17 +442,19 @@ function HeroBlock(props: any) {
 
 function TextBlock({ body, ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  // Detect plain text (legacy) vs HTML — if it has no tags, wrap line breaks
+  const html = /<[a-z][\s\S]*>/i.test(body || "")
+    ? body || ""
+    : (body || "").replace(/\n/g, "<br />");
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-3xl mx-auto">
-        <EditableText
-          as="div"
+        <EditableRichText
           editMode={c.editMode}
-          value={body || ""}
+          value={html}
           placeholder="Start writing here…"
-          multiline
           onChange={(v) => c.set("body", v)}
-          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed"
         />
       </div>
     </section>
