@@ -2966,18 +2966,18 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 </Select>
               </div>
 
-              {/* Logo Image — accepts PNG/JPG/WEBP/SVG, up to 5MB, min 200px wide */}
+              {/* Logo Image — accepts PNG/JPG/WEBP/SVG/GIF, up to 5MB, min 200px wide */}
               <BrandRow
                 label="Logo Image"
                 value={site?.logoUrl ?? ""}
                 onChange={(url) => onSiteChange({ logo_url: url || null })}
                 photographerId={photographerId}
                 folder="logo"
-                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
-                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/gif"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG, GIF"
                 maxSizeMB={5}
                 minWidth={200}
-                helperText="PNG, JPG, WEBP or SVG · ≤5MB · min 200px wide"
+                helperText="PNG, JPG, WEBP, SVG or GIF · ≤5MB · min 200px wide"
               />
 
               {/* Alternative Logo — same rules as primary logo */}
@@ -2987,8 +2987,8 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 onChange={(url) => onSiteChange({ logo_alt_url: url || null })}
                 photographerId={photographerId}
                 folder="logo-alt"
-                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml"]}
-                allowedTypesLabel="PNG, JPG, WEBP, SVG"
+                allowedTypes={["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/gif"]}
+                allowedTypesLabel="PNG, JPG, WEBP, SVG, GIF"
                 maxSizeMB={5}
                 minWidth={200}
                 helperText="Used on dark backgrounds · same format rules as Logo"
