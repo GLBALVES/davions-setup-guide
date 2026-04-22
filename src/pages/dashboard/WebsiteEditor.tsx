@@ -3892,13 +3892,26 @@ const WebsiteEditor = () => {
           </Button>
           <Button
             size="sm"
-            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            className={cn(
+              "flex-1 h-8 px-1 text-[10px] gap-1 transition-colors",
+              publishStatus === "success" && "bg-emerald-600 hover:bg-emerald-600 text-white",
+              publishStatus === "error" && "bg-destructive hover:bg-destructive text-destructive-foreground"
+            )}
             onClick={handlePublish}
             disabled={publishing}
             title={labels.publish}
           >
-            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            {labels.publish}
+            {publishStatus === "loading" && <Loader2 className="h-3 w-3 animate-spin" />}
+            {publishStatus === "success" && <Check className="h-3 w-3" />}
+            {publishStatus === "error" && <AlertCircle className="h-3 w-3" />}
+            {publishStatus === "idle" && <Upload className="h-3 w-3" />}
+            {publishStatus === "loading"
+              ? labels.publishing
+              : publishStatus === "success"
+                ? labels.publishedShort
+                : publishStatus === "error"
+                  ? labels.failedShort
+                  : labels.publish}
           </Button>
         </div>
       </div>
