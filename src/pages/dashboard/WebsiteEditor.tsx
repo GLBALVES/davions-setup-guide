@@ -3374,33 +3374,11 @@ const WebsiteEditor = () => {
   const isMobile = useIsMobile();
   const { lang } = useLanguage();
 
-  // Live-sync favicon to the actual browser tab while editing.
-  // Restores the original favicon when leaving the editor.
-  useEffect(() => {
-    const previewFavicon =
-      (site as any)?.faviconUrl ||
-      (site as any)?.logoUrl ||
-      null;
-    if (!previewFavicon) return;
-
-    const head = document.head;
-    const previous = Array.from(head.querySelectorAll<HTMLLinkElement>('link[rel*="icon"]'));
-    const previousHrefs = previous.map((el) => ({ el, href: el.href }));
-
-    let live = head.querySelector<HTMLLinkElement>('link[data-lov-live-favicon="1"]');
-    if (!live) {
-      live = document.createElement("link");
-      live.rel = "icon";
-      live.setAttribute("data-lov-live-favicon", "1");
-      head.appendChild(live);
-    }
-    live.href = previewFavicon;
-
-    return () => {
-      live?.remove();
-      previousHrefs.forEach(({ el, href }) => { el.href = href; });
-    };
-  }, [(site as any)?.faviconUrl, (site as any)?.logoUrl]);
+  // Note: We intentionally do NOT inject the photographer's favicon into the
+  // dashboard's real browser tab. The dashboard always shows the Davions
+  // favicon (set in index.html). The photographer's favicon is shown only:
+  //   - in the simulated browser-tab UI inside the editor preview, and
+  //   - on the live public site (handled in PublicSiteRenderer).
 
   // Load photographer + site config
   useEffect(() => {
