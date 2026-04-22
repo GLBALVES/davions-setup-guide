@@ -774,7 +774,7 @@ const HeaderSliderPanel = ({
           {(!cfg.slides || cfg.slides.length === 0) && (
             <div className="mb-3 px-3 py-2 rounded-md bg-muted/40 border border-border/60">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {we.noSlidesHint || "Sem slides, esta página exibirá apenas o menu de navegação no topo."}
+                {(we as any).noSlidesHint || "Sem slides, esta página exibirá apenas o menu de navegação no topo."}
               </p>
             </div>
           )}
