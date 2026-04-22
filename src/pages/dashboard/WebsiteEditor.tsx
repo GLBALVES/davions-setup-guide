@@ -3734,7 +3734,8 @@ const WebsiteEditor = () => {
     view: lang === "pt" ? "Visualizar" : lang === "es" ? "Vista previa" : "Preview",
     publish: lang === "pt" ? "Publicar" : lang === "es" ? "Publicar" : "Publish",
     published: lang === "pt" ? "Site publicado" : lang === "es" ? "Sitio publicado" : "Site published",
-    openLive: lang === "pt" ? "Abrir site ao vivo" : lang === "es" ? "Abrir sitio en vivo" : "Open live site",
+    openLive: lang === "pt" ? "Ver ao vivo" : lang === "es" ? "Ver en vivo" : "Live site",
+    openLiveFull: lang === "pt" ? "Abrir site ao vivo" : lang === "es" ? "Abrir sitio en vivo" : "Open live site",
     noLiveUrl: lang === "pt"
       ? "Configure um domínio customizado ou URL da loja primeiro."
       : lang === "es"
