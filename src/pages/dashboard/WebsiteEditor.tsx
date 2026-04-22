@@ -12,6 +12,8 @@ import {
   ArrowRightToLine, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDeployStatus } from "@/hooks/useDeployStatus";
+import { DeployStatusBadge, DeployStatusBanner } from "@/components/website-editor/DeployStatusIndicator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -3354,6 +3356,8 @@ const WebsiteEditor = () => {
   const [site, setSite] = useState<PreviewSiteConfig | null>(null);
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
+  // Bump after a successful publish to trigger the deploy-status auto-poll
+  const [deployPollKey, setDeployPollKey] = useState(0);
   // Tracks the live save state for the auto-save indicator (Style → Logo & Branding etc.)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
@@ -3743,6 +3747,44 @@ const WebsiteEditor = () => {
         : "Set up your store URL first in Personalize.",
   };
 
+  // ── Code-bundle deploy status ───────────────────────────────────────────────
+  // Compares the editor's running JS bundle against the bundle the live custom
+  // domain is currently serving. The "Update" button (top-right global publish)
+  // is what actually deploys the bundle — this indicator surfaces whether that
+  // step is still pending after a content publish.
+  const deployLabels = {
+    title: lang === "pt" ? "Deploy do código" : lang === "es" ? "Despliegue del código" : "Code deploy",
+    synced: lang === "pt" ? "Código sincronizado" : lang === "es" ? "Código sincronizado" : "Code in sync",
+    pending: lang === "pt" ? "Deploy pendente" : lang === "es" ? "Despliegue pendiente" : "Deploy pending",
+    error: lang === "pt" ? "Não verificado" : lang === "es" ? "No verificado" : "Not verified",
+    checking: lang === "pt" ? "Verificando…" : lang === "es" ? "Verificando…" : "Checking…",
+    idle: lang === "pt" ? "Verificar deploy" : lang === "es" ? "Verificar despliegue" : "Check deploy",
+    bannerPendingTitle: lang === "pt"
+      ? "O deploy do código ainda está em andamento"
+      : lang === "es"
+        ? "El despliegue del código aún está en curso"
+        : "Code deploy is still in progress",
+    bannerPendingBody: lang === "pt"
+      ? "O conteúdo foi publicado, mas o domínio ao vivo ainda está servindo a versão anterior do app. Clique em 'Update' no topo para enviar o novo bundle."
+      : lang === "es"
+        ? "El contenido se publicó, pero el dominio en vivo aún sirve la versión anterior. Haz clic en 'Update' arriba para enviar el nuevo paquete."
+        : "Your content was published, but the live domain is still serving the previous app version. Click 'Update' at the top to ship the new bundle.",
+    bannerErrorTitle: lang === "pt"
+      ? "Não foi possível verificar o deploy"
+      : lang === "es"
+        ? "No se pudo verificar el despliegue"
+        : "Couldn't verify deploy",
+    bannerErrorBody: lang === "pt"
+      ? "Não conseguimos ler o build atual do site ao vivo."
+      : lang === "es"
+        ? "No pudimos leer el build actual del sitio en vivo."
+        : "We couldn't read the current build from the live site.",
+    recheck: lang === "pt" ? "Verificar" : lang === "es" ? "Verificar" : "Recheck",
+  };
+
+  const liveHostForDeploy = customDomain || null;
+  const deploy = useDeployStatus({ liveHost: liveHostForDeploy, pollKey: deployPollKey });
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -3821,6 +3863,9 @@ const WebsiteEditor = () => {
       toast.success(labels.published, liveUrl ? {
         action: { label: openLabel, onClick: () => window.open(liveUrl, "_blank", "noopener") },
       } : undefined);
+      // Trigger deploy-status polling — the global "Update" deploy is async,
+      // so the live bundle may take a moment to match the editor's bundle.
+      setDeployPollKey((k) => k + 1);
     } catch (e) {
       console.error(e);
       toast.error(lang === "pt" ? "Falha ao publicar" : lang === "es" ? "Error al publicar" : "Failed to publish");
@@ -3900,6 +3945,14 @@ const WebsiteEditor = () => {
         <div className="flex-1 min-h-0 overflow-hidden">
           {panelMap[activeTab]}
         </div>
+        <div className="border-t border-border px-2 pt-2 pb-1 shrink-0 bg-card flex items-center justify-between gap-2">
+          <DeployStatusBadge
+            status={deploy.status}
+            labels={deployLabels}
+            onCheck={() => void deploy.check()}
+            liveHost={liveHostForDeploy}
+          />
+        </div>
         <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
           <Button
             size="sm"
@@ -3975,6 +4028,14 @@ const WebsiteEditor = () => {
         {panelMap[activeTab]}
       </div>
 
+      <div className="border-t border-border px-2 pt-2 pb-1 shrink-0 bg-card flex items-center justify-between gap-2">
+        <DeployStatusBadge
+          status={deploy.status}
+          labels={deployLabels}
+          onCheck={() => void deploy.check()}
+          liveHost={liveHostForDeploy}
+        />
+      </div>
       <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
         <Button
           size="sm"
@@ -4040,6 +4101,13 @@ const WebsiteEditor = () => {
           faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
           title={(site as any)?.logoText || site?.displayName || "Studio"}
           saveStatus={saveStatus}
+        />
+
+        <DeployStatusBanner
+          status={deploy.status}
+          labels={deployLabels}
+          onCheck={() => void deploy.check()}
+          liveHost={liveHostForDeploy}
         />
 
         <div className="flex-1 min-h-0">
