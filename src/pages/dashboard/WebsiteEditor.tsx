@@ -3739,7 +3739,8 @@ const WebsiteEditor = () => {
     view: lang === "pt" ? "Visualizar" : lang === "es" ? "Vista previa" : "Preview",
     publish: lang === "pt" ? "Publicar" : lang === "es" ? "Publicar" : "Publish",
     published: lang === "pt" ? "Site publicado" : lang === "es" ? "Sitio publicado" : "Site published",
-    openLive: lang === "pt" ? "Abrir site ao vivo" : lang === "es" ? "Abrir sitio en vivo" : "Open live site",
+    openLive: lang === "pt" ? "Ver ao vivo" : lang === "es" ? "Ver en vivo" : "Live site",
+    openLiveFull: lang === "pt" ? "Abrir site ao vivo" : lang === "es" ? "Abrir sitio en vivo" : "Open live site",
     noLiveUrl: lang === "pt"
       ? "Configure um domínio customizado ou URL da loja primeiro."
       : lang === "es"
@@ -3994,37 +3995,37 @@ const WebsiteEditor = () => {
             liveHost={liveHostForDeploy}
           />
         </div>
-        <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
+        <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
           <Button
             size="sm"
             variant="outline"
-            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
             onClick={handlePreview}
             title={labels.view}
           >
-            <Eye className="h-3 w-3" />
-            {labels.view}
+            <Eye className="h-3 w-3 shrink-0" />
+            <span className="truncate">{labels.view}</span>
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
             onClick={handleOpenLive}
-            title={labels.openLive}
+            title={labels.openLiveFull}
             disabled={!customDomain && !storeSlug}
           >
-            <ExternalLink className="h-3 w-3" />
-            {labels.openLive}
+            <ExternalLink className="h-3 w-3 shrink-0" />
+            <span className="truncate">{labels.openLive}</span>
           </Button>
           <Button
             size="sm"
-            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
             onClick={handlePublish}
             disabled={publishing}
             title={labels.publish}
           >
-            {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-            {labels.publish}
+            {publishing ? <Loader2 className="h-3 w-3 animate-spin shrink-0" /> : null}
+            <span className="truncate">{labels.publish}</span>
           </Button>
         </div>
       </div>
@@ -4077,34 +4078,37 @@ const WebsiteEditor = () => {
           liveHost={liveHostForDeploy}
         />
       </div>
-      <div className="border-t border-border p-2 flex gap-1.5 shrink-0 bg-card">
+      <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
         <Button
           size="sm"
           variant="outline"
-          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
           onClick={handlePreview}
+          title={labels.view}
         >
-          <Eye className="h-3 w-3" />
-          {labels.view}
+          <Eye className="h-3 w-3 shrink-0" />
+          <span className="truncate">{labels.view}</span>
         </Button>
         <Button
           size="sm"
           variant="outline"
-          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
           onClick={handleOpenLive}
+          title={labels.openLiveFull}
           disabled={!customDomain && !storeSlug}
         >
-          <ExternalLink className="h-3 w-3" />
-          {labels.openLive}
+          <ExternalLink className="h-3 w-3 shrink-0" />
+          <span className="truncate">{labels.openLive}</span>
         </Button>
         <Button
           size="sm"
-          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          className="flex-1 min-w-0 h-8 px-1.5 text-[10px] gap-1 normal-case tracking-normal font-medium"
           onClick={handlePublish}
           disabled={publishing}
+          title={labels.publish}
         >
-          {publishing ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-          {labels.publish}
+          {publishing ? <Loader2 className="h-3 w-3 animate-spin shrink-0" /> : null}
+          <span className="truncate">{labels.publish}</span>
         </Button>
       </div>
     </div>
