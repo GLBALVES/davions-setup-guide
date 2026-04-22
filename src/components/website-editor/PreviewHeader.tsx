@@ -74,10 +74,17 @@ export default function PreviewHeader({
 
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(config || {}) };
   const validSlides = (cfg.slides || []).filter((s) => !!s.imageUrl);
-  const usingPlaceholder = validSlides.length === 0;
-  const slides: HeaderSlide[] = usingPlaceholder
-    ? [{ id: "placeholder", imageUrl: PLACEHOLDER_IMAGE }]
-    : validSlides;
+  // When the page has no slides at all:
+  //  - Live site: render a compact nav-only header (no hero, no placeholder).
+  //  - Edit mode: keep a placeholder image so the user still sees the hero area
+  //    and can access the edit handles to add/restore slides.
+  const navOnlyMode = validSlides.length === 0 && !editMode;
+  const usingPlaceholder = validSlides.length === 0 && editMode;
+  const slides: HeaderSlide[] = navOnlyMode
+    ? []
+    : usingPlaceholder
+      ? [{ id: "placeholder", imageUrl: PLACEHOLDER_IMAGE }]
+      : validSlides;
 
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
