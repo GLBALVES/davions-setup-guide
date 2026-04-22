@@ -12,6 +12,8 @@ import {
   ArrowRightToLine, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDeployStatus } from "@/hooks/useDeployStatus";
+import { DeployStatusBadge, DeployStatusBanner } from "@/components/website-editor/DeployStatusIndicator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -3354,6 +3356,8 @@ const WebsiteEditor = () => {
   const [site, setSite] = useState<PreviewSiteConfig | null>(null);
   const [displayName, setDisplayName] = useState<string>("Studio");
   const [publishing, setPublishing] = useState(false);
+  // Bump after a successful publish to trigger the deploy-status auto-poll
+  const [deployPollKey, setDeployPollKey] = useState(0);
   // Tracks the live save state for the auto-save indicator (Style → Logo & Branding etc.)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
@@ -3821,6 +3825,9 @@ const WebsiteEditor = () => {
       toast.success(labels.published, liveUrl ? {
         action: { label: openLabel, onClick: () => window.open(liveUrl, "_blank", "noopener") },
       } : undefined);
+      // Trigger deploy-status polling — the global "Update" deploy is async,
+      // so the live bundle may take a moment to match the editor's bundle.
+      setDeployPollKey((k) => k + 1);
     } catch (e) {
       console.error(e);
       toast.error(lang === "pt" ? "Falha ao publicar" : lang === "es" ? "Error al publicar" : "Failed to publish");
