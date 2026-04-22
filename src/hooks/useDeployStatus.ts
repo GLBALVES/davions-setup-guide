@@ -1,19 +1,27 @@
 /**
  * useDeployStatus
  *
- * Compares the locally-running JS bundle's BUILD_ID (injected at Vite build
- * time) against the BUILD_ID currently served by the live custom domain
- * (read from <meta name="build-id"> in the live index.html).
+ * Tracks whether a fresh production bundle has been deployed to the
+ * photographer's custom domain after a publish.
  *
- * - "synced":   live domain is serving the same bundle the editor is running.
- * - "pending":  live domain is serving an older bundle — global "Update"
- *               deploy hasn't propagated yet.
- * - "error":    network/fetch failure or no live URL configured.
- * - "checking": fetch in flight.
- * - "idle":     never checked yet.
+ * Strategy:
+ *   - The editor itself runs from a different build (preview/dev) than the
+ *     production live domain, so we can NOT compare local vs remote build-id
+ *     directly — they would never match.
+ *   - Instead, we capture a "baseline" build-id from the live domain at the
+ *     start of each polling cycle. The deploy is considered "synced" the
+ *     moment the live domain starts serving a DIFFERENT build-id than the
+ *     baseline (i.e. Lovable's global "Update" deploy has propagated).
  *
- * Auto-polls for ~2min after a publish event (caller flips `pollKey`),
- * and exposes a manual `check()` for the user.
+ * States:
+ *   - "idle":     never checked yet.
+ *   - "checking": fetch in flight.
+ *   - "synced":   live bundle changed since the publish was triggered.
+ *   - "pending":  live bundle is still the pre-publish baseline.
+ *   - "error":    network/fetch failure or no live URL configured.
+ *
+ * Polls for ~5min after a publish event (caller bumps `pollKey`), and exposes
+ * a manual `check()` for the user.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -26,8 +34,9 @@ interface Options {
   /** Bumping this number triggers a fresh polling cycle. */
   pollKey?: number;
   /**
-   * Fired once per polling cycle the moment the live bundle matches the local
-   * one. Use this to refresh the in-editor preview / open a fresh live tab.
+   * Fired once per polling cycle the moment the live bundle changes from the
+   * pre-publish baseline. Use this to refresh the in-editor preview / open a
+   * fresh live tab.
    */
   onSynced?: () => void;
 }
@@ -61,7 +70,10 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
   const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStopAtRef = useRef<number>(0);
+  /** Build-id served by live BEFORE the most recent publish was triggered. */
+  const baselineBuildIdRef = useRef<string | null>(null);
 
+  /** Manual one-shot check — does NOT depend on a baseline. */
   const check = useCallback(async (): Promise<DeployStatus> => {
     if (!liveHost) {
       setStatus("error");
@@ -75,7 +87,13 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
       setStatus("error");
       return "error";
     }
-    const next: DeployStatus = remote === LOCAL_BUILD_ID ? "synced" : "pending";
+    // For a manual check (no active publish cycle), we have no baseline —
+    // treat any successful fetch as "synced" (the live site is reachable and
+    // serving a build). The pending vs synced distinction only matters during
+    // an active publish cycle, which is handled by the polling effect below.
+    const baseline = baselineBuildIdRef.current;
+    const next: DeployStatus =
+      baseline && remote === baseline ? "pending" : "synced";
     setStatus(next);
     return next;
   }, [liveHost]);
@@ -98,8 +116,9 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
-    pollStopAtRef.current = Date.now() + 2 * 60 * 1000; // 2 minutes
+    pollStopAtRef.current = Date.now() + 5 * 60 * 1000; // 5 minutes
     let firedSynced = false;
+    let cancelled = false;
 
     const fireSynced = () => {
       if (firedSynced) return;
@@ -110,16 +129,38 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
     };
 
     const tick = async () => {
-      const next = await check();
-      if (next === "synced") {
+      if (cancelled) return;
+      setStatus("checking");
+      const remote = await fetchRemoteBuildId(liveHost);
+      setLastCheckedAt(Date.now());
+      setRemoteBuildId(remote);
+      if (!remote) {
+        // Transient fetch failure during polling — keep the cycle alive,
+        // surface as pending so the banner stays visible.
+        setStatus("pending");
+        return;
+      }
+      const baseline = baselineBuildIdRef.current;
+      if (!baseline) {
+        // First successful fetch in this cycle becomes the baseline.
+        baselineBuildIdRef.current = remote;
+        setStatus("pending");
+        return;
+      }
+      if (remote !== baseline) {
+        setStatus("synced");
         if (pollTimerRef.current) {
           clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
         }
         fireSynced();
+      } else {
+        setStatus("pending");
       }
     };
 
+    // Reset baseline at the start of each new publish cycle.
+    baselineBuildIdRef.current = null;
     void tick();
     pollTimerRef.current = setInterval(() => {
       if (Date.now() > pollStopAtRef.current) {
@@ -127,10 +168,17 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
           clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
         }
+        // Timed out without detecting a new build — surface as error so the
+        // user can retry manually.
+        setStatus("error");
         return;
       }
       void tick();
     }, 15000);
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollKey, liveHost]);
 
