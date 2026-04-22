@@ -3913,6 +3913,17 @@ const WebsiteEditor = () => {
           </Button>
           <Button
             size="sm"
+            variant="outline"
+            className="flex-1 h-8 px-1 text-[10px] gap-1"
+            onClick={handleOpenLive}
+            title={labels.openLive}
+            disabled={!customDomain && !storeSlug}
+          >
+            <ExternalLink className="h-3 w-3" />
+            {labels.openLive}
+          </Button>
+          <Button
+            size="sm"
             className="flex-1 h-8 px-1 text-[10px] gap-1"
             onClick={handlePublish}
             disabled={publishing}
@@ -3973,6 +3984,16 @@ const WebsiteEditor = () => {
         >
           <Eye className="h-3 w-3" />
           {labels.view}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 h-8 px-1 text-[10px] gap-1"
+          onClick={handleOpenLive}
+          disabled={!customDomain && !storeSlug}
+        >
+          <ExternalLink className="h-3 w-3" />
+          {labels.openLive}
         </Button>
         <Button
           size="sm"
