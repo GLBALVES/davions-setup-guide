@@ -3572,6 +3572,7 @@ export type Database = {
           photographer_id: string
           published_at: string | null
           published_content: Json | null
+          published_header_config: Json | null
           published_sections_order: Json | null
           sections_order: Json | null
           slug: string
@@ -3591,6 +3592,7 @@ export type Database = {
           photographer_id: string
           published_at?: string | null
           published_content?: Json | null
+          published_header_config?: Json | null
           published_sections_order?: Json | null
           sections_order?: Json | null
           slug: string
@@ -3610,6 +3612,7 @@ export type Database = {
           photographer_id?: string
           published_at?: string | null
           published_content?: Json | null
+          published_header_config?: Json | null
           published_sections_order?: Json | null
           sections_order?: Json | null
           slug?: string
