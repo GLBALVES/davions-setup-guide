@@ -98,16 +98,6 @@ export function useDeployStatus({ liveHost, pollKey = 0, onSynced }: Options) {
     return next;
   }, [liveHost]);
 
-  // Cleanup polling on unmount or host change
-  useEffect(() => {
-    return () => {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
-    };
-  }, []);
-
   // Trigger a polling cycle whenever pollKey changes (e.g. after Publish)
   useEffect(() => {
     if (!liveHost || pollKey === 0) return;
