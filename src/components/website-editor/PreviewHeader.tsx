@@ -100,8 +100,17 @@ export default function PreviewHeader({
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
-  const displayName = site?.displayName || "Studio";
+  const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
+  const logoSize = ((site as any)?.logoSize as string) || "medium";
+  const logoImgClass =
+    logoSize === "small" ? "h-6 sm:h-7 w-auto object-contain"
+    : logoSize === "large" ? "h-12 sm:h-16 w-auto object-contain"
+    : "h-8 sm:h-10 w-auto object-contain";
+  const logoTextClass =
+    logoSize === "small" ? "text-[10px] sm:text-xs font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : logoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
 
   const renderLink = (link: PreviewNavLink) => {
     if (link.type === "link") {
@@ -273,9 +282,9 @@ export default function PreviewHeader({
               </nav>
               <div className="flex items-center justify-center order-1 md:order-none">
                 {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className="h-8 sm:h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
-                  <span className="text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                  <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
                   </span>
                 )}
@@ -297,9 +306,9 @@ export default function PreviewHeader({
             <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
               <div className="flex items-center">
                 {site?.logoUrl ? (
-                  <img src={site.logoUrl} alt={displayName} className="h-8 sm:h-10 w-auto object-contain" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                  <img src={site.logoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
                 ) : (
-                  <span className="text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap" style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                  <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
                     {displayName}
                   </span>
                 )}

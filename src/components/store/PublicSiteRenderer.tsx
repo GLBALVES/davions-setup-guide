@@ -297,6 +297,8 @@ interface NavProps {
 function toPreviewHeaderSite(site: SiteConfig | null, displayName: string) {
   return {
     logoUrl: site?.logo_url ?? null,
+    logoText: site?.logo_text ?? null,
+    logoSize: site?.logo_size ?? null,
     displayName,
   };
 }
