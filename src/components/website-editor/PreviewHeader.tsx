@@ -100,8 +100,17 @@ export default function PreviewHeader({
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
-  const displayName = site?.displayName || "Studio";
+  const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
+  const logoSize = ((site as any)?.logoSize as string) || "medium";
+  const logoImgClass =
+    logoSize === "small" ? "h-6 sm:h-7 w-auto object-contain"
+    : logoSize === "large" ? "h-12 sm:h-16 w-auto object-contain"
+    : "h-8 sm:h-10 w-auto object-contain";
+  const logoTextClass =
+    logoSize === "small" ? "text-[10px] sm:text-xs font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : logoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
 
   const renderLink = (link: PreviewNavLink) => {
     if (link.type === "link") {
