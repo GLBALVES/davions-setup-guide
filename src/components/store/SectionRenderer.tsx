@@ -1,5 +1,5 @@
 import { Camera, Images, Mail, MapPin, Clock, ArrowRight, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
