@@ -35,6 +35,10 @@ interface RawPage {
 const CustomDomainStore = () => {
   const [searchParams] = useSearchParams();
   const isDraftPreview = searchParams.get("preview") === "1";
+  // Cache-buster from the editor's "Publish" action (e.g. ?v=1776846930). When
+  // it changes, this component re-fetches site_pages so the freshly published
+  // snapshot shows up without a hard reload.
+  const cacheBuster = searchParams.get("v");
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -143,7 +147,7 @@ const CustomDomainStore = () => {
     };
 
     load();
-  }, [isDraftPreview]);
+  }, [isDraftPreview, cacheBuster]);
 
   if (loading) {
     return <CustomDomainLoader photographer={photographer} />;
