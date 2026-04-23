@@ -1998,6 +1998,7 @@ export default function PublicSiteRenderer(props: Props) {
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
+        <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
   }
@@ -2041,6 +2042,7 @@ export default function PublicSiteRenderer(props: Props) {
           </main>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
+        <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
   }
