@@ -25,6 +25,8 @@ interface SectionRendererProps {
   /** When true, blocks render with inline editable handles. */
   editMode?: boolean;
   edit?: EditContext;
+  /** Photographer id used by public-site blocks (e.g. contact form submissions). */
+  photographerId?: string | null;
 }
 
 // ─── Site button variant helper ────────────────────────────────────────────
@@ -196,6 +198,7 @@ export default function SectionRenderer({
   accentColor = "#000000",
   editMode = false,
   edit,
+  photographerId,
 }: SectionRendererProps) {
   return (
     <>
@@ -206,6 +209,7 @@ export default function SectionRenderer({
           accentColor={accentColor}
           editMode={editMode}
           edit={edit}
+          photographerId={photographerId ?? edit?.photographerId ?? null}
         />
       ))}
     </>
@@ -217,16 +221,18 @@ function SectionBlock({
   accentColor,
   editMode,
   edit,
+  photographerId,
 }: {
   section: PageSection;
   accentColor: string;
   editMode: boolean;
   edit?: EditContext;
+  photographerId?: string | null;
 }) {
   const p = section.props || {};
   // bound setter for this section
   const set = (path: string, value: any) => edit?.onPropChange(section.id, path, value);
-  const ctx = { editMode, set, photographerId: edit?.photographerId };
+  const ctx = { editMode, set, photographerId: photographerId ?? edit?.photographerId ?? null };
 
   const inner = (() => {
     switch (section.type) {
