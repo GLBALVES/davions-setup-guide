@@ -2882,6 +2882,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
     { key: "logo", label: "Logo & Branding" },
     { key: "fonts", label: "Fonts" },
     { key: "colors", label: "Colors" },
+    { key: "footer", label: "Footer" },
     { key: "animations", label: "Animations" },
     { key: "navigation", label: "Navigation" },
     { key: "spacing", label: "Spacing" },
