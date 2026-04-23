@@ -32,7 +32,7 @@ interface SiteRow {
  */
 export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "store" | "custom-domain" }) {
   const { slug } = useParams();
-  const { language } = useLanguage();
+  const { lang: language } = useLanguage();
   const [photographer, setPhotographer] = useState<PhotographerRow | null>(null);
   const [site, setSite] = useState<SiteRow | null>(null);
   const [loading, setLoading] = useState(true);

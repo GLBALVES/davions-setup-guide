@@ -21,7 +21,7 @@ export default function LegalSubPanel({
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
 }) {
-  const { language } = useLanguage();
+  const { lang: language } = useLanguage();
   const defaults = getLegalDefaults(language);
   const studio = site?.business_name || "your studio";
 
