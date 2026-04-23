@@ -257,6 +257,17 @@ function PreviewFooter({
     : [];
   const isFiltering = visibleSocials.length > 0;
 
+  const layout: string = s?.footer_layout || "minimal";
+  const logoPosition: string = s?.footer_logo_position || "center";
+  const alignment: string = s?.footer_alignment || "center";
+  const showNav: boolean = s?.footer_show_nav ?? false;
+  const showSitemap: boolean = s?.footer_show_sitemap ?? false;
+  const showContactInfo: boolean = s?.footer_show_contact_info ?? false;
+  const showTagline: boolean = s?.footer_show_tagline ?? false;
+  const tagline: string = s?.footer_tagline ?? "";
+  const columns: Array<{ heading: string; links: Array<{ label: string; href: string }> }> =
+    Array.isArray(s?.footer_columns) ? s.footer_columns : [];
+
   const TikTokIcon = (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
@@ -288,6 +299,131 @@ function PreviewFooter({
     return true;
   });
 
+  const alignCls =
+    alignment === "left" ? "text-left items-start" :
+    alignment === "right" ? "text-right items-end" :
+    "text-center items-center";
+  const logoPosCls =
+    logoPosition === "left" ? "justify-start" :
+    logoPosition === "right" ? "justify-end" :
+    "justify-center";
+
+  const logoBlock = showLogo ? (
+    <div className={`flex ${logoPosCls}`}>
+      {s?.logoUrl ? (
+        <img src={s.logoUrl} alt={s?.displayName || "Studio"} className="h-8 object-contain" />
+      ) : (
+        <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={{ color: fg }}>
+          {s?.displayName || "Studio"}
+        </span>
+      )}
+    </div>
+  ) : null;
+
+  const taglineBlock = showTagline && tagline ? (
+    <p className="text-[11px] font-light leading-relaxed max-w-xs opacity-80" style={{ color: fg }}>
+      {tagline}
+    </p>
+  ) : null;
+
+  const socialBlock = showSocials && visible.length > 0 ? (
+    <div className={`flex items-center gap-5 ${logoPosCls}`}>
+      {visible.map((e) => (
+        <span key={e.key} style={{ color: fg }} className="opacity-80">
+          {e.icon}
+        </span>
+      ))}
+    </div>
+  ) : null;
+
+  const navBlock = showNav ? (
+    <div className={`flex flex-col gap-2 ${alignCls}`}>
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90" style={{ color: fg }}>Menu</h4>
+      <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>Home</span>
+      <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>Sessions</span>
+      <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>Contact</span>
+    </div>
+  ) : null;
+
+  const sitemapBlock = showSitemap ? (
+    <div className={`flex flex-col gap-2 ${alignCls}`}>
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90" style={{ color: fg }}>Sitemap</h4>
+      <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>All pages</span>
+    </div>
+  ) : null;
+
+  const contactBlock = showContactInfo ? (
+    <div className={`flex flex-col gap-2 ${alignCls}`}>
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90" style={{ color: fg }}>Contact</h4>
+      <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>email@studio.com</span>
+      {s?.whatsapp && <span className="text-[11px] font-light opacity-70" style={{ color: fg }}>{s.whatsapp}</span>}
+    </div>
+  ) : null;
+
+  const columnsBlocks = columns.map((col, ci) => (
+    <div key={ci} className={`flex flex-col gap-2 ${alignCls}`}>
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90" style={{ color: fg }}>{col.heading}</h4>
+      {(col.links ?? []).map((l, li) => (
+        <span key={li} className="text-[11px] font-light opacity-70" style={{ color: fg }}>{l.label}</span>
+      ))}
+    </div>
+  ));
+
+  const allColBlocks = [navBlock, sitemapBlock, contactBlock, ...columnsBlocks].filter(Boolean);
+
+  const renderBody = () => {
+    if (layout === "split") {
+      return (
+        <div className="max-w-7xl mx-auto flex flex-col gap-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+            <div className="flex flex-col gap-4 max-w-sm">
+              {logoBlock}{taglineBlock}{socialBlock}
+            </div>
+            <div className="flex flex-wrap gap-10">{allColBlocks}</div>
+          </div>
+          <div className="border-t border-current/10 pt-4 text-center">
+            <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+          </div>
+        </div>
+      );
+    }
+    if (layout === "columns") {
+      return (
+        <div className="max-w-7xl mx-auto flex flex-col gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="flex flex-col gap-4 col-span-2 md:col-span-1">
+              {logoBlock}{taglineBlock}{socialBlock}
+            </div>
+            {allColBlocks}
+          </div>
+          <div className="border-t border-current/10 pt-4 text-center">
+            <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+          </div>
+        </div>
+      );
+    }
+    if (layout === "stacked") {
+      return (
+        <div className={`max-w-7xl mx-auto flex flex-col gap-6 ${alignCls}`}>
+          {logoBlock}{taglineBlock}
+          <div className="flex flex-wrap justify-center gap-10">{allColBlocks}</div>
+          {socialBlock}
+          <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+        </div>
+      );
+    }
+    // minimal
+    return (
+      <div className={`max-w-7xl mx-auto flex flex-col gap-5 ${alignCls}`}>
+        {logoBlock}{taglineBlock}{socialBlock}
+        {allColBlocks.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-10 pt-2">{allColBlocks}</div>
+        )}
+        <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+      </div>
+    );
+  };
+
   return (
     <footer
       style={{ backgroundColor: bg, color: fg }}
@@ -297,31 +433,7 @@ function PreviewFooter({
       )}
       onClick={editMode && onEdit ? (e) => { e.stopPropagation(); onEdit(); } : undefined}
     >
-      <div className="max-w-7xl mx-auto flex flex-col items-center gap-5 text-center">
-        {showLogo && (
-          <div className="flex items-center justify-center">
-            {s?.logoUrl ? (
-              <img src={s.logoUrl} alt={s?.displayName || "Studio"} className="h-8 object-contain" />
-            ) : (
-              <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={{ color: fg }}>
-                {s?.displayName || "Studio"}
-              </span>
-            )}
-          </div>
-        )}
-
-        {showSocials && visible.length > 0 && (
-          <div className="flex items-center justify-center gap-5">
-            {visible.map((e) => (
-              <span key={e.key} style={{ color: fg }} className="opacity-80">
-                {e.icon}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80">{text}</p>
-      </div>
+      {renderBody()}
 
       {editMode && (
         <div className="absolute top-2 right-3 opacity-0 group-hover/footer:opacity-100 transition-opacity pointer-events-none">
