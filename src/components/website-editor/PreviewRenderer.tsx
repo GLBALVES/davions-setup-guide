@@ -794,9 +794,7 @@ export default function PreviewRenderer({
           style={{ fontFamily: "Inter, system-ui, sans-serif" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white">
-            <img src="/favicon.png" alt="" className="h-3 w-3 object-contain" />
-          </span>
+          <img src="/favicon.png" alt="" className="h-3.5 w-3.5 rounded-sm object-contain" />
           <span>Made with <span className="font-semibold">Davions</span></span>
         </a>
       )}
