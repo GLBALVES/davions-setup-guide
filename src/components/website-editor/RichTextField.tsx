@@ -126,7 +126,14 @@ export interface RichTextFieldProps {
  *  applied by the closest ancestor span. Used to highlight the current
  *  font/color/size in the toolbar. */
 function inspectStyleAt(html: string, plainStart: number) {
-  const result: { color?: string; fontFamily?: string; fontSize?: string } = {};
+  const result: {
+    color?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+  } = {};
   if (!html) return result;
   const tpl = document.createElement("template");
   tpl.innerHTML = looksLikeHtml(html) ? html : escapeHtml(html);
@@ -145,6 +152,13 @@ function inspectStyleAt(html: string, plainStart: number) {
             if (a.style.color && !result.color) result.color = a.style.color;
             if (a.style.fontFamily && !result.fontFamily) result.fontFamily = a.style.fontFamily;
             if (a.style.fontSize && !result.fontSize) result.fontSize = a.style.fontSize;
+            const tag = a.tagName.toLowerCase();
+            const fw = a.style.fontWeight;
+            const fs = a.style.fontStyle;
+            const td = a.style.textDecoration || a.style.textDecorationLine;
+            if (!result.bold && (tag === "b" || tag === "strong" || fw === "bold" || (fw && Number(fw) >= 600))) result.bold = true;
+            if (!result.italic && (tag === "i" || tag === "em" || fs === "italic")) result.italic = true;
+            if (!result.underline && (tag === "u" || (td && td.includes("underline")))) result.underline = true;
           }
           done = true;
         }
@@ -156,6 +170,132 @@ function inspectStyleAt(html: string, plainStart: number) {
   };
   walk(tpl.content, []);
   return result;
+}
+
+/** Remove a formatting tag/style across a plain-text range. Walks the DOM and
+ *  unwraps spans/tags whose text overlaps the range and that match the format. */
+function removeFormatFromHtmlRange(
+  html: string,
+  plainStart: number,
+  plainEnd: number,
+  format: "b" | "i" | "u",
+): string {
+  const source = html || "";
+  if (!looksLikeHtml(source)) return source;
+  const tpl = document.createElement("template");
+  tpl.innerHTML = source;
+
+  const matches = (el: HTMLElement): boolean => {
+    const tag = el.tagName.toLowerCase();
+    if (format === "b") {
+      if (tag === "b" || tag === "strong") return true;
+      const fw = el.style.fontWeight;
+      return fw === "bold" || (!!fw && Number(fw) >= 600);
+    }
+    if (format === "i") {
+      if (tag === "i" || tag === "em") return true;
+      return el.style.fontStyle === "italic";
+    }
+    // underline
+    if (tag === "u") return true;
+    const td = el.style.textDecoration || el.style.textDecorationLine;
+    return !!td && td.includes("underline");
+  };
+
+  const stripStyle = (el: HTMLElement) => {
+    if (format === "b") {
+      el.style.removeProperty("font-weight");
+    } else if (format === "i") {
+      el.style.removeProperty("font-style");
+    } else {
+      el.style.removeProperty("text-decoration");
+      el.style.removeProperty("text-decoration-line");
+    }
+  };
+
+  // Compute plain-text indices of every element so we know which intersect.
+  let cursor = 0;
+  const ranges = new Map<HTMLElement, { start: number; end: number }>();
+  const measure = (node: Node) => {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        cursor += (child.nodeValue ?? "").length;
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as HTMLElement;
+        const start = cursor;
+        measure(el);
+        ranges.set(el, { start, end: cursor });
+      }
+    }
+  };
+  measure(tpl.content);
+
+  const targets: HTMLElement[] = [];
+  ranges.forEach((r, el) => {
+    if (r.start < plainEnd && r.end > plainStart && matches(el)) targets.push(el);
+  });
+
+  for (const el of targets) {
+    const r = ranges.get(el)!;
+    const fullyInside = r.start >= plainStart && r.end <= plainEnd;
+    if (fullyInside) {
+      // Unwrap (or strip) the entire element.
+      const tag = el.tagName.toLowerCase();
+      const isFormatTag =
+        (format === "b" && (tag === "b" || tag === "strong")) ||
+        (format === "i" && (tag === "i" || tag === "em")) ||
+        (format === "u" && tag === "u");
+      if (isFormatTag && el.getAttribute("style")) {
+        // Convert to span keeping other styles.
+        const span = document.createElement("span");
+        span.setAttribute("style", el.getAttribute("style") || "");
+        while (el.firstChild) span.appendChild(el.firstChild);
+        el.parentNode?.replaceChild(span, el);
+      } else if (isFormatTag) {
+        // Pure tag — unwrap children.
+        const frag = document.createDocumentFragment();
+        while (el.firstChild) frag.appendChild(el.firstChild);
+        el.parentNode?.replaceChild(frag, el);
+      } else {
+        stripStyle(el);
+        if (!el.getAttribute("style") && el.tagName.toLowerCase() === "span") {
+          const frag = document.createDocumentFragment();
+          while (el.firstChild) frag.appendChild(el.firstChild);
+          el.parentNode?.replaceChild(frag, el);
+        }
+      }
+    } else {
+      // Partial overlap: split text content. Simplest approach — wrap the
+      // non-overlapping portions back with the same format after stripping.
+      const text = el.textContent ?? "";
+      const localStart = Math.max(0, plainStart - r.start);
+      const localEnd = Math.min(text.length, plainEnd - r.start);
+      const before = text.slice(0, localStart);
+      const after = text.slice(localEnd);
+      const middle = text.slice(localStart, localEnd);
+      const styleCss =
+        format === "b" ? "font-weight:bold" : format === "i" ? "font-style:italic" : "text-decoration:underline";
+      const frag = document.createDocumentFragment();
+      const mkWrap = (s: string) => {
+        if (!s) return null;
+        const span = document.createElement("span");
+        span.setAttribute("style", styleCss);
+        // Preserve element's other inline styles.
+        const otherStyle = el.getAttribute("style") || "";
+        if (otherStyle) span.setAttribute("style", `${otherStyle};${styleCss}`);
+        span.textContent = s;
+        return span;
+      };
+      const beforeNode = mkWrap(before);
+      const afterNode = mkWrap(after);
+      if (beforeNode) frag.appendChild(beforeNode);
+      if (middle) frag.appendChild(document.createTextNode(middle));
+      if (afterNode) frag.appendChild(afterNode);
+      el.parentNode?.replaceChild(frag, el);
+    }
+  }
+
+  return tpl.innerHTML;
 }
 
 /** Parse a CSS color (named/hex/rgb) to a normalized #rrggbb hex. */
