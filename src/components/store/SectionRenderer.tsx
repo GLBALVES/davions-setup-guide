@@ -1257,9 +1257,18 @@ function normalizeSlideItems(raw: any[]): SlideItemNorm[] {
   );
 }
 
-function SlideshowBlock({ images = [] }: any) {
+function SlideshowBlock({ images = [], autoplay = true, interval = 5000 }: any) {
   const slides = normalizeSlideItems(images);
   const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (!autoplay || paused || slides.length <= 1) return;
+    const t = window.setInterval(() => {
+      setCurrent((c) => (c + 1) % slides.length);
+    }, Math.max(1500, Number(interval) || 5000));
+    return () => window.clearInterval(t);
+  }, [autoplay, paused, interval, slides.length]);
 
   if (slides.length === 0) {
     return (
@@ -1276,7 +1285,11 @@ function SlideshowBlock({ images = [] }: any) {
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded">
+      <div
+        className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {slide.link ? (
           <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
             <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover" />
