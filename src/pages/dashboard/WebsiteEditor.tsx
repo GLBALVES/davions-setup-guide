@@ -2400,10 +2400,187 @@ type StyleSubPanel =
   | "logo"
   | "fonts"
   | "colors"
+  | "footer"
   | "animations"
   | "navigation"
   | "spacing"
   | "buttons";
+
+// ── Footer Sub Panel ─────────────────────────────────────────────────────────
+const FOOTER_SOCIAL_KEYS: { key: string; label: string; urlField: string }[] = [
+  { key: "instagram", label: "Instagram", urlField: "instagram_url" },
+  { key: "facebook", label: "Facebook", urlField: "facebook_url" },
+  { key: "youtube", label: "YouTube", urlField: "youtube_url" },
+  { key: "linkedin", label: "LinkedIn", urlField: "linkedin_url" },
+  { key: "tiktok", label: "TikTok", urlField: "tiktok_url" },
+  { key: "pinterest", label: "Pinterest", urlField: "pinterest_url" },
+  { key: "whatsapp", label: "WhatsApp", urlField: "whatsapp" },
+];
+
+const FooterSubPanel = ({
+  site,
+  onSiteChange,
+  displayName,
+}: {
+  site: PreviewSiteConfig | null;
+  onSiteChange: (patch: Partial<Record<string, any>>) => void;
+  displayName?: string;
+}) => {
+  const s = site as any;
+  const showLogo: boolean = s?.footer_show_logo ?? false;
+  const showSocials: boolean = s?.footer_show_socials ?? true;
+  const visibleSocials: string[] = Array.isArray(s?.footer_visible_socials)
+    ? s.footer_visible_socials
+    : [];
+  const isFiltering = visibleSocials.length > 0;
+
+  const toggleSocial = (key: string) => {
+    // Build the current "active" set. If no filter is set, treat all configured
+    // socials as visible — that way clicking off one immediately filters it out.
+    const allConfigured = FOOTER_SOCIAL_KEYS
+      .filter((s2) => !!(site as any)?.[s2.urlField])
+      .map((s2) => s2.key);
+    const current = isFiltering ? visibleSocials : allConfigured;
+    const next = current.includes(key)
+      ? current.filter((k) => k !== key)
+      : [...current, key];
+    // If the result equals the full set, clear filter to mean "show all".
+    const sameAsAll =
+      next.length === allConfigured.length &&
+      allConfigured.every((k) => next.includes(k));
+    onSiteChange({ footer_visible_socials: sameAsAll ? null : next });
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Identity */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Identity
+        </h4>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-foreground">Show logo / studio name</p>
+            <p className="text-[11px] text-muted-foreground">
+              Displays your logo image, or the studio name as fallback.
+            </p>
+          </div>
+          <Switch
+            checked={showLogo}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_logo: checked })}
+          />
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Footer text */}
+      <section className="space-y-2">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Footer text
+        </h4>
+        <Input
+          value={(site as any)?.footer_text ?? (site as any)?.footerText ?? ""}
+          onChange={(e) => onSiteChange({ footer_text: e.target.value })}
+          placeholder={`© ${new Date().getFullYear()} ${displayName || "Studio"}`}
+          className="h-9 text-sm"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Shown centered at the bottom — typically a copyright line.
+        </p>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Colors */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Colors
+        </h4>
+        <ColorRow
+          label="Background"
+          value={(site as any)?.footerBg || (site as any)?.footer_bg_color || "#000000"}
+          onChange={(v) => onSiteChange({ footer_bg_color: v })}
+        />
+        <ColorRow
+          label="Text & icons"
+          value={(site as any)?.footerTextColor || (site as any)?.footer_text_color || "#ffffff"}
+          onChange={(v) => onSiteChange({ footer_text_color: v })}
+        />
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Social icons */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Social icons
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Pick which icons appear in the footer.
+            </p>
+          </div>
+          <Switch
+            checked={showSocials}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_socials: checked })}
+          />
+        </div>
+
+        {showSocials && (
+          <div className="space-y-1.5 pt-1">
+            {FOOTER_SOCIAL_KEYS.map((row) => {
+              const url = (site as any)?.[row.urlField];
+              const enabled = !isFiltering ? true : visibleSocials.includes(row.key);
+              const disabled = !url;
+              return (
+                <div
+                  key={row.key}
+                  className={cn(
+                    "flex items-center justify-between rounded-md border border-border px-3 py-2",
+                    disabled && "opacity-50",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground">{row.label}</p>
+                    <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">
+                      {url || "Add link in Settings → Social"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={enabled && !disabled}
+                    disabled={disabled}
+                    onCheckedChange={() => toggleSocial(row.key)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Branding badge */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-foreground">Show "Powered by Davions"</p>
+            <p className="text-[11px] text-muted-foreground">
+              Hide the badge at the very bottom of the footer.
+            </p>
+          </div>
+          <Switch
+            checked={!((site as any)?.hideBranding ?? false)}
+            onCheckedChange={(checked) => onSiteChange({ hide_branding: !checked })}
+          />
+        </div>
+      </section>
+    </div>
+  );
+};
+
 
 // ── Buttons Sub Panel ────────────────────────────────────────────────────────
 const ButtonsSubPanel = ({
@@ -2853,14 +3030,26 @@ const SITE_TEMPLATES_LABELS: Record<string, string> = {
   milo: "Violeta",
 };
 
-const StylePanel = ({ photographerId, site, onSiteChange }: {
+const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
+  /** When set, the panel jumps to that sub-view (e.g. when the user clicks the footer). */
+  openSubKey?: StyleSubPanel | null;
+  /** Called after the panel consumed `openSubKey` so the parent can reset it. */
+  onSubKeyHandled?: () => void;
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Allow the parent (e.g. clicking the footer in the canvas) to open a sub-panel.
+  useEffect(() => {
+    if (openSubKey) {
+      setSub(openSubKey);
+      onSubKeyHandled?.();
+    }
+  }, [openSubKey, onSubKeyHandled]);
 
   // Load the chosen site_template (separate column from photographer_site we already read)
   useEffect(() => {
@@ -2881,6 +3070,7 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
     { key: "logo", label: "Logo & Branding" },
     { key: "fonts", label: "Fonts" },
     { key: "colors", label: "Colors" },
+    { key: "footer", label: "Footer" },
     { key: "animations", label: "Animations" },
     { key: "navigation", label: "Navigation" },
     { key: "spacing", label: "Spacing" },
@@ -3097,6 +3287,10 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
                 />
               </div>
             </div>
+          )}
+
+          {sub === "footer" && (
+            <FooterSubPanel site={site} onSiteChange={onSiteChange} displayName={site?.displayName} />
           )}
 
           {sub === "animations" && (
@@ -3374,6 +3568,7 @@ const BrandRow = ({
 // ── Main Editor ──────────────────────────────────────────────────────────────
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
+  const [pendingStyleSub, setPendingStyleSub] = useState<StyleSubPanel | null>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -3937,7 +4132,7 @@ const WebsiteEditor = () => {
       showBlog={Boolean((site as any)?.show_blog)}
     />,
     blog: <BlogPanel />,
-    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
+    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
@@ -4214,6 +4409,7 @@ const WebsiteEditor = () => {
             photographerId={user?.id ?? null}
             headerConfig={activePageInfo.headerConfig ?? null}
             onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
+            onEditFooter={() => { setActiveTab("style"); setPendingStyleSub("footer"); }}
           />
         </div>
       </div>

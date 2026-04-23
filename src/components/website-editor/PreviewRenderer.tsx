@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon, Instagram, Facebook, Youtube, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
@@ -95,6 +95,8 @@ interface PreviewRendererProps {
   headerConfig?: HeaderConfig | null;
   /** Open the header settings panel in the sidebar */
   onEditHeader?: () => void;
+  /** Open the footer settings panel in the sidebar */
+  onEditFooter?: () => void;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
@@ -228,16 +230,85 @@ function PreviewNav({
 }
 
 // ── Inline preview Footer ────────────────────────────────────────────────────
-function PreviewFooter({ site }: { site?: PreviewSiteConfig | null }) {
-  const bg = site?.footerBg ?? "hsl(var(--foreground))";
-  const fg = site?.footerTextColor ?? "hsl(var(--background))";
-  const text = site?.footerText || `© ${new Date().getFullYear()} ${site?.displayName || "Studio"}`;
+function PreviewFooter({
+  site,
+  editMode = false,
+  onEdit,
+}: {
+  site?: PreviewSiteConfig | null;
+  editMode?: boolean;
+  onEdit?: () => void;
+}) {
+  const s = site as any;
+  const bg = s?.footerBg ?? s?.footer_bg_color ?? "hsl(var(--foreground))";
+  const fg = s?.footerTextColor ?? s?.footer_text_color ?? "hsl(var(--background))";
+  const text = s?.footerText || s?.footer_text || `© ${new Date().getFullYear()} ${s?.displayName || "Studio"}`;
+  const showLogo: boolean = s?.footer_show_logo ?? false;
+  const showSocials: boolean = s?.footer_show_socials ?? true;
+  const hideBranding: boolean = s?.hideBranding ?? s?.hide_branding ?? false;
+  const visibleSocials: string[] = Array.isArray(s?.footer_visible_socials)
+    ? s.footer_visible_socials
+    : [];
+  const isFiltering = visibleSocials.length > 0;
+
+  const SOCIAL_ENTRIES: { key: string; href: string | null | undefined; icon: React.ReactNode }[] = [
+    { key: "instagram", href: s?.instagram_url, icon: <Instagram className="h-4 w-4" /> },
+    { key: "facebook", href: s?.facebook_url, icon: <Facebook className="h-4 w-4" /> },
+    { key: "youtube", href: s?.youtube_url, icon: <Youtube className="h-4 w-4" /> },
+    { key: "linkedin", href: s?.linkedin_url, icon: <Linkedin className="h-4 w-4" /> },
+  ];
+  const visible = SOCIAL_ENTRIES.filter((e) => {
+    if (!e.href) return false;
+    if (isFiltering) return visibleSocials.includes(e.key);
+    return true;
+  });
 
   return (
-    <footer style={{ backgroundColor: bg, color: fg }} className="py-12 px-6">
-      <div className="max-w-7xl mx-auto text-center">
+    <footer
+      style={{ backgroundColor: bg, color: fg }}
+      className={cn(
+        "py-12 px-6 relative group/footer",
+        editMode && "cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all",
+      )}
+      onClick={editMode && onEdit ? (e) => { e.stopPropagation(); onEdit(); } : undefined}
+    >
+      <div className="max-w-7xl mx-auto flex flex-col items-center gap-5 text-center">
+        {showLogo && (
+          <div className="flex items-center justify-center">
+            {s?.logoUrl ? (
+              <img src={s.logoUrl} alt={s?.displayName || "Studio"} className="h-8 object-contain" />
+            ) : (
+              <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={{ color: fg }}>
+                {s?.displayName || "Studio"}
+              </span>
+            )}
+          </div>
+        )}
+
+        {showSocials && visible.length > 0 && (
+          <div className="flex items-center justify-center gap-5">
+            {visible.map((e) => (
+              <span key={e.key} style={{ color: fg }} className="opacity-80">
+                {e.icon}
+              </span>
+            ))}
+          </div>
+        )}
+
         <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80">{text}</p>
+
+        {!hideBranding && (
+          <p className="text-[9px] tracking-widest uppercase opacity-40">Powered by Davions</p>
+        )}
       </div>
+
+      {editMode && (
+        <div className="absolute top-2 right-3 opacity-0 group-hover/footer:opacity-100 transition-opacity pointer-events-none">
+          <span className="text-[10px] tracking-widest uppercase bg-primary text-primary-foreground px-2 py-1 rounded">
+            Edit footer
+          </span>
+        </div>
+      )}
     </footer>
   );
 }
@@ -433,6 +504,7 @@ export default function PreviewRenderer({
   photographerId,
   headerConfig,
   onEditHeader,
+  onEditFooter,
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
@@ -691,7 +763,7 @@ export default function PreviewRenderer({
           )}
 
           {/* Footer */}
-          {showHeaderFooter && <PreviewFooter site={site} />}
+          {showHeaderFooter && <PreviewFooter site={site} editMode={editMode} onEdit={onEditFooter} />}
         </div>
       </div>
     </div>
