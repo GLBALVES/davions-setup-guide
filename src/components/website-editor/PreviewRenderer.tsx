@@ -526,6 +526,9 @@ export default function PreviewRenderer({
   headerConfig,
   onEditHeader,
   onEditFooter,
+  browserFaviconUrl = null,
+  browserTitle = null,
+  saveStatus = "idle",
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
