@@ -89,11 +89,6 @@ export default function PreviewHeader({
     setIndex(0);
   }, [slides.length]);
 
-  // Reset index when slide count changes
-  useEffect(() => {
-    setIndex(0);
-  }, [slides.length]);
-
   // Autoplay
   useEffect(() => {
     if (!cfg.autoplay || slides.length < 2) return;
