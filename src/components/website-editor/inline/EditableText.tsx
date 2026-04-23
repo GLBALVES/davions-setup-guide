@@ -129,7 +129,9 @@ export default function EditableText({
       onInput={handleInput}
       onBlur={commit}
       onKeyDown={handleKeyDown}
-      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      // Allow click to bubble so the parent block's onSelect runs and opens
+      // the block settings panel in the sidebar. The cursor still lands here
+      // because contentEditable handles caret placement before bubbling.
       className={cn(
         "outline-none focus:ring-2 focus:ring-primary/40 rounded-sm transition-all",
         "hover:ring-1 hover:ring-primary/30",
