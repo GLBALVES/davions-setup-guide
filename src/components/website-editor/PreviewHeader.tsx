@@ -161,6 +161,7 @@ export default function PreviewHeader({
           href={link.url || "#"}
           target={newTab ? "_blank" : "_self"}
           rel={newTab ? "noopener noreferrer" : undefined}
+          onClick={(e) => { if (editMode) e.stopPropagation(); }}
           className="text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70"
           style={{ color }}
         >
@@ -171,7 +172,7 @@ export default function PreviewHeader({
     return (
       <button
         key={link.id}
-        onClick={() => onNavigatePage?.(link.id)}
+        onClick={(e) => { if (editMode) e.stopPropagation(); onNavigatePage?.(link.id); }}
         className={cn(
           "text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70",
           activePageId === link.id && "underline underline-offset-4"
@@ -187,7 +188,37 @@ export default function PreviewHeader({
   if (navOnlyMode) {
     const navFg = "hsl(var(--foreground))";
     return (
-      <header className="relative w-full bg-background border-b border-border">
+      <header
+        className="relative w-full bg-background border-b border-border"
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        onClick={() => editMode && onEditHeader?.()}
+      >
+        {editMode && (
+          <div
+            className={cn(
+              "absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 transition-opacity pointer-events-auto",
+              hovering ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onEditHeader?.(); }}
+              className="px-2.5 py-1.5 rounded-md text-[11px] bg-background text-foreground hover:bg-muted transition-colors flex items-center gap-1.5 shadow-md border border-border"
+            >
+              <LayoutTemplate className="h-3 w-3" />
+              {we.changeLayout}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onEditHeader?.(); }}
+              className="px-2.5 py-1.5 rounded-md text-[11px] bg-background text-foreground hover:bg-muted transition-colors flex items-center gap-1.5 shadow-md border border-border"
+            >
+              <Settings2 className="h-3 w-3" />
+              {we.headerSettings}
+            </button>
+          </div>
+        )}
         <div className="px-4 sm:px-6 py-4 sm:py-5">
           <div className="max-w-7xl mx-auto">
             {layout === "logo-center" ? (
@@ -207,7 +238,7 @@ export default function PreviewHeader({
                 </nav>
                 <button
                   type="button"
-                  onClick={() => setMobileOpen((v) => !v)}
+                  onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
                   className="md:hidden order-2 p-1.5 -mr-1.5 text-foreground/80 hover:text-foreground"
                   aria-label="Menu"
                 >
@@ -228,7 +259,7 @@ export default function PreviewHeader({
                 </nav>
                 <button
                   type="button"
-                  onClick={() => setMobileOpen((v) => !v)}
+                  onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
                   className="md:hidden p-1.5 -mr-1.5 text-foreground/80 hover:text-foreground"
                   aria-label="Menu"
                 >
