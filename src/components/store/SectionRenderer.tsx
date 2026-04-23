@@ -1205,41 +1205,153 @@ function VideoBlock({ url }: any) {
     );
   }
 
-  // Convert YouTube/Vimeo URLs to embed with minimal chrome
-  // (hides title, share/watch-later buttons, related videos, video annotations,
-  // keyboard shortcuts and the YouTube logo as much as the players allow)
-  let embedUrl = url;
+  // YouTube / Vimeo → render with minimal custom chrome (only play + mute toggle).
+  // Strategy: hide native UI behind masks (top title bar + bottom control bar) and
+  // expose our own play/pause + mute buttons that talk to the player via postMessage.
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-  if (ytMatch) {
-    const id = ytMatch[1];
-    const ytParams = new URLSearchParams({
-      modestbranding: "1",
-      rel: "0",
-      showinfo: "0",
-      iv_load_policy: "3",
-      fs: "0",
-      disablekb: "1",
-      playsinline: "1",
-    });
-    embedUrl = `https://www.youtube-nocookie.com/embed/${id}?${ytParams.toString()}`;
-  }
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) {
-    const vimeoParams = new URLSearchParams({
-      title: "0",
-      byline: "0",
-      portrait: "0",
-      dnt: "1",
-    });
-    embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}?${vimeoParams.toString()}`;
+  const provider: "youtube" | "vimeo" | "other" = ytMatch ? "youtube" : vimeoMatch ? "vimeo" : "other";
+
+  if (provider === "other") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-4xl mx-auto aspect-video overflow-hidden rounded">
+          <iframe src={url} className="w-full h-full border-0" allowFullScreen allow="autoplay; encrypted-media" />
+        </div>
+      </section>
+    );
   }
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-4xl mx-auto aspect-video overflow-hidden rounded">
-        <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen allow="autoplay; encrypted-media" />
+      <div className="max-w-4xl mx-auto">
+        <MinimalEmbedPlayer
+          provider={provider}
+          videoId={(ytMatch ? ytMatch[1] : vimeoMatch![1])}
+        />
       </div>
     </section>
+  );
+}
+
+// Minimal-chrome embed player for YouTube/Vimeo.
+// Renders only a custom play button and mute toggle; native UI is masked out.
+function MinimalEmbedPlayer({ provider, videoId }: { provider: "youtube" | "vimeo"; videoId: string }) {
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const [playing, setPlaying] = React.useState(false);
+  const [muted, setMuted] = React.useState(false);
+  const [started, setStarted] = React.useState(false);
+
+  const src = React.useMemo(() => {
+    if (provider === "youtube") {
+      const p = new URLSearchParams({
+        enablejsapi: "1",
+        modestbranding: "1",
+        rel: "0",
+        showinfo: "0",
+        iv_load_policy: "3",
+        fs: "0",
+        disablekb: "1",
+        playsinline: "1",
+        controls: "0",
+        autoplay: started ? "1" : "0",
+      });
+      return `https://www.youtube-nocookie.com/embed/${videoId}?${p.toString()}`;
+    }
+    const p = new URLSearchParams({
+      title: "0",
+      byline: "0",
+      portrait: "0",
+      dnt: "1",
+      controls: "0",
+      autoplay: started ? "1" : "0",
+    });
+    return `https://player.vimeo.com/video/${videoId}?${p.toString()}`;
+  }, [provider, videoId, started]);
+
+  const post = React.useCallback((command: string, args?: any) => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    if (provider === "youtube") {
+      win.postMessage(JSON.stringify({ event: "command", func: command, args: args ?? [] }), "*");
+    } else {
+      win.postMessage(JSON.stringify({ method: command, value: args }), "*");
+    }
+  }, [provider]);
+
+  const togglePlay = () => {
+    if (!started) { setStarted(true); setPlaying(true); return; }
+    if (playing) {
+      post(provider === "youtube" ? "pauseVideo" : "pause");
+      setPlaying(false);
+    } else {
+      post(provider === "youtube" ? "playVideo" : "play");
+      setPlaying(true);
+    }
+  };
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    if (provider === "youtube") {
+      post(next ? "mute" : "unMute");
+    } else {
+      post("setMuted", next);
+    }
+  };
+
+  return (
+    <div className="relative aspect-video overflow-hidden rounded bg-black group">
+      {started && (
+        <iframe
+          ref={iframeRef}
+          src={src}
+          className="absolute inset-0 w-full h-full border-0"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
+      )}
+
+      {/* Top mask — hides title bar that appears on pause/hover */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-black z-10" />
+      {/* Bottom mask — hides native control bar */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-black z-10" />
+
+      {/* Center play/pause overlay (also serves as initial poster trigger) */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        aria-label={playing ? "Pause" : "Play"}
+        className="absolute inset-0 z-20 flex items-center justify-center bg-transparent transition-opacity"
+        style={{ opacity: !started || !playing ? 1 : 0 }}
+        onMouseEnter={(e) => { if (started && playing) (e.currentTarget.style.opacity = "1"); }}
+        onMouseLeave={(e) => { if (started && playing) (e.currentTarget.style.opacity = "0"); }}
+      >
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 shadow-lg transition-transform hover:scale-105">
+          {playing ? (
+            <svg viewBox="0 0 24 24" className="h-6 w-6 fill-black"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-7 w-7 fill-black ml-1"><path d="M8 5v14l11-7z" /></svg>
+          )}
+        </span>
+      </button>
+
+      {/* Mute toggle — bottom-right, only after start */}
+      {started && (
+        <button
+          type="button"
+          onClick={toggleMute}
+          aria-label={muted ? "Unmute" : "Mute"}
+          className="absolute bottom-4 right-4 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80"
+        >
+          {muted ? (
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M16.5 12A4.5 4.5 0 0014 8.03v2.21l2.45 2.45a4.5 4.5 0 00.05-.69zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.7 8.7 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.03v7.94A4.5 4.5 0 0016.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
+          )}
+        </button>
+      )}
+    </div>
   );
 }
 
