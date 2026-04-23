@@ -1,5 +1,5 @@
 import { Camera, Images, Mail, MapPin, Clock, ArrowRight, ChevronDown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
@@ -1257,9 +1257,18 @@ function normalizeSlideItems(raw: any[]): SlideItemNorm[] {
   );
 }
 
-function SlideshowBlock({ images = [] }: any) {
+function SlideshowBlock({ images = [], autoplay = true, interval = 5000 }: any) {
   const slides = normalizeSlideItems(images);
   const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (!autoplay || paused || slides.length <= 1) return;
+    const t = window.setInterval(() => {
+      setCurrent((c) => (c + 1) % slides.length);
+    }, Math.max(1500, Number(interval) || 5000));
+    return () => window.clearInterval(t);
+  }, [autoplay, paused, interval, slides.length]);
 
   if (slides.length === 0) {
     return (
@@ -1276,7 +1285,11 @@ function SlideshowBlock({ images = [] }: any) {
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded">
+      <div
+        className="max-w-4xl mx-auto relative aspect-[16/7] overflow-hidden rounded"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {slide.link ? (
           <a href={slide.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
             <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover" />
@@ -1304,8 +1317,28 @@ function SlideshowBlock({ images = [] }: any) {
 
 // ─── Carousel ───────────────────────────────────────────────────────────────
 
-function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
+function CarouselBlock({ images = [], itemsVisible = 3, autoplay = false, interval = 5000 }: any) {
   const slides = normalizeSlideItems(images);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (!autoplay || paused || slides.length <= itemsVisible) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const t = window.setInterval(() => {
+      const itemWidth = el.scrollWidth / Math.max(1, slides.length);
+      const maxScroll = el.scrollWidth - el.clientWidth - 1;
+      const next = el.scrollLeft + itemWidth;
+      if (next >= maxScroll) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: itemWidth, behavior: "smooth" });
+      }
+    }, Math.max(1500, Number(interval) || 5000));
+    return () => window.clearInterval(t);
+  }, [autoplay, paused, interval, slides.length, itemsVisible]);
+
   if (slides.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
@@ -1322,7 +1355,12 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
+      <div
+        ref={scrollerRef}
+        className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar scroll-smooth"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {slides.map((slide, i) => {
           const inner = (
             <div className="relative w-full aspect-square overflow-hidden rounded group">

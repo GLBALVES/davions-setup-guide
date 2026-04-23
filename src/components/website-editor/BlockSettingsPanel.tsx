@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -234,15 +235,25 @@ function normalizeSlides(raw: any[]): SlideItem[] {
 
 function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }: { props: any; onChange: (p: any) => void; photographerId?: string | null; isCarousel?: boolean }) {
   const slides: SlideItem[] = normalizeSlides(props.images || []);
+  const autoplay = props.autoplay ?? !isCarousel; // slideshow defaults on, carousel off
+  const interval = props.interval ?? 5000;
   return (
     <div className="space-y-3">
-      {isCarousel ? (
+      {isCarousel && (
         <Field label={`Visible items: ${props.itemsVisible ?? 3}`}>
           <Slider value={[props.itemsVisible ?? 3]} min={1} max={6} step={1} onValueChange={([v]) => onChange({ ...props, itemsVisible: v })} />
         </Field>
-      ) : (
-        <Field label={`Interval: ${(props.interval ?? 5000) / 1000}s`}>
-          <Slider value={[props.interval ?? 5000]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
+      )}
+      <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-foreground">Autoplay</p>
+          <p className="text-[10px] text-muted-foreground">Advance slides automatically</p>
+        </div>
+        <Switch checked={autoplay} onCheckedChange={(v) => onChange({ ...props, autoplay: v })} />
+      </div>
+      {autoplay && (
+        <Field label={`Interval: ${interval / 1000}s`}>
+          <Slider value={[interval]} min={2000} max={15000} step={500} onValueChange={([v]) => onChange({ ...props, interval: v })} />
         </Field>
       )}
       <Field label="Slides">
