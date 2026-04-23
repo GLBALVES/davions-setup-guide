@@ -74,20 +74,10 @@ export default function PreviewHeader({
 
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(config || {}) };
   const validSlides = (cfg.slides || []).filter((s) => !!s.imageUrl);
-  // When the page has no slides at all:
-  //  - Live site: render a compact nav-only header (no hero, no placeholder).
-  //  - Edit mode: keep a placeholder image so the user still sees the hero area
-  //    and can access the edit handles to add/restore slides.
-  const navOnlyMode = validSlides.length === 0 && !editMode;
-  const navOnlyModeEdit = validSlides.length === 0 && editMode;
-  const navOnlyMode = navOnlyModeLive || navOnlyModeEdit;
+  const navOnlyMode = validSlides.length === 0;
+  const slides = validSlides;
 
   const [index, setIndex] = useState(0);
-  const [hovering, setHovering] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const activeSlide = slides[index] || slides[0];
-  const showSlideCta = !!activeSlide?.buttonText;
-  const activeSlideTint = activeSlide?.backgroundTint ?? 0;
 
   // Reset index when slide count changes
   useEffect(() => {
@@ -345,15 +335,6 @@ export default function PreviewHeader({
         </div>
       )}
 
-      {/* Demo badge */}
-      {usingPlaceholder && (
-        <div className="absolute top-3 right-3 z-20 px-2 py-1 rounded bg-black/60 backdrop-blur-sm">
-          <span className="text-[10px] tracking-[0.15em] uppercase text-white/90 font-light">
-            {we.demoImage}
-          </span>
-        </div>
-      )}
-
       {/* Edit handles (only in edit mode) */}
       {editMode && (
         <div
@@ -450,9 +431,9 @@ export default function PreviewHeader({
       </div>
 
       {/* Slide indicators */}
-      {slides.length > 1 && (
+      {validSlides.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5">
-          {slides.map((s, i) => (
+          {validSlides.map((s, i) => (
             <button
               key={s.id}
               type="button"
