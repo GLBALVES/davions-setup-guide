@@ -293,7 +293,10 @@ export default function PreviewHeader({
               </div>
             )}
             {mobileOpen && (
-              <div className="md:hidden mt-3 bg-background rounded-md py-3 px-4 flex flex-col gap-3 border border-border">
+              <div
+                className="md:hidden mt-3 rounded-md py-3 px-4 flex flex-col gap-3 border"
+                style={{ backgroundColor: mobilePanelBg, borderColor: navBorder }}
+              >
                 {navLinks.map((link) => renderLinkWithColor(link, navFg))}
               </div>
             )}
