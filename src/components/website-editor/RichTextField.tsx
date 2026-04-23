@@ -466,13 +466,13 @@ export function RichTextField({
 
       {/* Format toolbar */}
       <div className="flex items-center gap-0.5 flex-wrap rounded-md border border-border bg-muted/30 p-1">
-        <ToolbarButton title="Bold" onClick={() => applyTag("b")}>
+        <ToolbarButton title="Bold" onClick={() => applyTag("b")} active={!!activeStyle.bold}>
           <Bold className="h-3.5 w-3.5" />
         </ToolbarButton>
-        <ToolbarButton title="Italic" onClick={() => applyTag("i")}>
+        <ToolbarButton title="Italic" onClick={() => applyTag("i")} active={!!activeStyle.italic}>
           <Italic className="h-3.5 w-3.5" />
         </ToolbarButton>
-        <ToolbarButton title="Underline" onClick={() => applyTag("u")}>
+        <ToolbarButton title="Underline" onClick={() => applyTag("u")} active={!!activeStyle.underline}>
           <Underline className="h-3.5 w-3.5" />
         </ToolbarButton>
 
