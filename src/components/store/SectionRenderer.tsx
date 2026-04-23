@@ -440,15 +440,38 @@ function HeroBlock(props: any) {
 
 // ─── Text ───────────────────────────────────────────────────────────────────
 
-function TextBlock({ body, ctx }: any) {
+function TextBlock({ title, subtitle, body, align = "center", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   // Detect plain text (legacy) vs HTML — if it has no tags, wrap line breaks
   const html = /<[a-z][\s\S]*>/i.test(body || "")
     ? body || ""
     : (body || "").replace(/\n/g, "<br />");
+  const alignClass =
+    align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
+  const showTitle = c.editMode || !!title;
+  const showSubtitle = c.editMode || !!subtitle;
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-3xl mx-auto">
+      <div className={`max-w-3xl mx-auto ${alignClass}`}>
+        {showTitle && (
+          <EditableText
+            editMode={c.editMode}
+            value={title || ""}
+            placeholder="Title (optional)"
+            onChange={(v) => c.set("title", v)}
+            as="h2"
+            className="font-serif italic text-2xl sm:text-3xl md:text-4xl text-foreground mb-4 leading-tight"
+          />
+        )}
+        {showSubtitle && (
+          <EditableText
+            editMode={c.editMode}
+            value={subtitle || ""}
+            placeholder="Subtitle (optional)"
+            onChange={(v) => c.set("subtitle", v)}
+            className="text-xs sm:text-sm uppercase tracking-[0.2em] text-muted-foreground mb-6"
+          />
+        )}
         <EditableRichText
           editMode={c.editMode}
           value={html}
