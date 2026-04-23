@@ -585,12 +585,36 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
 
 // ─── Shared Footer ───────────────────────────────────────────────────────────
 
-function SharedFooter({ site, showContact, displayName, logoUrl }: { site: SiteConfig | null; showContact: boolean; displayName?: string; logoUrl?: string | null }) {
+function SharedFooter({
+  site,
+  showContact,
+  displayName,
+  logoUrl,
+  navLinks,
+  photographerEmail,
+}: {
+  site: SiteConfig | null;
+  showContact: boolean;
+  displayName?: string;
+  logoUrl?: string | null;
+  navLinks?: NavLinkItem[];
+  photographerEmail?: string | null;
+}) {
   const showSocials = site?.footer_show_socials ?? true;
   const showLogo = site?.footer_show_logo ?? false;
   const bgColor = site?.footer_bg_color ?? null;
   const textColor = site?.footer_text_color ?? null;
   const filterKeys = site?.footer_visible_socials ?? null;
+
+  const layout = site?.footer_layout ?? "minimal";
+  const logoPosition = site?.footer_logo_position ?? "center";
+  const alignment = site?.footer_alignment ?? "center";
+  const showNav = site?.footer_show_nav ?? false;
+  const showSitemap = site?.footer_show_sitemap ?? false;
+  const showContactInfo = site?.footer_show_contact_info ?? false;
+  const showTagline = site?.footer_show_tagline ?? false;
+  const tagline = site?.footer_tagline ?? "";
+  const columns = Array.isArray(site?.footer_columns) ? site!.footer_columns! : [];
 
   const ALL_SOCIAL_ENTRIES: { key: string; href: string | null | undefined; icon: React.ReactNode }[] = [
     { key: "instagram", href: site?.instagram_url, icon: <Instagram className="h-4 w-4" /> },
@@ -610,60 +634,239 @@ function SharedFooter({ site, showContact, displayName, logoUrl }: { site: SiteC
 
   const footerStyle: React.CSSProperties = bgColor ? { backgroundColor: bgColor } : {};
   const iconColorCls = textColor ? "" : "text-muted-foreground hover:text-foreground";
+  const textStyle = textColor ? { color: textColor } : undefined;
 
+  const alignCls =
+    alignment === "left" ? "text-left items-start" :
+    alignment === "right" ? "text-right items-end" :
+    "text-center items-center";
+
+  const logoPosCls =
+    logoPosition === "left" ? "justify-start" :
+    logoPosition === "right" ? "justify-end" :
+    "justify-center";
+
+  // ── Logo block ──────────────────────────────────────────────────────────
+  const logoBlock = showLogo ? (
+    <div className={`flex ${logoPosCls}`}>
+      {logoUrl ? (
+        <img src={logoUrl} alt={displayName} className="h-8 object-contain" style={textColor ? { filter: "none" } : undefined} />
+      ) : (
+        <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={textStyle}>
+          {displayName}
+        </span>
+      )}
+    </div>
+  ) : null;
+
+  // ── Tagline ─────────────────────────────────────────────────────────────
+  const taglineBlock = showTagline && tagline ? (
+    <p className="text-[11px] font-light leading-relaxed max-w-xs opacity-80" style={textStyle}>
+      {tagline}
+    </p>
+  ) : null;
+
+  // ── Social icons ────────────────────────────────────────────────────────
+  const socialBlock = showContact && showSocials && visibleSocialEntries.length > 0 ? (
+    <div className={`flex items-center gap-5 ${logoPosCls}`}>
+      {visibleSocialEntries.map(e => (
+        <a
+          key={e.key}
+          href={e.href!}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={e.key}
+          className={`transition-colors ${iconColorCls}`}
+          style={textStyle}
+        >
+          {e.icon}
+        </a>
+      ))}
+    </div>
+  ) : null;
+
+  // ── Vertical nav (top-level pages) ──────────────────────────────────────
+  const navBlock = showNav && navLinks && navLinks.length > 0 ? (
+    <nav className={`flex flex-col gap-2 ${alignCls}`} aria-label="Footer navigation">
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90 mb-1" style={textStyle}>
+        Menu
+      </h4>
+      {navLinks.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          className="text-[11px] font-light hover:opacity-70 transition-opacity"
+          style={textStyle}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  ) : null;
+
+  // ── Sitemap (all pages including children) ─────────────────────────────
+  const sitemapLinks: NavLinkItem[] = [];
+  (navLinks ?? []).forEach((l) => {
+    sitemapLinks.push(l);
+    (l.children ?? []).forEach((c) => sitemapLinks.push(c));
+  });
+  const sitemapBlock = showSitemap && sitemapLinks.length > 0 ? (
+    <nav className={`flex flex-col gap-2 ${alignCls}`} aria-label="Sitemap">
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90 mb-1" style={textStyle}>
+        Sitemap
+      </h4>
+      {sitemapLinks.map((link, idx) => (
+        <a
+          key={`${link.href}-${idx}`}
+          href={link.href}
+          className="text-[11px] font-light hover:opacity-70 transition-opacity"
+          style={textStyle}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  ) : null;
+
+  // ── Contact info ────────────────────────────────────────────────────────
+  const contactBlock = showContactInfo ? (
+    <div className={`flex flex-col gap-2 ${alignCls}`}>
+      <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90 mb-1" style={textStyle}>
+        Contact
+      </h4>
+      {photographerEmail && (
+        <a
+          href={`mailto:${photographerEmail}`}
+          className="text-[11px] font-light hover:opacity-70 transition-opacity"
+          style={textStyle}
+        >
+          {photographerEmail}
+        </a>
+      )}
+      {site?.whatsapp && (
+        <a
+          href={`https://wa.me/${site.whatsapp.replace(/\D/g, "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-light hover:opacity-70 transition-opacity"
+          style={textStyle}
+        >
+          WhatsApp: {site.whatsapp}
+        </a>
+      )}
+    </div>
+  ) : null;
+
+  // ── Custom columns ──────────────────────────────────────────────────────
+  const columnsBlock = columns.length > 0 ? (
+    <>
+      {columns.map((col, ci) => (
+        <div key={ci} className={`flex flex-col gap-2 ${alignCls}`}>
+          <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90 mb-1" style={textStyle}>
+            {col.heading}
+          </h4>
+          {(col.links ?? []).map((l, li) => (
+            <a
+              key={li}
+              href={l.href}
+              className="text-[11px] font-light hover:opacity-70 transition-opacity"
+              style={textStyle}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+      ))}
+    </>
+  ) : null;
+
+  // ── Footer text (copyright) ─────────────────────────────────────────────
+  const copyrightBlock = site?.footer_text ? (
+    <p className="text-[10px] font-light opacity-80" style={textStyle}>
+      {site.footer_text}
+    </p>
+  ) : null;
+
+  // ── Layout renderers ────────────────────────────────────────────────────
+  const renderColumns = () => {
+    const blocks = [navBlock, sitemapBlock, contactBlock, ...(columnsBlock ? columns.map((col, ci) => (
+      <div key={ci} className={`flex flex-col gap-2 ${alignCls}`}>
+        <h4 className="text-[10px] tracking-[0.25em] uppercase font-medium opacity-90 mb-1" style={textStyle}>{col.heading}</h4>
+        {(col.links ?? []).map((l, li) => (
+          <a key={li} href={l.href} className="text-[11px] font-light hover:opacity-70 transition-opacity" style={textStyle}>{l.label}</a>
+        ))}
+      </div>
+    )) : [])].filter(Boolean);
+    return blocks;
+  };
+
+  if (layout === "split") {
+    return (
+      <footer id="contact" data-block-key="footer" className="border-t border-border py-12" style={footerStyle}>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col gap-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+            <div className="flex flex-col gap-4 max-w-sm">
+              {logoBlock}
+              {taglineBlock}
+              {socialBlock}
+            </div>
+            <div className="flex flex-wrap gap-10">
+              {renderColumns()}
+            </div>
+          </div>
+          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+        </div>
+      </footer>
+    );
+  }
+
+  if (layout === "columns") {
+    return (
+      <footer id="contact" data-block-key="footer" className="border-t border-border py-12" style={footerStyle}>
+        <div className="max-w-6xl mx-auto px-6 flex flex-col gap-8">
+          <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8`}>
+            <div className="flex flex-col gap-4 col-span-2 md:col-span-1">
+              {logoBlock}
+              {taglineBlock}
+              {socialBlock}
+            </div>
+            {renderColumns()}
+          </div>
+          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+        </div>
+      </footer>
+    );
+  }
+
+  if (layout === "stacked") {
+    return (
+      <footer id="contact" data-block-key="footer" className="border-t border-border py-12" style={footerStyle}>
+        <div className={`max-w-6xl mx-auto px-6 flex flex-col gap-8 ${alignCls}`}>
+          {logoBlock}
+          {taglineBlock}
+          <div className="flex flex-wrap justify-center gap-10">
+            {renderColumns()}
+          </div>
+          {socialBlock}
+          {copyrightBlock}
+        </div>
+      </footer>
+    );
+  }
+
+  // minimal (default — backward compatible)
   return (
-    <footer
-      id="contact"
-      data-block-key="footer"
-      className="border-t border-border py-12"
-      style={footerStyle}
-    >
-      <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
-        {/* Logo / Studio Name */}
-        {showLogo && (
-          <div className="flex items-center justify-center">
-            {logoUrl ? (
-              <img src={logoUrl} alt={displayName} className="h-8 object-contain" style={textColor ? { filter: "none" } : undefined} />
-            ) : (
-              <span
-                className="text-[10px] tracking-[0.4em] uppercase font-light"
-                style={{ color: textColor ?? undefined }}
-              >
-                {displayName}
-              </span>
-            )}
+    <footer id="contact" data-block-key="footer" className="border-t border-border py-12" style={footerStyle}>
+      <div className={`max-w-6xl mx-auto px-6 flex flex-col gap-6 ${alignCls}`}>
+        {logoBlock}
+        {taglineBlock}
+        {socialBlock}
+        {(navBlock || sitemapBlock || contactBlock || columnsBlock) && (
+          <div className="flex flex-wrap justify-center gap-10 pt-2">
+            {renderColumns()}
           </div>
         )}
-
-        {/* Social icons */}
-        {showContact && showSocials && visibleSocialEntries.length > 0 && (
-          <div className="flex items-center justify-center gap-5">
-            {visibleSocialEntries.map(e => (
-              <a
-                key={e.key}
-                href={e.href!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`transition-colors ${iconColorCls}`}
-                style={textColor ? { color: textColor } : undefined}
-              >
-                {e.icon}
-              </a>
-            ))}
-          </div>
-        )}
-
-        {/* Footer text */}
-        {site?.footer_text && (
-          <p
-            className="text-[10px] font-light text-center"
-            style={{ color: textColor ?? undefined }}
-          >
-            {site.footer_text}
-          </p>
-        )}
-
-        {/* Branding badge moved to a floating element rendered at the page root */}
+        {copyrightBlock}
       </div>
     </footer>
   );
