@@ -260,7 +260,7 @@ function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any
       {error && <p className="text-[11px] text-destructive">{error}</p>}
 
       {props.url && /supabase.*site-videos/i.test(props.url) && (
-        <p className="text-[11px] text-emerald-600 leading-relaxed">
+        <p className="text-[11px] text-primary leading-relaxed">
           ✓ Uploaded video in use. Edit the URL above to switch to YouTube/Vimeo.
         </p>
       )}
