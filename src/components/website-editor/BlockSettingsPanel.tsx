@@ -156,7 +156,7 @@ function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) 
 function ContactFormContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   return (
     <Field label="Submit Label">
-      <Input value={props.submitLabel || "Send"} onChange={(e) => onChange({ ...props, submitLabel: e.target.value })} className="h-9 text-sm" />
+      <RichTextField value={props.submitLabel || "Send"} onChange={(v) => onChange({ ...props, submitLabel: v })} />
     </Field>
   );
 }
