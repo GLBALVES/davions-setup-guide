@@ -799,14 +799,17 @@ function SharedFooter({
     </p>
   ) : null;
 
-  // ── Legal links (Terms + Privacy) ───────────────────────────────────────
+  // ── Legal links (Terms + Privacy) — point to the photographer's own
+  //    pages so the visitor stays inside the studio's site/branding.
+  const isOnStoreRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/store/");
+  const legalBase = isOnStoreRoute && photographer?.store_slug ? `/store/${photographer.store_slug}` : "";
   const legalBlock = (
     <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
-      <a href="/terms" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+      <a href={`${legalBase}/terms`} className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
         {t.lgpd.termsOfService}
       </a>
       <span className="text-[10px] opacity-40" style={textStyle}>·</span>
-      <a href="/privacy" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+      <a href={`${legalBase}/privacy`} className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
         {t.lgpd.privacyPolicy}
       </a>
     </div>
