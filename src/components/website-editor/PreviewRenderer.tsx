@@ -97,6 +97,12 @@ interface PreviewRendererProps {
   onEditHeader?: () => void;
   /** Open the footer settings panel in the sidebar */
   onEditFooter?: () => void;
+  /** Browser-tab indicator: favicon shown next to the viewport switcher */
+  browserFaviconUrl?: string | null;
+  /** Browser-tab indicator: site title shown next to the viewport switcher */
+  browserTitle?: string | null;
+  /** Auto-save status pill rendered next to the browser-tab indicator */
+  saveStatus?: "idle" | "saving" | "saved" | "error";
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
