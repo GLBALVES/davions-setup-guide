@@ -2562,6 +2562,11 @@ export type Database = {
           seo_title: string | null
           sessions_bg_color: string | null
           sessions_text_color: string | null
+          shop_description: string | null
+          shop_layout: string
+          shop_show_galleries: boolean
+          shop_show_sessions: boolean
+          shop_title: string | null
           show_about: boolean | null
           show_blog: boolean | null
           show_booking: boolean | null
@@ -2656,6 +2661,11 @@ export type Database = {
           seo_title?: string | null
           sessions_bg_color?: string | null
           sessions_text_color?: string | null
+          shop_description?: string | null
+          shop_layout?: string
+          shop_show_galleries?: boolean
+          shop_show_sessions?: boolean
+          shop_title?: string | null
           show_about?: boolean | null
           show_blog?: boolean | null
           show_booking?: boolean | null
@@ -2750,6 +2760,11 @@ export type Database = {
           seo_title?: string | null
           sessions_bg_color?: string | null
           sessions_text_color?: string | null
+          shop_description?: string | null
+          shop_layout?: string
+          shop_show_galleries?: boolean
+          shop_show_sessions?: boolean
+          shop_title?: string | null
           show_about?: boolean | null
           show_blog?: boolean | null
           show_booking?: boolean | null
