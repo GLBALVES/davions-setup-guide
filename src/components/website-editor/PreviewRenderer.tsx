@@ -307,12 +307,22 @@ function PreviewFooter({
     logoPosition === "right" ? "justify-end" :
     "justify-center";
 
+  const footerLogoSize = (s?.logoSize as string) || (s?.logo_size as string) || "medium";
+  const footerLogoImgClass =
+    footerLogoSize === "small" ? "h-12 sm:h-16 w-auto object-contain"
+    : footerLogoSize === "large" ? "h-24 sm:h-32 w-auto object-contain"
+    : "h-16 sm:h-24 w-auto object-contain";
+  const footerLogoTextClass =
+    footerLogoSize === "small" ? "text-[10px] sm:text-xs font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : footerLogoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
+
   const logoBlock = showLogo ? (
     <div className={`flex ${logoPosCls}`}>
       {s?.logoUrl ? (
-        <img src={s.logoUrl} alt={s?.displayName || "Studio"} className="h-8 object-contain" />
+        <img src={s.logoUrl} alt={s?.displayName || "Studio"} className={footerLogoImgClass} />
       ) : (
-        <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={{ color: fg }}>
+        <span className={footerLogoTextClass} style={{ color: fg }}>
           {s?.displayName || "Studio"}
         </span>
       )}
