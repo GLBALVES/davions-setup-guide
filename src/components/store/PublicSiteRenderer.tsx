@@ -2249,7 +2249,7 @@ export default function PublicSiteRenderer(props: Props) {
                 </p>
                 <article
                   className="prose prose-sm max-w-none [&_h2]:text-sm [&_h2]:tracking-widest [&_h2]:uppercase [&_h2]:font-light [&_h2]:mt-10 [&_h2]:mb-3 [&_p]:text-xs [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:text-xs [&_li]:mb-1 [&_strong]:font-medium"
-                  style={site?.text_color ? { color: site.text_color } : undefined}
+                  style={(site as any)?.text_color ? { color: (site as any).text_color } : undefined}
                   dangerouslySetInnerHTML={{ __html: props.subPageHtml }}
                 />
               </div>
