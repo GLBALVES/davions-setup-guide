@@ -2552,6 +2552,7 @@ export type Database = {
           pinterest_url: string | null
           portfolio_bg_color: string | null
           portfolio_text_color: string | null
+          privacy_content: string | null
           quote_author: string | null
           quote_bg_color: string | null
           quote_text: string | null
@@ -2573,6 +2574,7 @@ export type Database = {
           site_subheadline: string | null
           site_template: string | null
           tagline: string | null
+          terms_content: string | null
           testimonials: Json | null
           testimonials_bg_color: string | null
           testimonials_text_color: string | null
@@ -2644,6 +2646,7 @@ export type Database = {
           pinterest_url?: string | null
           portfolio_bg_color?: string | null
           portfolio_text_color?: string | null
+          privacy_content?: string | null
           quote_author?: string | null
           quote_bg_color?: string | null
           quote_text?: string | null
@@ -2665,6 +2668,7 @@ export type Database = {
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
+          terms_content?: string | null
           testimonials?: Json | null
           testimonials_bg_color?: string | null
           testimonials_text_color?: string | null
@@ -2736,6 +2740,7 @@ export type Database = {
           pinterest_url?: string | null
           portfolio_bg_color?: string | null
           portfolio_text_color?: string | null
+          privacy_content?: string | null
           quote_author?: string | null
           quote_bg_color?: string | null
           quote_text?: string | null
@@ -2757,6 +2762,7 @@ export type Database = {
           site_subheadline?: string | null
           site_template?: string | null
           tagline?: string | null
+          terms_content?: string | null
           testimonials?: Json | null
           testimonials_bg_color?: string | null
           testimonials_text_color?: string | null
