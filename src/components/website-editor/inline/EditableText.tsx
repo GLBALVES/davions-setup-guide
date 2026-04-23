@@ -82,7 +82,16 @@ export default function EditableText({
   const Comp: any = Tag;
   return (
     <Comp
-      ref={ref as any}
+      ref={(el: HTMLElement | null) => {
+        ref.current = el;
+        // Initialise textContent on mount only — never on re-render — so React
+        // doesn't reconcile children and clobber the caret while typing.
+        if (el && el.textContent !== (value || "")) {
+          if (document.activeElement !== el) {
+            el.textContent = value || "";
+          }
+        }
+      }}
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
@@ -98,8 +107,6 @@ export default function EditableText({
         className
       )}
       style={style}
-    >
-      {value}
-    </Comp>
+    />
   );
 }
