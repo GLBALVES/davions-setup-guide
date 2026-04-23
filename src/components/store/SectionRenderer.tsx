@@ -1184,12 +1184,34 @@ function VideoBlock({ url }: any) {
     );
   }
 
-  // Convert YouTube/Vimeo URLs to embed
+  // Convert YouTube/Vimeo URLs to embed with minimal chrome
+  // (hides title, share/watch-later buttons, related videos, video annotations,
+  // keyboard shortcuts and the YouTube logo as much as the players allow)
   let embedUrl = url;
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-  if (ytMatch) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+  if (ytMatch) {
+    const id = ytMatch[1];
+    const ytParams = new URLSearchParams({
+      modestbranding: "1",
+      rel: "0",
+      showinfo: "0",
+      iv_load_policy: "3",
+      fs: "0",
+      disablekb: "1",
+      playsinline: "1",
+    });
+    embedUrl = `https://www.youtube-nocookie.com/embed/${id}?${ytParams.toString()}`;
+  }
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  if (vimeoMatch) {
+    const vimeoParams = new URLSearchParams({
+      title: "0",
+      byline: "0",
+      portrait: "0",
+      dnt: "1",
+    });
+    embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}?${vimeoParams.toString()}`;
+  }
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
