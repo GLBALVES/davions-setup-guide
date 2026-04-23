@@ -32,11 +32,14 @@ export default function EditableText({
   const debounceRef = useRef<number | null>(null);
   const lastCommittedRef = useRef<string>(value);
 
-  // Keep DOM in sync when external value changes and we're not actively typing
+  // Keep DOM in sync when external value changes and we're not actively typing.
+  // Important: never re-write textContent while focused — doing so resets the
+  // caret to the start, causing an "autofocus loop" when paired with a
+  // debounced commit.
   useEffect(() => {
     if (!ref.current) return;
     if (document.activeElement === ref.current) return;
-    if (ref.current.textContent !== value) {
+    if (ref.current.textContent !== (value || "")) {
       ref.current.textContent = value || "";
     }
     lastCommittedRef.current = value;
@@ -79,7 +82,16 @@ export default function EditableText({
   const Comp: any = Tag;
   return (
     <Comp
-      ref={ref as any}
+      ref={(el: HTMLElement | null) => {
+        ref.current = el;
+        // Initialise textContent on mount only — never on re-render — so React
+        // doesn't reconcile children and clobber the caret while typing.
+        if (el && el.textContent !== (value || "")) {
+          if (document.activeElement !== el) {
+            el.textContent = value || "";
+          }
+        }
+      }}
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
@@ -95,8 +107,6 @@ export default function EditableText({
         className
       )}
       style={style}
-    >
-      {value}
-    </Comp>
+    />
   );
 }
