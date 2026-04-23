@@ -238,7 +238,7 @@ export default function PreviewHeader({
                 </nav>
                 <button
                   type="button"
-                  onClick={() => setMobileOpen((v) => !v)}
+                  onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
                   className="md:hidden order-2 p-1.5 -mr-1.5 text-foreground/80 hover:text-foreground"
                   aria-label="Menu"
                 >
