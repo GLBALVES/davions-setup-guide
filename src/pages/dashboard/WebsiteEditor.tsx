@@ -2434,9 +2434,44 @@ const FooterSubPanel = ({
     : [];
   const isFiltering = visibleSocials.length > 0;
 
+  const layout: "minimal" | "columns" | "split" | "stacked" = (s?.footer_layout as any) || "minimal";
+  const logoPosition: "left" | "center" | "right" = (s?.footer_logo_position as any) || "center";
+  const alignment: "left" | "center" | "right" = (s?.footer_alignment as any) || "center";
+  const showNav: boolean = s?.footer_show_nav ?? false;
+  const showSitemap: boolean = s?.footer_show_sitemap ?? false;
+  const showContactInfo: boolean = s?.footer_show_contact_info ?? false;
+  const showTagline: boolean = s?.footer_show_tagline ?? false;
+  const tagline: string = s?.footer_tagline ?? "";
+  const columns: Array<{ heading: string; links: Array<{ label: string; href: string }> }> = Array.isArray(s?.footer_columns) ? s.footer_columns : [];
+
+  const updateColumn = (idx: number, patch: Partial<{ heading: string; links: Array<{ label: string; href: string }> }>) => {
+    const next = columns.map((c, i) => (i === idx ? { ...c, ...patch } : c));
+    onSiteChange({ footer_columns: next });
+  };
+  const addColumn = () => {
+    onSiteChange({ footer_columns: [...columns, { heading: "Section", links: [{ label: "Link", href: "/" }] }] });
+  };
+  const removeColumn = (idx: number) => {
+    onSiteChange({ footer_columns: columns.filter((_, i) => i !== idx) });
+  };
+  const updateColLink = (ci: number, li: number, patch: Partial<{ label: string; href: string }>) => {
+    const col = columns[ci];
+    if (!col) return;
+    const links = (col.links ?? []).map((l, i) => (i === li ? { ...l, ...patch } : l));
+    updateColumn(ci, { links });
+  };
+  const addColLink = (ci: number) => {
+    const col = columns[ci];
+    if (!col) return;
+    updateColumn(ci, { links: [...(col.links ?? []), { label: "Link", href: "/" }] });
+  };
+  const removeColLink = (ci: number, li: number) => {
+    const col = columns[ci];
+    if (!col) return;
+    updateColumn(ci, { links: (col.links ?? []).filter((_, i) => i !== li) });
+  };
+
   const toggleSocial = (key: string) => {
-    // Build the current "active" set. If no filter is set, treat all configured
-    // socials as visible — that way clicking off one immediately filters it out.
     const allConfigured = FOOTER_SOCIAL_KEYS
       .filter((s2) => !!(site as any)?.[s2.urlField])
       .map((s2) => s2.key);
@@ -2444,25 +2479,71 @@ const FooterSubPanel = ({
     const next = current.includes(key)
       ? current.filter((k) => k !== key)
       : [...current, key];
-    // If the result equals the full set, clear filter to mean "show all".
     const sameAsAll =
       next.length === allConfigured.length &&
       allConfigured.every((k) => next.includes(k));
     onSiteChange({ footer_visible_socials: sameAsAll ? null : next });
   };
 
+  const SegBtn = ({ value, current, onClick, label }: { value: string; current: string; onClick: () => void; label: string }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex-1 px-2 py-1.5 text-[11px] rounded-md border transition-colors",
+        value === current
+          ? "border-foreground bg-foreground text-background"
+          : "border-border bg-background text-foreground hover:bg-muted",
+      )}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div className="space-y-5">
-      {/* Identity */}
+      {/* Layout */}
       <section className="space-y-3">
         <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
-          Identity
+          Layout
+        </h4>
+        <div className="grid grid-cols-2 gap-2">
+          <SegBtn value="minimal" current={layout} onClick={() => onSiteChange({ footer_layout: "minimal" })} label="Minimal" />
+          <SegBtn value="columns" current={layout} onClick={() => onSiteChange({ footer_layout: "columns" })} label="Columns" />
+          <SegBtn value="split" current={layout} onClick={() => onSiteChange({ footer_layout: "split" })} label="Split" />
+          <SegBtn value="stacked" current={layout} onClick={() => onSiteChange({ footer_layout: "stacked" })} label="Stacked" />
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Minimal: tudo centralizado. Columns: grid de seções. Split: logo à esquerda + colunas à direita. Stacked: logo no topo, seções abaixo.
+        </p>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Alignment */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Alignment
+        </h4>
+        <div className="flex gap-2">
+          <SegBtn value="left" current={alignment} onClick={() => onSiteChange({ footer_alignment: "left" })} label="Left" />
+          <SegBtn value="center" current={alignment} onClick={() => onSiteChange({ footer_alignment: "center" })} label="Center" />
+          <SegBtn value="right" current={alignment} onClick={() => onSiteChange({ footer_alignment: "right" })} label="Right" />
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Identity (Logo) */}
+      <section className="space-y-3">
+        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+          Logo / Studio name
         </h4>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-foreground">Show logo / studio name</p>
+            <p className="text-sm text-foreground">Show logo</p>
             <p className="text-[11px] text-muted-foreground">
-              Displays your logo image, or the studio name as fallback.
+              Displays your logo image, or studio name as fallback.
             </p>
           </div>
           <Switch
@@ -2470,6 +2551,166 @@ const FooterSubPanel = ({
             onCheckedChange={(checked) => onSiteChange({ footer_show_logo: checked })}
           />
         </div>
+        {showLogo && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-muted-foreground">Logo position</p>
+            <div className="flex gap-2">
+              <SegBtn value="left" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "left" })} label="Left" />
+              <SegBtn value="center" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "center" })} label="Center" />
+              <SegBtn value="right" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "right" })} label="Right" />
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Tagline */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Tagline
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Short description shown next to your logo.
+            </p>
+          </div>
+          <Switch
+            checked={showTagline}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_tagline: checked })}
+          />
+        </div>
+        {showTagline && (
+          <Input
+            value={tagline}
+            onChange={(e) => onSiteChange({ footer_tagline: e.target.value })}
+            placeholder="Capturando momentos, criando memórias."
+            className="h-9 text-sm"
+          />
+        )}
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Vertical menu */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Vertical menu
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Lista os links principais do menu (páginas top-level).
+            </p>
+          </div>
+          <Switch
+            checked={showNav}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_nav: checked })}
+          />
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Sitemap */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Sitemap
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Lista todas as páginas (incluindo subpáginas).
+            </p>
+          </div>
+          <Switch
+            checked={showSitemap}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_sitemap: checked })}
+          />
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Contact info */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Contact info
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Mostra e-mail e WhatsApp como bloco de contato.
+            </p>
+          </div>
+          <Switch
+            checked={showContactInfo}
+            onCheckedChange={(checked) => onSiteChange({ footer_show_contact_info: checked })}
+          />
+        </div>
+      </section>
+
+      <div className="h-px bg-border" />
+
+      {/* Custom columns */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
+              Custom columns
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Adicione blocos com título e links (Recursos, Legal, etc).
+            </p>
+          </div>
+          <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={addColumn}>
+            <Plus className="h-3 w-3 mr-1" /> Add
+          </Button>
+        </div>
+        {columns.length > 0 && (
+          <div className="space-y-3">
+            {columns.map((col, ci) => (
+              <div key={ci} className="rounded-md border border-border p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={col.heading}
+                    onChange={(e) => updateColumn(ci, { heading: e.target.value })}
+                    placeholder="Heading"
+                    className="h-8 text-xs flex-1"
+                  />
+                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeColumn(ci)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+                <div className="space-y-1.5">
+                  {(col.links ?? []).map((l, li) => (
+                    <div key={li} className="flex items-center gap-1.5">
+                      <Input
+                        value={l.label}
+                        onChange={(e) => updateColLink(ci, li, { label: e.target.value })}
+                        placeholder="Label"
+                        className="h-7 text-[11px] flex-1"
+                      />
+                      <Input
+                        value={l.href}
+                        onChange={(e) => updateColLink(ci, li, { href: e.target.value })}
+                        placeholder="https:// or /page"
+                        className="h-7 text-[11px] flex-1"
+                      />
+                      <Button type="button" size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeColLink(ci, li)}>
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] w-full justify-start" onClick={() => addColLink(ci)}>
+                    <Plus className="h-3 w-3 mr-1" /> Add link
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="h-px bg-border" />
@@ -2477,7 +2718,7 @@ const FooterSubPanel = ({
       {/* Footer text */}
       <section className="space-y-2">
         <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
-          Footer text
+          Copyright text
         </h4>
         <Input
           value={(site as any)?.footer_text ?? (site as any)?.footerText ?? ""}
@@ -2485,9 +2726,6 @@ const FooterSubPanel = ({
           placeholder={`© ${new Date().getFullYear()} ${displayName || "Studio"}`}
           className="h-9 text-sm"
         />
-        <p className="text-[11px] text-muted-foreground">
-          Shown centered at the bottom — typically a copyright line.
-        </p>
       </section>
 
       <div className="h-px bg-border" />

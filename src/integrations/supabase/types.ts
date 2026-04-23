@@ -2517,10 +2517,19 @@ export type Database = {
           facebook_pixel_id: string | null
           facebook_url: string | null
           favicon_url: string | null
+          footer_alignment: string | null
           footer_bg_color: string | null
+          footer_columns: Json | null
+          footer_layout: string | null
+          footer_logo_position: string | null
           footer_preset: string | null
+          footer_show_contact_info: boolean | null
           footer_show_logo: boolean | null
+          footer_show_nav: boolean | null
+          footer_show_sitemap: boolean | null
           footer_show_socials: boolean | null
+          footer_show_tagline: boolean | null
+          footer_tagline: string | null
           footer_text: string | null
           footer_text_color: string | null
           footer_visible_socials: Json | null
@@ -2600,10 +2609,19 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_alignment?: string | null
           footer_bg_color?: string | null
+          footer_columns?: Json | null
+          footer_layout?: string | null
+          footer_logo_position?: string | null
           footer_preset?: string | null
+          footer_show_contact_info?: boolean | null
           footer_show_logo?: boolean | null
+          footer_show_nav?: boolean | null
+          footer_show_sitemap?: boolean | null
           footer_show_socials?: boolean | null
+          footer_show_tagline?: boolean | null
+          footer_tagline?: string | null
           footer_text?: string | null
           footer_text_color?: string | null
           footer_visible_socials?: Json | null
@@ -2683,10 +2701,19 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          footer_alignment?: string | null
           footer_bg_color?: string | null
+          footer_columns?: Json | null
+          footer_layout?: string | null
+          footer_logo_position?: string | null
           footer_preset?: string | null
+          footer_show_contact_info?: boolean | null
           footer_show_logo?: boolean | null
+          footer_show_nav?: boolean | null
+          footer_show_sitemap?: boolean | null
           footer_show_socials?: boolean | null
+          footer_show_tagline?: boolean | null
+          footer_tagline?: string | null
           footer_text?: string | null
           footer_text_color?: string | null
           footer_visible_socials?: Json | null
