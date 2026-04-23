@@ -1734,3 +1734,96 @@ function MapBlock({ address, height = 400 }: any) {
     </section>
   );
 }
+
+// ─── Shop Block (sessions + galleries grid) ─────────────────────────────────
+import ShopGrid from "@/components/store/ShopGrid";
+import { supabase } from "@/integrations/supabase/client";
+
+function ShopBlock({
+  title,
+  subtitle,
+  layout = "grid-3",
+  showSessions = true,
+  showGalleries = true,
+  showPrice = true,
+  ctaLabel,
+  limit,
+  photographerId,
+}: any) {
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [galleries, setGalleries] = useState<any[]>([]);
+  const [storeSlug, setStoreSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!photographerId) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: ses }, { data: gal }, { data: ph }] = await Promise.all([
+        (supabase as any)
+          .from("sessions")
+          .select("id, slug, title, price, cover_image_url")
+          .eq("photographer_id", photographerId)
+          .eq("status", "active")
+          .neq("hide_from_store", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("galleries")
+          .select("id, slug, title, category, cover_image_url, price_per_photo")
+          .eq("photographer_id", photographerId)
+          .eq("status", "published")
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("photographers")
+          .select("store_slug, custom_domain")
+          .eq("id", photographerId)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setSessions(ses ?? []);
+      setGalleries(gal ?? []);
+      setStoreSlug((ph as any)?.store_slug ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [photographerId]);
+
+  const onCustomDomain = typeof window !== "undefined" &&
+    !window.location.hostname.includes("lovable") &&
+    !window.location.pathname.startsWith("/store/");
+
+  const sessionHref = (s: any) =>
+    onCustomDomain ? `/book/${s.slug ?? s.id}` : `/store/${storeSlug}/${s.slug ?? s.id}`;
+  const galleryHref = (g: any) => `/gallery/${g.slug ?? g.id}`;
+
+  return (
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
+      <div className="max-w-6xl mx-auto">
+        {(title || subtitle) && (
+          <header className="text-center mb-8 sm:mb-10">
+            {title && (
+              <h2 className="text-2xl sm:text-3xl font-extralight tracking-[0.08em] uppercase mb-2">
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="text-sm font-light text-muted-foreground max-w-xl mx-auto">{subtitle}</p>
+            )}
+          </header>
+        )}
+        <ShopGrid
+          sessions={sessions}
+          galleries={galleries}
+          layout={layout}
+          showFilters
+          showPrice={showPrice}
+          showSessions={showSessions}
+          showGalleries={showGalleries}
+          ctaLabel={ctaLabel}
+          limit={limit}
+          sessionHref={sessionHref}
+          galleryHref={galleryHref}
+        />
+      </div>
+    </section>
+  );
+}
+
