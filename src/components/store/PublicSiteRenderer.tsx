@@ -601,6 +601,7 @@ function SharedFooter({
   navLinks?: NavLinkItem[];
   photographerEmail?: string | null;
 }) {
+  const { t } = useLanguage();
   const showSocials = site?.footer_show_socials ?? true;
   const showLogo = site?.footer_show_logo ?? false;
   const bgColor = site?.footer_bg_color ?? null;
