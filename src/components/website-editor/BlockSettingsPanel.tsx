@@ -80,10 +80,43 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
 }
 
 function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  const align = props.align || "center";
   return (
-    <Field label="Body">
-      <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[120px]" placeholder="Write your content here..." />
-    </Field>
+    <div className="space-y-3">
+      <Field label="Title (optional)">
+        <Input
+          value={props.title || ""}
+          onChange={(e) => onChange({ ...props, title: e.target.value })}
+          className="h-9 text-sm"
+          placeholder="e.g. Timeless & Minimalist Maternity..."
+        />
+      </Field>
+      <Field label="Subtitle (optional)">
+        <Input
+          value={props.subtitle || ""}
+          onChange={(e) => onChange({ ...props, subtitle: e.target.value })}
+          className="h-9 text-sm"
+          placeholder="e.g. Serving Houston, Sugar Land..."
+        />
+      </Field>
+      <Field label="Body">
+        <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[120px]" placeholder="Write your content here..." />
+      </Field>
+      <Field label="Alignment">
+        <div className="flex gap-1">
+          {(["left", "center", "right"] as const).map((a) => (
+            <button
+              key={a}
+              type="button"
+              onClick={() => onChange({ ...props, align: a })}
+              className={`flex-1 h-8 text-xs rounded border capitalize ${align === a ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:bg-muted"}`}
+            >
+              {a}
+            </button>
+          ))}
+        </div>
+      </Field>
+    </div>
   );
 }
 
