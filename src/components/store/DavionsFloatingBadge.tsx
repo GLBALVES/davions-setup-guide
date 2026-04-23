@@ -13,13 +13,16 @@ export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Made with Davions"
-      className="fixed bottom-4 right-4 z-[60] inline-flex items-center justify-center rounded-full hover:shadow-lg transition-shadow"
+      className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-background/95 backdrop-blur-md pl-3 pr-4 py-1.5 shadow-lg border border-border hover:bg-background transition-colors"
     >
       <img
         src={davionsBadge}
-        alt="Davions"
-        className="h-10 w-10 object-contain"
+        alt=""
+        className="h-5 w-5 object-contain"
       />
+      <span className="text-xs font-medium text-foreground whitespace-nowrap">
+        Made with Davions
+      </span>
     </a>
   );
 }
