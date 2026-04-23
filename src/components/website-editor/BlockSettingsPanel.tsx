@@ -208,10 +208,10 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
                 folder="gallery"
               />
               <Field label="Title (optional)">
-                <Input value={item.title || ""} onChange={(e) => update({ title: e.target.value })} className="h-9 text-sm" placeholder="Image title" />
+                <RichTextField value={item.title || ""} onChange={(v) => update({ title: v })} placeholder="Image title" />
               </Field>
               <Field label="Caption (optional)">
-                <Textarea value={item.caption || ""} onChange={(e) => update({ caption: e.target.value })} className="text-sm min-h-[60px]" placeholder="Short description" />
+                <RichTextField multiline value={item.caption || ""} onChange={(v) => update({ caption: v })} placeholder="Short description" />
               </Field>
               <Field label="Link URL (optional)">
                 <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
@@ -274,10 +274,10 @@ function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }:
                 />
               </Field>
               <Field label="Title">
-                <Input value={item.title || ""} onChange={(e) => update({ title: e.target.value })} className="h-9 text-sm" placeholder="Slide title" />
+                <RichTextField value={item.title || ""} onChange={(v) => update({ title: v })} placeholder="Slide title" />
               </Field>
               <Field label="Caption">
-                <Textarea value={item.caption || ""} onChange={(e) => update({ caption: e.target.value })} className="text-sm min-h-[60px]" placeholder="Short description shown on the slide" />
+                <RichTextField multiline value={item.caption || ""} onChange={(v) => update({ caption: v })} placeholder="Short description shown on the slide" />
               </Field>
               <Field label="Link URL (optional)">
                 <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://… or #section" />
@@ -330,7 +330,7 @@ function LogoStripContentEditor({ props, onChange, photographerId }: { props: an
   return (
     <div className="space-y-3">
       <Field label="Title">
-        <Input value={props.title || ""} onChange={(e) => onChange({ ...props, title: e.target.value })} className="h-9 text-sm" placeholder="As Seen On" />
+        <RichTextField value={props.title || ""} onChange={(v) => onChange({ ...props, title: v })} placeholder="As Seen On" />
       </Field>
       <Field label="Logos">
         <ItemListEditor
@@ -375,10 +375,10 @@ function FaqContentEditor({ props, onChange }: { props: any; onChange: (p: any) 
       renderDetail={(item, update) => (
         <div className="space-y-2">
           <Field label="Question">
-            <Input value={item.question} onChange={(e) => update({ question: e.target.value })} className="h-9 text-sm" placeholder="Question" />
+            <RichTextField value={item.question} onChange={(v) => update({ question: v })} placeholder="Question" />
           </Field>
           <Field label="Answer">
-            <Textarea value={item.answer} onChange={(e) => update({ answer: e.target.value })} className="text-sm min-h-[100px]" placeholder="Answer" />
+            <RichTextField multiline value={item.answer} onChange={(v) => update({ answer: v })} placeholder="Answer" />
           </Field>
         </div>
       )}
@@ -399,10 +399,10 @@ function StatsContentEditor({ props, onChange }: { props: any; onChange: (p: any
       renderDetail={(item, update) => (
         <div className="space-y-2">
           <Field label="Value">
-            <Input value={item.value} onChange={(e) => update({ value: e.target.value })} className="h-9 text-sm" placeholder="500+" />
+            <RichTextField value={item.value} onChange={(v) => update({ value: v })} placeholder="500+" />
           </Field>
           <Field label="Label">
-            <Input value={item.label} onChange={(e) => update({ label: e.target.value })} className="h-9 text-sm" placeholder="Sessions" />
+            <RichTextField value={item.label} onChange={(v) => update({ label: v })} placeholder="Sessions" />
           </Field>
         </div>
       )}
@@ -423,13 +423,13 @@ function TestimonialsContentEditor({ props, onChange }: { props: any; onChange: 
       renderDetail={(item, update) => (
         <div className="space-y-2">
           <Field label="Quote">
-            <Textarea value={item.quote} onChange={(e) => update({ quote: e.target.value })} className="text-sm min-h-[100px]" placeholder="Testimonial quote..." />
+            <RichTextField multiline value={item.quote} onChange={(v) => update({ quote: v })} placeholder="Testimonial quote..." />
           </Field>
           <Field label="Author">
-            <Input value={item.author} onChange={(e) => update({ author: e.target.value })} className="h-9 text-sm" placeholder="Name" />
+            <RichTextField value={item.author} onChange={(v) => update({ author: v })} placeholder="Name" />
           </Field>
           <Field label="Role">
-            <Input value={item.role} onChange={(e) => update({ role: e.target.value })} className="h-9 text-sm" placeholder="Role / Company" />
+            <RichTextField value={item.role} onChange={(v) => update({ role: v })} placeholder="Role / Company" />
           </Field>
         </div>
       )}
