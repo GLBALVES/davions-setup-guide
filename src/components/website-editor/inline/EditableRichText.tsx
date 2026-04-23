@@ -103,7 +103,8 @@ export default function EditableRichText({
       onInput={handleInput}
       onBlur={commit}
       onPaste={handlePaste}
-      onClick={(e) => e.stopPropagation()}
+      // Allow click to bubble to the parent block so its settings panel opens
+      // in the sidebar when the user clicks any text inside it.
       className={cn(
         "prose prose-sm max-w-none dark:prose-invert",
         "outline-none focus:ring-2 focus:ring-primary/40 rounded-sm transition-all",
