@@ -1184,6 +1184,27 @@ function VideoBlock({ url }: any) {
     );
   }
 
+  // Native video files (.mp4, .webm, .mov, .ogg, .m4v) → use HTML5 <video>
+  // with controlsList to hide download/fullscreen/picture-in-picture, leaving
+  // essentially just play and volume controls.
+  const isNativeVideo = /\.(mp4|webm|mov|ogg|m4v)(\?.*)?$/i.test(url);
+  if (isNativeVideo) {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-4xl mx-auto aspect-video overflow-hidden rounded bg-black">
+          <video
+            src={url}
+            controls
+            controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablePictureInPicture
+            playsInline
+            className="w-full h-full"
+          />
+        </div>
+      </section>
+    );
+  }
+
   // Convert YouTube/Vimeo URLs to embed with minimal chrome
   // (hides title, share/watch-later buttons, related videos, video annotations,
   // keyboard shortcuts and the YouTube logo as much as the players allow)
