@@ -13,12 +13,12 @@ export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Made with Davions"
-      className="fixed bottom-4 right-4 z-[60] inline-flex items-center justify-center rounded-full bg-foreground/90 backdrop-blur-md p-2 shadow-lg hover:bg-foreground transition-colors"
+      className="fixed bottom-4 right-4 z-[60] inline-flex items-center justify-center rounded-full hover:shadow-lg transition-shadow"
     >
       <img
         src={davionsBadge}
         alt="Davions"
-        className="h-6 w-6 object-contain invert"
+        className="h-10 w-10 object-contain"
       />
     </a>
   );
