@@ -3,6 +3,8 @@
  * shown on every published page unless the photographer has hidden it via
  * Footer settings (hide_branding = true).
  */
+import davionsBadge from "@/assets/davions-badge.png";
+
 export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
   if (hidden) return null;
   return (
@@ -10,15 +12,14 @@ export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
       href="https://davions.com?ref=badge"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-1.5 rounded-full bg-foreground/90 text-background backdrop-blur-md px-3 py-1.5 text-[10px] font-medium tracking-wide shadow-lg hover:bg-foreground transition-colors"
-      style={{ fontFamily: "Inter, system-ui, sans-serif" }}
+      aria-label="Made with Davions"
+      className="fixed bottom-4 right-4 z-[60] inline-flex items-center justify-center rounded-full bg-foreground/90 backdrop-blur-md p-2 shadow-lg hover:bg-foreground transition-colors"
     >
       <img
-        src="https://davions.com/favicon.png"
-        alt=""
-        className="h-3.5 w-3.5 rounded-sm object-contain"
+        src={davionsBadge}
+        alt="Davions"
+        className="h-6 w-6 object-contain invert"
       />
-      <span>Made with <span className="font-semibold">Davions</span></span>
     </a>
   );
 }
