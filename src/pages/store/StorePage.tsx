@@ -68,7 +68,7 @@ const StorePage = () => {
       const [{ data: siteData }, { data: sessionData }, { data: galleryData }, { data: pagesData }] = await Promise.all([
         supabase
           .from("photographer_site")
-          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, logo_alt_url, logo_text, logo_size, hide_branding, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text, header_bg_color, header_text_color, header_visible_socials, footer_bg_color, footer_text_color, footer_show_logo, footer_show_socials, footer_visible_socials, footer_preset, footer_layout, footer_logo_position, footer_alignment, footer_show_nav, footer_show_sitemap, footer_show_contact_info, footer_show_tagline, footer_tagline, footer_columns, hero_bg_color, hero_text_color, sessions_bg_color, sessions_text_color, portfolio_bg_color, portfolio_text_color, about_bg_color, about_text_color, quote_bg_color, quote_text_color, experience_bg_color, experience_text_color, contact_bg_color, contact_text_color, testimonials_bg_color, testimonials_text_color, button_style, button_shape, button_size, button_height, button_width")
+          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, logo_alt_url, logo_text, logo_size, hide_branding, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text, header_bg_color, header_text_color, header_visible_socials, footer_bg_color, footer_text_color, footer_show_logo, footer_show_socials, footer_visible_socials, footer_preset, footer_layout, footer_logo_position, footer_alignment, footer_show_nav, footer_show_sitemap, footer_show_contact_info, footer_show_tagline, footer_tagline, footer_columns, hero_bg_color, hero_text_color, sessions_bg_color, sessions_text_color, portfolio_bg_color, portfolio_text_color, about_bg_color, about_text_color, quote_bg_color, quote_text_color, experience_bg_color, experience_text_color, contact_bg_color, contact_text_color, testimonials_bg_color, testimonials_text_color, button_style, button_shape, button_size, button_height, button_width, shop_title, shop_description, shop_show_sessions, shop_show_galleries, shop_layout")
           .eq("photographer_id", photoData.id)
           .maybeSingle(),
         (supabase as any)
@@ -123,7 +123,7 @@ const StorePage = () => {
       });
 
       setPhotographer(photoData as Photographer);
-      setSite(siteData as SiteConfig ?? null);
+      setSite((siteData as unknown as SiteConfig) ?? null);
       setSessions((sessionData ?? []).map((s: any) => ({
         ...s,
         category: s.session_types?.name ?? null,

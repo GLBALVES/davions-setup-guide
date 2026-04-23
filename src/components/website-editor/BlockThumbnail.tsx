@@ -354,6 +354,19 @@ export default function BlockThumbnail({ type, className }: BlockThumbnailProps)
         </Frame>
       );
 
+    case "shop":
+      return wrapper(
+        <Frame>
+          {[0, 1, 2].map((c) => (
+            <g key={c}>
+              <rect x={6 + c * 30} y="10" width="26" height="22" fill="hsl(var(--muted))" stroke={FG} opacity={0.7} />
+              <rect x={6 + c * 30} y="36" width="18" height="2.5" fill={FG} opacity={0.55} stroke="none" />
+              <rect x={6 + c * 30} y="42" width="10" height="2" fill={FG} opacity={0.35} stroke="none" />
+            </g>
+          ))}
+        </Frame>
+      );
+
     default:
       return wrapper(
         <Frame>

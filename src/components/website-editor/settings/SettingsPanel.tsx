@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TrackingModal from "./TrackingModal";
 import AdvancedModal from "./AdvancedModal";
@@ -11,8 +11,9 @@ import DraftsSubPanel from "./DraftsSubPanel";
 import TrashSubPanel from "./TrashSubPanel";
 import FormSubmissionsSubPanel from "./FormSubmissionsSubPanel";
 import LegalSubPanel from "./LegalSubPanel";
+import ShopSubPanel from "./ShopSubPanel";
 
-type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal";
+type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal" | "shop";
 
 export default function SettingsPanel({
   photographerId,
@@ -37,6 +38,7 @@ export default function SettingsPanel({
       trash: "Trash",
       forms: "Form Submissions",
       legal: "Legal",
+      shop: "Shop",
     };
     return (
       <div className="flex flex-col h-full">
@@ -57,6 +59,7 @@ export default function SettingsPanel({
           {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
           {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
           {view === "legal" && <LegalSubPanel site={site} onSiteChange={onSiteChange} />}
+          {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
         </div>
       </div>
     );
@@ -72,6 +75,7 @@ export default function SettingsPanel({
         {/* SITE SETTINGS */}
         <Section title="Site Settings">
           <Item icon={Globe} label="Domain" onClick={() => navigate("/dashboard/website")} />
+          <Item icon={Store} label="Shop" onClick={() => setView("shop")} />
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
           <Item icon={Share2} label="Social" onClick={() => setView("social")} />

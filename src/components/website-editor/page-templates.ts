@@ -27,7 +27,8 @@ export type SectionType =
   | "instagram-feed"
   | "social-links"
   | "embed"
-  | "logo-strip";
+  | "logo-strip"
+  | "shop";
 
 export interface PageSection {
   id: string;

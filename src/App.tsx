@@ -90,6 +90,7 @@ import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import PublicLegalPage from "./pages/store/PublicLegalPage";
+import PublicShopPage from "./pages/store/PublicShopPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -122,6 +123,7 @@ const App = () => {
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/terms" element={<PublicLegalPage kind="terms" mode="custom-domain" />} />
                 <Route path="/privacy" element={<PublicLegalPage kind="privacy" mode="custom-domain" />} />
+                <Route path="/shop" element={<PublicShopPage mode="custom-domain" />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
             ) : (
@@ -135,6 +137,7 @@ const App = () => {
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/store/:slug" element={<StorePage />} />
+                <Route path="/store/:slug/shop" element={<PublicShopPage mode="store" />} />
                 <Route path="/store/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
                 <Route path="/store/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
                 <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
