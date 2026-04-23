@@ -3101,6 +3101,10 @@ const StylePanel = ({ photographerId, site, onSiteChange }: {
             </div>
           )}
 
+          {sub === "footer" && (
+            <FooterSubPanel site={site} onSiteChange={onSiteChange} displayName={site?.displayName} />
+          )}
+
           {sub === "animations" && (
             <ComingSoon
               title="Animations"
