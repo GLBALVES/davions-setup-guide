@@ -1695,7 +1695,7 @@ function buildBlockMap(
   // in editor mode where visibleSections doesn't include "footer"
   const logoUrl = site?.logo_url ?? null;
   const footer: React.ReactNode = (
-    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={logoUrl} /></div>
+    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={logoUrl} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
   );
 
   return { hero, quote, sessions: sessionsBlock, experience, portfolio, about, testimonials, footer };
@@ -1720,7 +1720,7 @@ function EditorialTemplate({ props, derived }: { props: Props; derived: ReturnTy
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1744,7 +1744,7 @@ function GridTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1768,7 +1768,7 @@ function MagazineTemplate({ props, derived }: { props: Props; derived: ReturnTyp
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1792,7 +1792,7 @@ function CleanTemplate({ props, derived }: { props: Props; derived: ReturnType<t
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1854,7 +1854,7 @@ function SierraTemplate({ props, derived }: { props: Props; derived: ReturnType<
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1924,7 +1924,7 @@ function CanvasTemplate({ props, derived }: { props: Props; derived: ReturnType<
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -1986,7 +1986,7 @@ function AveryTemplate({ props, derived }: { props: Props; derived: ReturnType<t
       {/* Main content */}
       <main className="flex-1 md:ml-[220px] pt-14 md:pt-0">
         {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-        <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+        <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
       </main>
     </div>
   );
@@ -2040,7 +2040,7 @@ function SevilleTemplate({ props, derived }: { props: Props; derived: ReturnType
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -2102,7 +2102,7 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
         displayName={displayName} logoUrl={site?.logo_url ?? null} accentColor={accentColor}
         navLinks={navLinks} showBooking={showBooking} ctaText={ctaText} onNavClick={handleNavClick} site={site} />
       {orderedKeys.map((key) => (blocks as any)[key] ?? null)}
-      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} /></div>
+      <div data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={site?.logo_url ?? null} navLinks={navLinks} photographerEmail={photographer?.email ?? null} /></div>
     </div>
   );
 }
@@ -2217,7 +2217,7 @@ export default function PublicSiteRenderer(props: Props) {
               </div>
             )}
           </div>
-          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={photographer?.email ?? null} />
         </div>
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
@@ -2261,7 +2261,7 @@ export default function PublicSiteRenderer(props: Props) {
               </p>
             </section>
           </main>
-          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={photographer?.email ?? null} />
         </div>
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
@@ -2314,7 +2314,7 @@ export default function PublicSiteRenderer(props: Props) {
           <div className={headerConfig ? "" : forceOpaque ? "pt-16" : ""}>
             <SectionRenderer sections={props.pageSections} accentColor={accentColor} photographerId={props.photographer?.id ?? null} />
           </div>
-          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={photographer?.email ?? null} />
         </div>
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
