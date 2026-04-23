@@ -221,16 +221,18 @@ function SectionBlock({
   accentColor,
   editMode,
   edit,
+  photographerId,
 }: {
   section: PageSection;
   accentColor: string;
   editMode: boolean;
   edit?: EditContext;
+  photographerId?: string | null;
 }) {
   const p = section.props || {};
   // bound setter for this section
   const set = (path: string, value: any) => edit?.onPropChange(section.id, path, value);
-  const ctx = { editMode, set, photographerId: edit?.photographerId };
+  const ctx = { editMode, set, photographerId: photographerId ?? edit?.photographerId ?? null };
 
   const inner = (() => {
     switch (section.type) {
