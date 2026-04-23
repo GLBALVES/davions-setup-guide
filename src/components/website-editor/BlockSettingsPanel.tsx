@@ -191,8 +191,39 @@ function ContactFormContentEditor({ props, onChange }: { props: any; onChange: (
 }
 
 function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+  const { user } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setError(null);
+    if (file.size > 100 * 1024 * 1024) {
+      setError("File too large (max 100MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ext = file.name.split(".").pop() || "mp4";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("site-videos")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("site-videos").getPublicUrl(path);
+      onChange({ ...props, url: data.publicUrl });
+    } catch (err: any) {
+      setError(err?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <Field label="Video URL (YouTube, Vimeo or .mp4/.webm)">
         <Input
           value={props.url || ""}
@@ -201,8 +232,41 @@ function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any
           placeholder="https://youtube.com/... or https://your-cdn.com/video.mp4"
         />
       </Field>
+
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">or upload</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      <Field label="Upload video file (max 100MB)">
+        <label
+          className={cn(
+            "flex h-9 cursor-pointer items-center justify-center rounded-md border border-dashed border-border bg-background px-3 text-xs text-muted-foreground transition hover:bg-accent hover:text-accent-foreground",
+            uploading && "pointer-events-none opacity-60"
+          )}
+        >
+          <input
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime,video/ogg"
+            className="hidden"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
+          {uploading ? "Uploading…" : "Choose video file (.mp4, .webm, .mov)"}
+        </label>
+      </Field>
+
+      {error && <p className="text-[11px] text-destructive">{error}</p>}
+
+      {props.url && /supabase.*site-videos/i.test(props.url) && (
+        <p className="text-[11px] text-emerald-600 leading-relaxed">
+          ✓ Uploaded video in use. Edit the URL above to switch to YouTube/Vimeo.
+        </p>
+      )}
+
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Tip: paste a direct .mp4 / .webm link to use the native player with only play & volume (no titles, branding or related videos).
+        Tip: uploading a file (or pasting a direct .mp4/.webm link) uses a clean native player with only play & volume — no titles, branding or related videos.
       </p>
     </div>
   );
