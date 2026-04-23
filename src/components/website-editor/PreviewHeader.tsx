@@ -161,6 +161,7 @@ export default function PreviewHeader({
           href={link.url || "#"}
           target={newTab ? "_blank" : "_self"}
           rel={newTab ? "noopener noreferrer" : undefined}
+          onClick={(e) => { if (editMode) e.stopPropagation(); }}
           className="text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70"
           style={{ color }}
         >
@@ -171,7 +172,7 @@ export default function PreviewHeader({
     return (
       <button
         key={link.id}
-        onClick={() => onNavigatePage?.(link.id)}
+        onClick={(e) => { if (editMode) e.stopPropagation(); onNavigatePage?.(link.id); }}
         className={cn(
           "text-[11px] tracking-[0.25em] uppercase font-light transition-opacity hover:opacity-70",
           activePageId === link.id && "underline underline-offset-4"
