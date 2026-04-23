@@ -186,11 +186,35 @@ export default function PreviewHeader({
   };
 
   // Nav-only render: no slides on this page → render just a compact menu bar.
+  // Detect logo luminance to auto-pick a contrasting background.
+  // - Logo claro (lum > 0.6) → fundo escuro, texto claro
+  // - Logo escuro (lum < 0.4) → fundo claro, texto escuro
+  // - Sem logo / tons médios / falha → tema padrão (background/foreground)
+  const detectedLum = useImageLuminance(activeLogoUrl || null);
   if (navOnlyMode) {
-    const navFg = "hsl(var(--foreground))";
+    let navBg = "hsl(var(--background))";
+    let navFg = "hsl(var(--foreground))";
+    let navBorder = "hsl(var(--border))";
+    let mobilePanelBg = "hsl(var(--background))";
+    if (activeLogoUrl && detectedLum !== null) {
+      if (detectedLum > 0.6) {
+        // light logo → dark header
+        navBg = "#111111";
+        navFg = "#ffffff";
+        navBorder = "rgba(255,255,255,0.12)";
+        mobilePanelBg = "#111111";
+      } else if (detectedLum < 0.4) {
+        // dark logo → light header
+        navBg = "#ffffff";
+        navFg = "#111111";
+        navBorder = "rgba(0,0,0,0.10)";
+        mobilePanelBg = "#ffffff";
+      }
+    }
     return (
       <header
-        className="relative w-full bg-background border-b border-border"
+        className="relative w-full"
+        style={{ backgroundColor: navBg, borderBottom: `1px solid ${navBorder}` }}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
         onClick={() => editMode && onEditHeader?.()}
