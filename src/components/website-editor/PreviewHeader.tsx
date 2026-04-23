@@ -78,6 +78,16 @@ export default function PreviewHeader({
   const slides = validSlides;
 
   const [index, setIndex] = useState(0);
+  const [hovering, setHovering] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const activeSlide = slides[index] || slides[0];
+  const showSlideCta = !!activeSlide?.buttonText;
+  const activeSlideTint = activeSlide?.backgroundTint ?? 0;
+
+  // Reset index when slide count changes
+  useEffect(() => {
+    setIndex(0);
+  }, [slides.length]);
 
   // Reset index when slide count changes
   useEffect(() => {
