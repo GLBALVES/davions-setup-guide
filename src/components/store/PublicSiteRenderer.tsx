@@ -837,7 +837,7 @@ function SharedFooter({
               {renderColumns()}
             </div>
           </div>
-          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+          <div className="border-t border-current/10 pt-6">{bottomBlock}</div>
         </div>
       </footer>
     );
@@ -855,7 +855,7 @@ function SharedFooter({
             </div>
             {renderColumns()}
           </div>
-          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+          <div className="border-t border-current/10 pt-6">{bottomBlock}</div>
         </div>
       </footer>
     );
@@ -871,7 +871,7 @@ function SharedFooter({
             {renderColumns()}
           </div>
           {socialBlock}
-          {copyrightBlock}
+          {bottomBlock}
         </div>
       </footer>
     );
@@ -889,7 +889,7 @@ function SharedFooter({
             {renderColumns()}
           </div>
         )}
-        {copyrightBlock}
+        {bottomBlock}
       </div>
     </footer>
   );
