@@ -317,13 +317,6 @@ function PreviewFooter({
         <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80">{text}</p>
       </div>
 
-      {/* Floating Davions badge — matches the published site */}
-      {!hideBranding && (
-        <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-foreground/90 text-background px-2.5 py-1 text-[9px] font-medium tracking-wide shadow">
-          <span>Made with <span className="font-semibold">Davions</span></span>
-        </div>
-      )}
-
       {editMode && (
         <div className="absolute top-2 right-3 opacity-0 group-hover/footer:opacity-100 transition-opacity pointer-events-none">
           <span className="text-[10px] tracking-widest uppercase bg-primary text-primary-foreground px-2 py-1 rounded">
@@ -593,8 +586,10 @@ export default function PreviewRenderer({
     }
   };
 
+  const hideBranding: boolean = (site as any)?.hideBranding ?? (site as any)?.hide_branding ?? false;
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="relative flex flex-col h-full">
       {/* Viewport toolbar */}
       <div className="h-10 border-b border-border bg-card flex items-center justify-center gap-1 shrink-0">
         {([
@@ -788,6 +783,21 @@ export default function PreviewRenderer({
           {showHeaderFooter && <PreviewFooter site={site} editMode={editMode} onEdit={onEditFooter} />}
         </div>
       </div>
+
+      {/* Floating Davions badge — overlays the entire preview viewport */}
+      {!hideBranding && (
+        <a
+          href="https://davions.com?ref=badge"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-4 right-4 z-50 inline-flex items-center gap-1.5 rounded-full bg-foreground/90 text-background backdrop-blur-md px-3 py-1.5 text-[10px] font-medium tracking-wide shadow-lg hover:bg-foreground transition-colors"
+          style={{ fontFamily: "Inter, system-ui, sans-serif" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img src="/favicon.png" alt="" className="h-3.5 w-3.5 rounded-sm object-contain" />
+          <span>Made with <span className="font-semibold">Davions</span></span>
+        </a>
+      )}
     </div>
   );
 }
