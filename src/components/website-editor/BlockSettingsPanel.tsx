@@ -86,23 +86,21 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   return (
     <div className="space-y-3">
       <Field label="Title (optional)">
-        <Input
+        <RichTextField
           value={props.title || ""}
-          onChange={(e) => onChange({ ...props, title: e.target.value })}
-          className="h-9 text-sm"
+          onChange={(v) => onChange({ ...props, title: v })}
           placeholder="e.g. Timeless & Minimalist Maternity..."
         />
       </Field>
       <Field label="Subtitle (optional)">
-        <Input
+        <RichTextField
           value={props.subtitle || ""}
-          onChange={(e) => onChange({ ...props, subtitle: e.target.value })}
-          className="h-9 text-sm"
+          onChange={(v) => onChange({ ...props, subtitle: v })}
           placeholder="e.g. Serving Houston, Sugar Land..."
         />
       </Field>
       <Field label="Body">
-        <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[120px]" placeholder="Write your content here..." />
+        <RichTextField multiline value={props.body || ""} onChange={(v) => onChange({ ...props, body: v })} placeholder="Write your content here..." />
       </Field>
       <Field label="Alignment">
         <div className="flex gap-1">
@@ -126,10 +124,10 @@ function ImageTextContentEditor({ props, onChange, photographerId }: { props: an
   return (
     <div className="space-y-3">
       <Field label="Title">
-        <Input value={props.title || ""} onChange={(e) => onChange({ ...props, title: e.target.value })} className="h-9 text-sm" />
+        <RichTextField value={props.title || ""} onChange={(v) => onChange({ ...props, title: v })} />
       </Field>
       <Field label="Body">
-        <Textarea value={props.body || ""} onChange={(e) => onChange({ ...props, body: e.target.value })} className="text-sm min-h-[80px]" />
+        <RichTextField multiline value={props.body || ""} onChange={(v) => onChange({ ...props, body: v })} />
       </Field>
       <Field label="Image">
         <ImageUploadField
@@ -148,7 +146,7 @@ function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) 
   return (
     <div className="space-y-3">
       <Field label="Headline">
-        <Input value={props.headline || ""} onChange={(e) => onChange({ ...props, headline: e.target.value })} className="h-9 text-sm" />
+        <RichTextField value={props.headline || ""} onChange={(v) => onChange({ ...props, headline: v })} />
       </Field>
       <ButtonsListEditor props={props} onChange={onChange} />
     </div>
