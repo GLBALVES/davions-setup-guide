@@ -15,13 +15,13 @@ interface ImageUploadFieldProps {
   aspectClass?: string;
   /**
    * Validation options. All optional — when omitted, defaults preserve previous
-   * behavior (any image up to 10MB).
+   * behavior (any image up to 50MB).
    */
   /** Allowed MIME types, e.g. ["image/png","image/svg+xml","image/x-icon"] */
   allowedTypes?: string[];
   /** Friendly label for allowed formats shown in error toasts (e.g. "PNG, SVG, ICO") */
   allowedTypesLabel?: string;
-  /** Max file size in MB (default 10) */
+  /** Max file size in MB (default 50) */
   maxSizeMB?: number;
   /** Min width in pixels (validated against decoded image) */
   minWidth?: number;
@@ -48,7 +48,7 @@ export function ImageUploadField({
   aspectClass = "aspect-video",
   allowedTypes,
   allowedTypesLabel,
-  maxSizeMB = 10,
+  maxSizeMB = 50,
   minWidth,
   minHeight,
   maxWidth,
