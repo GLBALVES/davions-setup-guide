@@ -251,7 +251,6 @@ function PreviewFooter({
   const text = s?.footerText || s?.footer_text || `© ${new Date().getFullYear()} ${s?.displayName || "Studio"}`;
   const showLogo: boolean = s?.footer_show_logo ?? false;
   const showSocials: boolean = s?.footer_show_socials ?? true;
-  const hideBranding: boolean = s?.hideBranding ?? s?.hide_branding ?? false;
   const visibleSocials: string[] = Array.isArray(s?.footer_visible_socials)
     ? s.footer_visible_socials
     : [];
