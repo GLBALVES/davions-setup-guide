@@ -153,6 +153,24 @@ export interface SiteConfig {
   footer_visible_socials?: string[] | null;
   /** Footer preset template id */
   footer_preset?: string | null;
+  /** Footer overall layout: "minimal" (centered) | "columns" (multi-column) | "split" (logo left + nav right) | "stacked" (logo top, columns below) */
+  footer_layout?: "minimal" | "columns" | "split" | "stacked" | null;
+  /** Logo position when layout is "minimal" or "stacked": "left" | "center" | "right" */
+  footer_logo_position?: "left" | "center" | "right" | null;
+  /** Text alignment within the footer: "left" | "center" | "right" */
+  footer_alignment?: "left" | "center" | "right" | null;
+  /** Show vertical menu (links to top-level pages) */
+  footer_show_nav?: boolean | null;
+  /** Show sitemap (all pages flat list) */
+  footer_show_sitemap?: boolean | null;
+  /** Show contact info block (email + whatsapp) */
+  footer_show_contact_info?: boolean | null;
+  /** Show tagline / short description */
+  footer_show_tagline?: boolean | null;
+  /** Tagline / short description text */
+  footer_tagline?: string | null;
+  /** Custom footer columns: [{ heading, links: [{ label, href }] }] */
+  footer_columns?: Array<{ heading: string; links: Array<{ label: string; href: string }> }> | null;
   /** Per-section background & text colors */
   hero_bg_color?: string | null;
   hero_text_color?: string | null;
