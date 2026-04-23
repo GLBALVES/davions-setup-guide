@@ -198,6 +198,7 @@ export default function SectionRenderer({
   accentColor = "#000000",
   editMode = false,
   edit,
+  photographerId,
 }: SectionRendererProps) {
   return (
     <>
@@ -208,6 +209,7 @@ export default function SectionRenderer({
           accentColor={accentColor}
           editMode={editMode}
           edit={edit}
+          photographerId={photographerId ?? edit?.photographerId ?? null}
         />
       ))}
     </>
