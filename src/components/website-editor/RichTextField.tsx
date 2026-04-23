@@ -338,7 +338,7 @@ export function RichTextField({
         {/* Font family */}
         <div className="relative">
           <ToolbarButton
-            title="Font family"
+            title={activeFontPreset ? `Font: ${activeFontPreset.label}` : "Font family"}
             active={showFont}
             onClick={() => {
               setShowFont((v) => !v);
@@ -347,24 +347,37 @@ export function RichTextField({
             }}
           >
             <Type className="h-3.5 w-3.5" />
+            <span
+              className="hidden sm:inline max-w-[60px] truncate text-[10px] text-muted-foreground"
+              style={activeFontStack ? { fontFamily: activeFontStack } : undefined}
+            >
+              {activeFontPreset?.label ?? "Default"}
+            </span>
             <ChevronDown className="h-3 w-3" />
           </ToolbarButton>
           {showFont && (
-            <div className="absolute z-20 top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[260px] overflow-y-auto">
-              {FONT_PRESETS.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    onApplyFont(f.stack);
-                  }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground text-xs"
-                  style={{ fontFamily: f.stack }}
-                >
-                  {f.label}
-                </button>
-              ))}
+            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[260px] overflow-y-auto">
+              {FONT_PRESETS.map((f) => {
+                const isActive = activeFontPreset?.id === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onApplyFont(f.stack);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 hover:bg-muted text-foreground text-xs flex items-center justify-between",
+                      isActive && "bg-muted font-medium",
+                    )}
+                    style={{ fontFamily: f.stack }}
+                  >
+                    <span>{f.label}</span>
+                    {isActive && <span className="text-primary text-[10px]">●</span>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -372,34 +385,44 @@ export function RichTextField({
         {/* Font size */}
         <div className="relative">
           <ToolbarButton
-            title="Font size"
+            title={activeFontSizePx ? `Size: ${activeFontSizePx}px` : "Font size"}
             active={showSize}
             onClick={() => {
               setShowSize((v) => !v);
+              setShowColor=false as never;
               setShowColor(false);
               setShowFont(false);
             }}
           >
             <span className="font-medium text-[11px]">Aa</span>
+            <span className="hidden sm:inline text-[10px] text-muted-foreground">
+              {activeFontSizePx ? `${activeFontSizePx}` : "—"}
+            </span>
             <ChevronDown className="h-3 w-3" />
           </ToolbarButton>
           {showSize && (
-            <div className="absolute z-20 top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[180px]">
+            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[180px]">
               <div className="grid grid-cols-3 gap-1 mb-2">
-                {SIZE_PRESETS.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      onApplySize(s.px);
-                    }}
-                    className="px-2 py-1 hover:bg-muted rounded text-foreground border border-border text-center text-xs"
-                    title={`${s.px}px`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+                {SIZE_PRESETS.map((s) => {
+                  const isActive = activeFontSizePx === s.px;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onApplySize(s.px);
+                      }}
+                      className={cn(
+                        "px-2 py-1 hover:bg-muted rounded text-foreground border text-center text-xs",
+                        isActive ? "border-primary bg-primary/10 font-medium" : "border-border",
+                      )}
+                      title={`${s.px}px`}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
               </div>
               <div className="flex items-center gap-1">
                 <input
@@ -408,7 +431,7 @@ export function RichTextField({
                   max={200}
                   value={customSize}
                   onChange={(e) => setCustomSize(e.target.value)}
-                  placeholder="px"
+                  placeholder={activeFontSizePx ? String(activeFontSizePx) : "px"}
                   className="w-full px-2 py-1 border border-border rounded bg-background text-foreground text-xs"
                 />
                 <button
@@ -430,7 +453,7 @@ export function RichTextField({
         {/* Color */}
         <div className="relative">
           <ToolbarButton
-            title="Color"
+            title={activeColorHex ? `Color: ${activeColorHex}` : "Color"}
             active={showColor}
             onClick={() => {
               setShowColor((v) => !v);
@@ -439,26 +462,39 @@ export function RichTextField({
             }}
           >
             <Palette className="h-3.5 w-3.5" />
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-sm border border-border"
+              style={{ background: activeColorHex || "transparent" }}
+            />
           </ToolbarButton>
           {showColor && (
-            <div className="absolute z-20 top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[200px]">
+            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-[200px] max-w-[calc(100vw-2rem)]">
               <div className="grid grid-cols-7 gap-1 mb-2">
-                {COLOR_SWATCHES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      onApplyColor(c);
-                    }}
-                    className="w-6 h-6 rounded border border-border"
-                    style={{ background: c }}
-                    title={c}
-                  />
-                ))}
+                {COLOR_SWATCHES.map((c) => {
+                  const isActive = activeColorHex?.toUpperCase() === c.toUpperCase();
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onApplyColor(c);
+                      }}
+                      className={cn(
+                        "w-6 h-6 rounded border",
+                        isActive
+                          ? "border-primary ring-2 ring-primary ring-offset-1"
+                          : "border-border",
+                      )}
+                      style={{ background: c }}
+                      title={c}
+                    />
+                  );
+                })}
               </div>
               <input
                 type="color"
+                value={activeColorHex || "#000000"}
                 onChange={(e) => onApplyColor(e.target.value)}
                 className="w-full h-7 cursor-pointer rounded border border-border bg-background"
               />
