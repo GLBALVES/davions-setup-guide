@@ -391,7 +391,10 @@ export function RichTextField({
   const applyTag = (tag: "b" | "i" | "u") => {
     const { start, end } = getRange();
     if (start === end) return;
-    const next = applyTagToHtmlRange(value || plainValue, start, end, tag);
+    const isActive = tag === "b" ? !!activeStyle.bold : tag === "i" ? !!activeStyle.italic : !!activeStyle.underline;
+    const next = isActive
+      ? removeFormatFromHtmlRange(value || plainValue, start, end, tag)
+      : applyTagToHtmlRange(value || plainValue, start, end, tag);
     onChange(next);
   };
 
