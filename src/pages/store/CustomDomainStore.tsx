@@ -16,6 +16,8 @@ import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import type { PageSection } from "@/components/store/SectionRenderer";
 import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
+import { getShopDefaults } from "@/lib/shop-defaults";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RawPage {
   id: string;
@@ -36,6 +38,7 @@ interface RawPage {
 
 const CustomDomainStore = () => {
   const [searchParams] = useSearchParams();
+  const { lang } = useLanguage();
   const isDraftPreview = searchParams.get("preview") === "1";
   // Cache-buster from the editor's "Publish" action (e.g. ?v=1776846930). When
   // it changes, this component re-fetches site_pages so the freshly published
@@ -133,6 +136,23 @@ const CustomDomainStore = () => {
         makePageHref: (page) => `/page/${page.slug}`,
       });
 
+      // Inject "Shop" link after Home when shop is enabled and has content
+      const siteAny = (siteData ?? {}) as Record<string, any>;
+      const shopEnabled = siteAny.show_store === true;
+      const hasShopContent =
+        ((siteAny.shop_show_sessions !== false) && (sessionData ?? []).length > 0) ||
+        ((siteAny.shop_show_galleries !== false) && (galleryData ?? []).length > 0);
+      if (shopEnabled && hasShopContent) {
+        const shopDefaults = getShopDefaults(lang);
+        const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
+        const shopLink = { label: shopLabel, href: "/shop" };
+        if (visibleNavLinks.length > 0 && visibleNavLinks[0].href === "/") {
+          visibleNavLinks.splice(1, 0, shopLink);
+        } else {
+          visibleNavLinks.unshift(shopLink);
+        }
+      }
+
       setPhotographer(photoData as Photographer);
       setSite((siteData as unknown as SiteConfig) ?? null);
       setSessions((sessionData ?? []).map((s: any) => ({
@@ -148,7 +168,7 @@ const CustomDomainStore = () => {
     };
 
     load();
-  }, [isDraftPreview, cacheBuster]);
+  }, [isDraftPreview, cacheBuster, lang]);
 
   if (loading) {
     return <CustomDomainLoader photographer={photographer} />;

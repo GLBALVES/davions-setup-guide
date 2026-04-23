@@ -5,6 +5,7 @@ import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "
 import type { PageSection } from "@/components/store/SectionRenderer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
+import { getShopDefaults } from "@/lib/shop-defaults";
 
 interface RawPage {
   id: string;
@@ -25,7 +26,7 @@ interface RawPage {
 const StorePage = () => {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const rawPreview = searchParams.get("preview");
   const isDraftPreview = rawPreview === "1";
   // Only treat ?preview= as a template name override when it's NOT the draft flag.
@@ -122,6 +123,24 @@ const StorePage = () => {
         makePageHref: (page) => `/store/${slug}/page/${page.slug}`,
       });
 
+      // Inject "Shop" link after Home when shop is enabled and has content
+      const siteAny = (siteData ?? {}) as Record<string, any>;
+      const shopEnabled = siteAny.show_store === true;
+      const hasShopContent =
+        ((siteAny.shop_show_sessions !== false) && (sessionData ?? []).length > 0) ||
+        ((siteAny.shop_show_galleries !== false) && (galleryData ?? []).length > 0);
+      if (shopEnabled && hasShopContent) {
+        const shopDefaults = getShopDefaults(lang);
+        const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
+        const shopLink = { label: shopLabel, href: `/store/${slug}/shop` };
+        // Place after Home (index 0) if present, otherwise at the start
+        if (visibleNavLinks.length > 0 && visibleNavLinks[0].href === `/store/${slug}`) {
+          visibleNavLinks.splice(1, 0, shopLink);
+        } else {
+          visibleNavLinks.unshift(shopLink);
+        }
+      }
+
       setPhotographer(photoData as Photographer);
       setSite((siteData as unknown as SiteConfig) ?? null);
       setSessions((sessionData ?? []).map((s: any) => ({
@@ -145,7 +164,7 @@ const StorePage = () => {
     };
 
     load();
-  }, [slug, isDraftPreview, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
+  }, [slug, isDraftPreview, lang, t.websiteEditor.emptySiteDescription, t.websiteEditor.emptySiteTitle]);
 
   if (loading) {
     return (
