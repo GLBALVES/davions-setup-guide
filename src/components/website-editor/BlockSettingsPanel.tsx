@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ImageUploadField } from "./ImageUploadField";
 import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
+import { RichTextField } from "./RichTextField";
 import type { PageSection } from "./page-templates";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
