@@ -593,6 +593,7 @@ function SharedFooter({
   logoUrl,
   navLinks,
   photographerEmail,
+  storeSlug,
 }: {
   site: SiteConfig | null;
   showContact: boolean;
@@ -600,6 +601,7 @@ function SharedFooter({
   logoUrl?: string | null;
   navLinks?: NavLinkItem[];
   photographerEmail?: string | null;
+  storeSlug?: string | null;
 }) {
   const { t } = useLanguage();
   const showSocials = site?.footer_show_socials ?? true;
@@ -799,14 +801,17 @@ function SharedFooter({
     </p>
   ) : null;
 
-  // ── Legal links (Terms + Privacy) ───────────────────────────────────────
+  // ── Legal links (Terms + Privacy) — point to the photographer's own
+  //    pages so the visitor stays inside the studio's site/branding.
+  const isOnStoreRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/store/");
+  const legalBase = isOnStoreRoute && storeSlug ? `/store/${storeSlug}` : "";
   const legalBlock = (
     <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
-      <a href="/terms" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+      <a href={`${legalBase}/terms`} className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
         {t.lgpd.termsOfService}
       </a>
       <span className="text-[10px] opacity-40" style={textStyle}>·</span>
-      <a href="/privacy" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+      <a href={`${legalBase}/privacy`} className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
         {t.lgpd.privacyPolicy}
       </a>
     </div>
@@ -1728,7 +1733,7 @@ function buildBlockMap(
   // in editor mode where visibleSections doesn't include "footer"
   const logoUrl = site?.logo_url ?? null;
   const footer: React.ReactNode = (
-    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={logoUrl} navLinks={navLinks} photographerEmail={props.photographer?.email ?? null} /></div>
+    <div key="footer" data-block-key="footer"><SharedFooter site={site} showContact={showContact} displayName={displayName} logoUrl={logoUrl} navLinks={navLinks} photographerEmail={props.photographer?.email ?? null} storeSlug={props.photographer?.store_slug ?? null} /></div>
   );
 
   return { hero, quote, sessions: sessionsBlock, experience, portfolio, about, testimonials, footer };

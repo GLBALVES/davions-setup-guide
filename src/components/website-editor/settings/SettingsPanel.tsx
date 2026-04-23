@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TrackingModal from "./TrackingModal";
 import AdvancedModal from "./AdvancedModal";
@@ -10,8 +10,9 @@ import SocialSubPanel from "./SocialSubPanel";
 import DraftsSubPanel from "./DraftsSubPanel";
 import TrashSubPanel from "./TrashSubPanel";
 import FormSubmissionsSubPanel from "./FormSubmissionsSubPanel";
+import LegalSubPanel from "./LegalSubPanel";
 
-type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms";
+type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal";
 
 export default function SettingsPanel({
   photographerId,
@@ -35,6 +36,7 @@ export default function SettingsPanel({
       drafts: "Draft Sites",
       trash: "Trash",
       forms: "Form Submissions",
+      legal: "Legal",
     };
     return (
       <div className="flex flex-col h-full">
@@ -54,6 +56,7 @@ export default function SettingsPanel({
           {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
           {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
           {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
+          {view === "legal" && <LegalSubPanel site={site} onSiteChange={onSiteChange} />}
         </div>
       </div>
     );
@@ -72,6 +75,7 @@ export default function SettingsPanel({
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
           <Item icon={Share2} label="Social" onClick={() => setView("social")} />
+          <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setView("legal")} />
           <Item icon={BarChart3} label="Tracking & Analytics" onClick={() => setTrackingOpen(true)} />
           <Item icon={Settings2} label="Advanced" onClick={() => setAdvancedOpen(true)} />
         </Section>
