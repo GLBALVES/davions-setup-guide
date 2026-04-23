@@ -122,6 +122,56 @@ export interface RichTextFieldProps {
   inputClassName?: string;
 }
 
+/** Inspect the HTML at plain index `plainStart` and return the inline styles
+ *  applied by the closest ancestor span. Used to highlight the current
+ *  font/color/size in the toolbar. */
+function inspectStyleAt(html: string, plainStart: number) {
+  const result: { color?: string; fontFamily?: string; fontSize?: string } = {};
+  if (!html) return result;
+  const tpl = document.createElement("template");
+  tpl.innerHTML = looksLikeHtml(html) ? html : escapeHtml(html);
+  let cursor = 0;
+  let done = false;
+  const walk = (node: Node, ancestors: HTMLElement[]) => {
+    if (done) return;
+    for (const child of Array.from(node.childNodes)) {
+      if (done) return;
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.nodeValue ?? "";
+        const nodeEnd = cursor + text.length;
+        if (plainStart >= cursor && plainStart <= nodeEnd) {
+          for (let i = ancestors.length - 1; i >= 0; i--) {
+            const a = ancestors[i];
+            if (a.style.color && !result.color) result.color = a.style.color;
+            if (a.style.fontFamily && !result.fontFamily) result.fontFamily = a.style.fontFamily;
+            if (a.style.fontSize && !result.fontSize) result.fontSize = a.style.fontSize;
+          }
+          done = true;
+        }
+        cursor = nodeEnd;
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        walk(child, [...ancestors, child as HTMLElement]);
+      }
+    }
+  };
+  walk(tpl.content, []);
+  return result;
+}
+
+/** Parse a CSS color (named/hex/rgb) to a normalized #rrggbb hex. */
+function normalizeColor(c?: string): string | undefined {
+  if (!c || typeof document === "undefined") return undefined;
+  const probe = document.createElement("div");
+  probe.style.color = c;
+  document.body.appendChild(probe);
+  const computed = getComputedStyle(probe).color;
+  document.body.removeChild(probe);
+  const m = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!m) return c;
+  const [r, g, b] = [m[1], m[2], m[3]].map((n) => Number(n).toString(16).padStart(2, "0"));
+  return `#${r}${g}${b}`.toUpperCase();
+}
+
 export function RichTextField({
   value,
   onChange,
@@ -147,11 +197,6 @@ export function RichTextField({
     setSelection({ start, end });
   };
 
-  // When user types/edits the plain text, we have to either:
-  //  - drop existing HTML formatting (text changed shape)
-  //  - or keep it intact (text unchanged)
-  // To keep things predictable for users, when the plain text changes we
-  // commit the new value as plain text. They can then reapply formatting.
   const onPlainChange = (nextPlain: string) => {
     if (nextPlain === plainValue) return;
     onChange(nextPlain);
@@ -170,6 +215,32 @@ export function RichTextField({
     return { start: 0, end: len };
   };
 
+  // Active style at the current effective range start (visual highlight).
+  const activeStyle = useMemo(() => {
+    const { start } = getRange();
+    return inspectStyleAt(value || "", start);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, selection, plainValue]);
+
+  const activeColorHex = useMemo(() => normalizeColor(activeStyle.color), [activeStyle.color]);
+  const activeFontStack = activeStyle.fontFamily;
+  const activeFontPreset = useMemo(
+    () =>
+      activeFontStack
+        ? FONT_PRESETS.find(
+            (f) =>
+              f.stack.replace(/\s|"|'/g, "").toLowerCase() ===
+              activeFontStack.replace(/\s|"|'/g, "").toLowerCase(),
+          )
+        : undefined,
+    [activeFontStack],
+  );
+  const activeFontSizePx = useMemo(() => {
+    if (!activeStyle.fontSize) return undefined;
+    const m = activeStyle.fontSize.match(/(\d+(?:\.\d+)?)px/);
+    return m ? Number(m[1]) : undefined;
+  }, [activeStyle.fontSize]);
+
   const apply = (styleCss: string) => {
     const { start, end } = getRange();
     if (start === end) return;
@@ -185,7 +256,6 @@ export function RichTextField({
   };
 
   const clearFormatting = () => {
-    // Strip all html, keep plain text only.
     onChange(plainValue);
   };
 
@@ -208,7 +278,6 @@ export function RichTextField({
     closeAllPopovers();
   };
 
-  // Close popovers when clicking outside the toolbar.
   const wrapRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
