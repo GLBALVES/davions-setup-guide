@@ -3,6 +3,7 @@ import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook,
 import SEOHead from "@/components/SEOHead";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
+import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
@@ -644,9 +645,7 @@ function SharedFooter({ site, showContact, displayName, logoUrl }: { site: SiteC
           </p>
         )}
 
-        {!site?.hide_branding && (
-          <p className="text-[9px] tracking-widest uppercase text-center" style={{ color: textColor ? textColor + "66" : undefined, opacity: textColor ? undefined : 0.4 }}>Powered by Davions</p>
-        )}
+        {/* Branding badge moved to a floating element rendered at the page root */}
       </div>
     </footer>
   );
@@ -2122,6 +2121,7 @@ export default function PublicSiteRenderer(props: Props) {
         canonical={seoUrl}
       />
       {templateEl}
+      <DavionsFloatingBadge hidden={!!site?.hide_branding} />
     </>
   );
 }
