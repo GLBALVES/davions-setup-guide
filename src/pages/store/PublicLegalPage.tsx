@@ -4,129 +4,162 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getLegalDefaults } from "@/lib/legal-defaults";
-import SEOHead from "@/components/SEOHead";
+import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
+import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
+import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 
 type Kind = "terms" | "privacy";
 
-interface PhotographerRow {
+interface RawPage {
   id: string;
-  full_name: string | null;
-  business_name: string | null;
-  store_slug: string | null;
-}
-
-interface SiteRow {
-  terms_content: string | null;
-  privacy_content: string | null;
-  business_name?: string | null;
-  bg_color?: string | null;
-  text_color?: string | null;
-  font_family?: string | null;
+  photographer_id: string;
+  title: string;
+  slug: string;
+  parent_id: string | null;
+  sort_order: number;
+  is_home: boolean;
+  is_visible: boolean;
+  sections_order: unknown;
+  page_content: Record<string, any> | null;
 }
 
 /**
- * Renders a photographer's Terms or Privacy page using their custom override
- * (if any) or a sensible default text describing the photographer↔client
- * relationship. Resolves the photographer either from `:slug` (store route)
- * or from the current hostname (custom domain route).
+ * Renders the photographer's Terms or Privacy page wrapped in the same
+ * header (slides removed, only menu) and footer used by the rest of the site,
+ * for full visual consistency.
  */
 export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "store" | "custom-domain" }) {
   const { slug } = useParams();
-  const { lang: language } = useLanguage();
-  const [photographer, setPhotographer] = useState<PhotographerRow | null>(null);
-  const [site, setSite] = useState<SiteRow | null>(null);
+  const { lang } = useLanguage();
+  const [photographer, setPhotographer] = useState<Photographer | null>(null);
+  const [site, setSite] = useState<SiteConfig | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [sitePages, setSitePages] = useState<RawPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      let photoQuery;
-      if (mode === "custom-domain") {
-        photoQuery = supabase
-          .from("photographers")
-          .select("id, full_name, business_name, store_slug")
-          .eq("custom_domain", getCurrentHostname())
-          .maybeSingle();
-      } else {
-        photoQuery = supabase
-          .from("photographers")
-          .select("id, full_name, business_name, store_slug")
-          .eq("store_slug", slug!)
-          .maybeSingle();
-      }
+      const photoQuery =
+        mode === "custom-domain"
+          ? supabase
+              .from("photographers")
+              .select("id, full_name, email, store_slug, bio, business_name")
+              .eq("custom_domain", getCurrentHostname())
+              .maybeSingle()
+          : supabase
+              .from("photographers")
+              .select("id, full_name, email, store_slug, bio, business_name")
+              .eq("store_slug", slug!)
+              .maybeSingle();
+
       const { data: photo } = await photoQuery;
       if (cancelled) return;
       if (!photo) { setNotFound(true); setLoading(false); return; }
-      setPhotographer(photo as PhotographerRow);
 
-      const { data: siteData } = await supabase
-        .from("photographer_site")
-        .select("terms_content, privacy_content, business_name, bg_color, text_color, font_family")
-        .eq("photographer_id", photo.id)
-        .maybeSingle();
+      const [{ data: siteData }, { data: sessionData }, { data: galleryData }, { data: pagesData }] =
+        await Promise.all([
+          supabase.from("photographer_site").select("*").eq("photographer_id", photo.id).maybeSingle(),
+          (supabase as any)
+            .from("sessions")
+            .select("id, slug, title, description, tagline, price, duration_minutes, num_photos, location, cover_image_url")
+            .eq("photographer_id", photo.id)
+            .eq("status", "active")
+            .neq("hide_from_store", true),
+          supabase.from("galleries").select("id, slug, title, category, cover_image_url").eq("photographer_id", photo.id).eq("status", "published"),
+          supabase.from("site_pages").select("*").eq("photographer_id", photo.id).order("sort_order"),
+        ]);
+
       if (cancelled) return;
-      setSite((siteData ?? {}) as SiteRow);
+      setPhotographer(photo as Photographer);
+      setSite((siteData as unknown as SiteConfig) ?? null);
+      setSessions((sessionData as Session[]) ?? []);
+      setGalleries((galleryData as Gallery[]) ?? []);
+      setSitePages((pagesData as RawPage[]) ?? []);
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [slug, mode]);
 
-  const defaults = getLegalDefaults(language);
-  const studioName =
-    site?.business_name ||
-    photographer?.business_name ||
-    photographer?.full_name ||
-    defaults.studioFallback;
-
-  const customHtml = kind === "terms" ? site?.terms_content : site?.privacy_content;
-  const defaultHtml = kind === "terms" ? defaults.termsHtml(studioName) : defaults.privacyHtml(studioName);
-  const html = customHtml && customHtml.trim().length > 0 ? customHtml : defaultHtml;
-
-  const title = kind === "terms" ? defaults.termsTitle : defaults.privacyTitle;
-  const today = new Date().toISOString().slice(0, 10);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xs text-muted-foreground">…</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
       </div>
     );
   }
 
   if (notFound || !photographer) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xs text-muted-foreground">Not found</div>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <p className="text-sm font-light text-muted-foreground">Not found.</p>
       </div>
     );
   }
 
-  const bg = site?.bg_color || "#ffffff";
-  const fg = site?.text_color || "#111111";
-  const fontFamily = site?.font_family || undefined;
+  const defaults = getLegalDefaults(lang);
+  const studioName =
+    (site as any)?.business_name ||
+    photographer.business_name ||
+    photographer.full_name ||
+    defaults.studioFallback;
+
+  const customHtml = kind === "terms" ? (site as any)?.terms_content : (site as any)?.privacy_content;
+  const defaultHtml = kind === "terms" ? defaults.termsHtml(studioName) : defaults.privacyHtml(studioName);
+  const html = customHtml && String(customHtml).trim().length > 0 ? String(customHtml) : defaultHtml;
+  const title = kind === "terms" ? defaults.termsTitle : defaults.privacyTitle;
+
+  const homeHref = mode === "custom-domain" ? "/" : `/store/${slug}`;
+  const makePageHref = (pageItem: { slug: string }) =>
+    mode === "custom-domain" ? `/page/${pageItem.slug}` : `/store/${slug}/page/${pageItem.slug}`;
+
+  const extraNavLinks = buildPublicSiteNavLinks({
+    pages: sitePages,
+    homeHref,
+    makePageHref,
+  });
+
+  // Header config WITHOUT slides — only the menu bar.
+  const pageHeaderConfig: HeaderConfig = {
+    ...DEFAULT_HEADER_CONFIG,
+    slides: [],
+    height: "0",
+    overlayOpacity: 0,
+  };
+
+  const seoUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${window.location.pathname}`
+      : "";
 
   return (
-    <>
-      <SEOHead title={`${title} — ${studioName}`} description={`${title} for ${studioName}`} />
-      <div
-        className="min-h-screen"
-        style={{ backgroundColor: bg, color: fg, fontFamily }}
-      >
-        <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24">
-          <h1 className="text-2xl sm:text-3xl font-light tracking-wide mb-2">{title}</h1>
-          <p className="text-xs opacity-60 mb-10">
-            {defaults.lastUpdatedLabel}: {today} · {studioName}
-          </p>
-
-          <article
-            className="prose prose-sm max-w-none [&_h2]:text-sm [&_h2]:tracking-widest [&_h2]:uppercase [&_h2]:font-light [&_h2]:mt-10 [&_h2]:mb-3 [&_p]:text-xs [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:text-xs [&_li]:mb-1 [&_strong]:font-medium"
-            style={{ color: fg }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-      </div>
-    </>
+    <PublicSiteRenderer
+      photographer={photographer}
+      site={site}
+      sessions={sessions}
+      galleries={galleries}
+      scrolled={scrolled}
+      mobileMenuOpen={mobileMenuOpen}
+      setMobileMenuOpen={setMobileMenuOpen}
+      seoUrl={seoUrl}
+      sessionHref={(s) => (mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/store/${slug}/${s.slug ?? s.id}`)}
+      galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
+      blogHref={mode === "custom-domain" ? `/blog` : `/store/${slug}/blog`}
+      extraNavLinks={extraNavLinks}
+      subPageTitle={title}
+      subPageHtml={html}
+      pageHeaderConfig={pageHeaderConfig}
+    />
   );
 }
