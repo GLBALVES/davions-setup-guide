@@ -1980,7 +1980,7 @@ export default function PublicSiteRenderer(props: Props) {
           )}
           <div className={headerConfig ? "" : "pt-20"}>
             {subSections.length > 0 ? (
-              <SectionRenderer sections={subSections} accentColor={accentColor} />
+              <SectionRenderer sections={subSections} accentColor={accentColor} photographerId={props.photographer?.id ?? null} />
             ) : subPageData?.content ? (
               <div className="max-w-4xl mx-auto px-6 py-16">
                 <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
@@ -2090,7 +2090,7 @@ export default function PublicSiteRenderer(props: Props) {
             />
           )}
           <div className={headerConfig ? "" : forceOpaque ? "pt-16" : ""}>
-            <SectionRenderer sections={props.pageSections} accentColor={accentColor} />
+            <SectionRenderer sections={props.pageSections} accentColor={accentColor} photographerId={props.photographer?.id ?? null} />
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} />
         </div>
