@@ -175,7 +175,10 @@ export default function InlineFormatToolbar() {
   };
   const onApplyColor = (color: string) => {
     execSimple(host, "foreColor", color);
+    window.getSelection()?.removeAllRanges();
     setShowColor(false);
+    setPos(null);
+    setHost(null);
   };
   const onApplySize = (px: number) => {
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
