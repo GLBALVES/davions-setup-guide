@@ -2434,23 +2434,6 @@ const FooterSubPanel = ({
     : [];
   const isFiltering = visibleSocials.length > 0;
 
-  const toggleSocial = (key: string) => {
-    // Build the current "active" set. If no filter is set, treat all configured
-    // socials as visible — that way clicking off one immediately filters it out.
-    const allConfigured = FOOTER_SOCIAL_KEYS
-      .filter((s2) => !!(site as any)?.[s2.urlField])
-      .map((s2) => s2.key);
-    const current = isFiltering ? visibleSocials : allConfigured;
-    const next = current.includes(key)
-      ? current.filter((k) => k !== key)
-      : [...current, key];
-    // If the result equals the full set, clear filter to mean "show all".
-    const sameAsAll =
-      next.length === allConfigured.length &&
-      allConfigured.every((k) => next.includes(k));
-    onSiteChange({ footer_visible_socials: sameAsAll ? null : next });
-  };
-
   const layout: "minimal" | "columns" | "split" | "stacked" = (s?.footer_layout as any) || "minimal";
   const logoPosition: "left" | "center" | "right" = (s?.footer_logo_position as any) || "center";
   const alignment: "left" | "center" | "right" = (s?.footer_alignment as any) || "center";
