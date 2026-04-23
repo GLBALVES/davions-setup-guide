@@ -599,27 +599,81 @@ export default function PreviewRenderer({
 
   return (
     <div className="relative flex flex-col h-full">
-      {/* Viewport toolbar */}
-      <div className="h-10 border-b border-border bg-card flex items-center justify-center gap-1 shrink-0">
-        {([
-          { id: "desktop" as Viewport, Icon: Monitor, label: "Desktop" },
-          { id: "tablet" as Viewport, Icon: Tablet, label: "Tablet" },
-          { id: "mobile" as Viewport, Icon: Smartphone, label: "Mobile" },
-        ]).map(({ id, Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => setViewport(id)}
-            className={cn(
-              "p-1.5 rounded transition-colors",
-              viewport === id
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-            title={label}
-          >
-            <Icon className="h-4 w-4" />
-          </button>
-        ))}
+      {/* Viewport toolbar — also hosts the simulated browser tab + save status */}
+      <div className="h-10 border-b border-border bg-card flex items-center px-3 shrink-0 gap-2">
+        {/* Left: simulated browser tab */}
+        <div className="flex-1 min-w-0 flex items-center">
+          {(browserTitle || browserFaviconUrl) && (
+            <div className="flex items-center gap-2 max-w-[260px] h-7 px-3 rounded-md bg-muted/40 border border-border">
+              {browserFaviconUrl ? (
+                <img
+                  src={browserFaviconUrl}
+                  alt=""
+                  className="h-3.5 w-3.5 rounded-sm object-cover shrink-0"
+                />
+              ) : (
+                <div className="h-3.5 w-3.5 rounded-sm bg-muted-foreground/30 shrink-0" />
+              )}
+              <span className="text-[11px] text-foreground truncate">{browserTitle}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Center: viewport switcher */}
+        <div className="flex items-center gap-1">
+          {([
+            { id: "desktop" as Viewport, Icon: Monitor, label: "Desktop" },
+            { id: "tablet" as Viewport, Icon: Tablet, label: "Tablet" },
+            { id: "mobile" as Viewport, Icon: Smartphone, label: "Mobile" },
+          ]).map(({ id, Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setViewport(id)}
+              className={cn(
+                "p-1.5 rounded transition-colors",
+                viewport === id
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+              title={label}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
+
+        {/* Right: auto-save indicator */}
+        <div className="flex-1 min-w-0 flex items-center justify-end">
+          {saveStatus !== "idle" && (
+            <div
+              className={cn(
+                "flex items-center gap-1.5 h-5 px-2 rounded-full text-[10px] font-medium transition-opacity",
+                saveStatus === "saving" && "bg-muted text-muted-foreground",
+                saveStatus === "saved" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                saveStatus === "error" && "bg-destructive/10 text-destructive"
+              )}
+            >
+              {saveStatus === "saving" && (
+                <>
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  Saving…
+                </>
+              )}
+              {saveStatus === "saved" && (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Saved
+                </>
+              )}
+              {saveStatus === "error" && (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                  Save failed
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Preview container */}
