@@ -288,6 +288,8 @@ function SectionBlock({
         return <EmbedBlock {...p} />;
       case "logo-strip":
         return <LogoStripBlock {...p} />;
+      case "shop":
+        return <ShopBlock {...p} photographerId={photographerId ?? edit?.photographerId ?? null} />;
       case "map":
         return <MapBlock {...p} />;
       default:
