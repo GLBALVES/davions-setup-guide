@@ -192,9 +192,19 @@ function ContactFormContentEditor({ props, onChange }: { props: any; onChange: (
 
 function VideoContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   return (
-    <Field label="Video URL (YouTube / Vimeo)">
-      <Input value={props.url || ""} onChange={(e) => onChange({ ...props, url: e.target.value })} className="h-9 text-sm" placeholder="https://youtube.com/watch?v=..." />
-    </Field>
+    <div className="space-y-2">
+      <Field label="Video URL (YouTube, Vimeo or .mp4/.webm)">
+        <Input
+          value={props.url || ""}
+          onChange={(e) => onChange({ ...props, url: e.target.value })}
+          className="h-9 text-sm"
+          placeholder="https://youtube.com/... or https://your-cdn.com/video.mp4"
+        />
+      </Field>
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        Tip: paste a direct .mp4 / .webm link to use the native player with only play & volume (no titles, branding or related videos).
+      </p>
+    </div>
   );
 }
 
