@@ -611,23 +611,12 @@ const HeaderSliderPanel = ({
   const { t } = useLanguage();
   const we = t.websiteEditor;
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(value || {}) };
-  // Stable stub slide id so re-renders don't generate new ids and break selection/persistence.
-  const stubIdRef = useRef<string>(crypto.randomUUID());
-  const slides: HeaderSlide[] = cfg.slides && cfg.slides.length > 0
-    ? cfg.slides
-    : [{ id: stubIdRef.current, title: "", imageUrl: null }];
-  const [activeSlideId, setActiveSlideId] = useState<string>(slides[0].id);
-
-  // NOTE: We intentionally do NOT auto-persist a stub slide on mount. The previous
-  // implementation triggered an `onChange` write every time the panel opened, which
-  // could race with other findAndUpdate calls and overwrite real header config.
-  // Stub slide is purely visual until the user actually edits something.
+  // Slides come straight from config — no stub fallback so the list can be truly empty.
+  const slides: HeaderSlide[] = cfg.slides || [];
+  const [activeSlideId, setActiveSlideId] = useState<string>(slides[0]?.id || "");
 
   const updateCfg = (patch: Partial<HeaderConfig>) => {
-    // Ensure slides array is always materialized when persisting (so "stub" gets saved
-    // the moment the user interacts with the panel).
-    const currentSlides = cfg.slides && cfg.slides.length > 0 ? cfg.slides : slides;
-    onChange({ ...cfg, slides: currentSlides, ...patch });
+    onChange({ ...cfg, slides, ...patch });
   };
   const updateSlides = (next: HeaderSlide[]) => onChange({ ...cfg, slides: next });
 
@@ -647,7 +636,7 @@ const HeaderSliderPanel = ({
     updateSlides(slides.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   };
 
-  const activeSlide = slides.find((s) => s.id === activeSlideId) || slides[0];
+  const activeSlide = slides.find((s) => s.id === activeSlideId) || null;
 
   return (
     <div className="flex flex-col h-full">
