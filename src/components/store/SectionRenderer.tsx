@@ -730,6 +730,10 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+  const emailTouched = email.length > 0;
+  const emailInvalid = emailTouched && !isValidEmail(email);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (c.editMode) return;
@@ -741,6 +745,11 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
     if (!name.trim() || !email.trim() || !message.trim()) {
       setStatus("error");
       setErrorMsg("Please fill in all fields");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setStatus("error");
+      setErrorMsg("Please enter a valid email address");
       return;
     }
     setStatus("sending");
@@ -776,7 +785,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
     <section className="py-12 sm:py-16 px-5 sm:px-6" id="contact">
       <div className="max-w-xl mx-auto">
         <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           <input
             type="text"
             placeholder="Your name"
@@ -785,14 +794,26 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
             disabled={c.editMode || status === "sending"}
             className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
           />
-          <input
-            type="email"
-            placeholder="Your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={c.editMode || status === "sending"}
-            className="w-full px-4 py-3 bg-transparent border border-border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
-          />
+          <div>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="Your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={c.editMode || status === "sending"}
+              aria-invalid={emailInvalid}
+              className={`w-full px-4 py-3 bg-transparent border rounded text-sm font-light text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                emailInvalid
+                  ? "border-destructive focus:border-destructive"
+                  : "border-border focus:border-foreground"
+              }`}
+            />
+            {emailInvalid && (
+              <p className="mt-1 text-xs text-destructive">Please enter a valid email address</p>
+            )}
+          </div>
           <textarea
             rows={4}
             placeholder="Your message"
