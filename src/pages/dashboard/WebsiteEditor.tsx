@@ -4131,7 +4131,7 @@ const WebsiteEditor = () => {
       showBlog={Boolean((site as any)?.show_blog)}
     />,
     blog: <BlogPanel />,
-    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} />,
+    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
