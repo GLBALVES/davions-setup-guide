@@ -3568,6 +3568,7 @@ const BrandRow = ({
 // ── Main Editor ──────────────────────────────────────────────────────────────
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
+  const [pendingStyleSub, setPendingStyleSub] = useState<StyleSubPanel | null>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
