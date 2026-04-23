@@ -675,8 +675,8 @@ function ToolbarButton({
       }}
       onClick={onClick}
       className={cn(
-        "p-1.5 rounded text-foreground hover:bg-muted flex items-center gap-0.5",
-        active && "bg-muted",
+        "p-1.5 rounded text-foreground hover:bg-muted flex items-center gap-0.5 transition-colors",
+        active && "bg-primary text-primary-foreground hover:bg-primary/90",
       )}
     >
       {children}
