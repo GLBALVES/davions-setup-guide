@@ -99,6 +99,7 @@ export default function EditableRichText({
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
+      data-inline-editable="true"
       onInput={handleInput}
       onBlur={commit}
       onPaste={handlePaste}

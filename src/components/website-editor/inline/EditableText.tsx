@@ -12,10 +12,17 @@ interface EditableTextProps {
   editMode?: boolean;
 }
 
+/** Detects if a string contains any HTML tags (e.g. inline <span style="..">). */
+function looksLikeHtml(s: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(s);
+}
+
 /**
  * Inline-editable text used inside the live editor preview.
- * - When editMode is false, it renders a plain element with the value.
- * - When editMode is true, it becomes contentEditable. Edits are committed on
+ * - When editMode is false, renders the value (as HTML if it contains tags so
+ *   inline formatting from the InlineFormatToolbar — font/color/size — is
+ *   preserved on the public site).
+ * - When editMode is true, becomes contentEditable. Edits are committed on
  *   blur (and a 400ms debounce while typing).
  */
 export default function EditableText({
@@ -33,20 +40,36 @@ export default function EditableText({
   const lastCommittedRef = useRef<string>(value);
 
   // Keep DOM in sync when external value changes and we're not actively typing.
-  // Important: never re-write textContent while focused — doing so resets the
+  // Important: never re-write the DOM while focused — doing so resets the
   // caret to the start, causing an "autofocus loop" when paired with a
   // debounced commit.
   useEffect(() => {
     if (!ref.current) return;
     if (document.activeElement === ref.current) return;
-    if (ref.current.textContent !== (value || "")) {
-      ref.current.textContent = value || "";
+    const isHtml = looksLikeHtml(value || "");
+    if (isHtml) {
+      if (ref.current.innerHTML !== (value || "")) {
+        ref.current.innerHTML = value || "";
+      }
+    } else {
+      if (ref.current.textContent !== (value || "")) {
+        ref.current.textContent = value || "";
+      }
     }
     lastCommittedRef.current = value;
   }, [value]);
 
   if (!editMode) {
     const Comp: any = Tag;
+    if (looksLikeHtml(value || "")) {
+      return (
+        <Comp
+          className={className}
+          style={style}
+          dangerouslySetInnerHTML={{ __html: value || "" }}
+        />
+      );
+    }
     return (
       <Comp className={className} style={style}>
         {value || placeholder || ""}
@@ -55,7 +78,12 @@ export default function EditableText({
   }
 
   const commit = () => {
-    const next = ref.current?.textContent ?? "";
+    if (!ref.current) return;
+    // If the DOM picked up any inline formatting tags, persist as HTML so the
+    // formatting survives. Otherwise stick with plain text for cleanliness.
+    const html = ref.current.innerHTML ?? "";
+    const text = ref.current.textContent ?? "";
+    const next = looksLikeHtml(html) ? html : text;
     if (next !== lastCommittedRef.current) {
       lastCommittedRef.current = next;
       onChange(next);
@@ -72,7 +100,6 @@ export default function EditableText({
       e.preventDefault();
       (ref.current as HTMLElement | null)?.blur();
     }
-    // Escape blurs without committing extra
     if (e.key === "Escape") {
       e.preventDefault();
       (ref.current as HTMLElement | null)?.blur();
@@ -84,10 +111,13 @@ export default function EditableText({
     <Comp
       ref={(el: HTMLElement | null) => {
         ref.current = el;
-        // Initialise textContent on mount only — never on re-render — so React
+        // Initialise content on mount only — never on re-render — so React
         // doesn't reconcile children and clobber the caret while typing.
-        if (el && el.textContent !== (value || "")) {
-          if (document.activeElement !== el) {
+        if (el && document.activeElement !== el) {
+          const isHtml = looksLikeHtml(value || "");
+          if (isHtml && el.innerHTML !== (value || "")) {
+            el.innerHTML = value || "";
+          } else if (!isHtml && el.textContent !== (value || "")) {
             el.textContent = value || "";
           }
         }
@@ -95,6 +125,7 @@ export default function EditableText({
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
+      data-inline-editable="true"
       onInput={handleInput}
       onBlur={commit}
       onKeyDown={handleKeyDown}
