@@ -2400,6 +2400,7 @@ type StyleSubPanel =
   | "logo"
   | "fonts"
   | "colors"
+  | "footer"
   | "animations"
   | "navigation"
   | "spacing"
