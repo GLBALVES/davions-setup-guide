@@ -370,6 +370,14 @@ function PreviewFooter({
 
   const allColBlocks = [navBlock, sitemapBlock, contactBlock, ...columnsBlocks].filter(Boolean);
 
+  const legalBlock = (
+    <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
+      <span className="text-[10px] font-light opacity-70" style={{ color: fg }}>Terms of Service</span>
+      <span className="text-[10px] opacity-40" style={{ color: fg }}>·</span>
+      <span className="text-[10px] font-light opacity-70" style={{ color: fg }}>Privacy Policy</span>
+    </div>
+  );
+
   const renderBody = () => {
     if (layout === "split") {
       return (
@@ -380,8 +388,9 @@ function PreviewFooter({
             </div>
             <div className="flex flex-wrap gap-10">{allColBlocks}</div>
           </div>
-          <div className="border-t border-current/10 pt-4 text-center">
+          <div className="border-t border-current/10 pt-4 flex flex-col items-center gap-2">
             <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+            {legalBlock}
           </div>
         </div>
       );
@@ -395,8 +404,9 @@ function PreviewFooter({
             </div>
             {allColBlocks}
           </div>
-          <div className="border-t border-current/10 pt-4 text-center">
+          <div className="border-t border-current/10 pt-4 flex flex-col items-center gap-2">
             <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+            {legalBlock}
           </div>
         </div>
       );
@@ -408,6 +418,7 @@ function PreviewFooter({
           <div className="flex flex-wrap justify-center gap-10">{allColBlocks}</div>
           {socialBlock}
           <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+          {legalBlock}
         </div>
       );
     }
@@ -419,6 +430,7 @@ function PreviewFooter({
           <div className="flex flex-wrap justify-center gap-10 pt-2">{allColBlocks}</div>
         )}
         <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80" style={{ color: fg }}>{text}</p>
+        {legalBlock}
       </div>
     );
   };

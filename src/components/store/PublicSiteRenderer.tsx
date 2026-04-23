@@ -4,6 +4,7 @@ import SEOHead from "@/components/SEOHead";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
@@ -600,6 +601,7 @@ function SharedFooter({
   navLinks?: NavLinkItem[];
   photographerEmail?: string | null;
 }) {
+  const { t } = useLanguage();
   const showSocials = site?.footer_show_socials ?? true;
   const showLogo = site?.footer_show_logo ?? false;
   const bgColor = site?.footer_bg_color ?? null;
@@ -787,6 +789,27 @@ function SharedFooter({
     </p>
   ) : null;
 
+  // ── Legal links (Terms + Privacy) ───────────────────────────────────────
+  const legalBlock = (
+    <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
+      <a href="/terms" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+        {t.lgpd.termsOfService}
+      </a>
+      <span className="text-[10px] opacity-40" style={textStyle}>·</span>
+      <a href="/privacy" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+        {t.lgpd.privacyPolicy}
+      </a>
+    </div>
+  );
+
+  const bottomBlock = (
+    <div className="flex flex-col gap-2 items-center w-full">
+      {copyrightBlock}
+      {legalBlock}
+    </div>
+  );
+
+
   // ── Layout renderers ────────────────────────────────────────────────────
   const renderColumns = () => {
     const blocks = [navBlock, sitemapBlock, contactBlock, ...(columnsBlock ? columns.map((col, ci) => (
@@ -814,7 +837,7 @@ function SharedFooter({
               {renderColumns()}
             </div>
           </div>
-          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+          <div className="border-t border-current/10 pt-6">{bottomBlock}</div>
         </div>
       </footer>
     );
@@ -832,7 +855,7 @@ function SharedFooter({
             </div>
             {renderColumns()}
           </div>
-          {copyrightBlock && <div className="border-t border-current/10 pt-6 text-center">{copyrightBlock}</div>}
+          <div className="border-t border-current/10 pt-6">{bottomBlock}</div>
         </div>
       </footer>
     );
@@ -848,7 +871,7 @@ function SharedFooter({
             {renderColumns()}
           </div>
           {socialBlock}
-          {copyrightBlock}
+          {bottomBlock}
         </div>
       </footer>
     );
@@ -866,7 +889,7 @@ function SharedFooter({
             {renderColumns()}
           </div>
         )}
-        {copyrightBlock}
+        {bottomBlock}
       </div>
     </footer>
   );
