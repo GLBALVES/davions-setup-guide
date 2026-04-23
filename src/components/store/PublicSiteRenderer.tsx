@@ -649,12 +649,22 @@ function SharedFooter({
     "justify-center";
 
   // ── Logo block ──────────────────────────────────────────────────────────
+  const footerLogoSize = site?.logo_size || "medium";
+  const footerLogoImgClass =
+    footerLogoSize === "small" ? "h-12 sm:h-16 w-auto object-contain"
+    : footerLogoSize === "large" ? "h-24 sm:h-32 w-auto object-contain"
+    : "h-16 sm:h-24 w-auto object-contain";
+  const footerLogoTextClass =
+    footerLogoSize === "small" ? "text-[10px] sm:text-xs font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : footerLogoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
+    : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
+
   const logoBlock = showLogo ? (
     <div className={`flex ${logoPosCls}`}>
       {logoUrl ? (
-        <img src={logoUrl} alt={displayName} className="h-8 object-contain" style={textColor ? { filter: "none" } : undefined} />
+        <img src={logoUrl} alt={displayName} className={footerLogoImgClass} style={textColor ? { filter: "none" } : undefined} />
       ) : (
-        <span className="text-[10px] tracking-[0.4em] uppercase font-light" style={textStyle}>
+        <span className={footerLogoTextClass} style={textStyle}>
           {displayName}
         </span>
       )}
