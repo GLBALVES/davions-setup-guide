@@ -79,12 +79,8 @@ export default function PreviewHeader({
   //  - Edit mode: keep a placeholder image so the user still sees the hero area
   //    and can access the edit handles to add/restore slides.
   const navOnlyMode = validSlides.length === 0 && !editMode;
-  const usingPlaceholder = validSlides.length === 0 && editMode;
-  const slides: HeaderSlide[] = navOnlyMode
-    ? []
-    : usingPlaceholder
-      ? [{ id: "placeholder", imageUrl: PLACEHOLDER_IMAGE }]
-      : validSlides;
+  const navOnlyModeEdit = validSlides.length === 0 && editMode;
+  const navOnlyMode = navOnlyModeLive || navOnlyModeEdit;
 
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
