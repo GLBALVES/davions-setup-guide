@@ -4354,13 +4354,6 @@ const WebsiteEditor = () => {
           </div>
         )}
 
-        {/* Simulated browser tab — shows favicon + title in real time */}
-        <BrowserTabBar
-          faviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
-          title={(site as any)?.logoText || site?.displayName || "Studio"}
-          saveStatus={saveStatus}
-        />
-
         <InlineFormatToolbar />
 
         <div className="flex-1 min-h-0">
@@ -4410,6 +4403,9 @@ const WebsiteEditor = () => {
             headerConfig={activePageInfo.headerConfig ?? null}
             onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
             onEditFooter={() => { setActiveTab("style"); setPendingStyleSub("footer"); }}
+            browserFaviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
+            browserTitle={(site as any)?.logoText || site?.displayName || "Studio"}
+            saveStatus={saveStatus}
           />
         </div>
       </div>
