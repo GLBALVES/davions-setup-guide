@@ -504,6 +504,7 @@ export default function PreviewRenderer({
   photographerId,
   headerConfig,
   onEditHeader,
+  onEditFooter,
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
