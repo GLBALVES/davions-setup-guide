@@ -4,6 +4,7 @@ import SEOHead from "@/components/SEOHead";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
