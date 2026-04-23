@@ -4409,6 +4409,7 @@ const WebsiteEditor = () => {
             photographerId={user?.id ?? null}
             headerConfig={activePageInfo.headerConfig ?? null}
             onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
+            onEditFooter={() => { setActiveTab("style"); setPendingStyleSub("footer"); }}
           />
         </div>
       </div>
