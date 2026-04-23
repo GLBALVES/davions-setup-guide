@@ -63,10 +63,10 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
   return (
     <div className="space-y-3">
       <Field label="Headline">
-        <Input value={props.headline || ""} onChange={(e) => onChange({ ...props, headline: e.target.value })} className="h-9 text-sm" placeholder="Your headline" />
+        <RichTextField value={props.headline || ""} onChange={(v) => onChange({ ...props, headline: v })} placeholder="Your headline" />
       </Field>
       <Field label="Subtitle">
-        <Input value={props.subtitle || ""} onChange={(e) => onChange({ ...props, subtitle: e.target.value })} className="h-9 text-sm" placeholder="A short subtitle" />
+        <RichTextField value={props.subtitle || ""} onChange={(v) => onChange({ ...props, subtitle: v })} placeholder="A short subtitle" />
       </Field>
       <Field label="Background Image">
         <ImageUploadField
