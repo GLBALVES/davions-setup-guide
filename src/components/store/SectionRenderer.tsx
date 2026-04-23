@@ -1317,8 +1317,28 @@ function SlideshowBlock({ images = [], autoplay = true, interval = 5000 }: any) 
 
 // ─── Carousel ───────────────────────────────────────────────────────────────
 
-function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
+function CarouselBlock({ images = [], itemsVisible = 3, autoplay = false, interval = 5000 }: any) {
   const slides = normalizeSlideItems(images);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (!autoplay || paused || slides.length <= itemsVisible) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    const t = window.setInterval(() => {
+      const itemWidth = el.scrollWidth / Math.max(1, slides.length);
+      const maxScroll = el.scrollWidth - el.clientWidth - 1;
+      const next = el.scrollLeft + itemWidth;
+      if (next >= maxScroll) {
+        el.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        el.scrollBy({ left: itemWidth, behavior: "smooth" });
+      }
+    }, Math.max(1500, Number(interval) || 5000));
+    return () => window.clearInterval(t);
+  }, [autoplay, paused, interval, slides.length, itemsVisible]);
+
   if (slides.length === 0) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
@@ -1335,7 +1355,12 @@ function CarouselBlock({ images = [], itemsVisible = 3 }: any) {
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
+      <div
+        ref={scrollerRef}
+        className="max-w-6xl mx-auto flex gap-3 overflow-x-auto no-scrollbar scroll-smooth"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {slides.map((slide, i) => {
           const inner = (
             <div className="relative w-full aspect-square overflow-hidden rounded group">
