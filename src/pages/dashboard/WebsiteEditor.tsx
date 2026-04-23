@@ -41,6 +41,7 @@ import { AddBlockDivider } from "@/components/website-editor/BlockToolbar";
 import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
 import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/components/website-editor/PreviewRenderer";
+import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormatToolbar";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
@@ -4164,6 +4165,8 @@ const WebsiteEditor = () => {
           title={(site as any)?.logoText || site?.displayName || "Studio"}
           saveStatus={saveStatus}
         />
+
+        <InlineFormatToolbar />
 
         <div className="flex-1 min-h-0">
           <PreviewRenderer
