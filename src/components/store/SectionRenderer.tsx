@@ -25,6 +25,8 @@ interface SectionRendererProps {
   /** When true, blocks render with inline editable handles. */
   editMode?: boolean;
   edit?: EditContext;
+  /** Photographer id used by public-site blocks (e.g. contact form submissions). */
+  photographerId?: string | null;
 }
 
 // ─── Site button variant helper ────────────────────────────────────────────
