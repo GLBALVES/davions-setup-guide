@@ -1108,7 +1108,7 @@ function buildBlockMap(
   derived: ReturnType<typeof deriveCommon>
 ): Record<string, React.ReactNode> {
   const { photographer, site, sessions, galleries, sessionHref, galleryHref } = props;
-  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks: _navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
+  const { displayName, headline, subheadline, ctaText, accentColor, showStore, showBooking, showContact, navLinks, handleNavClick, editMode, ed, onFieldChange, showBlock } = derived;
 
   // ── Hero ──────────────────────────────────────────────────────────────────
   let hero: React.ReactNode = null;
