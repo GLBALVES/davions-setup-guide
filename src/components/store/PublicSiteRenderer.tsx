@@ -269,6 +269,8 @@ interface Props {
   subPageSections?: any[];
   /** Pre-rendered HTML body for the sub-page (used by Terms/Privacy pages) */
   subPageHtml?: string;
+  /** Pre-rendered React node body for the sub-page (used by Shop page). Takes precedence over subPageHtml. */
+  subPageBody?: React.ReactNode;
   /** Full page sections data from site_pages.page_content.sections */
   pageSections?: PageSection[];
   /** Override the saved site_template for live preview (from ?preview= URL param) */
@@ -2239,7 +2241,9 @@ export default function PublicSiteRenderer(props: Props) {
             />
           )}
           <div className={headerConfig ? "" : "pt-20"}>
-            {subSections.length > 0 ? (
+            {props.subPageBody ? (
+              props.subPageBody
+            ) : subSections.length > 0 ? (
               <SectionRenderer sections={subSections} accentColor={accentColor} photographerId={props.photographer?.id ?? null} />
             ) : props.subPageHtml ? (
               <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24">
