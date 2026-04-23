@@ -3030,14 +3030,26 @@ const SITE_TEMPLATES_LABELS: Record<string, string> = {
   milo: "Violeta",
 };
 
-const StylePanel = ({ photographerId, site, onSiteChange }: {
+const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
+  /** When set, the panel jumps to that sub-view (e.g. when the user clicks the footer). */
+  openSubKey?: StyleSubPanel | null;
+  /** Called after the panel consumed `openSubKey` so the parent can reset it. */
+  onSubKeyHandled?: () => void;
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Allow the parent (e.g. clicking the footer in the canvas) to open a sub-panel.
+  useEffect(() => {
+    if (openSubKey) {
+      setSub(openSubKey);
+      onSubKeyHandled?.();
+    }
+  }, [openSubKey, onSubKeyHandled]);
 
   // Load the chosen site_template (separate column from photographer_site we already read)
   useEffect(() => {
