@@ -4341,8 +4341,8 @@ const WebsiteEditor = () => {
 
       {/* Preview area */}
       <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
-        <div className="h-12 border-b border-border bg-card flex items-center px-3 sm:px-4 shrink-0 gap-2">
-          {isMobile && (
+        {isMobile && (
+          <div className="h-12 border-b border-border bg-card flex items-center px-3 sm:px-4 shrink-0 gap-2">
             <button
               onClick={() => setMobilePanelOpen(true)}
               className="h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -4350,9 +4350,9 @@ const WebsiteEditor = () => {
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
-          )}
-          <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
-        </div>
+            <span className="text-xs text-muted-foreground">{TABS.find((t) => t.id === activeTab)?.label}</span>
+          </div>
+        )}
 
         {/* Simulated browser tab — shows favicon + title in real time */}
         <BrowserTabBar
