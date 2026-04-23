@@ -296,11 +296,14 @@ function PreviewFooter({
         )}
 
         <p className="text-[10px] tracking-[0.3em] uppercase font-light opacity-80">{text}</p>
-
-        {!hideBranding && (
-          <p className="text-[9px] tracking-widest uppercase opacity-40">Powered by Davions</p>
-        )}
       </div>
+
+      {/* Floating Davions badge — matches the published site */}
+      {!hideBranding && (
+        <div className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-foreground/90 text-background px-2.5 py-1 text-[9px] font-medium tracking-wide shadow">
+          <span>Made with <span className="font-semibold">Davions</span></span>
+        </div>
+      )}
 
       {editMode && (
         <div className="absolute top-2 right-3 opacity-0 group-hover/footer:opacity-100 transition-opacity pointer-events-none">
