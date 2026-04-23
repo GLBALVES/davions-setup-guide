@@ -763,7 +763,7 @@ export default function PreviewRenderer({
           )}
 
           {/* Footer */}
-          {showHeaderFooter && <PreviewFooter site={site} />}
+          {showHeaderFooter && <PreviewFooter site={site} editMode={editMode} onEdit={onEditFooter} />}
         </div>
       </div>
     </div>
