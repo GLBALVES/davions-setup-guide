@@ -28,12 +28,41 @@ export interface BlockSettings {
 
 const PRESET_COLORS = [
   { label: "None", value: "" },
-  { label: "White", value: "hsl(0, 0%, 100%)" },
-  { label: "Light Gray", value: "hsl(0, 0%, 96%)" },
-  { label: "Dark", value: "hsl(0, 0%, 8%)" },
-  { label: "Black", value: "hsl(0, 0%, 0%)" },
+  { label: "White", value: "#ffffff" },
+  { label: "Off White", value: "#fafaf9" },
+  { label: "Light Gray", value: "#f5f5f4" },
+  { label: "Gray", value: "#d6d3d1" },
+  { label: "Slate", value: "#64748b" },
+  { label: "Dark", value: "#171717" },
+  { label: "Black", value: "#000000" },
   { label: "Primary", value: "hsl(var(--primary))" },
+  { label: "Cream", value: "#f5efe6" },
+  { label: "Sand", value: "#e7dcc8" },
+  { label: "Beige", value: "#d4c5a9" },
+  { label: "Blush", value: "#f5d6d0" },
+  { label: "Rose", value: "#e8b4b8" },
+  { label: "Mauve", value: "#a78a8a" },
+  { label: "Sage", value: "#b8c5b0" },
+  { label: "Olive", value: "#7d8a5c" },
+  { label: "Forest", value: "#3a5a40" },
+  { label: "Mint", value: "#c8e0d4" },
+  { label: "Sky", value: "#bfd9e8" },
+  { label: "Ocean", value: "#4a7a96" },
+  { label: "Navy", value: "#1e3a5f" },
+  { label: "Lavender", value: "#d4c5e2" },
+  { label: "Purple", value: "#6b4e8a" },
+  { label: "Plum", value: "#3d2645" },
+  { label: "Terracotta", value: "#c97b63" },
+  { label: "Rust", value: "#8b4513" },
+  { label: "Mustard", value: "#d4a574" },
+  { label: "Gold", value: "#b89968" },
+  { label: "Brown", value: "#5c4033" },
+  { label: "Espresso", value: "#3e2723" },
 ];
+
+function isHexColor(v: string) {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v.trim());
+}
 
 const PADDING_PRESETS = [
   { label: "Compact", top: 24, bottom: 24 },
