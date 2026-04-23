@@ -789,6 +789,27 @@ function SharedFooter({
     </p>
   ) : null;
 
+  // ── Legal links (Terms + Privacy) ───────────────────────────────────────
+  const legalBlock = (
+    <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
+      <a href="/terms" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+        {t.lgpd.termsOfService}
+      </a>
+      <span className="text-[10px] opacity-40" style={textStyle}>·</span>
+      <a href="/privacy" className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
+        {t.lgpd.privacyPolicy}
+      </a>
+    </div>
+  );
+
+  const bottomBlock = (
+    <div className="flex flex-col gap-2 items-center w-full">
+      {copyrightBlock}
+      {legalBlock}
+    </div>
+  );
+
+
   // ── Layout renderers ────────────────────────────────────────────────────
   const renderColumns = () => {
     const blocks = [navBlock, sitemapBlock, contactBlock, ...(columnsBlock ? columns.map((col, ci) => (
