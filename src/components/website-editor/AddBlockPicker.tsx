@@ -5,7 +5,7 @@ import {
   FileText, Columns2, Columns3, Minus, Video,
   DollarSign, HelpCircle, Quote, BarChart3, Users, Clock,
   Mail, Map, Instagram, Share2, Code, Award,
-  Search, Sparkles, X,
+  Search, Sparkles, X, Store, ShoppingBag,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -95,6 +95,15 @@ const CATEGORIES: BlockCategory[] = [
     blocks: [
       { type: "cta", label: "Call to Action", description: "Drive visitors to act", icon: Target },
       { type: "logo-strip", label: "Logo Strip", description: "'As seen on' brand logos", icon: Award },
+    ],
+  },
+  {
+    id: "commerce",
+    label: "Commerce",
+    emoji: "🛍️",
+    icon: ShoppingBag,
+    blocks: [
+      { type: "shop", label: "Shop", description: "Sessions & galleries grid", icon: Store },
     ],
   },
 ];

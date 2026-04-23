@@ -82,6 +82,12 @@ export const BLOCK_VARIANTS: Partial<Record<SectionType, BlockVariant[]>> = {
     { id: "grid-4x4", label: "4×4 Grid", icon: "⊡" },
     { id: "carousel", label: "Carousel", icon: "⟷" },
   ],
+  shop: [
+    { id: "grid-3", label: "3 Columns", icon: "⊞" },
+    { id: "grid-4", label: "4 Columns", icon: "⊡" },
+    { id: "grid-2-feature", label: "Featured", icon: "▭" },
+    { id: "carousel", label: "Carousel", icon: "⟷" },
+  ],
 };
 
 /** Get the default variant for a section type */
