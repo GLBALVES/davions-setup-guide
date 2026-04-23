@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { RichTextField } from "./RichTextField";
 
 /**
  * Reusable button-list schema. Used both at the block level (Hero / CTA / …)
@@ -103,10 +104,9 @@ export function ButtonsList({ buttons, onChange, label = "Buttons", compact = fa
                 <Trash2 className="h-3 w-3" />
               </button>
             </div>
-            <Input
+            <RichTextField
               value={b.text || ""}
-              onChange={(e) => updateAt(i, { text: e.target.value })}
-              className="h-8 text-xs"
+              onChange={(v) => updateAt(i, { text: v })}
               placeholder="Button text"
             />
             <Input
