@@ -139,8 +139,8 @@ export function resolveBlockButtons(props: any): BlockButton[] {
   return [];
 }
 
-/** Renders the configured button list. In edit mode, always shows at least one
- *  placeholder so the editor can interact with it. */
+/** Renders the configured button list. In edit mode, only shows buttons
+ *  that actually exist (no placeholder). Returns null when empty. */
 function BlockButtons({
   buttons,
   editMode,
@@ -154,7 +154,9 @@ function BlockButtons({
   marginTop?: string | number;
   align?: "start" | "center" | "end";
 }) {
-  const list = buttons.length > 0 ? buttons : (editMode ? [{ text: "", link: "", variant: "primary" as const }] : []);
+  // In edit mode: only show buttons if there are actual configured buttons
+  // In preview mode: only show buttons if there are actual buttons
+  const list = buttons.filter((b) => b.text || b.link);
   if (list.length === 0) return null;
   const justify = align === "center" ? "center" : align === "end" ? "flex-end" : "flex-start";
   return (
@@ -180,7 +182,7 @@ function BlockButtons({
               value={b.text || ""}
               placeholder="Button text"
               onChange={(v) => {
-                const next = [...list];
+                const next = [...buttons];
                 next[i] = { ...next[i], text: v };
                 onChange(next);
               }}
