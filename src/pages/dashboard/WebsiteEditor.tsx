@@ -2566,14 +2566,14 @@ const FooterSubPanel = ({
       <section className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-foreground">Show "Powered by Davions"</p>
+            <p className="text-sm text-foreground">Hide Davions badge</p>
             <p className="text-[11px] text-muted-foreground">
-              Hide the badge at the very bottom of the footer.
+              Removes the floating "Made with Davions" badge from your published site.
             </p>
           </div>
           <Switch
-            checked={!((site as any)?.hideBranding ?? false)}
-            onCheckedChange={(checked) => onSiteChange({ hide_branding: !checked })}
+            checked={(site as any)?.hideBranding ?? (site as any)?.hide_branding ?? false}
+            onCheckedChange={(checked) => onSiteChange({ hide_branding: checked })}
           />
         </div>
       </section>
