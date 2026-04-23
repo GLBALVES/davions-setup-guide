@@ -389,7 +389,6 @@ export function RichTextField({
             active={showSize}
             onClick={() => {
               setShowSize((v) => !v);
-              setShowColor=false as never;
               setShowColor(false);
               setShowFont(false);
             }}
