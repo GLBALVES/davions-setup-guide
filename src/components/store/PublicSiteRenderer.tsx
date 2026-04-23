@@ -267,6 +267,8 @@ interface Props {
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
   subPageSections?: any[];
+  /** Pre-rendered HTML body for the sub-page (used by Terms/Privacy pages) */
+  subPageHtml?: string;
   /** Full page sections data from site_pages.page_content.sections */
   pageSections?: PageSection[];
   /** Override the saved site_template for live preview (from ?preview= URL param) */
@@ -2239,6 +2241,18 @@ export default function PublicSiteRenderer(props: Props) {
           <div className={headerConfig ? "" : "pt-20"}>
             {subSections.length > 0 ? (
               <SectionRenderer sections={subSections} accentColor={accentColor} photographerId={props.photographer?.id ?? null} />
+            ) : props.subPageHtml ? (
+              <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24">
+                <h1 className="text-2xl sm:text-3xl font-light tracking-wide mb-2">{subPageTitle}</h1>
+                <p className="text-xs opacity-60 mb-10">
+                  {new Date().toISOString().slice(0, 10)} · {photographer?.business_name || photographer?.full_name || ""}
+                </p>
+                <article
+                  className="prose prose-sm max-w-none [&_h2]:text-sm [&_h2]:tracking-widest [&_h2]:uppercase [&_h2]:font-light [&_h2]:mt-10 [&_h2]:mb-3 [&_p]:text-xs [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:text-xs [&_li]:mb-1 [&_strong]:font-medium"
+                  style={site?.text_color ? { color: site.text_color } : undefined}
+                  dangerouslySetInnerHTML={{ __html: props.subPageHtml }}
+                />
+              </div>
             ) : subPageData?.content ? (
               <div className="max-w-4xl mx-auto px-6 py-16">
                 <h1 className="text-3xl md:text-5xl font-extralight tracking-[0.1em] uppercase mb-10">{subPageTitle}</h1>
@@ -2255,7 +2269,7 @@ export default function PublicSiteRenderer(props: Props) {
               </div>
             )}
           </div>
-          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} />
+          <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} storeSlug={props.photographer?.store_slug ?? null} />
         </div>
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
