@@ -48,7 +48,7 @@ export function ImageUploadField({
   aspectClass = "aspect-video",
   allowedTypes,
   allowedTypesLabel,
-  maxSizeMB = 10,
+  maxSizeMB = 50,
   minWidth,
   minHeight,
   maxWidth,

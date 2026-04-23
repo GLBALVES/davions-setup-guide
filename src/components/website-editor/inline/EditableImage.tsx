@@ -45,8 +45,8 @@ export default function EditableImage({
       toast.error("Please select an image file");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be smaller than 10MB");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Image must be smaller than 50MB");
       return;
     }
     if (!photographerId) {
