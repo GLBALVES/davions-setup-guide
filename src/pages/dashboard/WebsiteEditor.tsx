@@ -4482,6 +4482,9 @@ const WebsiteEditor = () => {
       showShop={Boolean((site as any)?.show_store)}
       shopLabel={(site as any)?.shop_title || undefined}
       shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
+      shopInMenu={(site as any)?.shop_in_menu !== false}
+      shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
+      onShopChange={(patch) => updateSite(patch)}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
