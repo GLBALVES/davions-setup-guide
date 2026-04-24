@@ -17,6 +17,8 @@ interface PageTemplate {
 
 const CATEGORIES = [
   "viewAll",
+  "landing",
+  "services",
   "about",
   "contact",
   "gallery",
@@ -30,6 +32,14 @@ type CategoryKey = typeof CATEGORIES[number];
 
 const TEMPLATES: PageTemplate[] = [
   { id: "blank", name: "Blank", category: "viewAll", description: "Página vazia para começar do zero." },
+  // Landing
+  { id: "landing-1", name: "Landing 1", category: "landing", description: "Conversão com prova social, planos e FAQ." },
+  { id: "landing-2", name: "Landing 2", category: "landing", description: "Casamentos: portfólio, planos e contato." },
+  { id: "landing-3", name: "Landing 3", category: "landing", description: "Mini sessions com escassez e CTA forte." },
+  // Services
+  { id: "services-1", name: "Services 1", category: "services", description: "Visão geral com colunas, planos e FAQ." },
+  { id: "services-2", name: "Services 2", category: "services", description: "Serviços detalhados em blocos visuais." },
+  { id: "services-3", name: "Services 3", category: "services", description: "Pacotes com depoimentos e métricas." },
   // About
   { id: "about-1", name: "About 1", category: "about", description: "Hero, história, números e depoimentos." },
   { id: "about-2", name: "About 2", category: "about", description: "Estúdio, jornada, equipe e CTA final." },
@@ -37,6 +47,8 @@ const TEMPLATES: PageTemplate[] = [
   // Contact
   { id: "contact-1", name: "Contact 1", category: "contact", description: "Contato com formulário, infos e mapa." },
   { id: "contact-2", name: "Contact 2", category: "contact", description: "Contato simples com horário e localização." },
+  { id: "contact-3", name: "Contact 3", category: "contact", description: "Contato com FAQ e redes sociais." },
+  { id: "contact-4", name: "Contact 4", category: "contact", description: "Consulta com depoimentos e CTA." },
   // Gallery
   { id: "gallery-1", name: "Gallery 1", category: "gallery", description: "Galeria em grid com CTA de conversão." },
   { id: "gallery-2", name: "Gallery 2", category: "gallery", description: "Masonry com depoimentos e CTA." },
