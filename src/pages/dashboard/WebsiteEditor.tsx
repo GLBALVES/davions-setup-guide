@@ -240,6 +240,7 @@ const PageContextMenu = ({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 };
 
