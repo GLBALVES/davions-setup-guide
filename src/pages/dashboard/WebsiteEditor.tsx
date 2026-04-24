@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate,
+  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
@@ -100,7 +100,7 @@ import { loadStudioContent, enrichSectionsWithContent } from "@/lib/site-templat
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 const TABS: { id: EditorTab; icon: React.ElementType; label: string }[] = [
-  { id: "pages", icon: LayoutTemplate, label: "Pages" },
+  { id: "pages", icon: Files, label: "Pages" },
   { id: "blog", icon: Newspaper, label: "Blog" },
   { id: "style", icon: Paintbrush, label: "Style" },
   { id: "settings", icon: Settings, label: "Settings" },
