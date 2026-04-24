@@ -2069,6 +2069,8 @@ export const translations = {
         portfolio: "Portfolio",
         story: "Story",
         others: "Others",
+        landing: "Landing",
+        services: "Services",
       },
     },
   },
