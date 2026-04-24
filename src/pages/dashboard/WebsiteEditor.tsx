@@ -1423,6 +1423,36 @@ const DroppableZone = ({
   );
 };
 
+const SHOP_VIRTUAL_ID = "__shop__";
+
+const ShopRow = ({ label, href }: { label: string; href: string }) => {
+  return (
+    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+      <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Open Shop"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </div>
+  );
+};
+
+type ShopExtra = {
+  label: string;
+  href: string;
+  inMenu: boolean;
+  sortOrder: number;
+  onMove: (toZone: "menu" | "notmenu") => void;
+  onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+};
+
 const DndPagesArea = ({
   menuPages,
   nonMenuPages,
@@ -1437,6 +1467,7 @@ const DndPagesArea = ({
   onMove,
   onReorder,
   onMoveToFolder,
+  shopExtra,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
@@ -1451,6 +1482,7 @@ const DndPagesArea = ({
   onMove: (id: string, target: DndZone) => void;
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
+  shopExtra?: ShopExtra | null;
 }) => {
   const folders = [...menuPages, ...nonMenuPages].filter((p) => p.type === "folder");
   const sensors = useSensors(
@@ -1463,8 +1495,15 @@ const DndPagesArea = ({
   const allPages = [...menuPages, ...nonMenuPages, ...childPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
-  const menuIds = menuPages.map((p) => p.id);
-  const notMenuIds = nonMenuPages.map((p) => p.id);
+  // Build IDs lists, injecting the virtual shop item at its sortOrder slot
+  const baseMenuIds = menuPages.map((p) => p.id);
+  const baseNotMenuIds = nonMenuPages.map((p) => p.id);
+  const injectShop = (ids: string[], so: number) => {
+    const idx = Math.max(0, Math.min(so, ids.length));
+    return [...ids.slice(0, idx), SHOP_VIRTUAL_ID, ...ids.slice(idx)];
+  };
+  const menuIds = shopExtra && shopExtra.inMenu ? injectShop(baseMenuIds, shopExtra.sortOrder) : baseMenuIds;
+  const notMenuIds = shopExtra && !shopExtra.inMenu ? injectShop(baseNotMenuIds, shopExtra.sortOrder) : baseNotMenuIds;
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
