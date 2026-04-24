@@ -2329,6 +2329,17 @@ const PagesPanel = ({
             toast.success(folderId ? "Moved to folder" : "Removed from folder");
           }
         }}
+        shopExtra={showShop && onShopChange ? {
+          label: shopLabel || "Shop",
+          href: shopHref || "#",
+          inMenu: shopInMenu !== false,
+          sortOrder: typeof shopSortOrder === "number" ? shopSortOrder : 1,
+          onMove: (toZone) => onShopChange({ shop_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
+            if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
+          },
+        } : null}
       />
 
       <PageTemplatePickerModal
