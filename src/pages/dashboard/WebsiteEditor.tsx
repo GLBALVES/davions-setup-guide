@@ -138,6 +138,29 @@ const PageContextMenu = ({
   const isInFolder = !!(page as any).parentId;
 
   return (
+    <div className="flex items-center gap-0.5">
+      <button
+        type="button"
+        title={we.duplicate}
+        aria-label={we.duplicate}
+        className="p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+      >
+        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
+      <button
+        type="button"
+        title={page.inMenu ? we.hideFromMenu : we.showOnMenu}
+        aria-label={page.inMenu ? we.hideFromMenu : we.showOnMenu}
+        className="p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => { e.stopPropagation(); onToggleMenu(); }}
+      >
+        {page.inMenu ? (
+          <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+        ) : (
+          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+        )}
+      </button>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
