@@ -45,6 +45,7 @@ import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormat
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
   PointerSensor, KeyboardSensor, useSensor, useSensors,
@@ -2380,20 +2381,7 @@ const PagesPanel = ({
   );
 };
 
-// ── Placeholder panels ───────────────────────────────────────────────────────
-const BlogPanel = () => (
-  <div className="p-4 space-y-4">
-    <h3 className="text-sm font-medium text-foreground">Blog</h3>
-    <p className="text-xs text-muted-foreground">Manage your blog posts and settings.</p>
-    <div className="space-y-2">
-      {["Posts", "Categories", "Settings"].map((item) => (
-        <div key={item} className="p-3 border border-border rounded-md hover:bg-muted/30 cursor-pointer transition-colors">
-          <p className="text-xs font-medium">{item}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+// ── Blog panel moved to BlogPostsPanel.tsx ───────────────────────────────────
 
 // ── Style Panel (Pixieset-style: Template + Template Options) ────────────────
 type StyleSubPanel =
@@ -4369,7 +4357,7 @@ const WebsiteEditor = () => {
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
     />,
-    blog: <BlogPanel />,
+    blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
