@@ -1,13 +1,22 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ExternalLink, Sparkles, Eye } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getBlogDefaults } from "@/lib/blog-defaults";
 
 const STR = {
   en: {
     title: "Blog",
     toggleLabel: "Show blog on site",
     toggleDesc: "Adds a /blog section to your public website.",
+    heroTitle: "Page title",
+    heroTitlePh: "Blog",
+    heroDesc: "Page description",
+    heroDescPh: "Stories, tips & inspiration from behind the lens.",
+    viewPublic: "View public blog",
     createPost: "Create new post with AI",
     createPostDesc: "Opens the AI blog generator in a new tab.",
     managePosts: "Manage blog posts",
@@ -18,6 +27,11 @@ const STR = {
     title: "Blog",
     toggleLabel: "Mostrar blog no site",
     toggleDesc: "Adiciona uma seção /blog ao seu site público.",
+    heroTitle: "Título da página",
+    heroTitlePh: "Blog",
+    heroDesc: "Descrição da página",
+    heroDescPh: "Histórias, dicas e inspiração de quem está por trás das lentes.",
+    viewPublic: "Ver blog público",
     createPost: "Criar novo post com IA",
     createPostDesc: "Abre o gerador de blog com IA em uma nova aba.",
     managePosts: "Gerenciar posts do blog",
@@ -28,6 +42,11 @@ const STR = {
     title: "Blog",
     toggleLabel: "Mostrar blog en el sitio",
     toggleDesc: "Agrega una sección /blog a tu sitio público.",
+    heroTitle: "Título de la página",
+    heroTitlePh: "Blog",
+    heroDesc: "Descripción de la página",
+    heroDescPh: "Historias, consejos e inspiración detrás de la lente.",
+    viewPublic: "Ver blog público",
     createPost: "Crear nueva entrada con IA",
     createPostDesc: "Abre el generador de blog con IA en una nueva pestaña.",
     managePosts: "Gestionar entradas del blog",
@@ -45,6 +64,7 @@ export default function BlogSubPanel({
 }) {
   const { lang } = useLanguage();
   const t = STR[lang as keyof typeof STR] ?? STR.en;
+  const d = getBlogDefaults(lang);
   const enabled = site?.show_blog ?? false;
 
   const openInNewTab = (path: string) => {
@@ -70,7 +90,46 @@ export default function BlogSubPanel({
         />
       </div>
 
-      {/* Primary CTA — Create new post (opens in new tab) */}
+      {enabled && (
+        <div className="space-y-3 pb-3 border-b border-border">
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-foreground normal-case tracking-normal">
+              {t.heroTitle}
+            </Label>
+            <Input
+              value={site?.blog_title ?? ""}
+              onChange={(e) => onSiteChange({ blog_title: e.target.value })}
+              placeholder={d.pageTitle || t.heroTitlePh}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-foreground normal-case tracking-normal">
+              {t.heroDesc}
+            </Label>
+            <Textarea
+              value={site?.blog_description ?? ""}
+              onChange={(e) => onSiteChange({ blog_description: e.target.value })}
+              placeholder={d.pageDescription || t.heroDescPh}
+              rows={2}
+              className="text-xs resize-none"
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-between text-xs normal-case tracking-normal h-8 px-3"
+            onClick={() => openInNewTab("/blog")}
+          >
+            <span className="flex items-center gap-2">
+              <Eye className="h-3.5 w-3.5" />
+              {t.viewPublic}
+            </span>
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </Button>
+        </div>
+      )}
+
       <Button
         size="sm"
         className="w-full justify-between text-xs normal-case tracking-normal font-medium h-10 px-3"
