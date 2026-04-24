@@ -1423,6 +1423,36 @@ const DroppableZone = ({
   );
 };
 
+const SHOP_VIRTUAL_ID = "__shop__";
+
+const ShopRow = ({ label, href }: { label: string; href: string }) => {
+  return (
+    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+      <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Open Shop"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </div>
+  );
+};
+
+type ShopExtra = {
+  label: string;
+  href: string;
+  inMenu: boolean;
+  sortOrder: number;
+  onMove: (toZone: "menu" | "notmenu") => void;
+  onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+};
+
 const DndPagesArea = ({
   menuPages,
   nonMenuPages,
@@ -1437,6 +1467,7 @@ const DndPagesArea = ({
   onMove,
   onReorder,
   onMoveToFolder,
+  shopExtra,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
@@ -1451,6 +1482,7 @@ const DndPagesArea = ({
   onMove: (id: string, target: DndZone) => void;
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
+  shopExtra?: ShopExtra | null;
 }) => {
   const folders = [...menuPages, ...nonMenuPages].filter((p) => p.type === "folder");
   const sensors = useSensors(
@@ -1463,8 +1495,15 @@ const DndPagesArea = ({
   const allPages = [...menuPages, ...nonMenuPages, ...childPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
-  const menuIds = menuPages.map((p) => p.id);
-  const notMenuIds = nonMenuPages.map((p) => p.id);
+  // Build IDs lists, injecting the virtual shop item at its sortOrder slot
+  const baseMenuIds = menuPages.map((p) => p.id);
+  const baseNotMenuIds = nonMenuPages.map((p) => p.id);
+  const injectShop = (ids: string[], so: number) => {
+    const idx = Math.max(0, Math.min(so, ids.length));
+    return [...ids.slice(0, idx), SHOP_VIRTUAL_ID, ...ids.slice(idx)];
+  };
+  const menuIds = shopExtra && shopExtra.inMenu ? injectShop(baseMenuIds, shopExtra.sortOrder) : baseMenuIds;
+  const notMenuIds = shopExtra && !shopExtra.inMenu ? injectShop(baseNotMenuIds, shopExtra.sortOrder) : baseNotMenuIds;
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
@@ -1479,13 +1518,15 @@ const DndPagesArea = ({
     const overId = String(e.over.id);
     if (activeId === overId) return;
 
+    const isShopActive = activeId === SHOP_VIRTUAL_ID;
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
     // A child page is one that is nested under a folder (not in either top-level zone)
-    const isActiveChild = !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
+    const isActiveChild = !isShopActive && !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
 
-    // Drop onto a folder header explicit droppable → make subpage
+    // Drop onto a folder header explicit droppable → make subpage (shop cannot be nested)
     if (overId.startsWith("folder:")) {
+      if (isShopActive) return;
       const folderId = overId.slice("folder:".length);
       if (folderId === activeId || isActiveFolder) return;
       onMoveToFolder(activeId, folderId);
@@ -1494,7 +1535,7 @@ const DndPagesArea = ({
 
     // Drop onto a folder row id (sortable wraps the folder) → nest as subpage
     const overIsFolder = folders.some((f) => f.id === overId);
-    if (overIsFolder && !isActiveFolder) {
+    if (overIsFolder && !isActiveFolder && !isShopActive) {
       onMoveToFolder(activeId, overId);
       return;
     }
@@ -1528,10 +1569,21 @@ const DndPagesArea = ({
       const oldIdx = list.indexOf(activeId);
       const newIdx = list.indexOf(overId);
       if (oldIdx < 0 || newIdx < 0) return;
-      onReorder(toZone, arrayMove(list, oldIdx, newIdx));
+      const reordered = arrayMove(list, oldIdx, newIdx);
+      // Update shop position if applicable
+      if (shopExtra && shopExtra.inMenu === (toZone === "menu") && reordered.includes(SHOP_VIRTUAL_ID)) {
+        shopExtra.onReorder(toZone, reordered);
+      }
+      // Update real pages order (without the shop virtual id)
+      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID);
+      if (pagesOnly.length > 0) onReorder(toZone, pagesOnly);
     } else {
       // Cross-zone move (visibility toggle)
-      onMove(activeId, toZone);
+      if (isShopActive && shopExtra) {
+        shopExtra.onMove(toZone);
+      } else {
+        onMove(activeId, toZone);
+      }
     }
   };
 
@@ -1544,10 +1596,19 @@ const DndPagesArea = ({
       onDragEnd={handleDragEnd}
     >
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
-        <DroppableZone id="menu" emptyHint={menuPages.length === 0 ? "Drop here to show in menu" : undefined}>
+        <DroppableZone id="menu" emptyHint={menuIds.length === 0 ? "Drop here to show in menu" : undefined}>
           <SortableContext items={menuIds} strategy={verticalListSortingStrategy}>
-            {menuPages.map((page) =>
-              page.type === "folder" ? (
+            {menuIds.map((id) => {
+              if (id === SHOP_VIRTUAL_ID && shopExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                  </SortableRow>
+                );
+              }
+              const page = menuPages.find((p) => p.id === id);
+              if (!page) return null;
+              return page.type === "folder" ? (
                 <SortableRow key={page.id} id={page.id}>
                   <PageFolder
                     page={page}
@@ -1577,18 +1638,27 @@ const DndPagesArea = ({
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
-              )
-            )}
+              );
+            })}
           </SortableContext>
         </DroppableZone>
 
         <div className="px-2 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{notInMenuLabel}</p>
         </div>
-        <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
+        <DroppableZone id="notmenu" emptyHint={notMenuIds.length === 0 ? "Drop here to hide from menu" : undefined}>
           <SortableContext items={notMenuIds} strategy={verticalListSortingStrategy}>
-            {nonMenuPages.map((page) => (
-              page.type === "folder" ? (
+            {notMenuIds.map((id) => {
+              if (id === SHOP_VIRTUAL_ID && shopExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                  </SortableRow>
+                );
+              }
+              const page = nonMenuPages.find((p) => p.id === id);
+              if (!page) return null;
+              return page.type === "folder" ? (
                 <SortableRow key={page.id} id={page.id}>
                   <PageFolder
                     page={page}
@@ -1618,14 +1688,20 @@ const DndPagesArea = ({
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
-              )
-            ))}
+              );
+            })}
           </SortableContext>
         </DroppableZone>
       </nav>
 
       <DragOverlay dropAnimation={null}>
-        {activeDrag ? (
+        {dragId === SHOP_VIRTUAL_ID && shopExtra ? (
+          <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+            <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="truncate">{shopExtra.label}</span>
+          </div>
+        ) : activeDrag ? (
           <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="truncate">{activeDrag.label}</span>
@@ -1654,6 +1730,9 @@ const PagesPanel = ({
   showShop,
   shopLabel,
   shopHref,
+  shopInMenu,
+  shopSortOrder,
+  onShopChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1671,6 +1750,9 @@ const PagesPanel = ({
   showShop?: boolean;
   shopLabel?: string;
   shopHref?: string;
+  shopInMenu?: boolean;
+  shopSortOrder?: number;
+  onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -2191,27 +2273,6 @@ const PagesPanel = ({
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.siteMenu}</p>
       </div>
 
-      {showShop && (
-        <div className="px-2 pb-1">
-          <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
-            <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="text-xs text-foreground flex-1 truncate">{shopLabel || "Shop"}</span>
-            {shopHref && (
-              <a
-                href={shopHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open Shop"
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
       <DndPagesArea
         menuPages={menuPages}
         nonMenuPages={nonMenuPages}
@@ -2268,6 +2329,17 @@ const PagesPanel = ({
             toast.success(folderId ? "Moved to folder" : "Removed from folder");
           }
         }}
+        shopExtra={showShop && onShopChange ? {
+          label: shopLabel || "Shop",
+          href: shopHref || "#",
+          inMenu: shopInMenu !== false,
+          sortOrder: typeof shopSortOrder === "number" ? shopSortOrder : 1,
+          onMove: (toZone) => onShopChange({ shop_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
+            if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
+          },
+        } : null}
       />
 
       <PageTemplatePickerModal
@@ -4410,6 +4482,9 @@ const WebsiteEditor = () => {
       showShop={Boolean((site as any)?.show_store)}
       shopLabel={(site as any)?.shop_title || undefined}
       shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
+      shopInMenu={(site as any)?.shop_in_menu !== false}
+      shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
+      onShopChange={(patch) => updateSite(patch)}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
