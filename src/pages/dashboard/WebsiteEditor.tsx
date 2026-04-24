@@ -1651,6 +1651,9 @@ const PagesPanel = ({
   onHeaderConfigChange,
   storeSlug,
   showBlog,
+  showShop,
+  shopLabel,
+  shopHref,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1665,6 +1668,9 @@ const PagesPanel = ({
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
   storeSlug?: string | null;
   showBlog?: boolean;
+  showShop?: boolean;
+  shopLabel?: string;
+  shopHref?: string;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
