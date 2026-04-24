@@ -2495,6 +2495,8 @@ export type Database = {
           about_text_color: string | null
           about_title: string | null
           accent_color: string | null
+          blog_description: string | null
+          blog_title: string | null
           body_font: string | null
           button_height: number | null
           button_shape: string | null
@@ -2594,6 +2596,8 @@ export type Database = {
           about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          blog_description?: string | null
+          blog_title?: string | null
           body_font?: string | null
           button_height?: number | null
           button_shape?: string | null
@@ -2693,6 +2697,8 @@ export type Database = {
           about_text_color?: string | null
           about_title?: string | null
           accent_color?: string | null
+          blog_description?: string | null
+          blog_title?: string | null
           body_font?: string | null
           button_height?: number | null
           button_shape?: string | null
