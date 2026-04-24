@@ -91,6 +91,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import PublicLegalPage from "./pages/store/PublicLegalPage";
 import PublicShopPage from "./pages/store/PublicShopPage";
+import PublicBlogListPage from "./pages/store/PublicBlogListPage";
+import PublicBlogPostPage from "./pages/store/PublicBlogPostPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,6 +126,8 @@ const App = () => {
                 <Route path="/terms" element={<PublicLegalPage kind="terms" mode="custom-domain" />} />
                 <Route path="/privacy" element={<PublicLegalPage kind="privacy" mode="custom-domain" />} />
                 <Route path="/shop" element={<PublicShopPage mode="custom-domain" />} />
+                <Route path="/blog" element={<PublicBlogListPage mode="custom-domain" />} />
+                <Route path="/blog/:postSlug" element={<PublicBlogPostPage mode="custom-domain" />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
             ) : (
@@ -138,6 +142,8 @@ const App = () => {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/store/:slug" element={<StorePage />} />
                 <Route path="/store/:slug/shop" element={<PublicShopPage mode="store" />} />
+                <Route path="/store/:slug/blog" element={<PublicBlogListPage mode="store" />} />
+                <Route path="/store/:slug/blog/:postSlug" element={<PublicBlogPostPage mode="store" />} />
                 <Route path="/store/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
                 <Route path="/store/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
                 <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
