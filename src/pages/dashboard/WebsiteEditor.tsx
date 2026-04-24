@@ -1730,6 +1730,9 @@ const PagesPanel = ({
   showShop,
   shopLabel,
   shopHref,
+  shopInMenu,
+  shopSortOrder,
+  onShopChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1747,6 +1750,9 @@ const PagesPanel = ({
   showShop?: boolean;
   shopLabel?: string;
   shopHref?: string;
+  shopInMenu?: boolean;
+  shopSortOrder?: number;
+  onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
