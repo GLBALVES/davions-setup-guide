@@ -1518,13 +1518,15 @@ const DndPagesArea = ({
     const overId = String(e.over.id);
     if (activeId === overId) return;
 
+    const isShopActive = activeId === SHOP_VIRTUAL_ID;
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
     // A child page is one that is nested under a folder (not in either top-level zone)
-    const isActiveChild = !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
+    const isActiveChild = !isShopActive && !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
 
-    // Drop onto a folder header explicit droppable → make subpage
+    // Drop onto a folder header explicit droppable → make subpage (shop cannot be nested)
     if (overId.startsWith("folder:")) {
+      if (isShopActive) return;
       const folderId = overId.slice("folder:".length);
       if (folderId === activeId || isActiveFolder) return;
       onMoveToFolder(activeId, folderId);
@@ -1533,7 +1535,7 @@ const DndPagesArea = ({
 
     // Drop onto a folder row id (sortable wraps the folder) → nest as subpage
     const overIsFolder = folders.some((f) => f.id === overId);
-    if (overIsFolder && !isActiveFolder) {
+    if (overIsFolder && !isActiveFolder && !isShopActive) {
       onMoveToFolder(activeId, overId);
       return;
     }
@@ -1567,10 +1569,21 @@ const DndPagesArea = ({
       const oldIdx = list.indexOf(activeId);
       const newIdx = list.indexOf(overId);
       if (oldIdx < 0 || newIdx < 0) return;
-      onReorder(toZone, arrayMove(list, oldIdx, newIdx));
+      const reordered = arrayMove(list, oldIdx, newIdx);
+      // Update shop position if applicable
+      if (shopExtra && shopExtra.inMenu === (toZone === "menu") && reordered.includes(SHOP_VIRTUAL_ID)) {
+        shopExtra.onReorder(toZone, reordered);
+      }
+      // Update real pages order (without the shop virtual id)
+      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID);
+      if (pagesOnly.length > 0) onReorder(toZone, pagesOnly);
     } else {
       // Cross-zone move (visibility toggle)
-      onMove(activeId, toZone);
+      if (isShopActive && shopExtra) {
+        shopExtra.onMove(toZone);
+      } else {
+        onMove(activeId, toZone);
+      }
     }
   };
 
