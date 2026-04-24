@@ -4407,6 +4407,9 @@ const WebsiteEditor = () => {
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
+      showShop={Boolean((site as any)?.show_store)}
+      shopLabel={(site as any)?.shop_title || undefined}
+      shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
