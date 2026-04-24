@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft,
+  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
@@ -1651,6 +1651,9 @@ const PagesPanel = ({
   onHeaderConfigChange,
   storeSlug,
   showBlog,
+  showShop,
+  shopLabel,
+  shopHref,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1665,6 +1668,9 @@ const PagesPanel = ({
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
   storeSlug?: string | null;
   showBlog?: boolean;
+  showShop?: boolean;
+  shopLabel?: string;
+  shopHref?: string;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -2184,6 +2190,27 @@ const PagesPanel = ({
       <div className="px-4 pb-2">
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.siteMenu}</p>
       </div>
+
+      {showShop && (
+        <div className="px-2 pb-1">
+          <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+            <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="text-xs text-foreground flex-1 truncate">{shopLabel || "Shop"}</span>
+            {shopHref && (
+              <a
+                href={shopHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open Shop"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       <DndPagesArea
         menuPages={menuPages}
@@ -4380,6 +4407,9 @@ const WebsiteEditor = () => {
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
+      showShop={Boolean((site as any)?.show_store)}
+      shopLabel={(site as any)?.shop_title || undefined}
+      shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
