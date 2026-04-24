@@ -45,6 +45,7 @@ import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormat
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
   PointerSensor, KeyboardSensor, useSensor, useSensors,
@@ -4369,7 +4370,7 @@ const WebsiteEditor = () => {
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
     />,
-    blog: <BlogPanel />,
+    blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
