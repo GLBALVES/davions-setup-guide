@@ -306,6 +306,78 @@ export function getTemplateSections(templateId: string): PageSection[] {
         text("Studio Hours", ""),
         mapSection(),
       ];
+    case "contact-3":
+      return [
+        hero("Let's Talk", "Reach out — I usually reply within 24h"),
+        columns3(),
+        contactForm(),
+        faqAccordion(),
+        socialLinks(),
+      ];
+    case "contact-4":
+      return [
+        hero("Book a Consultation", "Tell me about your project"),
+        contactForm(),
+        testimonials(),
+        cta("Prefer email?", "Send a Message"),
+      ];
+
+    // ── Landing ──
+    case "landing-1":
+      return [
+        hero("Capture Your Story", "Limited spots available this season"),
+        stats(),
+        imageText("Why Choose Us"),
+        pricingTable(),
+        testimonials(),
+        faqAccordion(),
+        cta("Reserve your date", "Book Now"),
+      ];
+    case "landing-2":
+      return [
+        hero("Wedding Photography", "Timeless memories, beautifully captured"),
+        galleryGrid("Recent Weddings"),
+        textImage("Our Approach"),
+        pricingTable(),
+        testimonials(),
+        contactForm(),
+      ];
+    case "landing-3":
+      return [
+        hero("Mini Sessions Are Open", "Book your spot before they're gone"),
+        columns3(),
+        galleryMasonry("Past Sessions"),
+        cta("Limited slots", "Reserve Now"),
+        faqAccordion(),
+      ];
+
+    // ── Services ──
+    case "services-1":
+      return [
+        hero("Services", "Everything you need, beautifully delivered"),
+        columns3(),
+        pricingTable(),
+        faqAccordion(),
+        cta("Ready to begin?", "Get a Quote"),
+      ];
+    case "services-2":
+      return [
+        hero("What I Offer", "Tailored photography services"),
+        imageText("Weddings"),
+        textImage("Portraits"),
+        imageText("Events"),
+        pricingTable(),
+        contactForm(),
+      ];
+    case "services-3":
+      return [
+        hero("Our Packages", "Choose the experience that fits your story"),
+        pricingTable(),
+        stats(),
+        testimonials(),
+        faqAccordion(),
+        cta("Have a custom request?", "Contact Us"),
+      ];
 
     // ── Gallery ──
     case "gallery-1":
