@@ -17,6 +17,7 @@ import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "
 import type { PageSection } from "@/components/store/SectionRenderer";
 import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
 import { getShopDefaults } from "@/lib/shop-defaults";
+import { getBlogDefaults } from "@/lib/blog-defaults";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RawPage {
@@ -79,10 +80,10 @@ const CustomDomainStore = () => {
         return;
       }
 
-      const [{ data: siteData }, { data: sessionData }, { data: galleryData }, { data: pagesData }] = await Promise.all([
+      const [{ data: siteData }, { data: sessionData }, { data: galleryData }, { data: pagesData }, { count: blogCount }] = await Promise.all([
         supabase
           .from("photographer_site")
-          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, logo_alt_url, logo_text, logo_size, hide_branding, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text, header_bg_color, header_text_color, header_visible_socials, footer_bg_color, footer_text_color, footer_show_logo, footer_show_socials, footer_visible_socials, footer_preset, footer_layout, footer_logo_position, footer_alignment, footer_show_nav, footer_show_sitemap, footer_show_contact_info, footer_show_tagline, footer_tagline, footer_columns, hero_bg_color, hero_text_color, sessions_bg_color, sessions_text_color, portfolio_bg_color, portfolio_text_color, about_bg_color, about_text_color, quote_bg_color, quote_text_color, experience_bg_color, experience_text_color, contact_bg_color, contact_text_color, testimonials_bg_color, testimonials_text_color, button_style, button_shape, button_size, button_height, button_width, shop_title, shop_description, shop_show_sessions, shop_show_galleries, shop_layout")
+          .select("site_hero_image_url, site_headline, site_subheadline, cta_text, cta_link, logo_url, logo_alt_url, logo_text, logo_size, hide_branding, tagline, accent_color, about_title, about_image_url, instagram_url, facebook_url, pinterest_url, tiktok_url, youtube_url, whatsapp, linkedin_url, footer_text, show_about, show_store, show_booking, show_blog, show_contact, seo_title, seo_description, og_image_url, site_template, favicon_url, quote_text, quote_author, experience_title, experience_text, header_bg_color, header_text_color, header_visible_socials, footer_bg_color, footer_text_color, footer_show_logo, footer_show_socials, footer_visible_socials, footer_preset, footer_layout, footer_logo_position, footer_alignment, footer_show_nav, footer_show_sitemap, footer_show_contact_info, footer_show_tagline, footer_tagline, footer_columns, hero_bg_color, hero_text_color, sessions_bg_color, sessions_text_color, portfolio_bg_color, portfolio_text_color, about_bg_color, about_text_color, quote_bg_color, quote_text_color, experience_bg_color, experience_text_color, contact_bg_color, contact_text_color, testimonials_bg_color, testimonials_text_color, button_style, button_shape, button_size, button_height, button_width, shop_title, shop_description, shop_show_sessions, shop_show_galleries, shop_layout, blog_title, blog_description")
           .eq("photographer_id", photoData.id)
           .maybeSingle(),
         (supabase as any)
@@ -102,6 +103,11 @@ const CustomDomainStore = () => {
           .select("id, title, slug, parent_id, sort_order, is_home, is_visible, sections_order, page_content, header_config, published_sections_order, published_content, published_header_config, published_at")
           .eq("photographer_id", photoData.id)
           .order("sort_order", { ascending: true }),
+        supabase
+          .from("blogs")
+          .select("id", { count: "exact", head: true })
+          .eq("photographer_id", photoData.id)
+          .eq("status", "published"),
       ]);
 
       const rawPages = (pagesData ?? []) as RawPage[];
@@ -136,20 +142,31 @@ const CustomDomainStore = () => {
         makePageHref: (page) => `/page/${page.slug}`,
       });
 
-      // Inject "Shop" link after Home when shop is enabled and has content
+      // Inject "Shop" + "Blog" links after Home when each is enabled and has content
       const siteAny = (siteData ?? {}) as Record<string, any>;
       const shopEnabled = siteAny.show_store === true;
       const hasShopContent =
         ((siteAny.shop_show_sessions !== false) && (sessionData ?? []).length > 0) ||
         ((siteAny.shop_show_galleries !== false) && (galleryData ?? []).length > 0);
+      const blogEnabled = siteAny.show_blog === true;
+      const hasBlogContent = (blogCount ?? 0) > 0;
+
+      const insertLinks: Array<{ label: string; href: string }> = [];
       if (shopEnabled && hasShopContent) {
         const shopDefaults = getShopDefaults(lang);
         const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
-        const shopLink = { label: shopLabel, href: "/shop" };
+        insertLinks.push({ label: shopLabel, href: "/shop" });
+      }
+      if (blogEnabled && hasBlogContent) {
+        const blogDefaults = getBlogDefaults(lang);
+        const blogLabel = (siteAny.blog_title as string)?.trim() || blogDefaults.navLabel;
+        insertLinks.push({ label: blogLabel, href: "/blog" });
+      }
+      if (insertLinks.length > 0) {
         if (visibleNavLinks.length > 0 && visibleNavLinks[0].href === "/") {
-          visibleNavLinks.splice(1, 0, shopLink);
+          visibleNavLinks.splice(1, 0, ...insertLinks);
         } else {
-          visibleNavLinks.unshift(shopLink);
+          visibleNavLinks.unshift(...insertLinks);
         }
       }
 
