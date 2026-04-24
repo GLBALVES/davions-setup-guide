@@ -1596,10 +1596,19 @@ const DndPagesArea = ({
       onDragEnd={handleDragEnd}
     >
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
-        <DroppableZone id="menu" emptyHint={menuPages.length === 0 ? "Drop here to show in menu" : undefined}>
+        <DroppableZone id="menu" emptyHint={menuIds.length === 0 ? "Drop here to show in menu" : undefined}>
           <SortableContext items={menuIds} strategy={verticalListSortingStrategy}>
-            {menuPages.map((page) =>
-              page.type === "folder" ? (
+            {menuIds.map((id) => {
+              if (id === SHOP_VIRTUAL_ID && shopExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                  </SortableRow>
+                );
+              }
+              const page = menuPages.find((p) => p.id === id);
+              if (!page) return null;
+              return page.type === "folder" ? (
                 <SortableRow key={page.id} id={page.id}>
                   <PageFolder
                     page={page}
@@ -1629,18 +1638,27 @@ const DndPagesArea = ({
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
-              )
-            )}
+              );
+            })}
           </SortableContext>
         </DroppableZone>
 
         <div className="px-2 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{notInMenuLabel}</p>
         </div>
-        <DroppableZone id="notmenu" emptyHint={nonMenuPages.length === 0 ? "Drop here to hide from menu" : undefined}>
+        <DroppableZone id="notmenu" emptyHint={notMenuIds.length === 0 ? "Drop here to hide from menu" : undefined}>
           <SortableContext items={notMenuIds} strategy={verticalListSortingStrategy}>
-            {nonMenuPages.map((page) => (
-              page.type === "folder" ? (
+            {notMenuIds.map((id) => {
+              if (id === SHOP_VIRTUAL_ID && shopExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                  </SortableRow>
+                );
+              }
+              const page = nonMenuPages.find((p) => p.id === id);
+              if (!page) return null;
+              return page.type === "folder" ? (
                 <SortableRow key={page.id} id={page.id}>
                   <PageFolder
                     page={page}
@@ -1670,8 +1688,8 @@ const DndPagesArea = ({
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
                   />
                 </SortableRow>
-              )
-            ))}
+              );
+            })}
           </SortableContext>
         </DroppableZone>
       </nav>
