@@ -1,117 +1,132 @@
 
-# Plano: Loja do Fotógrafo
 
-Vamos criar uma "Loja" que reúne tudo o que o fotógrafo vende — **sessões** (booking) e **galerias** publicadas (download/prints pagos) — em dois formatos: uma **página dedicada** (`/shop`) e um **bloco arrastável** que pode ser inserido em qualquer página do editor. A visibilidade é controlada por um novo painel **Settings → Loja**.
+# Plano: Fazer o Blog Funcionar Publicamente
 
-## O que o fotógrafo verá
+O módulo de criação no dashboard já está 100% funcional. Falta plugar a "saída pública" — listagem `/blog`, página de post `/blog/:slug`, RLS para leitura anônima e injeção do link no menu.
 
-### 1. Página dedicada `/shop`
-- **URL subfolder:** `davions.com/store/{slug}/shop`
-- **URL custom domain:** `meusite.com/shop`
-- Reaproveita o `PublicSiteRenderer` (mesmo header com menu, mesmo footer, sem slides) — mesma UX já adotada nas páginas de Termos/Privacidade.
-- Conteúdo: hero curto com título + descrição configuráveis, depois grid responsivo de produtos com filtros por aba: **Todos · Sessões · Galerias**.
-- Cada card mostra capa, título, preço a partir de, badge ("Sessão" ou "Galeria") e botão "Ver detalhes" → leva para `/book/:slug` (sessões) ou `/gallery/:slug` (galerias).
+## O que o usuário verá
 
-### 2. Bloco "Loja" no editor
-- Aparece em **Add Block → Commerce → Loja** com 4 variantes (grid 3-col, grid 4-col, carousel, "destaques" 2-col).
-- Props editáveis no painel lateral:
-  - Título da seção (ex: "Pacotes & Galerias")
-  - Subtítulo
-  - Filtro: Tudo / Apenas Sessões / Apenas Galerias / Selecionar manualmente IDs
-  - Limite de itens (4, 8, 12, todos)
-  - Ordem (manual, mais recentes, preço crescente, preço decrescente)
-  - Mostrar preço (sim/não)
-  - Texto do botão (default: "Ver detalhes")
-- Visualmente, o bloco enriquece automaticamente com sessões/galerias reais do estúdio (mesmo padrão já usado em `enrichSectionsWithContent`).
+### 1. Página de listagem `/blog`
+- **URL subfolder:** `davions.com/store/{slug}/blog`
+- **URL custom domain:** `meusite.com/blog`
+- Reaproveita `PublicSiteRenderer` (mesma UX de Shop/Termos): header com menu + footer, sem slides.
+- Conteúdo: hero curto com título "Blog" e descrição configurável, depois grid responsivo de cards de posts (3 colunas no desktop, 1 no mobile).
+- Cada card mostra: capa, título, trecho da meta_description, badge de keyword principal, data de publicação, tempo de leitura, botão "Ler mais" → `/blog/:slug`.
+- Filtros opcionais por keyword (chips) no topo.
+- Paginação simples (12 por página).
 
-### 3. Settings → Loja (novo SubPanel)
-- Toggle **Ativar a Loja** (escreve em `photographer_site.show_store`).
-- Quando ativo:
-  - Adiciona automaticamente o link **"Shop"** no menu do site (após Home, antes de Contato).
-  - Adiciona link **"Shop"** no footer.
-- Campos adicionais:
-  - **Título da página** (default i18n: "Shop" / "Loja" / "Tienda")
-  - **Subtítulo / descrição** (textarea curta)
-  - **Mostrar sessões** (toggle, default ON)
-  - **Mostrar galerias publicadas** (toggle, default ON)
-  - **Layout padrão** (grid 3-col / grid 4-col / lista)
-- Botão "Ver loja pública" abre `/shop` em nova aba.
+### 2. Página de post `/blog/:slug`
+- **URL subfolder:** `davions.com/store/{slug}/blog/{post-slug}`
+- **URL custom domain:** `meusite.com/blog/{post-slug}`
+- Layout tipo "artigo": capa full-width, título, autor (nome do estúdio), data, tempo de leitura, conteúdo HTML renderizado com tipografia limpa.
+- Imagem do meio renderizada se existir.
+- CTA do post (se configurado) renderizado em destaque no fim.
+- Sessão "Posts relacionados" com 3 outros posts do mesmo fotógrafo.
+- Botões de compartilhar (WhatsApp, Facebook, X, copiar link).
+- SEO completo: `<title>` = meta_title, `<meta description>`, Open Graph (og_title, og_description, og_image), JSON-LD Article schema.
+
+### 3. Integração no menu/footer
+- Quando `show_blog === true` **E** existir pelo menos 1 post com `status='published'`:
+  - Link "Blog" aparece no header automaticamente (já após "Home", antes de "Contact").
+  - Link "Blog" aparece no footer (coluna Menu e Sitemap).
+- Se não houver posts publicados, link some automaticamente para evitar página vazia (mesma regra defensiva do Shop).
 
 ## Mudanças técnicas
 
 ### Banco de dados (migração)
-Adicionar à tabela `photographer_site`:
-- `shop_title` (texto) — título da página da loja
-- `shop_description` (texto) — subtítulo
-- `shop_show_sessions` (booleano, default true)
-- `shop_show_galleries` (booleano, default true)
-- `shop_layout` (texto, default `'grid-3'`)
 
-Reaproveitar a coluna existente `show_store` como master toggle (já existe e já é usada em `Personalize.tsx`).
+**RLS pública para leitura de posts publicados:**
+
+```sql
+CREATE POLICY "Anyone can read published blogs"
+ON public.blogs
+FOR SELECT
+TO anon, authenticated
+USING (status = 'published');
+```
+
+A política existente (`Photographers can CRUD own blogs`) continua intacta — ela cobre INSERT/UPDATE/DELETE. A nova só libera SELECT pra posts publicados.
 
 ### Novos arquivos
-- `src/lib/shop-defaults.ts` — textos default i18n para título/descrição.
-- `src/pages/store/PublicShopPage.tsx` — página `/shop`. Carrega photographer + site + sessões (status=active, hide_from_store!=true) + galerias (status=published) e renderiza dentro de `PublicSiteRenderer` passando o grid de produtos como sub-page node.
-- `src/components/store/ShopGrid.tsx` — componente reutilizável que recebe `{sessions, galleries, layout, showFilters, t}` e renderiza grid + filtros por aba. Usado pela página dedicada e pelo bloco.
-- `src/components/website-editor/settings/ShopSubPanel.tsx` — novo painel em Settings.
+- `src/pages/store/PublicBlogListPage.tsx` — lista de posts, segue o padrão do `PublicShopPage.tsx` (carrega photographer + site + sitePages + posts publicados, renderiza dentro de `PublicSiteRenderer` via `subPageBody`).
+- `src/pages/store/PublicBlogPostPage.tsx` — página de detalhe do post.
+- `src/components/store/BlogList.tsx` — grid reutilizável de cards de blog (recebe `{posts, baseHref, t}`).
+- `src/components/store/BlogPostView.tsx` — render de artigo individual + CTA + share + relacionados.
+- `src/lib/blog-defaults.ts` — strings i18n para hero/empty/sharing nos 3 idiomas (EN/PT-BR/ES).
 
 ### Arquivos a editar
-- `src/components/store/PublicSiteRenderer.tsx`
-  - Estender prop `subPageHtml` para também aceitar `subPageNode?: React.ReactNode` (renderiza node em vez de HTML quando presente).
-  - Quando `site.show_store === true`, prepend link "Shop" antes dos extras no header e replicar no footer.
-- `src/components/store/SectionRenderer.tsx`
-  - Adicionar `case "shop":` chamando novo `ShopBlock` (wrapper sobre `ShopGrid` que faz fetch via context com `photographer_id`).
-- `src/components/website-editor/AddBlockPicker.tsx` + `block-variants.ts` + `BlockThumbnail.tsx`
-  - Registrar novo tipo `shop` na categoria "Commerce" com 4 variantes e thumbnails.
-- `src/components/website-editor/PreviewRenderer.tsx`
-  - Renderizar bloco `shop` em modo preview (mesmo `ShopBlock`).
-- `src/components/website-editor/settings/SettingsPanel.tsx`
-  - Adicionar item **Loja** (ícone `Store` do lucide) em "Site Settings", abrindo `ShopSubPanel`.
-- `src/App.tsx`
-  - Novas rotas:
-    - `/store/:slug/shop` → `PublicShopPage` (subfolder)
-    - `/shop` → `PublicShopPage` (custom domain)
+- `src/App.tsx` — adicionar rotas:
+  - `/store/:slug/blog` → `PublicBlogListPage` (mode=store)
+  - `/store/:slug/blog/:postSlug` → `PublicBlogPostPage` (mode=store)
+  - `/blog` → `PublicBlogListPage` (mode=custom-domain)
+  - `/blog/:postSlug` → `PublicBlogPostPage` (mode=custom-domain)
 - `src/pages/store/StorePage.tsx` e `src/pages/store/CustomDomainStore.tsx`
-  - Incluir `shop_title, shop_description, shop_show_sessions, shop_show_galleries, shop_layout` no `select`.
-  - Passar `show_store` ao builder de nav links para inserir o "Shop" automaticamente.
-- `src/lib/site-navigation.ts`
-  - Suportar parâmetro `shopLink?: { href: string; label: string }` que insere o link logo após Home.
-- i18n (`LanguageContext` / dicionários)
-  - Novas chaves: `shop.title`, `shop.description`, `shop.allTab`, `shop.sessionsTab`, `shop.galleriesTab`, `shop.viewDetails`, `shop.startingAt`, `shop.empty`, `settings.shop` nos 3 idiomas (EN/PT-BR/ES).
+  - Adicionar `hasBlogContent` (count de posts publicados) e injetar link "Blog" em `visibleNavLinks` quando `show_blog === true && hasBlogContent`.
+  - Mesma regra do Shop: insere após "Home", antes de "Contact".
+- `src/components/store/PublicSiteRenderer.tsx`
+  - Não precisa mudar — já lê `extraNavLinks` que vai incluir o link Blog.
+- `src/components/website-editor/settings/BlogSubPanel.tsx`
+  - Adicionar campos editáveis: `blog_title` (string) e `blog_description` (textarea) na config do site, que o hero da página `/blog` consome.
+  - Adicionar botão "Ver blog público" que abre `/blog` em nova aba.
 
-### Comportamento dos cards
-- **Sessão**: capa = `cover_image_url`, preço = `price` (cents → moeda), badge "Sessão", link `/book/{slug ?? id}` (subfolder usa `/store/{slug}/{slug}`).
-- **Galeria**: capa = `cover_image_url`, preço = "A partir de R$ X" usando `price_per_photo` quando > 0; badge "Galeria", link `/gallery/{slug ?? id}`.
-- Se `price === 0` ou ausente: ocultar preço (mostra apenas "Sob consulta").
+### Banco — colunas opcionais (migração leve)
+Adicionar à tabela `photographer_site`:
+- `blog_title` TEXT — título do hero da listagem (default: "Blog" / "Nosso Blog" / "Nuestro Blog")
+- `blog_description` TEXT — subtítulo/descrição
+
+### Comportamento de cards (BlogList)
+- Capa = `cover_image_url` (fallback: gradient com a primeira letra do título)
+- Título: line-clamp-2
+- Trecho: `meta_description` ou primeiras 140 chars de `content` (HTML strippado)
+- Badge: keyword principal
+- Footer do card: data formatada por idioma + `reading_time_minutes`
+- Click no card inteiro navega para `/blog/{slug}`
+
+### Comportamento da página de post (BlogPostView)
+- Carrega blog via `slug` + `photographer_id` (via store_slug ou custom_domain)
+- Se `status !== 'published'`, retorna 404
+- Renderiza `content` como HTML sanitizado (já é HTML gerado pela IA, confiável pois é do próprio fotógrafo)
+- Posts relacionados: query `blogs` mesmo `photographer_id`, status=published, id != atual, order by published_at desc, limit 3
+- SEO injetado via `<SEOHead>` (já existe no projeto)
+- Share buttons usam `navigator.share` em mobile, fallback para `window.open` + clipboard
+
+### i18n
+Novas chaves em `blog-defaults.ts`:
+- `blog.title`, `blog.description`, `blog.empty`, `blog.readMore`, `blog.minRead`
+- `blog.relatedPosts`, `blog.share`, `blog.sharedSuccess`, `blog.publishedOn`
+- `blog.allPosts`, `blog.byKeyword`
 
 ### Estados vazios
-- Se `show_store=true` mas não há sessões nem galerias publicadas: a página exibe mensagem amigável ("Em breve novidades por aqui") e o link "Shop" é ocultado automaticamente do menu/footer para não criar página vazia.
+- `/blog` sem posts → "Em breve novidades por aqui" + botão de voltar para home (e o link do menu some automaticamente, conforme regra acima).
+- Post não encontrado (`/blog/post-inexistente`) → 404 padrão da plataforma.
 
-## Diagrama de arquitetura
+## Diagrama
 
 ```text
-                   ┌─────────────────────────┐
-                   │ photographer_site       │
-                   │  show_store, shop_*     │
-                   └────────────┬────────────┘
-                                │
-        ┌───────────────────────┼───────────────────────┐
-        │                       │                       │
-        ▼                       ▼                       ▼
- ShopSubPanel          PublicShopPage           ShopBlock
- (editor settings)     (/shop dedicada)         (bloco arrastável)
-        │                       │                       │
-        └───────────────────────┴───────────────────────┘
-                                │
-                                ▼
-                       ShopGrid (componente)
-                                │
-                ┌───────────────┴───────────────┐
-                ▼                               ▼
-         sessions (active)           galleries (published)
+┌──────────────────────┐
+│ blogs (status=publ.) │ ◄── nova RLS SELECT pra anon
+└──────────┬───────────┘
+           │
+   ┌───────┴────────────┐
+   │                    │
+   ▼                    ▼
+PublicBlogListPage   PublicBlogPostPage
+(/blog)              (/blog/:slug)
+   │                    │
+   └────────┬───────────┘
+            │
+            ▼
+     PublicSiteRenderer
+     (header/footer com link "Blog" injetado)
+            ▲
+            │
+   StorePage / CustomDomainStore
+   (injeta extraNavLinks: Blog se show_blog && hasPosts)
 ```
 
 ## Fora do escopo
-- Não cria nova entidade "produtos físicos" (prints, álbuns, gift cards). Se quiser adicionar isso depois, podemos modelar uma tabela `shop_products` separada — me avise.
-- Não altera o fluxo de checkout existente (sessões continuam usando `/book`, galerias continuam usando o checkout de download por foto).
-- Não toca em Stripe Connect: a Loja é apenas vitrine + redirecionamento para os fluxos de compra que já existem.
+- Comentários públicos nos posts (precisa moderação, podemos adicionar depois com tabela `blog_comments` + RLS).
+- Newsletter inscrição na página do blog (já existe módulo de email separado).
+- RSS feed (`/blog/rss.xml`) — fácil de adicionar via edge function se solicitado.
+- Reordenação manual dos posts (hoje ordenamos por `published_at desc`).
+
