@@ -81,6 +81,8 @@ export default function PageTemplatePickerModal({ open, onOpenChange, onSelect }
 
   const categoryLabels: Record<CategoryKey, string> = {
     viewAll: pt.viewAll,
+    landing: (pt as any).landing ?? "Landing",
+    services: (pt as any).services ?? "Services",
     about: pt.about,
     contact: pt.contact,
     gallery: pt.gallery,
