@@ -2191,6 +2191,27 @@ const PagesPanel = ({
         <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{we.siteMenu}</p>
       </div>
 
+      {showShop && (
+        <div className="px-2 pb-1">
+          <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+            <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="text-xs text-foreground flex-1 truncate">{shopLabel || "Shop"}</span>
+            {shopHref && (
+              <a
+                href={shopHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open Shop"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <DndPagesArea
         menuPages={menuPages}
         nonMenuPages={nonMenuPages}
