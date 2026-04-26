@@ -211,6 +211,36 @@ const Signup = () => {
                 )}
               />
 
+              {/* Password requirements checklist */}
+              <div className="border border-border bg-muted/30 px-4 py-3">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground font-light mb-2.5">
+                  {a.passwordRequirementsTitle}
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {checks.map((c) => (
+                    <li
+                      key={c.key}
+                      className={cn(
+                        "flex items-center gap-2 text-xs font-light transition-colors",
+                        c.ok ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex items-center justify-center w-4 h-4 rounded-full border transition-colors shrink-0",
+                          c.ok
+                            ? "bg-foreground border-foreground text-background"
+                            : "border-border bg-background text-muted-foreground/50"
+                        )}
+                      >
+                        {c.ok ? <Check className="w-2.5 h-2.5" strokeWidth={3} /> : <X className="w-2.5 h-2.5" strokeWidth={2} />}
+                      </span>
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               {serverError && (
                 <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-3 py-2">
                   {serverError}
