@@ -1731,6 +1731,15 @@ export const translations = {
       nameTooLong: "Name must be under 100 characters.",
       passwordTooShort: "Password must be at least 8 characters.",
       passwordsDontMatch: "Passwords don't match.",
+      passwordRequirementsTitle: "Your password must contain:",
+      reqMinLength: "At least 8 characters",
+      reqUppercase: "One uppercase letter (A-Z)",
+      reqLowercase: "One lowercase letter (a-z)",
+      reqNumber: "One number (0-9)",
+      reqMatch: "Passwords match",
+      passwordMissingUppercase: "Must include an uppercase letter.",
+      passwordMissingLowercase: "Must include a lowercase letter.",
+      passwordMissingNumber: "Must include a number.",
     },
     // ── Public Navbar ──
     navbar: {
