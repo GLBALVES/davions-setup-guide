@@ -3766,6 +3766,15 @@ export const translations = {
       nameTooLong: "O nome deve ter menos de 100 caracteres.",
       passwordTooShort: "A senha deve ter pelo menos 8 caracteres.",
       passwordsDontMatch: "As senhas não coincidem.",
+      passwordRequirementsTitle: "Sua senha deve conter:",
+      reqMinLength: "Pelo menos 8 caracteres",
+      reqUppercase: "Uma letra maiúscula (A-Z)",
+      reqLowercase: "Uma letra minúscula (a-z)",
+      reqNumber: "Um número (0-9)",
+      reqMatch: "As senhas coincidem",
+      passwordMissingUppercase: "Deve incluir uma letra maiúscula.",
+      passwordMissingLowercase: "Deve incluir uma letra minúscula.",
+      passwordMissingNumber: "Deve incluir um número.",
     },
     // ── Public Navbar ──
     navbar: {
