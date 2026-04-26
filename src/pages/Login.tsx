@@ -26,6 +26,7 @@ async function requestPushPermissionOnLogin() {
 const Login = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { t } = useLanguage();
   const a = t.auth;
 
