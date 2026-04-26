@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -31,7 +33,10 @@ const Signup = () => {
     password: z
       .string()
       .min(8, { message: a.passwordTooShort })
-      .max(128),
+      .max(128)
+      .regex(/[A-Z]/, { message: a.passwordMissingUppercase })
+      .regex(/[a-z]/, { message: a.passwordMissingLowercase })
+      .regex(/[0-9]/, { message: a.passwordMissingNumber }),
     confirmPassword: z.string(),
   }).refine((d) => d.password === d.confirmPassword, {
     message: a.passwordsDontMatch,
@@ -43,7 +48,19 @@ const Signup = () => {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+    mode: "onChange",
   });
+
+  const passwordValue = form.watch("password");
+  const confirmValue = form.watch("confirmPassword");
+
+  const checks = [
+    { key: "len", label: a.reqMinLength, ok: passwordValue.length >= 8 },
+    { key: "upper", label: a.reqUppercase, ok: /[A-Z]/.test(passwordValue) },
+    { key: "lower", label: a.reqLowercase, ok: /[a-z]/.test(passwordValue) },
+    { key: "num", label: a.reqNumber, ok: /[0-9]/.test(passwordValue) },
+    { key: "match", label: a.reqMatch, ok: passwordValue.length > 0 && passwordValue === confirmValue },
+  ];
 
   const onSubmit = async (values: SignupFormValues) => {
     setServerError(null);
@@ -193,6 +210,36 @@ const Signup = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Password requirements checklist */}
+              <div className="border border-border bg-muted/30 px-4 py-3">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground font-light mb-2.5">
+                  {a.passwordRequirementsTitle}
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {checks.map((c) => (
+                    <li
+                      key={c.key}
+                      className={cn(
+                        "flex items-center gap-2 text-xs font-light transition-colors",
+                        c.ok ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex items-center justify-center w-4 h-4 rounded-full border transition-colors shrink-0",
+                          c.ok
+                            ? "bg-foreground border-foreground text-background"
+                            : "border-border bg-background text-muted-foreground/50"
+                        )}
+                      >
+                        {c.ok ? <Check className="w-2.5 h-2.5" strokeWidth={3} /> : <X className="w-2.5 h-2.5" strokeWidth={2} />}
+                      </span>
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               {serverError && (
                 <p className="text-xs text-destructive border border-destructive/30 bg-destructive/5 px-3 py-2">

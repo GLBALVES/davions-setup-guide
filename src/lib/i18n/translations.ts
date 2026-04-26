@@ -1731,6 +1731,15 @@ export const translations = {
       nameTooLong: "Name must be under 100 characters.",
       passwordTooShort: "Password must be at least 8 characters.",
       passwordsDontMatch: "Passwords don't match.",
+      passwordRequirementsTitle: "Your password must contain:",
+      reqMinLength: "At least 8 characters",
+      reqUppercase: "One uppercase letter (A-Z)",
+      reqLowercase: "One lowercase letter (a-z)",
+      reqNumber: "One number (0-9)",
+      reqMatch: "Passwords match",
+      passwordMissingUppercase: "Must include an uppercase letter.",
+      passwordMissingLowercase: "Must include a lowercase letter.",
+      passwordMissingNumber: "Must include a number.",
     },
     // ── Public Navbar ──
     navbar: {
@@ -3757,6 +3766,15 @@ export const translations = {
       nameTooLong: "O nome deve ter menos de 100 caracteres.",
       passwordTooShort: "A senha deve ter pelo menos 8 caracteres.",
       passwordsDontMatch: "As senhas não coincidem.",
+      passwordRequirementsTitle: "Sua senha deve conter:",
+      reqMinLength: "Pelo menos 8 caracteres",
+      reqUppercase: "Uma letra maiúscula (A-Z)",
+      reqLowercase: "Uma letra minúscula (a-z)",
+      reqNumber: "Um número (0-9)",
+      reqMatch: "As senhas coincidem",
+      passwordMissingUppercase: "Deve incluir uma letra maiúscula.",
+      passwordMissingLowercase: "Deve incluir uma letra minúscula.",
+      passwordMissingNumber: "Deve incluir um número.",
     },
     // ── Public Navbar ──
     navbar: {
@@ -5853,6 +5871,15 @@ export const translations = {
       nameTooLong: "El nombre debe tener menos de 100 caracteres.",
       passwordTooShort: "La contraseña debe tener al menos 8 caracteres.",
       passwordsDontMatch: "Las contraseñas no coinciden.",
+      passwordRequirementsTitle: "Tu contraseña debe contener:",
+      reqMinLength: "Al menos 8 caracteres",
+      reqUppercase: "Una letra mayúscula (A-Z)",
+      reqLowercase: "Una letra minúscula (a-z)",
+      reqNumber: "Un número (0-9)",
+      reqMatch: "Las contraseñas coinciden",
+      passwordMissingUppercase: "Debe incluir una letra mayúscula.",
+      passwordMissingLowercase: "Debe incluir una letra minúscula.",
+      passwordMissingNumber: "Debe incluir un número.",
     },
     // ── Public Navbar ──
     navbar: {
