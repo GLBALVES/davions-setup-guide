@@ -33,7 +33,10 @@ const Signup = () => {
     password: z
       .string()
       .min(8, { message: a.passwordTooShort })
-      .max(128),
+      .max(128)
+      .regex(/[A-Z]/, { message: a.passwordMissingUppercase })
+      .regex(/[a-z]/, { message: a.passwordMissingLowercase })
+      .regex(/[0-9]/, { message: a.passwordMissingNumber }),
     confirmPassword: z.string(),
   }).refine((d) => d.password === d.confirmPassword, {
     message: a.passwordsDontMatch,
@@ -45,7 +48,19 @@ const Signup = () => {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+    mode: "onChange",
   });
+
+  const passwordValue = form.watch("password");
+  const confirmValue = form.watch("confirmPassword");
+
+  const checks = [
+    { key: "len", label: a.reqMinLength, ok: passwordValue.length >= 8 },
+    { key: "upper", label: a.reqUppercase, ok: /[A-Z]/.test(passwordValue) },
+    { key: "lower", label: a.reqLowercase, ok: /[a-z]/.test(passwordValue) },
+    { key: "num", label: a.reqNumber, ok: /[0-9]/.test(passwordValue) },
+    { key: "match", label: a.reqMatch, ok: passwordValue.length > 0 && passwordValue === confirmValue },
+  ];
 
   const onSubmit = async (values: SignupFormValues) => {
     setServerError(null);
