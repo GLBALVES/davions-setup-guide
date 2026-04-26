@@ -211,13 +211,24 @@ const Signup = () => {
                       {a.confirmPasswordLabel}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={a.confirmPasswordPlaceholder}
-                        autoComplete="new-password"
-                        className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirm ? "text" : "password"}
+                          placeholder={a.confirmPasswordPlaceholder}
+                          autoComplete="new-password"
+                          className="rounded-none border-border focus-visible:ring-0 focus-visible:border-foreground transition-colors pr-10"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm((v) => !v)}
+                          tabIndex={-1}
+                          aria-label={showConfirm ? "Hide password" : "Show password"}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
