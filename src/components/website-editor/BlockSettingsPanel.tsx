@@ -1016,6 +1016,14 @@ export const BlockSettingsPanel = ({
               />
             </div>
           )}
+
+          {s.backgroundImage && (
+            <OverlayControls
+              color={s.overlayColor}
+              opacity={s.overlayOpacity}
+              onChange={(patch) => update(patch)}
+            />
+          )}
         </div>
 
         <div className="border-t border-border" />
