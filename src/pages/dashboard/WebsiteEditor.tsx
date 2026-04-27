@@ -1056,6 +1056,70 @@ const HeaderSliderPanel = ({
             />
           </div>
 
+          {/* Background color (applied to nav-only header) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">
+              {(we as any).headerBackgroundColor || "Background color"}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={cfg.backgroundColor || "#ffffff"}
+                onChange={(e) => updateCfg({ backgroundColor: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent p-0.5"
+              />
+              <input
+                type="text"
+                value={cfg.backgroundColor || ""}
+                onChange={(e) => updateCfg({ backgroundColor: e.target.value })}
+                placeholder="#ffffff"
+                className="flex-1 h-9 px-2 rounded-md border border-border bg-background text-sm font-mono"
+              />
+              {cfg.backgroundColor && (
+                <button
+                  type="button"
+                  onClick={() => updateCfg({ backgroundColor: undefined })}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  title="Reset"
+                >
+                  {(we as any).reset || "Reset"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Text color */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">
+              {(we as any).headerTextColor || "Text color"}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={cfg.textColor || "#111111"}
+                onChange={(e) => updateCfg({ textColor: e.target.value })}
+                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent p-0.5"
+              />
+              <input
+                type="text"
+                value={cfg.textColor || ""}
+                onChange={(e) => updateCfg({ textColor: e.target.value })}
+                placeholder="#111111"
+                className="flex-1 h-9 px-2 rounded-md border border-border bg-background text-sm font-mono"
+              />
+              {cfg.textColor && (
+                <button
+                  type="button"
+                  onClick={() => updateCfg({ textColor: undefined })}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  title="Reset"
+                >
+                  {(we as any).reset || "Reset"}
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Overlay opacity is now configured per-slide (see slide editor above). */}
         </div>
       </div>

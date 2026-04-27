@@ -40,6 +40,10 @@ export interface HeaderConfig {
   height?: string;
   /** 0–1 */
   overlayOpacity?: number;
+  /** Override nav background color (hex / hsl / rgba). When empty, auto-detects from logo. */
+  backgroundColor?: string;
+  /** Override nav text color */
+  textColor?: string;
 }
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
@@ -232,7 +236,14 @@ export default function PreviewHeader({
         navFg = "#111111";
         navBorder = "rgba(0,0,0,0.10)";
         mobilePanelBg = "#ffffff";
-      }
+    }
+    if (cfg.backgroundColor) {
+      navBg = cfg.backgroundColor;
+      mobilePanelBg = cfg.backgroundColor;
+    }
+    if (cfg.textColor) {
+      navFg = cfg.textColor;
+    }
     }
     return (
       <header
