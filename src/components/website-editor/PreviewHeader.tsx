@@ -132,6 +132,8 @@ export default function PreviewHeader({
     return () => clearInterval(t);
   }, [cfg.autoplay, cfg.speed, slides.length]);
 
+  const headerUid = useMemo(() => `hdr-${Math.random().toString(36).slice(2, 9)}`, []);
+
   // Split nav links roughly in half for left/right of central logo (only for logo-center)
   const layout: HeaderLayout = (cfg.layout as HeaderLayout) || "logo-center";
   const half = Math.ceil(navLinks.length / 2);
@@ -368,7 +370,7 @@ export default function PreviewHeader({
     );
   }
 
-  const headerUid = useMemo(() => `hdr-${Math.random().toString(36).slice(2, 9)}`, []);
+  
   const hDesktop = cfg.height || "60vh";
   const hTablet = cfg.heightTablet || hDesktop;
   const hMobile = cfg.heightMobile || hTablet;
