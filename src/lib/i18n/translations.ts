@@ -4097,6 +4097,9 @@ export const translations = {
       buttonUrlLabel: "URL do botão",
       openInNewWindow: "Abrir link em nova janela",
       backgroundTint: "Escurecimento do fundo",
+      focalPoint: "Ponto focal",
+      focalPointHint: "Clique na imagem para definir o ponto focal",
+      reset: "Restaurar",
       emptySiteTitle: "Seu site está vazio",
       emptySiteDescription: "Adicione uma página no editor de website para começar a montar seu site público.",
       pageTemplatePicker: {
