@@ -374,9 +374,12 @@ type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photogr
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function HeroBlock(props: any) {
-  const { headline, subtitle, backgroundImage, accentColor, ctx } = props;
+  const { headline, subtitle, backgroundImage, accentColor, ctx, bgFocalX, bgFocalY } = props;
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const hasImage = !!backgroundImage;
+  const fx = typeof bgFocalX === "number" ? bgFocalX : 50;
+  const fy = typeof bgFocalY === "number" ? bgFocalY : 50;
+  const bgPosition = `${fx}% ${fy}%`;
   const buttons = resolveBlockButtons(props);
   const heroInner = (
     <>
@@ -432,7 +435,7 @@ function HeroBlock(props: any) {
       >
         <section
           className={sectionClass}
-          style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+          style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: bgPosition } : undefined}
         >
           {heroInner}
         </section>
@@ -443,7 +446,7 @@ function HeroBlock(props: any) {
   return (
     <section
       className={sectionClass}
-      style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      style={hasImage ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: bgPosition } : undefined}
     >
       {heroInner}
     </section>
