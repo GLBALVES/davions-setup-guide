@@ -13,7 +13,6 @@ import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
 import { RichTextField } from "./RichTextField";
 import InlineFormatSidebar from "./inline/InlineFormatSidebar";
-import EditableRichText from "./inline/EditableRichText";
 import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection } from "./page-templates";
 
@@ -193,39 +192,17 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
 }
 
 function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
-  // Build the same merged HTML as the preview (TextBlock) so the sidebar
-  // editor mirrors exactly what the user sees, including legacy title/subtitle.
-  const title = props.title || "";
-  const subtitle = props.subtitle || "";
-  const body = props.body || "";
-  const hasLegacy = !!(title || subtitle);
-  let initialHtml = body;
-  if (hasLegacy) {
-    const isHtml = /<[a-z][\s\S]*>/i.test(initialHtml);
-    const bodyHtml = isHtml ? initialHtml : initialHtml.replace(/\n/g, "<br />");
-    const titleHtml = title ? `<h2>${title}</h2>` : "";
-    const subHtml = subtitle
-      ? `<p><em><span style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;">${subtitle}</span></em></p>`
-      : "";
-    initialHtml = `${titleHtml}${subHtml}${bodyHtml}`;
-  } else {
-    initialHtml = /<[a-z][\s\S]*>/i.test(initialHtml)
-      ? initialHtml
-      : initialHtml.replace(/\n/g, "<br />");
-  }
-
+  const align = props.align || "center";
   return (
     <div className="space-y-3">
       <Field label="Content">
-        <div className="rounded-md border border-input bg-background p-3 min-h-[120px] max-h-[260px] overflow-y-auto">
-          <EditableRichText
-            editMode
-            value={initialHtml}
-            placeholder="Write your content… Select text and use the controls below."
-            onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
-            className="text-sm font-light text-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-2xl [&_h1]:text-foreground [&_h1]:mb-2 [&_h2]:font-serif [&_h2]:italic [&_h2]:text-xl [&_h2]:text-foreground [&_h2]:mb-2 [&_h3]:font-serif [&_h3]:italic [&_h3]:text-lg [&_h3]:text-foreground [&_h3]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-3 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:underline"
-          />
-        </div>
+        <RichTextField
+          multiline
+          hideToolbar
+          value={props.body || ""}
+          onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
+          placeholder="Write your content here… Select text and use the controls below."
+        />
       </Field>
       <InlineFormatSidebar />
     </div>
