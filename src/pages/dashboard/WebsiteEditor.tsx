@@ -437,6 +437,9 @@ const PageFolder = ({
   onDuplicate,
   onRename,
   onMoveToFolder,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   activePage: string;
@@ -448,6 +451,9 @@ const PageFolder = ({
   onDuplicate: (id: string) => void;
   onRename?: (id: string, label: string) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (targetPageId: string, sourcePageId: string) => void;
+  onShareHeaderWith?: (targetPageId: string, otherPageId: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
