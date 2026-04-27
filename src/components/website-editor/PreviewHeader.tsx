@@ -63,6 +63,8 @@ interface PreviewHeaderProps {
   /** Edit mode — show hover handles and accept clicks to open settings */
   editMode?: boolean;
   onEditHeader?: () => void;
+  /** When provided (edit mode), pin slider to this slide id and pause autoplay. */
+  pinnedSlideId?: string | null;
 }
 
 export default function PreviewHeader({
