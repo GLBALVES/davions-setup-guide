@@ -108,6 +108,15 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
           folder="hero"
         />
       </Field>
+      {props.backgroundImage && (
+        <FocalPointPicker
+          imageUrl={props.backgroundImage}
+          focalX={props.bgFocalX}
+          focalY={props.bgFocalY}
+          onChange={(x, y) => onChange({ ...props, bgFocalX: x, bgFocalY: y })}
+          onReset={() => onChange({ ...props, bgFocalX: 50, bgFocalY: 50 })}
+        />
+      )}
       <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
