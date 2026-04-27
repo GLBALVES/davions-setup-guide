@@ -170,6 +170,19 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
           onReset={() => onChange({ ...props, bgFocalX: 50, bgFocalY: 50 })}
         />
       )}
+      {props.backgroundImage && (
+        <OverlayControls
+          color={props.bgOverlayColor}
+          opacity={props.bgOverlayOpacity}
+          onChange={(patch) =>
+            onChange({
+              ...props,
+              ...(patch.overlayColor !== undefined ? { bgOverlayColor: patch.overlayColor } : {}),
+              ...(patch.overlayOpacity !== undefined ? { bgOverlayOpacity: patch.overlayOpacity } : {}),
+            })
+          }
+        />
+      )}
       <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
