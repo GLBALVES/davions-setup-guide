@@ -310,6 +310,8 @@ function SectionBlock({
     backgroundOpacity?: number;
     backgroundFocalX?: number;
     backgroundFocalY?: number;
+    overlayColor?: string;
+    overlayOpacity?: number;
     paddingTop?: number;
     paddingBottom?: number;
     colorScheme?: "light" | "dark" | "auto";
@@ -363,6 +365,19 @@ function SectionBlock({
           }}
         />
       )}
+      {bs.backgroundImage && bs.overlayColor && (bs.overlayOpacity ?? 0) > 0 && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: bs.overlayColor,
+            opacity: (bs.overlayOpacity ?? 0) / 100,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      )}
       <div style={{ position: "relative", zIndex: 1 }}>{inner}</div>
     </div>
   );
@@ -374,16 +389,23 @@ type Ctx = { editMode: boolean; set: (path: string, value: any) => void; photogr
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function HeroBlock(props: any) {
-  const { headline, subtitle, backgroundImage, accentColor, ctx, bgFocalX, bgFocalY } = props;
+  const { headline, subtitle, backgroundImage, accentColor, ctx, bgFocalX, bgFocalY, bgOverlayColor, bgOverlayOpacity } = props;
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const hasImage = !!backgroundImage;
   const fx = typeof bgFocalX === "number" ? bgFocalX : 50;
   const fy = typeof bgFocalY === "number" ? bgFocalY : 50;
   const bgPosition = `${fx}% ${fy}%`;
+  const overlayColor = bgOverlayColor || "#000000";
+  const overlayOpacity = typeof bgOverlayOpacity === "number" ? bgOverlayOpacity : 40;
   const buttons = resolveBlockButtons(props);
   const heroInner = (
     <>
-      {hasImage && <div className="absolute inset-0 bg-black/40" />}
+      {hasImage && (
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: overlayColor, opacity: overlayOpacity / 100 }}
+        />
+      )}
       {!hasImage && <div className="absolute inset-0 bg-foreground/5" />}
       <div className="relative z-10 text-center px-5 sm:px-6 py-14 sm:py-20 max-w-3xl mx-auto">
         <EditableText
