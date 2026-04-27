@@ -36,8 +36,12 @@ export interface HeaderConfig {
   /** ms */
   speed?: number;
   transition?: "fade" | "slide";
-  /** e.g. "60vh" */
+  /** Desktop height, e.g. "60vh" */
   height?: string;
+  /** Tablet height (≤1024px). Falls back to `height` when empty. */
+  heightTablet?: string;
+  /** Mobile height (≤640px). Falls back to `heightTablet` then `height` when empty. */
+  heightMobile?: string;
   /** 0–1 */
   overlayOpacity?: number;
   /** Override nav background color (hex / hsl / rgba). When empty, auto-detects from logo. */
