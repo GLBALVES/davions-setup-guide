@@ -170,6 +170,7 @@ export default function InlineFormatToolbar() {
       setShowColor(false);
       setShowFont(false);
       setShowSize(false);
+      setShowBlock(false);
     }
   }, [pos]);
 
