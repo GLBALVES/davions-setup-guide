@@ -314,6 +314,8 @@ function SectionBlock({
     overlayOpacity?: number;
     paddingTop?: number;
     paddingBottom?: number;
+    paddingLeft?: number;
+    paddingRight?: number;
     colorScheme?: "light" | "dark" | "auto";
     animation?: "none" | "fade-up" | "fade-in" | "slide-left";
   };
