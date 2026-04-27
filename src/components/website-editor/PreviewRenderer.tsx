@@ -593,6 +593,7 @@ function SortableBlock({
   onToggleVisibility,
   onCopyAnchor,
   hidden,
+  onVariantChange,
   children,
 }: {
   section: PageSection;
@@ -608,6 +609,7 @@ function SortableBlock({
   onToggleVisibility: () => void;
   onCopyAnchor: () => void;
   hidden?: boolean;
+  onVariantChange?: (variant: string) => void;
   children: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
