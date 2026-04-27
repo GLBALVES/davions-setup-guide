@@ -86,7 +86,7 @@ function execSimple(host: HTMLElement, command: string, value?: string) {
   fireInput(host);
 }
 
-export default function InlineFormatSidebar() {
+export default function InlineFormatSidebar({ compact = false }: { compact?: boolean } = {}) {
   // Track the latest non-collapsed selection inside any inline-editable host.
   const lastRangeRef = useRef<Range | null>(null);
   const lastHostRef = useRef<HTMLElement | null>(null);
