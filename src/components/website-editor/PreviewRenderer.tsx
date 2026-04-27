@@ -659,6 +659,7 @@ export default function PreviewRenderer({
   onPropChange,
   photographerId,
   headerConfig,
+  pinnedSlideId = null,
   onEditHeader,
   onEditFooter,
   browserFaviconUrl = null,
