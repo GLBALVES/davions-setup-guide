@@ -925,15 +925,15 @@ export const BlockSettingsPanel = ({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Background Image</label>
-            <ImageUploadField
-              value={s.backgroundImage}
-              onChange={(url) => update({ backgroundImage: url })}
-              photographerId={photographerId}
-              folder="block-bg"
+          {s.backgroundImage && (
+            <FocalPointPicker
+              imageUrl={s.backgroundImage}
+              focalX={s.backgroundFocalX}
+              focalY={s.backgroundFocalY}
+              onChange={(x, y) => update({ backgroundFocalX: x, backgroundFocalY: y })}
+              onReset={() => update({ backgroundFocalX: 50, backgroundFocalY: 50 })}
             />
-          </div>
+          )}
 
           {s.backgroundImage && (
             <div className="space-y-1.5">
