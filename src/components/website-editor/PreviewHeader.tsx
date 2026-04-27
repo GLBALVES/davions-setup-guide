@@ -537,6 +537,29 @@ export default function PreviewHeader({
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
+          ) : layout === "logo-stacked" ? (
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <div className="flex items-center justify-center w-full relative">
+                {activeLogoUrl ? (
+                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                ) : (
+                  <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
+                    {displayName}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
+                  className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-white/90 hover:text-white"
+                  aria-label="Menu"
+                >
+                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
+              </div>
+              <nav className="hidden md:flex items-center justify-center gap-6 flex-wrap">
+                {stackedLinks.map(renderLink)}
+              </nav>
+            </div>
           ) : (
             <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
               <div className="flex items-center">
