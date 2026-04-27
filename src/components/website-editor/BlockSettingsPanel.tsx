@@ -123,10 +123,10 @@ function isHexColor(v: string) {
 }
 
 const PADDING_PRESETS = [
-  { label: "Compact", top: 24, bottom: 24 },
-  { label: "Normal", top: 48, bottom: 48 },
-  { label: "Spacious", top: 80, bottom: 80 },
-  { label: "Extra", top: 120, bottom: 120 },
+  { label: "Compact", top: 24, bottom: 24, left: 16, right: 16 },
+  { label: "Normal", top: 48, bottom: 48, left: 24, right: 24 },
+  { label: "Spacious", top: 80, bottom: 80, left: 32, right: 32 },
+  { label: "Extra", top: 120, bottom: 120, left: 48, right: 48 },
 ];
 
 const ANIMATIONS = [
