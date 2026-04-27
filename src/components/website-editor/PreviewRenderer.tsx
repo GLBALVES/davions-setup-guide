@@ -870,6 +870,7 @@ export default function PreviewRenderer({
               config={headerConfig}
               editMode={editMode}
               onEditHeader={onEditHeader}
+              pinnedSlideId={pinnedSlideId}
             />
           )}
 
