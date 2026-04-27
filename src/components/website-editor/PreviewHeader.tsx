@@ -44,6 +44,8 @@ export interface HeaderConfig {
   backgroundColor?: string;
   /** Override nav text color */
   textColor?: string;
+  /** When set, this header is shared with every other page that has the same groupId. Editing one updates all. */
+  groupId?: string;
 }
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
