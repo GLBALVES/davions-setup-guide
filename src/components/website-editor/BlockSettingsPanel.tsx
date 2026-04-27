@@ -23,6 +23,8 @@ export interface BlockSettings {
   backgroundOpacity?: number;
   backgroundFocalX?: number;
   backgroundFocalY?: number;
+  overlayColor?: string;
+  overlayOpacity?: number;
   paddingTop?: number;
   paddingBottom?: number;
   colorScheme?: "light" | "dark" | "auto";
