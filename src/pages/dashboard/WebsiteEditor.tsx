@@ -1810,6 +1810,8 @@ const DndPagesArea = ({
   onReorder,
   onMoveToFolder,
   shopExtra,
+  onCopyHeader,
+  onShareHeader,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
