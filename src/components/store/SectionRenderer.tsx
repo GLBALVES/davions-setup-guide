@@ -365,6 +365,19 @@ function SectionBlock({
           }}
         />
       )}
+      {bs.backgroundImage && bs.overlayColor && (bs.overlayOpacity ?? 0) > 0 && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: bs.overlayColor,
+            opacity: (bs.overlayOpacity ?? 0) / 100,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      )}
       <div style={{ position: "relative", zIndex: 1 }}>{inner}</div>
     </div>
   );
