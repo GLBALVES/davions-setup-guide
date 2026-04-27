@@ -236,7 +236,14 @@ export default function PreviewHeader({
         navFg = "#111111";
         navBorder = "rgba(0,0,0,0.10)";
         mobilePanelBg = "#ffffff";
-      }
+    }
+    if (cfg.backgroundColor) {
+      navBg = cfg.backgroundColor;
+      mobilePanelBg = cfg.backgroundColor;
+    }
+    if (cfg.textColor) {
+      navFg = cfg.textColor;
+    }
     }
     return (
       <header
