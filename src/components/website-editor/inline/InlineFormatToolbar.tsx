@@ -114,6 +114,7 @@ export default function InlineFormatToolbar() {
   const [showColor, setShowColor] = useState(false);
   const [showFont, setShowFont] = useState(false);
   const [showSize, setShowSize] = useState(false);
+  const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
 
