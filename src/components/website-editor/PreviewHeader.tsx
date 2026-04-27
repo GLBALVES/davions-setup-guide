@@ -346,14 +346,23 @@ export default function PreviewHeader({
     );
   }
 
+  const headerUid = useMemo(() => `hdr-${Math.random().toString(36).slice(2, 9)}`, []);
+  const hDesktop = cfg.height || "60vh";
+  const hTablet = cfg.heightTablet || hDesktop;
+  const hMobile = cfg.heightMobile || hTablet;
+
   return (
     <header
-      className="relative w-full overflow-hidden"
-      style={{ height: cfg.height || "60vh" }}
+      className={`relative w-full overflow-hidden ${headerUid}`}
+      style={{ height: hDesktop }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => editMode && onEditHeader?.()}
     >
+      <style>{`
+        @media (max-width: 1024px) { .${headerUid} { height: ${hTablet} !important; } }
+        @media (max-width: 640px) { .${headerUid} { height: ${hMobile} !important; } }
+      `}</style>
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((slide, i) => {
