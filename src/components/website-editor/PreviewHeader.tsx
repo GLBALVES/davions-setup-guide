@@ -23,7 +23,7 @@ export interface HeaderSlide {
   focalY?: number;
 }
 
-export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked";
+export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked" | "menu-above-logo";
 
 export type HeaderLogoVariant = "primary" | "alt";
 
@@ -139,7 +139,7 @@ export default function PreviewHeader({
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
-  const stackedLinks = layout === "logo-stacked" ? navLinks : [];
+  const stackedLinks = (layout === "logo-stacked" || layout === "menu-above-logo") ? navLinks : [];
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
