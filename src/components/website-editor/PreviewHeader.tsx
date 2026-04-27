@@ -40,6 +40,10 @@ export interface HeaderConfig {
   height?: string;
   /** 0–1 */
   overlayOpacity?: number;
+  /** Override nav background color (hex / hsl / rgba). When empty, auto-detects from logo. */
+  backgroundColor?: string;
+  /** Override nav text color */
+  textColor?: string;
 }
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
