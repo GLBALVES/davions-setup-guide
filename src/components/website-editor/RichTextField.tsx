@@ -120,6 +120,7 @@ export interface RichTextFieldProps {
   multiline?: boolean;
   className?: string;
   inputClassName?: string;
+  hideToolbar?: boolean;
 }
 
 /** Inspect the HTML at plain index `plainStart` and return the inline styles
