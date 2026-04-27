@@ -1963,6 +1963,9 @@ const DndPagesArea = ({
                     onDuplicate={onDuplicate}
                     onRename={onRename}
                     onMoveToFolder={onMoveToFolder}
+                    allPages={allPages}
+                    onCopyHeaderFrom={(targetId, sourceId) => copyHeaderFromPage(sourceId, targetId)}
+                    onShareHeaderWith={(targetId, otherId) => shareHeaderWithPage(targetId, otherId)}
                   />
                 </SortableRow>
               ) : (
@@ -1978,6 +1981,9 @@ const DndPagesArea = ({
                     onDuplicate={() => onDuplicate(page.id)}
                     onRename={(label) => onRename(page.id, label)}
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
+                    allPages={allPages}
+                    onCopyHeaderFrom={(sourceId) => copyHeaderFromPage(sourceId, page.id)}
+                    onShareHeaderWith={(otherId) => shareHeaderWithPage(page.id, otherId)}
                   />
                 </SortableRow>
               );
