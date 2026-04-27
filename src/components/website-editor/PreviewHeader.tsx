@@ -530,7 +530,7 @@ export default function PreviewHeader({
               onClick={(e) => { e.stopPropagation(); setIndex(i); }}
               className={cn(
                 "h-1 rounded-full transition-all",
-                i === index ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                i === displayIndex ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
               )}
               aria-label={`Slide ${i + 1}`}
             />
