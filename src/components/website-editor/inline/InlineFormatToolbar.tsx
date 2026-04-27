@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bold, Italic, Underline, Eraser, Type, Palette } from "lucide-react";
+import {
+  Bold, Italic, Underline, Eraser, Type, Palette,
+  Heading1, Heading2, Heading3, Quote, List, ListOrdered,
+  AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, ChevronDown,
+} from "lucide-react";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
+
+const BLOCK_PRESETS: { id: string; label: string; tag: string }[] = [
+  { id: "h1", label: "Heading 1", tag: "H1" },
+  { id: "h2", label: "Heading 2", tag: "H2" },
+  { id: "h3", label: "Heading 3", tag: "H3" },
+  { id: "p", label: "Body", tag: "P" },
+  { id: "blockquote", label: "Quote", tag: "BLOCKQUOTE" },
+];
 
 /**
  * Floating selection toolbar that lets users format the currently selected
@@ -102,6 +114,7 @@ export default function InlineFormatToolbar() {
   const [showColor, setShowColor] = useState(false);
   const [showFont, setShowFont] = useState(false);
   const [showSize, setShowSize] = useState(false);
+  const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
 
@@ -157,6 +170,7 @@ export default function InlineFormatToolbar() {
       setShowColor(false);
       setShowFont(false);
       setShowSize(false);
+      setShowBlock(false);
     }
   }, [pos]);
 
@@ -184,6 +198,33 @@ export default function InlineFormatToolbar() {
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
     setShowSize(false);
   };
+  const onApplyBlock = (tag: string) => {
+    // formatBlock expects "<H1>", "<P>", "<BLOCKQUOTE>" etc.
+    execSimple(host, "formatBlock", `<${tag}>`);
+    setShowBlock(false);
+  };
+  const onApplyLink = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const url = window.prompt("URL:", "https://");
+    if (!url) return;
+    execSimple(host, "createLink", url);
+  };
+
+  const currentBlockLabel = (() => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return "Body";
+    let n: Node | null = sel.anchorNode;
+    while (n && n.nodeType !== 1) n = n.parentNode;
+    let el = n as HTMLElement | null;
+    while (el && el !== host) {
+      const t = el.tagName;
+      const found = BLOCK_PRESETS.find((b) => b.tag === t);
+      if (found) return found.label;
+      el = el.parentElement;
+    }
+    return "Body";
+  })();
 
   const node = (
     <div
@@ -198,6 +239,51 @@ export default function InlineFormatToolbar() {
       }}
       className="bg-background border border-border shadow-lg rounded-md flex items-center gap-0.5 p-1 text-xs"
     >
+      {/* Block / Heading dropdown */}
+      <div className="relative">
+        <button
+          type="button"
+          onMouseDown={guard(() => {
+            setShowBlock((v) => !v);
+            setShowFont(false);
+            setShowSize(false);
+            setShowColor(false);
+          })}
+          className={cn(
+            "px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center gap-1 min-w-[88px]",
+            showBlock && "bg-muted"
+          )}
+          title="Text style"
+        >
+          <span className="truncate">{currentBlockLabel}</span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+        {showBlock && (
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[160px] z-[10000]">
+            {BLOCK_PRESETS.map((b) => {
+              const Icon =
+                b.id === "h1" ? Heading1 :
+                b.id === "h2" ? Heading2 :
+                b.id === "h3" ? Heading3 :
+                b.id === "blockquote" ? Quote : Type;
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onMouseDown={guard(() => onApplyBlock(b.tag))}
+                  className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
+                >
+                  <Icon className="h-3.5 w-3.5 opacity-70" />
+                  <span>{b.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
       {/* Bold/Italic/Underline */}
       <button
         type="button"
@@ -374,6 +460,36 @@ export default function InlineFormatToolbar() {
           </div>
         )}
       </div>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
+      {/* Lists */}
+      <button type="button" onMouseDown={guard(() => execSimple(host, "insertUnorderedList"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Bullet list">
+        <List className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "insertOrderedList"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Numbered list">
+        <ListOrdered className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
+      {/* Align */}
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyLeft"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align left">
+        <AlignLeft className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyCenter"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align center">
+        <AlignCenter className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyRight"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align right">
+        <AlignRight className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
+      {/* Link */}
+      <button type="button" onMouseDown={guard(onApplyLink)} className="p-1.5 hover:bg-muted rounded text-foreground" title="Insert link">
+        <LinkIcon className="h-3.5 w-3.5" />
+      </button>
 
       <div className="w-px h-5 bg-border mx-0.5" />
 

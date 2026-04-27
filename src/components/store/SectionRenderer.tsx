@@ -485,42 +485,41 @@ function HeroBlock(props: any) {
 
 function TextBlock({ title, subtitle, body, align = "center", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
-  // Detect plain text (legacy) vs HTML — if it has no tags, wrap line breaks
-  const html = /<[a-z][\s\S]*>/i.test(body || "")
-    ? body || ""
-    : (body || "").replace(/\n/g, "<br />");
   const alignClass =
     align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
-  const showTitle = c.editMode || !!title;
-  const showSubtitle = c.editMode || !!subtitle;
+
+  // Unified body. If legacy title/subtitle exist, merge them into body as
+  // H2 / small-caps subtitle so users can edit everything in one rich-text area.
+  const hasLegacy = !!(title || subtitle);
+  let initialHtml = body || "";
+  if (hasLegacy) {
+    const isHtml = /<[a-z][\s\S]*>/i.test(initialHtml);
+    const bodyHtml = isHtml ? initialHtml : (initialHtml || "").replace(/\n/g, "<br />");
+    const titleHtml = title ? `<h2>${title}</h2>` : "";
+    const subHtml = subtitle
+      ? `<p><em><span style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;">${subtitle}</span></em></p>`
+      : "";
+    initialHtml = `${titleHtml}${subHtml}${bodyHtml}`;
+  } else {
+    initialHtml = /<[a-z][\s\S]*>/i.test(initialHtml)
+      ? initialHtml
+      : (initialHtml || "").replace(/\n/g, "<br />");
+  }
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className={`max-w-3xl mx-auto ${alignClass}`}>
-        {showTitle && (
-          <EditableText
-            editMode={c.editMode}
-            value={title || ""}
-            placeholder="Title (optional)"
-            onChange={(v) => c.set("title", v)}
-            as="h2"
-            className="font-serif italic text-2xl sm:text-3xl md:text-4xl text-foreground mb-4 leading-tight"
-          />
-        )}
-        {showSubtitle && (
-          <EditableText
-            editMode={c.editMode}
-            value={subtitle || ""}
-            placeholder="Subtitle (optional)"
-            onChange={(v) => c.set("subtitle", v)}
-            className="text-xs sm:text-sm uppercase tracking-[0.2em] text-muted-foreground mb-6"
-          />
-        )}
         <EditableRichText
           editMode={c.editMode}
-          value={html}
-          placeholder="Start writing here…"
-          onChange={(v) => c.set("body", v)}
-          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed"
+          value={initialHtml}
+          placeholder="Start writing here…  Select text to format (Heading, Bold, Color…)"
+          onChange={(v) => {
+            c.set("body", v);
+            // Clear legacy fields once user edits the unified body
+            if (title) c.set("title", "");
+            if (subtitle) c.set("subtitle", "");
+          }}
+          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-3xl [&_h1]:sm:text-4xl [&_h1]:md:text-5xl [&_h1]:text-foreground [&_h1]:mb-4 [&_h1]:leading-tight [&_h2]:font-serif [&_h2]:italic [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:md:text-4xl [&_h2]:text-foreground [&_h2]:mb-4 [&_h2]:leading-tight [&_h3]:font-serif [&_h3]:italic [&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:text-foreground [&_h3]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline [&_a]:text-foreground"
         />
       </div>
     </section>
