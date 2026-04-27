@@ -715,7 +715,107 @@ const HeaderSliderPanel = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* LAYOUT */}
+        {/* SHARE / COPY HEADER between pages */}
+        {allPages && currentPageId && (
+          <div className="px-4 pt-4 pb-2 space-y-2">
+            {isShared && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-amber-50 border border-amber-200/70">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Link2 className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                  <span className="text-[11px] text-amber-900 truncate">
+                    Shared with {sharedPagesCount} pages
+                  </span>
+                </div>
+                {onUnshareHeader && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Unlink this header from the shared group? Future edits on this page won't affect the others.")) {
+                        sharedConfirmedRef.current = true;
+                        onUnshareHeader();
+                      }
+                    }}
+                    className="text-[11px] text-amber-900 underline hover:no-underline shrink-0"
+                  >
+                    Unlink
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-8 px-2 rounded-md border border-border text-[11px] text-foreground hover:bg-muted/40 transition-colors flex items-center justify-center gap-1.5"
+                    title="Copy header from another page (independent copy)"
+                  >
+                    <Copy className="h-3 w-3" /> Copy from…
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== currentPageId && p.headerConfig).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages with a header
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== currentPageId && p.headerConfig)
+                      .map((p) => (
+                        <DropdownMenuItem
+                          key={p.id}
+                          className="gap-2 text-xs"
+                          onClick={() => onCopyHeaderFromPage?.(p.id)}
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span className="truncate">{p.label}</span>
+                        </DropdownMenuItem>
+                      ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-8 px-2 rounded-md border border-border text-[11px] text-foreground hover:bg-muted/40 transition-colors flex items-center justify-center gap-1.5"
+                    title="Share this header with another page (linked)"
+                  >
+                    <Link2 className="h-3 w-3" /> Share with…
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== currentPageId).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== currentPageId)
+                      .map((p) => {
+                        const alreadyShared = !!cfg.groupId && p.headerConfig?.groupId === cfg.groupId;
+                        return (
+                          <DropdownMenuItem
+                            key={p.id}
+                            className="gap-2 text-xs"
+                            disabled={alreadyShared}
+                            onClick={() => onShareHeaderWithPage?.(p.id)}
+                          >
+                            <FileText className="h-3 w-3" />
+                            <span className="truncate flex-1">{p.label}</span>
+                            {alreadyShared && <span className="text-[10px] text-muted-foreground">linked</span>}
+                          </DropdownMenuItem>
+                        );
+                      })
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        )}
+
+
         <div className="px-4 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
         </div>
