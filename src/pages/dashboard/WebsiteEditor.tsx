@@ -628,18 +628,29 @@ const HeaderSliderPanel = ({
   value,
   onChange,
   photographerId,
+  onActiveSlideChange,
 }: {
   onBack: () => void;
   value: HeaderConfig | null;
   onChange: (next: HeaderConfig) => void;
   photographerId: string | null;
+  onActiveSlideChange?: (slideId: string | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(value || {}) };
   // Slides come straight from config — no stub fallback so the list can be truly empty.
   const slides: HeaderSlide[] = cfg.slides || [];
-  const [activeSlideId, setActiveSlideId] = useState<string>(slides[0]?.id || "");
+  const [activeSlideId, setActiveSlideIdState] = useState<string>(slides[0]?.id || "");
+  const setActiveSlideId = (id: string) => {
+    setActiveSlideIdState(id);
+    onActiveSlideChange?.(id || null);
+  };
+  // Notify parent on mount and when slide changes externally (add/remove).
+  useEffect(() => {
+    onActiveSlideChange?.(activeSlideId || null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSlideId]);
 
   const updateCfg = (patch: Partial<HeaderConfig>) => {
     onChange({ ...cfg, slides, ...patch });
