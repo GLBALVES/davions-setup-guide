@@ -239,6 +239,51 @@ export default function InlineFormatToolbar() {
       }}
       className="bg-background border border-border shadow-lg rounded-md flex items-center gap-0.5 p-1 text-xs"
     >
+      {/* Block / Heading dropdown */}
+      <div className="relative">
+        <button
+          type="button"
+          onMouseDown={guard(() => {
+            setShowBlock((v) => !v);
+            setShowFont(false);
+            setShowSize(false);
+            setShowColor(false);
+          })}
+          className={cn(
+            "px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center gap-1 min-w-[88px]",
+            showBlock && "bg-muted"
+          )}
+          title="Text style"
+        >
+          <span className="truncate">{currentBlockLabel}</span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+        {showBlock && (
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[160px] z-[10000]">
+            {BLOCK_PRESETS.map((b) => {
+              const Icon =
+                b.id === "h1" ? Heading1 :
+                b.id === "h2" ? Heading2 :
+                b.id === "h3" ? Heading3 :
+                b.id === "blockquote" ? Quote : Type;
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onMouseDown={guard(() => onApplyBlock(b.tag))}
+                  className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
+                >
+                  <Icon className="h-3.5 w-3.5 opacity-70" />
+                  <span>{b.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
       {/* Bold/Italic/Underline */}
       <button
         type="button"
