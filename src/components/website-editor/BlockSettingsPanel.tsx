@@ -27,6 +27,8 @@ export interface BlockSettings {
   overlayOpacity?: number;
   paddingTop?: number;
   paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
 }
@@ -121,10 +123,10 @@ function isHexColor(v: string) {
 }
 
 const PADDING_PRESETS = [
-  { label: "Compact", top: 24, bottom: 24 },
-  { label: "Normal", top: 48, bottom: 48 },
-  { label: "Spacious", top: 80, bottom: 80 },
-  { label: "Extra", top: 120, bottom: 120 },
+  { label: "Compact", top: 24, bottom: 24, left: 16, right: 16 },
+  { label: "Normal", top: 48, bottom: 48, left: 24, right: 24 },
+  { label: "Spacious", top: 80, bottom: 80, left: 32, right: 32 },
+  { label: "Extra", top: 120, bottom: 120, left: 48, right: 48 },
 ];
 
 const ANIMATIONS = [
@@ -1037,10 +1039,10 @@ export const BlockSettingsPanel = ({
             {PADDING_PRESETS.map((p) => (
               <button
                 key={p.label}
-                onClick={() => update({ paddingTop: p.top, paddingBottom: p.bottom })}
+                onClick={() => update({ paddingTop: p.top, paddingBottom: p.bottom, paddingLeft: p.left, paddingRight: p.right })}
                 className={cn(
                   "flex-1 px-2 py-1.5 rounded-md text-[10px] font-medium border transition-colors",
-                  s.paddingTop === p.top && s.paddingBottom === p.bottom
+                  s.paddingTop === p.top && s.paddingBottom === p.bottom && s.paddingLeft === p.left && s.paddingRight === p.right
                     ? "bg-primary/10 border-primary/30 text-primary"
                     : "border-border text-muted-foreground hover:bg-muted/50"
                 )}
@@ -1057,6 +1059,14 @@ export const BlockSettingsPanel = ({
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Bottom: {s.paddingBottom ?? 48}px</label>
             <Slider value={[s.paddingBottom ?? 48]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingBottom: v })} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Left: {s.paddingLeft ?? 0}px</label>
+            <Slider value={[s.paddingLeft ?? 0]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingLeft: v })} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Right: {s.paddingRight ?? 0}px</label>
+            <Slider value={[s.paddingRight ?? 0]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingRight: v })} />
           </div>
         </div>
 

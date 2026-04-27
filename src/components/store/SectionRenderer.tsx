@@ -314,6 +314,8 @@ function SectionBlock({
     overlayOpacity?: number;
     paddingTop?: number;
     paddingBottom?: number;
+    paddingLeft?: number;
+    paddingRight?: number;
     colorScheme?: "light" | "dark" | "auto";
     animation?: "none" | "fade-up" | "fade-in" | "slide-left";
   };
@@ -323,6 +325,8 @@ function SectionBlock({
     bs.backgroundImage ||
     bs.paddingTop !== undefined ||
     bs.paddingBottom !== undefined ||
+    bs.paddingLeft !== undefined ||
+    bs.paddingRight !== undefined ||
     (bs.colorScheme && bs.colorScheme !== "auto") ||
     (bs.animation && bs.animation !== "none");
 
@@ -332,6 +336,8 @@ function SectionBlock({
     backgroundColor: bs.backgroundColor || undefined,
     paddingTop: bs.paddingTop !== undefined ? `${bs.paddingTop}px` : undefined,
     paddingBottom: bs.paddingBottom !== undefined ? `${bs.paddingBottom}px` : undefined,
+    paddingLeft: bs.paddingLeft !== undefined ? `${bs.paddingLeft}px` : undefined,
+    paddingRight: bs.paddingRight !== undefined ? `${bs.paddingRight}px` : undefined,
     position: "relative",
   };
 
