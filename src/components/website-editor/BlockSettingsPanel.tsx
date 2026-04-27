@@ -12,6 +12,7 @@ import { ImageUploadField } from "./ImageUploadField";
 import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
 import { RichTextField } from "./RichTextField";
+import InlineFormatSidebar from "./inline/InlineFormatSidebar";
 import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection } from "./page-templates";
 
@@ -194,12 +195,13 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   const align = props.align || "center";
   return (
     <div className="space-y-3">
+      <InlineFormatSidebar />
       <Field label="Content">
         <RichTextField
           multiline
           value={props.body || ""}
           onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
-          placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
+          placeholder="Write your content here… Select text in the page, then use the controls above."
         />
       </Field>
       <Field label="Alignment">
