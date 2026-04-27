@@ -338,7 +338,7 @@ export default function PreviewHeader({
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((slide, i) => {
-          const active = i === index;
+          const active = i === displayIndex;
           const fx = typeof slide.focalX === "number" ? slide.focalX : 50;
           const fy = typeof slide.focalY === "number" ? slide.focalY : 50;
           const objectPosition = `${fx}% ${fy}%`;
@@ -348,7 +348,7 @@ export default function PreviewHeader({
                 key={slide.id}
                 className="absolute inset-0 transition-transform duration-700 ease-in-out"
                 style={{
-                  transform: `translateX(${(i - index) * 100}%)`,
+                  transform: `translateX(${(i - displayIndex) * 100}%)`,
                 }}
               >
                 <img
