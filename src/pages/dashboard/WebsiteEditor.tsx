@@ -3972,6 +3972,10 @@ const WebsiteEditor = () => {
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  // While editing a header slider, this is the id of the slide currently focused in
+  // the sidebar editor. Used by PreviewHeader to pause autoplay and pin the view
+  // to the slide being edited.
+  const [editorActiveSlideId, setEditorActiveSlideId] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
