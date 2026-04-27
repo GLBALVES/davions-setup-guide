@@ -13,7 +13,8 @@ import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
 import { RichTextField } from "./RichTextField";
 import { FocalPointPicker } from "./FocalPointPicker";
-import type { PageSection } from "./page-templates";
+import type { PageSection, SectionType } from "./page-templates";
+import { BLOCK_VARIANTS } from "./block-variants";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
 
