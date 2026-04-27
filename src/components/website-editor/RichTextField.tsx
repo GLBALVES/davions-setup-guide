@@ -652,6 +652,7 @@ export function RichTextField({
           <Eraser className="h-3.5 w-3.5" />
         </ToolbarButton>
       </div>
+      )}
     </div>
   );
 }
