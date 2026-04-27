@@ -14,6 +14,8 @@ export interface HeaderSlide {
   buttonUrl?: string;
   openInNewTab?: boolean;
   backgroundTint?: number;
+  /** Per-slide overlay opacity (0–1). Falls back to header-level overlayOpacity when undefined. */
+  overlayOpacity?: number;
   imageUrl: string | null;
   /** Focal point X (0–100, percent). Defaults to 50. */
   focalX?: number;
@@ -377,10 +379,15 @@ export default function PreviewHeader({
         })}
       </div>
 
-      {/* Overlay */}
+      {/* Overlay — per-slide override falls back to header-level value */}
       <div
         className="absolute inset-0 bg-black pointer-events-none"
-        style={{ opacity: cfg.overlayOpacity ?? 0.3 }}
+        style={{
+          opacity:
+            typeof activeSlide?.overlayOpacity === "number"
+              ? activeSlide.overlayOpacity
+              : cfg.overlayOpacity ?? 0.3,
+        }}
       />
 
       {activeSlideTint > 0 && (
