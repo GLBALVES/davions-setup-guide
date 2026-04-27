@@ -4827,6 +4827,7 @@ const WebsiteEditor = () => {
             onPropChange={handleBlockPropChange}
             photographerId={user?.id ?? null}
             headerConfig={activePageInfo.headerConfig ?? null}
+            pinnedSlideId={editingSection === "header-slider" ? editorActiveSlideId : null}
             onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
             onEditFooter={() => { setActiveTab("style"); setPendingStyleSub("footer"); }}
             browserFaviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
