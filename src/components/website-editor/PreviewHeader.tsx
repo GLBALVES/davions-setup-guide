@@ -23,7 +23,7 @@ export interface HeaderSlide {
   focalY?: number;
 }
 
-export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked";
+export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked" | "menu-above-logo";
 
 export type HeaderLogoVariant = "primary" | "alt";
 
@@ -139,7 +139,7 @@ export default function PreviewHeader({
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
-  const stackedLinks = layout === "logo-stacked" ? navLinks : [];
+  const stackedLinks = (layout === "logo-stacked" || layout === "menu-above-logo") ? navLinks : [];
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
@@ -313,8 +313,8 @@ export default function PreviewHeader({
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </button>
               </div>
-            ) : layout === "logo-stacked" ? (
-              <div className="flex flex-col items-center gap-3 sm:gap-4">
+            ) : (layout === "logo-stacked" || layout === "menu-above-logo") ? (
+              <div className={cn("flex items-center gap-3 sm:gap-4", layout === "menu-above-logo" ? "flex-col-reverse" : "flex-col")}>
                 <div className="flex items-center justify-center w-full relative">
                   {activeLogoUrl ? (
                     <img src={activeLogoUrl} alt={displayName} className={logoImgClass} />
@@ -539,8 +539,8 @@ export default function PreviewHeader({
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
-          ) : layout === "logo-stacked" ? (
-            <div className="flex flex-col items-center gap-3 sm:gap-4">
+          ) : (layout === "logo-stacked" || layout === "menu-above-logo") ? (
+            <div className={cn("flex items-center gap-3 sm:gap-4", layout === "menu-above-logo" ? "flex-col-reverse" : "flex-col")}>
               <div className="flex items-center justify-center w-full relative">
                 {activeLogoUrl ? (
                   <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />

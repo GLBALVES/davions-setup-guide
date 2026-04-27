@@ -911,6 +911,7 @@ const HeaderSliderPanel = ({
               { id: "logo-center", label: we.logoCenter, dotPos: "center" as const },
               { id: "logo-right", label: we.logoRight, dotPos: "end" as const },
               { id: "logo-stacked", label: (we as any).logoStacked || "Logo Stacked", dotPos: "stacked" as const },
+              { id: "menu-above-logo", label: (we as any).menuAboveLogo || "Menu Above Logo", dotPos: "menu-above" as const },
             ]).map((opt) => {
               const active = (cfg.layout || "logo-center") === opt.id;
               return (
@@ -930,17 +931,26 @@ const HeaderSliderPanel = ({
                   {/* Mini header preview */}
                   <div className={cn(
                     "w-full h-8 rounded border flex px-1.5 gap-1",
-                    opt.dotPos === "stacked" ? "flex-col items-center justify-center py-1" : "items-center",
+                    (opt.dotPos === "stacked" || opt.dotPos === "menu-above") ? "flex-col items-center justify-center py-1" : "items-center",
                     active ? "border-primary/60 bg-background" : "border-border bg-muted/30"
                   )}>
-                    {opt.dotPos === "stacked" ? (
+                    {opt.dotPos === "stacked" || opt.dotPos === "menu-above" ? (
                       <>
+                        {opt.dotPos === "menu-above" && (
+                          <div className="flex gap-0.5 mb-1">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                        )}
                         <span className={cn("w-2.5 h-2.5 rounded-full", active ? "bg-primary" : "bg-foreground/70")} />
-                        <div className="flex gap-0.5 mt-1">
-                          <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                          <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                          <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                        </div>
+                        {opt.dotPos === "stacked" && (
+                          <div className="flex gap-0.5 mt-1">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div className={cn(
