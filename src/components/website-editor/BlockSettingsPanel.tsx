@@ -214,20 +214,45 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
       : initialHtml.replace(/\n/g, "<br />");
   }
 
+  // Show the floating vertical toolbar only while there is a non-collapsed
+  // selection inside this very editor.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [showToolbar, setShowToolbar] = useState(false);
+
+  useEffect(() => {
+    const onSel = () => {
+      const sel = window.getSelection();
+      const host = containerRef.current;
+      if (!sel || sel.rangeCount === 0 || !host) {
+        setShowToolbar(false);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const inside = host.contains(range.commonAncestorContainer);
+      setShowToolbar(inside && !range.collapsed);
+    };
+    document.addEventListener("selectionchange", onSel);
+    return () => document.removeEventListener("selectionchange", onSel);
+  }, []);
+
   return (
     <div className="space-y-3">
       <Field label="Content">
-        <div className="flex items-stretch gap-2">
-          <InlineFormatSidebar compact />
-          <div className="flex-1 rounded-md border border-input bg-background p-3 min-h-[160px] max-h-[320px] overflow-y-auto">
+        <div ref={containerRef} className="relative">
+          <div className="rounded-md border border-input bg-background p-3 min-h-[160px] max-h-[320px] overflow-y-auto">
             <EditableRichText
               editMode
               value={initialHtml}
-              placeholder="Write your content… Select text and use the controls on the left."
+              placeholder="Write your content… Select text to format it."
               onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
               className="text-sm font-light text-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-2xl [&_h1]:text-foreground [&_h1]:mb-2 [&_h2]:font-serif [&_h2]:italic [&_h2]:text-xl [&_h2]:text-foreground [&_h2]:mb-2 [&_h3]:font-serif [&_h3]:italic [&_h3]:text-lg [&_h3]:text-foreground [&_h3]:mb-2 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-3 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:underline"
             />
           </div>
+          {showToolbar && (
+            <div className="absolute top-0 left-full ml-2 z-40 animate-in fade-in slide-in-from-left-1">
+              <InlineFormatSidebar compact />
+            </div>
+          )}
         </div>
       </Field>
     </div>
