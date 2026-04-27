@@ -194,22 +194,13 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   const align = props.align || "center";
   return (
     <div className="space-y-3">
-      <Field label="Title (optional)">
+      <Field label="Content">
         <RichTextField
-          value={props.title || ""}
-          onChange={(v) => onChange({ ...props, title: v })}
-          placeholder="e.g. Timeless & Minimalist Maternity..."
+          multiline
+          value={props.body || ""}
+          onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
+          placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
         />
-      </Field>
-      <Field label="Subtitle (optional)">
-        <RichTextField
-          value={props.subtitle || ""}
-          onChange={(v) => onChange({ ...props, subtitle: v })}
-          placeholder="e.g. Serving Houston, Sugar Land..."
-        />
-      </Field>
-      <Field label="Body">
-        <RichTextField multiline value={props.body || ""} onChange={(v) => onChange({ ...props, body: v })} placeholder="Write your content here..." />
       </Field>
       <Field label="Alignment">
         <div className="flex gap-1">
