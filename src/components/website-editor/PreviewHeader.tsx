@@ -23,7 +23,7 @@ export interface HeaderSlide {
   focalY?: number;
 }
 
-export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
+export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked";
 
 export type HeaderLogoVariant = "primary" | "alt";
 
