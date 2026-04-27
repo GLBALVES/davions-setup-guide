@@ -14,6 +14,8 @@ export interface HeaderSlide {
   buttonUrl?: string;
   openInNewTab?: boolean;
   backgroundTint?: number;
+  /** Per-slide overlay opacity (0–1). Falls back to header-level overlayOpacity when undefined. */
+  overlayOpacity?: number;
   imageUrl: string | null;
   /** Focal point X (0–100, percent). Defaults to 50. */
   focalX?: number;
