@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
+  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag, Monitor, Tablet, Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
