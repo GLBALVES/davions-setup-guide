@@ -482,7 +482,7 @@ const PageFolder = ({
           className="text-left"
         />
         {expanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
+        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} allPages={allPages} onCopyHeaderFrom={onCopyHeaderFrom ? (sid) => onCopyHeaderFrom(page.id, sid) : undefined} onShareHeaderWith={onShareHeaderWith ? (oid) => onShareHeaderWith(page.id, oid) : undefined} />
       </div>
       {expanded && page.children?.map((child) => (
         <SortableRow key={child.id} id={child.id}>
@@ -496,6 +496,9 @@ const PageFolder = ({
             onDelete={() => onDelete(child.id)}
             onDuplicate={() => onDuplicate(child.id)}
             onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+            allPages={allPages}
+            onCopyHeaderFrom={onCopyHeaderFrom ? (sid) => onCopyHeaderFrom(child.id, sid) : undefined}
+            onShareHeaderWith={onShareHeaderWith ? (oid) => onShareHeaderWith(child.id, oid) : undefined}
             onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
             indent
           />
