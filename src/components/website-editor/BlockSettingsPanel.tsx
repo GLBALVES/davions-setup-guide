@@ -12,6 +12,7 @@ import { ImageUploadField } from "./ImageUploadField";
 import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
 import { RichTextField } from "./RichTextField";
+import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection } from "./page-templates";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
@@ -20,6 +21,8 @@ export interface BlockSettings {
   backgroundColor?: string;
   backgroundImage?: string;
   backgroundOpacity?: number;
+  backgroundFocalX?: number;
+  backgroundFocalY?: number;
   paddingTop?: number;
   paddingBottom?: number;
   colorScheme?: "light" | "dark" | "auto";
@@ -105,6 +108,15 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
           folder="hero"
         />
       </Field>
+      {props.backgroundImage && (
+        <FocalPointPicker
+          imageUrl={props.backgroundImage}
+          focalX={props.bgFocalX}
+          focalY={props.bgFocalY}
+          onChange={(x, y) => onChange({ ...props, bgFocalX: x, bgFocalY: y })}
+          onReset={() => onChange({ ...props, bgFocalX: 50, bgFocalY: 50 })}
+        />
+      )}
       <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
@@ -913,15 +925,15 @@ export const BlockSettingsPanel = ({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Background Image</label>
-            <ImageUploadField
-              value={s.backgroundImage}
-              onChange={(url) => update({ backgroundImage: url })}
-              photographerId={photographerId}
-              folder="block-bg"
+          {s.backgroundImage && (
+            <FocalPointPicker
+              imageUrl={s.backgroundImage}
+              focalX={s.backgroundFocalX}
+              focalY={s.backgroundFocalY}
+              onChange={(x, y) => update({ backgroundFocalX: x, backgroundFocalY: y })}
+              onReset={() => update({ backgroundFocalX: 50, backgroundFocalY: 50 })}
             />
-          </div>
+          )}
 
           {s.backgroundImage && (
             <div className="space-y-1.5">
