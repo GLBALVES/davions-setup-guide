@@ -463,6 +463,36 @@ export default function InlineFormatToolbar() {
 
       <div className="w-px h-5 bg-border mx-0.5" />
 
+      {/* Lists */}
+      <button type="button" onMouseDown={guard(() => execSimple(host, "insertUnorderedList"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Bullet list">
+        <List className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "insertOrderedList"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Numbered list">
+        <ListOrdered className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
+      {/* Align */}
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyLeft"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align left">
+        <AlignLeft className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyCenter"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align center">
+        <AlignCenter className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" onMouseDown={guard(() => execSimple(host, "justifyRight"))} className="p-1.5 hover:bg-muted rounded text-foreground" title="Align right">
+        <AlignRight className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
+      {/* Link */}
+      <button type="button" onMouseDown={guard(onApplyLink)} className="p-1.5 hover:bg-muted rounded text-foreground" title="Insert link">
+        <LinkIcon className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="w-px h-5 bg-border mx-0.5" />
+
       {/* Clear */}
       <button
         type="button"
