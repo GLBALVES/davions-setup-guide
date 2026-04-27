@@ -1,69 +1,32 @@
+## Diagnóstico
 
-# Plano: Aba "Posts" funcional no Editor de Site
+Os controles de **overlay da imagem de background** sumiram do painel `BlockSettingsPanel.tsx` em alguma edição posterior, mesmo a lógica de renderização ainda existindo em `SectionRenderer.tsx` (linhas 313-375, lendo `overlayColor` e `overlayOpacity`).
 
-Transformar o placeholder atual `BlogPanel` em `BlogPostsPanel` — uma lista funcional de posts no painel lateral do editor, inspirada no Pixieset.
+Resultado: as propriedades funcionam tecnicamente, mas não há mais UI para o usuário ajustá-las — por isso "não aparece em lugar nenhum".
 
-## O que o usuário verá
+## O que será feito
 
-### Painel lateral "Posts" (sidebar do editor)
-- **Header**: título "Blog Posts" + botão "+ Novo Post" (abre `/dashboard/blog/gerador` em nova aba) + ícone de configurações (abre `BlogSubPanel`).
-- **Busca**: campo para filtrar posts por título.
-- **Tabs**: All / Published / Drafts (filtro client-side por `status`).
-- **Lista de posts** (rolável):
-  - Thumbnail 56x56 (cover_image_url ou fallback gradient com inicial)
-  - Título (line-clamp-2)
-  - Badge de status: Published (verde) / Draft (cinza)
-  - Data de publicação ou "Atualizado em..."
-  - Menu `...` (DropdownMenu) com ações:
-    - **Editar** → abre `/dashboard/blog/gerador?id={id}` em nova aba
-    - **Publicar / Despublicar** → toggle `status` direto no Supabase
-    - **Duplicar** → cria novo registro clonando campos
-    - **Ver no site** → abre `/blog/{slug}` no preview público
-    - **Deletar** → AlertDialog de confirmação
-- **Footer do painel**:
-  - Botão "Preview Blog" → abre `/blog` público em nova aba
-  - Botão "Gerenciar tudo" → abre `/dashboard/blog`
-- **Estado vazio**: ilustração + texto "Nenhum post ainda" + botão "Criar primeiro post"
+Reintegrar os controles de overlay no painel do editor, em dois lugares (igual estava antes):
 
-## Mudanças técnicas
+1. **Editor de conteúdo do Hero** (`HeroContentEditor`) — logo após o `FocalPointPicker` da imagem de fundo do Hero (~linha 113).
+2. **Configurações gerais de seção** (`BlockSettingsPanel`) — logo após o `FocalPointPicker` da imagem de fundo da seção (~linha 938).
 
-### Novos arquivos
-- `src/components/website-editor/BlogPostsPanel.tsx` — painel principal (substitui o BlogPanel placeholder)
-- `src/components/website-editor/BlogPostRow.tsx` — item individual da lista
+Cada bloco terá:
+- Seletor de cor (`<input type="color">` + input hex), padrão `#000000`.
+- Slider de opacidade 0–100% (componente `Slider` do shadcn), padrão `40`.
+- Só aparece quando há `backgroundImage` definida.
+- Labels traduzidos via `LanguageContext` (EN / PT-BR / ES) — chaves novas: `editor.bgOverlay`, `editor.overlayColor`, `editor.overlayOpacity`.
 
-### Arquivo a editar
-- `src/pages/dashboard/WebsiteEditor.tsx` — substituir `BlogPanel` no `panelMap` por `<BlogPostsPanel />`. Manter o ícone e label "Posts" do tab.
+## Detalhes técnicos
 
-### Query principal
-```ts
-supabase
-  .from("blogs")
-  .select("id, title, slug, status, cover_image_url, published_at, updated_at, keyword, photographer_id")
-  .eq("photographer_id", photographerId)
-  .order("updated_at", { ascending: false });
-```
+- Adicionar de volta as propriedades `overlayColor?: string` e `overlayOpacity?: number` na interface `BlockSettings` (linha 20+) — atualmente ausentes.
+- Criar componente helper local `OverlayControls` em `BlockSettingsPanel.tsx` para reutilizar nos dois pontos.
+- Hero: adicionar `bgOverlayColor` e `bgOverlayOpacity` ao tipo do bloco Hero e propagar para o `HeroBlock` no `SectionRenderer` (já consumidos pela lógica existente).
+- Nenhuma alteração no `SectionRenderer.tsx` (lógica de renderização do overlay já está pronta).
+- Nenhuma migração de banco — os dados ficam no JSONB do site.
 
-### Realtime / refresh
-- Após cada ação (publish, duplicate, delete) refazer a query e mostrar `toast`.
-- Sem realtime — refresh manual via React Query `invalidateQueries(['editor-blog-posts'])`.
+## Arquivos afetados
 
-### i18n
-Adicionar chaves em `src/lib/i18n/translations.ts` (EN/PT-BR/ES):
-- `editor.blog.title`, `editor.blog.newPost`, `editor.blog.search`
-- `editor.blog.tabs.all/published/drafts`
-- `editor.blog.empty.title/description/cta`
-- `editor.blog.actions.edit/publish/unpublish/duplicate/view/delete`
-- `editor.blog.confirmDelete`, `editor.blog.previewBlog`, `editor.blog.manageAll`
-- `editor.blog.toast.published/unpublished/duplicated/deleted/error`
-
-### Comportamento
-- Click no row inteiro → abre editor de blog em nova aba (mesmo que "Editar")
-- "Publicar" seta `status='published'` + `published_at=now()` se nulo
-- "Despublicar" seta `status='draft'`, mantém `published_at`
-- "Duplicar" copia título com sufixo "(cópia)", gera novo slug, status='draft', limpa published_at
-- Confirmação visual via `toast` para todas ações
-
-## Fora do escopo
-- Edição inline de título/conteúdo no painel (continua sendo no `/dashboard/blog/gerador`)
-- Reordenação manual (continua por `updated_at`)
-- Bulk actions (selecionar vários para deletar/publicar)
+- `src/components/website-editor/BlockSettingsPanel.tsx` — adicionar interface, componente `OverlayControls` e integrá-lo em 2 pontos.
+- `src/lib/i18n/translations.ts` — 3 novas chaves × 3 idiomas.
+- `src/components/store/SectionRenderer.tsx` — apenas garantir que o `HeroBlock` receba `bgOverlayColor`/`bgOverlayOpacity` do bloco Hero (verificar se já está passando).
