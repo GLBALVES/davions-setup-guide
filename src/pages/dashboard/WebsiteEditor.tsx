@@ -1056,20 +1056,7 @@ const HeaderSliderPanel = ({
             />
           </div>
 
-          {/* Overlay opacity */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">{we.overlayOpacity}</label>
-              <span className="text-[11px] text-muted-foreground">{Math.round((cfg.overlayOpacity ?? 0.3) * 100)}%</span>
-            </div>
-            <Slider
-              min={0}
-              max={80}
-              step={5}
-              value={[Math.round((cfg.overlayOpacity ?? 0.3) * 100)]}
-              onValueChange={(v) => updateCfg({ overlayOpacity: (v[0] || 0) / 100 })}
-            />
-          </div>
+          {/* Overlay opacity is now configured per-slide (see slide editor above). */}
         </div>
       </div>
     </div>
