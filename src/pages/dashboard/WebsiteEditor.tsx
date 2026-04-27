@@ -852,13 +852,64 @@ const HeaderSliderPanel = ({
               >
                 <div className="aspect-[16/9] w-full rounded border border-border overflow-hidden bg-muted/30 flex items-center justify-center">
                   {activeSlide.imageUrl ? (
-                    <img src={activeSlide.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={activeSlide.imageUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: `${activeSlide.focalX ?? 50}% ${activeSlide.focalY ?? 50}%` }}
+                    />
                   ) : (
                     <ImagePlus className="h-6 w-6 text-muted-foreground/50" />
                   )}
                 </div>
               </EditableImage>
             </div>
+            {activeSlide.imageUrl && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {(we as any).focalPoint || "Focal point"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => updateSlide(activeSlide.id, { focalX: 50, focalY: 50 })}
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {(we as any).reset || "Reset"}
+                  </button>
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+                    updateSlide(activeSlide.id, { focalX: Math.round(x), focalY: Math.round(y) });
+                  }}
+                  className="relative aspect-[16/9] w-full rounded border border-border overflow-hidden bg-muted/30 cursor-crosshair select-none"
+                  title={(we as any).focalPointHint || "Click to set focal point"}
+                >
+                  <img
+                    src={activeSlide.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover pointer-events-none"
+                    style={{ objectPosition: `${activeSlide.focalX ?? 50}% ${activeSlide.focalY ?? 50}%` }}
+                    draggable={false}
+                  />
+                  <div
+                    className="absolute w-5 h-5 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.5)] bg-primary/80 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{
+                      left: `${activeSlide.focalX ?? 50}%`,
+                      top: `${activeSlide.focalY ?? 50}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {(we as any).focalPointHint || "Click on the image to set the focal point"} · {Math.round(activeSlide.focalX ?? 50)}% / {Math.round(activeSlide.focalY ?? 50)}%
+                </p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">{we.slideTitle}</label>
               <Input

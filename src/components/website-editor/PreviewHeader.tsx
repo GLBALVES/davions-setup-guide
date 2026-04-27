@@ -15,6 +15,10 @@ export interface HeaderSlide {
   openInNewTab?: boolean;
   backgroundTint?: number;
   imageUrl: string | null;
+  /** Focal point X (0–100, percent). Defaults to 50. */
+  focalX?: number;
+  /** Focal point Y (0–100, percent). Defaults to 50. */
+  focalY?: number;
 }
 
 export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
@@ -318,6 +322,9 @@ export default function PreviewHeader({
       <div className="absolute inset-0">
         {slides.map((slide, i) => {
           const active = i === index;
+          const fx = typeof slide.focalX === "number" ? slide.focalX : 50;
+          const fy = typeof slide.focalY === "number" ? slide.focalY : 50;
+          const objectPosition = `${fx}% ${fy}%`;
           if (cfg.transition === "slide") {
             return (
               <div
@@ -331,6 +338,7 @@ export default function PreviewHeader({
                   src={slide.imageUrl || PLACEHOLDER_IMAGE}
                   alt=""
                   className="w-full h-full object-cover"
+                  style={{ objectPosition }}
                 />
               </div>
             );
@@ -345,6 +353,7 @@ export default function PreviewHeader({
                 src={slide.imageUrl || PLACEHOLDER_IMAGE}
                 alt=""
                 className="w-full h-full object-cover"
+                style={{ objectPosition }}
               />
             </div>
           );

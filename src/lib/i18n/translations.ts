@@ -2065,6 +2065,9 @@ export const translations = {
       buttonUrlLabel: "Button URL",
       openInNewWindow: "Open link in new window",
       backgroundTint: "Background tint",
+      focalPoint: "Focal point",
+      focalPointHint: "Click on the image to set the focal point",
+      reset: "Reset",
       emptySiteTitle: "Your site is empty",
       emptySiteDescription: "Add a page in the website editor to start building your public site.",
       pageTemplatePicker: {
@@ -4094,6 +4097,9 @@ export const translations = {
       buttonUrlLabel: "URL do botão",
       openInNewWindow: "Abrir link em nova janela",
       backgroundTint: "Escurecimento do fundo",
+      focalPoint: "Ponto focal",
+      focalPointHint: "Clique na imagem para definir o ponto focal",
+      reset: "Restaurar",
       emptySiteTitle: "Seu site está vazio",
       emptySiteDescription: "Adicione uma página no editor de website para começar a montar seu site público.",
       pageTemplatePicker: {
@@ -6199,6 +6205,9 @@ export const translations = {
       buttonUrlLabel: "URL del botón",
       openInNewWindow: "Abrir enlace en nueva ventana",
       backgroundTint: "Oscurecimiento del fondo",
+      focalPoint: "Punto focal",
+      focalPointHint: "Haz clic en la imagen para definir el punto focal",
+      reset: "Restablecer",
       emptySiteTitle: "Tu sitio está vacío",
       emptySiteDescription: "Agrega una página en el editor del sitio web para comenzar a construir tu sitio público.",
       pageTemplatePicker: {
