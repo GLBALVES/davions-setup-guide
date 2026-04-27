@@ -904,6 +904,51 @@ export const BlockSettingsPanel = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* ── Layout Variants ── */}
+        {(() => {
+          const variants = BLOCK_VARIANTS[section.type as SectionType];
+          if (!variants || variants.length < 2) return null;
+          const current = (section.props as any)?.variant || variants[0]?.id;
+          return (
+            <>
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Layout</p>
+              </div>
+              <div className="px-4 pb-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {variants.map((v) => {
+                    const active = current === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => onUpdateProps({ ...(section.props || {}), variant: v.id })}
+                        title={v.label}
+                        aria-label={v.label}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 p-2 rounded-md border transition-colors",
+                          active
+                            ? "border-primary bg-primary/5 text-foreground"
+                            : "border-border hover:border-foreground/30 hover:bg-muted/40 text-muted-foreground"
+                        )}
+                      >
+                        <span className="text-lg leading-none">{v.icon}</span>
+                        <span className={cn(
+                          "text-[10px] font-medium truncate w-full text-center",
+                          active ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {v.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="border-t border-border" />
+            </>
+          );
+        })()}
+
         {/* ── Content Fields ── */}
         {contentEditor && (
           <>
