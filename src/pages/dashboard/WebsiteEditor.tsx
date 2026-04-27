@@ -1825,6 +1825,8 @@ const DndPagesArea = ({
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
+  onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
+  onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
   const folders = [...menuPages, ...nonMenuPages].filter((p) => p.type === "folder");
   const sensors = useSensors(
