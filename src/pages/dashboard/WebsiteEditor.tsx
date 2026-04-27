@@ -240,6 +240,70 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs" onClick={onDuplicate}>
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
+        {allPages && allPages.length > 1 && page.type !== "folder" && page.type !== "link" && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+                <Copy className="h-3.5 w-3.5" /> Copy header from…
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== page.id && p.headerConfig).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages with a header
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== page.id && p.headerConfig)
+                      .map((p) => (
+                        <DropdownMenuItem
+                          key={p.id}
+                          className="gap-2 text-xs"
+                          onClick={(e) => { e.stopPropagation(); onCopyHeaderFrom?.(p.id); }}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span className="truncate">{p.label}</span>
+                        </DropdownMenuItem>
+                      ))
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+                <Link2 className="h-3.5 w-3.5" /> Share header with…
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== page.id).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== page.id)
+                      .map((p) => {
+                        const linked = !!page.headerConfig?.groupId && p.headerConfig?.groupId === page.headerConfig?.groupId;
+                        return (
+                          <DropdownMenuItem
+                            key={p.id}
+                            className="gap-2 text-xs"
+                            disabled={linked}
+                            onClick={(e) => { e.stopPropagation(); onShareHeaderWith?.(p.id); }}
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span className="truncate flex-1">{p.label}</span>
+                            {linked && <span className="text-[10px] text-muted-foreground">linked</span>}
+                          </DropdownMenuItem>
+                        );
+                      })
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.isHome}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
