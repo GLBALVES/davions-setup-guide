@@ -23,8 +23,6 @@ export interface BlockSettings {
   backgroundOpacity?: number;
   backgroundFocalX?: number;
   backgroundFocalY?: number;
-  overlayColor?: string;
-  overlayOpacity?: number;
   paddingTop?: number;
   paddingBottom?: number;
   colorScheme?: "light" | "dark" | "auto";
@@ -93,43 +91,6 @@ interface BlockSettingsPanelProps {
 
 // ── Per-type content editors ──────────────────────────────────────────────────
 
-function OverlayControls({
-  color,
-  opacity,
-  onColorChange,
-  onOpacityChange,
-}: {
-  color: string;
-  opacity: number;
-  onColorChange: (v: string) => void;
-  onOpacityChange: (v: number) => void;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">
-        Overlay Opacity: {Math.round(opacity)}%
-      </label>
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={isHexColor(color) ? color : "#000000"}
-          onChange={(e) => onColorChange(e.target.value)}
-          className="h-9 w-10 rounded-md border border-border cursor-pointer bg-background p-0.5"
-          aria-label="Overlay color"
-        />
-        <Slider
-          value={[opacity]}
-          min={0}
-          max={100}
-          step={5}
-          onValueChange={([v]) => onOpacityChange(v)}
-          className="flex-1"
-        />
-      </div>
-    </div>
-  );
-}
-
 function HeroContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   return (
     <div className="space-y-3">
@@ -154,14 +115,6 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
           focalY={props.bgFocalY}
           onChange={(x, y) => onChange({ ...props, bgFocalX: x, bgFocalY: y })}
           onReset={() => onChange({ ...props, bgFocalX: 50, bgFocalY: 50 })}
-        />
-      )}
-      {props.backgroundImage && (
-        <OverlayControls
-          color={props.bgOverlayColor ?? "#000000"}
-          opacity={typeof props.bgOverlayOpacity === "number" ? props.bgOverlayOpacity : 40}
-          onColorChange={(v) => onChange({ ...props, bgOverlayColor: v })}
-          onOpacityChange={(v) => onChange({ ...props, bgOverlayOpacity: v })}
         />
       )}
       <ButtonsListEditor props={props} onChange={onChange} />
@@ -996,15 +949,6 @@ export const BlockSettingsPanel = ({
                 className="w-full"
               />
             </div>
-          )}
-
-          {s.backgroundImage && (
-            <OverlayControls
-              color={s.overlayColor ?? "#000000"}
-              opacity={typeof s.overlayOpacity === "number" ? s.overlayOpacity : 0}
-              onColorChange={(v) => update({ overlayColor: v })}
-              onOpacityChange={(v) => update({ overlayOpacity: v })}
-            />
           )}
         </div>
 
