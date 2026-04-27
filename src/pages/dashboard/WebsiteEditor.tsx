@@ -1255,19 +1255,64 @@ const HeaderSliderPanel = ({
             </Select>
           </div>
 
-          {/* Height */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">{we.headerHeight}</label>
-              <span className="text-[11px] text-muted-foreground">{parseInt(cfg.height || "60", 10)}vh</span>
+          {/* Height — per-device */}
+          <div className="space-y-3">
+            <label className="text-xs font-medium text-muted-foreground">{we.headerHeight}</label>
+
+            {/* Desktop */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Monitor className="h-3 w-3" /> Desktop
+                </span>
+                <span className="text-[11px] text-muted-foreground">{parseInt(cfg.height || "60", 10)}vh</span>
+              </div>
+              <Slider
+                min={40}
+                max={100}
+                step={5}
+                value={[parseInt(cfg.height || "60", 10)]}
+                onValueChange={(v) => updateCfg({ height: `${v[0]}vh` })}
+              />
             </div>
-            <Slider
-              min={40}
-              max={100}
-              step={5}
-              value={[parseInt(cfg.height || "60", 10)]}
-              onValueChange={(v) => updateCfg({ height: `${v[0]}vh` })}
-            />
+
+            {/* Tablet */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Tablet className="h-3 w-3" /> Tablet
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {parseInt(cfg.heightTablet || cfg.height || "60", 10)}vh
+                </span>
+              </div>
+              <Slider
+                min={30}
+                max={100}
+                step={5}
+                value={[parseInt(cfg.heightTablet || cfg.height || "60", 10)]}
+                onValueChange={(v) => updateCfg({ heightTablet: `${v[0]}vh` })}
+              />
+            </div>
+
+            {/* Mobile */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Smartphone className="h-3 w-3" /> Mobile
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {parseInt(cfg.heightMobile || cfg.heightTablet || cfg.height || "60", 10)}vh
+                </span>
+              </div>
+              <Slider
+                min={30}
+                max={100}
+                step={5}
+                value={[parseInt(cfg.heightMobile || cfg.heightTablet || cfg.height || "60", 10)]}
+                onValueChange={(v) => updateCfg({ heightMobile: `${v[0]}vh` })}
+              />
+            </div>
           </div>
 
           {/* Background color (applied to nav-only header) */}
