@@ -2148,7 +2148,7 @@ const PagesPanel = ({
     findAndUpdate(targetPageId, { headerConfig: sharedHeader });
   };
 
-
+  const toggleMenu = (id: string) => {
     const page = pages.find((p) => p.id === id) || pages.flatMap((p) => p.children || []).find((c) => c.id === id);
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
   };
