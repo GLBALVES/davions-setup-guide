@@ -20,6 +20,8 @@ export interface BlockSettings {
   backgroundColor?: string;
   backgroundImage?: string;
   backgroundOpacity?: number;
+  backgroundFocalX?: number;
+  backgroundFocalY?: number;
   paddingTop?: number;
   paddingBottom?: number;
   colorScheme?: "light" | "dark" | "auto";
