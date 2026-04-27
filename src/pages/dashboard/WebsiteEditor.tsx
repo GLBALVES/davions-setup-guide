@@ -121,6 +121,9 @@ const PageContextMenu = ({
   onDelete,
   onDuplicate,
   onMoveToFolder,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   folders: SitePage[];
@@ -129,6 +132,9 @@ const PageContextMenu = ({
   onDelete: () => void;
   onDuplicate: () => void;
   onMoveToFolder: (folderId: string | null) => void;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (sourcePageId: string) => void;
+  onShareHeaderWith?: (otherPageId: string) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -234,6 +240,70 @@ const PageContextMenu = ({
         <DropdownMenuItem className="gap-2 text-xs" onClick={onDuplicate}>
           <Copy className="h-3.5 w-3.5" /> {we.duplicate}
         </DropdownMenuItem>
+        {allPages && allPages.length > 1 && page.type !== "folder" && page.type !== "link" && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+                <Copy className="h-3.5 w-3.5" /> Copy header from…
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== page.id && p.headerConfig).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages with a header
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== page.id && p.headerConfig)
+                      .map((p) => (
+                        <DropdownMenuItem
+                          key={p.id}
+                          className="gap-2 text-xs"
+                          onClick={(e) => { e.stopPropagation(); onCopyHeaderFrom?.(p.id); }}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span className="truncate">{p.label}</span>
+                        </DropdownMenuItem>
+                      ))
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="gap-2 text-xs" onClick={(e) => e.stopPropagation()}>
+                <Link2 className="h-3.5 w-3.5" /> Share header with…
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== page.id).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== page.id)
+                      .map((p) => {
+                        const linked = !!page.headerConfig?.groupId && p.headerConfig?.groupId === page.headerConfig?.groupId;
+                        return (
+                          <DropdownMenuItem
+                            key={p.id}
+                            className="gap-2 text-xs"
+                            disabled={linked}
+                            onClick={(e) => { e.stopPropagation(); onShareHeaderWith?.(p.id); }}
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            <span className="truncate flex-1">{p.label}</span>
+                            {linked && <span className="text-[10px] text-muted-foreground">linked</span>}
+                          </DropdownMenuItem>
+                        );
+                      })
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2 text-xs text-destructive" onClick={onDelete} disabled={page.isHome}>
           <Trash2 className="h-3.5 w-3.5" /> {we.delete}
@@ -306,6 +376,9 @@ const PageItem = ({
   onRename,
   onMoveToFolder,
   indent = false,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   active?: boolean;
@@ -318,6 +391,9 @@ const PageItem = ({
   onRename?: (label: string) => void;
   onMoveToFolder: (folderId: string | null) => void;
   indent?: boolean;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (sourcePageId: string) => void;
+  onShareHeaderWith?: (otherPageId: string) => void;
 }) => {
   const IconEl = page.icon
     ? null
@@ -344,7 +420,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <EditableLabel value={page.label} onRename={onRename} />
-      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} />
+      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} allPages={allPages} onCopyHeaderFrom={onCopyHeaderFrom} onShareHeaderWith={onShareHeaderWith} />
     </div>
   );
 };
@@ -361,6 +437,9 @@ const PageFolder = ({
   onDuplicate,
   onRename,
   onMoveToFolder,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   activePage: string;
@@ -372,6 +451,9 @@ const PageFolder = ({
   onDuplicate: (id: string) => void;
   onRename?: (id: string, label: string) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (targetPageId: string, sourcePageId: string) => void;
+  onShareHeaderWith?: (targetPageId: string, otherPageId: string) => void;
 }) => {
   const [open, setOpen] = useState(true);
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `folder:${page.id}` });
@@ -400,7 +482,7 @@ const PageFolder = ({
           className="text-left"
         />
         {expanded ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} />
+        <PageContextMenu page={page} folders={folders} onSettings={() => onSettings(page)} onToggleMenu={() => onToggleMenu(page.id)} onDelete={() => onDelete(page.id)} onDuplicate={() => onDuplicate(page.id)} onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)} allPages={allPages} onCopyHeaderFrom={onCopyHeaderFrom ? (sid) => onCopyHeaderFrom(page.id, sid) : undefined} onShareHeaderWith={onShareHeaderWith ? (oid) => onShareHeaderWith(page.id, oid) : undefined} />
       </div>
       {expanded && page.children?.map((child) => (
         <SortableRow key={child.id} id={child.id}>
@@ -414,6 +496,9 @@ const PageFolder = ({
             onDelete={() => onDelete(child.id)}
             onDuplicate={() => onDuplicate(child.id)}
             onRename={onRename ? (label) => onRename(child.id, label) : undefined}
+            allPages={allPages}
+            onCopyHeaderFrom={onCopyHeaderFrom ? (sid) => onCopyHeaderFrom(child.id, sid) : undefined}
+            onShareHeaderWith={onShareHeaderWith ? (oid) => onShareHeaderWith(child.id, oid) : undefined}
             onMoveToFolder={(fid) => onMoveToFolder(child.id, fid)}
             indent
           />
@@ -629,12 +714,26 @@ const HeaderSliderPanel = ({
   onChange,
   photographerId,
   onActiveSlideChange,
+  currentPageId,
+  currentPageLabel,
+  allPages,
+  sharedPagesCount,
+  onCopyHeaderFromPage,
+  onShareHeaderWithPage,
+  onUnshareHeader,
 }: {
   onBack: () => void;
   value: HeaderConfig | null;
   onChange: (next: HeaderConfig) => void;
   photographerId: string | null;
   onActiveSlideChange?: (slideId: string | null) => void;
+  currentPageId?: string | null;
+  currentPageLabel?: string;
+  allPages?: SitePage[];
+  sharedPagesCount?: number;
+  onCopyHeaderFromPage?: (sourcePageId: string) => void;
+  onShareHeaderWithPage?: (otherPageId: string) => void;
+  onUnshareHeader?: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -652,10 +751,25 @@ const HeaderSliderPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSlideId]);
 
+  const isShared = !!cfg.groupId && (sharedPagesCount ?? 1) > 1;
+  const sharedConfirmedRef = useRef(false);
+  const guardEdit = (): boolean => {
+    if (!isShared || sharedConfirmedRef.current) return true;
+    const ok = window.confirm(
+      `This header is shared with ${sharedPagesCount} pages. Editing will update it on every page that uses it. Continue?`
+    );
+    if (ok) sharedConfirmedRef.current = true;
+    return ok;
+  };
+
   const updateCfg = (patch: Partial<HeaderConfig>) => {
+    if (!guardEdit()) return;
     onChange({ ...cfg, slides, ...patch });
   };
-  const updateSlides = (next: HeaderSlide[]) => onChange({ ...cfg, slides: next });
+  const updateSlides = (next: HeaderSlide[]) => {
+    if (!guardEdit()) return;
+    onChange({ ...cfg, slides: next });
+  };
 
   const addSlide = () => {
     const id = crypto.randomUUID();
@@ -686,7 +800,107 @@ const HeaderSliderPanel = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* LAYOUT */}
+        {/* SHARE / COPY HEADER between pages */}
+        {allPages && currentPageId && (
+          <div className="px-4 pt-4 pb-2 space-y-2">
+            {isShared && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-amber-50 border border-amber-200/70">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Link2 className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                  <span className="text-[11px] text-amber-900 truncate">
+                    Shared with {sharedPagesCount} pages
+                  </span>
+                </div>
+                {onUnshareHeader && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Unlink this header from the shared group? Future edits on this page won't affect the others.")) {
+                        sharedConfirmedRef.current = true;
+                        onUnshareHeader();
+                      }
+                    }}
+                    className="text-[11px] text-amber-900 underline hover:no-underline shrink-0"
+                  >
+                    Unlink
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-8 px-2 rounded-md border border-border text-[11px] text-foreground hover:bg-muted/40 transition-colors flex items-center justify-center gap-1.5"
+                    title="Copy header from another page (independent copy)"
+                  >
+                    <Copy className="h-3 w-3" /> Copy from…
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== currentPageId && p.headerConfig).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages with a header
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== currentPageId && p.headerConfig)
+                      .map((p) => (
+                        <DropdownMenuItem
+                          key={p.id}
+                          className="gap-2 text-xs"
+                          onClick={() => onCopyHeaderFromPage?.(p.id)}
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span className="truncate">{p.label}</span>
+                        </DropdownMenuItem>
+                      ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-8 px-2 rounded-md border border-border text-[11px] text-foreground hover:bg-muted/40 transition-colors flex items-center justify-center gap-1.5"
+                    title="Share this header with another page (linked)"
+                  >
+                    <Link2 className="h-3 w-3" /> Share with…
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                  {allPages.filter((p) => p.id !== currentPageId).length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                      No other pages
+                    </DropdownMenuItem>
+                  ) : (
+                    allPages
+                      .filter((p) => p.id !== currentPageId)
+                      .map((p) => {
+                        const alreadyShared = !!cfg.groupId && p.headerConfig?.groupId === cfg.groupId;
+                        return (
+                          <DropdownMenuItem
+                            key={p.id}
+                            className="gap-2 text-xs"
+                            disabled={alreadyShared}
+                            onClick={() => onShareHeaderWithPage?.(p.id)}
+                          >
+                            <FileText className="h-3 w-3" />
+                            <span className="truncate flex-1">{p.label}</span>
+                            {alreadyShared && <span className="text-[10px] text-muted-foreground">linked</span>}
+                          </DropdownMenuItem>
+                        );
+                      })
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        )}
+
+
         <div className="px-4 pt-4 pb-2">
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
         </div>
@@ -1596,6 +1810,8 @@ const DndPagesArea = ({
   onReorder,
   onMoveToFolder,
   shopExtra,
+  onCopyHeader,
+  onShareHeader,
 }: {
   menuPages: SitePage[];
   nonMenuPages: SitePage[];
@@ -1611,6 +1827,8 @@ const DndPagesArea = ({
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
+  onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
+  onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
   const folders = [...menuPages, ...nonMenuPages].filter((p) => p.type === "folder");
   const sensors = useSensors(
@@ -1749,6 +1967,9 @@ const DndPagesArea = ({
                     onDuplicate={onDuplicate}
                     onRename={onRename}
                     onMoveToFolder={onMoveToFolder}
+                    allPages={allPages}
+                    onCopyHeaderFrom={(targetId, sourceId) => onCopyHeader?.(sourceId, targetId)}
+                    onShareHeaderWith={(targetId, otherId) => onShareHeader?.(targetId, otherId)}
                   />
                 </SortableRow>
               ) : (
@@ -1764,6 +1985,9 @@ const DndPagesArea = ({
                     onDuplicate={() => onDuplicate(page.id)}
                     onRename={(label) => onRename(page.id, label)}
                     onMoveToFolder={(fid) => onMoveToFolder(page.id, fid)}
+                    allPages={allPages}
+                    onCopyHeaderFrom={(sourceId) => onCopyHeader?.(sourceId, page.id)}
+                    onShareHeaderWith={(otherId) => onShareHeader?.(page.id, otherId)}
                   />
                 </SortableRow>
               );
@@ -2102,6 +2326,52 @@ const PagesPanel = ({
     if (settingsPage?.id === id) setSettingsPage((prev) => (prev ? { ...prev, ...patch } : null));
   };
 
+  // Apply a header config update. If the page's header (or the next header) has
+  // a groupId (i.e. it's shared), propagate to every other page in that group.
+  const applyHeaderUpdate = (pageId: string, nextHeader: HeaderConfig | null) => {
+    const allP = flattenPages(pages);
+    const target = allP.find((p) => p.id === pageId);
+    const sharedGroupId = nextHeader?.groupId || target?.headerConfig?.groupId || null;
+
+    if (!sharedGroupId) {
+      findAndUpdate(pageId, { headerConfig: nextHeader });
+      return;
+    }
+    const targets = allP.filter((p) => p.headerConfig?.groupId === sharedGroupId).map((p) => p.id);
+    if (!targets.includes(pageId)) targets.push(pageId);
+    targets.forEach((id) => findAndUpdate(id, { headerConfig: nextHeader }));
+  };
+
+  // Count how many pages share a given header groupId
+  const countPagesInGroup = (groupId: string | undefined | null): number => {
+    if (!groupId) return 1;
+    return flattenPages(pages).filter((p) => p.headerConfig?.groupId === groupId).length;
+  };
+
+  // Copy header from sourcePageId to targetPageId as an INDEPENDENT clone (no groupId).
+  const copyHeaderFromPage = (sourcePageId: string, targetPageId: string) => {
+    const allP = flattenPages(pages);
+    const src = allP.find((p) => p.id === sourcePageId);
+    if (!src?.headerConfig) return;
+    const cloned: HeaderConfig = JSON.parse(JSON.stringify(src.headerConfig));
+    delete (cloned as any).groupId;
+    findAndUpdate(targetPageId, { headerConfig: cloned });
+  };
+
+  // Share header between sourcePageId and targetPageId (assigns/keeps a shared groupId).
+  const shareHeaderWithPage = (sourcePageId: string, targetPageId: string) => {
+    const allP = flattenPages(pages);
+    const src = allP.find((p) => p.id === sourcePageId);
+    if (!src?.headerConfig) return;
+    const groupId = src.headerConfig.groupId || crypto.randomUUID();
+    const sharedHeader: HeaderConfig = { ...JSON.parse(JSON.stringify(src.headerConfig)), groupId };
+    // Make sure the source itself carries the groupId (in case it didn't yet)
+    if (!src.headerConfig.groupId) {
+      findAndUpdate(sourcePageId, { headerConfig: sharedHeader });
+    }
+    findAndUpdate(targetPageId, { headerConfig: sharedHeader });
+  };
+
   const toggleMenu = (id: string) => {
     const page = pages.find((p) => p.id === id) || pages.flatMap((p) => p.children || []).find((c) => c.id === id);
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
@@ -2273,17 +2543,41 @@ const PagesPanel = ({
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
     const activeP = allPages.find((p) => p.id === activePage);
+    const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
       <HeaderSliderPanel
         onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
         value={activeP?.headerConfig ?? null}
         onChange={(next) => {
           if (!activeP) return;
-          findAndUpdate(activeP.id, { headerConfig: next });
+          applyHeaderUpdate(activeP.id, next);
           onHeaderConfigChange?.(next);
         }}
         photographerId={photographerId}
         onActiveSlideChange={onActiveSlideChange}
+        currentPageId={activeP?.id ?? null}
+        currentPageLabel={activeP?.label ?? ""}
+        allPages={allPages}
+        sharedPagesCount={sharedCount}
+        onCopyHeaderFromPage={(sourceId) => {
+          if (!activeP) return;
+          copyHeaderFromPage(sourceId, activeP.id);
+        }}
+        onShareHeaderWithPage={(otherId) => {
+          if (!activeP) return;
+          // If current page already has a header, treat it as the source.
+          // Otherwise pull the other page's header into both.
+          if (activeP.headerConfig) {
+            shareHeaderWithPage(activeP.id, otherId);
+          } else {
+            shareHeaderWithPage(otherId, activeP.id);
+          }
+        }}
+        onUnshareHeader={() => {
+          if (!activeP?.headerConfig) return;
+          const { groupId, ...rest } = activeP.headerConfig;
+          findAndUpdate(activeP.id, { headerConfig: rest });
+        }}
       />
     );
   }
@@ -3060,7 +3354,7 @@ const FooterSubPanel = ({
       </section>
     </div>
   );
-};
+  };
 
 
 // ── Buttons Sub Panel ────────────────────────────────────────────────────────
