@@ -365,13 +365,13 @@ function SectionBlock({
           }}
         />
       )}
-      {bs.backgroundImage && bs.overlayColor && (bs.overlayOpacity ?? 0) > 0 && (
+      {bs.backgroundImage && (bs.overlayOpacity ?? 0) > 0 && (
         <div
           aria-hidden
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: bs.overlayColor,
+            backgroundColor: bs.overlayColor || "#000000",
             opacity: (bs.overlayOpacity ?? 0) / 100,
             pointerEvents: "none",
             zIndex: 1,
