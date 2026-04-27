@@ -42,6 +42,7 @@ import { AddBlockPicker } from "@/components/website-editor/AddBlockPicker";
 import { BlockSettingsPanel, type BlockSettings } from "@/components/website-editor/BlockSettingsPanel";
 import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/components/website-editor/PreviewRenderer";
 import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormatToolbar";
+import InlineFormatSidebar from "@/components/website-editor/inline/InlineFormatSidebar";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
@@ -4768,7 +4769,12 @@ const WebsiteEditor = () => {
       )}
 
       {/* Preview area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
+      <div className="relative flex-1 flex flex-col min-w-0 bg-muted/20">
+        {/* Floating vertical text-formatting toolbar — anchored to the left edge
+            of the preview area, sitting next to the editor sidebar. */}
+        <div className="hidden md:block absolute left-2 top-1/2 -translate-y-1/2 z-30">
+          <InlineFormatSidebar compact />
+        </div>
         {isMobile && (
           <div className="h-12 border-b border-border bg-card flex items-center px-3 sm:px-4 shrink-0 gap-2">
             <button
