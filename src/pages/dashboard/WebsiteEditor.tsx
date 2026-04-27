@@ -121,6 +121,9 @@ const PageContextMenu = ({
   onDelete,
   onDuplicate,
   onMoveToFolder,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   folders: SitePage[];
@@ -129,6 +132,9 @@ const PageContextMenu = ({
   onDelete: () => void;
   onDuplicate: () => void;
   onMoveToFolder: (folderId: string | null) => void;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (sourcePageId: string) => void;
+  onShareHeaderWith?: (otherPageId: string) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
