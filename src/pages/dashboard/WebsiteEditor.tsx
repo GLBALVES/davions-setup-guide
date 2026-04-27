@@ -420,7 +420,7 @@ const PageItem = ({
         <IconEl className="h-3.5 w-3.5 shrink-0" />
       ) : null}
       <EditableLabel value={page.label} onRename={onRename} />
-      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} />
+      <PageContextMenu page={page} folders={folders} onSettings={onSettings} onToggleMenu={onToggleMenu} onDelete={onDelete} onDuplicate={onDuplicate} onMoveToFolder={onMoveToFolder} allPages={allPages} onCopyHeaderFrom={onCopyHeaderFrom} onShareHeaderWith={onShareHeaderWith} />
     </div>
   );
 };
