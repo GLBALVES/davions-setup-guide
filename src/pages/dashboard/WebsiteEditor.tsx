@@ -2102,7 +2102,53 @@ const PagesPanel = ({
     if (settingsPage?.id === id) setSettingsPage((prev) => (prev ? { ...prev, ...patch } : null));
   };
 
-  const toggleMenu = (id: string) => {
+  // Apply a header config update. If the page's header (or the next header) has
+  // a groupId (i.e. it's shared), propagate to every other page in that group.
+  const applyHeaderUpdate = (pageId: string, nextHeader: HeaderConfig | null) => {
+    const allP = flattenPages(pages);
+    const target = allP.find((p) => p.id === pageId);
+    const sharedGroupId = nextHeader?.groupId || target?.headerConfig?.groupId || null;
+
+    if (!sharedGroupId) {
+      findAndUpdate(pageId, { headerConfig: nextHeader });
+      return;
+    }
+    const targets = allP.filter((p) => p.headerConfig?.groupId === sharedGroupId).map((p) => p.id);
+    if (!targets.includes(pageId)) targets.push(pageId);
+    targets.forEach((id) => findAndUpdate(id, { headerConfig: nextHeader }));
+  };
+
+  // Count how many pages share a given header groupId
+  const countPagesInGroup = (groupId: string | undefined | null): number => {
+    if (!groupId) return 1;
+    return flattenPages(pages).filter((p) => p.headerConfig?.groupId === groupId).length;
+  };
+
+  // Copy header from sourcePageId to targetPageId as an INDEPENDENT clone (no groupId).
+  const copyHeaderFromPage = (sourcePageId: string, targetPageId: string) => {
+    const allP = flattenPages(pages);
+    const src = allP.find((p) => p.id === sourcePageId);
+    if (!src?.headerConfig) return;
+    const cloned: HeaderConfig = JSON.parse(JSON.stringify(src.headerConfig));
+    delete (cloned as any).groupId;
+    findAndUpdate(targetPageId, { headerConfig: cloned });
+  };
+
+  // Share header between sourcePageId and targetPageId (assigns/keeps a shared groupId).
+  const shareHeaderWithPage = (sourcePageId: string, targetPageId: string) => {
+    const allP = flattenPages(pages);
+    const src = allP.find((p) => p.id === sourcePageId);
+    if (!src?.headerConfig) return;
+    const groupId = src.headerConfig.groupId || crypto.randomUUID();
+    const sharedHeader: HeaderConfig = { ...JSON.parse(JSON.stringify(src.headerConfig)), groupId };
+    // Make sure the source itself carries the groupId (in case it didn't yet)
+    if (!src.headerConfig.groupId) {
+      findAndUpdate(sourcePageId, { headerConfig: sharedHeader });
+    }
+    findAndUpdate(targetPageId, { headerConfig: sharedHeader });
+  };
+
+
     const page = pages.find((p) => p.id === id) || pages.flatMap((p) => p.children || []).find((c) => c.id === id);
     if (page) findAndUpdate(id, { inMenu: !page.inMenu });
   };
