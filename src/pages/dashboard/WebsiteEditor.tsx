@@ -376,6 +376,9 @@ const PageItem = ({
   onRename,
   onMoveToFolder,
   indent = false,
+  allPages,
+  onCopyHeaderFrom,
+  onShareHeaderWith,
 }: {
   page: SitePage;
   active?: boolean;
@@ -388,6 +391,9 @@ const PageItem = ({
   onRename?: (label: string) => void;
   onMoveToFolder: (folderId: string | null) => void;
   indent?: boolean;
+  allPages?: SitePage[];
+  onCopyHeaderFrom?: (sourcePageId: string) => void;
+  onShareHeaderWith?: (otherPageId: string) => void;
 }) => {
   const IconEl = page.icon
     ? null
