@@ -356,7 +356,7 @@ function SectionBlock({
             inset: 0,
             backgroundImage: `url(${bs.backgroundImage})`,
             backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundPosition: `${typeof bs.backgroundFocalX === "number" ? bs.backgroundFocalX : 50}% ${typeof bs.backgroundFocalY === "number" ? bs.backgroundFocalY : 50}%`,
             opacity: (bs.backgroundOpacity ?? 100) / 100,
             pointerEvents: "none",
             zIndex: 0,
