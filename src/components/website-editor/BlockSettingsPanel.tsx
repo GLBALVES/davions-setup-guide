@@ -23,10 +23,63 @@ export interface BlockSettings {
   backgroundOpacity?: number;
   backgroundFocalX?: number;
   backgroundFocalY?: number;
+  overlayColor?: string;
+  overlayOpacity?: number;
   paddingTop?: number;
   paddingBottom?: number;
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
+}
+
+// Reusable overlay controls (color + opacity slider) for background images
+function OverlayControls({
+  color,
+  opacity,
+  onChange,
+}: {
+  color?: string;
+  opacity?: number;
+  onChange: (patch: { overlayColor?: string; overlayOpacity?: number }) => void;
+}) {
+  const effectiveColor = color || "#000000";
+  const effectiveOpacity = typeof opacity === "number" ? opacity : 40;
+  return (
+    <div className="space-y-2 rounded-md border border-border/60 p-3">
+      <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
+        Image Overlay
+      </p>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">Overlay Color</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={effectiveColor}
+            onChange={(e) => onChange({ overlayColor: e.target.value })}
+            className="h-9 w-10 rounded cursor-pointer border border-border bg-background"
+          />
+          <Input
+            value={effectiveColor}
+            onChange={(e) => onChange({ overlayColor: e.target.value })}
+            placeholder="#000000"
+            className="h-9 text-sm font-mono flex-1"
+          />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">
+          Overlay Opacity: {Math.round(effectiveOpacity)}%
+        </label>
+        <Slider
+          value={[effectiveOpacity]}
+          min={0}
+          max={100}
+          step={5}
+          onValueChange={([v]) => onChange({ overlayOpacity: v })}
+          className="w-full"
+        />
+      </div>
+    </div>
+  );
 }
 
 const PRESET_COLORS = [
