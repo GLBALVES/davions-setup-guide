@@ -320,6 +320,7 @@ export function RichTextField({
   multiline = false,
   className,
   inputClassName,
+  hideToolbar = false,
 }: RichTextFieldProps) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [showColor, setShowColor] = useState(false);
