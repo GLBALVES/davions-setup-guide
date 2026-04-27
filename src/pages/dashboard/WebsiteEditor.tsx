@@ -3062,31 +3062,6 @@ const FooterSubPanel = ({
   );
   };
 
-  // Apply a header config update to a page. If the page's header has a `groupId`
-  // (i.e. it's shared), propagate the same headerConfig to every other page that
-  // shares that groupId. Otherwise update only the target page.
-  const applyHeaderUpdate = (pageId: string, nextHeader: HeaderConfig | null) => {
-    const allP = flattenPages(pages);
-    const target = allP.find((p) => p.id === pageId);
-    const sharedGroupId = nextHeader?.groupId || target?.headerConfig?.groupId || null;
-
-    if (!sharedGroupId) {
-      // Independent (copied) header — update only this page.
-      findAndUpdate(pageId, { headerConfig: nextHeader });
-      return;
-    }
-
-    // Shared header — propagate to every page that has the same groupId.
-    const targets = allP.filter((p) => p.headerConfig?.groupId === sharedGroupId).map((p) => p.id);
-    if (!targets.includes(pageId)) targets.push(pageId);
-    targets.forEach((id) => findAndUpdate(id, { headerConfig: nextHeader }));
-  };
-
-  // Count how many pages share a given groupId (for badges / confirmation dialogs)
-  const countPagesInGroup = (groupId: string | undefined | null): number => {
-    if (!groupId) return 1;
-    return flattenPages(pages).filter((p) => p.headerConfig?.groupId === groupId).length;
-  };
 
 // ── Buttons Sub Panel ────────────────────────────────────────────────────────
 const ButtonsSubPanel = ({
