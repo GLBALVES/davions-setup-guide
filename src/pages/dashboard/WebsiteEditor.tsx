@@ -4769,7 +4769,12 @@ const WebsiteEditor = () => {
       )}
 
       {/* Preview area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
+      <div className="relative flex-1 flex flex-col min-w-0 bg-muted/20">
+        {/* Floating vertical text-formatting toolbar — anchored to the left edge
+            of the preview area, sitting next to the editor sidebar. */}
+        <div className="hidden md:block absolute left-2 top-1/2 -translate-y-1/2 z-30">
+          <InlineFormatSidebar compact />
+        </div>
         {isMobile && (
           <div className="h-12 border-b border-border bg-card flex items-center px-3 sm:px-4 shrink-0 gap-2">
             <button
