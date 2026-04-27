@@ -980,6 +980,21 @@ const HeaderSliderPanel = ({
                 onValueChange={(v) => updateSlide(activeSlide.id, { backgroundTint: (v[0] || 0) / 100 })}
               />
             </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">{we.overlayOpacity}</label>
+                <span className="text-[11px] text-muted-foreground">
+                  {Math.round(((activeSlide.overlayOpacity ?? cfg.overlayOpacity ?? 0.3)) * 100)}%
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={80}
+                step={5}
+                value={[Math.round(((activeSlide.overlayOpacity ?? cfg.overlayOpacity ?? 0.3)) * 100)]}
+                onValueChange={(v) => updateSlide(activeSlide.id, { overlayOpacity: (v[0] || 0) / 100 })}
+              />
+            </div>
           </div>
         )}
 
