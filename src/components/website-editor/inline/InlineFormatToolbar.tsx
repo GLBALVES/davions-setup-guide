@@ -1,8 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bold, Italic, Underline, Eraser, Type, Palette } from "lucide-react";
+import {
+  Bold, Italic, Underline, Eraser, Type, Palette,
+  Heading1, Heading2, Heading3, Quote, List, ListOrdered,
+  AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, ChevronDown,
+} from "lucide-react";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
+
+const BLOCK_PRESETS: { id: string; label: string; tag: string }[] = [
+  { id: "h1", label: "Heading 1", tag: "H1" },
+  { id: "h2", label: "Heading 2", tag: "H2" },
+  { id: "h3", label: "Heading 3", tag: "H3" },
+  { id: "p", label: "Body", tag: "P" },
+  { id: "blockquote", label: "Quote", tag: "BLOCKQUOTE" },
+];
 
 /**
  * Floating selection toolbar that lets users format the currently selected
