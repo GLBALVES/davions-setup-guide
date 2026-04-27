@@ -75,6 +75,7 @@ export default function PreviewHeader({
   config,
   editMode = false,
   onEditHeader,
+  pinnedSlideId = null,
 }: PreviewHeaderProps) {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -84,20 +85,34 @@ export default function PreviewHeader({
   const navOnlyMode = validSlides.length === 0;
   const slides = validSlides;
 
+  // Resolve pinned slide index (if pinned id matches a visible slide).
+  const pinnedIndex = pinnedSlideId
+    ? slides.findIndex((s) => s.id === pinnedSlideId)
+    : -1;
+  const isPinned = pinnedIndex >= 0;
+
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const activeSlide = slides[index] || slides[0];
+
+  // When pinned, force the displayed index to the pinned slide.
+  useEffect(() => {
+    if (isPinned) setIndex(pinnedIndex);
+  }, [isPinned, pinnedIndex]);
+
+  const displayIndex = isPinned ? pinnedIndex : index;
+  const activeSlide = slides[displayIndex] || slides[0];
   const showSlideCta = !!activeSlide?.buttonText;
   const activeSlideTint = activeSlide?.backgroundTint ?? 0;
 
-  // Reset index when slide count changes
+  // Reset index when slide count changes (skip while pinned)
   useEffect(() => {
-    setIndex(0);
-  }, [slides.length]);
+    if (!isPinned) setIndex(0);
+  }, [slides.length, isPinned]);
 
-  // Autoplay
+  // Autoplay — paused while a slide is pinned for editing.
   useEffect(() => {
+    if (isPinned) return;
     if (!cfg.autoplay || slides.length < 2) return;
     const t = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
