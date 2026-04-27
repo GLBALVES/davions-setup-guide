@@ -93,6 +93,8 @@ interface PreviewRendererProps {
   photographerId?: string | null;
   /** Per-page header (slider) configuration */
   headerConfig?: HeaderConfig | null;
+  /** When set (in edit mode), pin the header slider to this slide and pause autoplay. */
+  pinnedSlideId?: string | null;
   /** Open the header settings panel in the sidebar */
   onEditHeader?: () => void;
   /** Open the footer settings panel in the sidebar */
@@ -657,6 +659,7 @@ export default function PreviewRenderer({
   onPropChange,
   photographerId,
   headerConfig,
+  pinnedSlideId = null,
   onEditHeader,
   onEditFooter,
   browserFaviconUrl = null,
@@ -867,6 +870,7 @@ export default function PreviewRenderer({
               config={headerConfig}
               editMode={editMode}
               onEditHeader={onEditHeader}
+              pinnedSlideId={pinnedSlideId}
             />
           )}
 

@@ -628,18 +628,29 @@ const HeaderSliderPanel = ({
   value,
   onChange,
   photographerId,
+  onActiveSlideChange,
 }: {
   onBack: () => void;
   value: HeaderConfig | null;
   onChange: (next: HeaderConfig) => void;
   photographerId: string | null;
+  onActiveSlideChange?: (slideId: string | null) => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
   const cfg: HeaderConfig = { ...DEFAULT_HEADER_CONFIG, ...(value || {}) };
   // Slides come straight from config — no stub fallback so the list can be truly empty.
   const slides: HeaderSlide[] = cfg.slides || [];
-  const [activeSlideId, setActiveSlideId] = useState<string>(slides[0]?.id || "");
+  const [activeSlideId, setActiveSlideIdState] = useState<string>(slides[0]?.id || "");
+  const setActiveSlideId = (id: string) => {
+    setActiveSlideIdState(id);
+    onActiveSlideChange?.(id || null);
+  };
+  // Notify parent on mount and when slide changes externally (add/remove).
+  useEffect(() => {
+    onActiveSlideChange?.(activeSlideId || null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSlideId]);
 
   const updateCfg = (patch: Partial<HeaderConfig>) => {
     onChange({ ...cfg, slides, ...patch });
@@ -1784,6 +1795,7 @@ const PagesPanel = ({
   shopInMenu,
   shopSortOrder,
   onShopChange,
+  onActiveSlideChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1804,6 +1816,8 @@ const PagesPanel = ({
   shopInMenu?: boolean;
   shopSortOrder?: number;
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
+  /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
+  onActiveSlideChange?: (slideId: string | null) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -2195,7 +2209,7 @@ const PagesPanel = ({
     const activeP = allPages.find((p) => p.id === activePage);
     return (
       <HeaderSliderPanel
-        onBack={() => setEditingSection(null)}
+        onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
         value={activeP?.headerConfig ?? null}
         onChange={(next) => {
           if (!activeP) return;
@@ -2203,6 +2217,7 @@ const PagesPanel = ({
           onHeaderConfigChange?.(next);
         }}
         photographerId={photographerId}
+        onActiveSlideChange={onActiveSlideChange}
       />
     );
   }
@@ -3972,6 +3987,10 @@ const WebsiteEditor = () => {
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  // While editing a header slider, this is the id of the slide currently focused in
+  // the sidebar editor. Used by PreviewHeader to pause autoplay and pin the view
+  // to the slide being edited.
+  const [editorActiveSlideId, setEditorActiveSlideId] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
@@ -4536,6 +4555,7 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
+      onActiveSlideChange={setEditorActiveSlideId}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
     style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
@@ -4807,6 +4827,7 @@ const WebsiteEditor = () => {
             onPropChange={handleBlockPropChange}
             photographerId={user?.id ?? null}
             headerConfig={activePageInfo.headerConfig ?? null}
+            pinnedSlideId={editingSection === "header-slider" ? editorActiveSlideId : null}
             onEditHeader={() => { setActiveTab("pages"); setEditingSection("header-slider"); }}
             onEditFooter={() => { setActiveTab("style"); setPendingStyleSub("footer"); }}
             browserFaviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
