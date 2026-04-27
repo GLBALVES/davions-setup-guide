@@ -179,13 +179,150 @@ export default function InlineFormatSidebar({ compact = false }: { compact?: boo
     </button>
   );
 
+  // ── Compact vertical column layout ───────────────────────────────────────
+  if (compact) {
+    const popoverCls =
+      "absolute left-full top-0 ml-1 z-50 bg-background border border-border rounded-md shadow-lg p-2 min-w-[180px] max-h-[260px] overflow-y-auto";
+    const closeAll = () => {
+      setShowBlock(false); setShowFont(false); setShowSize(false); setShowColor(false);
+    };
+    return (
+      <div
+        className="flex flex-col items-center gap-1 rounded-md border border-border/60 p-1.5 bg-background w-9"
+        onMouseDown={(e) => e.preventDefault()}
+        title={hasSelection ? "Apply to selection" : "Select text first"}
+      >
+        {/* Block style */}
+        <div className="relative">
+          <Btn onClick={guard(() => { const v = !showBlock; closeAll(); setShowBlock(v); })} title="Text style" active={showBlock}>
+            <Heading2 className="h-3.5 w-3.5" />
+          </Btn>
+          {showBlock && (
+            <div className={popoverCls}>
+              {BLOCK_PRESETS.map(({ id, label, tag, Icon }) => (
+                <button key={id} type="button"
+                  onMouseDown={guard(() => { onApplyBlock(tag); setShowBlock(false); })}
+                  className="w-full text-left px-2 py-1.5 hover:bg-muted text-foreground flex items-center gap-2 text-xs rounded"
+                >
+                  <Icon className="h-3.5 w-3.5 opacity-70" /><span>{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <Btn onClick={guard(onBold)} title="Bold"><Bold className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onItalic)} title="Italic"><Italic className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onUnderline)} title="Underline"><Underline className="h-3.5 w-3.5" /></Btn>
+
+        <div className="w-5 h-px bg-border my-0.5" />
+
+        <Btn onClick={guard(onUL)} title="Bullet list"><List className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onOL)} title="Numbered list"><ListOrdered className="h-3.5 w-3.5" /></Btn>
+
+        <div className="w-5 h-px bg-border my-0.5" />
+
+        <Btn onClick={guard(onAlignL)} title="Align left"><AlignLeft className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onAlignC)} title="Align center"><AlignCenter className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onAlignR)} title="Align right"><AlignRight className="h-3.5 w-3.5" /></Btn>
+
+        <div className="w-5 h-px bg-border my-0.5" />
+
+        {/* Font */}
+        <div className="relative">
+          <Btn onClick={guard(() => { const v = !showFont; closeAll(); setShowFont(v); })} title="Font" active={showFont}>
+            <Type className="h-3.5 w-3.5" />
+          </Btn>
+          {showFont && (
+            <div className={popoverCls}>
+              {FONT_PRESETS.map((f) => (
+                <button key={f.id} type="button"
+                  onMouseDown={guard(() => { onApplyFont(f.stack); setShowFont(false); })}
+                  className="w-full text-left px-2 py-1.5 hover:bg-muted text-foreground text-xs rounded"
+                  style={{ fontFamily: f.stack }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Size */}
+        <div className="relative">
+          <Btn onClick={guard(() => { const v = !showSize; closeAll(); setShowSize(v); })} title="Font size" active={showSize}>
+            <span className="text-[10px] font-semibold">Aa</span>
+          </Btn>
+          {showSize && (
+            <div className={popoverCls}>
+              <div className="grid grid-cols-3 gap-1 mb-2">
+                {SIZE_PRESETS.map((s) => (
+                  <button key={s.id} type="button"
+                    onMouseDown={guard(() => { onApplySize(s.px); setShowSize(false); })}
+                    className="px-2 py-1 hover:bg-muted rounded text-foreground border border-border text-xs"
+                    title={`${s.px}px`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                <input type="number" min={8} max={200} value={customSize}
+                  onChange={(e) => setCustomSize(e.target.value)}
+                  placeholder="px"
+                  className="w-full px-2 py-1 border border-border rounded bg-background text-foreground text-xs"
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+                <button type="button"
+                  onMouseDown={guard(() => {
+                    const n = parseInt(customSize, 10);
+                    if (!Number.isNaN(n) && n >= 8 && n <= 200) { onApplySize(n); setShowSize(false); }
+                  })}
+                  className="px-2 py-1 hover:bg-muted rounded text-foreground border border-border text-xs"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Color */}
+        <div className="relative">
+          <Btn onClick={guard(() => { const v = !showColor; closeAll(); setShowColor(v); })} title="Color" active={showColor}>
+            <Palette className="h-3.5 w-3.5" />
+          </Btn>
+          {showColor && (
+            <div className={popoverCls}>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {COLOR_SWATCHES.map((c) => (
+                  <button key={c} type="button"
+                    onMouseDown={guard(() => { onApplyColor(c); setShowColor(false); })}
+                    className="w-5 h-5 rounded border border-border"
+                    style={{ background: c }} title={c}
+                  />
+                ))}
+              </div>
+              <input type="color"
+                onChange={(e) => onApplyColor(e.target.value)}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="w-full h-7 cursor-pointer rounded border border-border bg-background"
+              />
+            </div>
+          )}
+        </div>
+
+        <Btn onClick={guard(onLink)} title="Insert link"><LinkIcon className="h-3.5 w-3.5" /></Btn>
+        <Btn onClick={guard(onClear)} title="Clear formatting"><Eraser className="h-3.5 w-3.5" /></Btn>
+      </div>
+    );
+  }
+
+  // ── Default (legacy) full layout ─────────────────────────────────────────
   return (
     <div
       className="space-y-2 rounded-md border border-border/60 p-3"
-      onMouseDown={(e) => {
-        // Don't blur the editable; preserve the selection
-        e.preventDefault();
-      }}
+      onMouseDown={(e) => e.preventDefault()}
     >
       <div className="flex items-center justify-between">
         <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
@@ -195,173 +332,17 @@ export default function InlineFormatSidebar({ compact = false }: { compact?: boo
           <span className="text-[10px] text-muted-foreground/70">Select text first</span>
         )}
       </div>
-
-      {/* Heading / block style */}
-      <div className="relative">
-        <button
-          type="button"
-          onMouseDown={guard(() => {
-            setShowBlock((v) => !v);
-            setShowFont(false); setShowSize(false); setShowColor(false);
-          })}
-          className="w-full px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center justify-between border border-border/60 text-xs"
-        >
-          <span>Text style</span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </button>
-        {showBlock && (
-          <div className="mt-1 bg-background border border-border rounded-md py-1">
-            {BLOCK_PRESETS.map(({ id, label, tag, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onMouseDown={guard(() => { onApplyBlock(tag); setShowBlock(false); })}
-                className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2 text-xs"
-              >
-                <Icon className="h-3.5 w-3.5 opacity-70" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Inline marks */}
       <div className="flex flex-wrap gap-1">
         <Btn onClick={guard(onBold)} title="Bold"><Bold className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onItalic)} title="Italic"><Italic className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onUnderline)} title="Underline"><Underline className="h-3.5 w-3.5" /></Btn>
-        <Btn onClick={guard(onClear)} title="Clear formatting"><Eraser className="h-3.5 w-3.5" /></Btn>
-      </div>
-
-      {/* Lists & alignment */}
-      <div className="flex flex-wrap gap-1">
         <Btn onClick={guard(onUL)} title="Bullet list"><List className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onOL)} title="Numbered list"><ListOrdered className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onAlignL)} title="Align left"><AlignLeft className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onAlignC)} title="Align center"><AlignCenter className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onAlignR)} title="Align right"><AlignRight className="h-3.5 w-3.5" /></Btn>
         <Btn onClick={guard(onLink)} title="Insert link"><LinkIcon className="h-3.5 w-3.5" /></Btn>
-      </div>
-
-      {/* Font picker */}
-      <div className="relative">
-        <button
-          type="button"
-          onMouseDown={guard(() => {
-            setShowFont((v) => !v);
-            setShowSize(false); setShowColor(false); setShowBlock(false);
-          })}
-          className="w-full px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center justify-between border border-border/60 text-xs"
-        >
-          <span className="flex items-center gap-1"><Type className="h-3.5 w-3.5" />Font</span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </button>
-        {showFont && (
-          <div className="mt-1 bg-background border border-border rounded-md py-1 max-h-[220px] overflow-y-auto">
-            {FONT_PRESETS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onMouseDown={guard(() => { onApplyFont(f.stack); setShowFont(false); })}
-                className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground text-xs"
-                style={{ fontFamily: f.stack }}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Size picker */}
-      <div className="relative">
-        <button
-          type="button"
-          onMouseDown={guard(() => {
-            setShowSize((v) => !v);
-            setShowFont(false); setShowColor(false); setShowBlock(false);
-          })}
-          className="w-full px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center justify-between border border-border/60 text-xs"
-        >
-          <span className="font-medium">Aa Size</span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </button>
-        {showSize && (
-          <div className="mt-1 bg-background border border-border rounded-md p-2">
-            <div className="grid grid-cols-3 gap-1 mb-2">
-              {SIZE_PRESETS.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onMouseDown={guard(() => { onApplySize(s.px); setShowSize(false); })}
-                  className="px-2 py-1 hover:bg-muted rounded text-foreground border border-border text-center text-xs"
-                  title={`${s.px}px`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={8} max={200}
-                value={customSize}
-                onChange={(e) => setCustomSize(e.target.value)}
-                placeholder="px"
-                className="w-full px-2 py-1 border border-border rounded bg-background text-foreground text-xs"
-                onMouseDown={(e) => e.stopPropagation()}
-              />
-              <button
-                type="button"
-                onMouseDown={guard(() => {
-                  const n = parseInt(customSize, 10);
-                  if (!Number.isNaN(n) && n >= 8 && n <= 200) { onApplySize(n); setShowSize(false); }
-                })}
-                className="px-2 py-1 hover:bg-muted rounded text-foreground border border-border text-xs"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Color picker */}
-      <div className="relative">
-        <button
-          type="button"
-          onMouseDown={guard(() => {
-            setShowColor((v) => !v);
-            setShowFont(false); setShowSize(false); setShowBlock(false);
-          })}
-          className="w-full px-2 py-1.5 hover:bg-muted rounded text-foreground flex items-center justify-between border border-border/60 text-xs"
-        >
-          <span className="flex items-center gap-1"><Palette className="h-3.5 w-3.5" />Color</span>
-          <ChevronDown className="h-3 w-3 opacity-60" />
-        </button>
-        {showColor && (
-          <div className="mt-1 bg-background border border-border rounded-md p-2">
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {COLOR_SWATCHES.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onMouseDown={guard(() => { onApplyColor(c); setShowColor(false); })}
-                  className="w-6 h-6 rounded border border-border"
-                  style={{ background: c }}
-                  title={c}
-                />
-              ))}
-            </div>
-            <input
-              type="color"
-              onChange={(e) => onApplyColor(e.target.value)}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="w-full h-7 cursor-pointer rounded border border-border bg-background"
-            />
-          </div>
-        )}
+        <Btn onClick={guard(onClear)} title="Clear formatting"><Eraser className="h-3.5 w-3.5" /></Btn>
       </div>
     </div>
   );
