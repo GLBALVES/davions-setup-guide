@@ -2319,17 +2319,41 @@ const PagesPanel = ({
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
     const activeP = allPages.find((p) => p.id === activePage);
+    const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
       <HeaderSliderPanel
         onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
         value={activeP?.headerConfig ?? null}
         onChange={(next) => {
           if (!activeP) return;
-          findAndUpdate(activeP.id, { headerConfig: next });
+          applyHeaderUpdate(activeP.id, next);
           onHeaderConfigChange?.(next);
         }}
         photographerId={photographerId}
         onActiveSlideChange={onActiveSlideChange}
+        currentPageId={activeP?.id ?? null}
+        currentPageLabel={activeP?.label ?? ""}
+        allPages={allPages}
+        sharedPagesCount={sharedCount}
+        onCopyHeaderFromPage={(sourceId) => {
+          if (!activeP) return;
+          copyHeaderFromPage(sourceId, activeP.id);
+        }}
+        onShareHeaderWithPage={(otherId) => {
+          if (!activeP) return;
+          // If current page already has a header, treat it as the source.
+          // Otherwise pull the other page's header into both.
+          if (activeP.headerConfig) {
+            shareHeaderWithPage(activeP.id, otherId);
+          } else {
+            shareHeaderWithPage(otherId, activeP.id);
+          }
+        }}
+        onUnshareHeader={() => {
+          if (!activeP?.headerConfig) return;
+          const { groupId, ...rest } = activeP.headerConfig;
+          findAndUpdate(activeP.id, { headerConfig: rest });
+        }}
       />
     );
   }
