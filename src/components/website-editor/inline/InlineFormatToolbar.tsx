@@ -198,6 +198,33 @@ export default function InlineFormatToolbar() {
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
     setShowSize(false);
   };
+  const onApplyBlock = (tag: string) => {
+    // formatBlock expects "<H1>", "<P>", "<BLOCKQUOTE>" etc.
+    execSimple(host, "formatBlock", `<${tag}>`);
+    setShowBlock(false);
+  };
+  const onApplyLink = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const url = window.prompt("URL:", "https://");
+    if (!url) return;
+    execSimple(host, "createLink", url);
+  };
+
+  const currentBlockLabel = (() => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return "Body";
+    let n: Node | null = sel.anchorNode;
+    while (n && n.nodeType !== 1) n = n.parentNode;
+    let el = n as HTMLElement | null;
+    while (el && el !== host) {
+      const t = el.tagName;
+      const found = BLOCK_PRESETS.find((b) => b.tag === t);
+      if (found) return found.label;
+      el = el.parentElement;
+    }
+    return "Body";
+  })();
 
   const node = (
     <div
