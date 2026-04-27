@@ -629,12 +629,26 @@ const HeaderSliderPanel = ({
   onChange,
   photographerId,
   onActiveSlideChange,
+  currentPageId,
+  currentPageLabel,
+  allPages,
+  sharedPagesCount,
+  onCopyHeaderFromPage,
+  onShareHeaderWithPage,
+  onUnshareHeader,
 }: {
   onBack: () => void;
   value: HeaderConfig | null;
   onChange: (next: HeaderConfig) => void;
   photographerId: string | null;
   onActiveSlideChange?: (slideId: string | null) => void;
+  currentPageId?: string | null;
+  currentPageLabel?: string;
+  allPages?: SitePage[];
+  sharedPagesCount?: number;
+  onCopyHeaderFromPage?: (sourcePageId: string) => void;
+  onShareHeaderWithPage?: (otherPageId: string) => void;
+  onUnshareHeader?: () => void;
 }) => {
   const { t } = useLanguage();
   const we = t.websiteEditor;
@@ -652,10 +666,25 @@ const HeaderSliderPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSlideId]);
 
+  const isShared = !!cfg.groupId && (sharedPagesCount ?? 1) > 1;
+  const sharedConfirmedRef = useRef(false);
+  const guardEdit = (): boolean => {
+    if (!isShared || sharedConfirmedRef.current) return true;
+    const ok = window.confirm(
+      `This header is shared with ${sharedPagesCount} pages. Editing will update it on every page that uses it. Continue?`
+    );
+    if (ok) sharedConfirmedRef.current = true;
+    return ok;
+  };
+
   const updateCfg = (patch: Partial<HeaderConfig>) => {
+    if (!guardEdit()) return;
     onChange({ ...cfg, slides, ...patch });
   };
-  const updateSlides = (next: HeaderSlide[]) => onChange({ ...cfg, slides: next });
+  const updateSlides = (next: HeaderSlide[]) => {
+    if (!guardEdit()) return;
+    onChange({ ...cfg, slides: next });
+  };
 
   const addSlide = () => {
     const id = crypto.randomUUID();
