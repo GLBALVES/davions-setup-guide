@@ -310,6 +310,8 @@ function SectionBlock({
     backgroundOpacity?: number;
     backgroundFocalX?: number;
     backgroundFocalY?: number;
+    overlayColor?: string;
+    overlayOpacity?: number;
     paddingTop?: number;
     paddingBottom?: number;
     colorScheme?: "light" | "dark" | "auto";
@@ -363,7 +365,20 @@ function SectionBlock({
           }}
         />
       )}
-      <div style={{ position: "relative", zIndex: 1 }}>{inner}</div>
+      {bs.backgroundImage && bs.overlayColor && (bs.overlayOpacity ?? 0) > 0 && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: bs.overlayColor,
+            opacity: (bs.overlayOpacity ?? 0) / 100,
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+      )}
+      <div style={{ position: "relative", zIndex: 2 }}>{inner}</div>
     </div>
   );
 }
