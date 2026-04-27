@@ -2198,7 +2198,7 @@ const PagesPanel = ({
     const activeP = allPages.find((p) => p.id === activePage);
     return (
       <HeaderSliderPanel
-        onBack={() => setEditingSection(null)}
+        onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
         value={activeP?.headerConfig ?? null}
         onChange={(next) => {
           if (!activeP) return;
@@ -2206,6 +2206,7 @@ const PagesPanel = ({
           onHeaderConfigChange?.(next);
         }}
         photographerId={photographerId}
+        onActiveSlideChange={onActiveSlideChange}
       />
     );
   }
