@@ -958,6 +958,15 @@ export const BlockSettingsPanel = ({
               />
             </div>
           )}
+
+          {s.backgroundImage && (
+            <OverlayControls
+              color={s.overlayColor ?? "#000000"}
+              opacity={typeof s.overlayOpacity === "number" ? s.overlayOpacity : 0}
+              onColorChange={(v) => update({ overlayColor: v })}
+              onOpacityChange={(v) => update({ overlayOpacity: v })}
+            />
+          )}
         </div>
 
         <div className="border-t border-border" />
