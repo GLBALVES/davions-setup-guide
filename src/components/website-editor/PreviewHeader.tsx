@@ -379,10 +379,15 @@ export default function PreviewHeader({
         })}
       </div>
 
-      {/* Overlay */}
+      {/* Overlay — per-slide override falls back to header-level value */}
       <div
         className="absolute inset-0 bg-black pointer-events-none"
-        style={{ opacity: cfg.overlayOpacity ?? 0.3 }}
+        style={{
+          opacity:
+            typeof activeSlide?.overlayOpacity === "number"
+              ? activeSlide.overlayOpacity
+              : cfg.overlayOpacity ?? 0.3,
+        }}
       />
 
       {activeSlideTint > 0 && (
