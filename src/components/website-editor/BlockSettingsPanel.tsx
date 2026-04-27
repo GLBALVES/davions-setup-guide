@@ -195,29 +195,15 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
   const align = props.align || "center";
   return (
     <div className="space-y-3">
-      <InlineFormatSidebar />
       <Field label="Content">
         <RichTextField
           multiline
           value={props.body || ""}
           onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
-          placeholder="Write your content here… Select text in the page, then use the controls above."
+          placeholder="Write your content here… Select text and use the controls below."
         />
       </Field>
-      <Field label="Alignment">
-        <div className="flex gap-1">
-          {(["left", "center", "right"] as const).map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => onChange({ ...props, align: a })}
-              className={`flex-1 h-8 text-xs rounded border capitalize ${align === a ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:bg-muted"}`}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
-      </Field>
+      <InlineFormatSidebar />
     </div>
   );
 }
