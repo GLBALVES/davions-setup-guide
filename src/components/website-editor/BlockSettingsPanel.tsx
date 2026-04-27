@@ -198,7 +198,6 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
       <Field label="Content">
         <RichTextField
           multiline
-          hideToolbar
           value={props.body || ""}
           onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
           placeholder="Write your content here… Select text and use the controls below."
