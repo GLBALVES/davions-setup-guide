@@ -915,7 +915,7 @@ function CtaBlock(props: any) {
 
 // ─── FAQ Accordion ──────────────────────────────────────────────────────────
 
-function FaqBlock({ items = [], ctx }: any) {
+function FaqBlock({ items = [], variant = "accordion", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqItems = items.length > 0 ? items : [
@@ -923,6 +923,91 @@ function FaqBlock({ items = [], ctx }: any) {
     { question: "How do I book?", answer: "Booking information…" },
   ];
 
+  // ─── Two columns, all answers visible ───
+  if (variant === "two-column-open") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+            {faqItems.map((item: any, i: number) => (
+              <div key={i} className="space-y-2">
+                <EditableText
+                  as="h3"
+                  editMode={c.editMode}
+                  value={item.question || ""}
+                  placeholder="Question"
+                  onChange={(v) => c.set(`items.${i}.question`, v)}
+                  className="text-sm font-medium text-foreground"
+                />
+                <EditableText
+                  as="p"
+                  editMode={c.editMode}
+                  value={item.answer || ""}
+                  placeholder="Answer"
+                  multiline
+                  onChange={(v) => c.set(`items.${i}.answer`, v)}
+                  className="text-sm font-light text-muted-foreground leading-relaxed block"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ─── Plus / X toggle accordion ───
+  if (variant === "plus-toggle") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
+          <div className="divide-y divide-border">
+            {faqItems.map((item: any, i: number) => {
+              const isOpen = openIndex === i;
+              return (
+                <div key={i}>
+                  <div className="w-full flex items-center justify-between py-4 text-left gap-3">
+                    <EditableText
+                      as="span"
+                      editMode={c.editMode}
+                      value={item.question || ""}
+                      placeholder="Question"
+                      onChange={(v) => c.set(`items.${i}.question`, v)}
+                      className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                    />
+                    {!c.editMode && (
+                      <button
+                        onClick={() => setOpenIndex(isOpen ? null : i)}
+                        className="ml-2 p-1.5 rounded-full border border-border text-foreground hover:bg-muted transition-colors shrink-0"
+                        aria-label={isOpen ? "Close" : "Open"}
+                      >
+                        {isOpen ? <XIcon className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                  {(c.editMode || isOpen) && (
+                    <EditableText
+                      as="p"
+                      editMode={c.editMode}
+                      value={item.answer || ""}
+                      placeholder="Answer"
+                      multiline
+                      onChange={(v) => c.set(`items.${i}.answer`, v)}
+                      className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ─── Default: chevron accordion ───
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-2xl mx-auto">
