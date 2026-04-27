@@ -1784,6 +1784,7 @@ const PagesPanel = ({
   shopInMenu,
   shopSortOrder,
   onShopChange,
+  onActiveSlideChange,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -1804,6 +1805,8 @@ const PagesPanel = ({
   shopInMenu?: boolean;
   shopSortOrder?: number;
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
+  /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
+  onActiveSlideChange?: (slideId: string | null) => void;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
