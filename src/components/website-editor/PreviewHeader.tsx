@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -36,8 +36,12 @@ export interface HeaderConfig {
   /** ms */
   speed?: number;
   transition?: "fade" | "slide";
-  /** e.g. "60vh" */
+  /** Desktop height, e.g. "60vh" */
   height?: string;
+  /** Tablet height (≤1024px). Falls back to `height` when empty. */
+  heightTablet?: string;
+  /** Mobile height (≤640px). Falls back to `heightTablet` then `height` when empty. */
+  heightMobile?: string;
   /** 0–1 */
   overlayOpacity?: number;
   /** Override nav background color (hex / hsl / rgba). When empty, auto-detects from logo. */
@@ -342,14 +346,23 @@ export default function PreviewHeader({
     );
   }
 
+  const headerUid = useMemo(() => `hdr-${Math.random().toString(36).slice(2, 9)}`, []);
+  const hDesktop = cfg.height || "60vh";
+  const hTablet = cfg.heightTablet || hDesktop;
+  const hMobile = cfg.heightMobile || hTablet;
+
   return (
     <header
-      className="relative w-full overflow-hidden"
-      style={{ height: cfg.height || "60vh" }}
+      className={`relative w-full overflow-hidden ${headerUid}`}
+      style={{ height: hDesktop }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => editMode && onEditHeader?.()}
     >
+      <style>{`
+        @media (max-width: 1024px) { .${headerUid} { height: ${hTablet} !important; } }
+        @media (max-width: 640px) { .${headerUid} { height: ${hMobile} !important; } }
+      `}</style>
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((slide, i) => {
