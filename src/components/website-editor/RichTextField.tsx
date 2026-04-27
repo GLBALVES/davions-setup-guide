@@ -120,6 +120,7 @@ export interface RichTextFieldProps {
   multiline?: boolean;
   className?: string;
   inputClassName?: string;
+  hideToolbar?: boolean;
 }
 
 /** Inspect the HTML at plain index `plainStart` and return the inline styles
@@ -319,6 +320,7 @@ export function RichTextField({
   multiline = false,
   className,
   inputClassName,
+  hideToolbar = false,
 }: RichTextFieldProps) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [showColor, setShowColor] = useState(false);
@@ -464,7 +466,7 @@ export function RichTextField({
         />
       )}
 
-      {/* Format toolbar */}
+      {!hideToolbar && (
       <div className="flex items-center gap-0.5 flex-wrap rounded-md border border-border bg-muted/30 p-1">
         <ToolbarButton title="Bold" onClick={() => applyTag("b")} active={!!activeStyle.bold}>
           <Bold className="h-3.5 w-3.5" />
@@ -650,6 +652,7 @@ export function RichTextField({
           <Eraser className="h-3.5 w-3.5" />
         </ToolbarButton>
       </div>
+      )}
     </div>
   );
 }
