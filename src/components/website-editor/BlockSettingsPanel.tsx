@@ -13,7 +13,8 @@ import { ItemListEditor } from "./ItemListEditor";
 import { ButtonsList, ButtonsListEditor, type BlockBtn } from "./ButtonsListEditor";
 import { RichTextField } from "./RichTextField";
 import { FocalPointPicker } from "./FocalPointPicker";
-import type { PageSection } from "./page-templates";
+import type { PageSection, SectionType } from "./page-templates";
+import { BLOCK_VARIANTS } from "./block-variants";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
 
@@ -903,6 +904,45 @@ export const BlockSettingsPanel = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* ── Layout Variants ── */}
+        {(() => {
+          const variants = BLOCK_VARIANTS[section.type as SectionType];
+          if (!variants || variants.length < 2) return null;
+          const current = (section.props as any)?.variant ?? variants[0].id;
+          return (
+            <>
+              <div className="px-4 pt-4 pb-2">
+                <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Layout</p>
+              </div>
+              <div className="px-4 pb-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {variants.map((v) => {
+                    const active = current === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => onUpdateProps({ ...(section.props || {}), variant: v.id })}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-1 p-2.5 rounded-md border text-xs transition-colors",
+                          active
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        )}
+                        title={v.label}
+                      >
+                        <span className="text-lg leading-none">{v.icon}</span>
+                        <span className="text-[10px] leading-tight text-center w-full truncate">{v.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="border-t border-border" />
+            </>
+          );
+        })()}
+
         {/* ── Content Fields ── */}
         {contentEditor && (
           <>
