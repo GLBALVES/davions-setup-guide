@@ -2496,6 +2496,7 @@ export type Database = {
           about_title: string | null
           accent_color: string | null
           animation_style: string
+          base_block_padding: number
           blog_description: string | null
           blog_title: string | null
           body_font: string | null
@@ -2556,6 +2557,7 @@ export type Database = {
           logo_size: string
           logo_text: string | null
           logo_url: string | null
+          max_page_width: number
           nav_menu_style: string
           nav_sticky_header: boolean
           og_image_url: string | null
@@ -2608,6 +2610,7 @@ export type Database = {
           about_title?: string | null
           accent_color?: string | null
           animation_style?: string
+          base_block_padding?: number
           blog_description?: string | null
           blog_title?: string | null
           body_font?: string | null
@@ -2668,6 +2671,7 @@ export type Database = {
           logo_size?: string
           logo_text?: string | null
           logo_url?: string | null
+          max_page_width?: number
           nav_menu_style?: string
           nav_sticky_header?: boolean
           og_image_url?: string | null
@@ -2720,6 +2724,7 @@ export type Database = {
           about_title?: string | null
           accent_color?: string | null
           animation_style?: string
+          base_block_padding?: number
           blog_description?: string | null
           blog_title?: string | null
           body_font?: string | null
@@ -2780,6 +2785,7 @@ export type Database = {
           logo_size?: string
           logo_text?: string | null
           logo_url?: string | null
+          max_page_width?: number
           nav_menu_style?: string
           nav_sticky_header?: boolean
           og_image_url?: string | null

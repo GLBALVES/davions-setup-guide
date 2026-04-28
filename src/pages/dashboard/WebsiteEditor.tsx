@@ -49,6 +49,8 @@ import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel"
 import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-editor/settings/NavigationSubPanel";
 import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
+import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
+import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
@@ -4073,9 +4075,10 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           )}
 
           {sub === "spacing" && (
-            <ComingSoon
-              title="Spacing"
-              description="Global section padding and rhythm controls. Coming soon."
+            <SpacingSubPanel
+              maxPageWidth={(site as any)?.max_page_width ?? SPACING_DEFAULTS.maxPageWidth}
+              baseBlockPadding={(site as any)?.base_block_padding ?? SPACING_DEFAULTS.baseBlockPadding}
+              onChange={(patch) => onSiteChange(patch)}
             />
           )}
 
@@ -4441,6 +4444,12 @@ const WebsiteEditor = () => {
 
   // Apply scroll-triggered section animations.
   useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
+
+  // Apply max-width + base block padding from the Spacing panel.
+  useSiteSpacing(
+    (site as any)?.max_page_width ?? SPACING_DEFAULTS.maxPageWidth,
+    (site as any)?.base_block_padding ?? SPACING_DEFAULTS.baseBlockPadding,
+  );
   useEffect(() => {
     if ((site as any)?.fontTemplateId) return; // typography hook handles it
     const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
