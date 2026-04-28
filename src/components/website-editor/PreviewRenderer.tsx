@@ -679,6 +679,9 @@ function SortableBlock({
             onToggleVisibility={onToggleVisibility}
             onCopyAnchor={onCopyAnchor}
             hidden={hidden}
+            sectionType={section.type as SectionType}
+            currentVariant={(section.props as any)?.variant}
+            onVariantChange={onVariantChange}
           />
         </div>
       )}
