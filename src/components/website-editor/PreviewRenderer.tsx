@@ -1006,6 +1006,7 @@ export default function PreviewRenderer({
                               toast.error("Could not copy link");
                             }
                           }}
+                          onVariantChange={onPropChange ? (v) => onPropChange(section.id, "variant", v) : undefined}
                         >
                           <SectionRenderer
                             sections={[section]}
