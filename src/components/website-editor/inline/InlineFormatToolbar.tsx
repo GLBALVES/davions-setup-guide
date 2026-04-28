@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
   Bold, Italic, Underline, Eraser, Type, Palette,
   Heading1, Heading2, Heading3, Quote, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, ChevronDown,

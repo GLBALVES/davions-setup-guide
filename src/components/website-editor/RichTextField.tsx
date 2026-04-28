@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bold, Italic, Underline, Eraser, Type, Palette, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
+import { SitePalettePicker } from "./SitePalettePicker";
 
 /**
  * Field that stores a value as HTML (for inline formatting like color/font/size)

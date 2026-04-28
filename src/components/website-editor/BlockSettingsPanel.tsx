@@ -15,6 +15,7 @@ import { RichTextField } from "./RichTextField";
 import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection, SectionType } from "./page-templates";
 import { BLOCK_VARIANTS } from "./block-variants";
+import { SitePalettePicker } from "./SitePalettePicker";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
 
