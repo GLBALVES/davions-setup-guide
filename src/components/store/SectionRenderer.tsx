@@ -623,7 +623,7 @@ function TextImageBlock(props: any) {
               value={title || ""}
               placeholder="Add a title"
               onChange={(v) => c.set("title", v)}
-              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+              className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
             />
           )}
           <EditableText
@@ -633,7 +633,7 @@ function TextImageBlock(props: any) {
             placeholder="Add body text"
             multiline
             onChange={(v) => c.set("body", v)}
-            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
           />
           <BlockButtons
             buttons={buttons}
