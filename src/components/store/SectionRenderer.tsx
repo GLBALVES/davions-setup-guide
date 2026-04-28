@@ -1,5 +1,6 @@
 import { Camera, Images, Mail, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Plus, X as XIcon } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
