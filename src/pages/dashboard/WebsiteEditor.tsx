@@ -2141,7 +2141,17 @@ const PagesPanel = ({
   const { t, lang } = useLanguage();
   const we = t.websiteEditor;
 
-  const flattenPages = (list: SitePage[]) => list.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
+  // Whenever the user clicks the sidebar tab, reset every nested sub-screen
+  // so the panel always opens at its root (page list).
+  useEffect(() => {
+    if (resetNonce === undefined) return;
+    setSettingsPage(null);
+    setEditingSectionsPageId(null);
+    setEditingSection(null);
+    onSelectBlock(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetNonce]);
+
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
