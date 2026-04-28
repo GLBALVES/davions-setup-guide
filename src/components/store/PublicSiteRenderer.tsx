@@ -150,6 +150,17 @@ export interface SiteConfig {
   header_text_color?: string | null;
   /** Which social icons to show in the header (null/empty = show all that have URLs) */
   header_visible_socials?: string[] | null;
+  /** Header menu layout style */
+  nav_menu_style?:
+    | "logo-left"
+    | "logo-left-hamburger"
+    | "logo-center-links-below"
+    | "centered-split"
+    | "links-left-logo-left"
+    | "logo-center-only"
+    | null;
+  /** Whether the header stays pinned to the top while scrolling */
+  nav_sticky_header?: boolean | null;
   /** Footer background color */
   footer_bg_color?: string | null;
   /** Footer text / icon color */
