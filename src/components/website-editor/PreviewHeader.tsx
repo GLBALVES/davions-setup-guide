@@ -134,7 +134,8 @@ export default function PreviewHeader({
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
-  const fg = "#ffffff";
+  // Slides mode: white by default for contrast on imagery, but allow Header Settings override.
+  const fg = cfg.textColor || "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
   const logoVariant: HeaderLogoVariant = (cfg.logoVariant as HeaderLogoVariant) || "primary";
   const altLogoUrl = (site as any)?.logoAltUrl as string | null | undefined;
