@@ -4332,6 +4332,10 @@ const BrandRow = ({
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [pendingStyleSub, setPendingStyleSub] = useState<StyleSubPanel | null>(null);
+  // Bumps every time the user clicks a tab in the sidebar rail. Sub-panels
+  // observe this and reset their internal sub-screen state, so each tab
+  // always opens at its root and never "remembers" a previous nested view.
+  const [tabResetNonce, setTabResetNonce] = useState(0);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
