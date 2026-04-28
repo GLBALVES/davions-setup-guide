@@ -46,6 +46,7 @@ import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
 import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel";
+import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-editor/settings/NavigationSubPanel";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
@@ -4061,15 +4062,12 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           )}
 
           {sub === "navigation" && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Logo position, alignment and link style are configured per-page in the
-                <span className="font-medium text-foreground"> header settings</span> of each page.
-              </p>
-              <p className="text-[11px] text-muted-foreground/80">
-                Open a page → click the header → adjust the logo position icons.
-              </p>
-            </div>
+            <NavigationSubPanel
+              menuStyle={(((site as any)?.nav_menu_style ?? "centered-split") as NavMenuStyle)}
+              stickyHeader={!!(site as any)?.nav_sticky_header}
+              onMenuStyleChange={(s) => onSiteChange({ nav_menu_style: s })}
+              onStickyHeaderChange={(v) => onSiteChange({ nav_sticky_header: v })}
+            />
           )}
 
           {sub === "spacing" && (
