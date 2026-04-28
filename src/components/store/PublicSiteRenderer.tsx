@@ -526,7 +526,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
             ) : (
               <span
                 style={textColor ? { color: textColor } : undefined}
-                className={`${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
+                className={`site-logo-text ${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
               >
                 {labelText}
               </span>
