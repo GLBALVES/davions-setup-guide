@@ -1,0 +1,3 @@
+ALTER TABLE public.photographer_site
+  ADD COLUMN IF NOT EXISTS max_page_width INTEGER NOT NULL DEFAULT 1280,
+  ADD COLUMN IF NOT EXISTS base_block_padding INTEGER NOT NULL DEFAULT 64;
