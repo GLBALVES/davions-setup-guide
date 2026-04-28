@@ -484,6 +484,9 @@ function FloatingBlockToolbar({
   onToggleVisibility,
   onCopyAnchor,
   hidden,
+  sectionType,
+  currentVariant,
+  onVariantChange,
 }: {
   isFirst: boolean;
   isLast: boolean;
@@ -495,7 +498,13 @@ function FloatingBlockToolbar({
   onToggleVisibility: () => void;
   onCopyAnchor: () => void;
   hidden?: boolean;
+  sectionType: SectionType;
+  currentVariant?: string;
+  onVariantChange?: (variant: string) => void;
 }) {
+  const [variantOpen, setVariantOpen] = useState(false);
+  const variants = BLOCK_VARIANTS[sectionType];
+
   const Btn = ({ onClick, disabled, title, children, danger, ...rest }: any) => (
     <button
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
@@ -517,6 +526,45 @@ function FloatingBlockToolbar({
       <Btn onClick={onMoveUp} disabled={isFirst} title="Move up"><ArrowUp className="h-3.5 w-3.5" /></Btn>
       <Btn onClick={onMoveDown} disabled={isLast} title="Move down"><ArrowDown className="h-3.5 w-3.5" /></Btn>
       <div className="w-px h-4 bg-background/20 mx-0.5" />
+      {variants && variants.length > 1 && onVariantChange && (
+        <Popover open={variantOpen} onOpenChange={setVariantOpen}>
+          <PopoverTrigger asChild>
+            <button
+              onClick={(e) => e.stopPropagation()}
+              title="Change layout"
+              className="p-1.5 rounded text-background/80 hover:text-background hover:bg-background/15 transition-colors"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="center" sideOffset={8} className="w-60 p-2 z-[60]" onClick={(e) => e.stopPropagation()}>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2 px-1">
+              Layout
+            </p>
+            <div className="grid grid-cols-3 gap-1">
+              {variants.map((v) => {
+                const active = (currentVariant ?? variants[0].id) === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={(e) => { e.stopPropagation(); onVariantChange(v.id); setVariantOpen(false); }}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-md text-xs transition-colors border",
+                      active
+                        ? "bg-primary/10 text-primary border-primary/30"
+                        : "hover:bg-muted/60 text-muted-foreground border-transparent"
+                    )}
+                    title={v.label}
+                  >
+                    <span className="text-base leading-none">{v.icon}</span>
+                    <span className="text-[10px] leading-tight truncate w-full text-center">{v.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
       <Btn onClick={onDuplicate} title="Duplicate"><Copy className="h-3.5 w-3.5" /></Btn>
       <Btn onClick={onSettings} title="Settings"><Settings2 className="h-3.5 w-3.5" /></Btn>
       <Btn onClick={onToggleVisibility} title={hidden ? "Show on site" : "Hide on site"}>
