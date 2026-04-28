@@ -4002,40 +4002,26 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           )}
 
           {sub === "fonts" && (
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Heading font</label>
-                <Select
-                  value={site?.headingFont || "inter"}
-                  onValueChange={(v) => onSiteChange({ heading_font: v })}
-                >
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FONT_PRESETS.map((f) => (
-                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Body font</label>
-                <Select
-                  value={site?.bodyFont || "inter"}
-                  onValueChange={(v) => onSiteChange({ body_font: v })}
-                >
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FONT_PRESETS.map((f) => (
-                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <FontsSubPanel
+              templateId={(site as any)?.fontTemplateId ?? null}
+              overrides={(site as any)?.fontOverrides ?? {}}
+              fontSize={((site as any)?.fontSize as FontSizeScale | undefined) ?? "regular"}
+              onTemplateChange={(id, tpl) => {
+                // Update template id + sync legacy heading/body fields for back-compat.
+                onSiteChange({
+                  font_template_id: id,
+                  heading_font: tpl.heading,
+                  body_font: tpl.body,
+                });
+              }}
+              onOverridesChange={(next) => onSiteChange({ font_overrides: next as any })}
+              onFontSizeChange={(size) => {
+                const ov = ((site as any)?.fontOverrides ?? {}) as FontOverrides;
+                const next = { ...ov, __size: { fontSize: ({ compact: 0, regular: 1, comfortable: 2 } as any)[size] ?? 1 } } as any;
+                // Persist size inside font_overrides under a reserved key so we don't need an extra column.
+                onSiteChange({ font_overrides: next });
+              }}
+            />
           )}
 
           {sub === "colors" && (
