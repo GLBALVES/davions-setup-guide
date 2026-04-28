@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,7 +23,7 @@ export interface HeaderSlide {
   focalY?: number;
 }
 
-export type HeaderLayout = "logo-center" | "logo-left" | "logo-right" | "logo-stacked" | "menu-above-logo";
+export type HeaderLayout = "logo-center" | "logo-left" | "logo-right";
 
 export type HeaderLogoVariant = "primary" | "alt";
 
@@ -36,12 +36,8 @@ export interface HeaderConfig {
   /** ms */
   speed?: number;
   transition?: "fade" | "slide";
-  /** Desktop height, e.g. "60vh" */
+  /** e.g. "60vh" */
   height?: string;
-  /** Tablet height (≤1024px). Falls back to `height` when empty. */
-  heightTablet?: string;
-  /** Mobile height (≤640px). Falls back to `heightTablet` then `height` when empty. */
-  heightMobile?: string;
   /** 0–1 */
   overlayOpacity?: number;
   /** Override nav background color (hex / hsl / rgba). When empty, auto-detects from logo. */
@@ -132,14 +128,11 @@ export default function PreviewHeader({
     return () => clearInterval(t);
   }, [cfg.autoplay, cfg.speed, slides.length]);
 
-  const headerUid = useMemo(() => `hdr-${Math.random().toString(36).slice(2, 9)}`, []);
-
   // Split nav links roughly in half for left/right of central logo (only for logo-center)
   const layout: HeaderLayout = (cfg.layout as HeaderLayout) || "logo-center";
   const half = Math.ceil(navLinks.length / 2);
   const leftLinks = layout === "logo-center" ? navLinks.slice(0, half) : [];
   const rightLinks = layout === "logo-center" ? navLinks.slice(half) : navLinks;
-  const stackedLinks = (layout === "logo-stacked" || layout === "menu-above-logo") ? navLinks : [];
   const displayName = (site as any)?.logoText || site?.displayName || "Studio";
   const fg = "#ffffff";
   const logoSize = ((site as any)?.logoSize as string) || "medium";
@@ -313,27 +306,6 @@ export default function PreviewHeader({
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </button>
               </div>
-            ) : (layout === "logo-stacked" || layout === "menu-above-logo") ? (
-              <div className={cn("flex items-center gap-3 sm:gap-4", layout === "menu-above-logo" ? "flex-col-reverse" : "flex-col")}>
-                <div className="flex items-center justify-center w-full relative">
-                  {activeLogoUrl ? (
-                    <img src={activeLogoUrl} alt={displayName} className={logoImgClass} />
-                  ) : (
-                    <span className={logoTextClass} style={{ color: navFg }}>{displayName}</span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
-                    className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-foreground/80 hover:text-foreground"
-                    aria-label="Menu"
-                  >
-                    {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                  </button>
-                </div>
-                <nav className="hidden md:flex items-center justify-center gap-6 flex-wrap">
-                  {stackedLinks.map((link) => renderLinkWithColor(link, navFg))}
-                </nav>
-              </div>
             ) : (
               <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>
                 <div className="flex items-center">
@@ -370,23 +342,14 @@ export default function PreviewHeader({
     );
   }
 
-  
-  const hDesktop = cfg.height || "60vh";
-  const hTablet = cfg.heightTablet || hDesktop;
-  const hMobile = cfg.heightMobile || hTablet;
-
   return (
     <header
-      className={`relative w-full overflow-hidden ${headerUid}`}
-      style={{ height: hDesktop }}
+      className="relative w-full overflow-hidden"
+      style={{ height: cfg.height || "60vh" }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => editMode && onEditHeader?.()}
     >
-      <style>{`
-        @media (max-width: 1024px) { .${headerUid} { height: ${hTablet} !important; } }
-        @media (max-width: 640px) { .${headerUid} { height: ${hMobile} !important; } }
-      `}</style>
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((slide, i) => {
@@ -538,29 +501,6 @@ export default function PreviewHeader({
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-            </div>
-          ) : (layout === "logo-stacked" || layout === "menu-above-logo") ? (
-            <div className={cn("flex items-center gap-3 sm:gap-4", layout === "menu-above-logo" ? "flex-col-reverse" : "flex-col")}>
-              <div className="flex items-center justify-center w-full relative">
-                {activeLogoUrl ? (
-                  <img src={activeLogoUrl} alt={displayName} className={logoImgClass} style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
-                ) : (
-                  <span className={logoTextClass} style={{ color: fg, textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
-                    {displayName}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setMobileOpen((v) => !v); }}
-                  className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-white/90 hover:text-white"
-                  aria-label="Menu"
-                >
-                  {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
-              </div>
-              <nav className="hidden md:flex items-center justify-center gap-6 flex-wrap">
-                {stackedLinks.map(renderLink)}
-              </nav>
             </div>
           ) : (
             <div className={cn("flex items-center justify-between gap-4 sm:gap-6", layout === "logo-right" && "flex-row-reverse")}>

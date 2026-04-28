@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag, Monitor, Tablet, Smartphone,
+  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
@@ -905,14 +905,12 @@ const HeaderSliderPanel = ({
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">{we.changeLayout}</p>
         </div>
         <div className="px-4 pb-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {([
-              { id: "logo-left", label: we.logoLeft, dotPos: "start" as const },
-              { id: "logo-center", label: we.logoCenter, dotPos: "center" as const },
-              { id: "logo-right", label: we.logoRight, dotPos: "end" as const },
-              { id: "logo-stacked", label: (we as any).logoStacked || "Logo Stacked", dotPos: "stacked" as const },
-              { id: "menu-above-logo", label: (we as any).menuAboveLogo || "Menu Above Logo", dotPos: "menu-above" as const },
-            ]).map((opt) => {
+              { id: "logo-left", label: we.logoLeft, dotPos: "start" },
+              { id: "logo-center", label: we.logoCenter, dotPos: "center" },
+              { id: "logo-right", label: we.logoRight, dotPos: "end" },
+            ] as const).map((opt) => {
               const active = (cfg.layout || "logo-center") === opt.id;
               return (
                 <button
@@ -930,59 +928,38 @@ const HeaderSliderPanel = ({
                 >
                   {/* Mini header preview */}
                   <div className={cn(
-                    "w-full h-8 rounded border flex px-1.5 gap-1",
-                    (opt.dotPos === "stacked" || opt.dotPos === "menu-above") ? "flex-col items-center justify-center py-1" : "items-center",
+                    "w-full h-8 rounded border flex items-center px-1.5 gap-1",
                     active ? "border-primary/60 bg-background" : "border-border bg-muted/30"
                   )}>
-                    {opt.dotPos === "stacked" || opt.dotPos === "menu-above" ? (
-                      <>
-                        {opt.dotPos === "menu-above" && (
-                          <div className="flex gap-0.5 mb-1">
+                    <div className={cn(
+                      "flex items-center w-full",
+                      opt.dotPos === "start" && "justify-start gap-1",
+                      opt.dotPos === "center" && "justify-between",
+                      opt.dotPos === "end" && "justify-end gap-1 flex-row-reverse",
+                    )}>
+                      {opt.dotPos === "center" ? (
+                        <>
+                          <div className="flex gap-0.5">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                          <span className={cn("w-2.5 h-2.5 rounded-full", active ? "bg-primary" : "bg-foreground/70")} />
+                          <div className="flex gap-0.5">
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", active ? "bg-primary" : "bg-foreground/70")} />
+                          <div className={cn("flex gap-0.5", opt.dotPos === "end" ? "mr-auto" : "ml-auto")}>
                             <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
                             <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
                             <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
                           </div>
-                        )}
-                        <span className={cn("w-2.5 h-2.5 rounded-full", active ? "bg-primary" : "bg-foreground/70")} />
-                        {opt.dotPos === "stacked" && (
-                          <div className="flex gap-0.5 mt-1">
-                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                            <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className={cn(
-                        "flex items-center w-full",
-                        opt.dotPos === "start" && "justify-start gap-1",
-                        opt.dotPos === "center" && "justify-between",
-                        opt.dotPos === "end" && "justify-end gap-1 flex-row-reverse",
-                      )}>
-                        {opt.dotPos === "center" ? (
-                          <>
-                            <div className="flex gap-0.5">
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                            </div>
-                            <span className={cn("w-2.5 h-2.5 rounded-full", active ? "bg-primary" : "bg-foreground/70")} />
-                            <div className="flex gap-0.5">
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", active ? "bg-primary" : "bg-foreground/70")} />
-                            <div className={cn("flex gap-0.5", opt.dotPos === "end" ? "mr-auto" : "ml-auto")}>
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                              <span className="w-1.5 h-0.5 bg-muted-foreground/60 rounded-sm" />
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                   <span className={cn(
                     "text-[10px] font-medium truncate w-full text-center",
@@ -1278,64 +1255,19 @@ const HeaderSliderPanel = ({
             </Select>
           </div>
 
-          {/* Height — per-device */}
-          <div className="space-y-3">
-            <label className="text-xs font-medium text-muted-foreground">{we.headerHeight}</label>
-
-            {/* Desktop */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Monitor className="h-3 w-3" /> Desktop
-                </span>
-                <span className="text-[11px] text-muted-foreground">{parseInt(cfg.height || "60", 10)}vh</span>
-              </div>
-              <Slider
-                min={40}
-                max={100}
-                step={5}
-                value={[parseInt(cfg.height || "60", 10)]}
-                onValueChange={(v) => updateCfg({ height: `${v[0]}vh` })}
-              />
+          {/* Height */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">{we.headerHeight}</label>
+              <span className="text-[11px] text-muted-foreground">{parseInt(cfg.height || "60", 10)}vh</span>
             </div>
-
-            {/* Tablet */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Tablet className="h-3 w-3" /> Tablet
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {parseInt(cfg.heightTablet || cfg.height || "60", 10)}vh
-                </span>
-              </div>
-              <Slider
-                min={30}
-                max={100}
-                step={5}
-                value={[parseInt(cfg.heightTablet || cfg.height || "60", 10)]}
-                onValueChange={(v) => updateCfg({ heightTablet: `${v[0]}vh` })}
-              />
-            </div>
-
-            {/* Mobile */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Smartphone className="h-3 w-3" /> Mobile
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {parseInt(cfg.heightMobile || cfg.heightTablet || cfg.height || "60", 10)}vh
-                </span>
-              </div>
-              <Slider
-                min={30}
-                max={100}
-                step={5}
-                value={[parseInt(cfg.heightMobile || cfg.heightTablet || cfg.height || "60", 10)]}
-                onValueChange={(v) => updateCfg({ heightMobile: `${v[0]}vh` })}
-              />
-            </div>
+            <Slider
+              min={40}
+              max={100}
+              step={5}
+              value={[parseInt(cfg.height || "60", 10)]}
+              onValueChange={(v) => updateCfg({ height: `${v[0]}vh` })}
+            />
           </div>
 
           {/* Background color (applied to nav-only header) */}
