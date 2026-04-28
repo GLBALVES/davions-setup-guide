@@ -3830,7 +3830,7 @@ const SITE_TEMPLATES_LABELS: Record<string, string> = {
   milo: "Violeta",
 };
 
-const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled }: {
+const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled, resetNonce }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
@@ -3838,10 +3838,20 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
   openSubKey?: StyleSubPanel | null;
   /** Called after the panel consumed `openSubKey` so the parent can reset it. */
   onSubKeyHandled?: () => void;
+  /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
+  resetNonce?: number;
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Reset sub-screen whenever the user clicks the sidebar tab.
+  useEffect(() => {
+    if (resetNonce === undefined) return;
+    setSub(null);
+    setPickerOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetNonce]);
 
   // Allow the parent (e.g. clicking the footer in the canvas) to open a sub-panel.
   useEffect(() => {
