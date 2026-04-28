@@ -2259,6 +2259,9 @@ export default function PublicSiteRenderer(props: Props) {
     ((site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
   );
 
+  // Apply scroll-triggered section animations on the live site.
+  useSiteAnimations((site as any)?.animation_style ?? "none");
+
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
 
