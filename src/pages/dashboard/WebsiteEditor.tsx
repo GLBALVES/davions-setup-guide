@@ -2097,6 +2097,7 @@ const PagesPanel = ({
   shopSortOrder,
   onShopChange,
   onActiveSlideChange,
+  resetNonce,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -2119,6 +2120,8 @@ const PagesPanel = ({
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
+  /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
+  resetNonce?: number;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
