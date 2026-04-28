@@ -49,6 +49,8 @@ import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel"
 import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-editor/settings/NavigationSubPanel";
 import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
+import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
+import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
@@ -4073,9 +4075,10 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           )}
 
           {sub === "spacing" && (
-            <ComingSoon
-              title="Spacing"
-              description="Global section padding and rhythm controls. Coming soon."
+            <SpacingSubPanel
+              maxPageWidth={(site as any)?.max_page_width ?? SPACING_DEFAULTS.maxPageWidth}
+              baseBlockPadding={(site as any)?.base_block_padding ?? SPACING_DEFAULTS.baseBlockPadding}
+              onChange={(patch) => onSiteChange(patch)}
             />
           )}
 
