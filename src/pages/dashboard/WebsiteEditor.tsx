@@ -4028,32 +4028,24 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           })()}
 
           {sub === "colors" && (
-            <div className="space-y-4">
-              <ColorRow
-                label="Accent"
-                value={site?.accentColor || "#000000"}
-                onChange={(v) => onSiteChange({ accent_color: v })}
-              />
-              <ColorRow
-                label="Header background"
-                value={site?.headerBg || "#ffffff"}
-                onChange={(v) => onSiteChange({ header_bg_color: v })}
-              />
-              <ColorRow
-                label="Footer background"
-                value={site?.footerBg || "#000000"}
-                onChange={(v) => onSiteChange({ footer_bg_color: v })}
-              />
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Footer text</label>
-                <Input
-                  value={site?.footerText || ""}
-                  onChange={(e) => onSiteChange({ footer_text: e.target.value })}
-                  className="h-9 text-sm"
-                  placeholder="© 2026 Studio Name"
-                />
-              </div>
-            </div>
+            <ColorsSubPanel
+              paletteId={(site as any)?.colorPaletteId ?? (site as any)?.color_palette_id ?? null}
+              schemeId={
+                ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id ?? null) as SchemeId | null
+              }
+              overrides={
+                ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides
+              }
+              customPalettes={
+                ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[]
+              }
+              onPaletteChange={(id, sk) =>
+                onSiteChange({ color_palette_id: id, color_scheme_id: sk })
+              }
+              onSchemeChange={(sk) => onSiteChange({ color_scheme_id: sk })}
+              onOverridesChange={(next) => onSiteChange({ color_overrides: next as any })}
+              onCustomPalettesChange={(next) => onSiteChange({ custom_color_palettes: next as any })}
+            />
           )}
 
           {sub === "footer" && (
