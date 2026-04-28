@@ -58,9 +58,9 @@ export const BLOCK_VARIANTS: Partial<Record<SectionType, BlockVariant[]>> = {
     { id: "minimal", label: "Minimal", icon: "▬" },
   ],
   "faq-accordion": [
-    { id: "classic", label: "Classic", icon: "☰" },
-    { id: "cards", label: "Cards", icon: "▭" },
-    { id: "inline", label: "Inline", icon: "▬" },
+    { id: "chevron", label: "Chevron", icon: "⌄" },
+    { id: "plus-toggle", label: "Plus Toggle", icon: "＋" },
+    { id: "two-column-open", label: "Two Columns", icon: "▥" },
   ],
   "contact-form": [
     { id: "centered", label: "Centered", icon: "◎" },
