@@ -2097,6 +2097,7 @@ const PagesPanel = ({
   shopSortOrder,
   onShopChange,
   onActiveSlideChange,
+  resetNonce,
 }: {
   editingSection: string | null;
   setEditingSection: (s: string | null) => void;
@@ -2119,6 +2120,8 @@ const PagesPanel = ({
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
+  /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
+  resetNonce?: number;
 }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
@@ -2137,6 +2140,17 @@ const PagesPanel = ({
   const [loaded, setLoaded] = useState(false);
   const { t, lang } = useLanguage();
   const we = t.websiteEditor;
+
+  // Whenever the user clicks the sidebar tab, reset every nested sub-screen
+  // so the panel always opens at its root (page list).
+  useEffect(() => {
+    if (resetNonce === undefined) return;
+    setSettingsPage(null);
+    setEditingSectionsPageId(null);
+    setEditingSection(null);
+    onSelectBlock(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetNonce]);
 
   const flattenPages = (list: SitePage[]) => list.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
@@ -3816,7 +3830,7 @@ const SITE_TEMPLATES_LABELS: Record<string, string> = {
   milo: "Violeta",
 };
 
-const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled }: {
+const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHandled, resetNonce }: {
   photographerId: string | null;
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
@@ -3824,10 +3838,20 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
   openSubKey?: StyleSubPanel | null;
   /** Called after the panel consumed `openSubKey` so the parent can reset it. */
   onSubKeyHandled?: () => void;
+  /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
+  resetNonce?: number;
 }) => {
   const [siteTemplate, setSiteTemplate] = useState<string>("editorial");
   const [sub, setSub] = useState<StyleSubPanel | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Reset sub-screen whenever the user clicks the sidebar tab.
+  useEffect(() => {
+    if (resetNonce === undefined) return;
+    setSub(null);
+    setPickerOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetNonce]);
 
   // Allow the parent (e.g. clicking the footer in the canvas) to open a sub-panel.
   useEffect(() => {
@@ -4332,6 +4356,10 @@ const BrandRow = ({
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [pendingStyleSub, setPendingStyleSub] = useState<StyleSubPanel | null>(null);
+  // Bumps every time the user clicks a tab in the sidebar rail. Sub-panels
+  // observe this and reset their internal sub-screen state, so each tab
+  // always opens at its root and never "remembers" a previous nested view.
+  const [tabResetNonce, setTabResetNonce] = useState(0);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -4912,6 +4940,19 @@ const WebsiteEditor = () => {
     }
   };
 
+  // Switch to a tab and reset every nested sub-screen so each tab always
+  // opens at its root (no block-settings / sub-panel "leaking" between tabs).
+  // Pass `force=true` to also re-trigger the reset when the user clicks the
+  // already-active tab (so the tab acts like a "go to root" shortcut too).
+  const handleSelectTab = (tab: EditorTab) => {
+    setSelectedBlockIndex(null);
+    setEditingSection(null);
+    setPendingStyleSub(null);
+    setEditorActiveSlideId(null);
+    setActiveTab(tab);
+    setTabResetNonce((n) => n + 1);
+  };
+
   const panelMap: Record<EditorTab, React.ReactNode> = {
     pages: <PagesPanel
       editingSection={editingSection}
@@ -4934,13 +4975,15 @@ const WebsiteEditor = () => {
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
       onActiveSlideChange={setEditorActiveSlideId}
+      resetNonce={tabResetNonce}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
-    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
+    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} resetNonce={tabResetNonce} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
       onSiteChange={updateSite}
+      resetNonce={tabResetNonce}
     />,
   };
 
@@ -4968,7 +5011,7 @@ const WebsiteEditor = () => {
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleSelectTab(tab.id)}
                     className={cn(
                       "w-full h-11 flex items-center justify-center transition-colors relative",
                       isActive ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
@@ -5056,7 +5099,7 @@ const WebsiteEditor = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleSelectTab(tab.id)}
                 className={cn(
                   "flex-1 h-12 flex flex-col items-center justify-center gap-0.5 transition-colors relative shrink-0 min-w-[56px] px-2",
                   isActive ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"

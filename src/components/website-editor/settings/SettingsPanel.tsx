@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,15 +19,26 @@ export default function SettingsPanel({
   photographerId,
   site,
   onSiteChange,
+  resetNonce,
 }: {
   photographerId: string | null;
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
+  /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
+  resetNonce?: number;
 }) {
   const navigate = useNavigate();
   const [view, setView] = useState<SubView>(null);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  useEffect(() => {
+    if (resetNonce === undefined) return;
+    setView(null);
+    setTrackingOpen(false);
+    setAdvancedOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetNonce]);
 
   if (view) {
     const titles: Record<Exclude<SubView, null>, string> = {
