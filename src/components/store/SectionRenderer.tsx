@@ -870,7 +870,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
             type="submit"
             disabled={c.editMode || status === "sending"}
             style={{ borderColor: accentColor, color: accentColor }}
-            className="w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity disabled:opacity-50"
+            className="site-button w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity disabled:opacity-50"
           >
             <EditableText
               as="span"
