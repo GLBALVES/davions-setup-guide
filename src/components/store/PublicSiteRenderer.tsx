@@ -2171,6 +2171,14 @@ export default function PublicSiteRenderer(props: Props) {
     : site?.seo_title || `${displayName} — Photography`;
   const seoDescription = site?.seo_description || subheadline || undefined;
 
+  // Apply the studio's typography template (Pixieset-style fonts panel).
+  const fontOverrides = (site?.font_overrides ?? {}) as FontOverrides;
+  useSiteTypography(
+    site?.font_template_id ?? null,
+    fontOverrides,
+    (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
+
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
 
