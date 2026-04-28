@@ -47,6 +47,7 @@ import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/w
 import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
 import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
