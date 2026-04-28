@@ -4430,6 +4430,14 @@ const WebsiteEditor = () => {
     (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
   );
 
+  // Inject color palette CSS variables (--site-bg, --site-headings, …).
+  useSiteColors(
+    (site as any)?.colorPaletteId ?? (site as any)?.color_palette_id,
+    ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id) as SchemeId | null,
+    ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides,
+    ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
+  );
+
   // Legacy: still load heading/body Google Fonts for older sites with no template chosen.
   useEffect(() => {
     if ((site as any)?.fontTemplateId) return; // typography hook handles it
