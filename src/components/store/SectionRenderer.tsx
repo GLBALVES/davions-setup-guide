@@ -1122,13 +1122,212 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
 
 // ─── Testimonials ───────────────────────────────────────────────────────────
 
-function TestimonialsBlock({ items = [], ctx }: any) {
+function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const displayItems = items.length > 0 ? items : [
-    { quote: "An incredible experience from start to finish.", author: "Client", role: "" },
-    { quote: "The photos exceeded all our expectations.", author: "Client", role: "" },
+    { quote: "An incredible experience from start to finish.", author: "Client", role: "", image: "" },
+    { quote: "The photos exceeded all our expectations.", author: "Client", role: "", image: "" },
   ];
 
+  // Reusable inline editors
+  const Quote = ({ item, i, className }: any) => (
+    <EditableText
+      as="p"
+      editMode={c.editMode}
+      value={item.quote || ""}
+      multiline
+      onChange={(v) => c.set(`items.${i}.quote`, v)}
+      className={className}
+    />
+  );
+  const Author = ({ item, i, className, style }: any) => (
+    <EditableText
+      as="span"
+      editMode={c.editMode}
+      value={item.author || ""}
+      onChange={(v) => c.set(`items.${i}.author`, v)}
+      className={className}
+      style={style}
+    />
+  );
+  const Role = ({ item, i, className }: any) =>
+    (c.editMode || item.role) ? (
+      <EditableText
+        as="span"
+        editMode={c.editMode}
+        value={item.role || ""}
+        placeholder="role"
+        onChange={(v) => c.set(`items.${i}.role`, v)}
+        className={className}
+      />
+    ) : null;
+
+  // ── Image Background ────────────────────────────────────────────────────
+  if (variant === "image-bg") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {displayItems.map((item: any, i: number) => (
+            <div
+              key={i}
+              className="relative overflow-hidden rounded-sm min-h-[280px] md:min-h-[340px] flex items-end"
+            >
+              {item.image ? (
+                <img src={item.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 bg-muted" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="relative z-10 p-6 sm:p-8 text-white w-full">
+                <Quote item={item} i={i} className="text-base sm:text-lg font-extralight italic leading-relaxed mb-4 block" />
+                <div className="text-[10px] tracking-[0.3em] uppercase opacity-90">
+                  — <Author item={item} i={i} />
+                  {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Image Side (alternating) ────────────────────────────────────────────
+  if (variant === "image-side") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-5xl mx-auto space-y-12">
+          {displayItems.map((item: any, i: number) => {
+            const reverse = i % 2 === 1;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "grid grid-cols-1 md:grid-cols-2 gap-8 items-center",
+                  reverse && "md:[&>*:first-child]:order-2"
+                )}
+              >
+                <div className="aspect-[4/3] overflow-hidden rounded-sm bg-muted">
+                  {item.image && (
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <blockquote>
+                  <Quote item={item} i={i} className="text-base sm:text-lg font-extralight italic text-foreground leading-relaxed mb-4 block" />
+                  <footer className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                    — <Author item={item} i={i} />
+                    {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
+                  </footer>
+                </blockquote>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Image Above ─────────────────────────────────────────────────────────
+  if (variant === "image-above") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {displayItems.map((item: any, i: number) => (
+              <div key={i} className="flex flex-col">
+                <div className="aspect-[4/3] overflow-hidden rounded-sm bg-muted mb-4">
+                  {item.image && (
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <Quote item={item} i={i} className="text-sm font-light text-muted-foreground italic leading-relaxed mb-3 block" />
+                <div className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mt-auto">
+                  — <Author item={item} i={i} />
+                  {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Avatar Top (small round avatar above quote, centered) ───────────────
+  if (variant === "avatar-top") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
+            {displayItems.map((item: any, i: number) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-muted mb-4 ring-1 ring-border">
+                  {item.image && (
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <Quote item={item} i={i} className="text-sm font-light text-muted-foreground italic leading-relaxed mb-3 block" />
+                <div className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                  <Author item={item} i={i} />
+                  {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Avatar Side (small round avatar to the left of author line) ─────────
+  if (variant === "avatar-side") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {displayItems.map((item: any, i: number) => (
+              <blockquote key={i} className="border-l-2 border-border pl-6">
+                <Quote item={item} i={i} className="text-sm font-light text-muted-foreground italic leading-relaxed mb-4 block" />
+                <footer className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0 ring-1 ring-border">
+                    {item.image && (
+                      <img src={item.image} alt="" className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+                    <Author item={item} i={i} />
+                    {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
+                  </div>
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Minimal Quote (single, centered) ────────────────────────────────────
+  if (variant === "minimal-quote") {
+    const item = displayItems[0];
+    return (
+      <section className="py-16 sm:py-20 px-5 sm:px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-4xl font-extralight text-foreground/30 leading-none mb-4">❝</p>
+          <Quote item={item} i={0} className="text-lg sm:text-xl font-extralight italic text-foreground leading-relaxed mb-6 block" />
+          <div className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
+            — <Author item={item} i={0} />
+            {(c.editMode || item.role) && <>, <Role item={item} i={0} /></>}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Cards (default) ─────────────────────────────────────────────────────
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
@@ -1136,21 +1335,10 @@ function TestimonialsBlock({ items = [], ctx }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
-              <EditableText
-                as="p"
-                editMode={c.editMode}
-                value={item.quote || ""}
-                multiline
-                onChange={(v) => c.set(`items.${i}.quote`, v)}
-                className="text-sm font-light text-muted-foreground leading-relaxed italic mb-3 block"
-              />
+              <Quote item={item} i={i} className="text-sm font-light text-muted-foreground leading-relaxed italic mb-3 block" />
               <footer className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">
-                — <EditableText as="span" editMode={c.editMode} value={item.author || ""} onChange={(v) => c.set(`items.${i}.author`, v)} />
-                {(c.editMode || item.role) && (
-                  <>
-                    , <EditableText as="span" editMode={c.editMode} value={item.role || ""} placeholder="role" onChange={(v) => c.set(`items.${i}.role`, v)} />
-                  </>
-                )}
+                — <Author item={item} i={i} />
+                {(c.editMode || item.role) && <>, <Role item={item} i={i} /></>}
               </footer>
             </blockquote>
           ))}
