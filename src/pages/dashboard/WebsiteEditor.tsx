@@ -2152,6 +2152,7 @@ const PagesPanel = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce]);
 
+  const flattenPages = (list: SitePage[]) => list.flatMap((p) => (p.children ? [p, ...p.children] : [p]));
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
