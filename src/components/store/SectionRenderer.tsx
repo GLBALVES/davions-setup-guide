@@ -1139,7 +1139,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
       value={item.quote || ""}
       multiline
       onChange={(v) => c.set(`items.${i}.quote`, v)}
-      className={className}
+      className={cn("site-pullquote", className)}
     />
   );
   const Author = ({ item, i, className, style }: any) => (
@@ -1148,7 +1148,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
       editMode={c.editMode}
       value={item.author || ""}
       onChange={(v) => c.set(`items.${i}.author`, v)}
-      className={className}
+      className={cn("site-h6", className)}
       style={style}
     />
   );
@@ -1160,7 +1160,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
         value={item.role || ""}
         placeholder="role"
         onChange={(v) => c.set(`items.${i}.role`, v)}
-        className={className}
+        className={cn("site-h6", className)}
       />
     ) : null;
 
