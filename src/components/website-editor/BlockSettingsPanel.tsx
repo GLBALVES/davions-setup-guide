@@ -869,7 +869,7 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void, 
     case "logo-strip": return <LogoStripContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "faq-accordion": return <FaqContentEditor props={props} onChange={onChange} />;
     case "stats": return <StatsContentEditor props={props} onChange={onChange} />;
-    case "testimonials": return <TestimonialsContentEditor props={props} onChange={onChange} />;
+    case "testimonials": return <TestimonialsContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "spacer": return <SpacerContentEditor props={props} onChange={onChange} />;
     case "pricing-table": return <PricingContentEditor props={props} onChange={onChange} />;
     case "team": return <TeamContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
