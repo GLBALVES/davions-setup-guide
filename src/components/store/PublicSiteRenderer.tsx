@@ -5,6 +5,8 @@ import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/Pr
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import type { FontOverrides, FontSizeScale } from "@/components/website-editor/font-templates";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
