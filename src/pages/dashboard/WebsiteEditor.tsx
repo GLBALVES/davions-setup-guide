@@ -4524,6 +4524,8 @@ const WebsiteEditor = () => {
     footer_text: "footerText",
     heading_font: "headingFont",
     body_font: "bodyFont",
+    font_template_id: "fontTemplateId",
+    font_overrides: "fontOverrides",
     button_style: "buttonStyle",
     button_shape: "buttonShape",
     button_size: "buttonSize",
