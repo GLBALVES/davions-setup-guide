@@ -4409,6 +4409,8 @@ const WebsiteEditor = () => {
           footerText: raw.footer_text,
           headingFont: raw.heading_font,
           bodyFont: raw.body_font,
+          fontTemplateId: raw.font_template_id,
+          fontOverrides: raw.font_overrides ?? {},
           buttonStyle: raw.button_style || "solid",
           buttonShape: raw.button_shape || "square",
           buttonSize: raw.button_size || "medium",
