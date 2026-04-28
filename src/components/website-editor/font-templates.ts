@@ -42,7 +42,10 @@ export interface ElementTypography {
 }
 
 export type ElementOverrides = Partial<ElementTypography>;
-export type FontOverrides = Partial<Record<ElementKey, ElementOverrides>>;
+export type FontOverrides = Partial<Record<ElementKey, ElementOverrides>> & {
+  /** Reserved meta key — not an element. Stores the global font-size scale. */
+  _meta?: { fontSize?: FontSizeScale };
+};
 
 export interface FontTemplate {
   id: string;
