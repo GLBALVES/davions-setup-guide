@@ -585,18 +585,26 @@ function StatsContentEditor({ props, onChange }: { props: any; onChange: (p: any
   );
 }
 
-function TestimonialsContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
-  const items: { quote: string; author: string; role: string }[] = props.items || [];
+function TestimonialsContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  const items: { quote: string; author: string; role: string; image?: string }[] = props.items || [];
   return (
     <ItemListEditor
       items={items}
       onChange={(next) => onChange({ ...props, items: next })}
       itemLabel="Testimonial"
       addLabel="Add Testimonial"
-      newItem={() => ({ quote: "", author: "", role: "" })}
+      newItem={() => ({ quote: "", author: "", role: "", image: "" })}
       renderLabel={(it) => it.author || it.quote.slice(0, 40)}
       renderDetail={(item, update) => (
         <div className="space-y-2">
+          <Field label="Image (avatar or photo)">
+            <ImageUploadField
+              value={item.image || ""}
+              onChange={(url) => update({ image: url })}
+              photographerId={photographerId}
+              folder="testimonials"
+            />
+          </Field>
           <Field label="Quote">
             <RichTextField multiline value={item.quote} onChange={(v) => update({ quote: v })} placeholder="Testimonial quote..." />
           </Field>

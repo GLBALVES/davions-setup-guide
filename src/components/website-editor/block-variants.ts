@@ -44,7 +44,11 @@ export const BLOCK_VARIANTS: Partial<Record<SectionType, BlockVariant[]>> = {
   ],
   testimonials: [
     { id: "cards", label: "Cards", icon: "▭" },
-    { id: "carousel", label: "Carousel", icon: "⟷" },
+    { id: "avatar-top", label: "Avatar Top", icon: "◯" },
+    { id: "avatar-side", label: "Avatar Side", icon: "◐" },
+    { id: "image-side", label: "Image Side", icon: "◧" },
+    { id: "image-above", label: "Image Above", icon: "▣" },
+    { id: "image-bg", label: "Image Background", icon: "⬛" },
     { id: "minimal-quote", label: "Minimal Quote", icon: "❝" },
   ],
   cta: [
