@@ -124,6 +124,7 @@ const faqAccordion = (): PageSection => ({
   type: "faq-accordion",
   label: "FAQ",
   props: {
+    variant: "chevron",
     items: [
       { question: "What is included?", answer: "" },
       { question: "How do I book?", answer: "" },
