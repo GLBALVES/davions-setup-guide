@@ -177,7 +177,6 @@ function BlockButtons({
             onClick={(e) => editMode && e.preventDefault()}
             {...btn}
             className={`${btn.className} site-button`}
-            data-site-typo="button"
           >
             <EditableText
               as="span"
