@@ -689,7 +689,7 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+          {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className={`grid ${gridCls} gap-3`}>
             {Array.from({ length: cols * 2 }).map((_, i) => (
               <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
@@ -705,7 +705,7 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+        {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`grid ${gridCls} gap-3`}>
           {items.map((it, i) => (
             <GalleryItemFigure key={i} item={it} aspect="aspect-square" />
@@ -726,7 +726,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+          {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className="columns-2 md:columns-3 gap-3 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-muted/20 rounded flex items-center justify-center break-inside-avoid" style={{ height: `${150 + (i % 3) * 60}px` }}>
@@ -744,7 +744,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+        {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`${colsCls} gap-3 space-y-3`}>
           {items.map((it, i) => (
             <div key={i} className="break-inside-avoid mb-3">
@@ -822,7 +822,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6" id="contact">
       <div className="max-w-xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           <input
             type="text"
@@ -930,7 +930,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
             {faqItems.map((item: any, i: number) => (
               <div key={i} className="space-y-2">
@@ -965,7 +965,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
         <div className="divide-y divide-border">
           {faqItems.map((item: any, i: number) => {
             const isOpen = openIndex === i;
@@ -1033,7 +1033,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Pricing</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayPlans.map((plan: any, i: number) => (
             <div key={i} className="border border-border rounded-lg p-6 text-center hover:shadow-md transition-shadow">
@@ -1234,7 +1234,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col">
@@ -1261,7 +1261,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col items-center">
@@ -1288,7 +1288,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {displayItems.map((item: any, i: number) => (
               <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1333,7 +1333,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1398,7 +1398,7 @@ function TeamBlock({ members = [], ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Our Team</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Our Team</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {displayMembers.map((m: any, i: number) => (
             <div key={i} className="text-center">
@@ -1861,7 +1861,7 @@ function InstagramFeedBlock({ count = 9, columns = 3, username, posts = [] }: an
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-2 text-foreground">Instagram</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-2 text-foreground">Instagram</h2>
         {username && (
           <p className="text-center text-xs text-muted-foreground mb-6">@{username}</p>
         )}
