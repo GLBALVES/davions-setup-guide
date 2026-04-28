@@ -969,7 +969,12 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
             const isOpen = openIndex === i;
             return (
               <div key={i}>
-                <div className="w-full flex items-center justify-between py-4 text-left gap-3">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? null : i)}
+                  className="w-full flex items-center justify-between py-4 text-left gap-3 group"
+                  aria-expanded={isOpen}
+                >
                   <EditableText
                     as="span"
                     editMode={c.editMode}
@@ -978,25 +983,22 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                     onChange={(v) => c.set(`items.${i}.question`, v)}
                     className="text-sm font-light text-foreground flex-1 cursor-pointer"
                   />
-                  {!c.editMode && (
-                    <button
-                      onClick={() => setOpenIndex(isOpen ? null : i)}
-                      className={
-                        isPlus
-                          ? "shrink-0 h-7 w-7 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                          : "shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
-                      }
-                      aria-label={isOpen ? "Collapse" : "Expand"}
-                    >
-                      {isPlus ? (
-                        isOpen ? <XIcon className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />
-                      ) : (
-                        isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                      )}
-                    </button>
-                  )}
-                </div>
-                {(c.editMode || isOpen) && (
+                  <span
+                    className={
+                      isPlus
+                        ? "shrink-0 h-7 w-7 flex items-center justify-center rounded-full border border-border text-muted-foreground group-hover:text-foreground group-hover:border-foreground transition-colors"
+                        : "shrink-0 p-1 text-muted-foreground group-hover:text-foreground transition-colors"
+                    }
+                    aria-hidden="true"
+                  >
+                    {isPlus ? (
+                      isOpen ? <XIcon className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />
+                    ) : (
+                      isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                    )}
+                  </span>
+                </button>
+                {isOpen && (
                   <EditableText
                     as="p"
                     editMode={c.editMode}
