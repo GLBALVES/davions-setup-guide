@@ -2504,12 +2504,16 @@ export type Database = {
           button_style: string | null
           button_variants: Json
           button_width: number | null
+          color_overrides: Json
+          color_palette_id: string | null
+          color_scheme_id: string | null
           contact_bg_color: string | null
           contact_text_color: string | null
           created_at: string
           cta_link: string | null
           cta_text: string | null
           custom_body_html: string | null
+          custom_color_palettes: Json
           custom_css: string | null
           custom_head_html: string | null
           experience_bg_color: string | null
@@ -2609,12 +2613,16 @@ export type Database = {
           button_style?: string | null
           button_variants?: Json
           button_width?: number | null
+          color_overrides?: Json
+          color_palette_id?: string | null
+          color_scheme_id?: string | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
           custom_body_html?: string | null
+          custom_color_palettes?: Json
           custom_css?: string | null
           custom_head_html?: string | null
           experience_bg_color?: string | null
@@ -2714,12 +2722,16 @@ export type Database = {
           button_style?: string | null
           button_variants?: Json
           button_width?: number | null
+          color_overrides?: Json
+          color_palette_id?: string | null
+          color_scheme_id?: string | null
           contact_bg_color?: string | null
           contact_text_color?: string | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
           custom_body_html?: string | null
+          custom_color_palettes?: Json
           custom_css?: string | null
           custom_head_html?: string | null
           experience_bg_color?: string | null
