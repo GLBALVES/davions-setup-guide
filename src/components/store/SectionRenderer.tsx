@@ -1008,7 +1008,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                     placeholder="Answer"
                     multiline
                     onChange={(v) => c.set(`items.${i}.answer`, v)}
-                    className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                    className="site-paragraph-1 pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
                   />
                 )}
               </div>
