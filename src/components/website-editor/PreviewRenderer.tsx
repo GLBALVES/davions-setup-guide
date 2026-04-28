@@ -126,6 +126,8 @@ function PreviewNav({
   const fg = site?.headerTextColor ?? undefined;
   const logoText = site?.logoText || site?.displayName || "Studio";
   const logoSize = site?.logoSize || "medium";
+  const menuStyle: string = (site as any)?.nav_menu_style ?? "centered-split";
+  const stickyHeader: boolean = !!(site as any)?.nav_sticky_header;
   const logoImgClass =
     logoSize === "small" ? "h-6 w-auto object-contain"
     : logoSize === "large" ? "h-12 w-auto object-contain"
@@ -135,11 +137,175 @@ function PreviewNav({
     : logoSize === "large" ? "text-base font-light tracking-[0.25em] uppercase"
     : "text-sm font-light tracking-[0.25em] uppercase";
 
+  const Logo = site?.logoUrl ? (
+    <img src={site.logoUrl} alt={logoText} className={logoImgClass} />
+  ) : (
+    <span className={logoTextClass} style={{ color: fg ?? undefined }}>{logoText}</span>
+  );
+
+  const linksNav = (extra = "") => (
+    <nav className={cn("hidden md:flex items-center gap-6", extra)}>
+      {navLinks.map((link) => {
+        if (link.type === "link") {
+          const newTab = link.openInNewTab !== false;
+          return (
+            <a
+              key={link.id}
+              href={link.url || "#"}
+              target={newTab ? "_blank" : "_self"}
+              rel={newTab ? "noopener noreferrer" : undefined}
+              className="text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70"
+              style={{ color: fg ?? undefined }}
+            >
+              {link.label}
+            </a>
+          );
+        }
+        if (link.type === "folder" && link.children && link.children.length > 0) {
+          return (
+            <div key={link.id} className="relative group">
+              <button
+                className="text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70 inline-flex items-center gap-1"
+                style={{ color: fg ?? undefined }}
+              >
+                {link.label}
+                <span className="text-[8px] opacity-60">▼</span>
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all min-w-[180px] z-20">
+                <div className="border border-border/40 shadow-lg py-2" style={{ backgroundColor: bg ?? "hsl(var(--background))" }}>
+                  {link.children.map((child) => {
+                    if (child.type === "link") {
+                      const newTab = child.openInNewTab !== false;
+                      return (
+                        <a
+                          key={child.id}
+                          href={child.url || "#"}
+                          target={newTab ? "_blank" : "_self"}
+                          rel={newTab ? "noopener noreferrer" : undefined}
+                          className="block px-4 py-2 text-[11px] tracking-[0.2em] uppercase font-light hover:opacity-70 text-left"
+                          style={{ color: fg ?? undefined }}
+                        >
+                          {child.label}
+                        </a>
+                      );
+                    }
+                    return (
+                      <button
+                        key={child.id}
+                        onClick={() => onNavigatePage?.(child.id)}
+                        className={cn(
+                          "block w-full px-4 py-2 text-[11px] tracking-[0.2em] uppercase font-light hover:opacity-70 text-left",
+                          activePageId === child.id && "underline underline-offset-4"
+                        )}
+                        style={{ color: fg ?? undefined }}
+                      >
+                        {child.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <button
+            key={link.id}
+            onClick={() => onNavigatePage?.(link.id)}
+            className={cn(
+              "text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70",
+              activePageId === link.id && "underline underline-offset-4"
+            )}
+            style={{ color: fg ?? undefined }}
+          >
+            {link.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
+  // Layout container per menu style
+  let inner: React.ReactNode;
+  if (menuStyle === "logo-left") {
+    inner = (
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4 gap-4">
+        <div className="flex items-center gap-3">{Logo}</div>
+        {linksNav("justify-end")}
+      </div>
+    );
+  } else if (menuStyle === "logo-left-hamburger") {
+    inner = (
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4 gap-4">
+        <div className="flex items-center gap-3">{Logo}</div>
+        <div className="flex flex-col gap-1" style={{ color: fg ?? undefined }} aria-label="Menu preview">
+          <span className="block h-px w-5 bg-current opacity-70" />
+          <span className="block h-px w-5 bg-current opacity-70" />
+        </div>
+      </div>
+    );
+  } else if (menuStyle === "logo-center-links-below") {
+    inner = (
+      <div className="max-w-7xl mx-auto flex flex-col items-center gap-2 px-6 py-3">
+        <div className="flex items-center gap-3">{Logo}</div>
+        {linksNav("justify-center")}
+      </div>
+    );
+  } else if (menuStyle === "links-left-logo-left") {
+    inner = (
+      <div className="max-w-7xl mx-auto flex items-center px-6 py-4 gap-6">
+        <div className="flex items-center gap-3">{Logo}</div>
+        {linksNav("")}
+      </div>
+    );
+  } else if (menuStyle === "logo-center-only") {
+    inner = (
+      <div className="max-w-7xl mx-auto flex items-center justify-center px-6 py-4">
+        {Logo}
+      </div>
+    );
+  } else {
+    // centered-split (default)
+    const leftLinks = navLinks.slice(0, Math.ceil(navLinks.length / 2));
+    const rightLinks = navLinks.slice(Math.ceil(navLinks.length / 2));
+    const renderInline = (items: typeof navLinks, extra = "") => (
+      <nav className={cn("hidden md:flex items-center gap-6", extra)}>
+        {items.map((link) => (
+          <button
+            key={link.id}
+            onClick={() => link.type === "page" && onNavigatePage?.(link.id)}
+            className={cn(
+              "text-[11px] tracking-[0.2em] uppercase font-light transition-opacity hover:opacity-70",
+              activePageId === link.id && "underline underline-offset-4"
+            )}
+            style={{ color: fg ?? undefined }}
+          >
+            {link.label}
+          </button>
+        ))}
+      </nav>
+    );
+    inner = (
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 px-6 py-4">
+        {renderInline(leftLinks, "flex-1 justify-end")}
+        <div className="flex items-center justify-center shrink-0 px-6">{Logo}</div>
+        {renderInline(rightLinks, "flex-1 justify-start")}
+      </div>
+    );
+  }
+
   return (
     <header
-      className="border-b border-border/50 sticky top-0 z-10"
+      className={cn(
+        "border-b border-border/50 z-10",
+        stickyHeader ? "sticky top-0" : "relative"
+      )}
       style={{ backgroundColor: bg ?? "hsl(var(--background))", color: fg ?? undefined }}
     >
+      {inner}
+    </header>
+  );
+}
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
           {site?.logoUrl ? (
