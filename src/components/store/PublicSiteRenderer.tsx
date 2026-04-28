@@ -2179,6 +2179,14 @@ export default function PublicSiteRenderer(props: Props) {
     (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
   );
 
+  // Apply the studio's color palette + scheme.
+  useSiteColors(
+    (site as any)?.color_palette_id ?? null,
+    ((site as any)?.color_scheme_id ?? null) as SchemeId | null,
+    ((site as any)?.color_overrides ?? {}) as ColorOverrides,
+    ((site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
+  );
+
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
 
