@@ -47,6 +47,8 @@ import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/w
 import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
 import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel";
 import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-editor/settings/NavigationSubPanel";
+import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
+import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
@@ -4055,9 +4057,9 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           )}
 
           {sub === "animations" && (
-            <ComingSoon
-              title="Animations"
-              description="Choose how sections fade, slide, and reveal as visitors scroll. Coming soon."
+            <AnimationsSubPanel
+              value={(((site as any)?.animation_style ?? "none") as AnimationStyle)}
+              onChange={(v) => onSiteChange({ animation_style: v })}
             />
           )}
 
