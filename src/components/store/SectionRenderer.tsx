@@ -423,7 +423,8 @@ function HeroBlock(props: any) {
           value={headline || ""}
           placeholder="Headline"
           onChange={(v) => c.set("headline", v)}
-          className={`text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
+          data-site-typo="banner_heading"
+          className={`site-banner-heading text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
         />
         {(c.editMode || subtitle) && (
           <EditableText
@@ -433,7 +434,8 @@ function HeroBlock(props: any) {
             placeholder="Add a subtitle"
             multiline
             onChange={(v) => c.set("subtitle", v)}
-            className={`mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto block ${hasImage ? "text-white/80" : "text-muted-foreground"}`}
+            data-site-typo="banner_subtitle"
+            className={`site-banner-subtitle mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto block ${hasImage ? "text-white/80" : "text-muted-foreground"}`}
           />
         )}
         <div className="flex justify-center">
