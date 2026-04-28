@@ -287,13 +287,16 @@ export function collectFontIds(templateId: string | null | undefined, overrides:
 const ELEMENT_TO_SELECTORS: Record<ElementKey, string> = {
   banner_heading: ".site-banner-heading, [data-site-typo='banner_heading']",
   banner_subtitle: ".site-banner-subtitle, [data-site-typo='banner_subtitle']",
-  h1: ".site-h1, [data-site-typo='h1']",
-  h2: ".site-h2, [data-site-typo='h2']",
-  h3: ".site-h3, [data-site-typo='h3']",
-  h4: ".site-h4, [data-site-typo='h4']",
-  h5: ".site-h5, [data-site-typo='h5']",
-  h6: ".site-h6, [data-site-typo='h6']",
-  paragraph_1: ".site-paragraph-1, [data-site-typo='paragraph_1']",
+  // Headings: also match raw tags inside any .site-rich-text container so
+  // text written via the inline rich-text editor (Text block, columns) gets
+  // the chosen template typography automatically.
+  h1: ".site-h1, [data-site-typo='h1'], .site-rich-text h1",
+  h2: ".site-h2, [data-site-typo='h2'], .site-rich-text h2",
+  h3: ".site-h3, [data-site-typo='h3'], .site-rich-text h3",
+  h4: ".site-h4, [data-site-typo='h4'], .site-rich-text h4",
+  h5: ".site-h5, [data-site-typo='h5'], .site-rich-text h5",
+  h6: ".site-h6, [data-site-typo='h6'], .site-rich-text h6",
+  paragraph_1: ".site-paragraph-1, [data-site-typo='paragraph_1'], .site-rich-text p",
   paragraph_2: ".site-paragraph-2, [data-site-typo='paragraph_2']",
   paragraph_3: ".site-paragraph-3, [data-site-typo='paragraph_3']",
   logo_text: ".site-logo-text, [data-site-typo='logo_text']",
@@ -303,7 +306,7 @@ const ELEMENT_TO_SELECTORS: Record<ElementKey, string> = {
   overlay_sub_navigation: ".site-overlay-subnav, [data-site-typo='overlay_sub_navigation']",
   button: ".site-button, [data-site-typo='button']",
   form_label: ".site-form-label, [data-site-typo='form_label']",
-  pullquote: ".site-pullquote, [data-site-typo='pullquote']",
+  pullquote: ".site-pullquote, [data-site-typo='pullquote'], .site-rich-text blockquote",
 };
 
 /** Build a CSS string targeting all element classes/data-attrs. */
