@@ -733,33 +733,22 @@ function EmbedContentEditor({ props, onChange }: { props: any; onChange: (p: any
   );
 }
 
-function Columns2ContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
+function ColumnsHint({ count }: { count: number }) {
   return (
-    <div className="space-y-3">
-      <Field label="Left Column">
-        <RichTextField multiline value={props.left || ""} onChange={(v) => onChange({ ...props, left: v })} />
-      </Field>
-      <Field label="Right Column">
-        <RichTextField multiline value={props.right || ""} onChange={(v) => onChange({ ...props, right: v })} />
-      </Field>
+    <div className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground leading-relaxed">
+      Edit each of the <strong className="text-foreground">{count} columns</strong> directly on the canvas.
+      Hover a column and click <strong className="text-foreground">+ Add element</strong> to insert
+      text, images, buttons, spacers or dividers. Hover any element to reorder or remove it.
     </div>
   );
 }
 
-function Columns3ContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
-  return (
-    <div className="space-y-3">
-      <Field label="Column 1">
-        <RichTextField multiline value={props.col1 || ""} onChange={(v) => onChange({ ...props, col1: v })} />
-      </Field>
-      <Field label="Column 2">
-        <RichTextField multiline value={props.col2 || ""} onChange={(v) => onChange({ ...props, col2: v })} />
-      </Field>
-      <Field label="Column 3">
-        <RichTextField multiline value={props.col3 || ""} onChange={(v) => onChange({ ...props, col3: v })} />
-      </Field>
-    </div>
-  );
+function Columns2ContentEditor(_: { props: any; onChange: (p: any) => void }) {
+  return <ColumnsHint count={2} />;
+}
+
+function Columns3ContentEditor(_: { props: any; onChange: (p: any) => void }) {
+  return <ColumnsHint count={3} />;
 }
 
 function MapContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
