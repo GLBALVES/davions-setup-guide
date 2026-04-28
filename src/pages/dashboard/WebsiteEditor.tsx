@@ -44,6 +44,9 @@ import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/
 import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormatToolbar";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
+import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
+import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
@@ -3998,42 +4001,29 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
             </div>
           )}
 
-          {sub === "fonts" && (
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Heading font</label>
-                <Select
-                  value={site?.headingFont || "inter"}
-                  onValueChange={(v) => onSiteChange({ heading_font: v })}
-                >
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FONT_PRESETS.map((f) => (
-                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Body font</label>
-                <Select
-                  value={site?.bodyFont || "inter"}
-                  onValueChange={(v) => onSiteChange({ body_font: v })}
-                >
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FONT_PRESETS.map((f) => (
-                      <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+          {sub === "fonts" && (() => {
+            const ov = ((site as any)?.fontOverrides ?? {}) as FontOverrides;
+            const currentSize = (ov._meta?.fontSize as FontSizeScale | undefined) ?? "regular";
+            return (
+              <FontsSubPanel
+                templateId={(site as any)?.fontTemplateId ?? null}
+                overrides={ov}
+                fontSize={currentSize}
+                onTemplateChange={(id, tpl) => {
+                  onSiteChange({
+                    font_template_id: id,
+                    heading_font: tpl.heading,
+                    body_font: tpl.body,
+                  });
+                }}
+                onOverridesChange={(next) => onSiteChange({ font_overrides: next as any })}
+                onFontSizeChange={(size) => {
+                  const next: FontOverrides = { ...ov, _meta: { ...(ov._meta ?? {}), fontSize: size } };
+                  onSiteChange({ font_overrides: next as any });
+                }}
+              />
+            );
+          })()}
 
           {sub === "colors" && (
             <div className="space-y-4">
@@ -4419,6 +4409,8 @@ const WebsiteEditor = () => {
           footerText: raw.footer_text,
           headingFont: raw.heading_font,
           bodyFont: raw.body_font,
+          fontTemplateId: raw.font_template_id,
+          fontOverrides: raw.font_overrides ?? {},
           buttonStyle: raw.button_style || "solid",
           buttonShape: raw.button_shape || "square",
           buttonSize: raw.button_size || "medium",
@@ -4436,8 +4428,17 @@ const WebsiteEditor = () => {
     })();
   }, [user]);
 
-  // Inject the chosen Google Fonts into the page so the editor preview matches the published site.
+  // Inject the chosen Google Fonts + per-element typography CSS so the editor
+  // preview matches the published site exactly.
+  useSiteTypography(
+    (site as any)?.fontTemplateId,
+    ((site as any)?.fontOverrides ?? {}) as FontOverrides,
+    (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
+
+  // Legacy: still load heading/body Google Fonts for older sites with no template chosen.
   useEffect(() => {
+    if ((site as any)?.fontTemplateId) return; // typography hook handles it
     const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
     if (!href) return;
     const id = "lov-site-fonts";
@@ -4449,7 +4450,7 @@ const WebsiteEditor = () => {
       document.head.appendChild(el);
     }
     if (el.href !== href) el.href = href;
-  }, [site?.headingFont, site?.bodyFont]);
+  }, [site?.headingFont, site?.bodyFont, (site as any)?.fontTemplateId]);
 
   // Inject button design tokens (style/shape/size/dimensions) as CSS variables.
   useEffect(() => {
@@ -4523,6 +4524,8 @@ const WebsiteEditor = () => {
     footer_text: "footerText",
     heading_font: "headingFont",
     body_font: "bodyFont",
+    font_template_id: "fontTemplateId",
+    font_overrides: "fontOverrides",
     button_style: "buttonStyle",
     button_shape: "buttonShape",
     button_size: "buttonSize",
@@ -4604,6 +4607,8 @@ const WebsiteEditor = () => {
         footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
         headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
         bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
+        fontTemplateId: patch.font_template_id !== undefined ? patch.font_template_id : (prev as any)?.fontTemplateId,
+        fontOverrides: patch.font_overrides !== undefined ? patch.font_overrides : (prev as any)?.fontOverrides,
         buttonStyle: patch.button_style !== undefined ? patch.button_style : prev?.buttonStyle,
         buttonShape: patch.button_shape !== undefined ? patch.button_shape : prev?.buttonShape,
         buttonSize: patch.button_size !== undefined ? patch.button_size : prev?.buttonSize,

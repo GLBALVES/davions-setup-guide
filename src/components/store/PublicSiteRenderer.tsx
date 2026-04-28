@@ -5,6 +5,8 @@ import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/Pr
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import type { FontOverrides, FontSizeScale } from "@/components/website-editor/font-templates";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
 interface EditableTextProps {
@@ -195,6 +197,13 @@ export interface SiteConfig {
   button_size?: "small" | "medium" | "large" | "custom" | null;
   button_height?: number | null;
   button_width?: number | null;
+  /** Pixieset-style typography template id (e.g. "made-mirage"). */
+  font_template_id?: string | null;
+  /** Per-element typography overrides on top of the chosen template. */
+  font_overrides?: Record<string, any> | null;
+  /** Legacy fallback fields. */
+  heading_font?: string | null;
+  body_font?: string | null;
 }
 
 /** Helper: returns inline style for a section's custom bg/text colors */
@@ -2161,6 +2170,14 @@ export default function PublicSiteRenderer(props: Props) {
     ? `${subPageTitle} — ${displayName}`
     : site?.seo_title || `${displayName} — Photography`;
   const seoDescription = site?.seo_description || subheadline || undefined;
+
+  // Apply the studio's typography template (Pixieset-style fonts panel).
+  const fontOverrides = (site?.font_overrides ?? {}) as FontOverrides;
+  useSiteTypography(
+    site?.font_template_id ?? null,
+    fontOverrides,
+    (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
 
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";

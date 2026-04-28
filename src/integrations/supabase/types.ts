@@ -2519,6 +2519,8 @@ export type Database = {
           facebook_pixel_id: string | null
           facebook_url: string | null
           favicon_url: string | null
+          font_overrides: Json
+          font_template_id: string | null
           footer_alignment: string | null
           footer_bg_color: string | null
           footer_columns: Json | null
@@ -2622,6 +2624,8 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          font_overrides?: Json
+          font_template_id?: string | null
           footer_alignment?: string | null
           footer_bg_color?: string | null
           footer_columns?: Json | null
@@ -2725,6 +2729,8 @@ export type Database = {
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
+          font_overrides?: Json
+          font_template_id?: string | null
           footer_alignment?: string | null
           footer_bg_color?: string | null
           footer_columns?: Json | null
