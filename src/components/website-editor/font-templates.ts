@@ -275,8 +275,10 @@ export function collectFontIds(templateId: string | null | undefined, overrides:
   const tpl = getFontTemplate(templateId);
   const ids = new Set<string>();
   Object.values(tpl.elements).forEach((e) => ids.add(e.fontFamily));
-  Object.values(overrides ?? {}).forEach((ov) => {
-    if (ov?.fontFamily) ids.add(ov.fontFamily);
+  Object.entries(overrides ?? {}).forEach(([k, ov]) => {
+    if (k === "_meta" || !ov) return;
+    const fam = (ov as ElementOverrides).fontFamily;
+    if (fam) ids.add(fam);
   });
   // Filter to known presets only
   return Array.from(ids).filter((id) => FONT_PRESETS.some((f) => f.id === id));
