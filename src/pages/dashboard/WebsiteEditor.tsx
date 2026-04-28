@@ -45,8 +45,10 @@ import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormat
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
+import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
+import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
