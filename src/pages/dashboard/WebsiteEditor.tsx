@@ -4607,6 +4607,8 @@ const WebsiteEditor = () => {
         footerText: patch.footer_text !== undefined ? patch.footer_text : prev?.footerText,
         headingFont: patch.heading_font !== undefined ? patch.heading_font : prev?.headingFont,
         bodyFont: patch.body_font !== undefined ? patch.body_font : prev?.bodyFont,
+        fontTemplateId: patch.font_template_id !== undefined ? patch.font_template_id : (prev as any)?.fontTemplateId,
+        fontOverrides: patch.font_overrides !== undefined ? patch.font_overrides : (prev as any)?.fontOverrides,
         buttonStyle: patch.button_style !== undefined ? patch.button_style : prev?.buttonStyle,
         buttonShape: patch.button_shape !== undefined ? patch.button_shape : prev?.buttonShape,
         buttonSize: patch.button_size !== undefined ? patch.button_size : prev?.buttonSize,
