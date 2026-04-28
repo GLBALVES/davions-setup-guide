@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon, Instagram, Facebook, Youtube, Linkedin, Loader2 } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon, Instagram, Facebook, Youtube, Linkedin, Loader2, LayoutGrid } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BLOCK_VARIANTS } from "@/components/website-editor/block-variants";
+import type { SectionType } from "@/components/website-editor/page-templates";
 import { toast } from "sonner";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
