@@ -176,6 +176,7 @@ function BlockButtons({
             rel={!editMode && b.newTab ? "noopener noreferrer" : undefined}
             onClick={(e) => editMode && e.preventDefault()}
             {...btn}
+            className={`${btn.className} site-button`}
           >
             <EditableText
               as="span"
@@ -421,7 +422,7 @@ function HeroBlock(props: any) {
           value={headline || ""}
           placeholder="Headline"
           onChange={(v) => c.set("headline", v)}
-          className={`text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
+          className={`site-banner-heading text-2xl sm:text-3xl md:text-5xl font-extralight tracking-[0.08em] md:tracking-[0.1em] uppercase leading-tight ${hasImage ? "text-white" : "text-foreground"}`}
         />
         {(c.editMode || subtitle) && (
           <EditableText
@@ -431,7 +432,7 @@ function HeroBlock(props: any) {
             placeholder="Add a subtitle"
             multiline
             onChange={(v) => c.set("subtitle", v)}
-            className={`mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto block ${hasImage ? "text-white/80" : "text-muted-foreground"}`}
+            className={`site-banner-subtitle mt-4 text-sm md:text-base font-light leading-relaxed max-w-xl mx-auto block ${hasImage ? "text-white/80" : "text-muted-foreground"}`}
           />
         )}
         <div className="flex justify-center">
@@ -520,7 +521,7 @@ function TextBlock({ title, subtitle, body, align = "center", ctx }: any) {
             if (title) c.set("title", "");
             if (subtitle) c.set("subtitle", "");
           }}
-          className="text-sm md:text-base font-light text-muted-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-3xl [&_h1]:sm:text-4xl [&_h1]:md:text-5xl [&_h1]:text-foreground [&_h1]:mb-4 [&_h1]:leading-tight [&_h2]:font-serif [&_h2]:italic [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:md:text-4xl [&_h2]:text-foreground [&_h2]:mb-4 [&_h2]:leading-tight [&_h3]:font-serif [&_h3]:italic [&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:text-foreground [&_h3]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline [&_a]:text-foreground"
+          className="site-rich-text site-paragraph-1 text-sm md:text-base font-light text-muted-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-3xl [&_h1]:sm:text-4xl [&_h1]:md:text-5xl [&_h1]:text-foreground [&_h1]:mb-4 [&_h1]:leading-tight [&_h2]:font-serif [&_h2]:italic [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:md:text-4xl [&_h2]:text-foreground [&_h2]:mb-4 [&_h2]:leading-tight [&_h3]:font-serif [&_h3]:italic [&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:text-foreground [&_h3]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline [&_a]:text-foreground"
         />
       </div>
     </section>
@@ -563,7 +564,7 @@ function ImageTextBlock(props: any) {
               value={title || ""}
               placeholder="Add a title"
               onChange={(v) => c.set("title", v)}
-              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+              className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
             />
           )}
           <EditableText
@@ -573,7 +574,7 @@ function ImageTextBlock(props: any) {
             placeholder="Add body text"
             multiline
             onChange={(v) => c.set("body", v)}
-            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
           />
           <BlockButtons
             buttons={buttons}
@@ -622,7 +623,7 @@ function TextImageBlock(props: any) {
               value={title || ""}
               placeholder="Add a title"
               onChange={(v) => c.set("title", v)}
-              className="text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
+              className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
             />
           )}
           <EditableText
@@ -632,7 +633,7 @@ function TextImageBlock(props: any) {
             placeholder="Add body text"
             multiline
             onChange={(v) => c.set("body", v)}
-            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
           />
           <BlockButtons
             buttons={buttons}
@@ -688,7 +689,7 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+          {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className={`grid ${gridCls} gap-3`}>
             {Array.from({ length: cols * 2 }).map((_, i) => (
               <div key={i} className="aspect-square bg-muted/20 rounded flex items-center justify-center">
@@ -704,7 +705,7 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+        {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`grid ${gridCls} gap-3`}>
           {items.map((it, i) => (
             <GalleryItemFigure key={i} item={it} aspect="aspect-square" />
@@ -725,7 +726,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+          {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
           <div className="columns-2 md:columns-3 gap-3 space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-muted/20 rounded flex items-center justify-center break-inside-avoid" style={{ height: `${150 + (i % 3) * 60}px` }}>
@@ -743,7 +744,7 @@ function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        {label && <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+        {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
         <div className={`${colsCls} gap-3 space-y-3`}>
           {items.map((it, i) => (
             <div key={i} className="break-inside-avoid mb-3">
@@ -821,7 +822,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6" id="contact">
       <div className="max-w-xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">Get in Touch</h2>
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           <input
             type="text"
@@ -869,7 +870,7 @@ function ContactFormBlock({ submitLabel = "Send", accentColor, ctx }: any) {
             type="submit"
             disabled={c.editMode || status === "sending"}
             style={{ borderColor: accentColor, color: accentColor }}
-            className="w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity disabled:opacity-50"
+            className="site-button w-full py-3 border text-[10px] tracking-[0.3em] uppercase hover:opacity-70 transition-opacity disabled:opacity-50"
           >
             <EditableText
               as="span"
@@ -900,7 +901,7 @@ function CtaBlock(props: any) {
           value={headline || ""}
           placeholder="Ready?"
           onChange={(v) => c.set("headline", v)}
-          className="text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground block"
+          className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground block"
         />
         <BlockButtons
           buttons={buttons}
@@ -929,7 +930,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
             {faqItems.map((item: any, i: number) => (
               <div key={i} className="space-y-2">
@@ -939,7 +940,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                   value={item.question || ""}
                   placeholder="Question"
                   onChange={(v) => c.set(`items.${i}.question`, v)}
-                  className="text-sm font-medium text-foreground block"
+                  className="site-h3 text-sm font-medium text-foreground block"
                 />
                 <EditableText
                   as="p"
@@ -948,7 +949,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                   placeholder="Answer"
                   multiline
                   onChange={(v) => c.set(`items.${i}.answer`, v)}
-                  className="text-sm font-light text-muted-foreground leading-relaxed block"
+                  className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed block"
                 />
               </div>
             ))}
@@ -964,7 +965,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
         <div className="divide-y divide-border">
           {faqItems.map((item: any, i: number) => {
             const isOpen = openIndex === i;
@@ -982,7 +983,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                     value={item.question || ""}
                     placeholder="Question"
                     onChange={(v) => c.set(`items.${i}.question`, v)}
-                    className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                    className="site-h4 text-sm font-light text-foreground flex-1 cursor-pointer"
                   />
                   <span
                     className={
@@ -1007,7 +1008,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                     placeholder="Answer"
                     multiline
                     onChange={(v) => c.set(`items.${i}.answer`, v)}
-                    className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                    className="site-paragraph-1 pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
                   />
                 )}
               </div>
@@ -1032,7 +1033,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Pricing</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {displayPlans.map((plan: any, i: number) => (
             <div key={i} className="border border-border rounded-lg p-6 text-center hover:shadow-md transition-shadow">
@@ -1042,7 +1043,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
                 value={plan.name || ""}
                 placeholder="Plan"
                 onChange={(v) => c.set(`plans.${i}.name`, v)}
-                className="text-lg font-light tracking-wide mb-2 text-foreground block"
+                className="site-h3 text-lg font-light tracking-wide mb-2 text-foreground block"
               />
               <EditableText
                 as="p"
@@ -1050,7 +1051,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
                 value={plan.price || ""}
                 placeholder="$0"
                 onChange={(v) => c.set(`plans.${i}.price`, v)}
-                className="text-2xl font-extralight mb-4 block"
+                className="site-h2 text-2xl font-extralight mb-4 block"
                 style={{ color: accentColor }}
               />
               <ul className="space-y-2 text-sm font-light text-muted-foreground">
@@ -1096,14 +1097,14 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
                 editMode={c.editMode}
                 value={event.year || ""}
                 onChange={(v) => c.set(`events.${i}.year`, v)}
-                className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1 block"
+                className="site-h6 text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1 block"
               />
               <EditableText
                 as="h3"
                 editMode={c.editMode}
                 value={event.title || ""}
                 onChange={(v) => c.set(`events.${i}.title`, v)}
-                className="text-lg font-light text-foreground mb-1 block"
+                className="site-h3 text-lg font-light text-foreground mb-1 block"
               />
               <EditableText
                 as="p"
@@ -1111,7 +1112,7 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
                 value={event.description || ""}
                 multiline
                 onChange={(v) => c.set(`events.${i}.description`, v)}
-                className="text-sm font-light text-muted-foreground block"
+                className="site-paragraph-1 text-sm font-light text-muted-foreground block"
               />
             </div>
           ))}
@@ -1138,7 +1139,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
       value={item.quote || ""}
       multiline
       onChange={(v) => c.set(`items.${i}.quote`, v)}
-      className={className}
+      className={cn("site-pullquote", className)}
     />
   );
   const Author = ({ item, i, className, style }: any) => (
@@ -1147,7 +1148,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
       editMode={c.editMode}
       value={item.author || ""}
       onChange={(v) => c.set(`items.${i}.author`, v)}
-      className={className}
+      className={cn("site-h6", className)}
       style={style}
     />
   );
@@ -1159,7 +1160,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
         value={item.role || ""}
         placeholder="role"
         onChange={(v) => c.set(`items.${i}.role`, v)}
-        className={className}
+        className={cn("site-h6", className)}
       />
     ) : null;
 
@@ -1233,7 +1234,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col">
@@ -1260,7 +1261,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col items-center">
@@ -1287,7 +1288,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {displayItems.map((item: any, i: number) => (
               <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1332,7 +1333,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1369,7 +1370,7 @@ function StatsBlock({ items = [], accentColor, ctx }: any) {
               editMode={c.editMode}
               value={item.value || ""}
               onChange={(v) => c.set(`items.${i}.value`, v)}
-              className="text-3xl md:text-4xl font-extralight mb-1 block"
+              className="site-h2 text-3xl md:text-4xl font-extralight mb-1 block"
               style={{ color: accentColor }}
             />
             <EditableText
@@ -1377,7 +1378,7 @@ function StatsBlock({ items = [], accentColor, ctx }: any) {
               editMode={c.editMode}
               value={item.label || ""}
               onChange={(v) => c.set(`items.${i}.label`, v)}
-              className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground block"
+              className="site-h6 text-[10px] tracking-[0.3em] uppercase text-muted-foreground block"
             />
           </div>
         ))}
@@ -1397,7 +1398,7 @@ function TeamBlock({ members = [], ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Our Team</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Our Team</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {displayMembers.map((m: any, i: number) => (
             <div key={i} className="text-center">
@@ -1425,7 +1426,7 @@ function TeamBlock({ members = [], ctx }: any) {
                 value={m.name || ""}
                 placeholder="Name"
                 onChange={(v) => c.set(`members.${i}.name`, v)}
-                className="text-sm font-light text-foreground block"
+                className="site-h4 text-sm font-light text-foreground block"
               />
               {(c.editMode || m.role) && (
                 <EditableText
@@ -1434,7 +1435,7 @@ function TeamBlock({ members = [], ctx }: any) {
                   value={m.role || ""}
                   placeholder="Role"
                   onChange={(v) => c.set(`members.${i}.role`, v)}
-                  className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1 block"
+                  className="site-h6 text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1 block"
                 />
               )}
             </div>
@@ -1664,7 +1665,7 @@ function Columns2Block({ left, right, ctx }: any) {
           placeholder="Left column"
           multiline
           onChange={(v) => c.set("left", v)}
-          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
         />
         <EditableText
           as="div"
@@ -1673,7 +1674,7 @@ function Columns2Block({ left, right, ctx }: any) {
           placeholder="Right column"
           multiline
           onChange={(v) => c.set("right", v)}
-          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
         />
       </div>
     </section>
@@ -1696,7 +1697,7 @@ function Columns3Block({ col1, col2, col3, ctx }: any) {
             placeholder={`Column ${i + 1}`}
             multiline
             onChange={(v) => c.set(key, v)}
-            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
           />
         ))}
       </div>
@@ -1860,7 +1861,7 @@ function InstagramFeedBlock({ count = 9, columns = 3, username, posts = [] }: an
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-2 text-foreground">Instagram</h2>
+        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-2 text-foreground">Instagram</h2>
         {username && (
           <p className="text-center text-xs text-muted-foreground mb-6">@{username}</p>
         )}

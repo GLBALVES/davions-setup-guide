@@ -427,7 +427,7 @@ function NavItem({ link, textColor, textCls, onNavClick, isOpaque }: { link: Nav
       <button
         onClick={() => onNavClick(link.href)}
         style={textColor ? { color: textColor } : undefined}
-        className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+        className={`site-nav text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
           textColor ? "hover:opacity-70" : textCls
         }`}
       >
@@ -440,7 +440,7 @@ function NavItem({ link, textColor, textCls, onNavClick, isOpaque }: { link: Nav
     <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       <button
         style={textColor ? { color: textColor } : undefined}
-        className={`text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
+        className={`site-nav text-[10px] tracking-[0.3em] uppercase font-light transition-colors duration-300 whitespace-nowrap ${
           textColor ? "hover:opacity-70" : textCls
         }`}
       >
@@ -453,7 +453,7 @@ function NavItem({ link, textColor, textCls, onNavClick, isOpaque }: { link: Nav
               <button
                 key={child.label}
                 onClick={() => { onNavClick(child.href); setOpen(false); }}
-                className="block w-full text-left px-4 py-2 text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="site-subnav block w-full text-left px-4 py-2 text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               >
                 {child.label}
               </button>
@@ -526,7 +526,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
             ) : (
               <span
                 style={textColor ? { color: textColor } : undefined}
-                className={`${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
+                className={`site-logo-text ${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
               >
                 {labelText}
               </span>
@@ -564,7 +564,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                   onClick={() => {
                     if (!link.children?.length) { onNavClick(link.href); setMobileMenuOpen(false); }
                   }}
-                  className="text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 w-full"
+                  className="site-nav text-left text-[11px] tracking-[0.3em] uppercase font-light text-muted-foreground hover:text-foreground transition-colors py-2.5 border-b border-border/50 w-full"
                 >
                   {link.label}
                 </button>
@@ -572,7 +572,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                   <button
                     key={child.label}
                     onClick={() => { onNavClick(child.href); setMobileMenuOpen(false); }}
-                    className="text-left text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground/70 hover:text-foreground transition-colors py-2 pl-4 border-b border-border/30 w-full"
+                    className="site-subnav text-left text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground/70 hover:text-foreground transition-colors py-2 pl-4 border-b border-border/30 w-full"
                   >
                     {child.label}
                   </button>
