@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bold, Italic, Underline, Eraser, Type, Palette, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
+import { SitePalettePicker } from "./SitePalettePicker";
 
 /**
  * Field that stores a value as HTML (for inline formatting like color/font/size)
@@ -634,12 +635,12 @@ export function RichTextField({
                   );
                 })}
               </div>
-              <input
-                type="color"
-                value={activeColorHex || "#000000"}
-                onChange={(e) => onApplyColor(e.target.value)}
-                className="w-full h-7 cursor-pointer rounded border border-border bg-background"
-              />
+              <div className="pt-1">
+                <SitePalettePicker
+                  value={activeColorHex || "#000000"}
+                  onChange={(v) => onApplyColor(v)}
+                />
+              </div>
             </div>
           )}
         </div>

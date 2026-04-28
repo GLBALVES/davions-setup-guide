@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 
 const BLOCK_PRESETS: { id: string; label: string; tag: string }[] = [
   { id: "h1", label: "Heading 1", tag: "H1" },
@@ -451,12 +452,12 @@ export default function InlineFormatToolbar() {
                 />
               ))}
             </div>
-            <input
-              type="color"
-              onChange={(e) => onApplyColor(e.target.value)}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="w-full h-7 cursor-pointer rounded border border-border bg-background"
-            />
+            <div className="pt-1" onMouseDown={(e) => e.stopPropagation()}>
+              <SitePalettePicker
+                value="#000000"
+                onChange={(v) => onApplyColor(v)}
+              />
+            </div>
           </div>
         )}
       </div>

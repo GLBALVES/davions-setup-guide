@@ -15,6 +15,7 @@ import { RichTextField } from "./RichTextField";
 import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection, SectionType } from "./page-templates";
 import { BLOCK_VARIANTS } from "./block-variants";
+import { SitePalettePicker } from "./SitePalettePicker";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
 
@@ -54,11 +55,9 @@ function OverlayControls({
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-muted-foreground">Overlay Color</label>
         <div className="flex items-center gap-2">
-          <input
-            type="color"
+          <SitePalettePicker
             value={effectiveColor}
-            onChange={(e) => onChange({ overlayColor: e.target.value })}
-            className="h-9 w-10 rounded cursor-pointer border border-border bg-background"
+            onChange={(v) => onChange({ overlayColor: v })}
           />
           <Input
             value={effectiveColor}
@@ -985,11 +984,9 @@ export const BlockSettingsPanel = ({
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Custom (HEX)</label>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={isHexColor(s.backgroundColor || "") ? s.backgroundColor : "#ffffff"}
-                onChange={(e) => update({ backgroundColor: e.target.value })}
-                className="h-9 w-10 rounded-md border border-border cursor-pointer bg-background p-0.5"
+              <SitePalettePicker
+                value={isHexColor(s.backgroundColor || "") ? (s.backgroundColor as string) : "#ffffff"}
+                onChange={(v) => update({ backgroundColor: v })}
               />
               <Input
                 value={s.backgroundColor || ""}

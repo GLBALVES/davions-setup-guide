@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 import {
   COLOR_PALETTES,
   DEFAULT_PALETTE_ID,
@@ -435,18 +436,7 @@ function ColorDot({ value, onChange }: { value: string; onChange: (v: string) =>
         onChange={(e) => onChange(e.target.value)}
         className="h-7 w-[120px] text-[11px] font-mono"
       />
-      <label className="relative inline-block cursor-pointer">
-        <span
-          className="block h-7 w-7 rounded-full border border-border shadow-sm"
-          style={{ backgroundColor: value }}
-        />
-        <input
-          type="color"
-          value={hex}
-          onChange={(e) => onChange(e.target.value)}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-        />
-      </label>
+      <SitePalettePicker value={value || "#000000"} onChange={onChange} />
     </div>
   );
 }
