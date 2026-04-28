@@ -901,7 +901,7 @@ function CtaBlock(props: any) {
           value={headline || ""}
           placeholder="Ready?"
           onChange={(v) => c.set("headline", v)}
-          className="text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground block"
+          className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-6 text-foreground block"
         />
         <BlockButtons
           buttons={buttons}
