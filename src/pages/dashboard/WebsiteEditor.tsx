@@ -4001,28 +4001,29 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
             </div>
           )}
 
-          {sub === "fonts" && (
-            <FontsSubPanel
-              templateId={(site as any)?.fontTemplateId ?? null}
-              overrides={(site as any)?.fontOverrides ?? {}}
-              fontSize={((site as any)?.fontSize as FontSizeScale | undefined) ?? "regular"}
-              onTemplateChange={(id, tpl) => {
-                // Update template id + sync legacy heading/body fields for back-compat.
-                onSiteChange({
-                  font_template_id: id,
-                  heading_font: tpl.heading,
-                  body_font: tpl.body,
-                });
-              }}
-              onOverridesChange={(next) => onSiteChange({ font_overrides: next as any })}
-              onFontSizeChange={(size) => {
-                const ov = ((site as any)?.fontOverrides ?? {}) as FontOverrides;
-                const next = { ...ov, __size: { fontSize: ({ compact: 0, regular: 1, comfortable: 2 } as any)[size] ?? 1 } } as any;
-                // Persist size inside font_overrides under a reserved key so we don't need an extra column.
-                onSiteChange({ font_overrides: next });
-              }}
-            />
-          )}
+          {sub === "fonts" && (() => {
+            const ov = ((site as any)?.fontOverrides ?? {}) as FontOverrides;
+            const currentSize = (ov._meta?.fontSize as FontSizeScale | undefined) ?? "regular";
+            return (
+              <FontsSubPanel
+                templateId={(site as any)?.fontTemplateId ?? null}
+                overrides={ov}
+                fontSize={currentSize}
+                onTemplateChange={(id, tpl) => {
+                  onSiteChange({
+                    font_template_id: id,
+                    heading_font: tpl.heading,
+                    body_font: tpl.body,
+                  });
+                }}
+                onOverridesChange={(next) => onSiteChange({ font_overrides: next as any })}
+                onFontSizeChange={(size) => {
+                  const next: FontOverrides = { ...ov, _meta: { ...(ov._meta ?? {}), fontSize: size } };
+                  onSiteChange({ font_overrides: next as any });
+                }}
+              />
+            );
+          })()}
 
           {sub === "colors" && (
             <div className="space-y-4">
