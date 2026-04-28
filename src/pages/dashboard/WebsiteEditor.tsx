@@ -4987,7 +4987,7 @@ const WebsiteEditor = () => {
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleSelectTab(tab.id)}
                     className={cn(
                       "w-full h-11 flex items-center justify-center transition-colors relative",
                       isActive ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
@@ -5075,7 +5075,7 @@ const WebsiteEditor = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleSelectTab(tab.id)}
                 className={cn(
                   "flex-1 h-12 flex flex-col items-center justify-center gap-0.5 transition-colors relative shrink-0 min-w-[56px] px-2",
                   isActive ? "text-foreground bg-muted/60" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
