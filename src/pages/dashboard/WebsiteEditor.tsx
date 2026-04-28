@@ -4444,6 +4444,12 @@ const WebsiteEditor = () => {
 
   // Apply scroll-triggered section animations.
   useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
+
+  // Apply max-width + base block padding from the Spacing panel.
+  useSiteSpacing(
+    (site as any)?.max_page_width ?? SPACING_DEFAULTS.maxPageWidth,
+    (site as any)?.base_block_padding ?? SPACING_DEFAULTS.baseBlockPadding,
+  );
   useEffect(() => {
     if ((site as any)?.fontTemplateId) return; // typography hook handles it
     const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
