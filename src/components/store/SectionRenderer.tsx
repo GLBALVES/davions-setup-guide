@@ -940,7 +940,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                   value={item.question || ""}
                   placeholder="Question"
                   onChange={(v) => c.set(`items.${i}.question`, v)}
-                  className="text-sm font-medium text-foreground block"
+                  className="site-h3 text-sm font-medium text-foreground block"
                 />
                 <EditableText
                   as="p"
@@ -949,7 +949,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                   placeholder="Answer"
                   multiline
                   onChange={(v) => c.set(`items.${i}.answer`, v)}
-                  className="text-sm font-light text-muted-foreground leading-relaxed block"
+                  className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed block"
                 />
               </div>
             ))}
