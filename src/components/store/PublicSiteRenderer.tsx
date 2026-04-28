@@ -150,6 +150,17 @@ export interface SiteConfig {
   header_text_color?: string | null;
   /** Which social icons to show in the header (null/empty = show all that have URLs) */
   header_visible_socials?: string[] | null;
+  /** Header menu layout style */
+  nav_menu_style?:
+    | "logo-left"
+    | "logo-left-hamburger"
+    | "logo-center-links-below"
+    | "centered-split"
+    | "links-left-logo-left"
+    | "logo-center-only"
+    | null;
+  /** Whether the header stays pinned to the top while scrolling */
+  nav_sticky_header?: boolean | null;
   /** Footer background color */
   footer_bg_color?: string | null;
   /** Footer text / icon color */
@@ -476,6 +487,8 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
   const bgColor = site?.header_bg_color ?? undefined;
   const textColor = site?.header_text_color ?? undefined;
   const visibleSocials = site?.header_visible_socials ?? null;
+  const menuStyle = site?.nav_menu_style ?? "centered-split";
+  const sticky = site?.nav_sticky_header ?? false;
 
   // When a custom bg color is set we always show as "scrolled" visually (opaque).
   // forceOpaque is used when the page's first section is light (no dark hero behind the header).
@@ -490,75 +503,128 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
     ? "text-muted-foreground hover:text-foreground"
     : "text-white/70 hover:text-white";
 
-  // Split nav links into left and right halves for centered-logo layout (Pixieset style)
-  const leftLinks = navLinks.slice(0, Math.ceil(navLinks.length / 2));
-  const rightLinks = navLinks.slice(Math.ceil(navLinks.length / 2));
+  // Logo / studio name renderer (shared across all menu styles)
+  const renderLogo = () => {
+    const logoSize = site?.logo_size || "medium";
+    const imgClass =
+      logoSize === "small" ? "h-8 object-contain"
+      : logoSize === "large" ? "h-16 object-contain"
+      : "h-12 object-contain";
+    const textClass =
+      logoSize === "small" ? "text-xs tracking-[0.4em] uppercase font-light whitespace-nowrap"
+      : logoSize === "large" ? "text-base tracking-[0.4em] uppercase font-light whitespace-nowrap"
+      : "text-sm tracking-[0.4em] uppercase font-light whitespace-nowrap";
+    const labelText = site?.logo_text || displayName;
+    return logoUrl ? (
+      <img
+        src={logoUrl}
+        alt={labelText}
+        className={`${imgClass} transition-all duration-300 ${logoFilter}`}
+      />
+    ) : (
+      <span
+        style={textColor ? { color: textColor } : undefined}
+        className={`site-logo-text ${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
+      >
+        {labelText}
+      </span>
+    );
+  };
+
+  const renderLinks = (links: NavLinkItem[], extraClass = "") => (
+    <nav className={`hidden md:flex items-center gap-8 ${extraClass}`}>
+      {links.map((link) => (
+        <NavItem key={link.label} link={link} textColor={textColor} textCls={textCls} onNavClick={onNavClick} isOpaque={isOpaque} />
+      ))}
+    </nav>
+  );
+
+  const renderMobileToggle = (extraPosClass = "absolute right-6") =>
+    navLinks.length > 0 && (
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        style={textColor ? { color: textColor } : undefined}
+        className={`md:hidden ${extraPosClass} transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
+        aria-label="Toggle menu"
+      >
+        {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+    );
+
+  // Choose layout based on menu style
+  let layout: React.ReactNode;
+  if (menuStyle === "centered-split") {
+    const leftLinks = navLinks.slice(0, Math.ceil(navLinks.length / 2));
+    const rightLinks = navLinks.slice(Math.ceil(navLinks.length / 2));
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center gap-4">
+        {renderLinks(leftLinks, "flex-1 justify-end")}
+        <div className="flex items-center justify-center shrink-0 px-8">{renderLogo()}</div>
+        {renderLinks(rightLinks, "flex-1 justify-start")}
+        {renderMobileToggle()}
+      </div>
+    );
+  } else if (menuStyle === "logo-left") {
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+        <div className="flex items-center shrink-0">{renderLogo()}</div>
+        {renderLinks(navLinks, "justify-end")}
+        {renderMobileToggle()}
+      </div>
+    );
+  } else if (menuStyle === "logo-left-hamburger") {
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+        <div className="flex items-center shrink-0">{renderLogo()}</div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={textColor ? { color: textColor } : undefined}
+          className={`transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+    );
+  } else if (menuStyle === "logo-center-links-below") {
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col items-center gap-3">
+        <div className="flex items-center justify-center">{renderLogo()}</div>
+        {renderLinks(navLinks, "justify-center")}
+        {renderMobileToggle("md:hidden")}
+      </div>
+    );
+  } else if (menuStyle === "links-left-logo-left") {
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-8">
+        <div className="flex items-center shrink-0">{renderLogo()}</div>
+        {renderLinks(navLinks, "")}
+        <div className="flex-1" />
+        {renderMobileToggle()}
+      </div>
+    );
+  } else {
+    // logo-center-only
+    layout = (
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center">
+        {renderLogo()}
+      </div>
+    );
+  }
+
+  const positionCls = sticky
+    ? "fixed top-0 left-0 right-0 z-50"
+    : "absolute top-0 left-0 right-0 z-40";
 
   return (
     <header
       data-block-key="header"
       style={headerStyle}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`${positionCls} transition-all duration-300 ${
         !hasBg && (scrolled || forceOpaque) ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm" : ""
       } ${!hasBg && !scrolled && !forceOpaque ? "bg-transparent" : ""}`}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center gap-4">
-        {/* Left nav links */}
-        <nav className="hidden md:flex items-center gap-8 flex-1 justify-end">
-          {leftLinks.map((link) => (
-            <NavItem key={link.label} link={link} textColor={textColor} textCls={textCls} onNavClick={onNavClick} isOpaque={isOpaque} />
-          ))}
-        </nav>
-
-        {/* Center: logo / studio name */}
-        <div className="flex items-center justify-center shrink-0 px-8">
-          {(() => {
-            const logoSize = site?.logo_size || "medium";
-            const imgClass =
-              logoSize === "small" ? "h-8 object-contain"
-              : logoSize === "large" ? "h-16 object-contain"
-              : "h-12 object-contain";
-            const textClass =
-              logoSize === "small" ? "text-xs tracking-[0.4em] uppercase font-light whitespace-nowrap"
-              : logoSize === "large" ? "text-base tracking-[0.4em] uppercase font-light whitespace-nowrap"
-              : "text-sm tracking-[0.4em] uppercase font-light whitespace-nowrap";
-            const labelText = site?.logo_text || displayName;
-            return logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={labelText}
-                className={`${imgClass} transition-all duration-300 ${logoFilter}`}
-              />
-            ) : (
-              <span
-                style={textColor ? { color: textColor } : undefined}
-                className={`site-logo-text ${textClass} transition-colors duration-300 ${isOpaque && !textColor ? "text-foreground" : ""} ${!isOpaque && !textColor ? "text-white/90" : ""}`}
-              >
-                {labelText}
-              </span>
-            );
-          })()}
-        </div>
-
-        {/* Right nav links */}
-        <nav className="hidden md:flex items-center gap-8 flex-1 justify-start">
-          {rightLinks.map((link) => (
-            <NavItem key={link.label} link={link} textColor={textColor} textCls={textCls} onNavClick={onNavClick} isOpaque={isOpaque} />
-          ))}
-        </nav>
-
-        {/* Mobile toggle */}
-        {navLinks.length > 0 && (
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={textColor ? { color: textColor } : undefined}
-            className={`md:hidden absolute right-6 transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        )}
-      </div>
+      {layout}
 
       {/* Mobile menu */}
       {mobileMenuOpen && (

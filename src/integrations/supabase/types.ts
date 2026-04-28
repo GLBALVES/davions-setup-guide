@@ -2555,6 +2555,8 @@ export type Database = {
           logo_size: string
           logo_text: string | null
           logo_url: string | null
+          nav_menu_style: string
+          nav_sticky_header: boolean
           og_image_url: string | null
           photographer_id: string
           pinterest_url: string | null
@@ -2664,6 +2666,8 @@ export type Database = {
           logo_size?: string
           logo_text?: string | null
           logo_url?: string | null
+          nav_menu_style?: string
+          nav_sticky_header?: boolean
           og_image_url?: string | null
           photographer_id: string
           pinterest_url?: string | null
@@ -2773,6 +2777,8 @@ export type Database = {
           logo_size?: string
           logo_text?: string | null
           logo_url?: string | null
+          nav_menu_style?: string
+          nav_sticky_header?: boolean
           og_image_url?: string | null
           photographer_id?: string
           pinterest_url?: string | null
