@@ -451,12 +451,12 @@ export default function InlineFormatToolbar() {
                 />
               ))}
             </div>
-            <input
-              type="color"
-              onChange={(e) => onApplyColor(e.target.value)}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="w-full h-7 cursor-pointer rounded border border-border bg-background"
-            />
+            <div className="pt-1" onMouseDown={(e) => e.stopPropagation()}>
+              <SitePalettePicker
+                value="#000000"
+                onChange={(v) => onApplyColor(v)}
+              />
+            </div>
           </div>
         )}
       </div>

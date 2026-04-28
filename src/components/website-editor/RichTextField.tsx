@@ -634,12 +634,12 @@ export function RichTextField({
                   );
                 })}
               </div>
-              <input
-                type="color"
-                value={activeColorHex || "#000000"}
-                onChange={(e) => onApplyColor(e.target.value)}
-                className="w-full h-7 cursor-pointer rounded border border-border bg-background"
-              />
+              <div className="pt-1">
+                <SitePalettePicker
+                  value={activeColorHex || "#000000"}
+                  onChange={(v) => onApplyColor(v)}
+                />
+              </div>
             </div>
           )}
         </div>
