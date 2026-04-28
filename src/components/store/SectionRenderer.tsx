@@ -983,7 +983,7 @@ function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
                     value={item.question || ""}
                     placeholder="Question"
                     onChange={(v) => c.set(`items.${i}.question`, v)}
-                    className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                    className="site-h4 text-sm font-light text-foreground flex-1 cursor-pointer"
                   />
                   <span
                     className={
