@@ -280,8 +280,42 @@ function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }:
   const eff = resolveElement(templateId, overrides, elementKey, 1);
   const hasOverride = Boolean(overrides[elementKey] && Object.keys(overrides[elementKey]!).length > 0);
 
+  /** Apply this element's typography from another template — overrides only
+   *  the current element, leaves the global template + other elements alone. */
+  const applyPresetFromTemplate = (presetId: string) => {
+    const tpl = getFontTemplate(presetId);
+    const src = tpl.elements[elementKey];
+    onChange({
+      fontFamily: src.fontFamily,
+      weight: src.weight,
+      style: src.style,
+      fontSize: src.fontSize,
+      lineHeight: src.lineHeight,
+      letterSpacing: src.letterSpacing,
+      textTransform: src.textTransform,
+    });
+  };
+
   return (
     <div className="space-y-3 pb-4">
+      <Row label="Apply Preset">
+        <Select value="" onValueChange={applyPresetFromTemplate}>
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Pick a preset…" />
+          </SelectTrigger>
+          <SelectContent className="z-[60] max-h-72">
+            {FONT_TEMPLATES.map((tpl) => (
+              <SelectItem key={tpl.id} value={tpl.id}>
+                {tpl.label}
+                <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {tpl.category}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Row>
+
       <Row label="Font Family">
         <Select value={eff.fontFamily} onValueChange={(v) => onChange({ fontFamily: v })}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
