@@ -1043,7 +1043,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
                 value={plan.name || ""}
                 placeholder="Plan"
                 onChange={(v) => c.set(`plans.${i}.name`, v)}
-                className="text-lg font-light tracking-wide mb-2 text-foreground block"
+                className="site-h3 text-lg font-light tracking-wide mb-2 text-foreground block"
               />
               <EditableText
                 as="p"
@@ -1051,7 +1051,7 @@ function PricingBlock({ plans = [], accentColor, ctx }: any) {
                 value={plan.price || ""}
                 placeholder="$0"
                 onChange={(v) => c.set(`plans.${i}.price`, v)}
-                className="text-2xl font-extralight mb-4 block"
+                className="site-h2 text-2xl font-extralight mb-4 block"
                 style={{ color: accentColor }}
               />
               <ul className="space-y-2 text-sm font-light text-muted-foreground">
@@ -1097,14 +1097,14 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
                 editMode={c.editMode}
                 value={event.year || ""}
                 onChange={(v) => c.set(`events.${i}.year`, v)}
-                className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1 block"
+                className="site-h6 text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1 block"
               />
               <EditableText
                 as="h3"
                 editMode={c.editMode}
                 value={event.title || ""}
                 onChange={(v) => c.set(`events.${i}.title`, v)}
-                className="text-lg font-light text-foreground mb-1 block"
+                className="site-h3 text-lg font-light text-foreground mb-1 block"
               />
               <EditableText
                 as="p"
@@ -1112,7 +1112,7 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
                 value={event.description || ""}
                 multiline
                 onChange={(v) => c.set(`events.${i}.description`, v)}
-                className="text-sm font-light text-muted-foreground block"
+                className="site-paragraph-1 text-sm font-light text-muted-foreground block"
               />
             </div>
           ))}
@@ -1370,7 +1370,7 @@ function StatsBlock({ items = [], accentColor, ctx }: any) {
               editMode={c.editMode}
               value={item.value || ""}
               onChange={(v) => c.set(`items.${i}.value`, v)}
-              className="text-3xl md:text-4xl font-extralight mb-1 block"
+              className="site-h2 text-3xl md:text-4xl font-extralight mb-1 block"
               style={{ color: accentColor }}
             />
             <EditableText
@@ -1378,7 +1378,7 @@ function StatsBlock({ items = [], accentColor, ctx }: any) {
               editMode={c.editMode}
               value={item.label || ""}
               onChange={(v) => c.set(`items.${i}.label`, v)}
-              className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground block"
+              className="site-h6 text-[10px] tracking-[0.3em] uppercase text-muted-foreground block"
             />
           </div>
         ))}
@@ -1426,7 +1426,7 @@ function TeamBlock({ members = [], ctx }: any) {
                 value={m.name || ""}
                 placeholder="Name"
                 onChange={(v) => c.set(`members.${i}.name`, v)}
-                className="text-sm font-light text-foreground block"
+                className="site-h4 text-sm font-light text-foreground block"
               />
               {(c.editMode || m.role) && (
                 <EditableText
@@ -1435,7 +1435,7 @@ function TeamBlock({ members = [], ctx }: any) {
                   value={m.role || ""}
                   placeholder="Role"
                   onChange={(v) => c.set(`members.${i}.role`, v)}
-                  className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1 block"
+                  className="site-h6 text-[10px] tracking-[0.2em] uppercase text-muted-foreground mt-1 block"
                 />
               )}
             </div>
@@ -1665,7 +1665,7 @@ function Columns2Block({ left, right, ctx }: any) {
           placeholder="Left column"
           multiline
           onChange={(v) => c.set("left", v)}
-          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
         />
         <EditableText
           as="div"
@@ -1674,7 +1674,7 @@ function Columns2Block({ left, right, ctx }: any) {
           placeholder="Right column"
           multiline
           onChange={(v) => c.set("right", v)}
-          className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
         />
       </div>
     </section>
@@ -1697,7 +1697,7 @@ function Columns3Block({ col1, col2, col3, ctx }: any) {
             placeholder={`Column ${i + 1}`}
             multiline
             onChange={(v) => c.set(key, v)}
-            className="text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
+            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
           />
         ))}
       </div>
