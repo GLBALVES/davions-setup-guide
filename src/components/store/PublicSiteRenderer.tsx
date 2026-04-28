@@ -7,6 +7,7 @@ import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
+import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import type {
   ColorOverrides,
   CustomColorPalette,
