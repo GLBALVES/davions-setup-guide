@@ -4428,8 +4428,17 @@ const WebsiteEditor = () => {
     })();
   }, [user]);
 
-  // Inject the chosen Google Fonts into the page so the editor preview matches the published site.
+  // Inject the chosen Google Fonts + per-element typography CSS so the editor
+  // preview matches the published site exactly.
+  useSiteTypography(
+    (site as any)?.fontTemplateId,
+    ((site as any)?.fontOverrides ?? {}) as FontOverrides,
+    (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
+
+  // Legacy: still load heading/body Google Fonts for older sites with no template chosen.
   useEffect(() => {
+    if ((site as any)?.fontTemplateId) return; // typography hook handles it
     const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
     if (!href) return;
     const id = "lov-site-fonts";
@@ -4441,7 +4450,7 @@ const WebsiteEditor = () => {
       document.head.appendChild(el);
     }
     if (el.href !== href) el.href = href;
-  }, [site?.headingFont, site?.bodyFont]);
+  }, [site?.headingFont, site?.bodyFont, (site as any)?.fontTemplateId]);
 
   // Inject button design tokens (style/shape/size/dimensions) as CSS variables.
   useEffect(() => {
