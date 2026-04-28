@@ -4916,6 +4916,19 @@ const WebsiteEditor = () => {
     }
   };
 
+  // Switch to a tab and reset every nested sub-screen so each tab always
+  // opens at its root (no block-settings / sub-panel "leaking" between tabs).
+  // Pass `force=true` to also re-trigger the reset when the user clicks the
+  // already-active tab (so the tab acts like a "go to root" shortcut too).
+  const handleSelectTab = (tab: EditorTab) => {
+    setSelectedBlockIndex(null);
+    setEditingSection(null);
+    setPendingStyleSub(null);
+    setEditorActiveSlideId(null);
+    setActiveTab(tab);
+    setTabResetNonce((n) => n + 1);
+  };
+
   const panelMap: Record<EditorTab, React.ReactNode> = {
     pages: <PagesPanel
       editingSection={editingSection}
@@ -4938,13 +4951,15 @@ const WebsiteEditor = () => {
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
       onActiveSlideChange={setEditorActiveSlideId}
+      resetNonce={tabResetNonce}
     />,
     blog: <BlogPostsPanel storeSlug={storeSlug} />,
-    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} />,
+    style: <StylePanel photographerId={user?.id ?? null} site={site} onSiteChange={updateSite} openSubKey={pendingStyleSub} onSubKeyHandled={() => setPendingStyleSub(null)} resetNonce={tabResetNonce} />,
     settings: <SettingsPanel
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
       onSiteChange={updateSite}
+      resetNonce={tabResetNonce}
     />,
   };
 
