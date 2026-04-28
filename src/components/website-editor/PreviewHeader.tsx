@@ -221,31 +221,18 @@ export default function PreviewHeader({
   // - Sem logo / tons médios / falha → tema padrão (background/foreground)
   const detectedLum = useImageLuminance(activeLogoUrl || null);
   if (navOnlyMode) {
-    let navBg = "hsl(var(--background))";
-    let navFg = "hsl(var(--foreground))";
-    let navBorder = "hsl(var(--border))";
-    let mobilePanelBg = "hsl(var(--background))";
-    if (activeLogoUrl && detectedLum !== null) {
-      if (detectedLum > 0.6) {
-        // light logo → dark header
-        navBg = "#111111";
-        navFg = "#ffffff";
-        navBorder = "rgba(255,255,255,0.12)";
-        mobilePanelBg = "#111111";
-      } else if (detectedLum < 0.4) {
-        // dark logo → light header
-        navBg = "#ffffff";
-        navFg = "#111111";
-        navBorder = "rgba(0,0,0,0.10)";
-        mobilePanelBg = "#ffffff";
-    }
+    // Default: read from site color tokens (palette) so editor color changes apply.
+    let navBg = "var(--site-bg, hsl(var(--background)))";
+    let navFg = "var(--site-headings, hsl(var(--foreground)))";
+    let navBorder = "var(--site-lines, hsl(var(--border)))";
+    let mobilePanelBg = "var(--site-bg, hsl(var(--background)))";
+    // Manual overrides from Header Settings always win.
     if (cfg.backgroundColor) {
       navBg = cfg.backgroundColor;
       mobilePanelBg = cfg.backgroundColor;
     }
     if (cfg.textColor) {
       navFg = cfg.textColor;
-    }
     }
     return (
       <header
