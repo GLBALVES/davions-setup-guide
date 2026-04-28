@@ -1651,57 +1651,265 @@ function DividerBlock({ style = "line" }: { style?: string } = {}) {
   );
 }
 
-// ─── Columns 2 ──────────────────────────────────────────────────────────────
+// ─── Columns (2 / 3) — rich content per column ─────────────────────────────
+// Each column is an array of items: text | image | button | spacer | divider.
+// Backwards compatible with legacy `left`/`right` (cols=2) and `col1..3` (cols=3)
+// which are imported as a single text item per column.
 
-function Columns2Block({ left, right, ctx }: any) {
+type ColItem =
+  | { id: string; type: "text"; html: string }
+  | { id: string; type: "image"; url: string; alt?: string }
+  | { id: string; type: "button"; label: string; href: string; variant?: "primary" | "secondary" }
+  | { id: string; type: "spacer"; height: number }
+  | { id: string; type: "divider" };
+
+const newId = () => `ci-${Math.random().toString(36).slice(2, 9)}`;
+
+function migrateColumns(count: number, props: any): ColItem[][] {
+  if (Array.isArray(props.columns) && props.columns.length === count) {
+    return props.columns.map((col: any[]) => Array.isArray(col) ? col : []);
+  }
+  const out: ColItem[][] = [];
+  if (count === 2) {
+    out.push(props.left ? [{ id: newId(), type: "text", html: props.left }] : []);
+    out.push(props.right ? [{ id: newId(), type: "text", html: props.right }] : []);
+  } else {
+    for (let i = 1; i <= count; i++) {
+      const v = props[`col${i}`];
+      out.push(v ? [{ id: newId(), type: "text", html: v }] : []);
+    }
+  }
+  return out;
+}
+
+function ColumnsBlock({ count = 2, ctx, ...rest }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const columns = migrateColumns(count, rest);
+
+  const writeColumns = (next: ColItem[][]) => c.set("columns", next);
+
+  const updateItem = (col: number, idx: number, patch: Partial<ColItem>) => {
+    const next = columns.map((cc) => [...cc]);
+    next[col][idx] = { ...next[col][idx], ...patch } as ColItem;
+    writeColumns(next);
+  };
+  const addItem = (col: number, type: ColItem["type"]) => {
+    const item: ColItem =
+      type === "text" ? { id: newId(), type: "text", html: "" }
+      : type === "image" ? { id: newId(), type: "image", url: "" }
+      : type === "button" ? { id: newId(), type: "button", label: "Button", href: "#", variant: "primary" }
+      : type === "spacer" ? { id: newId(), type: "spacer", height: 24 }
+      : { id: newId(), type: "divider" };
+    const next = columns.map((cc) => [...cc]);
+    next[col].push(item);
+    writeColumns(next);
+  };
+  const removeItem = (col: number, idx: number) => {
+    const next = columns.map((cc) => [...cc]);
+    next[col].splice(idx, 1);
+    writeColumns(next);
+  };
+  const moveItem = (col: number, idx: number, dir: -1 | 1) => {
+    const next = columns.map((cc) => [...cc]);
+    const j = idx + dir;
+    if (j < 0 || j >= next[col].length) return;
+    [next[col][idx], next[col][j]] = [next[col][j], next[col][idx]];
+    writeColumns(next);
+  };
+
+  const gridCls =
+    count === 3
+      ? "grid grid-cols-1 md:grid-cols-3 gap-8"
+      : "grid grid-cols-1 md:grid-cols-2 gap-8";
+
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        <EditableText
-          as="div"
-          editMode={c.editMode}
-          value={left || ""}
-          placeholder="Left column"
-          multiline
-          onChange={(v) => c.set("left", v)}
-          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
-        />
-        <EditableText
-          as="div"
-          editMode={c.editMode}
-          value={right || ""}
-          placeholder="Right column"
-          multiline
-          onChange={(v) => c.set("right", v)}
-          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
-        />
+      <div className={cn("max-w-6xl mx-auto", gridCls)}>
+        {columns.map((items, ci) => (
+          <div key={ci} className="space-y-4">
+            {items.length === 0 && !c.editMode && (
+              <div className="min-h-[40px]" />
+            )}
+            {items.map((item, ii) => (
+              <ColumnItemRenderer
+                key={item.id}
+                item={item}
+                editMode={c.editMode}
+                photographerId={c.photographerId}
+                onChange={(patch) => updateItem(ci, ii, patch)}
+                onRemove={() => removeItem(ci, ii)}
+                onMoveUp={() => moveItem(ci, ii, -1)}
+                onMoveDown={() => moveItem(ci, ii, 1)}
+                isFirst={ii === 0}
+                isLast={ii === items.length - 1}
+              />
+            ))}
+            {c.editMode && (
+              <ColumnAddBar onAdd={(type) => addItem(ci, type)} placeholder={`Column ${ci + 1}`} />
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-// ─── Columns 3 ──────────────────────────────────────────────────────────────
-
-function Columns3Block({ col1, col2, col3, ctx }: any) {
-  const c: Ctx = ctx || { editMode: false, set: () => {} };
-  return (
-    <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {(["col1", "col2", "col3"] as const).map((key, i) => (
-          <EditableText
-            key={key}
-            as="div"
-            editMode={c.editMode}
-            value={(({ col1, col2, col3 }: any) => ({ col1, col2, col3 } as any))({ col1, col2, col3 })[key] || ""}
-            placeholder={`Column ${i + 1}`}
-            multiline
-            onChange={(v) => c.set(key, v)}
-            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line"
-          />
-        ))}
+function ColumnItemRenderer({
+  item, editMode, photographerId, onChange, onRemove, onMoveUp, onMoveDown, isFirst, isLast,
+}: {
+  item: ColItem;
+  editMode: boolean;
+  photographerId?: string | null;
+  onChange: (patch: Partial<ColItem>) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const wrap = (node: React.ReactNode) =>
+    editMode ? (
+      <div className="group/coli relative rounded-md ring-1 ring-transparent hover:ring-border/60 transition">
+        {node}
+        <div className="absolute -top-2 right-1 hidden group-hover/coli:flex items-center gap-0.5 bg-background border border-border rounded-md shadow-sm px-0.5 py-0.5 z-10">
+          <button type="button" onClick={onMoveUp} disabled={isFirst} title="Move up"
+            className="h-5 w-5 inline-flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30">
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <button type="button" onClick={onMoveDown} disabled={isLast} title="Move down"
+            className="h-5 w-5 inline-flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30">
+            <ChevronDown className="h-3 w-3" />
+          </button>
+          <button type="button" onClick={onRemove} title="Remove"
+            className="h-5 w-5 inline-flex items-center justify-center text-muted-foreground hover:text-destructive">
+            <XIcon className="h-3 w-3" />
+          </button>
+        </div>
       </div>
-    </section>
+    ) : (
+      <>{node}</>
+    );
+
+  switch (item.type) {
+    case "text":
+      return wrap(
+        <EditableRichText
+          value={item.html || ""}
+          editMode={editMode}
+          placeholder="Write text…"
+          onChange={(v) => onChange({ html: v } as any)}
+          className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed"
+        />
+      );
+    case "image":
+      return wrap(
+        <EditableImage
+          value={item.url}
+          onChange={(url) => onChange({ url } as any)}
+          photographerId={photographerId}
+          editMode={editMode}
+          className="block"
+        >
+          {item.url ? (
+            <img src={item.url} alt={item.alt || ""} className="w-full h-auto rounded-md object-cover" />
+          ) : (
+            <div className="aspect-[4/3] w-full rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground">
+              {editMode ? "Click to add image" : ""}
+            </div>
+          )}
+        </EditableImage>
+      );
+    case "button": {
+      if (editMode) {
+        return wrap(
+          <div className="space-y-1.5">
+            <SiteCtaLink href={item.href || "#"} variant={item.variant || "primary"} className="pointer-events-none">
+              {item.label || "Button"}
+            </SiteCtaLink>
+            <div className="flex flex-col gap-1">
+              <input
+                type="text"
+                value={item.label}
+                onChange={(e) => onChange({ label: e.target.value } as any)}
+                placeholder="Button label"
+                className="h-7 text-xs px-2 rounded border border-border bg-background"
+              />
+              <input
+                type="text"
+                value={item.href}
+                onChange={(e) => onChange({ href: e.target.value } as any)}
+                placeholder="https://…"
+                className="h-7 text-xs px-2 rounded border border-border bg-background"
+              />
+              <select
+                value={item.variant || "primary"}
+                onChange={(e) => onChange({ variant: e.target.value as any } as any)}
+                className="h-7 text-xs px-2 rounded border border-border bg-background"
+              >
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+              </select>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <SiteCtaLink href={item.href || "#"} variant={item.variant || "primary"}>
+          {item.label || "Button"}
+        </SiteCtaLink>
+      );
+    }
+    case "spacer":
+      return wrap(
+        <div style={{ height: item.height || 24 }} className={editMode ? "bg-muted/30 rounded-sm" : ""}>
+          {editMode && (
+            <div className="h-full flex items-center justify-center text-[10px] text-muted-foreground">
+              Spacer {item.height}px
+            </div>
+          )}
+        </div>
+      );
+    case "divider":
+      return wrap(<hr className="border-border" />);
+    default:
+      return null;
+  }
+}
+
+function ColumnAddBar({ onAdd, placeholder }: { onAdd: (t: ColItem["type"]) => void; placeholder: string }) {
+  const [open, setOpen] = useState(false);
+  const opts: { type: ColItem["type"]; label: string }[] = [
+    { type: "text", label: "Text" },
+    { type: "image", label: "Image" },
+    { type: "button", label: "Button" },
+    { type: "spacer", label: "Spacer" },
+    { type: "divider", label: "Divider" },
+  ];
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-md border border-dashed border-border text-xs text-muted-foreground hover:border-foreground hover:text-foreground transition"
+        title={`Add to ${placeholder}`}
+      >
+        <Plus className="h-3.5 w-3.5" /> Add element
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 mt-1 z-20 bg-popover border border-border rounded-md shadow-md p-1 grid grid-cols-2 gap-0.5">
+          {opts.map((o) => (
+            <button
+              key={o.type}
+              type="button"
+              onClick={() => { onAdd(o.type); setOpen(false); }}
+              className="px-2 py-1.5 text-xs rounded hover:bg-accent text-left"
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
