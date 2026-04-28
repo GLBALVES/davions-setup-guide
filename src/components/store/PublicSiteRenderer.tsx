@@ -195,6 +195,13 @@ export interface SiteConfig {
   button_size?: "small" | "medium" | "large" | "custom" | null;
   button_height?: number | null;
   button_width?: number | null;
+  /** Pixieset-style typography template id (e.g. "made-mirage"). */
+  font_template_id?: string | null;
+  /** Per-element typography overrides on top of the chosen template. */
+  font_overrides?: Record<string, any> | null;
+  /** Legacy fallback fields. */
+  heading_font?: string | null;
+  body_font?: string | null;
 }
 
 /** Helper: returns inline style for a section's custom bg/text colors */
