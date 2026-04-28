@@ -4439,7 +4439,8 @@ const WebsiteEditor = () => {
     ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
   );
 
-  // Legacy: still load heading/body Google Fonts for older sites with no template chosen.
+  // Apply scroll-triggered section animations.
+  useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
   useEffect(() => {
     if ((site as any)?.fontTemplateId) return; // typography hook handles it
     const href = buildGoogleFontsHref(site?.headingFont, site?.bodyFont);
