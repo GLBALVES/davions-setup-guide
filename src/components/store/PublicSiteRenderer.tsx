@@ -6,6 +6,12 @@ import SectionRenderer, { type PageSection } from "@/components/store/SectionRen
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useSiteColors } from "@/components/website-editor/useSiteColors";
+import type {
+  ColorOverrides,
+  CustomColorPalette,
+  SchemeId,
+} from "@/components/website-editor/color-palettes";
 import type { FontOverrides, FontSizeScale } from "@/components/website-editor/font-templates";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
@@ -2177,6 +2183,14 @@ export default function PublicSiteRenderer(props: Props) {
     site?.font_template_id ?? null,
     fontOverrides,
     (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
+
+  // Apply the studio's color palette + scheme.
+  useSiteColors(
+    (site as any)?.color_palette_id ?? null,
+    ((site as any)?.color_scheme_id ?? null) as SchemeId | null,
+    ((site as any)?.color_overrides ?? {}) as ColorOverrides,
+    ((site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
   );
 
   const derived = deriveCommon(props);

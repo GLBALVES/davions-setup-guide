@@ -45,8 +45,11 @@ import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormat
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
 import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
+import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
+import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
@@ -4026,32 +4029,24 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
           })()}
 
           {sub === "colors" && (
-            <div className="space-y-4">
-              <ColorRow
-                label="Accent"
-                value={site?.accentColor || "#000000"}
-                onChange={(v) => onSiteChange({ accent_color: v })}
-              />
-              <ColorRow
-                label="Header background"
-                value={site?.headerBg || "#ffffff"}
-                onChange={(v) => onSiteChange({ header_bg_color: v })}
-              />
-              <ColorRow
-                label="Footer background"
-                value={site?.footerBg || "#000000"}
-                onChange={(v) => onSiteChange({ footer_bg_color: v })}
-              />
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Footer text</label>
-                <Input
-                  value={site?.footerText || ""}
-                  onChange={(e) => onSiteChange({ footer_text: e.target.value })}
-                  className="h-9 text-sm"
-                  placeholder="© 2026 Studio Name"
-                />
-              </div>
-            </div>
+            <ColorsSubPanel
+              paletteId={(site as any)?.colorPaletteId ?? (site as any)?.color_palette_id ?? null}
+              schemeId={
+                ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id ?? null) as SchemeId | null
+              }
+              overrides={
+                ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides
+              }
+              customPalettes={
+                ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[]
+              }
+              onPaletteChange={(id, sk) =>
+                onSiteChange({ color_palette_id: id, color_scheme_id: sk })
+              }
+              onSchemeChange={(sk) => onSiteChange({ color_scheme_id: sk })}
+              onOverridesChange={(next) => onSiteChange({ color_overrides: next as any })}
+              onCustomPalettesChange={(next) => onSiteChange({ custom_color_palettes: next as any })}
+            />
           )}
 
           {sub === "footer" && (
@@ -4434,6 +4429,14 @@ const WebsiteEditor = () => {
     (site as any)?.fontTemplateId,
     ((site as any)?.fontOverrides ?? {}) as FontOverrides,
     (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+  );
+
+  // Inject color palette CSS variables (--site-bg, --site-headings, …).
+  useSiteColors(
+    (site as any)?.colorPaletteId ?? (site as any)?.color_palette_id,
+    ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id) as SchemeId | null,
+    ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides,
+    ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
   );
 
   // Legacy: still load heading/body Google Fonts for older sites with no template chosen.
