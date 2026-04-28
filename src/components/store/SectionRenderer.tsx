@@ -275,9 +275,9 @@ function SectionBlock({
       case "divider":
         return <DividerBlock />;
       case "columns-2":
-        return <Columns2Block {...p} ctx={ctx} />;
+        return <ColumnsBlock count={2} {...p} ctx={ctx} />;
       case "columns-3":
-        return <Columns3Block {...p} ctx={ctx} />;
+        return <ColumnsBlock count={3} {...p} ctx={ctx} />;
       case "slideshow":
         return <SlideshowBlock {...p} />;
       case "carousel":
