@@ -915,7 +915,7 @@ function CtaBlock(props: any) {
 
 // ─── FAQ Accordion ──────────────────────────────────────────────────────────
 
-function FaqBlock({ items = [], ctx }: any) {
+function FaqBlock({ items = [], variant = "chevron", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqItems = items.length > 0 ? items : [
@@ -923,32 +923,23 @@ function FaqBlock({ items = [], ctx }: any) {
     { question: "How do I book?", answer: "Booking information…" },
   ];
 
-  return (
-    <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
-        <div className="divide-y divide-border">
-          {faqItems.map((item: any, i: number) => (
-            <div key={i}>
-              <div className="w-full flex items-center justify-between py-4 text-left">
+  // ── Two columns open (no toggle) ───────────────────────────────────────
+  if (variant === "two-column-open") {
+    return (
+      <section className="py-12 sm:py-16 px-5 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">FAQ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+            {faqItems.map((item: any, i: number) => (
+              <div key={i} className="space-y-2">
                 <EditableText
-                  as="span"
+                  as="h3"
                   editMode={c.editMode}
                   value={item.question || ""}
                   placeholder="Question"
                   onChange={(v) => c.set(`items.${i}.question`, v)}
-                  className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                  className="text-sm font-medium text-foreground block"
                 />
-                {!c.editMode && (
-                  <button
-                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                    className="ml-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ChevronDown className={`h-4 w-4 transition-transform ${openIndex === i ? "rotate-180" : ""}`} />
-                  </button>
-                )}
-              </div>
-              {(c.editMode || openIndex === i) && (
                 <EditableText
                   as="p"
                   editMode={c.editMode}
@@ -956,11 +947,69 @@ function FaqBlock({ items = [], ctx }: any) {
                   placeholder="Answer"
                   multiline
                   onChange={(v) => c.set(`items.${i}.answer`, v)}
-                  className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                  className="text-sm font-light text-muted-foreground leading-relaxed block"
                 />
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Accordion variants (chevron or plus) ───────────────────────────────
+  const isPlus = variant === "plus-toggle";
+
+  return (
+    <section className="py-12 sm:py-16 px-5 sm:px-6">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">FAQ</h2>
+        <div className="divide-y divide-border">
+          {faqItems.map((item: any, i: number) => {
+            const isOpen = openIndex === i;
+            return (
+              <div key={i}>
+                <div className="w-full flex items-center justify-between py-4 text-left gap-3">
+                  <EditableText
+                    as="span"
+                    editMode={c.editMode}
+                    value={item.question || ""}
+                    placeholder="Question"
+                    onChange={(v) => c.set(`items.${i}.question`, v)}
+                    className="text-sm font-light text-foreground flex-1 cursor-pointer"
+                  />
+                  {!c.editMode && (
+                    <button
+                      onClick={() => setOpenIndex(isOpen ? null : i)}
+                      className={
+                        isPlus
+                          ? "shrink-0 h-7 w-7 flex items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                          : "shrink-0 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                      }
+                      aria-label={isOpen ? "Collapse" : "Expand"}
+                    >
+                      {isPlus ? (
+                        isOpen ? <XIcon className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />
+                      ) : (
+                        isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {(c.editMode || isOpen) && (
+                  <EditableText
+                    as="p"
+                    editMode={c.editMode}
+                    value={item.answer || ""}
+                    placeholder="Answer"
+                    multiline
+                    onChange={(v) => c.set(`items.${i}.answer`, v)}
+                    className="pb-4 text-sm font-light text-muted-foreground leading-relaxed block"
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
