@@ -44,6 +44,9 @@ import PreviewRenderer, { type PreviewSiteConfig, type PreviewNavLink } from "@/
 import InlineFormatToolbar from "@/components/website-editor/inline/InlineFormatToolbar";
 import { ImageUploadField } from "@/components/website-editor/ImageUploadField";
 import { FONT_PRESETS, buildGoogleFontsHref, getFontStack } from "@/components/website-editor/site-fonts";
+import FontsSubPanel from "@/components/website-editor/settings/FontsSubPanel";
+import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
