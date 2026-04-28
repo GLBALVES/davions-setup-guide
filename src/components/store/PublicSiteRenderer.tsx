@@ -7,6 +7,7 @@ import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
+import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import type {
   ColorOverrides,
   CustomColorPalette,
@@ -2258,6 +2259,9 @@ export default function PublicSiteRenderer(props: Props) {
     ((site as any)?.color_overrides ?? {}) as ColorOverrides,
     ((site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
   );
+
+  // Apply scroll-triggered section animations on the live site.
+  useSiteAnimations((site as any)?.animation_style ?? "none");
 
   const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
