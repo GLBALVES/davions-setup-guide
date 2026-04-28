@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 import {
   COLOR_PALETTES,
   DEFAULT_PALETTE_ID,
