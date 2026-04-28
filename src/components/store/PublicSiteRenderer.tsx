@@ -6,6 +6,12 @@ import SectionRenderer, { type PageSection } from "@/components/store/SectionRen
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useSiteColors } from "@/components/website-editor/useSiteColors";
+import type {
+  ColorOverrides,
+  CustomColorPalette,
+  SchemeId,
+} from "@/components/website-editor/color-palettes";
 import type { FontOverrides, FontSizeScale } from "@/components/website-editor/font-templates";
 
 // ─── Inline editable text ────────────────────────────────────────────────────
