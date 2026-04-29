@@ -56,7 +56,7 @@ interface BonusItem {
   text: string;
 }
 
-type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
 
 interface BriefingQuestion {
   id: string;
