@@ -3788,6 +3788,16 @@ export const translations = {
       passwordMissingUppercase: "Deve incluir uma letra maiúscula.",
       passwordMissingLowercase: "Deve incluir uma letra minúscula.",
       passwordMissingNumber: "Deve incluir um número.",
+      passwordRecoveryEyebrow: "Recuperação de Senha",
+      setNewPasswordTitle: "Definir nova senha",
+      setNewPasswordSubtitle: "Escolha uma senha forte para sua conta.",
+      passwordUpdatedRedirect: "Senha atualizada com sucesso. Redirecionando…",
+      invalidResetLink: "Este link de redefinição é inválido ou expirou. Solicite um novo.",
+      requestNewLink: "Solicitar um novo link",
+      verifyingLink: "Verificando link…",
+      updatingPassword: "Atualizando…",
+      updatePasswordButton: "Atualizar Senha",
+      backToSignIn: "Voltar para Entrar",
     },
     // ── Public Navbar ──
     navbar: {
