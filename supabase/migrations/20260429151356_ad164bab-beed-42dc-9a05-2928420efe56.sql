@@ -1,0 +1,3 @@
+ALTER TABLE public.leads
+  ADD COLUMN IF NOT EXISTS invited_at TIMESTAMPTZ NULL,
+  ADD COLUMN IF NOT EXISTS invited_user_id UUID NULL;

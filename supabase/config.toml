@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.submit-contact-form]
 verify_jwt = false
+
+[functions.invite-lead-as-user]
+verify_jwt = false

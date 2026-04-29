@@ -1978,6 +1978,8 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          invited_at: string | null
+          invited_user_id: string | null
           name: string
           phone: string
         }
@@ -1986,6 +1988,8 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invited_at?: string | null
+          invited_user_id?: string | null
           name?: string
           phone?: string
         }
@@ -1994,6 +1998,8 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invited_at?: string | null
+          invited_user_id?: string | null
           name?: string
           phone?: string
         }
