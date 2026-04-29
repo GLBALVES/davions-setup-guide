@@ -1740,6 +1740,16 @@ export const translations = {
       passwordMissingUppercase: "Must include an uppercase letter.",
       passwordMissingLowercase: "Must include a lowercase letter.",
       passwordMissingNumber: "Must include a number.",
+      passwordRecoveryEyebrow: "Password Recovery",
+      setNewPasswordTitle: "Set new password",
+      setNewPasswordSubtitle: "Choose a strong password for your account.",
+      passwordUpdatedRedirect: "Password updated successfully. Redirecting…",
+      invalidResetLink: "This reset link is invalid or has expired. Please request a new one.",
+      requestNewLink: "Request a new link",
+      verifyingLink: "Verifying link…",
+      updatingPassword: "Updating…",
+      updatePasswordButton: "Update Password",
+      backToSignIn: "Back to Sign In",
     },
     // ── Public Navbar ──
     navbar: {
