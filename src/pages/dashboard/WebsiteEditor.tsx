@@ -56,6 +56,7 @@ import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
