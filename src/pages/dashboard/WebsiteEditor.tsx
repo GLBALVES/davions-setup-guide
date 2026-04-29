@@ -56,6 +56,7 @@ import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
 import SettingsPanel from "@/components/website-editor/settings/SettingsPanel";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 import BlogPostsPanel from "@/components/website-editor/BlogPostsPanel";
 import {
   DndContext, useDroppable, DragOverlay,
@@ -1287,11 +1288,10 @@ const HeaderSliderPanel = ({
               {(we as any).headerBackgroundColor || "Background color"}
             </label>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={cfg.backgroundColor || "#ffffff"}
-                onChange={(e) => updateCfg({ backgroundColor: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent p-0.5"
+                onChange={(v) => updateCfg({ backgroundColor: v })}
+                className="h-9 w-9"
               />
               <input
                 type="text"
@@ -1319,11 +1319,10 @@ const HeaderSliderPanel = ({
               {(we as any).headerTextColor || "Text color"}
             </label>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={cfg.textColor || "#111111"}
-                onChange={(e) => updateCfg({ textColor: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent p-0.5"
+                onChange={(v) => updateCfg({ textColor: v })}
+                className="h-9 w-9"
               />
               <input
                 type="text"
@@ -3703,14 +3702,14 @@ const VariantPresets = ({
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
             <div className="flex items-center gap-2">
-              <input type="color" value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 w-10 rounded border border-border cursor-pointer" />
+              <SitePalettePicker value={bg} onChange={(v) => updateVariant(vKey, { bg: v })} className="h-9 w-9" />
               <Input value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 text-xs flex-1" />
             </div>
           </div>
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
             <div className="flex items-center gap-2">
-              <input type="color" value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 w-10 rounded border border-border cursor-pointer" />
+              <SitePalettePicker value={fg} onChange={(v) => updateVariant(vKey, { fg: v })} className="h-9 w-9" />
               <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
             </div>
           </div>
@@ -3723,11 +3722,10 @@ const VariantPresets = ({
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={borderColor}
-                onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
-                className="h-9 w-10 rounded border border-border cursor-pointer"
+                onChange={(v) => updateVariant(vKey, { borderColor: v })}
+                className="h-9 w-9"
               />
               <Input
                 value={v.borderColor || ""}
@@ -3757,11 +3755,10 @@ const VariantPresets = ({
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={hoverBg || bg}
-                onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
-                className="h-9 w-10 rounded border border-border cursor-pointer"
+                onChange={(v) => updateVariant(vKey, { hoverBg: v })}
+                className="h-9 w-9"
               />
               <Input
                 value={v.hoverBg || ""}
@@ -3774,11 +3771,10 @@ const VariantPresets = ({
           <div className="space-y-1">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={hoverFg || fg}
-                onChange={(e) => updateVariant(vKey, { hoverFg: e.target.value })}
-                className="h-9 w-10 rounded border border-border cursor-pointer"
+                onChange={(v) => updateVariant(vKey, { hoverFg: v })}
+                className="h-9 w-9"
               />
               <Input
                 value={v.hoverFg || ""}
@@ -3791,11 +3787,10 @@ const VariantPresets = ({
           <div className="space-y-1 col-span-2">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={hoverBorderColor || borderColor}
-                onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
-                className="h-9 w-10 rounded border border-border cursor-pointer"
+                onChange={(v) => updateVariant(vKey, { hoverBorderColor: v })}
+                className="h-9 w-9"
               />
               <Input
                 value={v.hoverBorderColor || ""}
@@ -4181,11 +4176,10 @@ const ColorRow = ({ label, value, onChange }: { label: string; value: string; on
   <div className="space-y-2">
     <label className="text-xs font-medium text-muted-foreground">{label}</label>
     <div className="flex items-center gap-2">
-      <input
-        type="color"
+      <SitePalettePicker
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+        onChange={(v) => onChange(v)}
+        className="h-9 w-9"
       />
       <Input
         value={value}
