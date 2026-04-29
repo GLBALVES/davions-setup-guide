@@ -453,6 +453,27 @@ const BookingSuccess = () => {
                         ))}
                       </div>
                     )}
+
+                    {q.type === "multi_image" && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {q.options.filter(Boolean).map((opt, i) => {
+                          const selected = (answers[q.id] as string) === opt;
+                          return (
+                            <button
+                              type="button"
+                              key={`${opt}-${i}`}
+                              onClick={() => setTextAnswer(q.id, opt)}
+                              className={`relative aspect-square overflow-hidden border transition-all ${selected ? "border-foreground ring-2 ring-foreground" : "border-input hover:border-foreground/40"}`}
+                            >
+                              <img src={opt} alt={`Option ${i + 1}`} className="w-full h-full object-cover" />
+                              {selected && (
+                                <span className="absolute top-1 right-1 bg-foreground text-background text-[9px] uppercase tracking-wider px-1.5 py-0.5">Selected</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
 
