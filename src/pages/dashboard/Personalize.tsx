@@ -356,6 +356,7 @@ const Personalize = () => {
       eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
+      fetchContractFields(),
       fetchBriefings()]
       );
 
