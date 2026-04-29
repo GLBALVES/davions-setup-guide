@@ -28,14 +28,15 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Supabase sets the session via the URL hash when the user lands from the email link
+    // Supabase sets the session via the URL hash when the user lands from the email link.
+    // Both password recovery and invite links land here.
     const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+    if (hash.includes("type=recovery") || hash.includes("type=invite") || hash.includes("type=signup")) {
       setReady(true);
     } else {
-      // Listen for auth state change — Supabase may fire PASSWORD_RECOVERY event
+      // Listen for auth state change — Supabase may fire PASSWORD_RECOVERY (recovery) or SIGNED_IN (invite)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === "PASSWORD_RECOVERY") {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
           setReady(true);
         }
       });
