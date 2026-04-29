@@ -62,7 +62,9 @@ export default function AdminLeads() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      if ((data as any)?.already_existed) {
+      if ((data as any)?.recovery_sent) {
+        toast.success("User already existed — password reset link sent.");
+      } else if ((data as any)?.already_existed) {
         toast.success("User already existed — lead marked as invited.");
       } else {
         toast.success("Invite email sent. The user can now set their password.");
