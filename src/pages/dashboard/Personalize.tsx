@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
+import ImageUploadField from "@/components/website-editor/ImageUploadField";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
 type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
