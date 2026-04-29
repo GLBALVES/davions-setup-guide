@@ -198,12 +198,11 @@ export default function AdminLeads() {
       <AlertDialog open={!!inviteTarget} onOpenChange={(open) => !open && !inviting && setInviteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Invite as user?</AlertDialogTitle>
+            <AlertDialogTitle>{inviteTarget?.invited_at ? "Resend access link?" : "Invite as user?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              An account will be created for{" "}
-              <span className="font-medium text-foreground">{inviteTarget?.name}</span> (
-              <span className="font-medium text-foreground">{inviteTarget?.email}</span>) and an email
-              will be sent with a link to define their password and access the app.
+              {inviteTarget?.invited_at
+                ? <>A new password reset link will be sent to <span className="font-medium text-foreground">{inviteTarget?.email}</span> so they can access the app.</>
+                : <>An account will be created for <span className="font-medium text-foreground">{inviteTarget?.name}</span> (<span className="font-medium text-foreground">{inviteTarget?.email}</span>) and an email will be sent with a link to define their password and access the app.</>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
