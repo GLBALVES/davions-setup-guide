@@ -5906,6 +5906,16 @@ export const translations = {
       passwordMissingUppercase: "Debe incluir una letra mayúscula.",
       passwordMissingLowercase: "Debe incluir una letra minúscula.",
       passwordMissingNumber: "Debe incluir un número.",
+      passwordRecoveryEyebrow: "Recuperación de Contraseña",
+      setNewPasswordTitle: "Establecer nueva contraseña",
+      setNewPasswordSubtitle: "Elige una contraseña segura para tu cuenta.",
+      passwordUpdatedRedirect: "Contraseña actualizada con éxito. Redirigiendo…",
+      invalidResetLink: "Este enlace de restablecimiento es inválido o ha expirado. Solicita uno nuevo.",
+      requestNewLink: "Solicitar un nuevo enlace",
+      verifyingLink: "Verificando enlace…",
+      updatingPassword: "Actualizando…",
+      updatePasswordButton: "Actualizar Contraseña",
+      backToSignIn: "Volver a Iniciar Sesión",
     },
     // ── Public Navbar ──
     navbar: {
