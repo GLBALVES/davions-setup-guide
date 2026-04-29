@@ -496,6 +496,25 @@ const ContractEditor = () => {
                 ))}
               </div>
             </div>
+
+            {customFields.length > 0 && (
+              <>
+                <Separator />
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.customFieldsLabel}</p>
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    {customFields.map((cf) => (
+                      <button key={cf.id} type="button" onClick={() => insertVariable(cf.field_key, cf.field_label)} className="flex items-center gap-2 text-left hover:bg-muted/60 rounded px-1.5 py-1 transition-colors group">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent text-accent-foreground border border-border whitespace-nowrap">
+                          {"{{"}{cf.field_label}{"}}"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             <Separator />
             <div className="flex flex-col gap-2">
               <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{ce.tipsLabel}</p>
