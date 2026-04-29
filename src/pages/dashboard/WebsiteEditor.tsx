@@ -1319,11 +1319,10 @@ const HeaderSliderPanel = ({
               {(we as any).headerTextColor || "Text color"}
             </label>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <SitePalettePicker
                 value={cfg.textColor || "#111111"}
-                onChange={(e) => updateCfg({ textColor: e.target.value })}
-                className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent p-0.5"
+                onChange={(v) => updateCfg({ textColor: v })}
+                className="h-9 w-9"
               />
               <input
                 type="text"
