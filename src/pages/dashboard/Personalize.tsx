@@ -234,6 +234,14 @@ const Personalize = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
+  // ── Contract custom fields ──────────────────────────────────────────────────
+  interface ContractField {id: string;field_key: string;field_label: string;default_value: string;}
+  const [contractFields, setContractFields] = useState<ContractField[]>([]);
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldDefault, setNewFieldDefault] = useState("");
+  const [addingField, setAddingField] = useState(false);
+  const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
+
   // ── Briefings ────────────────────────────────────────────────────────────────
   const [briefings, setBriefings] = useState<Briefing[]>([]);
   const [briefingDialogOpen, setBriefingDialogOpen] = useState(false);
