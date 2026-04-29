@@ -234,6 +234,14 @@ const Personalize = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
+  // ── Contract custom fields ──────────────────────────────────────────────────
+  interface ContractField {id: string;field_key: string;field_label: string;default_value: string;}
+  const [contractFields, setContractFields] = useState<ContractField[]>([]);
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+  const [newFieldDefault, setNewFieldDefault] = useState("");
+  const [addingField, setAddingField] = useState(false);
+  const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
+
   // ── Briefings ────────────────────────────────────────────────────────────────
   const [briefings, setBriefings] = useState<Briefing[]>([]);
   const [briefingDialogOpen, setBriefingDialogOpen] = useState(false);
@@ -257,6 +265,58 @@ const Personalize = () => {
     order("created_at", { ascending: true });
     if (data) setSessionTypes(data as SessionType[]);
   }, [photographerId]);
+
+  const fetchContractFields = useCallback(async () => {
+    if (!photographerId) return;
+    const { data } = await (supabase as any).
+    from("contract_custom_fields").
+    select("id, field_key, field_label, default_value").
+    eq("photographer_id", photographerId).
+    order("created_at", { ascending: true });
+    if (data) setContractFields(data);
+  }, [photographerId]);
+
+  const toFieldKey = (label: string) =>
+    label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
+
+  const handleAddContractField = async () => {
+    if (!photographerId || !newFieldLabel.trim()) return;
+    const fieldKey = toFieldKey(newFieldLabel.trim());
+    if (!fieldKey) return;
+    if (contractFields.some((f) => f.field_key === fieldKey)) {
+      toast({ title: t.personalize.contractFieldExists, variant: "destructive" });
+      return;
+    }
+    setAddingField(true);
+    const { data, error } = await (supabase as any).
+    from("contract_custom_fields").
+    insert({
+      photographer_id: photographerId,
+      field_key: fieldKey,
+      field_label: newFieldLabel.trim(),
+      default_value: newFieldDefault.trim()
+    }).
+    select("id, field_key, field_label, default_value").
+    single();
+    if (data && !error) {
+      setContractFields((prev) => [...prev, data]);
+      setNewFieldLabel("");
+      setNewFieldDefault("");
+      toast({ title: t.personalize.contractFieldAdded });
+    } else if (error) {
+      toast({ title: error.message, variant: "destructive" });
+    }
+    setAddingField(false);
+  };
+
+  const handleDeleteContractField = async (id: string) => {
+    setDeletingFieldId(id);
+    await (supabase as any).from("contract_custom_fields").delete().eq("id", id);
+    setContractFields((prev) => prev.filter((f) => f.id !== id));
+    setDeletingFieldId(null);
+    toast({ title: t.personalize.contractFieldDeleted });
+  };
 
   const fetchContracts = useCallback(async () => {
     if (!photographerId) return;
@@ -296,6 +356,7 @@ const Personalize = () => {
       eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
+      fetchContractFields(),
       fetchBriefings()]
       );
 
@@ -731,6 +792,87 @@ const Personalize = () => {
                       )}
                         </div>
                     }
+                    </section>
+
+                    <div className="border-t border-border" />
+
+                    {/* Contract custom fields */}
+                    <section className="flex flex-col gap-4">
+                      <SectionHeading
+                        title={t.personalize.contractFields}
+                        description={t.personalize.contractFieldsDesc} />
+
+                      {contractFields.length > 0 &&
+                        <div className="flex flex-col gap-2">
+                          {contractFields.map((f) =>
+                            <div key={f.id} className="border border-border p-4 flex items-start justify-between gap-4">
+                              <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                <p className="text-xs tracking-wider uppercase font-light truncate">{f.field_label}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">{`{{${f.field_key}}}`}</code>
+                                  {f.default_value &&
+                                    <span className="text-[10px] text-muted-foreground truncate">
+                                      = {f.default_value}
+                                    </span>
+                                  }
+                                </div>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
+                                disabled={deletingFieldId === f.id}
+                                onClick={() => handleDeleteContractField(f.id)}>
+                                {deletingFieldId === f.id ?
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                }
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      }
+
+                      {contractFields.length === 0 &&
+                        <p className="text-xs text-muted-foreground italic">{t.personalize.noContractFields}</p>
+                      }
+
+                      <div className="border border-border p-4 flex flex-col gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.contractFieldLabel}
+                            </Label>
+                            <Input
+                              value={newFieldLabel}
+                              onChange={(e) => setNewFieldLabel(e.target.value)}
+                              placeholder={t.personalize.contractFieldLabelPlaceholder}
+                              className="text-sm" />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.contractFieldDefault}
+                            </Label>
+                            <Input
+                              value={newFieldDefault}
+                              onChange={(e) => setNewFieldDefault(e.target.value)}
+                              placeholder={t.personalize.contractFieldDefaultPlaceholder}
+                              className="text-sm" />
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="self-start gap-1.5 text-xs tracking-wider uppercase font-light"
+                          disabled={!newFieldLabel.trim() || addingField}
+                          onClick={handleAddContractField}>
+                          {addingField ?
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                            <Plus className="h-3.5 w-3.5" />
+                          }
+                          {t.personalize.newContractField}
+                        </Button>
+                      </div>
                     </section>
 
                     <div className="border-t border-border" />
