@@ -171,12 +171,11 @@ export default function AdminLeads() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 text-xs"
-                            disabled={invited}
                             onClick={() => setInviteTarget(lead)}
-                            title={invited ? "Already invited" : "Invite as user"}
+                            title={invited ? "Resend invite / password link" : "Invite as user"}
                           >
                             <UserPlus size={12} className="mr-1" />
-                            Invite
+                            {invited ? "Resend" : "Invite"}
                           </Button>
                           <button
                             onClick={() => handleDelete(lead.id)}
