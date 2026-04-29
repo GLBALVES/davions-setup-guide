@@ -132,6 +132,8 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
     return ans || "—";
   };
 
+  const isImageUrl = (s: string) => /^https?:\/\//i.test(s);
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-lg">
@@ -149,12 +151,22 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
           </p>
         ) : (
           <div className="flex flex-col gap-4 pt-1">
-            {questions.map((q) => (
-              <div key={q.id} className="flex flex-col gap-1">
-                <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{q.label}</p>
-                <p className="text-sm font-light">{formatAnswer(q)}</p>
-              </div>
-            ))}
+            {questions.map((q) => {
+              const ans = answers[q.id];
+              const isImage = q.type === "multi_image" && typeof ans === "string" && isImageUrl(ans);
+              return (
+                <div key={q.id} className="flex flex-col gap-1">
+                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{q.label}</p>
+                  {isImage ? (
+                    <a href={ans as string} target="_blank" rel="noreferrer" className="block w-32 aspect-square overflow-hidden border border-border">
+                      <img src={ans as string} alt="" className="w-full h-full object-cover" />
+                    </a>
+                  ) : (
+                    <p className="text-sm font-light">{formatAnswer(q)}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </DialogContent>
