@@ -23,9 +23,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
+import ImageUploadField from "@/components/website-editor/ImageUploadField";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
-type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
 interface BriefingQuestion {
   id: string;
   type: QuestionType;
@@ -39,7 +40,8 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   long_text: "Long text",
   multiple_choice: "Multiple choice",
   checkboxes: "Checkboxes",
-  yes_no: "Yes / No"
+  yes_no: "Yes / No",
+  multi_image: "Multi image"
 };
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -886,7 +888,7 @@ const Personalize = () => {
                               onChange={(e) => {
                                 const newType = e.target.value as QuestionType;
                                 setBriefingQuestions((prev) => prev.map((item, i) =>
-                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
+                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes", "multi_image"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
                                 ));
                               }}
                               className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
@@ -948,6 +950,48 @@ const Personalize = () => {
                               className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
                               onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
                               
+                                    <Plus className="h-3 w-3" />
+                                    {t.personalize.addOption}
+                                  </button>
+                                </div>
+                          }
+
+                              {/* Image options (for multi_image) */}
+                              {q.type === "multi_image" &&
+                          <div className="flex flex-col gap-2 pl-1">
+                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Image options</p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {q.options.map((opt, optIdx) =>
+                              <div key={optIdx} className="relative flex flex-col gap-1">
+                                        <ImageUploadField
+                                  value={opt}
+                                  onChange={(url) => {
+                                    const updated = [...q.options];
+                                    updated[optIdx] = url;
+                                    setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                  }}
+                                  photographerId={photographerId}
+                                  folder="briefing-options"
+                                  aspectClass="aspect-square" />
+
+                                        <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 self-end text-muted-foreground hover:text-destructive"
+                                  onClick={() => {
+                                    const updated = q.options.filter((_, oi) => oi !== optIdx);
+                                    setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                  }}>
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                              )}
+                                  </div>
+                                  <button
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
                                     <Plus className="h-3 w-3" />
                                     {t.personalize.addOption}
                                   </button>

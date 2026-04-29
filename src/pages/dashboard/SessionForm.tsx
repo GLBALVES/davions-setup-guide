@@ -231,7 +231,7 @@ const SessionForm = () => {
   const [showFullContract, setShowFullContract] = useState(false);
 
   // ── Briefing ──
-  type BriefingQuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+  type BriefingQuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
   interface BriefingTemplate { id: string; name: string; }
   const [briefingTemplates, setBriefingTemplates] = useState<BriefingTemplate[]>([]);
   const [selectedBriefingId, setSelectedBriefingId] = useState<string>("none");
