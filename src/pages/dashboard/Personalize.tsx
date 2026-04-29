@@ -266,6 +266,58 @@ const Personalize = () => {
     if (data) setSessionTypes(data as SessionType[]);
   }, [photographerId]);
 
+  const fetchContractFields = useCallback(async () => {
+    if (!photographerId) return;
+    const { data } = await (supabase as any).
+    from("contract_custom_fields").
+    select("id, field_key, field_label, default_value").
+    eq("photographer_id", photographerId).
+    order("created_at", { ascending: true });
+    if (data) setContractFields(data);
+  }, [photographerId]);
+
+  const toFieldKey = (label: string) =>
+    label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
+
+  const handleAddContractField = async () => {
+    if (!photographerId || !newFieldLabel.trim()) return;
+    const fieldKey = toFieldKey(newFieldLabel.trim());
+    if (!fieldKey) return;
+    if (contractFields.some((f) => f.field_key === fieldKey)) {
+      toast({ title: t.personalize.contractFieldExists, variant: "destructive" });
+      return;
+    }
+    setAddingField(true);
+    const { data, error } = await (supabase as any).
+    from("contract_custom_fields").
+    insert({
+      photographer_id: photographerId,
+      field_key: fieldKey,
+      field_label: newFieldLabel.trim(),
+      default_value: newFieldDefault.trim()
+    }).
+    select("id, field_key, field_label, default_value").
+    single();
+    if (data && !error) {
+      setContractFields((prev) => [...prev, data]);
+      setNewFieldLabel("");
+      setNewFieldDefault("");
+      toast({ title: t.personalize.contractFieldAdded });
+    } else if (error) {
+      toast({ title: error.message, variant: "destructive" });
+    }
+    setAddingField(false);
+  };
+
+  const handleDeleteContractField = async (id: string) => {
+    setDeletingFieldId(id);
+    await (supabase as any).from("contract_custom_fields").delete().eq("id", id);
+    setContractFields((prev) => prev.filter((f) => f.id !== id));
+    setDeletingFieldId(null);
+    toast({ title: t.personalize.contractFieldDeleted });
+  };
+
   const fetchContracts = useCallback(async () => {
     if (!photographerId) return;
     const { data } = await (supabase as any).
