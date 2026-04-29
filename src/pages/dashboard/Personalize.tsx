@@ -25,7 +25,7 @@ import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionT
 import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
-type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no";
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
 interface BriefingQuestion {
   id: string;
   type: QuestionType;
@@ -39,7 +39,8 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   long_text: "Long text",
   multiple_choice: "Multiple choice",
   checkboxes: "Checkboxes",
-  yes_no: "Yes / No"
+  yes_no: "Yes / No",
+  multi_image: "Multi image"
 };
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
