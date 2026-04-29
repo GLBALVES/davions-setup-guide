@@ -955,6 +955,48 @@ const Personalize = () => {
                                   </button>
                                 </div>
                           }
+
+                              {/* Image options (for multi_image) */}
+                              {q.type === "multi_image" &&
+                          <div className="flex flex-col gap-2 pl-1">
+                                  <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Image options</p>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {q.options.map((opt, optIdx) =>
+                              <div key={optIdx} className="relative flex flex-col gap-1">
+                                        <ImageUploadField
+                                  value={opt}
+                                  onChange={(url) => {
+                                    const updated = [...q.options];
+                                    updated[optIdx] = url;
+                                    setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                  }}
+                                  photographerId={photographerId}
+                                  folder="briefing-options"
+                                  aspectClass="aspect-square" />
+
+                                        <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6 self-end text-muted-foreground hover:text-destructive"
+                                  onClick={() => {
+                                    const updated = q.options.filter((_, oi) => oi !== optIdx);
+                                    setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                  }}>
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                              )}
+                                  </div>
+                                  <button
+                              type="button"
+                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
+                                    <Plus className="h-3 w-3" />
+                                    {t.personalize.addOption}
+                                  </button>
+                                </div>
+                          }
                             </div>
                         )}
                         </div>
