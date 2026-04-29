@@ -888,7 +888,7 @@ const Personalize = () => {
                               onChange={(e) => {
                                 const newType = e.target.value as QuestionType;
                                 setBriefingQuestions((prev) => prev.map((item, i) =>
-                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
+                                i === idx ? { ...item, type: newType, options: ["multiple_choice", "checkboxes", "multi_image"].includes(newType) ? item.options.length ? item.options : [""] : [] } : item
                                 ));
                               }}
                               className="h-8 px-2 text-xs font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring">
