@@ -128,12 +128,19 @@ function BriefingDialog({
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             {questions.map((q) => {
               const ans = answers[q.id];
+              const isImage = q.type === "multi_image" && typeof ans === "string" && /^https?:\/\//i.test(ans);
               return (
                 <div key={q.id} className="space-y-1">
                   <p className="text-xs font-medium">{q.label}</p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {Array.isArray(ans) ? ans.join(", ") : ans || "—"}
-                  </p>
+                  {isImage ? (
+                    <a href={ans as string} target="_blank" rel="noreferrer" className="block w-32 aspect-square overflow-hidden border border-border">
+                      <img src={ans as string} alt="" className="w-full h-full object-cover" />
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {Array.isArray(ans) ? ans.join(", ") : ans || "—"}
+                    </p>
+                  )}
                 </div>
               );
             })}
