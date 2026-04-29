@@ -62,7 +62,9 @@ export default function AdminLeads() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      if ((data as any)?.already_existed) {
+      if ((data as any)?.recovery_sent) {
+        toast.success("User already existed — password reset link sent.");
+      } else if ((data as any)?.already_existed) {
         toast.success("User already existed — lead marked as invited.");
       } else {
         toast.success("Invite email sent. The user can now set their password.");
@@ -169,12 +171,11 @@ export default function AdminLeads() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2 text-xs"
-                            disabled={invited}
                             onClick={() => setInviteTarget(lead)}
-                            title={invited ? "Already invited" : "Invite as user"}
+                            title={invited ? "Resend invite / password link" : "Invite as user"}
                           >
                             <UserPlus size={12} className="mr-1" />
-                            Invite
+                            {invited ? "Resend" : "Invite"}
                           </Button>
                           <button
                             onClick={() => handleDelete(lead.id)}
@@ -197,12 +198,11 @@ export default function AdminLeads() {
       <AlertDialog open={!!inviteTarget} onOpenChange={(open) => !open && !inviting && setInviteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Invite as user?</AlertDialogTitle>
+            <AlertDialogTitle>{inviteTarget?.invited_at ? "Resend access link?" : "Invite as user?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              An account will be created for{" "}
-              <span className="font-medium text-foreground">{inviteTarget?.name}</span> (
-              <span className="font-medium text-foreground">{inviteTarget?.email}</span>) and an email
-              will be sent with a link to define their password and access the app.
+              {inviteTarget?.invited_at
+                ? <>A new password reset link will be sent to <span className="font-medium text-foreground">{inviteTarget?.email}</span> so they can access the app.</>
+                : <>An account will be created for <span className="font-medium text-foreground">{inviteTarget?.name}</span> (<span className="font-medium text-foreground">{inviteTarget?.email}</span>) and an email will be sent with a link to define their password and access the app.</>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

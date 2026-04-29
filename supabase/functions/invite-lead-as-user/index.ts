@@ -77,12 +77,29 @@ Deno.serve(async (req) => {
     }
 
     if (existingUser) {
-      // Mark lead invited and return notice
+      // User already exists — send a password recovery email so they can (re)set password and access the app.
+      const { error: resetErr } = await admin.auth.resetPasswordForEmail(email, {
+        redirectTo: redirect_to || undefined,
+      });
+      if (resetErr) {
+        console.error("resetPasswordForEmail error", resetErr);
+        return json({ error: resetErr.message || "Failed to send recovery email" }, 400);
+      }
+
+      // Make sure the photographer record exists and is approved
+      await admin
+        .from("photographers")
+        .upsert(
+          { id: existingUser.id, email, full_name: fullName, approval_status: "approved" },
+          { onConflict: "id" }
+        );
+
       await admin
         .from("leads")
         .update({ invited_at: new Date().toISOString(), invited_user_id: existingUser.id })
         .eq("id", lead_id);
-      return json({ success: true, already_existed: true, user_id: existingUser.id }, 200);
+
+      return json({ success: true, already_existed: true, recovery_sent: true, user_id: existingUser.id }, 200);
     }
 
     // Send invite (creates user + sends "Invite user" email)
