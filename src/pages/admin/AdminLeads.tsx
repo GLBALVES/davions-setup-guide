@@ -55,11 +55,38 @@ export default function AdminLeads() {
     if (!inviteTarget) return;
     setInviting(true);
     try {
+      // Make sure we still have a valid session — invoke uses it as Authorization header.
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess?.session) {
+        toast.error("Sua sessão expirou. Faça login novamente para enviar o convite.");
+        setInviting(false);
+        return;
+      }
+
       const redirectTo = `${window.location.origin}/reset-password`;
       const { data, error } = await supabase.functions.invoke("invite-lead-as-user", {
         body: { lead_id: inviteTarget.id, redirect_to: redirectTo },
       });
-      if (error) throw error;
+
+      // supabase-js wraps non-2xx in FunctionsHttpError — try to extract the JSON body
+      if (error) {
+        let detail = error.message;
+        const ctx = (error as any).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            if (body?.error) detail = body.error;
+          } catch {
+            try {
+              const text = await ctx.text();
+              if (text) detail = text;
+            } catch { /* ignore */ }
+          }
+        }
+        if (ctx?.status === 401) detail = "Não autorizado. Faça login novamente como admin.";
+        if (ctx?.status === 403) detail = "Acesso negado. Apenas admins podem convidar leads.";
+        throw new Error(detail);
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
 
       if ((data as any)?.recovery_sent) {
