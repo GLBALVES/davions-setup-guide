@@ -4978,6 +4978,7 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
+      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
@@ -4987,6 +4988,8 @@ const WebsiteEditor = () => {
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
       onSiteChange={updateSite}
+      openSubKey={pendingSettingsSub}
+      onSubKeyHandled={() => setPendingSettingsSub(null)}
       resetNonce={tabResetNonce}
     />,
   };
