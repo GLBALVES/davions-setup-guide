@@ -142,22 +142,19 @@ const CustomDomainStore = () => {
         makePageHref: (page) => `/page/${page.slug}`,
       });
 
-      // Inject "Shop" + "Blog" links after Home when each is enabled and has content
+      // Inject "Shop" + "Blog" links after Home whenever each is enabled.
+      // Empty states are rendered on the public Shop/Blog pages.
       const siteAny = (siteData ?? {}) as Record<string, any>;
       const shopEnabled = siteAny.show_store === true;
-      const hasShopContent =
-        ((siteAny.shop_show_sessions !== false) && (sessionData ?? []).length > 0) ||
-        ((siteAny.shop_show_galleries !== false) && (galleryData ?? []).length > 0);
       const blogEnabled = siteAny.show_blog === true;
-      const hasBlogContent = (blogCount ?? 0) > 0;
 
       const insertLinks: Array<{ label: string; href: string }> = [];
-      if (shopEnabled && hasShopContent) {
+      if (shopEnabled) {
         const shopDefaults = getShopDefaults(lang);
         const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
         insertLinks.push({ label: shopLabel, href: "/shop" });
       }
-      if (blogEnabled && hasBlogContent) {
+      if (blogEnabled) {
         const blogDefaults = getBlogDefaults(lang);
         const blogLabel = (siteAny.blog_title as string)?.trim() || blogDefaults.navLabel;
         insertLinks.push({ label: blogLabel, href: "/blog" });
