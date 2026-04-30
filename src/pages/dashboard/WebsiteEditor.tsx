@@ -1777,9 +1777,13 @@ const DroppableZone = ({
 
 const SHOP_VIRTUAL_ID = "__shop__";
 
-const ShopRow = ({ label, href }: { label: string; href: string }) => {
+const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onSettings?: () => void }) => {
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+    <button
+      type="button"
+      onClick={onSettings}
+      className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
+    >
       <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <span className="text-xs text-foreground flex-1 truncate">{label}</span>
       <a
@@ -1792,7 +1796,7 @@ const ShopRow = ({ label, href }: { label: string; href: string }) => {
       >
         <ExternalLink className="h-3.5 w-3.5" />
       </a>
-    </div>
+    </button>
   );
 };
 
@@ -1803,6 +1807,7 @@ type ShopExtra = {
   sortOrder: number;
   onMove: (toZone: "menu" | "notmenu") => void;
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+  onSettings?: () => void;
 };
 
 const DndPagesArea = ({
