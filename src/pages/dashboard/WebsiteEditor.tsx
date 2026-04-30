@@ -2117,6 +2117,12 @@ const DndPagesArea = ({
             <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="truncate">{shopExtra.label}</span>
           </div>
+        ) : dragId === BLOG_VIRTUAL_ID && blogExtra ? (
+          <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+            <Newspaper className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="truncate">{blogExtra.label}</span>
+          </div>
         ) : activeDrag ? (
           <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
