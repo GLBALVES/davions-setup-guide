@@ -145,6 +145,7 @@ export default function SettingsPanel({
         }}
         onSave={async (patch) => onSiteChange(patch)}
       />
+      <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
     </div>
   );
 }
