@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/RichTextEditor";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getLegalDefaults } from "@/lib/legal-defaults";
 import { RotateCcw, Eye } from "lucide-react";
@@ -133,13 +133,13 @@ export default function LegalSubPanel({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground">{labels.termsHelp}</p>
-        <Textarea
-          value={terms}
-          onChange={(e) => setTerms(e.target.value)}
-          placeholder={labels.placeholder}
-          rows={12}
-          className="text-xs font-mono"
-        />
+        <div className="rounded-md border border-input bg-background">
+          <RichTextEditor
+            content={terms}
+            onChange={setTerms}
+            placeholder={labels.placeholder}
+          />
+        </div>
       </div>
 
       {/* Privacy */}
@@ -180,13 +180,13 @@ export default function LegalSubPanel({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground">{labels.privacyHelp}</p>
-        <Textarea
-          value={privacy}
-          onChange={(e) => setPrivacy(e.target.value)}
-          placeholder={labels.placeholder}
-          rows={12}
-          className="text-xs font-mono"
-        />
+        <div className="rounded-md border border-input bg-background">
+          <RichTextEditor
+            content={privacy}
+            onChange={setPrivacy}
+            placeholder={labels.placeholder}
+          />
+        </div>
       </div>
 
       <div className="pt-2 border-t border-border">
