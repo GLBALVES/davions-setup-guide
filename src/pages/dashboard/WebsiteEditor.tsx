@@ -5051,6 +5051,12 @@ const WebsiteEditor = () => {
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
+      blogLabel={(site as any)?.blog_title || undefined}
+      blogHref={storeSlug ? `/store/${storeSlug}/blog` : "/blog"}
+      blogInMenu={(site as any)?.blog_in_menu !== false}
+      blogSortOrder={typeof (site as any)?.blog_sort_order === "number" ? (site as any).blog_sort_order : 2}
+      onBlogChange={(patch) => updateSite(patch)}
+      onBlogSettings={() => { setActiveTab("settings"); setPendingSettingsSub("blog"); }}
       showShop={Boolean((site as any)?.show_store)}
       shopLabel={(site as any)?.shop_title || undefined}
       shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
