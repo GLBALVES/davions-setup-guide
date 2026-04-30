@@ -1874,15 +1874,23 @@ const DndPagesArea = ({
   const allPages = [...menuPages, ...nonMenuPages, ...childPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
-  // Build IDs lists, injecting the virtual shop item at its sortOrder slot
+  // Build IDs lists, injecting virtual items (shop/blog) at their sortOrder slots
   const baseMenuIds = menuPages.map((p) => p.id);
   const baseNotMenuIds = nonMenuPages.map((p) => p.id);
-  const injectShop = (ids: string[], so: number) => {
+  const injectAt = (ids: string[], so: number, virtualId: string) => {
     const idx = Math.max(0, Math.min(so, ids.length));
-    return [...ids.slice(0, idx), SHOP_VIRTUAL_ID, ...ids.slice(idx)];
+    return [...ids.slice(0, idx), virtualId, ...ids.slice(idx)];
   };
-  const menuIds = shopExtra && shopExtra.inMenu ? injectShop(baseMenuIds, shopExtra.sortOrder) : baseMenuIds;
-  const notMenuIds = shopExtra && !shopExtra.inMenu ? injectShop(baseNotMenuIds, shopExtra.sortOrder) : baseNotMenuIds;
+  let menuIds = baseMenuIds;
+  let notMenuIds = baseNotMenuIds;
+  if (shopExtra) {
+    if (shopExtra.inMenu) menuIds = injectAt(menuIds, shopExtra.sortOrder, SHOP_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, shopExtra.sortOrder, SHOP_VIRTUAL_ID);
+  }
+  if (blogExtra) {
+    if (blogExtra.inMenu) menuIds = injectAt(menuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
+  }
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
