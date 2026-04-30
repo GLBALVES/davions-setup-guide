@@ -108,7 +108,7 @@ export default function SettingsPanel({
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
           <Item icon={Share2} label="Social" onClick={() => setView("social")} />
-          <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setView("legal")} />
+          <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setLegalOpen(true)} />
           <Item icon={BarChart3} label="Tracking & Analytics" onClick={() => setTrackingOpen(true)} />
           <Item icon={Settings2} label="Advanced" onClick={() => setAdvancedOpen(true)} />
         </Section>
