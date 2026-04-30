@@ -1777,9 +1777,13 @@ const DroppableZone = ({
 
 const SHOP_VIRTUAL_ID = "__shop__";
 
-const ShopRow = ({ label, href }: { label: string; href: string }) => {
+const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onSettings?: () => void }) => {
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+    <button
+      type="button"
+      onClick={onSettings}
+      className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
+    >
       <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <span className="text-xs text-foreground flex-1 truncate">{label}</span>
       <a
@@ -1792,7 +1796,7 @@ const ShopRow = ({ label, href }: { label: string; href: string }) => {
       >
         <ExternalLink className="h-3.5 w-3.5" />
       </a>
-    </div>
+    </button>
   );
 };
 
@@ -1803,6 +1807,7 @@ type ShopExtra = {
   sortOrder: number;
   onMove: (toZone: "menu" | "notmenu") => void;
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+  onSettings?: () => void;
 };
 
 const DndPagesArea = ({
@@ -1958,7 +1963,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2014,7 +2019,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2095,6 +2100,7 @@ const PagesPanel = ({
   shopInMenu,
   shopSortOrder,
   onShopChange,
+  onShopSettings,
   onActiveSlideChange,
   resetNonce,
 }: {
@@ -2117,6 +2123,7 @@ const PagesPanel = ({
   shopInMenu?: boolean;
   shopSortOrder?: number;
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
+  onShopSettings?: () => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
@@ -2789,6 +2796,7 @@ const PagesPanel = ({
             const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
+          onSettings: onShopSettings,
         } : null}
       />
 
@@ -4350,6 +4358,7 @@ const BrandRow = ({
 const WebsiteEditor = () => {
   const [activeTab, setActiveTab] = useState<EditorTab>("pages");
   const [pendingStyleSub, setPendingStyleSub] = useState<StyleSubPanel | null>(null);
+  const [pendingSettingsSub, setPendingSettingsSub] = useState<"shop" | "seo" | "blog" | "social" | "legal" | "drafts" | "trash" | "forms" | null>(null);
   // Bumps every time the user clicks a tab in the sidebar rail. Sub-panels
   // observe this and reset their internal sub-screen state, so each tab
   // always opens at its root and never "remembers" a previous nested view.
@@ -4942,6 +4951,7 @@ const WebsiteEditor = () => {
     setSelectedBlockIndex(null);
     setEditingSection(null);
     setPendingStyleSub(null);
+    setPendingSettingsSub(null);
     setEditorActiveSlideId(null);
     setActiveTab(tab);
     setTabResetNonce((n) => n + 1);
@@ -4968,6 +4978,7 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
+      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
@@ -4977,6 +4988,8 @@ const WebsiteEditor = () => {
       photographerId={user?.id ?? null}
       site={site as Record<string, any> | null}
       onSiteChange={updateSite}
+      openSubKey={pendingSettingsSub}
+      onSubKeyHandled={() => setPendingSettingsSub(null)}
       resetNonce={tabResetNonce}
     />,
   };

@@ -19,11 +19,15 @@ export default function SettingsPanel({
   photographerId,
   site,
   onSiteChange,
+  openSubKey,
+  onSubKeyHandled,
   resetNonce,
 }: {
   photographerId: string | null;
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
+  openSubKey?: SubView;
+  onSubKeyHandled?: () => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
   resetNonce?: number;
 }) {
@@ -39,6 +43,14 @@ export default function SettingsPanel({
     setAdvancedOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce]);
+
+  useEffect(() => {
+    if (openSubKey) {
+      setView(openSubKey);
+      onSubKeyHandled?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSubKey]);
 
   if (view) {
     const titles: Record<Exclude<SubView, null>, string> = {
