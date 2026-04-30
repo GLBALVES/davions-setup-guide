@@ -1842,6 +1842,7 @@ const DndPagesArea = ({
   onMoveToFolder,
   shopExtra,
   blogExtra,
+  onCopyHeader,
   onShareHeader,
 }: {
   menuPages: SitePage[];
