@@ -87,7 +87,7 @@ export default function SettingsPanel({
           {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
           {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
           {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
-          {view === "legal" && <LegalSubPanel site={site} onSiteChange={onSiteChange} />}
+          {/* legal opens in modal — see LegalModal below */}
           {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
         </div>
       </div>
