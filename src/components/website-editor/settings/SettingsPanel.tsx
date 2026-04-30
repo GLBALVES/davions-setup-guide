@@ -35,18 +35,24 @@ export default function SettingsPanel({
   const [view, setView] = useState<SubView>(null);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   useEffect(() => {
     if (resetNonce === undefined) return;
     setView(null);
     setTrackingOpen(false);
     setAdvancedOpen(false);
+    setLegalOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce]);
 
   useEffect(() => {
     if (openSubKey) {
-      setView(openSubKey);
+      if (openSubKey === "legal") {
+        setLegalOpen(true);
+      } else {
+        setView(openSubKey);
+      }
       onSubKeyHandled?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
