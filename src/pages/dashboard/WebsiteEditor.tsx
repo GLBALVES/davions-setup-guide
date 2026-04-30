@@ -1776,21 +1776,34 @@ const DroppableZone = ({
 };
 
 const SHOP_VIRTUAL_ID = "__shop__";
+const BLOG_VIRTUAL_ID = "__blog__";
 
-const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onSettings?: () => void }) => {
+const VirtualRow = ({
+  icon: Icon,
+  label,
+  href,
+  openTitle,
+  onSettings,
+}: {
+  icon: any;
+  label: string;
+  href: string;
+  openTitle: string;
+  onSettings?: () => void;
+}) => {
   return (
     <button
       type="button"
       onClick={onSettings}
       className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
     >
-      <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <span className="text-xs text-foreground flex-1 truncate">{label}</span>
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        title="Open Shop"
+        title={openTitle}
         className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
         onClick={(e) => e.stopPropagation()}
       >
@@ -1800,7 +1813,7 @@ const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onS
   );
 };
 
-type ShopExtra = {
+type VirtualExtra = {
   label: string;
   href: string;
   inMenu: boolean;
@@ -1809,6 +1822,9 @@ type ShopExtra = {
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
   onSettings?: () => void;
 };
+
+type ShopExtra = VirtualExtra;
+type BlogExtra = VirtualExtra;
 
 const DndPagesArea = ({
   menuPages,
@@ -1825,6 +1841,7 @@ const DndPagesArea = ({
   onReorder,
   onMoveToFolder,
   shopExtra,
+  blogExtra,
   onCopyHeader,
   onShareHeader,
 }: {
@@ -1842,6 +1859,7 @@ const DndPagesArea = ({
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
+  blogExtra?: BlogExtra | null;
   onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
   onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
@@ -1856,15 +1874,23 @@ const DndPagesArea = ({
   const allPages = [...menuPages, ...nonMenuPages, ...childPages];
   const activeDrag = dragId ? allPages.find((p) => p.id === dragId) : null;
 
-  // Build IDs lists, injecting the virtual shop item at its sortOrder slot
+  // Build IDs lists, injecting virtual items (shop/blog) at their sortOrder slots
   const baseMenuIds = menuPages.map((p) => p.id);
   const baseNotMenuIds = nonMenuPages.map((p) => p.id);
-  const injectShop = (ids: string[], so: number) => {
+  const injectAt = (ids: string[], so: number, virtualId: string) => {
     const idx = Math.max(0, Math.min(so, ids.length));
-    return [...ids.slice(0, idx), SHOP_VIRTUAL_ID, ...ids.slice(idx)];
+    return [...ids.slice(0, idx), virtualId, ...ids.slice(idx)];
   };
-  const menuIds = shopExtra && shopExtra.inMenu ? injectShop(baseMenuIds, shopExtra.sortOrder) : baseMenuIds;
-  const notMenuIds = shopExtra && !shopExtra.inMenu ? injectShop(baseNotMenuIds, shopExtra.sortOrder) : baseNotMenuIds;
+  let menuIds = baseMenuIds;
+  let notMenuIds = baseNotMenuIds;
+  if (shopExtra) {
+    if (shopExtra.inMenu) menuIds = injectAt(menuIds, shopExtra.sortOrder, SHOP_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, shopExtra.sortOrder, SHOP_VIRTUAL_ID);
+  }
+  if (blogExtra) {
+    if (blogExtra.inMenu) menuIds = injectAt(menuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
+  }
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
@@ -1880,14 +1906,16 @@ const DndPagesArea = ({
     if (activeId === overId) return;
 
     const isShopActive = activeId === SHOP_VIRTUAL_ID;
+    const isBlogActive = activeId === BLOG_VIRTUAL_ID;
+    const isVirtualActive = isShopActive || isBlogActive;
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
     // A child page is one that is nested under a folder (not in either top-level zone)
-    const isActiveChild = !isShopActive && !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
+    const isActiveChild = !isVirtualActive && !menuIds.includes(activeId) && !notMenuIds.includes(activeId);
 
-    // Drop onto a folder header explicit droppable → make subpage (shop cannot be nested)
+    // Drop onto a folder header explicit droppable → make subpage (virtuals cannot be nested)
     if (overId.startsWith("folder:")) {
-      if (isShopActive) return;
+      if (isVirtualActive) return;
       const folderId = overId.slice("folder:".length);
       if (folderId === activeId || isActiveFolder) return;
       onMoveToFolder(activeId, folderId);
@@ -1896,7 +1924,7 @@ const DndPagesArea = ({
 
     // Drop onto a folder row id (sortable wraps the folder) → nest as subpage
     const overIsFolder = folders.some((f) => f.id === overId);
-    if (overIsFolder && !isActiveFolder && !isShopActive) {
+    if (overIsFolder && !isActiveFolder && !isVirtualActive) {
       onMoveToFolder(activeId, overId);
       return;
     }
@@ -1931,17 +1959,24 @@ const DndPagesArea = ({
       const newIdx = list.indexOf(overId);
       if (oldIdx < 0 || newIdx < 0) return;
       const reordered = arrayMove(list, oldIdx, newIdx);
-      // Update shop position if applicable
+      // Update virtual positions if applicable
       if (shopExtra && shopExtra.inMenu === (toZone === "menu") && reordered.includes(SHOP_VIRTUAL_ID)) {
-        shopExtra.onReorder(toZone, reordered);
+        const newShopIdx = reordered.indexOf(SHOP_VIRTUAL_ID);
+        if (newShopIdx !== shopExtra.sortOrder) shopExtra.onReorder(toZone, reordered);
       }
-      // Update real pages order (without the shop virtual id)
-      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID);
+      if (blogExtra && blogExtra.inMenu === (toZone === "menu") && reordered.includes(BLOG_VIRTUAL_ID)) {
+        const newBlogIdx = reordered.indexOf(BLOG_VIRTUAL_ID);
+        if (newBlogIdx !== blogExtra.sortOrder) blogExtra.onReorder(toZone, reordered);
+      }
+      // Update real pages order (without the virtual ids)
+      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID && id !== BLOG_VIRTUAL_ID);
       if (pagesOnly.length > 0) onReorder(toZone, pagesOnly);
     } else {
       // Cross-zone move (visibility toggle)
       if (isShopActive && shopExtra) {
         shopExtra.onMove(toZone);
+      } else if (isBlogActive && blogExtra) {
+        blogExtra.onMove(toZone);
       } else {
         onMove(activeId, toZone);
       }
@@ -1963,7 +1998,14 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Shop" onSettings={shopExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
+              if (id === BLOG_VIRTUAL_ID && blogExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2019,7 +2061,14 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Shop" onSettings={shopExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
+              if (id === BLOG_VIRTUAL_ID && blogExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2068,6 +2117,12 @@ const DndPagesArea = ({
             <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="truncate">{shopExtra.label}</span>
           </div>
+        ) : dragId === BLOG_VIRTUAL_ID && blogExtra ? (
+          <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+            <Newspaper className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="truncate">{blogExtra.label}</span>
+          </div>
         ) : activeDrag ? (
           <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
@@ -2094,6 +2149,12 @@ const PagesPanel = ({
   onHeaderConfigChange,
   storeSlug,
   showBlog,
+  blogLabel,
+  blogHref,
+  blogInMenu,
+  blogSortOrder,
+  onBlogChange,
+  onBlogSettings,
   showShop,
   shopLabel,
   shopHref,
@@ -2117,6 +2178,12 @@ const PagesPanel = ({
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
   storeSlug?: string | null;
   showBlog?: boolean;
+  blogLabel?: string;
+  blogHref?: string;
+  blogInMenu?: boolean;
+  blogSortOrder?: number;
+  onBlogChange?: (patch: { blog_in_menu?: boolean; blog_sort_order?: number }) => void;
+  onBlogSettings?: () => void;
   showShop?: boolean;
   shopLabel?: string;
   shopHref?: string;
@@ -2797,6 +2864,18 @@ const PagesPanel = ({
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
           onSettings: onShopSettings,
+        } : null}
+        blogExtra={showBlog && onBlogChange ? {
+          label: blogLabel || "Blog",
+          href: blogHref || "#",
+          inMenu: blogInMenu !== false,
+          sortOrder: typeof blogSortOrder === "number" ? blogSortOrder : 2,
+          onMove: (toZone) => onBlogChange({ blog_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(BLOG_VIRTUAL_ID);
+            if (newIdx >= 0) onBlogChange({ blog_sort_order: newIdx });
+          },
+          onSettings: onBlogSettings,
         } : null}
       />
 
@@ -4972,6 +5051,12 @@ const WebsiteEditor = () => {
       onHeaderConfigChange={(cfg) => setActivePageInfo((prev) => ({ ...prev, headerConfig: cfg }))}
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
+      blogLabel={(site as any)?.blog_title || undefined}
+      blogHref={storeSlug ? `/store/${storeSlug}/blog` : "/blog"}
+      blogInMenu={(site as any)?.blog_in_menu !== false}
+      blogSortOrder={typeof (site as any)?.blog_sort_order === "number" ? (site as any).blog_sort_order : 2}
+      onBlogChange={(patch) => updateSite(patch)}
+      onBlogSettings={() => { setActiveTab("settings"); setPendingSettingsSub("blog"); }}
       showShop={Boolean((site as any)?.show_store)}
       shopLabel={(site as any)?.shop_title || undefined}
       shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
