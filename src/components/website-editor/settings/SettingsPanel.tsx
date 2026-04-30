@@ -70,27 +70,29 @@ export default function SettingsPanel({
       shop: "Shop",
     };
     return (
-      <div className="flex flex-col h-full">
-        <div className="h-10 border-b border-border flex items-center px-2 shrink-0">
-          <button
-            onClick={() => setView(null)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-muted/50"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span className="font-medium">{titles[view]}</span>
-          </button>
+      <>
+        <div className="flex flex-col h-full">
+          <div className="h-10 border-b border-border flex items-center px-2 shrink-0">
+            <button
+              onClick={() => setView(null)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-muted/50"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span className="font-medium">{titles[view]}</span>
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            {view === "seo" && <SeoSubPanel photographerId={photographerId} site={site} onSiteChange={onSiteChange} />}
+            {view === "blog" && <BlogSubPanel site={site} onSiteChange={onSiteChange} />}
+            {view === "social" && <SocialSubPanel site={site} onSiteChange={onSiteChange} />}
+            {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
+            {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
+            {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
+            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
+          </div>
         </div>
-        <div className="flex-1 min-h-0">
-          {view === "seo" && <SeoSubPanel photographerId={photographerId} site={site} onSiteChange={onSiteChange} />}
-          {view === "blog" && <BlogSubPanel site={site} onSiteChange={onSiteChange} />}
-          {view === "social" && <SocialSubPanel site={site} onSiteChange={onSiteChange} />}
-          {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
-          {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
-          {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
-          {/* legal opens in modal — see LegalModal below */}
-          {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
-        </div>
-      </div>
+        <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
+      </>
     );
   }
 
