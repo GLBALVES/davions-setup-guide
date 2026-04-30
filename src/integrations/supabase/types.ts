@@ -2504,6 +2504,8 @@ export type Database = {
           animation_style: string
           base_block_padding: number
           blog_description: string | null
+          blog_in_menu: boolean
+          blog_sort_order: number
           blog_title: string | null
           body_font: string | null
           button_height: number | null
@@ -2618,6 +2620,8 @@ export type Database = {
           animation_style?: string
           base_block_padding?: number
           blog_description?: string | null
+          blog_in_menu?: boolean
+          blog_sort_order?: number
           blog_title?: string | null
           body_font?: string | null
           button_height?: number | null
@@ -2732,6 +2736,8 @@ export type Database = {
           animation_style?: string
           base_block_padding?: number
           blog_description?: string | null
+          blog_in_menu?: boolean
+          blog_sort_order?: number
           blog_title?: string | null
           body_font?: string | null
           button_height?: number | null
