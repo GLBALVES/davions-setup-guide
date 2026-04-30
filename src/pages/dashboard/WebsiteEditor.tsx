@@ -2865,6 +2865,18 @@ const PagesPanel = ({
           },
           onSettings: onShopSettings,
         } : null}
+        blogExtra={showBlog && onBlogChange ? {
+          label: blogLabel || "Blog",
+          href: blogHref || "#",
+          inMenu: blogInMenu !== false,
+          sortOrder: typeof blogSortOrder === "number" ? blogSortOrder : 2,
+          onMove: (toZone) => onBlogChange({ blog_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(BLOG_VIRTUAL_ID);
+            if (newIdx >= 0) onBlogChange({ blog_sort_order: newIdx });
+          },
+          onSettings: onBlogSettings,
+        } : null}
       />
 
       <PageTemplatePickerModal
