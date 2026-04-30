@@ -133,13 +133,13 @@ export default function LegalSubPanel({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground">{labels.termsHelp}</p>
-        <Textarea
-          value={terms}
-          onChange={(e) => setTerms(e.target.value)}
-          placeholder={labels.placeholder}
-          rows={12}
-          className="text-xs font-mono"
-        />
+        <div className="rounded-md border border-input bg-background">
+          <RichTextEditor
+            content={terms}
+            onChange={setTerms}
+            placeholder={labels.placeholder}
+          />
+        </div>
       </div>
 
       {/* Privacy */}
