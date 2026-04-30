@@ -1776,21 +1776,34 @@ const DroppableZone = ({
 };
 
 const SHOP_VIRTUAL_ID = "__shop__";
+const BLOG_VIRTUAL_ID = "__blog__";
 
-const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onSettings?: () => void }) => {
+const VirtualRow = ({
+  icon: Icon,
+  label,
+  href,
+  openTitle,
+  onSettings,
+}: {
+  icon: any;
+  label: string;
+  href: string;
+  openTitle: string;
+  onSettings?: () => void;
+}) => {
   return (
     <button
       type="button"
       onClick={onSettings}
       className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
     >
-      <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       <span className="text-xs text-foreground flex-1 truncate">{label}</span>
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        title="Open Shop"
+        title={openTitle}
         className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
         onClick={(e) => e.stopPropagation()}
       >
@@ -1800,7 +1813,7 @@ const ShopRow = ({ label, href, onSettings }: { label: string; href: string; onS
   );
 };
 
-type ShopExtra = {
+type VirtualExtra = {
   label: string;
   href: string;
   inMenu: boolean;
@@ -1809,6 +1822,9 @@ type ShopExtra = {
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
   onSettings?: () => void;
 };
+
+type ShopExtra = VirtualExtra;
+type BlogExtra = VirtualExtra;
 
 const DndPagesArea = ({
   menuPages,
