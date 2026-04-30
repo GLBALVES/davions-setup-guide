@@ -2061,7 +2061,14 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Shop" onSettings={shopExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
+              if (id === BLOG_VIRTUAL_ID && blogExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
