@@ -2100,6 +2100,7 @@ const PagesPanel = ({
   shopInMenu,
   shopSortOrder,
   onShopChange,
+  onShopSettings,
   onActiveSlideChange,
   resetNonce,
 }: {
@@ -2122,6 +2123,7 @@ const PagesPanel = ({
   shopInMenu?: boolean;
   shopSortOrder?: number;
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
+  onShopSettings?: () => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
