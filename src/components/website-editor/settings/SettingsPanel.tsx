@@ -10,7 +10,7 @@ import SocialSubPanel from "./SocialSubPanel";
 import DraftsSubPanel from "./DraftsSubPanel";
 import TrashSubPanel from "./TrashSubPanel";
 import FormSubmissionsSubPanel from "./FormSubmissionsSubPanel";
-import LegalSubPanel from "./LegalSubPanel";
+import LegalModal from "./LegalModal";
 import ShopSubPanel from "./ShopSubPanel";
 
 type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal" | "shop";
