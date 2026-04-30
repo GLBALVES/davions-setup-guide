@@ -10,7 +10,7 @@ import SocialSubPanel from "./SocialSubPanel";
 import DraftsSubPanel from "./DraftsSubPanel";
 import TrashSubPanel from "./TrashSubPanel";
 import FormSubmissionsSubPanel from "./FormSubmissionsSubPanel";
-import LegalSubPanel from "./LegalSubPanel";
+import LegalModal from "./LegalModal";
 import ShopSubPanel from "./ShopSubPanel";
 
 type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal" | "shop";
@@ -35,18 +35,24 @@ export default function SettingsPanel({
   const [view, setView] = useState<SubView>(null);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   useEffect(() => {
     if (resetNonce === undefined) return;
     setView(null);
     setTrackingOpen(false);
     setAdvancedOpen(false);
+    setLegalOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce]);
 
   useEffect(() => {
     if (openSubKey) {
-      setView(openSubKey);
+      if (openSubKey === "legal") {
+        setLegalOpen(true);
+      } else {
+        setView(openSubKey);
+      }
       onSubKeyHandled?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,27 +70,29 @@ export default function SettingsPanel({
       shop: "Shop",
     };
     return (
-      <div className="flex flex-col h-full">
-        <div className="h-10 border-b border-border flex items-center px-2 shrink-0">
-          <button
-            onClick={() => setView(null)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-muted/50"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span className="font-medium">{titles[view]}</span>
-          </button>
+      <>
+        <div className="flex flex-col h-full">
+          <div className="h-10 border-b border-border flex items-center px-2 shrink-0">
+            <button
+              onClick={() => setView(null)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-muted/50"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span className="font-medium">{titles[view]}</span>
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            {view === "seo" && <SeoSubPanel photographerId={photographerId} site={site} onSiteChange={onSiteChange} />}
+            {view === "blog" && <BlogSubPanel site={site} onSiteChange={onSiteChange} />}
+            {view === "social" && <SocialSubPanel site={site} onSiteChange={onSiteChange} />}
+            {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
+            {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
+            {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
+            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
+          </div>
         </div>
-        <div className="flex-1 min-h-0">
-          {view === "seo" && <SeoSubPanel photographerId={photographerId} site={site} onSiteChange={onSiteChange} />}
-          {view === "blog" && <BlogSubPanel site={site} onSiteChange={onSiteChange} />}
-          {view === "social" && <SocialSubPanel site={site} onSiteChange={onSiteChange} />}
-          {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
-          {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
-          {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
-          {view === "legal" && <LegalSubPanel site={site} onSiteChange={onSiteChange} />}
-          {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
-        </div>
-      </div>
+        <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
+      </>
     );
   }
 
@@ -102,7 +110,7 @@ export default function SettingsPanel({
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
           <Item icon={Share2} label="Social" onClick={() => setView("social")} />
-          <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setView("legal")} />
+          <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setLegalOpen(true)} />
           <Item icon={BarChart3} label="Tracking & Analytics" onClick={() => setTrackingOpen(true)} />
           <Item icon={Settings2} label="Advanced" onClick={() => setAdvancedOpen(true)} />
         </Section>
@@ -137,6 +145,7 @@ export default function SettingsPanel({
         }}
         onSave={async (patch) => onSiteChange(patch)}
       />
+      <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
     </div>
   );
 }
