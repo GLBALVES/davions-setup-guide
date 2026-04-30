@@ -2019,7 +2019,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <ShopRow label={shopExtra.label} href={shopExtra.href} />
+                    <ShopRow label={shopExtra.label} href={shopExtra.href} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
