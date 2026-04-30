@@ -1858,6 +1858,7 @@ const DndPagesArea = ({
   onReorder: (zone: DndZone, orderedIds: string[]) => void;
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
+  blogExtra?: BlogExtra | null;
   onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
   onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
