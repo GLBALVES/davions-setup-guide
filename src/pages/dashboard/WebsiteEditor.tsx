@@ -4951,6 +4951,7 @@ const WebsiteEditor = () => {
     setSelectedBlockIndex(null);
     setEditingSection(null);
     setPendingStyleSub(null);
+    setPendingSettingsSub(null);
     setEditorActiveSlideId(null);
     setActiveTab(tab);
     setTabResetNonce((n) => n + 1);
