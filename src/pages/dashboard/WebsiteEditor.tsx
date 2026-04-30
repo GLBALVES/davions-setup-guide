@@ -2178,6 +2178,12 @@ const PagesPanel = ({
   onHeaderConfigChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig) => void;
   storeSlug?: string | null;
   showBlog?: boolean;
+  blogLabel?: string;
+  blogHref?: string;
+  blogInMenu?: boolean;
+  blogSortOrder?: number;
+  onBlogChange?: (patch: { blog_in_menu?: boolean; blog_sort_order?: number }) => void;
+  onBlogSettings?: () => void;
   showShop?: boolean;
   shopLabel?: string;
   shopHref?: string;
