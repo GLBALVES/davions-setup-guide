@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/RichTextEditor";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getLegalDefaults } from "@/lib/legal-defaults";
 import { RotateCcw, Eye } from "lucide-react";
