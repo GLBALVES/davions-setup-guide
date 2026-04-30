@@ -180,13 +180,13 @@ export default function LegalSubPanel({
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground">{labels.privacyHelp}</p>
-        <Textarea
-          value={privacy}
-          onChange={(e) => setPrivacy(e.target.value)}
-          placeholder={labels.placeholder}
-          rows={12}
-          className="text-xs font-mono"
-        />
+        <div className="rounded-md border border-input bg-background">
+          <RichTextEditor
+            content={privacy}
+            onChange={setPrivacy}
+            placeholder={labels.placeholder}
+          />
+        </div>
       </div>
 
       <div className="pt-2 border-t border-border">
