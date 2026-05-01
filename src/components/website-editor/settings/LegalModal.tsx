@@ -171,11 +171,23 @@ export default function LegalModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Scale className="h-4 w-4" />
-            {labels.title}
-          </DialogTitle>
-          <DialogDescription className="text-xs">{labels.intro}</DialogDescription>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Scale className="h-4 w-4" />
+                {labels.title}
+              </DialogTitle>
+              <DialogDescription className="text-xs mt-1">{labels.intro}</DialogDescription>
+            </div>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={saving}
+              className="mr-8 shrink-0"
+            >
+              {labels.save}
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs
