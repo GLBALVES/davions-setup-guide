@@ -20,7 +20,16 @@ import {
   MapPin,
   CreditCard,
   UserCircle,
+  Eye,
+  Sparkles,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 /* ── Types ──────────────────────────────────────────── */
 
