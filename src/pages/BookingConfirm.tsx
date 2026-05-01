@@ -304,6 +304,7 @@ const BookingConfirm = () => {
           email: booking.client_email,
           full_name: clientInfo.full_name.trim(),
           phone: clientInfo.phone.trim() || null,
+          tax_id: clientInfo.tax_id.trim() || null,
           birth_date: clientInfo.birth_date || null,
           address_street: clientInfo.address_street.trim() || null,
           address_city: clientInfo.address_city.trim() || null,
