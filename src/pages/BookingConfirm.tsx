@@ -895,7 +895,7 @@ const BookingConfirm = () => {
                 <input
                   type="checkbox"
                   checked={contractAccepted}
-                  onChange={(e) => setContractAccepted(e.target.checked)}
+                  onChange={(e) => handleAcceptContract(e.target.checked)}
                   className="h-4 w-4 accent-foreground mt-0.5"
                 />
                 <span className="text-xs font-light text-muted-foreground">
