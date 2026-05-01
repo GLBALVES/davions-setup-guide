@@ -354,6 +354,47 @@ const BookingConfirm = () => {
     }
   };
 
+  /* ── Resolve contract variables with live data ── */
+  const resolvedContractHtml = useMemo(() => {
+    if (!session?.contract_text) return "";
+    const fullAddress = [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state, clientInfo.address_zip, clientInfo.address_country]
+      .map((s) => (s || "").trim()).filter(Boolean).join(", ");
+    const data: Record<string, string> = {
+      client_name: clientInfo.full_name || booking?.client_name || "",
+      client_email: booking?.client_email || "",
+      client_phone: clientInfo.phone || "",
+      client_tax_id: clientInfo.tax_id || "",
+      client_address: fullAddress,
+      session_title: session.title || "",
+      session_date: booking?.booked_date ? formatDate(booking.booked_date) : "",
+      session_time: avail?.start_time ? formatTime(avail.start_time) : "",
+      session_duration: session.duration_minutes ? `${session.duration_minutes} min` : "",
+      session_price: session.price != null ? formatCurrency(session.price) : "",
+      photographer_name: photographer?.full_name || "",
+      studio_name: photographer?.business_name || photographer?.brand_name || photographer?.full_name || "",
+      studio_address: photographer?.business_address || "",
+    };
+    return resolveContractVariables(session.contract_text, data, contractCustomFields);
+  }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
+
+  /* ── Persist contract snapshot when accepted ── */
+  const handleAcceptContract = async (checked: boolean) => {
+    setContractAccepted(checked);
+    if (checked && booking?.id && resolvedContractHtml) {
+      try {
+        await (supabase as any)
+          .from("bookings")
+          .update({
+            contract_html_snapshot: resolvedContractHtml,
+            client_tax_id: clientInfo.tax_id?.trim() || null,
+          })
+          .eq("id", booking.id);
+      } catch (err) {
+        console.error("Save contract snapshot error:", err);
+      }
+    }
+  };
+
   /* ── Build steps dynamically ── */
   const buildSteps = (): StepDef[] => {
     if (!session) return [];
