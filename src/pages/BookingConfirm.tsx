@@ -148,6 +148,7 @@ const BookingConfirm = () => {
   const [clientInfo, setClientInfo] = useState<ClientInfo>({
     full_name: "",
     phone: "",
+    tax_id: "",
     birth_date: "",
     address_street: "",
     address_city: "",
