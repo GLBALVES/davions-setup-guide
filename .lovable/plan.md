@@ -1,39 +1,88 @@
-# Corrigir entrega do convite e personalizar emails
-
 ## Problema
 
-O email de convite não chegou porque o endereço usado já existia como usuário. Hoje a edge function `invite-lead-as-user` apenas marca o lead como "Invited" e não dispara nada quando o usuário já existe. Além disso, os emails padrão do Supabase (remetente `noreply@mail.app.supabase.io`) costumam cair no spam, o que também explica não-recebimento mesmo em fluxos novos.
+Hoje os "campos customizados" do contrato (ex.: CPF/CNPJ) só guardam um `default_value` estático — não há vínculo com o cadastro real do cliente. Além disso:
 
-## O que vou fazer
+1. A tabela `clients` não tem coluna para CPF/CNPJ.
+2. O passo "Your Info" do booking não coleta CPF/CNPJ.
+3. A função `resolveContractVariables` existe mas **nunca é chamada** no fluxo público — o contrato é renderizado cru (`session.contract_text`), então nem `[[client_name]]` está sendo substituído hoje.
 
-### 1. Atualizar a edge function `invite-lead-as-user`
-Quando o usuário **já existe**:
-- Em vez de só retornar `already_existed`, disparar `auth.admin.generateLink` do tipo `recovery` (ou `resetPasswordForEmail`) usando o mesmo `redirectTo` (`/reset-password`).
-- A página `ResetPassword.tsx` já trata tanto `type=invite` quanto `type=recovery`, então o usuário cai no mesmo fluxo de definir senha.
-- Garantir que o `redirectTo` aponte sempre para `https://www.davions.com/reset-password` (produção), independente de onde o admin estiver clicando.
-- Atualizar `leads.invited_at` em ambos os casos (novo convite ou reenvio).
+## Solução
 
-### 2. Melhorar UX no AdminLeads
-- Quando o lead já tem `invited_at`, o botão passa a se chamar **"Reenviar convite"** (em vez de só "Invite").
-- Mensagem do toast diferenciada: "Convite enviado" vs "Link de redefinição reenviado".
+Tratar CPF/CNPJ como um **campo nativo do cliente** (não custom), coletá-lo no booking, e fazer a resolução real das variáveis ao exibir e ao "congelar" o contrato no momento do aceite.
 
-### 3. Configurar emails de auth com domínio próprio (resolve o problema de spam)
-Como o domínio `davions.com` já está configurado no projeto, vou:
-- Rodar o scaffold dos templates de auth (`scaffold_auth_email_templates`) — gera os templates React Email para signup, invite, recovery, magic-link, email-change, reauthentication.
-- Aplicar a identidade visual do app aos templates: preto (#000000), branco, rose (#E11D48), fonte Inter, logo do Davions se existir em `public/`.
-- Traduzir o conteúdo dos emails para **português** (idioma principal do app, com menção a EN/ES no rodapé).
-- Adaptar os textos dos CTAs ao tom do app (ex.: "Definir minha senha", "Acessar Davions").
-- Fazer deploy da função `auth-email-hook`.
+### 1. Banco de dados (migração)
+- Adicionar coluna `tax_id text` em `public.clients` (armazena CPF ou CNPJ — mesmo campo, formato livre).
+- Adicionar coluna `client_tax_id text` em `public.bookings` (snapshot no momento do aceite, para o contrato congelado refletir o valor histórico).
 
-Resultado: emails passam a ser enviados pelo domínio configurado no Lovable Cloud (não mais `noreply@mail.app.supabase.io`), com branding Davions, melhorando muito a entregabilidade.
+### 2. Variável padrão de contrato
+Em `src/pages/dashboard/ContractEditor.tsx`:
+- Adicionar `{ key: "client_tax_id", label: "CPF / CNPJ" }` à lista `CONTRACT_VARIABLES`.
+- Aparecerá automaticamente no menu "Insert variable" e na sidebar de variáveis do editor.
+
+### 3. Coleta no booking público
+Em `src/pages/BookingConfirm.tsx`, passo "Your Info":
+- Adicionar input "CPF / CNPJ" (com máscara dinâmica leve: 11 dígitos → CPF, 14 → CNPJ; validação opcional).
+- Tornar **obrigatório apenas quando o idioma/locale é PT-BR** (o app é multi-idioma — em EN/ES fica opcional).
+- Carregar valor existente de `clients.tax_id` no `useEffect` de load.
+- Salvar no `upsert` de `clients` em `handleSaveClientInfo`.
+
+### 4. Renderização do contrato com variáveis resolvidas
+Em `BookingConfirm.tsx`, ao montar o passo "contract":
+- Buscar `contract_custom_fields` do fotógrafo (pelos valores default).
+- Chamar `resolveContractVariables(session.contract_text, data, customFields)` antes do `dangerouslySetInnerHTML`, onde `data` inclui:
+  - `client_name`, `client_email`, `client_phone`, `client_address`, `client_tax_id` (do form atual)
+  - `session_title`, `session_date`, `session_time`, `session_duration`, `session_price`, `session_location`
+  - `photographer_name`, `studio_name`, `studio_address`
+- No momento do aceite (botão "Accept"), persistir o HTML resolvido em uma nova coluna `bookings.contract_html_snapshot` para auditoria (e gravar `client_tax_id` no booking).
+
+### 5. UX no editor de contrato
+- Renomear a label de "Custom Fields" para deixar claro que são variáveis com **valor padrão fixo** (não vinculadas a cliente).
+- Adicionar uma nota informativa: "Use a variável CPF / CNPJ para puxar o valor automaticamente do cadastro do cliente."
 
 ## Detalhes técnicos
 
-- Edge function usa `generateLink({ type: 'recovery', email, options: { redirectTo } })` para usuários existentes. Esse link tem mesma estrutura `#access_token=...&type=recovery`, e `ResetPassword.tsx` já cobre o evento `PASSWORD_RECOVERY` / `SIGNED_IN`.
-- O scaffold cria `supabase/functions/auth-email-hook/index.ts` + `supabase/functions/_shared/email-templates/*.tsx`. Vou customizar os 6 templates com cores/tipografia da marca antes do deploy.
-- Após deploy, ativação dos emails de auth com domínio próprio acontece automaticamente no Lovable Cloud assim que a verificação DNS terminar (já está em curso).
-- Não precisa de Resend nem nenhum serviço externo — tudo via Lovable Cloud.
+```text
+clients
+  + tax_id text  (nullable)
 
-## Fora de escopo
-- Mudar a cópia (texto) dos demais emails transacionais não-auth.
-- Renomear/mover campos no banco (`invited_at`/`invited_user_id` continuam como estão).
+bookings
+  + client_tax_id        text  (nullable, snapshot)
+  + contract_html_snapshot text (nullable, contrato resolvido + aceito)
+```
+
+Resolução de variáveis (mapa em BookingConfirm):
+```ts
+const data = {
+  client_name: clientInfo.full_name,
+  client_email: booking.client_email,
+  client_phone: clientInfo.phone,
+  client_tax_id: clientInfo.tax_id,
+  client_address: [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state].filter(Boolean).join(", "),
+  session_title: session.title,
+  session_date: formatDate(booking.booked_date),
+  session_time: avail?.start_time?.slice(0,5),
+  session_duration: `${session.duration_minutes} min`,
+  session_price: formatMoney(session.price),
+  session_location: session.location,
+  photographer_name: photographer.full_name,
+  studio_name: photographer.business_name,
+  studio_address: photographer.address,
+};
+```
+
+## Arquivos afetados
+
+- `supabase/migrations/<new>.sql` (criar)
+- `src/pages/dashboard/ContractEditor.tsx` (adicionar variável padrão + nota UX)
+- `src/pages/BookingConfirm.tsx` (campo CPF/CNPJ, resolver variáveis, snapshot)
+- `src/pages/dashboard/Personalize.tsx` (ajuste de label/copy se necessário)
+
+## i18n
+Strings novas em EN / PT-BR / ES via `LanguageContext`:
+- "CPF / CNPJ" (label)
+- "Required for Brazilian clients" (helper)
+- Nota no editor sobre vincular ao cadastro
+
+## Fora do escopo
+- Validação algorítmica de CPF/CNPJ (dígitos verificadores) — pode ser adicionada depois se necessário.
+- Migração de dados antigos: bookings antigos ficam com `client_tax_id` nulo.
