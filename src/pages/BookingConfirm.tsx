@@ -76,6 +76,8 @@ interface PhotographerData {
   full_name: string;
   store_slug: string | null;
   brand_name: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
