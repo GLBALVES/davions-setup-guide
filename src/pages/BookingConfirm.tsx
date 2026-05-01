@@ -20,7 +20,16 @@ import {
   MapPin,
   CreditCard,
   UserCircle,
+  Eye,
+  Sparkles,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 /* ── Types ──────────────────────────────────────────── */
 
@@ -163,6 +172,7 @@ const BookingConfirm = () => {
 
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [contractPreviewOpen, setContractPreviewOpen] = useState(false);
   const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string }>>([]);
 
   // LGPD consent
@@ -376,6 +386,32 @@ const BookingConfirm = () => {
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
+
+  /* ── Build a list of resolved fields actually used in the contract for the preview banner ── */
+  const resolvedFieldsPreview = useMemo(() => {
+    if (!session?.contract_text) return [] as Array<{ label: string; value: string; missing: boolean }>;
+    const raw = session.contract_text;
+    const candidates: Array<{ key: string; label: string; value: string }> = [
+      { key: "client_name", label: "Name", value: clientInfo.full_name || booking?.client_name || "" },
+      { key: "client_email", label: "Email", value: booking?.client_email || "" },
+      { key: "client_phone", label: "Phone", value: clientInfo.phone || "" },
+      { key: "client_tax_id", label: "CPF / CNPJ", value: clientInfo.tax_id || "" },
+      { key: "client_address", label: "Address", value: [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state].filter(Boolean).join(", ") },
+      { key: "session_title", label: "Session", value: session.title || "" },
+      { key: "session_date", label: "Date", value: booking?.booked_date ? formatDate(booking.booked_date) : "" },
+      { key: "session_time", label: "Time", value: avail?.start_time ? formatTime(avail.start_time) : "" },
+      { key: "session_price", label: "Price", value: session.price != null ? formatCurrency(session.price) : "" },
+    ];
+    const customs = contractCustomFields.map((f) => ({
+      key: f.field_key,
+      label: f.field_label,
+      value: f.default_value || "",
+    }));
+    const all = [...candidates, ...customs];
+    return all
+      .filter(({ key }) => raw.includes(`{{${key}}}`) || raw.includes(`[[${key}]]`))
+      .map(({ label, value }) => ({ label, value, missing: !value || !value.trim() }));
+  }, [session, booking, avail, clientInfo, contractCustomFields]);
 
   /* ── Persist contract snapshot when accepted ── */
   const handleAcceptContract = async (checked: boolean) => {
@@ -878,9 +914,50 @@ const BookingConfirm = () => {
         {/* Contract */}
         {activeStep?.key === "contract" && session.contract_text && (
           <div className="border border-border flex flex-col divide-y divide-border">
-            <div className="p-5 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <p className="text-xs tracking-[0.2em] uppercase font-light">Service Agreement</p>
+            <div className="p-5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <p className="text-xs tracking-[0.2em] uppercase font-light">Service Agreement</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setContractPreviewOpen(true)}
+                className="h-7 px-2.5 text-[10px]"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Full preview
+              </Button>
+            </div>
+
+            {/* Preview banner: shows which fields will be auto-filled */}
+            <div className="p-4 bg-muted/30">
+              <div className="flex items-start gap-2 mb-3">
+                <Sparkles className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">
+                    Live preview · auto-filled with your information
+                  </p>
+                  <p className="text-[10px] font-light text-muted-foreground/80 mt-0.5">
+                    Review the values below. Missing fields will appear blank in your final contract.
+                  </p>
+                </div>
+              </div>
+              {resolvedFieldsPreview.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+                  {resolvedFieldsPreview.map((f, i) => (
+                    <div key={i} className="flex items-baseline gap-2 text-[11px] font-light min-w-0">
+                      <span className="text-muted-foreground shrink-0">{f.label}:</span>
+                      {f.missing ? (
+                        <span className="italic text-destructive/80">— missing —</span>
+                      ) : (
+                        <span className="text-foreground truncate">{f.value}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="p-5">
@@ -905,6 +982,32 @@ const BookingConfirm = () => {
             </div>
           </div>
         )}
+
+        {/* Full-screen contract preview modal */}
+        <Dialog open={contractPreviewOpen} onOpenChange={setContractPreviewOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
+              <DialogTitle className="text-sm tracking-[0.2em] uppercase font-light">
+                Contract preview
+              </DialogTitle>
+              <DialogDescription className="text-xs font-light">
+                This is exactly how your contract will look once accepted.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div
+                className="prose prose-sm max-w-none text-sm font-light leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || session.contract_text || "" }}
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-border shrink-0 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setContractPreviewOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
 
         {/* Payment */}
         {activeStep?.key === "payment" && (
