@@ -108,6 +108,7 @@ type StepKey = "details" | "client_info" | "briefing" | "contract" | "payment";
 interface ClientInfo {
   full_name: string;
   phone: string;
+  tax_id: string;
   birth_date: string;
   address_street: string;
   address_city: string;
