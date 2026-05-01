@@ -35,6 +35,9 @@ import {
 export const CONTRACT_VARIABLES = [
   { key: "client_name",       label: "Client Name" },
   { key: "client_email",      label: "Client Email" },
+  { key: "client_phone",      label: "Client Phone" },
+  { key: "client_tax_id",     label: "CPF / CNPJ" },
+  { key: "client_address",    label: "Client Address" },
   { key: "session_title",     label: "Session Title" },
   { key: "session_date",      label: "Session Date" },
   { key: "session_time",      label: "Session Time" },

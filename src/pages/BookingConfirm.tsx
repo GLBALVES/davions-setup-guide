@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,8 @@ interface PhotographerData {
   full_name: string;
   store_slug: string | null;
   brand_name: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
@@ -106,6 +109,7 @@ type StepKey = "details" | "client_info" | "briefing" | "contract" | "payment";
 interface ClientInfo {
   full_name: string;
   phone: string;
+  tax_id: string;
   birth_date: string;
   address_street: string;
   address_city: string;
@@ -145,6 +149,7 @@ const BookingConfirm = () => {
   const [clientInfo, setClientInfo] = useState<ClientInfo>({
     full_name: "",
     phone: "",
+    tax_id: "",
     birth_date: "",
     address_street: "",
     address_city: "",
@@ -158,6 +163,7 @@ const BookingConfirm = () => {
 
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string }>>([]);
 
   // LGPD consent
   const [privacyConsent, setPrivacyConsent] = useState(false);
@@ -192,7 +198,7 @@ const BookingConfirm = () => {
           .single(),
         (supabase as any)
           .from("photographers")
-          .select("full_name, store_slug, brand_name")
+          .select("full_name, store_slug, brand_name, business_name, business_address")
           .eq("id", b.photographer_id)
           .single(),
       ]);
@@ -234,7 +240,7 @@ const BookingConfirm = () => {
       if (b.client_email && b.photographer_id) {
         const { data: existingClient } = await (supabase as any)
           .from("clients")
-          .select("full_name, phone, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
+          .select("full_name, phone, tax_id, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
           .eq("photographer_id", b.photographer_id)
           .eq("email", b.client_email)
           .maybeSingle();
@@ -242,6 +248,7 @@ const BookingConfirm = () => {
           setClientInfo({
             full_name: existingClient.full_name || b.client_name || "",
             phone: existingClient.phone || "",
+            tax_id: existingClient.tax_id || "",
             birth_date: existingClient.birth_date || "",
             address_street: existingClient.address_street || "",
             address_city: existingClient.address_city || "",
@@ -253,6 +260,13 @@ const BookingConfirm = () => {
           setClientInfoSaved(true);
         }
       }
+
+      // Load contract custom fields (default values for variables)
+      const { data: cfData } = await (supabase as any)
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", b.photographer_id);
+      if (cfData) setContractCustomFields(cfData);
 
       setLoading(false);
     };
@@ -299,6 +313,7 @@ const BookingConfirm = () => {
           email: booking.client_email,
           full_name: clientInfo.full_name.trim(),
           phone: clientInfo.phone.trim() || null,
+          tax_id: clientInfo.tax_id.trim() || null,
           birth_date: clientInfo.birth_date || null,
           address_street: clientInfo.address_street.trim() || null,
           address_city: clientInfo.address_city.trim() || null,
@@ -336,6 +351,47 @@ const BookingConfirm = () => {
       console.error("Payment error:", err);
     } finally {
       setPaymentLoading(false);
+    }
+  };
+
+  /* ── Resolve contract variables with live data ── */
+  const resolvedContractHtml = useMemo(() => {
+    if (!session?.contract_text) return "";
+    const fullAddress = [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state, clientInfo.address_zip, clientInfo.address_country]
+      .map((s) => (s || "").trim()).filter(Boolean).join(", ");
+    const data: Record<string, string> = {
+      client_name: clientInfo.full_name || booking?.client_name || "",
+      client_email: booking?.client_email || "",
+      client_phone: clientInfo.phone || "",
+      client_tax_id: clientInfo.tax_id || "",
+      client_address: fullAddress,
+      session_title: session.title || "",
+      session_date: booking?.booked_date ? formatDate(booking.booked_date) : "",
+      session_time: avail?.start_time ? formatTime(avail.start_time) : "",
+      session_duration: session.duration_minutes ? `${session.duration_minutes} min` : "",
+      session_price: session.price != null ? formatCurrency(session.price) : "",
+      photographer_name: photographer?.full_name || "",
+      studio_name: photographer?.business_name || photographer?.brand_name || photographer?.full_name || "",
+      studio_address: photographer?.business_address || "",
+    };
+    return resolveContractVariables(session.contract_text, data, contractCustomFields);
+  }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
+
+  /* ── Persist contract snapshot when accepted ── */
+  const handleAcceptContract = async (checked: boolean) => {
+    setContractAccepted(checked);
+    if (checked && booking?.id && resolvedContractHtml) {
+      try {
+        await (supabase as any)
+          .from("bookings")
+          .update({
+            contract_html_snapshot: resolvedContractHtml,
+            client_tax_id: clientInfo.tax_id?.trim() || null,
+          })
+          .eq("id", booking.id);
+      } catch (err) {
+        console.error("Save contract snapshot error:", err);
+      }
     }
   };
 
@@ -591,6 +647,19 @@ const BookingConfirm = () => {
                   />
                 </div>
 
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">CPF / CNPJ <span className="text-muted-foreground/60">(Brazil)</span></Label>
+                  <Input
+                    value={clientInfo.tax_id}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, tax_id: e.target.value }))}
+                    placeholder="000.000.000-00 or 00.000.000/0000-00"
+                    className="text-sm font-light"
+                  />
+                  <p className="text-[10px] text-muted-foreground font-light">
+                    Required for Brazilian clients. Used to fill the contract automatically.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-light">Date of Birth</Label>
@@ -817,7 +886,7 @@ const BookingConfirm = () => {
             <div className="p-5">
               <div
                 className="prose prose-sm max-w-none text-xs font-light leading-relaxed max-h-80 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: session.contract_text }}
+                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || session.contract_text }}
               />
             </div>
 
@@ -826,7 +895,7 @@ const BookingConfirm = () => {
                 <input
                   type="checkbox"
                   checked={contractAccepted}
-                  onChange={(e) => setContractAccepted(e.target.checked)}
+                  onChange={(e) => handleAcceptContract(e.target.checked)}
                   className="h-4 w-4 accent-foreground mt-0.5"
                 />
                 <span className="text-xs font-light text-muted-foreground">

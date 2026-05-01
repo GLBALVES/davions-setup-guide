@@ -672,7 +672,9 @@ export type Database = {
           booked_date: string | null
           client_email: string
           client_name: string
+          client_tax_id: string | null
           consent_given_at: string | null
+          contract_html_snapshot: string | null
           created_at: string
           extras_total: number
           id: string
@@ -688,7 +690,9 @@ export type Database = {
           booked_date?: string | null
           client_email: string
           client_name: string
+          client_tax_id?: string | null
           consent_given_at?: string | null
+          contract_html_snapshot?: string | null
           created_at?: string
           extras_total?: number
           id?: string
@@ -704,7 +708,9 @@ export type Database = {
           booked_date?: string | null
           client_email?: string
           client_name?: string
+          client_tax_id?: string | null
           consent_given_at?: string | null
+          contract_html_snapshot?: string | null
           created_at?: string
           extras_total?: number
           id?: string
@@ -1077,6 +1083,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           photographer_id: string
+          tax_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1094,6 +1101,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           photographer_id: string
+          tax_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1111,6 +1119,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           photographer_id?: string
+          tax_id?: string | null
           updated_at?: string
         }
         Relationships: [
