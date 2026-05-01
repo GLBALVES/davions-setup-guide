@@ -238,7 +238,7 @@ const BookingConfirm = () => {
       if (b.client_email && b.photographer_id) {
         const { data: existingClient } = await (supabase as any)
           .from("clients")
-          .select("full_name, phone, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
+          .select("full_name, phone, tax_id, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
           .eq("photographer_id", b.photographer_id)
           .eq("email", b.client_email)
           .maybeSingle();
@@ -246,6 +246,7 @@ const BookingConfirm = () => {
           setClientInfo({
             full_name: existingClient.full_name || b.client_name || "",
             phone: existingClient.phone || "",
+            tax_id: existingClient.tax_id || "",
             birth_date: existingClient.birth_date || "",
             address_street: existingClient.address_street || "",
             address_city: existingClient.address_city || "",
