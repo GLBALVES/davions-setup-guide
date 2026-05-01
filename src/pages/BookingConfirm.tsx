@@ -261,6 +261,13 @@ const BookingConfirm = () => {
         }
       }
 
+      // Load contract custom fields (default values for variables)
+      const { data: cfData } = await (supabase as any)
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", b.photographer_id);
+      if (cfData) setContractCustomFields(cfData);
+
       setLoading(false);
     };
 
