@@ -163,6 +163,7 @@ const BookingConfirm = () => {
 
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string }>>([]);
 
   // LGPD consent
   const [privacyConsent, setPrivacyConsent] = useState(false);
