@@ -387,6 +387,32 @@ const BookingConfirm = () => {
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
 
+  /* ── Build a list of resolved fields actually used in the contract for the preview banner ── */
+  const resolvedFieldsPreview = useMemo(() => {
+    if (!session?.contract_text) return [] as Array<{ label: string; value: string; missing: boolean }>;
+    const raw = session.contract_text;
+    const candidates: Array<{ key: string; label: string; value: string }> = [
+      { key: "client_name", label: "Name", value: clientInfo.full_name || booking?.client_name || "" },
+      { key: "client_email", label: "Email", value: booking?.client_email || "" },
+      { key: "client_phone", label: "Phone", value: clientInfo.phone || "" },
+      { key: "client_tax_id", label: "CPF / CNPJ", value: clientInfo.tax_id || "" },
+      { key: "client_address", label: "Address", value: [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state].filter(Boolean).join(", ") },
+      { key: "session_title", label: "Session", value: session.title || "" },
+      { key: "session_date", label: "Date", value: booking?.booked_date ? formatDate(booking.booked_date) : "" },
+      { key: "session_time", label: "Time", value: avail?.start_time ? formatTime(avail.start_time) : "" },
+      { key: "session_price", label: "Price", value: session.price != null ? formatCurrency(session.price) : "" },
+    ];
+    const customs = contractCustomFields.map((f) => ({
+      key: f.field_key,
+      label: f.field_label,
+      value: f.default_value || "",
+    }));
+    const all = [...candidates, ...customs];
+    return all
+      .filter(({ key }) => raw.includes(`{{${key}}}`) || raw.includes(`[[${key}]]`))
+      .map(({ label, value }) => ({ label, value, missing: !value || !value.trim() }));
+  }, [session, booking, avail, clientInfo, contractCustomFields]);
+
   /* ── Persist contract snapshot when accepted ── */
   const handleAcceptContract = async (checked: boolean) => {
     setContractAccepted(checked);
