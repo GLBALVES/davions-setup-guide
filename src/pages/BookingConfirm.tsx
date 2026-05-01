@@ -597,6 +597,19 @@ const BookingConfirm = () => {
                   />
                 </div>
 
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-light">CPF / CNPJ <span className="text-muted-foreground/60">(Brazil)</span></Label>
+                  <Input
+                    value={clientInfo.tax_id}
+                    onChange={(e) => setClientInfo((p) => ({ ...p, tax_id: e.target.value }))}
+                    placeholder="000.000.000-00 or 00.000.000/0000-00"
+                    className="text-sm font-light"
+                  />
+                  <p className="text-[10px] text-muted-foreground font-light">
+                    Required for Brazilian clients. Used to fill the contract automatically.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-light">Date of Birth</Label>
