@@ -631,6 +631,160 @@ function getFileIcon(fileType: string) {
   return <File className="h-4 w-4 text-muted-foreground shrink-0" />;
 }
 
+function GalleriesSubSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
+  const { t } = useLanguage();
+  const tp = t.projects;
+  const queryClient = useQueryClient();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const linkedKey = ["project-linked-galleries", project.id];
+  const availableKey = ["photographer-unlinked-galleries", photographerId, project.id];
+
+  const { data: linked = [] } = useQuery<{ id: string; title: string; slug: string | null; cover_image_url: string | null; status: string }[]>({
+    queryKey: linkedKey,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("galleries")
+        .select("id, title, slug, cover_image_url, status")
+        .eq("project_id", project.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any;
+    },
+    enabled: !!project.id,
+  });
+
+  const { data: available = [] } = useQuery<{ id: string; title: string; cover_image_url: string | null; status: string }[]>({
+    queryKey: availableKey,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("galleries")
+        .select("id, title, cover_image_url, status, project_id")
+        .eq("photographer_id", photographerId)
+        .is("project_id", null)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any;
+    },
+    enabled: pickerOpen && !!photographerId,
+  });
+
+  const linkMutation = useMutation({
+    mutationFn: async (galleryId: string) => {
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: project.id } as any)
+        .eq("id", galleryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linkedKey });
+      queryClient.invalidateQueries({ queryKey: availableKey });
+      toast.success(tp.galleryLinked);
+      setPickerOpen(false);
+    },
+    onError: () => toast.error(tp.errorLinkingGallery),
+  });
+
+  const unlinkMutation = useMutation({
+    mutationFn: async (galleryId: string) => {
+      const { error } = await supabase
+        .from("galleries")
+        .update({ project_id: null } as any)
+        .eq("id", galleryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linkedKey });
+      queryClient.invalidateQueries({ queryKey: availableKey });
+      toast.success(tp.galleryUnlinked);
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{tp.galleriesSubsection}</p>
+        <button
+          onClick={() => setPickerOpen(true)}
+          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Plus className="h-3 w-3" /> {tp.linkGallery}
+        </button>
+      </div>
+
+      {linked.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noGalleries}</p>
+      ) : (
+        <div className="flex flex-col gap-1">
+          {linked.map((gal) => (
+            <div
+              key={gal.id}
+              className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 group"
+            >
+              {gal.cover_image_url ? (
+                <img src={gal.cover_image_url} alt="" className="h-6 w-6 rounded object-cover shrink-0" />
+              ) : (
+                <Image className="h-4 w-4 text-emerald-500 shrink-0" />
+              )}
+              <a
+                href={`/dashboard/galleries/${gal.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 min-w-0 flex items-center gap-1.5 hover:text-foreground"
+              >
+                <span className="text-xs font-medium truncate">{gal.title || "Untitled Gallery"}</span>
+                <ExternalLink className="h-3 w-3 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </a>
+              <button
+                onClick={() => unlinkMutation.mutate(gal.id)}
+                disabled={unlinkMutation.isPending}
+                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5"
+                title={tp.unlinkGallery}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{tp.linkGallery}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto flex flex-col gap-1.5 pr-1">
+            {available.length === 0 ? (
+              <p className="text-xs text-muted-foreground/60 text-center py-6">{tp.noGalleriesAvailable}</p>
+            ) : (
+              available.map((gal) => (
+                <button
+                  key={gal.id}
+                  onClick={() => linkMutation.mutate(gal.id)}
+                  disabled={linkMutation.isPending}
+                  className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/10 hover:bg-muted/40 px-3 py-2 text-left transition-colors disabled:opacity-50"
+                >
+                  {gal.cover_image_url ? (
+                    <img src={gal.cover_image_url} alt="" className="h-8 w-8 rounded object-cover shrink-0" />
+                  ) : (
+                    <Image className="h-4 w-4 text-muted-foreground shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{gal.title || "Untitled Gallery"}</p>
+                    <p className="text-[10px] text-muted-foreground/60 capitalize">{gal.status}</p>
+                  </div>
+                  <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function DocumentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
   const { t } = useLanguage();
   const tp = t.projects;
@@ -792,6 +946,9 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
           </div>
         )}
       </div>
+
+      {/* ── Galleries sub-section ────────────────────────────────────────── */}
+      <GalleriesSubSection project={project} photographerId={photographerId} />
 
       <Separator className="opacity-50" />
 
