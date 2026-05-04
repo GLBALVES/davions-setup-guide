@@ -793,6 +793,9 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         )}
       </div>
 
+      {/* ── Galleries sub-section ────────────────────────────────────────── */}
+      <GalleriesSubSection project={project} photographerId={photographerId} />
+
       <Separator className="opacity-50" />
 
       {/* ── Attached files ────────────────────────────────────────────────── */}
