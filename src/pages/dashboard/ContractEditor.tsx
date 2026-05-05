@@ -58,6 +58,36 @@ interface CustomField {
   default_value: string;
 }
 
+function normalizeVariableToken(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function applyVariableValue(html: string, key: string, label: string, value: string): string {
+  const normalizedKey = normalizeVariableToken(key);
+  const normalizedLabel = normalizeVariableToken(label);
+  const isMatch = (token: string) => {
+    const normalized = normalizeVariableToken(token);
+    return normalized === normalizedKey || normalized === normalizedLabel;
+  };
+
+  return html
+    .replace(
+      new RegExp(`<span\\b(?=[^>]*\\bdata-variable=(["'])${escapeRegExp(key)}\\1)[^>]*>[\\s\\S]*?<\\/span>`, "gi"),
+      value
+    )
+    .replace(/\[\[\s*([^\]]+?)\s*\]\]/g, (match, token) => (isMatch(token) ? value : match))
+    .replace(/\{\{\s*([^}]+?)\s*\}\}/g, (match, token) => (isMatch(token) ? value : match));
+}
+
 // ── Resolve [[key]] tokens in HTML ──────────────────────────────────────────
 export function resolveContractVariables(
   html: string,
