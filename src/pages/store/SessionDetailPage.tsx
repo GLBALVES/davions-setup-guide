@@ -663,6 +663,25 @@ const SessionDetailPage = () => {
     .filter(Boolean)
     .join(", ");
 
+  const resolvedContractHtml = useMemo(() => {
+    if (!session?.contract_text) return "";
+    return resolveContractVariables(session.contract_text, {
+      client_name: clientName,
+      client_email: clientEmail,
+      client_phone: clientPhone,
+      session_title: session.title,
+      session_date: selectedSlot?.label ?? "",
+      session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
+      session_duration: `${session.duration_minutes} min`,
+      session_price: formatCurrency(session.price),
+      session_location: session.location || "",
+      photographer_name: photographer?.full_name || "",
+      studio_name: studioName,
+      studio_address: studioAddress,
+      studio_email: photographer?.email || "",
+    }, contractCustomFields);
+  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields]);
+
   // ────────────────────────────────────────────
   // Calendar helpers
   // ────────────────────────────────────────────
