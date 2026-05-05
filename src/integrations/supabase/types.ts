@@ -4209,13 +4209,62 @@ export type Database = {
           },
         ]
       }
+      workflow_email_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          is_test: boolean
+          photographer_id: string
+          project_id: string | null
+          recipient_email: string
+          recipient_name: string
+          stage_trigger: string
+          status: string
+          subject: string
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          photographer_id: string
+          project_id?: string | null
+          recipient_email: string
+          recipient_name?: string
+          stage_trigger: string
+          status?: string
+          subject?: string
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_test?: boolean
+          photographer_id?: string
+          project_id?: string | null
+          recipient_email?: string
+          recipient_name?: string
+          stage_trigger?: string
+          status?: string
+          subject?: string
+          template_id?: string | null
+        }
+        Relationships: []
+      }
       workflow_email_templates: {
         Row: {
           auto_send: boolean
+          bcc_email: string
           created_at: string
+          delay_minutes: number
           enabled: boolean
+          from_name: string
           html_content: string
           id: string
+          name: string
           photographer_id: string
           stage_trigger: string
           subject: string
@@ -4223,10 +4272,14 @@ export type Database = {
         }
         Insert: {
           auto_send?: boolean
+          bcc_email?: string
           created_at?: string
+          delay_minutes?: number
           enabled?: boolean
+          from_name?: string
           html_content?: string
           id?: string
+          name?: string
           photographer_id: string
           stage_trigger: string
           subject?: string
@@ -4234,10 +4287,14 @@ export type Database = {
         }
         Update: {
           auto_send?: boolean
+          bcc_email?: string
           created_at?: string
+          delay_minutes?: number
           enabled?: boolean
+          from_name?: string
           html_content?: string
           id?: string
+          name?: string
           photographer_id?: string
           stage_trigger?: string
           subject?: string
