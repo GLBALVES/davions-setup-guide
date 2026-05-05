@@ -53,6 +53,7 @@ interface SessionData {
   cover_image_url: string | null;
   briefing_id: string | null;
   contract_text: string | null;
+  contract_id: string | null;
   price: number;
   session_model: string | null;
 }
