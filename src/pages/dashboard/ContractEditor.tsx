@@ -58,6 +58,36 @@ interface CustomField {
   default_value: string;
 }
 
+function normalizeVariableToken(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function applyVariableValue(html: string, key: string, label: string, value: string): string {
+  const normalizedKey = normalizeVariableToken(key);
+  const normalizedLabel = normalizeVariableToken(label);
+  const isMatch = (token: string) => {
+    const normalized = normalizeVariableToken(token);
+    return normalized === normalizedKey || normalized === normalizedLabel;
+  };
+
+  return html
+    .replace(
+      new RegExp(`<span\\b(?=[^>]*\\bdata-variable=(["'])${escapeRegExp(key)}\\1)[^>]*>[\\s\\S]*?<\\/span>`, "gi"),
+      value
+    )
+    .replace(/\[\[\s*([^\]]+?)\s*\]\]/g, (match, token) => (isMatch(token) ? value : match))
+    .replace(/\{\{\s*([^}]+?)\s*\}\}/g, (match, token) => (isMatch(token) ? value : match));
+}
+
 // ── Resolve [[key]] tokens in HTML ──────────────────────────────────────────
 export function resolveContractVariables(
   html: string,
@@ -65,18 +95,21 @@ export function resolveContractVariables(
   customFields?: CustomField[]
 ): string {
   let result = CONTRACT_VARIABLES.reduce((acc, v) => {
-    const val = data[v.key] ?? `[${v.label}]`;
-    return acc.replace(new RegExp(`\\[\\[${v.key}\\]\\]`, "g"), val);
+    const val = data[v.key] ?? "";
+    return applyVariableValue(acc, v.key, v.label, val);
   }, html);
 
   if (customFields) {
     for (const cf of customFields) {
-      const val = data[cf.field_key] ?? (cf.default_value || `[${cf.field_label}]`);
-      result = result.replace(new RegExp(`\\[\\[${cf.field_key}\\]\\]`, "g"), val);
+      const val = data[cf.field_key] ?? cf.default_value ?? "";
+      result = applyVariableValue(result, cf.field_key, cf.field_label, val);
     }
   }
 
-  return result;
+  return result
+    .replace(/<span\b(?=[^>]*\bdata-variable=(["']))[^>]*>[\s\S]*?<\/span>/gi, "")
+    .replace(/\[\[[^\]]+\]\]/g, "")
+    .replace(/\{\{[^}]+\}\}/g, "");
 }
 
 // ── Custom Tiptap Node: Variable chip ────────────────────────────────────────

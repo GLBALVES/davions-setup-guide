@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -111,6 +112,13 @@ interface SelectedExtra {
   price: number;
   qty: number;
   maxQty: number;
+}
+
+interface ContractCustomField {
+  id: string;
+  field_key: string;
+  field_label: string;
+  default_value: string;
 }
 
 type BookingStep = "product" | "slots" | "form" | "addons" | "review";
@@ -269,16 +277,6 @@ const getInitials = (name: string | null | undefined): string => {
     .join("");
 };
 
-// Resolve [[key]] variable tokens stored in contract HTML
-function resolveSessionContractVariables(
-  html: string,
-  data: Record<string, string>
-): string {
-  return Object.entries(data).reduce((acc, [key, val]) => {
-    return acc.replace(new RegExp(`\\[\\[${key}\\]\\]`, "g"), val);
-  }, html);
-}
-
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────
@@ -322,6 +320,7 @@ const SessionDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [contractCustomFields, setContractCustomFields] = useState<ContractCustomField[]>([]);
 
   // Signature modal state
   const [sigModalOpen, setSigModalOpen] = useState(false);
@@ -382,7 +381,7 @@ const SessionDetailPage = () => {
         setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
 
-      const [{ data: extrasData }, { data: bonusData }] = await Promise.all([
+      const [{ data: extrasData }, { data: bonusData }, { data: customFieldData }] = await Promise.all([
         supabase
           .from("session_extras")
           .select("id, description, price, quantity")
@@ -392,9 +391,14 @@ const SessionDetailPage = () => {
           .select("text, position")
           .eq("session_id", s.id)
           .order("position", { ascending: true }),
+        (supabase as any)
+          .from("contract_custom_fields")
+          .select("id, field_key, field_label, default_value")
+          .eq("photographer_id", s.photographer_id),
       ]);
       setExtras((extrasData ?? []) as SessionExtra[]);
       setBonuses(((bonusData ?? []) as { text: string; position: number }[]).map((b) => b.text));
+      setContractCustomFields((customFieldData ?? []) as ContractCustomField[]);
 
       // Portfolio images for the hero slider — stored directly on the session row
       const portfolioUrls: string[] = Array.isArray(s.portfolio_photos)
@@ -659,6 +663,25 @@ const SessionDetailPage = () => {
     .filter(Boolean)
     .join(", ");
 
+  const resolvedContractHtml = useMemo(() => {
+    if (!session?.contract_text) return "";
+    return resolveContractVariables(session.contract_text, {
+      client_name: clientName,
+      client_email: clientEmail,
+      client_phone: clientPhone,
+      session_title: session.title,
+      session_date: selectedSlot?.label ?? "",
+      session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
+      session_duration: `${session.duration_minutes} min`,
+      session_price: formatCurrency(session.price),
+      session_location: session.location || "",
+      photographer_name: photographer?.full_name || "",
+      studio_name: studioName,
+      studio_address: studioAddress,
+      studio_email: photographer?.email || "",
+    }, contractCustomFields);
+  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields]);
+
   // ────────────────────────────────────────────
   // Calendar helpers
   // ────────────────────────────────────────────
@@ -684,6 +707,25 @@ const SessionDetailPage = () => {
     setSelectedDate(date);
     setSelectedSlot(null);
   };
+
+  const handleEnterReview = useCallback(async () => {
+    if (!session) { setStep("review"); return; }
+    const [{ data: contractTemplate }, { data: customFieldData }] = await Promise.all([
+      session.contract_id
+        ? (supabase as any).from("contracts").select("body").eq("id", session.contract_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      (supabase as any)
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", session.photographer_id),
+    ]);
+    const latestBody = contractTemplate?.body ?? session.contract_text;
+    setSession((prev) => prev ? { ...prev, contract_text: latestBody } : prev);
+    setContractCustomFields((customFieldData ?? []) as ContractCustomField[]);
+    setContractAgreed(false);
+    setSignatureData(null);
+    setStep("review");
+  }, [session]);
 
   // ────────────────────────────────────────────
   // Checkout
@@ -1405,7 +1447,7 @@ const SessionDetailPage = () => {
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep("slots")} className="text-xs tracking-wider uppercase font-light rounded-none">Back</Button>
                 <Button
-                  onClick={() => setStep(extras.length > 0 ? "addons" : "review")}
+                  onClick={() => extras.length > 0 ? setStep("addons") : handleEnterReview()}
                   disabled={!clientName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
                   className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
                 >
@@ -1469,7 +1511,7 @@ const SessionDetailPage = () => {
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep("form")} className="text-xs tracking-wider uppercase font-light rounded-none">Back</Button>
                 <Button
-                  onClick={() => setStep("review")}
+                  onClick={handleEnterReview}
                   className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
                 >
                   Review & confirm →
@@ -1517,20 +1559,7 @@ const SessionDetailPage = () => {
                     <div
                       className="max-h-[55vh] overflow-y-auto text-xs font-light text-foreground leading-relaxed border border-border p-4 prose prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_strong]:font-medium [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
-                        __html: resolveSessionContractVariables(session.contract_text, {
-                          client_name: clientName,
-                          client_email: clientEmail,
-                          client_phone: clientPhone,
-                          session_title: session.title,
-                          session_date: selectedSlot?.label ?? "",
-                          session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
-                          session_duration: `${session.duration_minutes} min`,
-                          session_price: formatCurrency(session.price),
-                          photographer_name: photographer?.full_name || "",
-                          studio_name: studioName,
-                          studio_address: studioAddress,
-                          studio_email: photographer?.email || "",
-                        })
+                        __html: resolvedContractHtml
                       }}
                     />
 
