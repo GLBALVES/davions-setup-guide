@@ -46,6 +46,7 @@ interface SessionDetail {
   booking_notice_days: number;
   booking_window_days: number;
   contract_text: string | null;
+  contract_id: string | null;
   virtual_block_percent: number;
   portfolio_photos: string[] | null;
 }
@@ -54,6 +55,12 @@ interface PhotographerInfo {
   full_name: string | null;
   hero_image_url: string | null;
   logo_url?: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_zip?: string | null;
+  business_country?: string | null;
 }
 
 interface WeeklySlotDef {
@@ -353,7 +360,7 @@ const SessionDetailPage = () => {
       const [{ data: photographerData }, { data: siteData }] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, hero_image_url")
+          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country")
           .eq("id", s.photographer_id)
           .single(),
         supabase
