@@ -288,39 +288,46 @@ export default function WorkflowEmailTemplates() {
       {tab === "editor" && (
         <div className="grid grid-cols-12 gap-6">
           {/* Triggers list */}
-          <aside className="col-span-12 md:col-span-4 lg:col-span-3">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">
-              Gatilhos
-            </p>
-            <div className="border border-border divide-y divide-border">
-              {STAGE_TRIGGERS.map((trigger) => {
-                const tpl = templates[trigger];
-                const meta = triggerMeta[trigger];
-                const isActive = activeTrigger === trigger;
-                return (
-                  <button
-                    key={trigger}
-                    onClick={() => setActiveTrigger(trigger)}
-                    className={`w-full flex items-start gap-3 px-3 py-3 text-left transition-colors ${
-                      isActive ? "bg-foreground text-background" : "hover:bg-accent/30"
-                    }`}
-                  >
-                    <Mail className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-light truncate">{meta.label}</p>
-                      <p className={`text-[10px] truncate ${isActive ? "opacity-70" : "text-muted-foreground"}`}>
-                        {tpl?.name || meta.desc}
-                      </p>
-                    </div>
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${
-                        tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-            </div>
+          <aside className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
+            {[
+              { title: "Lembretes pré-sessão", keys: ["reminder_14_days", "reminder_7_days", "reminder_1_day"] as Trigger[] },
+              { title: "Estágios do projeto", keys: ["shot_to_editing", "editing_to_review", "review_to_delivered", "delivered_to_done", "gallery_linked"] as Trigger[] },
+            ].map((group) => (
+              <div key={group.title}>
+                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">
+                  {group.title}
+                </p>
+                <div className="border border-border divide-y divide-border">
+                  {group.keys.map((trigger) => {
+                    const tpl = templates[trigger];
+                    const meta = triggerMeta[trigger];
+                    const isActive = activeTrigger === trigger;
+                    return (
+                      <button
+                        key={trigger}
+                        onClick={() => setActiveTrigger(trigger)}
+                        className={`w-full flex items-start gap-3 px-3 py-3 text-left transition-colors ${
+                          isActive ? "bg-foreground text-background" : "hover:bg-accent/30"
+                        }`}
+                      >
+                        <Mail className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-light truncate">{meta.label}</p>
+                          <p className={`text-[10px] truncate ${isActive ? "opacity-70" : "text-muted-foreground"}`}>
+                            {tpl?.name || meta.desc}
+                          </p>
+                        </div>
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${
+                            tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
 
             {/* Variables */}
             <div className="mt-6 border border-border bg-muted/20 p-3">
