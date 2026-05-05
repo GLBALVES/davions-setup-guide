@@ -143,6 +143,7 @@ export default function WorkflowEmailTemplates() {
   const [sendingTest, setSendingTest] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
   const [tab, setTab] = useState<"editor" | "logs">("editor");
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const triggerMeta: Record<Trigger, { label: string; desc: string }> = {
     booking_confirmed: { label: "1 · Boas-vindas (sessão fechada)", desc: "Enviado quando o cliente confirma e paga a sessão." },
@@ -303,104 +304,78 @@ export default function WorkflowEmailTemplates() {
       </div>
 
       {tab === "editor" && (
-        <div className="grid grid-cols-12 gap-6">
-          {/* Triggers list */}
-          <aside className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
-            {[
-              { title: "Jornada do cliente", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
-              { title: "Lembretes pré-sessão", keys: [...REMINDER_TRIGGERS] as Trigger[] },
-            ].map((group) => (
-              <div key={group.title}>
-                <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">
-                  {group.title}
-                </p>
-                <div className="border border-border divide-y divide-border">
-                  {group.keys.map((trigger) => {
-                    const tpl = templates[trigger];
-                    const meta = triggerMeta[trigger];
-                    const isActive = activeTrigger === trigger;
-                    return (
-                      <button
-                        key={trigger}
-                        onClick={() => setActiveTrigger(trigger)}
-                        className={`w-full flex items-start gap-3 px-3 py-3 text-left transition-colors ${
-                          isActive ? "bg-foreground text-background" : "hover:bg-accent/30"
-                        }`}
-                      >
-                        <Mail className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-light truncate">{meta.label}</p>
-                          <p className={`text-[10px] truncate ${isActive ? "opacity-70" : "text-muted-foreground"}`}>
-                            {tpl?.name || meta.desc}
-                          </p>
-                        </div>
+        <div className="space-y-8">
+          {[
+            { title: "Jornada do cliente", desc: "7 etapas automáticas do início ao fim do projeto", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
+            { title: "Lembretes pré-sessão", desc: "Disparados antes da data do ensaio (se ativados na sessão)", keys: [...REMINDER_TRIGGERS] as Trigger[] },
+          ].map((group) => (
+            <div key={group.title}>
+              <div className="mb-3">
+                <p className="text-[11px] tracking-[0.25em] uppercase font-light">{group.title}</p>
+                <p className="text-[10px] text-muted-foreground">{group.desc}</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {group.keys.map((trigger) => {
+                  const tpl = templates[trigger];
+                  const meta = triggerMeta[trigger];
+                  return (
+                    <button
+                      key={trigger}
+                      onClick={() => {
+                        setActiveTrigger(trigger);
+                        setEditorOpen(true);
+                      }}
+                      className="group text-left border border-border bg-background hover:border-foreground transition-colors p-4 flex flex-col gap-3 min-h-[140px]"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                         <span
-                          className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${
-                            tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                          className={`inline-flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase ${
+                            tpl?.enabled ? "text-emerald-600" : "text-muted-foreground"
                           }`}
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-
-            {/* Variables */}
-            <div className="mt-6 border border-border bg-muted/20 p-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Info className="h-3 w-3 text-muted-foreground" />
-                <p className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
-                  Variáveis (clique para inserir)
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {VARIABLES.map((v) => (
-                  <button
-                    key={v.token}
-                    onClick={() => insertVariable(v.token)}
-                    title={v.desc}
-                    className="text-[10px] px-2 py-0.5 bg-background border border-border text-muted-foreground hover:border-foreground hover:text-foreground font-mono transition-colors"
-                  >
-                    {v.token}
-                  </button>
-                ))}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                            }`}
+                          />
+                          {tpl?.enabled ? "Ativo" : "Inativo"}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-light leading-tight mb-1">{meta.label}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2">
+                          {tpl?.subject || meta.desc}
+                        </p>
+                      </div>
+                      {tpl?.auto_send && (
+                        <span className="text-[9px] tracking-wider uppercase text-muted-foreground">
+                          Envio automático
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </aside>
+          ))}
+        </div>
+      )}
 
-          {/* Editor */}
+      {/* Editor Modal */}
+      <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm tracking-wider uppercase font-light">
+              {current ? triggerMeta[activeTrigger].label : ""}
+            </DialogTitle>
+            <p className="text-[11px] text-muted-foreground">
+              {current ? triggerMeta[activeTrigger].desc : ""}
+            </p>
+          </DialogHeader>
+
           {current && (
-            <section className="col-span-12 md:col-span-8 lg:col-span-9 flex flex-col gap-5">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="text-sm font-light">{triggerMeta[activeTrigger].label}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {triggerMeta[activeTrigger].desc}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)} className="gap-1.5">
-                    <Eye className="h-3.5 w-3.5" /> Preview
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setTestEmail(user?.email || "");
-                      setTestOpen(true);
-                    }}
-                    className="gap-1.5"
-                  >
-                    <Send className="h-3.5 w-3.5" /> Enviar teste
-                  </Button>
-                  <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1.5">
-                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                    Salvar
-                  </Button>
-                </div>
-              </div>
-
+            <div className="flex flex-col gap-5">
               {/* Toggles */}
               <div className="flex flex-wrap items-center gap-6 border border-border px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -484,6 +459,28 @@ export default function WorkflowEmailTemplates() {
                 />
               </div>
 
+              {/* Variables */}
+              <div className="border border-border bg-muted/20 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                  <p className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
+                    Variáveis (clique para inserir)
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {VARIABLES.map((v) => (
+                    <button
+                      key={v.token}
+                      onClick={() => insertVariable(v.token)}
+                      title={v.desc}
+                      className="text-[10px] px-2 py-0.5 bg-background border border-border text-muted-foreground hover:border-foreground hover:text-foreground font-mono transition-colors"
+                    >
+                      {v.token}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Content */}
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[10px] tracking-wider uppercase font-light text-muted-foreground">
@@ -497,10 +494,31 @@ export default function WorkflowEmailTemplates() {
                   />
                 </div>
               </div>
-            </section>
+            </div>
           )}
-        </div>
-      )}
+
+          <DialogFooter className="flex-wrap gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)} className="gap-1.5">
+              <Eye className="h-3.5 w-3.5" /> Preview
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setTestEmail(user?.email || "");
+                setTestOpen(true);
+              }}
+              className="gap-1.5"
+            >
+              <Send className="h-3.5 w-3.5" /> Enviar teste
+            </Button>
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1.5">
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {tab === "logs" && (
         <div className="border border-border">
