@@ -428,6 +428,7 @@ const BookingConfirm = () => {
         photographer?.business_zip,
         photographer?.business_country,
       ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
+      studio_email: (photographer as any)?.email || "",
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
