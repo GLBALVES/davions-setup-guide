@@ -135,7 +135,7 @@ export default function WorkflowEmailTemplates() {
   const [templates, setTemplates] = useState<Record<string, TemplateRow>>({});
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTrigger, setActiveTrigger] = useState<Trigger>("shot_to_editing");
+  const [activeTrigger, setActiveTrigger] = useState<Trigger>("booking_confirmed");
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -144,15 +144,17 @@ export default function WorkflowEmailTemplates() {
   const [logsSearch, setLogsSearch] = useState("");
   const [tab, setTab] = useState<"editor" | "logs">("editor");
 
-  const triggerMeta: Record<string, { label: string; desc: string }> = {
-    reminder_14_days: { label: "Lembrete · 14 dias antes", desc: "Enviado automaticamente 14 dias antes do ensaio (se ativado na sessão)." },
-    reminder_7_days: { label: "Lembrete · 7 dias antes", desc: "Enviado automaticamente 7 dias antes do ensaio (se ativado na sessão)." },
-    reminder_1_day: { label: "Lembrete · 1 dia antes", desc: "Enviado automaticamente 1 dia antes do ensaio (se ativado na sessão)." },
-    shot_to_editing: { label: t.personalize.shotToEditing, desc: t.personalize.shotToEditingDesc },
-    editing_to_review: { label: t.personalize.editingToReview, desc: t.personalize.editingToReviewDesc },
-    review_to_delivered: { label: t.personalize.reviewToDelivered, desc: t.personalize.reviewToDeliveredDesc },
-    delivered_to_done: { label: t.personalize.deliveredToDone, desc: t.personalize.deliveredToDoneDesc },
-    gallery_linked: { label: t.personalize.galleryLinked, desc: t.personalize.galleryLinkedDesc },
+  const triggerMeta: Record<Trigger, { label: string; desc: string }> = {
+    booking_confirmed: { label: "1 · Boas-vindas (sessão fechada)", desc: "Enviado quando o cliente confirma e paga a sessão." },
+    session_completed: { label: "2 · Pós-sessão (agradecimento)", desc: "Enviado após a data e hora do ensaio terminarem, agradecendo e informando a próxima etapa." },
+    proof_gallery_sent: { label: "3 · Galeria de provas enviada", desc: "Enviado quando você publica a galeria de provas para seleção." },
+    selection_completed: { label: "4 · Seleção concluída", desc: "Enviado quando o cliente finaliza a escolha; informa fila de pós-produção e prazo." },
+    final_gallery_sent: { label: "5 · Galeria final enviada", desc: "Enviado quando você publica a galeria final para download." },
+    download_reminder_7d: { label: "6 · Lembrete de download (7d)", desc: "Enviado 7 dias após o envio da galeria final, se o cliente ainda não baixou as fotos." },
+    post_delivery_feedback_7d: { label: "7 · Pós-entrega · feedback (7d)", desc: "Enviado 7 dias após o cliente baixar as fotos, agradecendo e pedindo feedback." },
+    reminder_14_days: { label: "Pré-sessão · 14 dias antes", desc: "Enviado 14 dias antes do ensaio (se ativado na sessão)." },
+    reminder_7_days: { label: "Pré-sessão · 7 dias antes", desc: "Enviado 7 dias antes do ensaio (se ativado na sessão)." },
+    reminder_1_day: { label: "Pré-sessão · 1 dia antes", desc: "Enviado 1 dia antes do ensaio (se ativado na sessão)." },
   };
 
   const fetchTemplates = useCallback(async () => {
