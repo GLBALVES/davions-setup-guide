@@ -1,88 +1,65 @@
-## Problema
+## Diagnóstico
 
-Hoje os "campos customizados" do contrato (ex.: CPF/CNPJ) só guardam um `default_value` estático — não há vínculo com o cadastro real do cliente. Além disso:
+Comparando os dois lados:
 
-1. A tabela `clients` não tem coluna para CPF/CNPJ.
-2. O passo "Your Info" do booking não coleta CPF/CNPJ.
-3. A função `resolveContractVariables` existe mas **nunca é chamada** no fluxo público — o contrato é renderizado cru (`session.contract_text`), então nem `[[client_name]]` está sendo substituído hoje.
+**Editor (`contracts.body` salvo no DB — fonte da verdade):**
+```
+Session Type:
+Session Date:        ← (sem chip nenhum)
+Session Time:
+Session Duration:
+```
+O usuário **removeu** os chips dessas linhas e salvou. O DB confirma: `Session Date:</strong>&nbsp;<br>` (sem `[[session_date]]`, sem chip).
 
-## Solução
-
-Tratar CPF/CNPJ como um **campo nativo do cliente** (não custom), coletá-lo no booking, e fazer a resolução real das variáveis ao exibir e ao "congelar" o contrato no momento do aceite.
-
-### 1. Banco de dados (migração)
-- Adicionar coluna `tax_id text` em `public.clients` (armazena CPF ou CNPJ — mesmo campo, formato livre).
-- Adicionar coluna `client_tax_id text` em `public.bookings` (snapshot no momento do aceite, para o contrato congelado refletir o valor histórico).
-
-### 2. Variável padrão de contrato
-Em `src/pages/dashboard/ContractEditor.tsx`:
-- Adicionar `{ key: "client_tax_id", label: "CPF / CNPJ" }` à lista `CONTRACT_VARIABLES`.
-- Aparecerá automaticamente no menu "Insert variable" e na sidebar de variáveis do editor.
-
-### 3. Coleta no booking público
-Em `src/pages/BookingConfirm.tsx`, passo "Your Info":
-- Adicionar input "CPF / CNPJ" (com máscara dinâmica leve: 11 dígitos → CPF, 14 → CNPJ; validação opcional).
-- Tornar **obrigatório apenas quando o idioma/locale é PT-BR** (o app é multi-idioma — em EN/ES fica opcional).
-- Carregar valor existente de `clients.tax_id` no `useEffect` de load.
-- Salvar no `upsert` de `clients` em `handleSaveClientInfo`.
-
-### 4. Renderização do contrato com variáveis resolvidas
-Em `BookingConfirm.tsx`, ao montar o passo "contract":
-- Buscar `contract_custom_fields` do fotógrafo (pelos valores default).
-- Chamar `resolveContractVariables(session.contract_text, data, customFields)` antes do `dangerouslySetInnerHTML`, onde `data` inclui:
-  - `client_name`, `client_email`, `client_phone`, `client_address`, `client_tax_id` (do form atual)
-  - `session_title`, `session_date`, `session_time`, `session_duration`, `session_price`, `session_location`
-  - `photographer_name`, `studio_name`, `studio_address`
-- No momento do aceite (botão "Accept"), persistir o HTML resolvido em uma nova coluna `bookings.contract_html_snapshot` para auditoria (e gravar `client_tax_id` no booking).
-
-### 5. UX no editor de contrato
-- Renomear a label de "Custom Fields" para deixar claro que são variáveis com **valor padrão fixo** (não vinculadas a cliente).
-- Adicionar uma nota informativa: "Use a variável CPF / CNPJ para puxar o valor automaticamente do cadastro do cliente."
-
-## Detalhes técnicos
-
-```text
-clients
-  + tax_id text  (nullable)
-
-bookings
-  + client_tax_id        text  (nullable, snapshot)
-  + contract_html_snapshot text (nullable, contrato resolvido + aceito)
+**Renderizado para o cliente (image-162):**
+```
+Session Date: Thursday, May 14   ← valor aparece "do nada"
 ```
 
-Resolução de variáveis (mapa em BookingConfirm):
-```ts
-const data = {
-  client_name: clientInfo.full_name,
-  client_email: booking.client_email,
-  client_phone: clientInfo.phone,
-  client_tax_id: clientInfo.tax_id,
-  client_address: [clientInfo.address_street, clientInfo.address_city, clientInfo.address_state].filter(Boolean).join(", "),
-  session_title: session.title,
-  session_date: formatDate(booking.booked_date),
-  session_time: avail?.start_time?.slice(0,5),
-  session_duration: `${session.duration_minutes} min`,
-  session_price: formatMoney(session.price),
-  session_location: session.location,
-  photographer_name: photographer.full_name,
-  studio_name: photographer.business_name,
-  studio_address: photographer.address,
-};
+### Causa raiz
+
+A página pública (`SessionDetailPage.tsx`) e o `BookingConfirm.tsx` usam **dois caminhos** para obter o HTML do contrato:
+
+1. `sessions.contract_text` — **snapshot antigo, congelado** quando a sessão foi criada. Ainda contém `[[session_date]]` próximo a "Session Date:".
+2. `contracts.body` — versão atual do template (fresca).
+
+No `useMemo` do `resolvedContractHtml` (linha 666–683 do `SessionDetailPage.tsx`), a resolução começa a partir de `session.contract_text`. Esse valor só é substituído pela versão fresca dentro do `handleEnterReview`, **depois** que o usuário clica para avançar até a etapa de revisão. Antes disso (e em qualquer renderização que não passe por esse handler — ex.: refresh, navegação direta), o HTML usado é o snapshot legado, que ainda contém o token `[[session_date]]` removido pelo fotógrafo.
+
+Resultado: o cliente vê um campo preenchido (`Session Date: Thursday, May 14`) que **não existe mais** no contrato editado — exatamente o oposto do que aconteceu antes (token órfão renderizado como `{{null}}`), mas o mesmo bug de fundo: **estamos lendo um cache estagnado em `sessions.contract_text`**.
+
+O mesmo padrão existe no `BookingConfirm.tsx` (linhas 247–253) e no edge function `get-booking-public` (sobrescreve `session.contract_text` apenas se `contract_id` existir, mas o cliente ainda pode usar o `contract_text` original em alguns trechos).
+
+## Correção
+
+Tratar **`contracts.body` como única fonte da verdade** sempre que o `contract_id` existir, em todos os pontos de leitura — nunca o snapshot.
+
+### 1. `src/pages/store/SessionDetailPage.tsx`
+- No `useEffect` de carga (linha 358–365), já busca `contracts.body` se `contract_id` existir → manter.
+- **Sempre** sobrescrever `s.contract_text = contractTemplate.body` quando `contract_id` está presente, mesmo se `body` vier vazio (atualmente só sobrescreve se `body` truthy — manter assim já está ok).
+- Mover a lógica de fetch para fora do `handleEnterReview` e re-buscar o `contracts.body` toda vez que o usuário entra na etapa "review" (já faz), **e também** invalidar o cache local: garantir que o `useMemo` recompute usando o body fresco. Atualmente está correto, mas adicionar dependência explícita.
+- No JSX (linha 1556) onde renderiza, usar **somente** `resolvedContractHtml` (que já parte do body fresco) e não `session.contract_text` cru.
+
+### 2. `src/pages/BookingConfirm.tsx`
+- Linhas 247–253: já refaz fetch do `contracts.body`. Garantir que renderiza `resolvedContractHtml` e nunca o `session.contract_text` como fallback (linhas 1012, 1046 — remover `|| session.contract_text`).
+
+### 3. `supabase/functions/get-booking-public/index.ts`
+- Já sobrescreve `session.contract_text` com `contracts.body` se `contract_id` presente. Manter.
+
+### 4. (Opcional, mas recomendado) Backfill
+- Migration única para sincronizar `sessions.contract_text` com o `contracts.body` atual em todas as sessões com `contract_id` definido — evita confusão futura caso outro código leia o snapshot.
+
+```sql
+UPDATE sessions s
+SET contract_text = c.body
+FROM contracts c
+WHERE s.contract_id = c.id
+  AND s.contract_text IS DISTINCT FROM c.body;
 ```
 
-## Arquivos afetados
+## Resumo do que muda
 
-- `supabase/migrations/<new>.sql` (criar)
-- `src/pages/dashboard/ContractEditor.tsx` (adicionar variável padrão + nota UX)
-- `src/pages/BookingConfirm.tsx` (campo CPF/CNPJ, resolver variáveis, snapshot)
-- `src/pages/dashboard/Personalize.tsx` (ajuste de label/copy se necessário)
+- `SessionDetailPage.tsx`: renderizar apenas `resolvedContractHtml`, sem fallback para snapshot.
+- `BookingConfirm.tsx`: idem, remover `|| session.contract_text` dos dois `dangerouslySetInnerHTML`.
+- Migration de backfill para zerar o snapshot estagnado de todas as sessões existentes.
 
-## i18n
-Strings novas em EN / PT-BR / ES via `LanguageContext`:
-- "CPF / CNPJ" (label)
-- "Required for Brazilian clients" (helper)
-- Nota no editor sobre vincular ao cadastro
-
-## Fora do escopo
-- Validação algorítmica de CPF/CNPJ (dígitos verificadores) — pode ser adicionada depois se necessário.
-- Migração de dados antigos: bookings antigos ficam com `client_tax_id` nulo.
+Após isso, o que o fotógrafo vê no editor = o que o cliente vê no checkout, sempre.
