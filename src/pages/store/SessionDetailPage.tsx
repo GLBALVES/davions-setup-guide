@@ -320,6 +320,7 @@ const SessionDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [contractCustomFields, setContractCustomFields] = useState<ContractCustomField[]>([]);
 
   // Signature modal state
   const [sigModalOpen, setSigModalOpen] = useState(false);
