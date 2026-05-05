@@ -108,6 +108,8 @@ interface Gallery {
   created_at: string;
   booking_id: string | null;
   project_id: string | null;
+  photographer_id?: string | null;
+  final_published_at?: string | null;
   watermark_id: string | null;
   expires_at: string | null;
   price_per_photo: number;
