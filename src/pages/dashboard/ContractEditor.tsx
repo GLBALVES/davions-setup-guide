@@ -46,6 +46,7 @@ export const CONTRACT_VARIABLES = [
   { key: "photographer_name", label: "Photographer Name" },
   { key: "studio_name",       label: "Studio Name" },
   { key: "studio_address",    label: "Studio Address" },
+  { key: "studio_email",      label: "Studio Email" },
 ] as const;
 
 export type VariableKey = (typeof CONTRACT_VARIABLES)[number]["key"];
