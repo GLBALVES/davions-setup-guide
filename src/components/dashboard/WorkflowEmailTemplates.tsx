@@ -130,6 +130,9 @@ export default function WorkflowEmailTemplates() {
   const [tab, setTab] = useState<"editor" | "logs">("editor");
 
   const triggerMeta: Record<string, { label: string; desc: string }> = {
+    reminder_14_days: { label: "Lembrete · 14 dias antes", desc: "Enviado automaticamente 14 dias antes do ensaio (se ativado na sessão)." },
+    reminder_7_days: { label: "Lembrete · 7 dias antes", desc: "Enviado automaticamente 7 dias antes do ensaio (se ativado na sessão)." },
+    reminder_1_day: { label: "Lembrete · 1 dia antes", desc: "Enviado automaticamente 1 dia antes do ensaio (se ativado na sessão)." },
     shot_to_editing: { label: t.personalize.shotToEditing, desc: t.personalize.shotToEditingDesc },
     editing_to_review: { label: t.personalize.editingToReview, desc: t.personalize.editingToReviewDesc },
     review_to_delivered: { label: t.personalize.reviewToDelivered, desc: t.personalize.reviewToDeliveredDesc },
