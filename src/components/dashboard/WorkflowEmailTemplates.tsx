@@ -113,12 +113,104 @@ function fillSample(html: string): string {
   return out;
 }
 
+const DEFAULT_CONTENT: Record<string, { name: string; subject: string; html: string }> = {
+  booking_confirmed: {
+    name: "Boas-vindas",
+    subject: "Sua sessão está confirmada, {{client_name}} ✨",
+    html: `<p>Olá {{client_name}},</p>
+<p>Que alegria ter você com a gente! Sua sessão <strong>{{session_type}}</strong> está confirmada para o dia <strong>{{shoot_date}}</strong>.</p>
+<p>Em breve enviaremos mais informações sobre os preparativos. Se tiver qualquer dúvida, é só responder este email.</p>
+<p>Com carinho,<br/>{{photographer_name}}<br/>{{studio_name}}</p>`,
+  },
+  session_completed: {
+    name: "Pós-sessão · agradecimento",
+    subject: "Obrigado pela sessão, {{client_name}} 💛",
+    html: `<p>Olá {{client_name}},</p>
+<p>Foi um prazer fotografar você! Espero que tenha gostado da experiência tanto quanto eu.</p>
+<p>Agora começa a curadoria das imagens. Em até <strong>{{selection_deadline}}</strong> sua galeria de provas estará disponível para você escolher as fotos favoritas.</p>
+<p>Te aviso assim que estiver pronta!</p>
+<p>Abraço,<br/>{{photographer_name}}</p>`,
+  },
+  proof_gallery_sent: {
+    name: "Galeria de provas",
+    subject: "Sua galeria de provas chegou, {{client_name}} 📸",
+    html: `<p>Olá {{client_name}},</p>
+<p>Sua galeria de provas do projeto <strong>{{project_title}}</strong> já está disponível!</p>
+<p>Acesse o link abaixo para visualizar e selecionar suas fotos favoritas:</p>
+<p><a href="{{gallery_link}}">{{gallery_link}}</a></p>
+<p>Você tem <strong>{{selection_deadline}}</strong> para fazer sua escolha. Qualquer dúvida, estou à disposição.</p>
+<p>{{photographer_name}}</p>`,
+  },
+  selection_completed: {
+    name: "Seleção concluída",
+    subject: "Recebemos sua seleção, {{client_name}} ✓",
+    html: `<p>Olá {{client_name}},</p>
+<p>Recebemos sua seleção de fotos! Elas já entraram na fila de pós-produção.</p>
+<p>O prazo estimado para a entrega da galeria final é de <strong>{{final_delivery_eta}}</strong>. Vou te avisar assim que estiver pronta.</p>
+<p>Obrigado pela confiança,<br/>{{photographer_name}}</p>`,
+  },
+  final_gallery_sent: {
+    name: "Galeria final entregue",
+    subject: "Sua galeria final está pronta, {{client_name}} 🎉",
+    html: `<p>Olá {{client_name}},</p>
+<p>É com muito carinho que entrego sua galeria final do projeto <strong>{{project_title}}</strong>.</p>
+<p>Acesse e baixe suas fotos no link abaixo:</p>
+<p><a href="{{gallery_link}}">{{gallery_link}}</a></p>
+<p>Espero que você ame cada imagem tanto quanto eu amei criá-las.</p>
+<p>Com carinho,<br/>{{photographer_name}}<br/>{{studio_name}}</p>`,
+  },
+  download_reminder_7d: {
+    name: "Lembrete de download",
+    subject: "Não esqueça de baixar suas fotos, {{client_name}}",
+    html: `<p>Olá {{client_name}},</p>
+<p>Notei que você ainda não baixou as fotos da sua galeria. Não deixe para depois — garanta que estão salvas com você!</p>
+<p><a href="{{download_link}}">Baixar minhas fotos</a></p>
+<p>Qualquer dificuldade, é só me avisar.</p>
+<p>{{photographer_name}}</p>`,
+  },
+  post_delivery_feedback_7d: {
+    name: "Pedido de feedback",
+    subject: "Como foi sua experiência, {{client_name}}? 💬",
+    html: `<p>Olá {{client_name}},</p>
+<p>Espero que esteja amando suas fotos! 💛</p>
+<p>Sua opinião é muito importante para mim. Você poderia compartilhar como foi sua experiência? Leva menos de 2 minutos:</p>
+<p><a href="{{feedback_link}}">Deixar meu depoimento</a></p>
+<p>Foi um prazer fotografar você. Até a próxima!</p>
+<p>{{photographer_name}}</p>`,
+  },
+  reminder_14_days: {
+    name: "Lembrete · 14 dias",
+    subject: "Sua sessão é em 14 dias, {{client_name}} 📅",
+    html: `<p>Olá {{client_name}},</p>
+<p>Faltam apenas <strong>14 dias</strong> para a sua sessão <strong>{{session_type}}</strong> no dia <strong>{{shoot_date}}</strong>.</p>
+<p>Comece a pensar nos looks, acessórios e referências. Se tiver dúvidas sobre o que levar ou vestir, é só me avisar.</p>
+<p>Mal posso esperar!<br/>{{photographer_name}}</p>`,
+  },
+  reminder_7_days: {
+    name: "Lembrete · 7 dias",
+    subject: "Sua sessão é na próxima semana, {{client_name}}",
+    html: `<p>Olá {{client_name}},</p>
+<p>Sua sessão <strong>{{session_type}}</strong> está chegando! Será no dia <strong>{{shoot_date}}</strong>.</p>
+<p>Confirme que está tudo certo de sua parte e separe os looks com antecedência. Qualquer ajuste, me avise o quanto antes.</p>
+<p>Até breve,<br/>{{photographer_name}}</p>`,
+  },
+  reminder_1_day: {
+    name: "Lembrete · 1 dia",
+    subject: "É amanhã, {{client_name}}! 🎬",
+    html: `<p>Olá {{client_name}},</p>
+<p>Passando para lembrar que sua sessão é <strong>amanhã ({{shoot_date}})</strong>.</p>
+<p>Dicas finais: durma bem, hidrate-se, e venha leve e tranquilo(a). O resto a gente faz junto!</p>
+<p>Até amanhã,<br/>{{photographer_name}}</p>`,
+  },
+};
+
 function emptyTpl(trigger: string): TemplateRow {
+  const def = DEFAULT_CONTENT[trigger];
   return {
     stage_trigger: trigger,
-    name: "",
-    subject: "",
-    html_content: "",
+    name: def?.name || "",
+    subject: def?.subject || "",
+    html_content: def?.html || "",
     enabled: false,
     auto_send: false,
     from_name: "",
