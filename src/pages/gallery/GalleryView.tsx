@@ -743,7 +743,26 @@ const GalleryView = () => {
         },
       });
       if (error) throw error;
-      if (data?.free) { setPurchaseOpen(false); setPurchaseSuccess(true); return; }
+      if (data?.free) {
+        setPurchaseOpen(false);
+        setPurchaseSuccess(true);
+        // Dispatch workflow email — selection_completed
+        try {
+          await supabase.functions.invoke("send-workflow-email", {
+            body: {
+              photographer_id: (gallery as any).photographer_id,
+              trigger: "selection_completed",
+              recipient_email: clientEmail.trim(),
+              recipient_name: clientName.trim() || undefined,
+              gallery_id: gallery.id,
+              vars: {
+                gallery_link: window.location.href.split("?")[0],
+              },
+            },
+          });
+        } catch (e) { console.error("workflow email failed", e); }
+        return;
+      }
       if (data?.url) window.location.href = data.url;
     } catch (err) {
       console.error("Checkout error:", err);
