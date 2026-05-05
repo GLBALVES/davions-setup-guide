@@ -235,7 +235,7 @@ const BookingConfirm = () => {
           .single(),
         (supabase as any)
           .from("photographers")
-          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
+          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone, email")
           .eq("id", b.photographer_id)
           .single(),
       ]);
