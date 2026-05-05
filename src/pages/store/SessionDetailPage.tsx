@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -111,6 +112,13 @@ interface SelectedExtra {
   price: number;
   qty: number;
   maxQty: number;
+}
+
+interface ContractCustomField {
+  id: string;
+  field_key: string;
+  field_label: string;
+  default_value: string;
 }
 
 type BookingStep = "product" | "slots" | "form" | "addons" | "review";
