@@ -396,8 +396,14 @@ const BookingConfirm = () => {
       session_duration: session.duration_minutes ? `${session.duration_minutes} min` : "",
       session_price: session.price != null ? formatCurrency(session.price) : "",
       photographer_name: photographer?.full_name || "",
-      studio_name: photographer?.business_name || photographer?.brand_name || photographer?.full_name || "",
-      studio_address: photographer?.business_address || "",
+      studio_name: photographer?.business_name || photographer?.full_name || "",
+      studio_address: [
+        photographer?.business_address,
+        photographer?.business_city,
+        photographer?.business_state,
+        photographer?.business_zip,
+        photographer?.business_country,
+      ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
