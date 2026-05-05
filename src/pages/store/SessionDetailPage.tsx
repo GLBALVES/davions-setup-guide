@@ -1540,20 +1540,7 @@ const SessionDetailPage = () => {
                     <div
                       className="max-h-[55vh] overflow-y-auto text-xs font-light text-foreground leading-relaxed border border-border p-4 prose prose-xs max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_strong]:font-medium [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground"
                       dangerouslySetInnerHTML={{
-                        __html: resolveSessionContractVariables(session.contract_text, {
-                          client_name: clientName,
-                          client_email: clientEmail,
-                          client_phone: clientPhone,
-                          session_title: session.title,
-                          session_date: selectedSlot?.label ?? "",
-                          session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
-                          session_duration: `${session.duration_minutes} min`,
-                          session_price: formatCurrency(session.price),
-                          photographer_name: photographer?.full_name || "",
-                          studio_name: studioName,
-                          studio_address: studioAddress,
-                          studio_email: photographer?.email || "",
-                        })
+                        __html: resolvedContractHtml
                       }}
                     />
 
