@@ -616,6 +616,7 @@ const SessionForm = () => {
       cover_image_url: coverImageUrl,
       status,
       contract_text: contractText.trim() || null,
+      contract_id: selectedContractId !== "none" && selectedContractId !== "existing" ? selectedContractId : null,
       briefing_id: selectedBriefingId !== "none" ? selectedBriefingId : null,
       tagline: tagline.trim() || null,
     };
