@@ -1,0 +1,2 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS contract_id uuid REFERENCES public.contracts(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS sessions_contract_id_idx ON public.sessions(contract_id);
