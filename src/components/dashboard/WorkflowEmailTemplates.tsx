@@ -143,6 +143,7 @@ export default function WorkflowEmailTemplates() {
   const [sendingTest, setSendingTest] = useState(false);
   const [logsSearch, setLogsSearch] = useState("");
   const [tab, setTab] = useState<"editor" | "logs">("editor");
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const triggerMeta: Record<Trigger, { label: string; desc: string }> = {
     booking_confirmed: { label: "1 · Boas-vindas (sessão fechada)", desc: "Enviado quando o cliente confirma e paga a sessão." },
