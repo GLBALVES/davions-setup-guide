@@ -501,7 +501,7 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; contract_id?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
@@ -509,10 +509,14 @@ const SessionForm = () => {
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
     setHideFromStore((s as any).hide_from_store ?? false);
-    // Load contract text
+    // Load contract — prefer linked template id (auto-syncs latest edits)
     const existingContract = sAny3.contract_text ?? "";
     setContractText(existingContract);
-    if (existingContract) setSelectedContractId("existing");
+    if (sAny3.contract_id) {
+      setSelectedContractId(sAny3.contract_id);
+    } else if (existingContract) {
+      setSelectedContractId("existing");
+    }
     // Load briefing
     if (sAny3.briefing_id) setSelectedBriefingId(sAny3.briefing_id);
     // Load session model & campaign dates
