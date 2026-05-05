@@ -646,6 +646,18 @@ const SessionDetailPage = () => {
   const formatCurrency = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 
+  const studioName = photographer?.business_name || photographer?.full_name || "";
+  const studioAddress = [
+    photographer?.business_address,
+    photographer?.business_city,
+    photographer?.business_state,
+    photographer?.business_zip,
+    photographer?.business_country,
+  ]
+    .map((part) => (part || "").trim())
+    .filter(Boolean)
+    .join(", ");
+
   // ────────────────────────────────────────────
   // Calendar helpers
   // ────────────────────────────────────────────
