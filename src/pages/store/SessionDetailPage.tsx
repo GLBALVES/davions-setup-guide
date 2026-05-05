@@ -1529,6 +1529,7 @@ const SessionDetailPage = () => {
                           photographer_name: photographer?.full_name || "",
                           studio_name: studioName,
                           studio_address: studioAddress,
+                          studio_email: photographer?.email || "",
                         })
                       }}
                     />
