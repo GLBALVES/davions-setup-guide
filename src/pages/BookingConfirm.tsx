@@ -1009,7 +1009,7 @@ const BookingConfirm = () => {
             <div className="p-5">
               <div
                 className="prose prose-sm max-w-none text-xs font-light leading-relaxed max-h-80 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || session.contract_text }}
+                dangerouslySetInnerHTML={{ __html: resolvedContractHtml }}
               />
             </div>
 
@@ -1043,7 +1043,7 @@ const BookingConfirm = () => {
             <div className="flex-1 overflow-y-auto px-6 py-5">
               <div
                 className="prose prose-sm max-w-none text-sm font-light leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || session.contract_text || "" }}
+                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || "" }}
               />
             </div>
             <div className="px-6 py-4 border-t border-border shrink-0 flex justify-end">
