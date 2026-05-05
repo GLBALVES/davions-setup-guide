@@ -307,8 +307,8 @@ export default function WorkflowEmailTemplates() {
           {/* Triggers list */}
           <aside className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
             {[
-              { title: "Lembretes pré-sessão", keys: ["reminder_14_days", "reminder_7_days", "reminder_1_day"] as Trigger[] },
-              { title: "Estágios do projeto", keys: ["shot_to_editing", "editing_to_review", "review_to_delivered", "delivered_to_done", "gallery_linked"] as Trigger[] },
+              { title: "Jornada do cliente", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
+              { title: "Lembretes pré-sessão", keys: [...REMINDER_TRIGGERS] as Trigger[] },
             ].map((group) => (
               <div key={group.title}>
                 <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">
