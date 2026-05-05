@@ -61,6 +61,7 @@ interface PhotographerInfo {
   business_state?: string | null;
   business_zip?: string | null;
   business_country?: string | null;
+  email?: string | null;
 }
 
 interface WeeklySlotDef {
