@@ -104,6 +104,37 @@ serve(async (req) => {
         } catch (pushErr) {
           console.error("Push notification failed:", pushErr);
         }
+
+        // Trigger workflow email — booking_confirmed (welcome)
+        try {
+          const { data: bkFull } = await supabase
+            .from("bookings")
+            .select("client_email, client_name, booked_date")
+            .eq("id", bookingId)
+            .single();
+          if (bkFull?.client_email) {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-workflow-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                photographer_id: bk.photographer_id,
+                trigger: "booking_confirmed",
+                recipient_email: bkFull.client_email,
+                recipient_name: bkFull.client_name,
+                booking_id: bookingId,
+                vars: {
+                  shoot_date: bkFull.booked_date,
+                  session_type: sess?.title || "",
+                },
+              }),
+            });
+          }
+        } catch (wfErr) {
+          console.error("Workflow email (booking_confirmed) failed:", wfErr);
+        }
       }
     }
 

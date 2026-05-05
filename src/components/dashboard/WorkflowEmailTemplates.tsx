@@ -57,16 +57,23 @@ interface LogRow {
   created_at: string;
 }
 
-const STAGE_TRIGGERS = [
+const JOURNEY_TRIGGERS = [
+  "booking_confirmed",
+  "session_completed",
+  "proof_gallery_sent",
+  "selection_completed",
+  "final_gallery_sent",
+  "download_reminder_7d",
+  "post_delivery_feedback_7d",
+] as const;
+
+const REMINDER_TRIGGERS = [
   "reminder_14_days",
   "reminder_7_days",
   "reminder_1_day",
-  "shot_to_editing",
-  "editing_to_review",
-  "review_to_delivered",
-  "delivered_to_done",
-  "gallery_linked",
 ] as const;
+
+const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS] as const;
 
 type Trigger = (typeof STAGE_TRIGGERS)[number];
 
@@ -77,6 +84,10 @@ const VARIABLES: { token: string; desc: string }[] = [
   { token: "{{photographer_name}}", desc: "Seu nome" },
   { token: "{{shoot_date}}", desc: "Data do ensaio" },
   { token: "{{gallery_link}}", desc: "Link da galeria" },
+  { token: "{{download_link}}", desc: "Link de download" },
+  { token: "{{selection_deadline}}", desc: "Prazo p/ seleção" },
+  { token: "{{final_delivery_eta}}", desc: "Previsão galeria final" },
+  { token: "{{feedback_link}}", desc: "Link de feedback" },
   { token: "{{studio_name}}", desc: "Nome do estúdio" },
   { token: "{{studio_email}}", desc: "Email do estúdio" },
 ];
@@ -88,6 +99,10 @@ const SAMPLE_PREVIEW: Record<string, string> = {
   "{{photographer_name}}": "Você",
   "{{shoot_date}}": new Date().toLocaleDateString("pt-BR"),
   "{{gallery_link}}": "https://davions.com/gallery/exemplo",
+  "{{download_link}}": "https://davions.com/gallery/exemplo/download",
+  "{{selection_deadline}}": "7 dias",
+  "{{final_delivery_eta}}": "30 dias",
+  "{{feedback_link}}": "https://davions.com/feedback/exemplo",
   "{{studio_name}}": "Davions Studio",
   "{{studio_email}}": "contato@davions.com",
 };
@@ -120,7 +135,7 @@ export default function WorkflowEmailTemplates() {
   const [templates, setTemplates] = useState<Record<string, TemplateRow>>({});
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTrigger, setActiveTrigger] = useState<Trigger>("shot_to_editing");
+  const [activeTrigger, setActiveTrigger] = useState<Trigger>("booking_confirmed");
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
@@ -129,15 +144,17 @@ export default function WorkflowEmailTemplates() {
   const [logsSearch, setLogsSearch] = useState("");
   const [tab, setTab] = useState<"editor" | "logs">("editor");
 
-  const triggerMeta: Record<string, { label: string; desc: string }> = {
-    reminder_14_days: { label: "Lembrete · 14 dias antes", desc: "Enviado automaticamente 14 dias antes do ensaio (se ativado na sessão)." },
-    reminder_7_days: { label: "Lembrete · 7 dias antes", desc: "Enviado automaticamente 7 dias antes do ensaio (se ativado na sessão)." },
-    reminder_1_day: { label: "Lembrete · 1 dia antes", desc: "Enviado automaticamente 1 dia antes do ensaio (se ativado na sessão)." },
-    shot_to_editing: { label: t.personalize.shotToEditing, desc: t.personalize.shotToEditingDesc },
-    editing_to_review: { label: t.personalize.editingToReview, desc: t.personalize.editingToReviewDesc },
-    review_to_delivered: { label: t.personalize.reviewToDelivered, desc: t.personalize.reviewToDeliveredDesc },
-    delivered_to_done: { label: t.personalize.deliveredToDone, desc: t.personalize.deliveredToDoneDesc },
-    gallery_linked: { label: t.personalize.galleryLinked, desc: t.personalize.galleryLinkedDesc },
+  const triggerMeta: Record<Trigger, { label: string; desc: string }> = {
+    booking_confirmed: { label: "1 · Boas-vindas (sessão fechada)", desc: "Enviado quando o cliente confirma e paga a sessão." },
+    session_completed: { label: "2 · Pós-sessão (agradecimento)", desc: "Enviado após a data e hora do ensaio terminarem, agradecendo e informando a próxima etapa." },
+    proof_gallery_sent: { label: "3 · Galeria de provas enviada", desc: "Enviado quando você publica a galeria de provas para seleção." },
+    selection_completed: { label: "4 · Seleção concluída", desc: "Enviado quando o cliente finaliza a escolha; informa fila de pós-produção e prazo." },
+    final_gallery_sent: { label: "5 · Galeria final enviada", desc: "Enviado quando você publica a galeria final para download." },
+    download_reminder_7d: { label: "6 · Lembrete de download (7d)", desc: "Enviado 7 dias após o envio da galeria final, se o cliente ainda não baixou as fotos." },
+    post_delivery_feedback_7d: { label: "7 · Pós-entrega · feedback (7d)", desc: "Enviado 7 dias após o cliente baixar as fotos, agradecendo e pedindo feedback." },
+    reminder_14_days: { label: "Pré-sessão · 14 dias antes", desc: "Enviado 14 dias antes do ensaio (se ativado na sessão)." },
+    reminder_7_days: { label: "Pré-sessão · 7 dias antes", desc: "Enviado 7 dias antes do ensaio (se ativado na sessão)." },
+    reminder_1_day: { label: "Pré-sessão · 1 dia antes", desc: "Enviado 1 dia antes do ensaio (se ativado na sessão)." },
   };
 
   const fetchTemplates = useCallback(async () => {
@@ -290,8 +307,8 @@ export default function WorkflowEmailTemplates() {
           {/* Triggers list */}
           <aside className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
             {[
-              { title: "Lembretes pré-sessão", keys: ["reminder_14_days", "reminder_7_days", "reminder_1_day"] as Trigger[] },
-              { title: "Estágios do projeto", keys: ["shot_to_editing", "editing_to_review", "review_to_delivered", "delivered_to_done", "gallery_linked"] as Trigger[] },
+              { title: "Jornada do cliente", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
+              { title: "Lembretes pré-sessão", keys: [...REMINDER_TRIGGERS] as Trigger[] },
             ].map((group) => (
               <div key={group.title}>
                 <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">

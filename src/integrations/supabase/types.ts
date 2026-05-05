@@ -1792,7 +1792,10 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           expires_at: string | null
+          final_published_at: string | null
+          gallery_kind: string | null
           id: string
+          last_download_at: string | null
           photographer_id: string
           price_per_photo: number
           project_id: string | null
@@ -1813,7 +1816,10 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           expires_at?: string | null
+          final_published_at?: string | null
+          gallery_kind?: string | null
           id?: string
+          last_download_at?: string | null
           photographer_id: string
           price_per_photo?: number
           project_id?: string | null
@@ -1834,7 +1840,10 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           expires_at?: string | null
+          final_published_at?: string | null
+          gallery_kind?: string | null
           id?: string
+          last_download_at?: string | null
           photographer_id?: string
           price_per_photo?: number
           project_id?: string | null
@@ -4208,6 +4217,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workflow_email_dispatched: {
+        Row: {
+          booking_id: string | null
+          gallery_id: string | null
+          id: string
+          photographer_id: string
+          project_id: string | null
+          recipient_email: string | null
+          sent_at: string
+          trigger: string
+        }
+        Insert: {
+          booking_id?: string | null
+          gallery_id?: string | null
+          id?: string
+          photographer_id: string
+          project_id?: string | null
+          recipient_email?: string | null
+          sent_at?: string
+          trigger: string
+        }
+        Update: {
+          booking_id?: string | null
+          gallery_id?: string | null
+          id?: string
+          photographer_id?: string
+          project_id?: string | null
+          recipient_email?: string | null
+          sent_at?: string
+          trigger?: string
+        }
+        Relationships: []
       }
       workflow_email_logs: {
         Row: {

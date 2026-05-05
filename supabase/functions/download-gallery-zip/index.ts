@@ -164,6 +164,16 @@ serve(async (req) => {
     const zipData = buildZip(files);
     const safeTitle = (gallery.title as string).replace(/[^a-z0-9]/gi, "-").toLowerCase();
 
+    // Mark gallery as downloaded (for download_reminder + feedback triggers)
+    try {
+      await supabase
+        .from("galleries")
+        .update({ last_download_at: new Date().toISOString() })
+        .eq("id", galleryId)
+        .is("last_download_at", null);
+    } catch (_) { /* ignore */ }
+
+
     return new Response(zipData, {
       status: 200,
       headers: {

@@ -1,65 +1,69 @@
-## Diagnóstico
+# Workflow de Emails — Jornada do Cliente em 7 Etapas
 
-Comparando os dois lados:
+Reorganiza o painel de emails automáticos seguindo a jornada real do cliente (do fechamento da sessão ao pós-entrega) e implementa os disparadores que ainda não existem.
 
-**Editor (`contracts.body` salvo no DB — fonte da verdade):**
-```
-Session Type:
-Session Date:        ← (sem chip nenhum)
-Session Time:
-Session Duration:
-```
-O usuário **removeu** os chips dessas linhas e salvou. O DB confirma: `Session Date:</strong>&nbsp;<br>` (sem `[[session_date]]`, sem chip).
+## Nova ordem de gatilhos (jornada)
 
-**Renderizado para o cliente (image-162):**
-```
-Session Date: Thursday, May 14   ← valor aparece "do nada"
-```
+| # | Chave (key) | Quando dispara |
+|---|---|---|
+| 1 | `booking_confirmed` | Cliente fecha/paga a sessão (boas-vindas) |
+| 2 | `session_completed` | Após data+hora do ensaio terminar (agradecimento + próxima etapa) |
+| 3 | `proof_gallery_sent` | Galeria de provas é publicada |
+| 4 | `selection_completed` | Cliente finaliza seleção de fotos (vai para fila de pós) |
+| 5 | `final_gallery_sent` | Galeria final é publicada |
+| 6 | `download_reminder_7d` | 7 dias após envio da galeria final, se cliente não baixou |
+| 7 | `post_delivery_feedback_7d` | 7 dias após o cliente baixar as fotos (agradecimento + feedback) |
 
-### Causa raiz
+Os lembretes pré-sessão (`reminder_14_days`, `reminder_7_days`, `reminder_1_day`) continuam existindo, agora agrupados separadamente como "Pré-sessão".
 
-A página pública (`SessionDetailPage.tsx`) e o `BookingConfirm.tsx` usam **dois caminhos** para obter o HTML do contrato:
+Triggers antigos (`shot_to_editing`, `editing_to_review`, `review_to_delivered`, `delivered_to_done`, `gallery_linked`) deixam de aparecer no painel — os registros já salvos no banco ficam preservados, mas ocultos da UI (não removidos para não quebrar histórico).
 
-1. `sessions.contract_text` — **snapshot antigo, congelado** quando a sessão foi criada. Ainda contém `[[session_date]]` próximo a "Session Date:".
-2. `contracts.body` — versão atual do template (fresca).
+## Mudanças na UI (`WorkflowEmailTemplates.tsx`)
 
-No `useMemo` do `resolvedContractHtml` (linha 666–683 do `SessionDetailPage.tsx`), a resolução começa a partir de `session.contract_text`. Esse valor só é substituído pela versão fresca dentro do `handleEnterReview`, **depois** que o usuário clica para avançar até a etapa de revisão. Antes disso (e em qualquer renderização que não passe por esse handler — ex.: refresh, navegação direta), o HTML usado é o snapshot legado, que ainda contém o token `[[session_date]]` removido pelo fotógrafo.
+- Substituir `STAGE_TRIGGERS` pelas 7 chaves novas + as 3 de pré-sessão.
+- Reescrever `triggerMeta` com labels/descrições nos 3 idiomas (EN/PT-BR/ES) via `LanguageContext`.
+- Sidebar com 3 grupos, nesta ordem:
+  1. **Jornada do cliente** — as 7 etapas numeradas (1–7) na ordem acima
+  2. **Pré-sessão** — 14d / 7d / 1d
+- Adicionar variáveis novas em `VARIABLES` e `SAMPLE_PREVIEW`:
+  - `{{selection_deadline}}`, `{{final_delivery_eta}}`, `{{download_link}}`, `{{feedback_link}}`
+- Configurações por template (já existem): nome interno, remetente, BCC, atraso em minutos, ativo/inativo, auto-envio, preview, teste, histórico.
 
-Resultado: o cliente vê um campo preenchido (`Session Date: Thursday, May 14`) que **não existe mais** no contrato editado — exatamente o oposto do que aconteceu antes (token órfão renderizado como `{{null}}`), mas o mesmo bug de fundo: **estamos lendo um cache estagnado em `sessions.contract_text`**.
+## Backend — pontos de disparo
 
-O mesmo padrão existe no `BookingConfirm.tsx` (linhas 247–253) e no edge function `get-booking-public` (sobrescreve `session.contract_text` apenas se `contract_id` existir, mas o cliente ainda pode usar o `contract_text` original em alguns trechos).
+Criar uma edge function única `send-workflow-email` (versão "real" da `send-workflow-email-test` já existente). Recebe `{ photographer_id, trigger, project_id|booking_id, recipient, vars }`, busca o template ativo, renderiza variáveis, envia via Brevo, grava em `workflow_email_logs` com `is_test=false`.
 
-## Correção
+Pontos de chamada:
 
-Tratar **`contracts.body` como única fonte da verdade** sempre que o `contract_id` existir, em todos os pontos de leitura — nunca o snapshot.
+| Trigger | Onde plugar |
+|---|---|
+| `booking_confirmed` | `session-booking-webhook` (após `payment_status='paid'`) |
+| `proof_gallery_sent` | ao publicar galeria do tipo "proofs" (toggle de `galleries.status`) |
+| `selection_completed` | endpoint/ação que finaliza seleção do cliente |
+| `final_gallery_sent` | ao publicar galeria final |
+| `session_completed` | cron horário que varre `bookings` cuja `booked_date + hora` < now() e ainda não tiveram disparo |
+| `download_reminder_7d` | cron diário: galerias finais publicadas há ≥7d sem download registrado |
+| `post_delivery_feedback_7d` | cron diário: 7d após primeiro download registrado |
 
-### 1. `src/pages/store/SessionDetailPage.tsx`
-- No `useEffect` de carga (linha 358–365), já busca `contracts.body` se `contract_id` existir → manter.
-- **Sempre** sobrescrever `s.contract_text = contractTemplate.body` quando `contract_id` está presente, mesmo se `body` vier vazio (atualmente só sobrescreve se `body` truthy — manter assim já está ok).
-- Mover a lógica de fetch para fora do `handleEnterReview` e re-buscar o `contracts.body` toda vez que o usuário entra na etapa "review" (já faz), **e também** invalidar o cache local: garantir que o `useMemo` recompute usando o body fresco. Atualmente está correto, mas adicionar dependência explícita.
-- No JSX (linha 1556) onde renderiza, usar **somente** `resolvedContractHtml` (que já parte do body fresco) e não `session.contract_text` cru.
+Schema:
 
-### 2. `src/pages/BookingConfirm.tsx`
-- Linhas 247–253: já refaz fetch do `contracts.body`. Garantir que renderiza `resolvedContractHtml` e nunca o `session.contract_text` como fallback (linhas 1012, 1046 — remover `|| session.contract_text`).
+- Adicionar coluna `last_download_at timestamptz` em `galleries` (se não existir) — atualizada no endpoint de download.
+- Adicionar tabela auxiliar `workflow_email_dispatched (project_id, trigger, sent_at)` com unique `(project_id, trigger)` para evitar reenvio pelos crons.
 
-### 3. `supabase/functions/get-booking-public/index.ts`
-- Já sobrescreve `session.contract_text` com `contracts.body` se `contract_id` presente. Manter.
+Cron (pg_cron + pg_net) chamando a edge function dispatcher horária/diária.
 
-### 4. (Opcional, mas recomendado) Backfill
-- Migration única para sincronizar `sessions.contract_text` com o `contracts.body` atual em todas as sessões com `contract_id` definido — evita confusão futura caso outro código leia o snapshot.
+## Detalhes técnicos
 
-```sql
-UPDATE sessions s
-SET contract_text = c.body
-FROM contracts c
-WHERE s.contract_id = c.id
-  AND s.contract_text IS DISTINCT FROM c.body;
-```
+- Migration: nova tabela `workflow_email_dispatched`, coluna `galleries.last_download_at`, RLS por `photographer_id`.
+- Edge functions:
+  - `send-workflow-email` (novo, dispatcher real, reusa lógica de render do test).
+  - `workflow-email-cron` (novo, varre bookings/galleries e chama dispatcher).
+- Hook em `session-booking-webhook` para `booking_confirmed`.
+- Hooks no fluxo de publicar galeria (proofs/final) e finalizar seleção.
+- i18n: adicionar chaves em `LanguageContext` para os 7 novos labels/desc nos 3 idiomas.
+- Manter compatibilidade: registros antigos em `workflow_email_templates` com triggers descontinuados não são deletados; UI apenas não os lista.
 
-## Resumo do que muda
+## Fora de escopo
 
-- `SessionDetailPage.tsx`: renderizar apenas `resolvedContractHtml`, sem fallback para snapshot.
-- `BookingConfirm.tsx`: idem, remover `|| session.contract_text` dos dois `dangerouslySetInnerHTML`.
-- Migration de backfill para zerar o snapshot estagnado de todas as sessões existentes.
-
-Após isso, o que o fotógrafo vê no editor = o que o cliente vê no checkout, sempre.
+- Editor visual de novos campos custom além das variáveis listadas.
+- Migração automática de conteúdo dos templates antigos para os novos (usuário recria — só existem ~5 e nenhum cliente em produção tem esses templates configurados ainda neste fluxo).

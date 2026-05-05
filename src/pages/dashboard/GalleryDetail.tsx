@@ -108,6 +108,8 @@ interface Gallery {
   created_at: string;
   booking_id: string | null;
   project_id: string | null;
+  photographer_id?: string | null;
+  final_published_at?: string | null;
   watermark_id: string | null;
   expires_at: string | null;
   price_per_photo: number;
@@ -628,13 +630,50 @@ const GalleryDetail = () => {
   const doPublish = async () => {
     if (!gallery) return;
     const newStatus = gallery.status === "published" ? "draft" : "published";
+    const isFinalKind = (() => {
+      const c = (gallery.category || "").toLowerCase();
+      if (c.includes("prov") || c.includes("proof") || c.includes("select")) return false;
+      return true; // default: treat as final delivery
+    })();
+    const updates: any = { status: newStatus };
+    if (newStatus === "published" && isFinalKind) {
+      updates.final_published_at = new Date().toISOString();
+    }
     const { error } = await supabase
       .from("galleries")
-      .update({ status: newStatus })
+      .update(updates)
       .eq("id", gallery.id);
     if (!error) {
-      setGallery({ ...gallery, status: newStatus });
+      setGallery({ ...gallery, status: newStatus, ...(updates.final_published_at ? { final_published_at: updates.final_published_at } : {}) } as any);
       toast({ title: newStatus === "published" ? "Gallery published" : "Gallery unpublished" });
+
+      if (newStatus === "published" && gallery.photographer_id && (gallery as any).booking_id) {
+        // Fetch client email from booking
+        try {
+          const { data: bk } = await supabase
+            .from("bookings")
+            .select("client_email, client_name")
+            .eq("id", (gallery as any).booking_id)
+            .single();
+          if (bk?.client_email) {
+            await supabase.functions.invoke("send-workflow-email", {
+              body: {
+                photographer_id: gallery.photographer_id,
+                trigger: isFinalKind ? "final_gallery_sent" : "proof_gallery_sent",
+                recipient_email: bk.client_email,
+                recipient_name: bk.client_name,
+                gallery_id: gallery.id,
+                vars: {
+                  gallery_link: `${window.location.origin}/g/${gallery.slug}`,
+                  download_link: `${window.location.origin}/g/${gallery.slug}?download=1`,
+                },
+              },
+            });
+          }
+        } catch (e) {
+          console.error("workflow email dispatch failed", e);
+        }
+      }
     }
   };
 
