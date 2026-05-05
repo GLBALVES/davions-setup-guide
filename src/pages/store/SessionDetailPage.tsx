@@ -708,6 +708,25 @@ const SessionDetailPage = () => {
     setSelectedSlot(null);
   };
 
+  const handleEnterReview = useCallback(async () => {
+    if (!session) { setStep("review"); return; }
+    const [{ data: contractTemplate }, { data: customFieldData }] = await Promise.all([
+      session.contract_id
+        ? (supabase as any).from("contracts").select("body").eq("id", session.contract_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      (supabase as any)
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", session.photographer_id),
+    ]);
+    const latestBody = contractTemplate?.body ?? session.contract_text;
+    setSession((prev) => prev ? { ...prev, contract_text: latestBody } : prev);
+    setContractCustomFields((customFieldData ?? []) as ContractCustomField[]);
+    setContractAgreed(false);
+    setSignatureData(null);
+    setStep("review");
+  }, [session]);
+
   // ────────────────────────────────────────────
   // Checkout
   // ────────────────────────────────────────────
