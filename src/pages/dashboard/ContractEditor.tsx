@@ -87,8 +87,14 @@ const VariableNode = Node.create({
   atom: true,
   addAttributes() {
     return {
-      key:   { default: null },
-      label: { default: null },
+      key: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-variable") || element.getAttribute("key"),
+      },
+      label: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-label") || element.getAttribute("label") || element.textContent,
+      },
     };
   },
   parseHTML() {
@@ -99,6 +105,7 @@ const VariableNode = Node.create({
       "span",
       mergeAttributes(HTMLAttributes, {
         "data-variable": HTMLAttributes.key,
+        "data-label": HTMLAttributes.label,
         class:
           "inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 cursor-default select-none",
       }),
