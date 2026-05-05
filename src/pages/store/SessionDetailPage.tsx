@@ -46,6 +46,7 @@ interface SessionDetail {
   booking_notice_days: number;
   booking_window_days: number;
   contract_text: string | null;
+  contract_id: string | null;
   virtual_block_percent: number;
   portfolio_photos: string[] | null;
 }
@@ -54,6 +55,12 @@ interface PhotographerInfo {
   full_name: string | null;
   hero_image_url: string | null;
   logo_url?: string | null;
+  business_name?: string | null;
+  business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_zip?: string | null;
+  business_country?: string | null;
 }
 
 interface WeeklySlotDef {
@@ -348,12 +355,20 @@ const SessionDetailPage = () => {
         return;
       }
       const s = sessionData as unknown as SessionDetail;
+      if (s.contract_id) {
+        const { data: contractTemplate } = await (supabase as any)
+          .from("contracts")
+          .select("body")
+          .eq("id", s.contract_id)
+          .maybeSingle();
+        if (contractTemplate?.body) s.contract_text = contractTemplate.body;
+      }
       setSession(s);
 
       const [{ data: photographerData }, { data: siteData }] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, hero_image_url")
+          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country")
           .eq("id", s.photographer_id)
           .single(),
         supabase
@@ -630,6 +645,18 @@ const SessionDetailPage = () => {
 
   const formatCurrency = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+
+  const studioName = photographer?.business_name || photographer?.full_name || "";
+  const studioAddress = [
+    photographer?.business_address,
+    photographer?.business_city,
+    photographer?.business_state,
+    photographer?.business_zip,
+    photographer?.business_country,
+  ]
+    .map((part) => (part || "").trim())
+    .filter(Boolean)
+    .join(", ");
 
   // ────────────────────────────────────────────
   // Calendar helpers
@@ -1492,11 +1519,15 @@ const SessionDetailPage = () => {
                         __html: resolveSessionContractVariables(session.contract_text, {
                           client_name: clientName,
                           client_email: clientEmail,
+                          client_phone: clientPhone,
                           session_title: session.title,
                           session_date: selectedSlot?.label ?? "",
                           session_time: selectedSlot ? formatTime12(selectedSlot.start_time) : "",
                           session_duration: `${session.duration_minutes} min`,
                           session_price: formatCurrency(session.price),
+                          photographer_name: photographer?.full_name || "",
+                          studio_name: studioName,
+                          studio_address: studioAddress,
                         })
                       }}
                     />
