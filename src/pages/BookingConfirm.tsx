@@ -518,7 +518,7 @@ const BookingConfirm = () => {
     );
   }
 
-  const photographerName = photographer?.brand_name || photographer?.full_name || "Photographer";
+  const photographerName = photographer?.business_name || photographer?.full_name || "Photographer";
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-12">
