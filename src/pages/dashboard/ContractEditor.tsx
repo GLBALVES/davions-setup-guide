@@ -95,18 +95,21 @@ export function resolveContractVariables(
   customFields?: CustomField[]
 ): string {
   let result = CONTRACT_VARIABLES.reduce((acc, v) => {
-    const val = data[v.key] ?? `[${v.label}]`;
-    return acc.replace(new RegExp(`\\[\\[${v.key}\\]\\]`, "g"), val);
+    const val = data[v.key] ?? "";
+    return applyVariableValue(acc, v.key, v.label, val);
   }, html);
 
   if (customFields) {
     for (const cf of customFields) {
-      const val = data[cf.field_key] ?? (cf.default_value || `[${cf.field_label}]`);
-      result = result.replace(new RegExp(`\\[\\[${cf.field_key}\\]\\]`, "g"), val);
+      const val = data[cf.field_key] ?? cf.default_value ?? "";
+      result = applyVariableValue(result, cf.field_key, cf.field_label, val);
     }
   }
 
-  return result;
+  return result
+    .replace(/<span\b(?=[^>]*\bdata-variable=(["']))[^>]*>[\s\S]*?<\/span>/gi, "")
+    .replace(/\[\[[^\]]+\]\]/g, "")
+    .replace(/\{\{[^}]+\}\}/g, "");
 }
 
 // ── Custom Tiptap Node: Variable chip ────────────────────────────────────────
