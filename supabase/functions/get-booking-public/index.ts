@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,8 +54,57 @@ serve(async (req) => {
       );
     }
 
+    const [sessionRes, availabilityRes, photographerRes, clientRes, customFieldsRes] = await Promise.all([
+      supabase
+        .from("sessions")
+        .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, contract_id, price, session_model")
+        .eq("id", booking.session_id)
+        .single(),
+      booking.availability_id
+        ? supabase
+            .from("session_availability")
+            .select("start_time, end_time")
+            .eq("id", booking.availability_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from("photographers")
+        .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
+        .eq("id", booking.photographer_id)
+        .single(),
+      booking.client_email
+        ? supabase
+            .from("clients")
+            .select("full_name, phone, tax_id, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
+            .eq("photographer_id", booking.photographer_id)
+            .eq("email", booking.client_email)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from("contract_custom_fields")
+        .select("id, field_key, field_label, default_value")
+        .eq("photographer_id", booking.photographer_id),
+    ]);
+
+    const session = sessionRes.data;
+    if (session?.contract_id) {
+      const { data: contractTemplate } = await supabase
+        .from("contracts")
+        .select("body")
+        .eq("id", session.contract_id)
+        .maybeSingle();
+      if (contractTemplate?.body) session.contract_text = contractTemplate.body;
+    }
+
     return new Response(
-      JSON.stringify({ booking }),
+      JSON.stringify({
+        booking,
+        session,
+        availability: availabilityRes.data,
+        photographer: photographerRes.data,
+        client: clientRes.data,
+        contractCustomFields: customFieldsRes.data ?? [],
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
