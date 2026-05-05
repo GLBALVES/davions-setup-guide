@@ -3528,6 +3528,7 @@ export type Database = {
           briefing_id: string | null
           campaign_dates: string[] | null
           confirmation_email_body: string
+          contract_id: string | null
           contract_text: string | null
           cover_image_url: string | null
           created_at: string
@@ -3563,6 +3564,7 @@ export type Database = {
           briefing_id?: string | null
           campaign_dates?: string[] | null
           confirmation_email_body?: string
+          contract_id?: string | null
           contract_text?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -3598,6 +3600,7 @@ export type Database = {
           briefing_id?: string | null
           campaign_dates?: string[] | null
           confirmation_email_body?: string
+          contract_id?: string | null
           contract_text?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -3631,6 +3634,13 @@ export type Database = {
             columns: ["briefing_id"]
             isOneToOne: false
             referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
           {

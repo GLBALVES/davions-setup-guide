@@ -53,6 +53,7 @@ interface SessionData {
   cover_image_url: string | null;
   briefing_id: string | null;
   contract_text: string | null;
+  contract_id: string | null;
   price: number;
   session_model: string | null;
 }
@@ -85,9 +86,13 @@ interface BriefingData {
 interface PhotographerData {
   full_name: string;
   store_slug: string | null;
-  brand_name: string | null;
   business_name?: string | null;
   business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_zip?: string | null;
+  business_country?: string | null;
+  business_phone?: string | null;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
@@ -198,7 +203,7 @@ const BookingConfirm = () => {
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
           .from("sessions")
-          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, price, session_model")
+          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, contract_id, price, session_model")
           .eq("id", b.session_id)
           .single(),
         supabase
@@ -208,13 +213,23 @@ const BookingConfirm = () => {
           .single(),
         (supabase as any)
           .from("photographers")
-          .select("full_name, store_slug, brand_name, business_name, business_address")
+          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
           .eq("id", b.photographer_id)
           .single(),
       ]);
 
       if (sessRes.data) {
         const s = sessRes.data as SessionData;
+        // If session references a contract template, always pull the LATEST body from it
+        // so edits to the template are reflected in the booking flow without re-attaching.
+        if (s.contract_id) {
+          const { data: tpl } = await (supabase as any)
+            .from("contracts")
+            .select("body")
+            .eq("id", s.contract_id)
+            .maybeSingle();
+          if (tpl?.body) s.contract_text = tpl.body;
+        }
         setSession(s);
 
         const { data: bonusData } = await (supabase as any)
@@ -381,8 +396,14 @@ const BookingConfirm = () => {
       session_duration: session.duration_minutes ? `${session.duration_minutes} min` : "",
       session_price: session.price != null ? formatCurrency(session.price) : "",
       photographer_name: photographer?.full_name || "",
-      studio_name: photographer?.business_name || photographer?.brand_name || photographer?.full_name || "",
-      studio_address: photographer?.business_address || "",
+      studio_name: photographer?.business_name || photographer?.full_name || "",
+      studio_address: [
+        photographer?.business_address,
+        photographer?.business_city,
+        photographer?.business_state,
+        photographer?.business_zip,
+        photographer?.business_country,
+      ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
@@ -497,7 +518,7 @@ const BookingConfirm = () => {
     );
   }
 
-  const photographerName = photographer?.brand_name || photographer?.full_name || "Photographer";
+  const photographerName = photographer?.business_name || photographer?.full_name || "Photographer";
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-4 py-12">
