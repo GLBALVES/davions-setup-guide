@@ -203,7 +203,7 @@ const BookingConfirm = () => {
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
           .from("sessions")
-          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, price, session_model")
+          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, contract_id, price, session_model")
           .eq("id", b.session_id)
           .single(),
         supabase
@@ -213,13 +213,23 @@ const BookingConfirm = () => {
           .single(),
         (supabase as any)
           .from("photographers")
-          .select("full_name, store_slug, brand_name, business_name, business_address")
+          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
           .eq("id", b.photographer_id)
           .single(),
       ]);
 
       if (sessRes.data) {
         const s = sessRes.data as SessionData;
+        // If session references a contract template, always pull the LATEST body from it
+        // so edits to the template are reflected in the booking flow without re-attaching.
+        if (s.contract_id) {
+          const { data: tpl } = await (supabase as any)
+            .from("contracts")
+            .select("body")
+            .eq("id", s.contract_id)
+            .maybeSingle();
+          if (tpl?.body) s.contract_text = tpl.body;
+        }
         setSession(s);
 
         const { data: bonusData } = await (supabase as any)
