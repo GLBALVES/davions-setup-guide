@@ -69,7 +69,7 @@ serve(async (req) => {
         : Promise.resolve({ data: null, error: null }),
       supabase
         .from("photographers")
-        .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
+        .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone, email")
         .eq("id", booking.photographer_id)
         .single(),
       booking.client_email

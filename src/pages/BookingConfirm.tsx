@@ -235,7 +235,7 @@ const BookingConfirm = () => {
           .single(),
         (supabase as any)
           .from("photographers")
-          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone")
+          .select("full_name, store_slug, business_name, business_address, business_city, business_state, business_zip, business_country, business_phone, email")
           .eq("id", b.photographer_id)
           .single(),
       ]);
@@ -428,6 +428,7 @@ const BookingConfirm = () => {
         photographer?.business_zip,
         photographer?.business_country,
       ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
+      studio_email: (photographer as any)?.email || "",
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
   }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);

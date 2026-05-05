@@ -61,6 +61,7 @@ interface PhotographerInfo {
   business_state?: string | null;
   business_zip?: string | null;
   business_country?: string | null;
+  email?: string | null;
 }
 
 interface WeeklySlotDef {
@@ -368,7 +369,7 @@ const SessionDetailPage = () => {
       const [{ data: photographerData }, { data: siteData }] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country")
+          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country, email")
           .eq("id", s.photographer_id)
           .single(),
         supabase
@@ -1528,6 +1529,7 @@ const SessionDetailPage = () => {
                           photographer_name: photographer?.full_name || "",
                           studio_name: studioName,
                           studio_address: studioAddress,
+                          studio_email: photographer?.email || "",
                         })
                       }}
                     />
