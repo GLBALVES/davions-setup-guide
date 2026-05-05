@@ -1009,7 +1009,7 @@ const BookingConfirm = () => {
             <div className="p-5">
               <div
                 className="prose prose-sm max-w-none text-xs font-light leading-relaxed max-h-80 overflow-y-auto"
-                dangerouslySetInnerHTML={{ __html: resolvedContractHtml || session.contract_text }}
+                dangerouslySetInnerHTML={{ __html: resolvedContractHtml }}
               />
             </div>
 
