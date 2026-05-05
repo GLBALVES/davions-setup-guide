@@ -368,7 +368,7 @@ const SessionDetailPage = () => {
       const [{ data: photographerData }, { data: siteData }] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country")
+          .select("full_name, hero_image_url, business_name, business_address, business_city, business_state, business_zip, business_country, email")
           .eq("id", s.photographer_id)
           .single(),
         supabase
