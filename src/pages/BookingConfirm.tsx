@@ -200,6 +200,28 @@ const BookingConfirm = () => {
       setBooking(b);
       setClientInfo((prev) => ({ ...prev, full_name: b.client_name || "" }));
 
+      if (fnResult?.session) setSession(fnResult.session as SessionData);
+      if (fnResult?.availability) setAvail(fnResult.availability as AvailData);
+      if (fnResult?.photographer) setPhotographer(fnResult.photographer as PhotographerData);
+      if (Array.isArray(fnResult?.contractCustomFields)) setContractCustomFields(fnResult.contractCustomFields);
+
+      if (fnResult?.client) {
+        const existingClient = fnResult.client;
+        setClientInfo({
+          full_name: existingClient.full_name || b.client_name || "",
+          phone: existingClient.phone || "",
+          tax_id: existingClient.tax_id || "",
+          birth_date: existingClient.birth_date || "",
+          address_street: existingClient.address_street || "",
+          address_city: existingClient.address_city || "",
+          address_state: existingClient.address_state || "",
+          address_zip: existingClient.address_zip || "",
+          address_country: existingClient.address_country || "",
+          instagram: existingClient.instagram || "",
+        });
+        setClientInfoSaved(true);
+      }
+
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
           .from("sessions")
@@ -218,7 +240,7 @@ const BookingConfirm = () => {
           .single(),
       ]);
 
-      if (sessRes.data) {
+      if (!fnResult?.session && sessRes.data) {
         const s = sessRes.data as SessionData;
         // If session references a contract template, always pull the LATEST body from it
         // so edits to the template are reflected in the booking flow without re-attaching.
@@ -258,11 +280,11 @@ const BookingConfirm = () => {
         }
       }
 
-      if (availRes.data) setAvail(availRes.data as AvailData);
-      if (photoRes.data) setPhotographer(photoRes.data as PhotographerData);
+      if (!fnResult?.availability && availRes.data) setAvail(availRes.data as AvailData);
+      if (!fnResult?.photographer && photoRes.data) setPhotographer(photoRes.data as PhotographerData);
 
       // Load existing client info if available
-      if (b.client_email && b.photographer_id) {
+      if (!fnResult?.client && b.client_email && b.photographer_id) {
         const { data: existingClient } = await (supabase as any)
           .from("clients")
           .select("full_name, phone, tax_id, birth_date, address_street, address_city, address_state, address_zip, address_country, instagram")
@@ -287,11 +309,13 @@ const BookingConfirm = () => {
       }
 
       // Load contract custom fields (default values for variables)
-      const { data: cfData } = await (supabase as any)
-        .from("contract_custom_fields")
-        .select("id, field_key, field_label, default_value")
-        .eq("photographer_id", b.photographer_id);
-      if (cfData) setContractCustomFields(cfData);
+      if (!Array.isArray(fnResult?.contractCustomFields)) {
+        const { data: cfData } = await (supabase as any)
+          .from("contract_custom_fields")
+          .select("id, field_key, field_label, default_value")
+          .eq("photographer_id", b.photographer_id);
+        if (cfData) setContractCustomFields(cfData);
+      }
 
       setLoading(false);
     };
