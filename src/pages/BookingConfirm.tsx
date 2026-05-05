@@ -86,9 +86,13 @@ interface BriefingData {
 interface PhotographerData {
   full_name: string;
   store_slug: string | null;
-  brand_name: string | null;
   business_name?: string | null;
   business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_zip?: string | null;
+  business_country?: string | null;
+  business_phone?: string | null;
 }
 
 /* ── Helpers ────────────────────────────────────────── */
