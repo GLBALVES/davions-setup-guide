@@ -58,6 +58,9 @@ interface LogRow {
 }
 
 const STAGE_TRIGGERS = [
+  "reminder_14_days",
+  "reminder_7_days",
+  "reminder_1_day",
   "shot_to_editing",
   "editing_to_review",
   "review_to_delivered",
