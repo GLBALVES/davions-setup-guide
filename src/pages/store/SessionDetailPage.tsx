@@ -355,6 +355,14 @@ const SessionDetailPage = () => {
         return;
       }
       const s = sessionData as unknown as SessionDetail;
+      if (s.contract_id) {
+        const { data: contractTemplate } = await (supabase as any)
+          .from("contracts")
+          .select("body")
+          .eq("id", s.contract_id)
+          .maybeSingle();
+        if (contractTemplate?.body) s.contract_text = contractTemplate.body;
+      }
       setSession(s);
 
       const [{ data: photographerData }, { data: siteData }] = await Promise.all([
