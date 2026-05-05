@@ -57,16 +57,23 @@ interface LogRow {
   created_at: string;
 }
 
-const STAGE_TRIGGERS = [
+const JOURNEY_TRIGGERS = [
+  "booking_confirmed",
+  "session_completed",
+  "proof_gallery_sent",
+  "selection_completed",
+  "final_gallery_sent",
+  "download_reminder_7d",
+  "post_delivery_feedback_7d",
+] as const;
+
+const REMINDER_TRIGGERS = [
   "reminder_14_days",
   "reminder_7_days",
   "reminder_1_day",
-  "shot_to_editing",
-  "editing_to_review",
-  "review_to_delivered",
-  "delivered_to_done",
-  "gallery_linked",
 ] as const;
+
+const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS] as const;
 
 type Trigger = (typeof STAGE_TRIGGERS)[number];
 
@@ -77,6 +84,10 @@ const VARIABLES: { token: string; desc: string }[] = [
   { token: "{{photographer_name}}", desc: "Seu nome" },
   { token: "{{shoot_date}}", desc: "Data do ensaio" },
   { token: "{{gallery_link}}", desc: "Link da galeria" },
+  { token: "{{download_link}}", desc: "Link de download" },
+  { token: "{{selection_deadline}}", desc: "Prazo p/ seleção" },
+  { token: "{{final_delivery_eta}}", desc: "Previsão galeria final" },
+  { token: "{{feedback_link}}", desc: "Link de feedback" },
   { token: "{{studio_name}}", desc: "Nome do estúdio" },
   { token: "{{studio_email}}", desc: "Email do estúdio" },
 ];
@@ -88,6 +99,10 @@ const SAMPLE_PREVIEW: Record<string, string> = {
   "{{photographer_name}}": "Você",
   "{{shoot_date}}": new Date().toLocaleDateString("pt-BR"),
   "{{gallery_link}}": "https://davions.com/gallery/exemplo",
+  "{{download_link}}": "https://davions.com/gallery/exemplo/download",
+  "{{selection_deadline}}": "7 dias",
+  "{{final_delivery_eta}}": "30 dias",
+  "{{feedback_link}}": "https://davions.com/feedback/exemplo",
   "{{studio_name}}": "Davions Studio",
   "{{studio_email}}": "contato@davions.com",
 };
