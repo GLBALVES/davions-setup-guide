@@ -1049,22 +1049,18 @@ function OneSessionCard({
   const handleConfirmDelete = async () => {
     setDeleteLoading(true);
     try {
-      const { data: linkedBookings } = await supabase
+      await supabase
         .from("bookings")
-        .select("id")
-        .eq("session_id", session.id)
-        .limit(1);
+        .update({ session_id: null })
+        .eq("session_id", session.id);
 
-      const isOneSession = (session as any).session_model === "one_session";
-      if (!isOneSession && linkedBookings && linkedBookings.length > 0) {
-        await supabase.from("sessions").update({ status: "draft" }).eq("id", session.id).eq("photographer_id", photographerId ?? "");
-        onDelete(session.id);
-        toast({ title: "Session deactivated", description: "This session has linked bookings and was deactivated instead." });
-      } else {
-        await supabase.from("sessions").delete().eq("id", session.id).eq("photographer_id", photographerId ?? "");
-        onDelete(session.id);
-        toast({ title: "Session deleted" });
-      }
+      await supabase
+        .from("sessions")
+        .delete()
+        .eq("id", session.id)
+        .eq("photographer_id", photographerId ?? "");
+      onDelete(session.id);
+      toast({ title: "Session deleted" });
     } catch {
       toast({ title: "Failed to delete session", variant: "destructive" });
     } finally {
