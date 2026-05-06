@@ -85,20 +85,20 @@ export function AppUpdateNotifier() {
   };
 
   return (
-    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] pointer-events-none w-full max-w-[640px] px-3 animate-in fade-in slide-in-from-top-4 duration-300">
-      <div className="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-md border border-rose-500/40 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 shadow-[0_8px_30px_rgba(225,29,72,0.18)] backdrop-blur">
-        <div className="shrink-0 h-8 w-8 flex items-center justify-center rounded-md bg-rose-500/15 border border-rose-500/30">
-          <Sparkles className="h-4 w-4 text-rose-600 dark:text-rose-300" />
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none w-auto max-w-[92vw] animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="pointer-events-auto flex items-center gap-3 pl-4 pr-2 py-2 rounded-full border border-white/10 bg-neutral-900/95 text-neutral-100 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-md">
+        <div className="shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-white/5">
+          <Sparkles className="h-3 w-3 text-neutral-300" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium tracking-wide leading-tight">{labels.title}</p>
-          <p className="text-[11px] opacity-75 leading-snug truncate">{labels.description}</p>
+        <div className="flex items-center gap-2 min-w-0">
+          <p className="text-[12px] font-medium leading-tight whitespace-nowrap">{labels.title}</p>
+          <span className="hidden sm:inline text-[11px] text-neutral-400 leading-snug truncate">{labels.description}</span>
         </div>
 
         <button
           onClick={() => window.location.reload()}
-          className="shrink-0 inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-medium px-3 py-2 rounded-sm bg-rose-600 text-white hover:bg-rose-700 transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-medium px-3 py-1.5 rounded-full bg-white text-neutral-900 hover:bg-neutral-200 transition-colors"
         >
           <RefreshCw className="h-3 w-3" />
           {labels.action}
@@ -107,7 +107,7 @@ export function AppUpdateNotifier() {
         <button
           onClick={() => setDismissed(true)}
           aria-label={labels.dismiss}
-          className="shrink-0 h-7 w-7 flex items-center justify-center rounded-sm text-rose-700/70 dark:text-rose-200/70 hover:bg-rose-500/10 transition-colors"
+          className="shrink-0 h-7 w-7 flex items-center justify-center rounded-full text-neutral-400 hover:text-neutral-100 hover:bg-white/5 transition-colors"
         >
           <X className="h-3.5 w-3.5" />
         </button>
