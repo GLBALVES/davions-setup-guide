@@ -223,6 +223,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.revenueTitle}
           sub={L.revenueSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/finance")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={monthSeries} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
