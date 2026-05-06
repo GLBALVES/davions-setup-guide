@@ -313,6 +313,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.topSessionsTitle}
           sub={L.topSessionsSub}
           empty={topSessions.length === 0 ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/sessions")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
