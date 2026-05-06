@@ -1118,38 +1118,41 @@ function ListView({
 // ── Archived Kanban Section ──────────────────────────────────────────────────
 function ArchivedKanbanSection({
   projects,
+  onView,
   onUnarchive,
   onDelete,
 }: {
   projects: ClientProject[];
+  onView: (p: ClientProject) => void;
   onUnarchive: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(true);
   const { t } = useLanguage();
   const p_t = t.projects;
   return (
     <div className="mt-6 border border-border/50 rounded-sm overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
-      >
-        {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+      <div className="w-full flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/40">
         <Archive className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-[10px] tracking-[0.25em] uppercase font-medium text-muted-foreground">{p_t.archived}</span>
         <span className="text-[10px] text-muted-foreground/50 ml-1">{projects.length}</span>
-      </button>
-      {open && (
-        <div className="flex flex-wrap gap-3 p-4">
+      </div>
+      {projects.length === 0 ? (
+        <div className="py-8 text-center text-xs text-muted-foreground/50 tracking-widest uppercase">{p_t.noArchivedProjects}</div>
+      ) : (
+        <div className="flex flex-wrap gap-3 p-4 bg-background">
           {projects.map((p) => (
-            <div key={p.id} className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[260px] flex flex-col gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <div
+              key={p.id}
+              onClick={() => onView(p)}
+              className="group border border-border/50 bg-muted/10 rounded-sm p-3 w-[260px] flex flex-col gap-2 opacity-70 hover:opacity-100 hover:border-foreground/30 transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between gap-1">
                 <p className="flex-1 text-xs font-medium leading-snug line-clamp-2 text-muted-foreground">{p.title}</p>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={() => onUnarchive(p.id)} title={p_t.showArchived}>
+                  <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); onUnarchive(p.id); }} title={p_t.showArchived}>
                     <ArchiveRestore className="h-3 w-3" />
                   </button>
-                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
+                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} title={p_t.projectRemoved}>
                     <X className="h-3 w-3" />
                   </button>
                 </div>
