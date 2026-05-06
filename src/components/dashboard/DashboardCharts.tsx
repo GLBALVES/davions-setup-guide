@@ -121,6 +121,7 @@ function formatCurrency(n: number, lang: string) {
 
 export function DashboardCharts({ photographerId, lang }: Props) {
   const L = LABELS[lang] ?? LABELS.en;
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
 
