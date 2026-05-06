@@ -1075,7 +1075,8 @@ function OneSessionCard({
         .eq("session_id", session.id)
         .limit(1);
 
-      if (linkedBookings && linkedBookings.length > 0) {
+      const isOneSession = (session as any).session_model === "one_session";
+      if (!isOneSession && linkedBookings && linkedBookings.length > 0) {
         await supabase.from("sessions").update({ status: "draft" }).eq("id", session.id).eq("photographer_id", photographerId ?? "");
         onDelete(session.id);
         toast({ title: "Session deactivated", description: "This session has linked bookings and was deactivated instead." });
