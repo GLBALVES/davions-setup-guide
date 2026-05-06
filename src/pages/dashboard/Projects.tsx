@@ -1745,7 +1745,19 @@ const Projects = () => {
                   </button>
                 );
               })}
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                {(activeStageFilter !== "all" || showArchived) && (
+                  <button
+                    onClick={() => {
+                      setActiveStageFilter("all");
+                      setShowArchived(false);
+                    }}
+                    className="flex items-center gap-1.5 border border-border/50 rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                    <span>{p_t.clearFilters ?? "Limpar filtros"}</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowArchived((v) => {
