@@ -1734,7 +1734,10 @@ const Projects = () => {
                   <button
                     key={s.key}
                     type="button"
-                    onClick={() => setActiveStageFilter((current) => current === s.key ? "all" : s.key)}
+                    onClick={() => {
+                      setShowArchived(false);
+                      setActiveStageFilter((current) => current === s.key ? "all" : s.key);
+                    }}
                     className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase transition-all ${STAGE_COLORS[s.key]} ${activeStageFilter === s.key ? "ring-1 ring-foreground/40" : "opacity-70 hover:opacity-100"}`}
                   >
                     <span>{stageLabel}</span>
