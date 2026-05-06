@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import ReactDOM from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1185,9 +1186,30 @@ const Projects = () => {
   const [editing, setEditing] = useState<ClientProject | null>(null);
   const [defaultStage, setDefaultStage] = useState<Stage>("upcoming");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [view, setView] = useState<"kanban" | "list">("kanban");
-  const [showArchived, setShowArchived] = useState(false);
-  const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // ── URL-persisted filters (survive reload / back-forward) ──────────────────
+  const VALID_STAGES: (Stage | "all")[] = ["all", "upcoming", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+  const initialStageParam = searchParams.get("stage") as Stage | "all" | null;
+  const initialStage: Stage | "all" = initialStageParam && VALID_STAGES.includes(initialStageParam) ? initialStageParam : "all";
+  const initialView = searchParams.get("view") === "list" ? "list" : "kanban";
+  const initialArchived = searchParams.get("archived") === "1" || initialStage === "archived";
+
+  const [view, setView] = useState<"kanban" | "list">(initialView);
+  const [showArchived, setShowArchived] = useState(initialArchived);
+  const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">(initialStage);
+
+  // Keep the URL in sync whenever filter state changes
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (view === "kanban") next.delete("view"); else next.set("view", view);
+    if (activeStageFilter === "all") next.delete("stage"); else next.set("stage", activeStageFilter);
+    if (showArchived && activeStageFilter !== "archived") next.set("archived", "1"); else next.delete("archived");
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, showArchived, activeStageFilter]);
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
