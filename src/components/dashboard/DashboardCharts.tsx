@@ -279,6 +279,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.funnelTitle}
           sub={L.funnelSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/bookings")}
         >
           <div className="flex flex-col gap-3 py-2">
             {funnelData.map((row, i) => {
