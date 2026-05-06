@@ -1187,6 +1187,7 @@ const Projects = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
+  const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">("all");
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -1529,6 +1530,14 @@ const Projects = () => {
       if (!dateA && dateB) return 1;
       return a.position - b.position;
     });
+
+  const activeStages = STAGES.filter((s) => s.key !== "archived");
+  const visibleStages = activeStageFilter === "all"
+    ? activeStages
+    : activeStages.filter((s) => s.key === activeStageFilter);
+  const visibleProjects = activeStageFilter === "all"
+    ? projects
+    : projects.filter((p) => p.stage === activeStageFilter || (showArchived && p.stage === "archived"));
 
   const activeProject = projects.find((p) => p.id === activeId) ?? null;
 
