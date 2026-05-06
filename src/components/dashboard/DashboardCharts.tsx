@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -21,7 +22,7 @@ import {
   XAxis, YAxis, Tooltip, CartesianGrid, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { TrendingUp, BarChart3, Target, PieChart as PieIcon } from "lucide-react";
+import { TrendingUp, BarChart3, Target, PieChart as PieIcon, ArrowUpRight } from "lucide-react";
 
 interface Props { photographerId: string; lang: "en" | "pt" | "es" }
 
