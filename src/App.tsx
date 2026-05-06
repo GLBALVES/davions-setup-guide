@@ -85,6 +85,7 @@ import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PublicOnlyRoute from "@/components/PublicOnlyRoute";
+import { AppUpdateNotifier } from "@/components/AppUpdateNotifier";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -113,7 +114,7 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <LanguageProvider>
-          
+          <AppUpdateNotifier />
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
