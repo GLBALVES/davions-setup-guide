@@ -1804,6 +1804,7 @@ const Projects = () => {
                 {showArchived && (
                   <ArchivedKanbanSection
                     projects={projectsByStage("archived")}
+                    onView={openView}
                     onUnarchive={handleUnarchive}
                     onDelete={handleDelete}
                   />
