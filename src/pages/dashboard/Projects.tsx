@@ -1790,7 +1790,7 @@ const Projects = () => {
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
-                  showArchived={showArchived}
+                  showArchived={showArchived || activeStageFilter === "archived"}
                   hideActive={activeStageFilter === "archived"}
                 />
               </div>
@@ -1837,8 +1837,8 @@ const Projects = () => {
                   </DndContext>
                 )}
 
-                {/* Archived section in kanban — always shown when toggle is on */}
-                {showArchived && (
+                {/* Archived section in kanban — shown when toggle is on or filter is set to archived */}
+                {(showArchived || activeStageFilter === "archived") && (
                   <ArchivedKanbanSection
                     projects={projectsByStage("archived")}
                     onView={openView}
