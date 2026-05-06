@@ -1125,7 +1125,7 @@ function ArchivedKanbanSection({
   onUnarchive: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const { t } = useLanguage();
   const p_t = t.projects;
   return (
