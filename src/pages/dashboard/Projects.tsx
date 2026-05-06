@@ -985,6 +985,7 @@ function ListView({
   onArchive,
   onUnarchive,
   showArchived,
+  hideActive = false,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
@@ -992,6 +993,7 @@ function ListView({
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
   showArchived: boolean;
+  hideActive?: boolean;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -1078,7 +1080,7 @@ function ListView({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border border-border rounded-sm overflow-hidden">
+      {!hideActive && <div className="border border-border rounded-sm overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
           {[p_t.title_field, p_t.client, p_t.sessionType, p_t.stage, p_t.shootDate, ""].map((h, i) => (
@@ -1094,7 +1096,7 @@ function ListView({
         ) : (
           active.map((p) => renderRow(p, false))
         )}
-      </div>
+      </div>}
 
       {/* Archived section — controlled by parent toggle */}
       {showArchived && (
