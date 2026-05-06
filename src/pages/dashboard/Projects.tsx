@@ -1744,7 +1744,13 @@ const Projects = () => {
               })}
               <div className="ml-auto">
                 <button
-                  onClick={() => setShowArchived((v) => !v)}
+                  onClick={() => {
+                    setShowArchived((v) => {
+                      const next = !v;
+                      setActiveStageFilter(next ? "archived" : "all");
+                      return next;
+                    });
+                  }}
                   className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
                     showArchived
                       ? "bg-muted text-foreground border-border"
@@ -1764,7 +1770,7 @@ const Projects = () => {
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
                 <ListView
-                  projects={projects}
+                  projects={visibleProjects}
                   onEdit={openEdit}
                   onDelete={handleDelete}
                   onArchive={handleArchive}
