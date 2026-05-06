@@ -1796,44 +1796,46 @@ const Projects = () => {
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto px-6 md:px-10 pb-8">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCorners}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                >
-                  <div className="flex gap-4 h-full items-start">
-                    {visibleStages.map((s) => (
-                      <KanbanColumn
-                        key={s.key}
-                        stage={s}
-                        projects={projectsByStage(s.key)}
-                        onView={openView}
-                        onEdit={openEdit}
-                        onDelete={handleDelete}
-                        onArchive={handleArchive}
-                        onAddCard={openAdd}
-                        shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
-                        onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
-                        postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
-                        onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
-                        onSetDeadline={handleSetDeadline}
-                        onSetGalleryExpiry={(s.key === "proof_gallery" || s.key === "final_gallery") ? handleSetGalleryExpiry : undefined}
-                      />
-                    ))}
-                  </div>
-                  <DragOverlay>
-                    {activeProject && (
-                      <div className="border border-border bg-card rounded-sm p-3 w-[220px] shadow-xl opacity-90">
-                        <p className="text-xs font-medium">{activeProject.title}</p>
-                        {activeProject.client_name && (
-                          <p className="text-[10px] text-muted-foreground mt-1">{activeProject.client_name}</p>
-                        )}
-                      </div>
-                    )}
-                  </DragOverlay>
-                </DndContext>
+                {activeStageFilter !== "archived" && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="flex gap-4 h-full items-start">
+                      {visibleStages.map((s) => (
+                        <KanbanColumn
+                          key={s.key}
+                          stage={s}
+                          projects={projectsByStage(s.key)}
+                          onView={openView}
+                          onEdit={openEdit}
+                          onDelete={handleDelete}
+                          onArchive={handleArchive}
+                          onAddCard={openAdd}
+                          shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
+                          onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
+                          postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
+                          onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
+                          onSetDeadline={handleSetDeadline}
+                          onSetGalleryExpiry={(s.key === "proof_gallery" || s.key === "final_gallery") ? handleSetGalleryExpiry : undefined}
+                        />
+                      ))}
+                    </div>
+                    <DragOverlay>
+                      {activeProject && (
+                        <div className="border border-border bg-card rounded-sm p-3 w-[220px] shadow-xl opacity-90">
+                          <p className="text-xs font-medium">{activeProject.title}</p>
+                          {activeProject.client_name && (
+                            <p className="text-[10px] text-muted-foreground mt-1">{activeProject.client_name}</p>
+                          )}
+                        </div>
+                      )}
+                    </DragOverlay>
+                  </DndContext>
+                )}
 
                 {/* Archived section in kanban — always shown when toggle is on */}
                 {showArchived && (
