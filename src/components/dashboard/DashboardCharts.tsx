@@ -254,6 +254,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.bookingsTitle}
           sub={L.bookingsSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/bookings")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthSeries} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
