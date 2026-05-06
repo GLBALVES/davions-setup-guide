@@ -985,6 +985,7 @@ function ListView({
   onArchive,
   onUnarchive,
   showArchived,
+  hideActive = false,
 }: {
   projects: ClientProject[];
   onEdit: (p: ClientProject) => void;
@@ -992,6 +993,7 @@ function ListView({
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
   showArchived: boolean;
+  hideActive?: boolean;
 }) {
   const { t } = useLanguage();
   const p_t = t.projects;
@@ -1078,7 +1080,7 @@ function ListView({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border border-border rounded-sm overflow-hidden">
+      {!hideActive && <div className="border border-border rounded-sm overflow-hidden">
         {/* Header row */}
         <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr_auto] gap-0 border-b border-border bg-muted/30">
           {[p_t.title_field, p_t.client, p_t.sessionType, p_t.stage, p_t.shootDate, ""].map((h, i) => (
@@ -1094,7 +1096,7 @@ function ListView({
         ) : (
           active.map((p) => renderRow(p, false))
         )}
-      </div>
+      </div>}
 
       {/* Archived section — controlled by parent toggle */}
       {showArchived && (
@@ -1185,6 +1187,7 @@ const Projects = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [showArchived, setShowArchived] = useState(false);
+  const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">("all");
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [sheetProject, setSheetProject] = useState<ClientProject | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -1528,6 +1531,14 @@ const Projects = () => {
       return a.position - b.position;
     });
 
+  const activeStages = STAGES.filter((s) => s.key !== "archived");
+  const visibleStages = activeStageFilter === "all"
+    ? activeStages
+    : activeStages.filter((s) => s.key === activeStageFilter);
+  const visibleProjects = activeStageFilter === "all"
+    ? projects
+    : projects.filter((p) => p.stage === activeStageFilter || (showArchived && p.stage === "archived"));
+
   const activeProject = projects.find((p) => p.id === activeId) ?? null;
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(e.active.id as string);
@@ -1716,22 +1727,33 @@ const Projects = () => {
 
             {/* Stage summary pills + archive toggle */}
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
-              {STAGES.filter((s) => s.key !== "archived").map((s) => {
+              {activeStages.map((s) => {
                 const count = projectsByStage(s.key).length;
                 const stageLabel = ({ upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery, post_production: p_t.post_production, final_gallery: p_t.final_gallery } as Record<string,string>)[s.key] ?? s.label;
                 return (
-                  <div
+                  <button
                     key={s.key}
-                    className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[s.key]}`}
+                    type="button"
+                    onClick={() => {
+                      setShowArchived(false);
+                      setActiveStageFilter((current) => current === s.key ? "all" : s.key);
+                    }}
+                    className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase transition-all ${STAGE_COLORS[s.key]} ${activeStageFilter === s.key ? "ring-1 ring-foreground/40" : "opacity-70 hover:opacity-100"}`}
                   >
                     <span>{stageLabel}</span>
                     <span className="opacity-60">{count}</span>
-                  </div>
+                  </button>
                 );
               })}
               <div className="ml-auto">
                 <button
-                  onClick={() => setShowArchived((v) => !v)}
+                  onClick={() => {
+                    setShowArchived((v) => {
+                      const next = !v;
+                      setActiveStageFilter(next ? "archived" : "all");
+                      return next;
+                    });
+                  }}
                   className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
                     showArchived
                       ? "bg-muted text-foreground border-border"
@@ -1751,12 +1773,13 @@ const Projects = () => {
             ) : view === "list" ? (
               <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-8">
                 <ListView
-                  projects={projects}
+                  projects={visibleProjects}
                   onEdit={openEdit}
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
                   showArchived={showArchived}
+                  hideActive={activeStageFilter === "archived"}
                 />
               </div>
             ) : (
@@ -1769,7 +1792,7 @@ const Projects = () => {
                   onDragEnd={handleDragEnd}
                 >
                   <div className="flex gap-4 h-full items-start">
-                    {STAGES.filter((s) => s.key !== "archived").map((s) => (
+                    {visibleStages.map((s) => (
                       <KanbanColumn
                         key={s.key}
                         stage={s}
