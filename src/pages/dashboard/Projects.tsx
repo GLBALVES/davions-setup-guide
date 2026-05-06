@@ -1727,17 +1727,19 @@ const Projects = () => {
 
             {/* Stage summary pills + archive toggle */}
             <div className="px-6 md:px-10 pb-4 flex items-center gap-2 flex-wrap shrink-0">
-              {STAGES.filter((s) => s.key !== "archived").map((s) => {
+              {activeStages.map((s) => {
                 const count = projectsByStage(s.key).length;
                 const stageLabel = ({ upcoming: p_t.upcoming, shot: p_t.shot, proof_gallery: p_t.proof_gallery, post_production: p_t.post_production, final_gallery: p_t.final_gallery } as Record<string,string>)[s.key] ?? s.label;
                 return (
-                  <div
+                  <button
                     key={s.key}
-                    className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase ${STAGE_COLORS[s.key]}`}
+                    type="button"
+                    onClick={() => setActiveStageFilter((current) => current === s.key ? "all" : s.key)}
+                    className={`flex items-center gap-1.5 border rounded-sm px-2 py-0.5 text-[10px] tracking-wider uppercase transition-all ${STAGE_COLORS[s.key]} ${activeStageFilter === s.key ? "ring-1 ring-foreground/40" : "opacity-70 hover:opacity-100"}`}
                   >
                     <span>{stageLabel}</span>
                     <span className="opacity-60">{count}</span>
-                  </div>
+                  </button>
                 );
               })}
               <div className="ml-auto">
@@ -1768,6 +1770,7 @@ const Projects = () => {
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
                   showArchived={showArchived}
+                  hideActive={activeStageFilter === "archived"}
                 />
               </div>
             ) : (
@@ -1780,7 +1783,7 @@ const Projects = () => {
                   onDragEnd={handleDragEnd}
                 >
                   <div className="flex gap-4 h-full items-start">
-                    {STAGES.filter((s) => s.key !== "archived").map((s) => (
+                    {visibleStages.map((s) => (
                       <KanbanColumn
                         key={s.key}
                         stage={s}
