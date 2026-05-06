@@ -478,40 +478,20 @@ function useSessionActions(
   const handleConfirmDelete = async () => {
     setDeleteLoading(true);
     try {
-      // Check for linked bookings or sales
-      const { data: linkedBookings } = await supabase
+      // Unlink any bookings first (preserve booking history), then delete the session
+      await supabase
         .from("bookings")
-        .select("id")
-        .eq("session_id", session.id)
-        .limit(1);
+        .update({ session_id: null })
+        .eq("session_id", session.id);
 
-      const isOneSession = (session as any).session_model === "one_session";
-      const hasLinks = !isOneSession && linkedBookings && linkedBookings.length > 0;
-
-      if (hasLinks) {
-        // Has linked records → just deactivate
-        const { error } = await supabase
-          .from("sessions")
-          .update({ status: "draft" })
-          .eq("id", session.id)
-          .eq("photographer_id", photographerId ?? "");
-        if (error) throw error;
-        onDelete?.(session.id);
-        toast({
-          title: "Session deactivated",
-          description: "This session has linked bookings and was deactivated instead of deleted.",
-        });
-      } else {
-        // No links → safe to delete (cascade availability + day configs)
-        const { error } = await supabase
-          .from("sessions")
-          .delete()
-          .eq("id", session.id)
-          .eq("photographer_id", photographerId ?? "");
-        if (error) throw error;
-        onDelete?.(session.id);
-        toast({ title: "Session deleted" });
-      }
+      const { error } = await supabase
+        .from("sessions")
+        .delete()
+        .eq("id", session.id)
+        .eq("photographer_id", photographerId ?? "");
+      if (error) throw error;
+      onDelete?.(session.id);
+      toast({ title: "Session deleted" });
     } catch {
       toast({ title: "Failed to delete session", variant: "destructive" });
     } finally {
