@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -21,7 +22,7 @@ import {
   XAxis, YAxis, Tooltip, CartesianGrid, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { TrendingUp, BarChart3, Target, PieChart as PieIcon } from "lucide-react";
+import { TrendingUp, BarChart3, Target, PieChart as PieIcon, ArrowUpRight } from "lucide-react";
 
 interface Props { photographerId: string; lang: "en" | "pt" | "es" }
 
@@ -120,6 +121,7 @@ function formatCurrency(n: number, lang: string) {
 
 export function DashboardCharts({ photographerId, lang }: Props) {
   const L = LABELS[lang] ?? LABELS.en;
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
 
@@ -221,6 +223,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.revenueTitle}
           sub={L.revenueSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/finance")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={monthSeries} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
@@ -251,6 +254,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.bookingsTitle}
           sub={L.bookingsSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/bookings")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthSeries} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
@@ -275,6 +279,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.funnelTitle}
           sub={L.funnelSub}
           empty={!hasAny ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/bookings")}
         >
           <div className="flex flex-col gap-3 py-2">
             {funnelData.map((row, i) => {
@@ -308,6 +313,7 @@ export function DashboardCharts({ photographerId, lang }: Props) {
           title={L.topSessionsTitle}
           sub={L.topSessionsSub}
           empty={topSessions.length === 0 ? L.noData : undefined}
+          onClick={() => navigate("/dashboard/sessions")}
         >
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -344,12 +350,26 @@ export function DashboardCharts({ photographerId, lang }: Props) {
 }
 
 function ChartCard({
-  icon: Icon, title, sub, children, empty,
+  icon: Icon, title, sub, children, empty, onClick,
 }: {
-  icon: React.ElementType; title: string; sub?: string; children: React.ReactNode; empty?: string;
+  icon: React.ElementType; title: string; sub?: string; children: React.ReactNode; empty?: string; onClick?: () => void;
 }) {
+  const interactive = !!onClick;
   return (
-    <div className="border border-border p-5 flex flex-col gap-3">
+    <div
+      onClick={onClick}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (interactive && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      className={`group border border-border p-5 flex flex-col gap-3 transition-colors ${
+        interactive ? "cursor-pointer hover:border-foreground/40 hover:bg-muted/20" : ""
+      }`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-0.5">
           <p className="text-[11px] tracking-wider uppercase font-light flex items-center gap-1.5">
@@ -358,6 +378,9 @@ function ChartCard({
           </p>
           {sub && <p className="text-[9px] text-muted-foreground tracking-wide">{sub}</p>}
         </div>
+        {interactive && (
+          <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+        )}
       </div>
       {empty ? (
         <div className="h-[220px] flex items-center justify-center text-[11px] tracking-widest uppercase text-muted-foreground/40">
