@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { PushBanner } from "@/components/dashboard/PushBanner";
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 
 import {
   CalendarDays, Clock, Users, FolderKanban, Image,
@@ -269,6 +270,9 @@ const Dashboard = () => {
                       onClick={() => navigate("/dashboard/schedule")}
                     />
                   </div>
+
+                  {/* ── Analytics charts ── */}
+                  {photographerId && <DashboardCharts photographerId={photographerId} lang={lang as "en" | "pt" | "es"} />}
 
                   {/* ── Main Grid ── */}
                   <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
