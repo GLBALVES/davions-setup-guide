@@ -1842,9 +1842,20 @@ export function ProjectDetailSheet({
               </Button>
             )}
             {isArchived ? (
-              <span className={cn("self-start inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0", STAGE_COLORS.archived)}>
-                <Archive className="h-2.5 w-2.5" /> {tp.archivedLabel}
-              </span>
+              <button
+                type="button"
+                onClick={() => { onUnarchive(project.id); onOpenChange(false); }}
+                title={tp.restore}
+                className={cn(
+                  "self-start group inline-flex items-center gap-1 border rounded-sm px-2 py-1 text-[10px] tracking-wider uppercase shrink-0 transition-colors hover:border-foreground/40 hover:text-foreground hover:bg-muted",
+                  STAGE_COLORS.archived,
+                )}
+              >
+                <Archive className="h-2.5 w-2.5 group-hover:hidden" />
+                <ArchiveRestore className="h-2.5 w-2.5 hidden group-hover:inline" />
+                <span className="group-hover:hidden">{tp.archivedLabel}</span>
+                <span className="hidden group-hover:inline">{tp.restore}</span>
+              </button>
             ) : (
               <Select value={effective.stage} onValueChange={(v) => save({ stage: v as Stage })}>
                 <SelectTrigger className={cn("h-7 text-[10px] tracking-wider uppercase border rounded-sm w-auto gap-1.5 shrink-0 px-2", STAGE_COLORS[effective.stage])}>
