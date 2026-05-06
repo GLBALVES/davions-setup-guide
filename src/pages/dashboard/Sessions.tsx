@@ -485,7 +485,8 @@ function useSessionActions(
         .eq("session_id", session.id)
         .limit(1);
 
-      const hasLinks = linkedBookings && linkedBookings.length > 0;
+      const isOneSession = (session as any).session_model === "one_session";
+      const hasLinks = !isOneSession && linkedBookings && linkedBookings.length > 0;
 
       if (hasLinks) {
         // Has linked records → just deactivate
