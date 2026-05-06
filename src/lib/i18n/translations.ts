@@ -1970,6 +1970,12 @@ export const translations = {
       assistant: "Davions Assistant",
       bugReport: "Report a bug",
     },
+    appUpdate: {
+      title: "New version available",
+      description: "Reload the page to apply the latest updates.",
+      action: "Reload",
+      dismiss: "Later",
+    },
     createBooking: {
       selectSession: "Select Session",
       searchSessions: "Search sessions...",
@@ -4032,6 +4038,12 @@ export const translations = {
       refresh: "Atualizar",
       assistant: "Assistente Davions",
       bugReport: "Reportar um bug",
+    },
+    appUpdate: {
+      title: "Nova versão disponível",
+      description: "Recarregue a página para aplicar as últimas atualizações.",
+      action: "Atualizar",
+      dismiss: "Depois",
     },
     createBooking: {
       selectSession: "Selecionar Sessão",
@@ -6171,6 +6183,12 @@ export const translations = {
       refresh: "Actualizar",
       assistant: "Asistente Davions",
       bugReport: "Reportar un bug",
+    },
+    appUpdate: {
+      title: "Nueva versión disponible",
+      description: "Recarga la página para aplicar las últimas actualizaciones.",
+      action: "Recargar",
+      dismiss: "Después",
     },
     createBooking: {
       selectSession: "Seleccionar Sesión",
