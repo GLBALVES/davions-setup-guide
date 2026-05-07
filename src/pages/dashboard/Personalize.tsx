@@ -270,6 +270,11 @@ const Personalize = () => {
   const [savingBriefing, setSavingBriefing] = useState(false);
   const [deletingBriefingId, setDeletingBriefingId] = useState<string | null>(null);
 
+  const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const optionsContainerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const briefingScrollContainerRef = useRef<HTMLDivElement>(null);
+  const questionLabelRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
@@ -1077,7 +1082,7 @@ const Personalize = () => {
                           {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
+                      <div ref={briefingScrollContainerRef} className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
                         {/* Briefing name */}
                         <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
@@ -1100,7 +1105,7 @@ const Personalize = () => {
                         }
 
                           {briefingQuestions.map((q, idx) =>
-                        <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
+                            <div key={q.id} ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
@@ -1145,15 +1150,16 @@ const Personalize = () => {
 
                               {/* Question label */}
                               <Input
-                            value={q.label}
-                            onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
-                            placeholder="Type your question here…"
-                            className="text-sm font-light h-8" />
+                                ref={(el) => { questionLabelRefs.current[idx] = el; }}
+                                value={q.label}
+                                onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
+                                placeholder="Type your question here…"
+                                className="text-sm font-light h-8" />
                           
 
                               {/* Options (for multiple_choice / checkboxes) */}
                               {(q.type === "multiple_choice" || q.type === "checkboxes") &&
-                          <div className="flex flex-col gap-2 pl-1">
+                          <div data-question-idx={idx} className="flex flex-col gap-2 pl-1" ref={(el) => { optionsContainerRefs.current[idx] = el; }}>
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.options}</p>
                                   {q.options.map((opt, optIdx) =>
                             <div key={optIdx} className="flex items-center gap-2">
@@ -1181,20 +1187,30 @@ const Personalize = () => {
                                       </Button>
                                     </div>
                             )}
-                                  <button
-                              type="button"
-                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
-                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
-                              
-                                    <Plus className="h-3 w-3" />
-                                    {t.personalize.addOption}
-                                  </button>
+                                   <button
+                                     type="button"
+                                     className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                                     onClick={() => {
+                                       setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item));
+                                       setTimeout(() => {
+                                         requestAnimationFrame(() => {
+                                           requestAnimationFrame(() => {
+                                             const inputs = document.querySelectorAll(`[data-question-idx="${idx}"] input[placeholder^="Option"]`);
+                                             const last = inputs[inputs.length - 1] as HTMLInputElement | undefined;
+                                             last?.focus();
+                                           });
+                                         });
+                                       }, 0);
+                                     }}>
+                                     <Plus className="h-3 w-3" />
+                                     {t.personalize.addOption}
+                                   </button>
                                 </div>
                           }
 
                               {/* Image options (for multi_image) */}
                               {q.type === "multi_image" &&
-                          <div className="flex flex-col gap-2 pl-1">
+                          <div data-question-idx={idx} className="flex flex-col gap-2 pl-1" ref={(el) => { optionsContainerRefs.current[idx] = el; }}>
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Image options</p>
                                   <div className="grid grid-cols-3 gap-2">
                                     {q.options.map((opt, optIdx) => {
@@ -1240,13 +1256,24 @@ const Personalize = () => {
                                       );
                                     })}
                                   </div>
-                                  <button
-                              type="button"
-                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
-                              onClick={() => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item))}>
-                                    <Plus className="h-3 w-3" />
-                                    {t.personalize.addOption}
-                                  </button>
+                                   <button
+                                     type="button"
+                                     className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                                     onClick={() => {
+                                       setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item));
+                                       setTimeout(() => {
+                                         requestAnimationFrame(() => {
+                                           requestAnimationFrame(() => {
+                                             const inputs = document.querySelectorAll(`[data-question-idx="${idx}"] input[type="text"]`);
+                                             const last = inputs[inputs.length - 1] as HTMLInputElement | undefined;
+                                             last?.focus();
+                                           });
+                                         });
+                                       }, 0);
+                                     }}>
+                                     <Plus className="h-3 w-3" />
+                                     {t.personalize.addOption}
+                                   </button>
                                 </div>
                           }
                             </div>
@@ -1269,7 +1296,15 @@ const Personalize = () => {
                               required: false,
                               options: []
                             };
+                            const nextIdx = briefingQuestions.length;
                             setBriefingQuestions((prev) => [...prev, newQ]);
+                            setTimeout(() => {
+                              requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                  questionLabelRefs.current[nextIdx]?.focus();
+                                });
+                              });
+                            }, 0);
                           }}>
                           <Plus className="h-3 w-3" />
                           {t.personalize.addQuestion}
