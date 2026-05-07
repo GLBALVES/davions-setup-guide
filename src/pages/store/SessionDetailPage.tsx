@@ -121,6 +121,11 @@ interface ContractCustomField {
   field_key: string;
   field_label: string;
   default_value: string;
+  value_source?: string | null;
+  mapped_key?: string | null;
+  client_prompt?: string | null;
+  client_input_type?: string | null;
+  required?: boolean | null;
 }
 
 type BookingStep = "product" | "slots" | "form" | "addons" | "review";
