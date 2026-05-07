@@ -1245,7 +1245,7 @@ const SessionDetailPage = () => {
                                   </span>
                                   {full ? (
                                     <span className="text-[9px] tracking-widest uppercase text-muted-foreground/50 mt-0.5">Esgotado</span>
-                                  ) : totalSpots > 1 ? (
+                                  ) : totalSpots > 1 && session?.show_spots_left !== false ? (
                                     <span className={cn(
                                       "text-[9px] mt-0.5",
                                       isSelected ? "text-background/70" : "text-muted-foreground",
