@@ -80,6 +80,7 @@ interface ClientProject {
   gallery_expires_at?: string | null;
   location?: string | null;
   description?: string | null;
+  is_paused?: boolean;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
