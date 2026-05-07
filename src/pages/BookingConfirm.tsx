@@ -632,7 +632,8 @@ const BookingConfirm = () => {
       if (stepKey === "client_info") {
         await handleSaveClientInfo();
       } else if (stepKey === "briefing") {
-        await handleSubmitBriefing();
+        const ok = await handleSubmitBriefing();
+        if (!ok) return;
       } else if (stepKey === "contract") {
         if (!contractAccepted) {
           await handleAcceptContract(true);
