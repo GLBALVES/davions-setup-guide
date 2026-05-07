@@ -1260,9 +1260,13 @@ const Personalize = () => {
                               onClick={() => {
                                 setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item));
                                 setTimeout(() => {
-                                  const el = optionsContainerRefs.current[idx];
-                                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                }, 150);
+                                  requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                      const el = optionsContainerRefs.current[idx];
+                                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    });
+                                  });
+                                }, 0);
                               }}>
                                     <Plus className="h-3 w-3" />
                                     {t.personalize.addOption}
