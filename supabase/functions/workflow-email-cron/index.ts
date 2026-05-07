@@ -188,6 +188,64 @@ serve(async (req) => {
       results.balance_due_session_day++;
     }
 
+    // 5) briefing_pending_reminder — daily reminder when session has briefing
+    //    and the client hasn't submitted answers yet. Stops once submitted or
+    //    once the shoot date has passed.
+    const todayStr = new Date().toISOString().split("T")[0];
+    const { data: pendingBriefingBookings } = await supabase
+      .from("bookings")
+      .select(`
+        id, photographer_id, client_name, client_email, booked_date, session_id,
+        sessions!inner(title, briefing_id)
+      `)
+      .in("payment_status", ["paid", "deposit_paid"])
+      .neq("status", "cancelled")
+      .gte("booked_date", todayStr);
+
+    for (const b of pendingBriefingBookings || []) {
+      const s: any = (b as any).sessions;
+      if (!s?.briefing_id || !b.client_email) continue;
+
+      // Skip if briefing already submitted for this booking
+      const { data: resp } = await supabase
+        .from("booking_briefing_responses")
+        .select("id")
+        .eq("booking_id", b.id)
+        .maybeSingle();
+      if (resp) continue;
+
+      // Throttle: don't send if last reminder went out < 24h ago
+      const since = new Date(Date.now() - 23 * 3600 * 1000).toISOString();
+      const { data: recent } = await supabase
+        .from("workflow_email_logs")
+        .select("id")
+        .eq("photographer_id", b.photographer_id)
+        .eq("stage_trigger", "briefing_pending_reminder")
+        .eq("recipient_email", b.client_email)
+        .eq("status", "sent")
+        .gte("created_at", since)
+        .limit(1)
+        .maybeSingle();
+      if (recent) continue;
+
+      const briefingLink = `https://davions.com/booking-success?booking=${b.id}#briefing`;
+
+      await dispatch(supabase, {
+        photographer_id: b.photographer_id,
+        trigger: "briefing_pending_reminder",
+        recipient_email: b.client_email,
+        recipient_name: b.client_name,
+        booking_id: b.id,
+        force: true, // bypass per-booking dedupe so it can repeat daily
+        vars: {
+          shoot_date: b.booked_date,
+          session_type: s.title || "",
+          briefing_link: briefingLink,
+        },
+      });
+      results.briefing_pending_reminder++;
+    }
+
     return new Response(JSON.stringify({ ok: true, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
