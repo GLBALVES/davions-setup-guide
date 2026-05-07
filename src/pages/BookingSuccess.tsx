@@ -67,6 +67,7 @@ const BookingSuccess = () => {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
+  const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
 
   // ── Confirm payment (always try when we have a checkoutSessionId) ─────────
   const tryConfirmBooking = async (
