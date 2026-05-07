@@ -1253,10 +1253,25 @@ const SessionDetailPage = () => {
                   ) : (
                     <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
                       <div className="sm:flex-1 p-4">
+                        {(() => {
+                          const monthCount = generatedSlots.filter(
+                            (s) => !s.disabled && isSameMonth(s.date, calendarMonth)
+                          ).length;
+                          if (monthCount <= 0) return null;
+                          return (
+                            <div className="mb-3 border border-foreground/20 bg-foreground/5 px-3 py-2 text-center">
+                              <p className="text-[10px] tracking-[0.25em] uppercase font-light text-foreground">
+                                Restam <span className="font-normal">{monthCount}</span> vaga{monthCount !== 1 ? "s" : ""} neste mês
+                              </p>
+                            </div>
+                          );
+                        })()}
                         <Calendar
                           mode="single"
                           selected={selectedDate}
                           onSelect={handleDateSelect}
+                          month={calendarMonth}
+                          onMonthChange={setCalendarMonth}
                           disabled={isDayDisabled}
                           fromDate={addDays(startOfToday(), session.booking_notice_days ?? 1)}
                           toDate={addDays(startOfToday(), session.booking_window_days ?? 60)}
