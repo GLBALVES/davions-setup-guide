@@ -775,7 +775,6 @@ const SessionForm = () => {
 
     setSaving(true);
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
-    const finalPrice = requirePayment ? priceInCents : 0;
 
     let finalDepositAmount = 0;
     if (depositEnabled) {
@@ -789,9 +788,10 @@ const SessionForm = () => {
       .from("sessions")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .update({
-        price: finalPrice,
+        price: priceInCents,
+        payment_required: requirePayment,
         tax_rate: taxEnabled ? parseFloat(taxRate || "0") : 0,
-        deposit_enabled: depositEnabled,
+        deposit_enabled: requirePayment ? depositEnabled : false,
         deposit_amount: finalDepositAmount,
         deposit_type: depositType,
         allow_tip: allowTip,
