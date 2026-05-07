@@ -2877,6 +2877,7 @@ export type Database = {
           business_name: string | null
           business_neighborhood: string | null
           business_phone: string | null
+          business_sales_tax: number | null
           business_state: string | null
           business_tax_id: string | null
           business_zip: string | null
@@ -2902,6 +2903,7 @@ export type Database = {
           business_name?: string | null
           business_neighborhood?: string | null
           business_phone?: string | null
+          business_sales_tax?: number | null
           business_state?: string | null
           business_tax_id?: string | null
           business_zip?: string | null
@@ -2927,6 +2929,7 @@ export type Database = {
           business_name?: string | null
           business_neighborhood?: string | null
           business_phone?: string | null
+          business_sales_tax?: number | null
           business_state?: string | null
           business_tax_id?: string | null
           business_zip?: string | null

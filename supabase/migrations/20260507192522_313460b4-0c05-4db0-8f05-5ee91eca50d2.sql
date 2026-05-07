@@ -1,0 +1,1 @@
+ALTER TABLE public.photographers ADD COLUMN IF NOT EXISTS business_sales_tax numeric(5,2);
