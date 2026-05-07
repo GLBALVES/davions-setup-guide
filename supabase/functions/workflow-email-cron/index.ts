@@ -31,6 +31,7 @@ serve(async (req) => {
     download_reminder_7d: 0,
     post_delivery_feedback_7d: 0,
     balance_due_session_day: 0,
+    briefing_pending_reminder: 0,
   };
 
   // Helpers ------------------------------------------------
