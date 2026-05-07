@@ -321,9 +321,15 @@ function KanbanCard({
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
-        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass}`}
+        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass} ${project.is_paused ? "opacity-60 border-dashed" : ""}`}
         onClick={() => onView(project)}
       >
+        {project.is_paused && (
+          <div className="flex items-center gap-1 text-[9px] tracking-[0.2em] uppercase text-amber-500">
+            <Pause className="h-2.5 w-2.5" />
+            <span>Pausada</span>
+          </div>
+        )}
         {/* drag handle + actions */}
         <div className="flex items-start justify-between gap-1">
           <button
@@ -1212,6 +1218,7 @@ const Projects = () => {
 
   const [view, setView] = useState<"kanban" | "list">(initialView);
   const [showArchived, setShowArchived] = useState(initialArchived);
+  const [showPausedOnly, setShowPausedOnly] = useState(false);
   const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">(initialStage);
 
   // Keep the URL in sync whenever filter state changes
@@ -1552,23 +1559,27 @@ const Projects = () => {
   }, [projects]);
 
   const projectsByStage = (stage: Stage) =>
-    projects.filter((p) => p.stage === stage).sort((a, b) => {
-      // Primary sort: shoot_date ascending (nulls last)
-      const dateA = a.shoot_date;
-      const dateB = b.shoot_date;
-      if (dateA && dateB) {
-        const cmpDate = dateA.localeCompare(dateB);
-        if (cmpDate !== 0) return cmpDate;
-        // Same date — sort by shoot_time ascending
-        const timeA = a.shoot_time || "00:00";
-        const timeB = b.shoot_time || "00:00";
-        const cmpTime = timeA.localeCompare(timeB);
-        if (cmpTime !== 0) return cmpTime;
-      }
-      if (dateA && !dateB) return -1;
-      if (!dateA && dateB) return 1;
-      return a.position - b.position;
-    });
+    projects
+      .filter((p) => p.stage === stage)
+      .filter((p) => (showPausedOnly ? !!p.is_paused : true))
+      .sort((a, b) => {
+        // Paused always last
+        if (!!a.is_paused !== !!b.is_paused) return a.is_paused ? 1 : -1;
+        // Primary sort: shoot_date ascending (nulls last)
+        const dateA = a.shoot_date;
+        const dateB = b.shoot_date;
+        if (dateA && dateB) {
+          const cmpDate = dateA.localeCompare(dateB);
+          if (cmpDate !== 0) return cmpDate;
+          const timeA = a.shoot_time || "00:00";
+          const timeB = b.shoot_time || "00:00";
+          const cmpTime = timeA.localeCompare(timeB);
+          if (cmpTime !== 0) return cmpTime;
+        }
+        if (dateA && !dateB) return -1;
+        if (!dateA && dateB) return 1;
+        return a.position - b.position;
+      });
 
   const activeStages = STAGES.filter((s) => s.key !== "archived");
   const visibleStages = activeStageFilter === "all"
@@ -1792,11 +1803,12 @@ const Projects = () => {
                 );
               })}
               <div className="ml-auto flex items-center gap-2">
-                {(activeStageFilter !== "all" || showArchived) && (
+                {(activeStageFilter !== "all" || showArchived || showPausedOnly) && (
                   <button
                     onClick={() => {
                       setActiveStageFilter("all");
                       setShowArchived(false);
+                      setShowPausedOnly(false);
                     }}
                     className="flex items-center gap-1.5 border border-border/50 rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                   >
@@ -1804,6 +1816,24 @@ const Projects = () => {
                     <span>{(p_t as any).clearFilters ?? "Limpar filtros"}</span>
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    setShowPausedOnly((v) => {
+                      const next = !v;
+                      if (next) { setShowArchived(false); setActiveStageFilter("upcoming"); }
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
+                    showPausedOnly
+                      ? "bg-muted text-foreground border-border"
+                      : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  <Pause className="h-3 w-3" />
+                  <span>Pausadas</span>
+                  <span className="opacity-60">{projects.filter((p) => p.is_paused && p.stage !== "archived").length}</span>
+                </button>
                 <button
                   onClick={() => {
                     setShowArchived((v) => {
