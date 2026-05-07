@@ -194,6 +194,7 @@ const Personalize = () => {
   const [businessCurrency, setBusinessCurrency] = useState("USD");
   const [businessTaxId, setBusinessTaxId] = useState("");
   const [businessSalesTax, setBusinessSalesTax] = useState<string>("");
+  const [businessTaxName, setBusinessTaxName] = useState<string>("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
   // ── Gallery settings (per type) ────────────────────────────────────────────
@@ -353,7 +354,7 @@ const Personalize = () => {
       (supabase as any).from("gallery_settings").
       select("key, value").eq("photographer_id", photographerId),
       (supabase as any).from("photographers").
-      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_tax_id, business_sales_tax").
+      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_tax_id, business_sales_tax, business_tax_name").
       eq("id", photographerId).single(),
       fetchSessionTypes(),
       fetchContracts(),
@@ -441,6 +442,7 @@ const Personalize = () => {
         setBusinessCurrency(b.business_currency ?? "USD");
         setBusinessTaxId(b.business_tax_id ?? "");
         setBusinessSalesTax(b.business_sales_tax != null ? String(b.business_sales_tax) : "");
+        setBusinessTaxName(b.business_tax_name ?? "");
       }
 
       setLoading(false);
@@ -583,7 +585,8 @@ const Personalize = () => {
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null,
-      business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", "."))
+      business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", ".")),
+      business_tax_name: businessTaxName.trim() || null
     }).eq("id", user!.id);
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
@@ -1280,7 +1283,15 @@ const Personalize = () => {
                         <FieldRow label={t.personalize.taxIdVat}>
                           <Input value={businessTaxId} onChange={(e) => setBusinessTaxId(e.target.value)} placeholder="e.g. 12-3456789" className="h-9 text-sm font-light" />
                         </FieldRow>
-                        <FieldRow label={(t.personalize as any).salesTax || "Sales Tax (%)"}>
+                        <FieldRow label={(t.personalize as any).taxName || "Tax Name"}>
+                          <Input
+                            value={businessTaxName}
+                            onChange={(e) => setBusinessTaxName(e.target.value)}
+                            placeholder="e.g. Sales Tax, IVA, VAT"
+                            className="h-9 text-sm font-light"
+                          />
+                        </FieldRow>
+                        <FieldRow label={(t.personalize as any).salesTax || "Tax Rate (%)"}>
                           <Input
                             type="number"
                             inputMode="decimal"
