@@ -5043,6 +5043,7 @@ export const translations = {
       country: "País",
       currency: "Moneda",
       taxIdVat: "RFC / Número Fiscal",
+      salesTax: "Impuesto sobre Ventas (%)",
       saving: "Guardando…",
       saveChanges: "Guardar cambios",
       businessSaved: "Configuración del negocio guardada",
