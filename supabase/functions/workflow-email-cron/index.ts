@@ -30,7 +30,27 @@ serve(async (req) => {
     session_completed: 0,
     download_reminder_7d: 0,
     post_delivery_feedback_7d: 0,
+    balance_due_session_day: 0,
   };
+
+  // Helpers ------------------------------------------------
+  const enc = new TextEncoder();
+  const b64url = (buf: ArrayBuffer) =>
+    btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  async function signToken(bookingId: string, expSec: number): Promise<string> {
+    const payload = b64url(enc.encode(JSON.stringify({ b: bookingId, e: expSec })));
+    const k = await crypto.subtle.importKey(
+      "raw", enc.encode(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    );
+    const sig = await crypto.subtle.sign("HMAC", k, enc.encode(payload));
+    return `${payload}.${b64url(sig)}`;
+  }
+  function fmtBRL(cents: number) {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
 
   try {
     // 1) session_completed — bookings whose shoot has ended
@@ -103,6 +123,68 @@ serve(async (req) => {
         },
       });
       results.post_delivery_feedback_7d++;
+    }
+
+    // 4) balance_due_session_day — bookings with deposit_paid whose session
+    //    is configured with balance_due_timing='session_day' and the offset
+    //    fire-time is reached (now within fire_at .. fire_at + 24h window).
+    const { data: depositBookings } = await supabase
+      .from("bookings")
+      .select(`
+        id, photographer_id, client_name, client_email, booked_date, session_id, extras_total,
+        sessions!inner(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate, balance_due_timing, balance_due_offset_hours),
+        session_availability:availability_id(start_time)
+      `)
+      .eq("payment_status", "deposit_paid")
+      .neq("status", "cancelled");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const now = Date.now();
+
+    for (const b of depositBookings || []) {
+      const s: any = (b as any).sessions;
+      const av: any = (b as any).session_availability;
+      if (!s || s.balance_due_timing !== "session_day") continue;
+      if (!b.client_email || !b.booked_date) continue;
+
+      const startTime = av?.start_time ?? "00:00:00";
+      const fireAt = new Date(`${b.booked_date}T${startTime}`).getTime()
+        + ((s.balance_due_offset_hours ?? 0) * 3600 * 1000);
+      if (now < fireAt) continue;
+      if (now > fireAt + 24 * 3600 * 1000) continue; // window expired
+
+      // Compute remaining balance
+      const sessionPrice = s.price ?? 0;
+      const subtotal = sessionPrice + ((b as any).extras_total ?? 0);
+      const taxRate = s.tax_rate ?? 0;
+      const taxAmount = Math.round(subtotal * (taxRate / 100));
+      const fullTotal = subtotal + taxAmount;
+      const isPercent = s.deposit_type === "percent" || s.deposit_type === "percentage";
+      const depositBase = isPercent
+        ? Math.round(fullTotal * ((s.deposit_amount ?? 0) / 100))
+        : (s.deposit_amount ?? 0);
+      const remaining = fullTotal - depositBase;
+      if (remaining <= 0) continue;
+
+      // Sign a token valid 30 days
+      const token = await signToken(b.id, Math.floor(now / 1000) + 30 * 86400);
+      const paymentLink = `${supabaseUrl}/functions/v1/get-balance-payment-link?token=${token}`;
+
+      await dispatch(supabase, {
+        photographer_id: b.photographer_id,
+        trigger: "balance_due_session_day",
+        recipient_email: b.client_email,
+        recipient_name: b.client_name,
+        booking_id: b.id,
+        vars: {
+          shoot_date: b.booked_date,
+          shoot_time: String(startTime).slice(0, 5),
+          session_type: s.title || "",
+          balance_amount: fmtBRL(remaining),
+          payment_link: paymentLink,
+        },
+      });
+      results.balance_due_session_day++;
     }
 
     return new Response(JSON.stringify({ ok: true, results }), {

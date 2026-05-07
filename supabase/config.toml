@@ -92,3 +92,9 @@ verify_jwt = false
 
 [functions.invite-lead-as-user]
 verify_jwt = false
+
+[functions.get-balance-payment-link]
+verify_jwt = false
+
+[functions.create-balance-payment-link]
+verify_jwt = false
