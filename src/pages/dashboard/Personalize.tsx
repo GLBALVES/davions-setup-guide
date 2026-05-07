@@ -1284,7 +1284,12 @@ const Personalize = () => {
                               required: false,
                               options: []
                             };
+                            const nextIdx = briefingQuestions.length;
                             setBriefingQuestions((prev) => [...prev, newQ]);
+                            setTimeout(() => {
+                              const el = questionRefs.current[nextIdx];
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}>
                           <Plus className="h-3 w-3" />
                           {t.personalize.addQuestion}
