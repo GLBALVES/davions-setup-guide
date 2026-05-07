@@ -2252,7 +2252,71 @@ const SessionForm = () => {
                       );
                     })()}
 
+                    {/* ── Balance Due Timing ── (only when a deposit is configured) */}
+                    {depositEnabled && (
+                      <div className="border border-border p-4 flex flex-col gap-3">
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-xs tracking-wider uppercase font-light">When to Charge the Remaining Balance</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            Choose when the rest of the session price will be billed to the client.
+                          </p>
+                        </div>
+                        <div className="grid gap-2">
+                          {[
+                            { value: "session_day", label: "On the session day", desc: "Hours before or after the session start time." },
+                            { value: "gallery_checkout", label: "At the proofing gallery checkout", desc: "Charged together with any extra photos selected." },
+                            { value: "after_delivery", label: "After final delivery", desc: "Manually charged once the gallery is delivered." },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setBalanceDueTiming(opt.value as typeof balanceDueTiming)}
+                              className={cn(
+                                "flex items-start justify-between gap-3 border p-3 text-left transition-colors",
+                                balanceDueTiming === opt.value
+                                  ? "border-foreground bg-foreground/5"
+                                  : "border-border hover:border-foreground/40"
+                              )}
+                            >
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[11px] tracking-wider uppercase font-light">{opt.label}</span>
+                                <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
+                              </div>
+                              <span className={cn(
+                                "mt-1 h-3 w-3 rounded-full border",
+                                balanceDueTiming === opt.value ? "bg-foreground border-foreground" : "border-muted-foreground"
+                              )} />
+                            </button>
+                          ))}
+                        </div>
+                        {balanceDueTiming === "session_day" && (
+                          <div className="flex items-center gap-3 mt-1">
+                            <Label htmlFor="balance-offset" className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                              Hours from session start
+                            </Label>
+                            <Input
+                              id="balance-offset"
+                              type="number"
+                              step="1"
+                              value={balanceDueOffsetHours}
+                              onChange={(e) => setBalanceDueOffsetHours(e.target.value)}
+                              className="h-8 w-24 text-sm"
+                            />
+                            <span className="text-[10px] text-muted-foreground">
+                              Negative = before, 0 = at start, positive = after.
+                            </span>
+                          </div>
+                        )}
+                        {balanceDueTiming === "gallery_checkout" && (
+                          <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-2">
+                            If the client also selects extra photos at the proofing gallery, those will be added to the same checkout.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* ── Allow Tip ── */}
+
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
                       <div className="flex flex-col gap-0.5">
                         <p className="text-xs tracking-wider uppercase font-light">Allow Tip</p>
