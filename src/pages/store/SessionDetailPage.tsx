@@ -441,11 +441,12 @@ const SessionDetailPage = () => {
         const allAvailIds = campaignRows.map((r) => r.id);
 
         // Fetch booking counts grouped by availability_id + booked_date
+        // Count both confirmed AND pending (awaiting payment) so spots are not oversold
         const { data: bookingsData } = await supabase
           .from("bookings")
-          .select("availability_id, booked_date")
+          .select("availability_id, booked_date, status")
           .in("availability_id", allAvailIds)
-          .eq("status", "confirmed");
+          .in("status", ["confirmed", "pending"]);
 
         // Build booking count map: key = `${availId}_${date}` → count
         const bookingCountMap = new Map<string, number>();
@@ -455,19 +456,55 @@ const SessionDetailPage = () => {
           bookingCountMap.set(key, (bookingCountMap.get(key) ?? 0) + 1);
         }
 
+        // Fetch blocked times for this photographer that may overlap campaign slot dates
+        const campaignDates = campaignRows.map((r) => r.date!).filter(Boolean);
+        const { data: campaignBlockedData } = campaignDates.length > 0
+          ? await (supabase as any)
+              .from("blocked_times")
+              .select("date, start_time, end_time, all_day")
+              .eq("photographer_id", s.photographer_id)
+              .in("date", campaignDates)
+          : { data: [] as any[] };
+
+        const blockedByDateCampaign = new Map<string, { start: string; end: string; all_day: boolean }[]>();
+        for (const bt of (campaignBlockedData ?? []) as any[]) {
+          if (!bt.date) continue;
+          if (!blockedByDateCampaign.has(bt.date)) blockedByDateCampaign.set(bt.date, []);
+          blockedByDateCampaign.get(bt.date)!.push({
+            start: (bt.start_time ?? "00:00").slice(0, 5),
+            end: (bt.end_time ?? "23:59").slice(0, 5),
+            all_day: !!bt.all_day,
+          });
+        }
+
+        const isCampaignSlotBlocked = (dateKey: string, slotStart: string, slotEnd: string): boolean => {
+          const ranges = blockedByDateCampaign.get(dateKey);
+          if (!ranges) return false;
+          for (const r of ranges) {
+            if (r.all_day) return true;
+            if (slotStart < r.end && slotEnd > r.start) return true;
+          }
+          return false;
+        };
+
         const campaignSlotsData: CampaignSlotDef[] = campaignRows
           .filter((r) => r.date! >= today) // only future dates
           .map((r) => {
             const spots = r.spots ?? 1;
             const bookedCount = bookingCountMap.get(`${r.id}_${r.date}`) ?? 0;
+            const startHHmm = r.start_time.slice(0, 5);
+            const endHHmm = r.end_time.slice(0, 5);
+            const blocked = isCampaignSlotBlocked(r.date!, startHHmm, endHHmm);
+            // If slot overlaps a blocked time, treat all spots as taken
+            const effectiveBooked = blocked ? spots : bookedCount;
             return {
               id: r.id,
               date: r.date!,
-              start_time: r.start_time.slice(0, 5),
-              end_time: r.end_time.slice(0, 5),
+              start_time: startHHmm,
+              end_time: endHHmm,
               spots,
               location_override: r.location_override ?? null,
-              _bookedCount: bookedCount,
+              _bookedCount: effectiveBooked,
             } as CampaignSlotDef & { _bookedCount: number };
           });
 
@@ -509,11 +546,11 @@ const SessionDetailPage = () => {
 
       const { data: bookingsData } = await supabase
         .from("bookings")
-        .select("availability_id, booked_date")
+        .select("availability_id, booked_date, status")
         .in("availability_id", defs.map((d) => d.id))
         .gte("booked_date", fromDate)
         .lte("booked_date", toDate)
-        .eq("status", "confirmed");
+        .in("status", ["confirmed", "pending"]);
 
       const bookedKeys = new Set<string>(
         (bookingsData ?? [])
