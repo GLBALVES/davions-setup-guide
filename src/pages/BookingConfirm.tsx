@@ -87,6 +87,7 @@ interface BriefingQuestion {
   label: string;
   required: boolean;
   options: string[];
+  max_select?: number | null;
 }
 
 interface BriefingData {
