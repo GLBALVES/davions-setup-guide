@@ -406,6 +406,21 @@ const BookingConfirm = () => {
         },
         { onConflict: "photographer_id,email" }
       );
+
+      // Persist custom client_input answers
+      const clientFields = activeClientInputFields;
+      if (clientFields.length > 0 && bookingId) {
+        const rows = clientFields.map((f) => ({
+          booking_id: bookingId,
+          field_key: f.field_key,
+          value: (customFieldAnswers[f.field_key] ?? "").toString(),
+          updated_at: new Date().toISOString(),
+        }));
+        await (supabase as any)
+          .from("booking_custom_field_values")
+          .upsert(rows, { onConflict: "booking_id,field_key" });
+      }
+
       setClientInfoSaved(true);
     } catch (err) {
       console.error("Save client info error:", err);
