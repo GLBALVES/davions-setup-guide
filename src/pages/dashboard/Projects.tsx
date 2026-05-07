@@ -1377,6 +1377,36 @@ const Projects = () => {
     } catch { /* ignore */ }
   };
 
+  // Column-level deadline for proof_gallery and final_gallery stages
+  const [proofDeadlineDays, setProofDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("proof_gallery_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+  const handleSetProofDeadlineDays = (days: number | null) => {
+    setProofDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("proof_gallery_deadline_days", String(days));
+      else localStorage.removeItem("proof_gallery_deadline_days");
+    } catch { /* ignore */ }
+  };
+  const [finalDeadlineDays, setFinalDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("final_gallery_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+  const handleSetFinalDeadlineDays = (days: number | null) => {
+    setFinalDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("final_gallery_deadline_days", String(days));
+      else localStorage.removeItem("final_gallery_deadline_days");
+    } catch { /* ignore */ }
+  };
+
   const handleSetDeadline = async (projectId: string, deadline: string | null) => {
     // Optimistic update — card refreshes immediately before DB confirms
     setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_deadline: deadline } : p));
