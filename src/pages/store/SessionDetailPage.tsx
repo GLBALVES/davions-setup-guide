@@ -775,6 +775,7 @@ const SessionDetailPage = () => {
               price: e.price,
               qty: e.qty,
             })),
+            customFieldAnswers,
           },
         }
       );
