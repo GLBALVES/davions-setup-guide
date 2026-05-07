@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
@@ -365,12 +366,23 @@ const BookingConfirm = () => {
       return { ...prev, [qId]: checked ? [...current, option] : current.filter((o) => o !== option) };
     });
 
-  const handleSubmitBriefing = async () => {
-    if (!briefing || !bookingId) return;
+  const handleSubmitBriefing = async (): Promise<boolean> => {
+    if (!briefing || !bookingId) return false;
+    const missing: string[] = [];
     for (const q of briefing.questions) {
-      if (!q.required) continue;
       const ans = answers[q.id];
-      if (!ans || (Array.isArray(ans) && ans.length === 0) || (typeof ans === "string" && !ans.trim())) return;
+      const empty =
+        ans === undefined ||
+        ans === null ||
+        (Array.isArray(ans) && ans.length === 0) ||
+        (typeof ans === "string" && !ans.trim());
+      if (empty) missing.push(q.label);
+    }
+    if (missing.length > 0) {
+      toast.error(
+        `Please answer all questions before continuing (${missing.length} remaining).`
+      );
+      return false;
     }
     setSubmittingBriefing(true);
     await (supabase as any).from("booking_briefing_responses").insert({
@@ -380,6 +392,7 @@ const BookingConfirm = () => {
     });
     setSubmittingBriefing(false);
     setBriefingSubmitted(true);
+    return true;
   };
 
   /* ── Custom fields the client must fill in for the contract ── */
@@ -619,7 +632,8 @@ const BookingConfirm = () => {
       if (stepKey === "client_info") {
         await handleSaveClientInfo();
       } else if (stepKey === "briefing") {
-        await handleSubmitBriefing();
+        const ok = await handleSubmitBriefing();
+        if (!ok) return;
       } else if (stepKey === "contract") {
         if (!contractAccepted) {
           await handleAcceptContract(true);
