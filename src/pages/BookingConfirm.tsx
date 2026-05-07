@@ -924,6 +924,42 @@ const BookingConfirm = () => {
                   </div>
                 </div>
 
+                {activeClientInputFields.length > 0 && (
+                  <div className="flex flex-col gap-3 pt-3 border-t border-border">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                      {t.personalize.cfBookingSectionTitle}
+                    </p>
+                    {activeClientInputFields.map((f) => {
+                      const promptText = (f.client_prompt || f.field_label) ?? "";
+                      const inputType = f.client_input_type || "text";
+                      const val = customFieldAnswers[f.field_key] ?? "";
+                      return (
+                        <div key={f.id} className="flex flex-col gap-1.5">
+                          <Label className="text-xs font-light">
+                            {promptText}
+                            {f.required && <span className="text-destructive ml-1">*</span>}
+                          </Label>
+                          {inputType === "textarea" ? (
+                            <textarea
+                              value={val}
+                              onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))}
+                              rows={3}
+                              className="w-full px-3 py-2 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          ) : (
+                            <Input
+                              type={inputType === "date" ? "date" : inputType === "number" ? "number" : "text"}
+                              value={val}
+                              onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))}
+                              className="text-sm font-light"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <Button
                   onClick={handleSaveClientInfo}
                   disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim()}
