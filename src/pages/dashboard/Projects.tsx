@@ -1851,6 +1851,7 @@ const Projects = () => {
                           onEdit={openEdit}
                           onDelete={handleDelete}
                           onArchive={handleArchive}
+                          onTogglePause={s.key === "upcoming" ? handleTogglePause : undefined}
                           onAddCard={openAdd}
                           shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
                           onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
