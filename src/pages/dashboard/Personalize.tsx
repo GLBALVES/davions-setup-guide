@@ -1192,7 +1192,7 @@ const Personalize = () => {
                                 setTimeout(() => {
                                   const el = optionsContainerRefs.current[idx];
                                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                }, 50);
+                                }, 150);
                               }}>
                               
                                     <Plus className="h-3 w-3" />
