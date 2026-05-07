@@ -1103,7 +1103,7 @@ const Personalize = () => {
                         }
 
                           {briefingQuestions.map((q, idx) =>
-                        <div key={q.id} className="border border-border p-4 flex flex-col gap-3">
+                            <div key={q.id} ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
                                 <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
