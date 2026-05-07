@@ -2960,6 +2960,7 @@ export const translations = {
       country: "País",
       currency: "Moeda",
       taxIdVat: "CPF/CNPJ ou Número Fiscal",
+      salesTax: "Imposto sobre Vendas (%)",
       saving: "Salvando…",
       saveChanges: "Salvar alterações",
       businessSaved: "Configurações do negócio salvas",
