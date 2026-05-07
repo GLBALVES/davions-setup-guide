@@ -341,7 +341,7 @@ function KanbanCard({
               <button
                 className={`p-0.5 ${project.is_paused ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"}`}
                 onClick={(e) => { e.stopPropagation(); onTogglePause(project.id, !project.is_paused); }}
-                title={project.is_paused ? (p_t.resumeSession ?? "Resume") : (p_t.pauseSession ?? "Pause — awaiting reschedule")}
+                title={project.is_paused ? ((p_t as any).resumeSession ?? "Resume") : ((p_t as any).pauseSession ?? "Pause — awaiting reschedule")}
               >
                 {project.is_paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
               </button>
