@@ -239,7 +239,7 @@ const BookingConfirm = () => {
       const [sessRes, availRes, photoRes] = await Promise.all([
         (supabase as any)
           .from("sessions")
-          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, contract_id, price, session_model")
+          .select("title, duration_minutes, location, num_photos, cover_image_url, briefing_id, contract_text, contract_id, price, session_model, deposit_enabled, deposit_amount, deposit_type, tax_rate")
           .eq("id", b.session_id)
           .single(),
         supabase
