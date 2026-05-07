@@ -2269,96 +2269,101 @@ const SessionForm = () => {
                             { value: "session_day", label: "On the session day", desc: "Hours before or after the session start time." },
                             { value: "gallery_checkout", label: "At the proofing gallery checkout", desc: "Charged together with any extra photos selected." },
                             { value: "after_delivery", label: "After final delivery", desc: "Manually charged once the gallery is delivered." },
-                          ].map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => setBalanceDueTiming(opt.value as typeof balanceDueTiming)}
-                              className={cn(
-                                "flex items-start justify-between gap-3 border p-3 text-left transition-colors",
-                                balanceDueTiming === opt.value
-                                  ? "border-foreground bg-foreground/5"
-                                  : "border-border hover:border-foreground/40"
-                              )}
-                            >
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[11px] tracking-wider uppercase font-light">{opt.label}</span>
-                                <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
-                              </div>
-                              <span className={cn(
-                                "mt-1 h-3 w-3 rounded-full border",
-                                balanceDueTiming === opt.value ? "bg-foreground border-foreground" : "border-muted-foreground"
-                              )} />
-                            </button>
-                          ))}
-                        </div>
-                        {balanceDueTiming === "session_day" && (() => {
-                          const offsetNum = parseInt(balanceDueOffsetHours || "0", 10) || 0;
-                          const direction: "before" | "at" | "after" =
-                            offsetNum < 0 ? "before" : offsetNum > 0 ? "after" : "at";
-                          const absHours = Math.abs(offsetNum);
-                          return (
-                            <div className="flex flex-col gap-2 mt-1 border-t border-border pt-3">
-                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">
-                                When on the session day
-                              </Label>
-                              <div className="flex flex-wrap items-center gap-2">
-                                {[
-                                  { value: "before", label: "Hours before" },
-                                  { value: "at", label: "At session start" },
-                                  { value: "after", label: "Hours after" },
-                                ].map((opt) => (
-                                  <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => {
-                                      if (opt.value === "at") setBalanceDueOffsetHours("0");
-                                      else if (opt.value === "before") setBalanceDueOffsetHours(String(-(absHours || 1)));
-                                      else setBalanceDueOffsetHours(String(absHours || 1));
-                                    }}
-                                    className={cn(
-                                      "px-3 py-1.5 text-[10px] tracking-wider uppercase border transition-colors",
-                                      direction === opt.value
-                                        ? "border-foreground bg-foreground text-background"
-                                        : "border-border hover:border-foreground/40"
-                                    )}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                ))}
-                                {direction !== "at" && (
-                                  <div className="flex items-center gap-2 ml-1">
-                                    <Input
-                                      id="balance-offset"
-                                      type="number"
-                                      min="1"
-                                      step="1"
-                                      value={absHours}
-                                      onChange={(e) => {
-                                        const n = Math.max(1, parseInt(e.target.value || "1", 10) || 1);
-                                        setBalanceDueOffsetHours(String(direction === "before" ? -n : n));
-                                      }}
-                                      className="h-8 w-20 text-sm"
-                                    />
-                                    <span className="text-[10px] text-muted-foreground">hours</span>
+                          ].map((opt) => {
+                            const selected = balanceDueTiming === opt.value;
+                            return (
+                              <div
+                                key={opt.value}
+                                className={cn(
+                                  "border transition-colors",
+                                  selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40"
+                                )}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setBalanceDueTiming(opt.value as typeof balanceDueTiming)}
+                                  className="w-full flex items-start justify-between gap-3 p-3 text-left"
+                                >
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[11px] tracking-wider uppercase font-light">{opt.label}</span>
+                                    <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
                                   </div>
+                                  <span className={cn(
+                                    "mt-1 h-3 w-3 rounded-full border shrink-0",
+                                    selected ? "bg-foreground border-foreground" : "border-muted-foreground"
+                                  )} />
+                                </button>
+
+                                {selected && opt.value === "session_day" && (() => {
+                                  const offsetNum = parseInt(balanceDueOffsetHours || "0", 10) || 0;
+                                  const direction: "before" | "at" | "after" =
+                                    offsetNum < 0 ? "before" : offsetNum > 0 ? "after" : "at";
+                                  const absHours = Math.abs(offsetNum);
+                                  return (
+                                    <div className="flex flex-col gap-2 px-3 pb-3 border-t border-border pt-3">
+                                      <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                                        When on the session day
+                                      </Label>
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        {[
+                                          { value: "before", label: "Hours before" },
+                                          { value: "at", label: "At session start" },
+                                          { value: "after", label: "Hours after" },
+                                        ].map((dopt) => (
+                                          <button
+                                            key={dopt.value}
+                                            type="button"
+                                            onClick={() => {
+                                              if (dopt.value === "at") setBalanceDueOffsetHours("0");
+                                              else if (dopt.value === "before") setBalanceDueOffsetHours(String(-(absHours || 1)));
+                                              else setBalanceDueOffsetHours(String(absHours || 1));
+                                            }}
+                                            className={cn(
+                                              "px-3 py-1.5 text-[10px] tracking-wider uppercase border transition-colors",
+                                              direction === dopt.value
+                                                ? "border-foreground bg-foreground text-background"
+                                                : "border-border hover:border-foreground/40"
+                                            )}
+                                          >
+                                            {dopt.label}
+                                          </button>
+                                        ))}
+                                        {direction !== "at" && (
+                                          <div className="flex items-center gap-2 ml-1">
+                                            <Input
+                                              type="number"
+                                              min="1"
+                                              step="1"
+                                              value={absHours}
+                                              onChange={(e) => {
+                                                const n = Math.max(1, parseInt(e.target.value || "1", 10) || 1);
+                                                setBalanceDueOffsetHours(String(direction === "before" ? -n : n));
+                                              }}
+                                              className="h-8 w-20 text-sm"
+                                            />
+                                            <span className="text-[10px] text-muted-foreground">hours</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        0 = at the session start time. Negative values bill before, positive values bill after.
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+
+                                {selected && opt.value === "gallery_checkout" && (
+                                  <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border px-3 py-3">
+                                    If the client also selects extra photos at the proofing gallery, those will be added to the same checkout.
+                                  </p>
                                 )}
                               </div>
-                              <span className="text-[10px] text-muted-foreground">
-                                0 = at the session start time. Negative values bill before, positive values bill after.
-                              </span>
-                            </div>
-                          );
-                        })()}
-                        {balanceDueTiming === "gallery_checkout" && (
-                          <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-2">
-                            If the client also selects extra photos at the proofing gallery, those will be added to the same checkout.
-                          </p>
-                        )}
+                            );
+                          })}
+                        </div>
                       </div>
 
                     {/* ── Allow Tip ── */}
-
                     <div className="flex items-start justify-between border border-border p-4 gap-4">
                       <div className="flex flex-col gap-0.5">
                         <p className="text-xs tracking-wider uppercase font-light">Allow Tip</p>
@@ -2376,19 +2381,9 @@ const SessionForm = () => {
                     <Button variant="ghost" onClick={() => setStep(2)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" />Back
                     </Button>
-                    <div className="flex items-center gap-3">
-                      {isEdit && (
-                        <Button variant="outline" onClick={handleTogglePublish} disabled={publishing} className="gap-2 text-xs tracking-wider uppercase font-light">
-                          {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : status === "active" ? <GlobeLock className="h-3.5 w-3.5" /> : <Globe className="h-3.5 w-3.5" />}
-                          {status === "active" ? "Unpublish" : "Publish"}
-                        </Button>
-                      )}
-                      <Button onClick={handleFinish} disabled={saving} className="gap-2 text-xs tracking-wider uppercase font-light">
-                        {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        Save & Continue
-                        {!saving && <ArrowRight className="h-3.5 w-3.5" />}
-                      </Button>
-                    </div>
+                    <Button onClick={() => setStep(4)} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      Next<ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </>
               )}
