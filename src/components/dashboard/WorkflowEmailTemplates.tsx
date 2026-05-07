@@ -421,6 +421,7 @@ export default function WorkflowEmailTemplates() {
           {[
             { title: "Jornada do cliente", desc: "7 etapas automáticas do início ao fim do projeto", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
             { title: "Lembretes pré-sessão", desc: "Disparados antes da data do ensaio (se ativados na sessão)", keys: [...REMINDER_TRIGGERS] as Trigger[] },
+            { title: "Pagamento", desc: "Lembrete + link Stripe para o saldo restante (quando 'On the session day' está ativo)", keys: [...PAYMENT_TRIGGERS] as Trigger[] },
           ].map((group) => (
             <div key={group.title}>
               <div className="mb-3">
