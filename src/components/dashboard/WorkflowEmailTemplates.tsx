@@ -112,6 +112,9 @@ const SAMPLE_PREVIEW: Record<string, string> = {
   "{{feedback_link}}": "https://davions.com/feedback/exemplo",
   "{{studio_name}}": "Davions Studio",
   "{{studio_email}}": "contato@davions.com",
+  "{{shoot_time}}": "14:00",
+  "{{balance_amount}}": "R$ 350,00",
+  "{{payment_link}}": "https://davions.com/pay/exemplo",
 };
 
 function fillSample(html: string): string {
