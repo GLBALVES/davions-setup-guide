@@ -337,6 +337,15 @@ function KanbanCard({
           </button>
           <p className="flex-1 text-xs font-medium leading-snug truncate">{project.client_name || project.title}</p>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            {project.stage === "upcoming" && onTogglePause && (
+              <button
+                className={`p-0.5 ${project.is_paused ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"}`}
+                onClick={(e) => { e.stopPropagation(); onTogglePause(project.id, !project.is_paused); }}
+                title={project.is_paused ? (p_t.resumeSession ?? "Resume") : (p_t.pauseSession ?? "Pause — awaiting reschedule")}
+              >
+                {project.is_paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+              </button>
+            )}
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onEdit(project); }}
