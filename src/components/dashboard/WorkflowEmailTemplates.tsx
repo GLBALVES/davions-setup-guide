@@ -239,6 +239,8 @@ const DEFAULT_CONTENT: Record<string, { name: string; subject: string; html: str
 <p>{{photographer_name}}<br/>{{studio_name}}</p>`,
   },
 };
+
+function emptyTpl(trigger: string): TemplateRow {
   const def = DEFAULT_CONTENT[trigger];
   return {
     stage_trigger: trigger,
