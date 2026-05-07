@@ -159,6 +159,8 @@ function KanbanCard({
   onTogglePause,
   shotDeadlineDays,
   postProdDeadlineDays,
+  proofDeadlineDays,
+  finalDeadlineDays,
   onSetDeadline,
   onSetGalleryExpiry,
 }: {
@@ -170,6 +172,8 @@ function KanbanCard({
   onTogglePause?: (id: string, paused: boolean) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
+  proofDeadlineDays?: number | null;
+  finalDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
@@ -227,12 +231,26 @@ function KanbanCard({
   const effectiveDeadline = shotEffectiveDeadline ?? postProdEffectiveDeadline;
   const deadlineStatus = effectiveDeadline ? getDeadlineStatus(effectiveDeadline) : null;
 
-  // Gallery expiry urgency for proof_gallery / final_gallery stages
-  const galleryExpiryStatus = (() => {
+  // Effective gallery expiry: explicit gallery_expires_at, else derived shoot_date + column days
+  const effectiveGalleryExpiry = (() => {
     if (project.stage !== "proof_gallery" && project.stage !== "final_gallery") return null;
-    if (!project.gallery_expires_at) return null;
-    return getDeadlineStatus(project.gallery_expires_at);
+    if (project.gallery_expires_at) return project.gallery_expires_at;
+    const days = project.stage === "proof_gallery" ? proofDeadlineDays : finalDeadlineDays;
+    if (days != null && project.shoot_date) {
+      try {
+        const shoot = new Date(project.shoot_date);
+        if (!isNaN(shoot.getTime())) {
+          const d = new Date(shoot);
+          d.setDate(d.getDate() + days);
+          return d.toISOString();
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
   })();
+
+  // Gallery expiry urgency for proof_gallery / final_gallery stages
+  const galleryExpiryStatus = effectiveGalleryExpiry ? getDeadlineStatus(effectiveGalleryExpiry) : null;
 
   // Upcoming session proximity alert
   const upcomingSessionStatus = (() => {
@@ -284,8 +302,8 @@ function KanbanCard({
 
   // Human-readable gallery expiry label
   const galleryExpiryLabel = (() => {
-    if (!project.gallery_expires_at || !galleryExpiryStatus) return null;
-    const d = parseISO(project.gallery_expires_at);
+    if (!effectiveGalleryExpiry || !galleryExpiryStatus) return null;
+    const d = parseISO(effectiveGalleryExpiry);
     const now = new Date();
     if (isPast(d)) return p_t.galleryExpired;
     const h = differenceInHours(d, now);
@@ -501,7 +519,7 @@ function KanbanCard({
         {/* Deadline progress bar */}
         {(() => {
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
-          const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
           // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
             ? (project.shoot_date ?? project.created_at)
@@ -644,6 +662,10 @@ function KanbanColumn({
   onSetShotDeadlineDays,
   postProdDeadlineDays,
   onSetPostProdDeadlineDays,
+  proofDeadlineDays,
+  onSetProofDeadlineDays,
+  finalDeadlineDays,
+  onSetFinalDeadlineDays,
   onSetDeadline,
   onSetGalleryExpiry,
 }: {
@@ -659,6 +681,10 @@ function KanbanColumn({
   onSetShotDeadlineDays?: (days: number | null) => void;
   postProdDeadlineDays?: number | null;
   onSetPostProdDeadlineDays?: (days: number | null) => void;
+  proofDeadlineDays?: number | null;
+  onSetProofDeadlineDays?: (days: number | null) => void;
+  finalDeadlineDays?: number | null;
+  onSetFinalDeadlineDays?: (days: number | null) => void;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
@@ -668,6 +694,10 @@ function KanbanColumn({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [ppInputVal, setPpInputVal] = useState(postProdDeadlineDays != null ? String(postProdDeadlineDays) : "");
   const [ppPopoverOpen, setPpPopoverOpen] = useState(false);
+  const [proofInputVal, setProofInputVal] = useState(proofDeadlineDays != null ? String(proofDeadlineDays) : "");
+  const [proofPopoverOpen, setProofPopoverOpen] = useState(false);
+  const [finalInputVal, setFinalInputVal] = useState(finalDeadlineDays != null ? String(finalDeadlineDays) : "");
+  const [finalPopoverOpen, setFinalPopoverOpen] = useState(false);
 
   const handleDaysCommit = (val: string) => {
     const n = parseInt(val, 10);
@@ -679,6 +709,18 @@ function KanbanColumn({
     const n = parseInt(val, 10);
     if (!isNaN(n) && n > 0) onSetPostProdDeadlineDays?.(n);
     else { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); }
+  };
+
+  const handleProofDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetProofDeadlineDays?.(n);
+    else { onSetProofDeadlineDays?.(null); setProofInputVal(""); }
+  };
+
+  const handleFinalDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetFinalDeadlineDays?.(n);
+    else { onSetFinalDeadlineDays?.(null); setFinalInputVal(""); }
   };
 
   // Example date: today + shotDeadlineDays
@@ -834,6 +876,72 @@ function KanbanColumn({
               </PopoverContent>
             </Popover>
           )}
+          {/* Deadline popover — proof_gallery / final_gallery columns */}
+          {(stage.key === "proof_gallery" || stage.key === "final_gallery") && (() => {
+            const isProof = stage.key === "proof_gallery";
+            const days = isProof ? proofDeadlineDays : finalDeadlineDays;
+            const inputVal2 = isProof ? proofInputVal : finalInputVal;
+            const setInputVal2 = isProof ? setProofInputVal : setFinalInputVal;
+            const open = isProof ? proofPopoverOpen : finalPopoverOpen;
+            const setOpen = isProof ? setProofPopoverOpen : setFinalPopoverOpen;
+            const commit = isProof ? handleProofDaysCommit : handleFinalDaysCommit;
+            const onClear = isProof ? onSetProofDeadlineDays : onSetFinalDeadlineDays;
+            const colorClass = isProof
+              ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20"
+              : "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20";
+            return (
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                      days != null ? colorClass : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                    }`}
+                    title={t.projects.deadlineTooltipPostProd}
+                  >
+                    <Timer className="h-3 w-3 shrink-0" />
+                    {days != null && <span>{days}d</span>}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                  <div>
+                    <p className="text-xs font-semibold">
+                      {isProof ? t.projects.proof_gallery : t.projects.final_gallery}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                      {t.projects.postProdDeadlineDesc}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={inputVal2}
+                      onChange={(e) => setInputVal2(e.target.value)}
+                      onBlur={() => commit(inputVal2)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          commit(inputVal2);
+                          setOpen(false);
+                        }
+                      }}
+                      placeholder={isProof ? "ex: 14" : "ex: 60"}
+                      className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                  </div>
+                  {days != null && (
+                    <button
+                      onClick={() => { onClear?.(null); setInputVal2(""); setOpen(false); }}
+                      className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                    >
+                      {t.projects.removeDeadline}
+                    </button>
+                  )}
+                </PopoverContent>
+              </Popover>
+            );
+          })()}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
             onClick={() => onAddCard(stage.key)}
@@ -853,7 +961,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} onTogglePause={onTogglePause} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} onTogglePause={onTogglePause} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} proofDeadlineDays={proofDeadlineDays} finalDeadlineDays={finalDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
           ))}
         </SortableContext>
 
@@ -1266,6 +1374,36 @@ const Projects = () => {
     try {
       if (days != null) localStorage.setItem("post_prod_deadline_days", String(days));
       else localStorage.removeItem("post_prod_deadline_days");
+    } catch { /* ignore */ }
+  };
+
+  // Column-level deadline for proof_gallery and final_gallery stages
+  const [proofDeadlineDays, setProofDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("proof_gallery_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+  const handleSetProofDeadlineDays = (days: number | null) => {
+    setProofDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("proof_gallery_deadline_days", String(days));
+      else localStorage.removeItem("proof_gallery_deadline_days");
+    } catch { /* ignore */ }
+  };
+  const [finalDeadlineDays, setFinalDeadlineDays] = useState<number | null>(() => {
+    try {
+      const v = localStorage.getItem("final_gallery_deadline_days");
+      const n = v ? parseInt(v, 10) : NaN;
+      return isNaN(n) ? null : n;
+    } catch { return null; }
+  });
+  const handleSetFinalDeadlineDays = (days: number | null) => {
+    setFinalDeadlineDays(days);
+    try {
+      if (days != null) localStorage.setItem("final_gallery_deadline_days", String(days));
+      else localStorage.removeItem("final_gallery_deadline_days");
     } catch { /* ignore */ }
   };
 
@@ -1906,6 +2044,10 @@ const Projects = () => {
                           onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
                           postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
                           onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
+                          proofDeadlineDays={proofDeadlineDays}
+                          onSetProofDeadlineDays={s.key === "proof_gallery" ? handleSetProofDeadlineDays : undefined}
+                          finalDeadlineDays={finalDeadlineDays}
+                          onSetFinalDeadlineDays={s.key === "final_gallery" ? handleSetFinalDeadlineDays : undefined}
                           onSetDeadline={handleSetDeadline}
                           onSetGalleryExpiry={(s.key === "proof_gallery" || s.key === "final_gallery") ? handleSetGalleryExpiry : undefined}
                         />
