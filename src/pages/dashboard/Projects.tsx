@@ -10,7 +10,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, Camera, Clock, AlertTriangle, Timer, RefreshCw } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, Camera, Clock, AlertTriangle, Timer, RefreshCw, Pause, Play } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
