@@ -73,7 +73,11 @@ const REMINDER_TRIGGERS = [
   "reminder_1_day",
 ] as const;
 
-const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS] as const;
+const PAYMENT_TRIGGERS = [
+  "balance_due_session_day",
+] as const;
+
+const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS, ...PAYMENT_TRIGGERS] as const;
 
 type Trigger = (typeof STAGE_TRIGGERS)[number];
 
