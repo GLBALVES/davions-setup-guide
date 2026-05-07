@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CONTRACT_VARIABLES } from "@/pages/dashboard/ContractEditor";
 import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
