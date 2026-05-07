@@ -182,7 +182,7 @@ serve(async (req) => {
       error_message: errMsg,
     });
 
-    if (status === "sent") {
+    if (status === "sent" && !force) {
       await supabase.from("workflow_email_dispatched").insert({
         photographer_id,
         trigger,

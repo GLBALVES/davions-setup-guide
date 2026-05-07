@@ -77,7 +77,11 @@ const PAYMENT_TRIGGERS = [
   "balance_due_session_day",
 ] as const;
 
-const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS, ...PAYMENT_TRIGGERS] as const;
+const ENGAGEMENT_TRIGGERS = [
+  "briefing_pending_reminder",
+] as const;
+
+const STAGE_TRIGGERS = [...JOURNEY_TRIGGERS, ...REMINDER_TRIGGERS, ...PAYMENT_TRIGGERS, ...ENGAGEMENT_TRIGGERS] as const;
 
 type Trigger = (typeof STAGE_TRIGGERS)[number];
 
@@ -97,6 +101,7 @@ const VARIABLES: { token: string; desc: string }[] = [
   { token: "{{shoot_time}}", desc: "Horário do ensaio" },
   { token: "{{balance_amount}}", desc: "Valor do saldo restante" },
   { token: "{{payment_link}}", desc: "Link de pagamento do saldo" },
+  { token: "{{briefing_link}}", desc: "Link do briefing pendente" },
 ];
 
 const SAMPLE_PREVIEW: Record<string, string> = {
@@ -115,6 +120,7 @@ const SAMPLE_PREVIEW: Record<string, string> = {
   "{{shoot_time}}": "14:00",
   "{{balance_amount}}": "R$ 350,00",
   "{{payment_link}}": "https://davions.com/pay/exemplo",
+  "{{briefing_link}}": "https://davions.com/briefing/exemplo",
 };
 
 function fillSample(html: string): string {
@@ -222,6 +228,16 @@ const DEFAULT_CONTENT: Record<string, { name: string; subject: string; html: str
 <p>Qualquer dúvida, é só responder este email.</p>
 <p>{{photographer_name}}<br/>{{studio_name}}</p>`,
   },
+  briefing_pending_reminder: {
+    name: "Briefing pendente · lembrete diário",
+    subject: "Falta seu briefing para a sessão {{session_type}} 📝",
+    html: `<p>Olá {{client_name}},</p>
+<p>Notei que o briefing da sua sessão <strong>{{session_type}}</strong> ({{shoot_date}}) ainda não foi preenchido.</p>
+<p>Ele é rapidinho e me ajuda muito a preparar tudo do jeito que você imagina. Pode preencher pelo link abaixo:</p>
+<p><a href="{{briefing_link}}" style="display:inline-block;padding:12px 24px;background:#000;color:#fff;text-decoration:none;border-radius:4px;">Preencher briefing</a></p>
+<p>Qualquer dúvida, é só responder este email.</p>
+<p>{{photographer_name}}<br/>{{studio_name}}</p>`,
+  },
 };
 
 function emptyTpl(trigger: string): TemplateRow {
@@ -269,6 +285,7 @@ export default function WorkflowEmailTemplates() {
     reminder_7_days: { label: "Pré-sessão · 7 dias antes", desc: "Enviado 7 dias antes do ensaio (se ativado na sessão)." },
     reminder_1_day: { label: "Pré-sessão · 1 dia antes", desc: "Enviado 1 dia antes do ensaio (se ativado na sessão)." },
     balance_due_session_day: { label: "Pagamento · saldo no dia da sessão", desc: "Enviado conforme o offset configurado em Sessions → Payment → On the session day, com link de pagamento do saldo restante." },
+    briefing_pending_reminder: { label: "Briefing · lembrete diário", desc: "Enviado uma vez por dia até que o cliente preencha o briefing da sessão (para ensaios futuros)." },
   };
 
   const fetchTemplates = useCallback(async () => {
@@ -422,6 +439,7 @@ export default function WorkflowEmailTemplates() {
             { title: "Jornada do cliente", desc: "7 etapas automáticas do início ao fim do projeto", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
             { title: "Lembretes pré-sessão", desc: "Disparados antes da data do ensaio (se ativados na sessão)", keys: [...REMINDER_TRIGGERS] as Trigger[] },
             { title: "Pagamento", desc: "Lembrete + link Stripe para o saldo restante (quando 'On the session day' está ativo)", keys: [...PAYMENT_TRIGGERS] as Trigger[] },
+            { title: "Engajamento", desc: "Lembretes recorrentes para ações pendentes do cliente", keys: [...ENGAGEMENT_TRIGGERS] as Trigger[] },
           ].map((group) => (
             <div key={group.title}>
               <div className="mb-3">
