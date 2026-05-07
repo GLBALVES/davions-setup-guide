@@ -142,6 +142,9 @@ export const translations = {
       converted: "Converted to standard session",
       noOneSessions: "No one-off sessions",
       oneSessionsHint: "Sessions created via manual booking appear here",
+      editOneSession: "Edit One Session",
+      saveChanges: "Save changes",
+      saved: "Changes saved",
     },
     // ── Galleries page ──
     galleries: {
