@@ -161,6 +161,25 @@ export function CreateBookingDialog({
   const [osInternalNotes, setOsInternalNotes] = useState("");
   const [osClientNotes, setOsClientNotes] = useState("");
 
+  // Payment
+  const [osPaymentOpen, setOsPaymentOpen] = useState(false);
+  const [osTaxEnabled, setOsTaxEnabled] = useState(false);
+  const [osTaxRate, setOsTaxRate] = useState<number | "">("");
+  const [osPDepositEnabled, setOsPDepositEnabled] = useState(false);
+  const [osPDepositAmount, setOsPDepositAmount] = useState<number | "">("");
+  const [osPDepositType, setOsPDepositType] = useState<"fixed" | "percent">("fixed");
+  const [osAllowTip, setOsAllowTip] = useState(false);
+
+  // Photo tiers
+  interface OsPhotoTier { min_photos: number; max_photos: number | null; price_per_photo: number | "" }
+  const [osPhotosOpen, setOsPhotosOpen] = useState(false);
+  const [osPhotoTiers, setOsPhotoTiers] = useState<OsPhotoTier[]>([]);
+
+  // Extras (addons)
+  interface OsExtraItem { description: string; quantity: number | ""; price: number | "" }
+  const [osExtrasOpen, setOsExtrasOpen] = useState(false);
+  const [osExtras, setOsExtras] = useState<OsExtraItem[]>([]);
+
   // Contracts & Briefings for one session
   const [contracts, setContracts] = useState<{ id: string; name: string; body: string }[]>([]);
   const [briefings, setBriefings] = useState<{ id: string; name: string }[]>([]);
