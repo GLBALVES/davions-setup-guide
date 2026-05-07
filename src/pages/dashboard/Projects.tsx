@@ -633,6 +633,7 @@ function KanbanColumn({
   onEdit,
   onDelete,
   onArchive,
+  onTogglePause,
   onAddCard,
   shotDeadlineDays,
   onSetShotDeadlineDays,
@@ -647,6 +648,7 @@ function KanbanColumn({
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  onTogglePause?: (id: string, paused: boolean) => void;
   onAddCard: (stage: Stage) => void;
   shotDeadlineDays?: number | null;
   onSetShotDeadlineDays?: (days: number | null) => void;
