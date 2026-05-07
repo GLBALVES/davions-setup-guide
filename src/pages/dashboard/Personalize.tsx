@@ -1289,7 +1289,7 @@ const Personalize = () => {
                             setTimeout(() => {
                               const el = questionRefs.current[nextIdx];
                               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }, 50);
+                            }, 150);
                           }}>
                           <Plus className="h-3 w-3" />
                           {t.personalize.addQuestion}
