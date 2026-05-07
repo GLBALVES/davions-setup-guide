@@ -521,8 +521,24 @@ const BookingConfirm = () => {
     return true;
   };
 
-  const goNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  const goNext = async () => {
+    if (currentStep >= steps.length - 1) return;
+    const stepKey = activeStep?.key;
+    setIsSavingContinue(true);
+    try {
+      if (stepKey === "client_info") {
+        await handleSaveClientInfo();
+      } else if (stepKey === "briefing") {
+        await handleSubmitBriefing();
+      } else if (stepKey === "contract") {
+        if (!contractAccepted) {
+          await handleAcceptContract(true);
+        }
+      }
+      setCurrentStep(currentStep + 1);
+    } finally {
+      setIsSavingContinue(false);
+    }
   };
 
   const goBack = () => {
