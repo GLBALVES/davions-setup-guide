@@ -1218,18 +1218,33 @@ const Personalize = () => {
                           <div className="flex flex-col gap-2 pl-1">
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Image options</p>
                                   <div className="grid grid-cols-3 gap-2">
-                                    {q.options.map((opt, optIdx) =>
+                                    {q.options.map((opt, optIdx) => {
+                                      const [optUrl, ...captionParts] = opt.split("||");
+                                      const optCaption = captionParts.join("||");
+                                      return (
                               <div key={optIdx} className="relative flex flex-col gap-1">
                                         <ImageUploadField
-                                  value={opt}
+                                  value={optUrl}
                                   onChange={(url) => {
                                     const updated = [...q.options];
-                                    updated[optIdx] = url;
+                                    updated[optIdx] = optCaption ? `${url}||${optCaption}` : url;
                                     setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
                                   }}
                                   photographerId={photographerId}
                                   folder="briefing-options"
                                   aspectClass="aspect-square" />
+
+                                        <input
+                                  type="text"
+                                  value={optCaption}
+                                  placeholder="Caption (optional)"
+                                  onChange={(e) => {
+                                    const updated = [...q.options];
+                                    const newCap = e.target.value;
+                                    updated[optIdx] = newCap ? `${optUrl}||${newCap}` : optUrl;
+                                    setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: updated } : item));
+                                  }}
+                                  className="h-7 w-full px-2 text-[11px] font-light bg-background border border-input text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring" />
 
                                         <Button
                                   type="button"
@@ -1243,7 +1258,8 @@ const Personalize = () => {
                                           <X className="h-3 w-3" />
                                         </Button>
                                       </div>
-                              )}
+                                      );
+                                    })}
                                   </div>
                                   <button
                               type="button"
