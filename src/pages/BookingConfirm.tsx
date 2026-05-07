@@ -439,6 +439,43 @@ const BookingConfirm = () => {
       session_time: avail?.start_time ? formatTime(avail.start_time) : "",
       session_duration: session.duration_minutes ? `${session.duration_minutes} min` : "",
       session_price: session.price != null ? formatCurrency(session.price) : "",
+      num_photos: session.num_photos > 0 ? String(session.num_photos) : "—",
+      includes: bonuses.length > 0
+        ? `<ul>${bonuses.map((b) => `<li>${b.text}</li>`).join("")}</ul>`
+        : "—",
+      selected_addons: invoiceItems.length > 0
+        ? `<ul>${invoiceItems.map((i) => `<li>${i.quantity}× ${i.description} — ${formatCurrency(i.unit_price * i.quantity)}</li>`).join("")}</ul>`
+        : "—",
+      total_amount: (() => {
+        const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+        const sub = (session.price ?? 0) + extras;
+        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        return formatCurrency(sub + tax);
+      })(),
+      deposit_amount: (() => {
+        if (!session.deposit_enabled) return "—";
+        const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+        const sub = (session.price ?? 0) + extras;
+        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        const total = sub + tax;
+        const isPercent = session.deposit_type === "percent" || session.deposit_type === "percentage";
+        const dep = isPercent
+          ? Math.round(total * ((session.deposit_amount ?? 0) / 100))
+          : (session.deposit_amount ?? 0);
+        return formatCurrency(dep);
+      })(),
+      balance_amount: (() => {
+        const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+        const sub = (session.price ?? 0) + extras;
+        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        const total = sub + tax;
+        if (!session.deposit_enabled) return formatCurrency(0);
+        const isPercent = session.deposit_type === "percent" || session.deposit_type === "percentage";
+        const dep = isPercent
+          ? Math.round(total * ((session.deposit_amount ?? 0) / 100))
+          : (session.deposit_amount ?? 0);
+        return formatCurrency(total - dep);
+      })(),
       photographer_name: photographer?.full_name || "",
       studio_name: photographer?.business_name || photographer?.full_name || "",
       studio_address: [
@@ -451,7 +488,7 @@ const BookingConfirm = () => {
       studio_email: (photographer as any)?.email || "",
     };
     return resolveContractVariables(session.contract_text, data, contractCustomFields);
-  }, [session, booking, avail, photographer, clientInfo, contractCustomFields]);
+  }, [session, booking, avail, photographer, clientInfo, contractCustomFields, bonuses, invoiceItems]);
 
   /* ── Build a list of resolved fields actually used in the contract for the preview banner ── */
   const resolvedFieldsPreview = useMemo(() => {
