@@ -237,6 +237,7 @@ function KanbanCard({
   // Upcoming session proximity alert
   const upcomingSessionStatus = (() => {
     if (project.stage !== "upcoming") return null;
+    if (project.is_paused) return null;
     if (!project.shoot_date) return null;
     const d = new Date(project.shoot_date);
     const now = new Date();
