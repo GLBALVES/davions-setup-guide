@@ -997,6 +997,7 @@ export type Database = {
           description: string | null
           gallery_deadline: string | null
           id: string
+          is_paused: boolean
           location: string | null
           notes: string | null
           photographer_id: string
@@ -1018,6 +1019,7 @@ export type Database = {
           description?: string | null
           gallery_deadline?: string | null
           id?: string
+          is_paused?: boolean
           location?: string | null
           notes?: string | null
           photographer_id: string
@@ -1039,6 +1041,7 @@ export type Database = {
           description?: string | null
           gallery_deadline?: string | null
           id?: string
+          is_paused?: boolean
           location?: string | null
           notes?: string | null
           photographer_id?: string
