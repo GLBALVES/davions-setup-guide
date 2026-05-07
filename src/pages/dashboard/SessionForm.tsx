@@ -2292,24 +2292,64 @@ const SessionForm = () => {
                             </button>
                           ))}
                         </div>
-                        {balanceDueTiming === "session_day" && (
-                          <div className="flex items-center gap-3 mt-1">
-                            <Label htmlFor="balance-offset" className="text-[9px] tracking-widest uppercase text-muted-foreground">
-                              Hours from session start
-                            </Label>
-                            <Input
-                              id="balance-offset"
-                              type="number"
-                              step="1"
-                              value={balanceDueOffsetHours}
-                              onChange={(e) => setBalanceDueOffsetHours(e.target.value)}
-                              className="h-8 w-24 text-sm"
-                            />
-                            <span className="text-[10px] text-muted-foreground">
-                              Negative = before, 0 = at start, positive = after.
-                            </span>
-                          </div>
-                        )}
+                        {balanceDueTiming === "session_day" && (() => {
+                          const offsetNum = parseInt(balanceDueOffsetHours || "0", 10) || 0;
+                          const direction: "before" | "at" | "after" =
+                            offsetNum < 0 ? "before" : offsetNum > 0 ? "after" : "at";
+                          const absHours = Math.abs(offsetNum);
+                          return (
+                            <div className="flex flex-col gap-2 mt-1 border-t border-border pt-3">
+                              <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">
+                                When on the session day
+                              </Label>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {[
+                                  { value: "before", label: "Hours before" },
+                                  { value: "at", label: "At session start" },
+                                  { value: "after", label: "Hours after" },
+                                ].map((opt) => (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      if (opt.value === "at") setBalanceDueOffsetHours("0");
+                                      else if (opt.value === "before") setBalanceDueOffsetHours(String(-(absHours || 1)));
+                                      else setBalanceDueOffsetHours(String(absHours || 1));
+                                    }}
+                                    className={cn(
+                                      "px-3 py-1.5 text-[10px] tracking-wider uppercase border transition-colors",
+                                      direction === opt.value
+                                        ? "border-foreground bg-foreground text-background"
+                                        : "border-border hover:border-foreground/40"
+                                    )}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                                {direction !== "at" && (
+                                  <div className="flex items-center gap-2 ml-1">
+                                    <Input
+                                      id="balance-offset"
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={absHours}
+                                      onChange={(e) => {
+                                        const n = Math.max(1, parseInt(e.target.value || "1", 10) || 1);
+                                        setBalanceDueOffsetHours(String(direction === "before" ? -n : n));
+                                      }}
+                                      className="h-8 w-20 text-sm"
+                                    />
+                                    <span className="text-[10px] text-muted-foreground">hours</span>
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">
+                                0 = at the session start time. Negative values bill before, positive values bill after.
+                              </span>
+                            </div>
+                          );
+                        })()}
                         {balanceDueTiming === "gallery_checkout" && (
                           <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-2">
                             If the client also selects extra photos at the proofing gallery, those will be added to the same checkout.
