@@ -390,6 +390,22 @@ export function CreateBookingDialog({
           price: osPrice === "" ? 0 : Math.round(Number(osPrice) * 100),
           briefing_id: osBriefingId || null,
           contract_text: contractText || null,
+          one_session_details: {
+            deposit: osDepositValue === "" ? null : {
+              type: osDepositType,
+              value: osDepositType === "fixed" ? Math.round(Number(osDepositValue) * 100) : Number(osDepositValue),
+            },
+            discount: osDiscountValue === "" ? null : {
+              type: osDiscountType,
+              value: osDiscountType === "fixed" ? Math.round(Number(osDiscountValue) * 100) : Number(osDiscountValue),
+            },
+            delivery_days: osDeliveryDays === "" ? null : Number(osDeliveryDays),
+            extra_photo_price: osExtraPhotoPrice === "" ? null : Math.round(Number(osExtraPhotoPrice) * 100),
+            full_address: osFullAddress.trim() || null,
+            headcount: osHeadcount === "" ? null : Number(osHeadcount),
+            internal_notes: osInternalNotes.trim() || null,
+            client_notes: osClientNotes.trim() || null,
+          },
         })
         .select("id")
         .single();
