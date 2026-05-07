@@ -1117,11 +1117,22 @@ function OneSessionCard({
               size="sm"
               variant="outline"
               className="text-[10px] tracking-wider uppercase font-light gap-1.5 flex-1"
-              onClick={() => setConvertDialogOpen(true)}
+              onClick={() => setEditOpen(true)}
             >
-              <ArrowRight className="h-3 w-3" />
-              {s.convertToSession}
+              <Pencil className="h-3 w-3" />
+              {t.common?.edit ?? "Edit"}
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setConvertDialogOpen(true)}
+                  className="p-1.5 transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{s.convertToSession}</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -1136,6 +1147,13 @@ function OneSessionCard({
           </div>
         </div>
       </div>
+
+      <EditOneSessionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        sessionId={session.id}
+        onSaved={onEdited}
+      />
 
       {/* Convert confirmation */}
       <AlertDialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
