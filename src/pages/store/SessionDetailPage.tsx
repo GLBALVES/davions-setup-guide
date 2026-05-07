@@ -51,6 +51,7 @@ interface SessionDetail {
   contract_text: string | null;
   contract_id: string | null;
   virtual_block_percent: number;
+  show_spots_left?: boolean;
   portfolio_photos: string[] | null;
 }
 
