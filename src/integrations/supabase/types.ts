@@ -628,6 +628,30 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_custom_field_values: {
+        Row: {
+          booking_id: string
+          created_at: string
+          field_key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          field_key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          field_key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       booking_invoice_items: {
         Row: {
           booking_id: string
@@ -1137,28 +1161,43 @@ export type Database = {
       }
       contract_custom_fields: {
         Row: {
+          client_input_type: string
+          client_prompt: string | null
           created_at: string
           default_value: string
           field_key: string
           field_label: string
           id: string
+          mapped_key: string | null
           photographer_id: string
+          required: boolean
+          value_source: string
         }
         Insert: {
+          client_input_type?: string
+          client_prompt?: string | null
           created_at?: string
           default_value?: string
           field_key?: string
           field_label?: string
           id?: string
+          mapped_key?: string | null
           photographer_id: string
+          required?: boolean
+          value_source?: string
         }
         Update: {
+          client_input_type?: string
+          client_prompt?: string | null
           created_at?: string
           default_value?: string
           field_key?: string
           field_label?: string
           id?: string
+          mapped_key?: string | null
           photographer_id?: string
+          required?: boolean
+          value_source?: string
         }
         Relationships: []
       }

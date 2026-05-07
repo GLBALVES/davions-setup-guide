@@ -191,7 +191,8 @@ const BookingConfirm = () => {
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
   const [contractPreviewOpen, setContractPreviewOpen] = useState(false);
-  const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string }>>([]);
+  const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string; value_source?: string | null; mapped_key?: string | null; client_prompt?: string | null; client_input_type?: string | null; required?: boolean | null }>>([]);
+  const [customFieldAnswers, setCustomFieldAnswers] = useState<Record<string, string>>({});
 
   // LGPD consent
   const [privacyConsent, setPrivacyConsent] = useState(false);
@@ -332,9 +333,20 @@ const BookingConfirm = () => {
       if (!Array.isArray(fnResult?.contractCustomFields)) {
         const { data: cfData } = await (supabase as any)
           .from("contract_custom_fields")
-          .select("id, field_key, field_label, default_value")
+          .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
           .eq("photographer_id", b.photographer_id);
         if (cfData) setContractCustomFields(cfData);
+      }
+
+      // Load any previously stored client answers for this booking
+      const { data: cfvData } = await (supabase as any)
+        .from("booking_custom_field_values")
+        .select("field_key, value")
+        .eq("booking_id", bookingId);
+      if (Array.isArray(cfvData)) {
+        const map: Record<string, string> = {};
+        cfvData.forEach((r: any) => { map[r.field_key] = r.value ?? ""; });
+        setCustomFieldAnswers(map);
       }
 
       setLoading(false);
@@ -370,6 +382,15 @@ const BookingConfirm = () => {
     setBriefingSubmitted(true);
   };
 
+  /* ── Custom fields the client must fill in for the contract ── */
+  const activeClientInputFields = useMemo(() => {
+    const html = session?.contract_text || "";
+    return contractCustomFields.filter((f) => {
+      if (f.value_source !== "client_input") return false;
+      return html.includes(`{{${f.field_key}}}`) || html.includes(`[[${f.field_key}]]`) || html.includes(`data-variable="${f.field_key}"`);
+    });
+  }, [session, contractCustomFields]);
+
   /* ── Client info handler ── */
   const handleSaveClientInfo = async () => {
     if (!booking) return;
@@ -394,6 +415,21 @@ const BookingConfirm = () => {
         },
         { onConflict: "photographer_id,email" }
       );
+
+      // Persist custom client_input answers
+      const clientFields = activeClientInputFields;
+      if (clientFields.length > 0 && bookingId) {
+        const rows = clientFields.map((f) => ({
+          booking_id: bookingId,
+          field_key: f.field_key,
+          value: (customFieldAnswers[f.field_key] ?? "").toString(),
+          updated_at: new Date().toISOString(),
+        }));
+        await (supabase as any)
+          .from("booking_custom_field_values")
+          .upsert(rows, { onConflict: "booking_id,field_key" });
+      }
+
       setClientInfoSaved(true);
     } catch (err) {
       console.error("Save client info error:", err);
@@ -487,8 +523,8 @@ const BookingConfirm = () => {
       ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
       studio_email: (photographer as any)?.email || "",
     };
-    return resolveContractVariables(session.contract_text, data, contractCustomFields);
-  }, [session, booking, avail, photographer, clientInfo, contractCustomFields, bonuses, invoiceItems]);
+    return resolveContractVariables(session.contract_text, data, contractCustomFields as any, customFieldAnswers);
+  }, [session, booking, avail, photographer, clientInfo, contractCustomFields, bonuses, invoiceItems, customFieldAnswers]);
 
   /* ── Build a list of resolved fields actually used in the contract for the preview banner ── */
   const resolvedFieldsPreview = useMemo(() => {
@@ -888,9 +924,45 @@ const BookingConfirm = () => {
                   </div>
                 </div>
 
+                {activeClientInputFields.length > 0 && (
+                  <div className="flex flex-col gap-3 pt-3 border-t border-border">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                      {t.personalize.cfBookingSectionTitle}
+                    </p>
+                    {activeClientInputFields.map((f) => {
+                      const promptText = (f.client_prompt || f.field_label) ?? "";
+                      const inputType = f.client_input_type || "text";
+                      const val = customFieldAnswers[f.field_key] ?? "";
+                      return (
+                        <div key={f.id} className="flex flex-col gap-1.5">
+                          <Label className="text-xs font-light">
+                            {promptText}
+                            {f.required && <span className="text-destructive ml-1">*</span>}
+                          </Label>
+                          {inputType === "textarea" ? (
+                            <textarea
+                              value={val}
+                              onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))}
+                              rows={3}
+                              className="w-full px-3 py-2 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                          ) : (
+                            <Input
+                              type={inputType === "date" ? "date" : inputType === "number" ? "number" : "text"}
+                              value={val}
+                              onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))}
+                              className="text-sm font-light"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <Button
                   onClick={handleSaveClientInfo}
-                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim()}
+                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim() || activeClientInputFields.some((f) => f.required && !(customFieldAnswers[f.field_key] || "").trim())}
                   className="w-full text-xs tracking-wider uppercase font-light mt-1"
                 >
                   {savingClientInfo ? "Saving…" : "Save & Continue"}

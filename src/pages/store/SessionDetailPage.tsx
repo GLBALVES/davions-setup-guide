@@ -121,6 +121,11 @@ interface ContractCustomField {
   field_key: string;
   field_label: string;
   default_value: string;
+  value_source?: string | null;
+  mapped_key?: string | null;
+  client_prompt?: string | null;
+  client_input_type?: string | null;
+  required?: boolean | null;
 }
 
 type BookingStep = "product" | "slots" | "form" | "addons" | "review";
@@ -324,6 +329,7 @@ const SessionDetailPage = () => {
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [contractCustomFields, setContractCustomFields] = useState<ContractCustomField[]>([]);
+  const [customFieldAnswers, setCustomFieldAnswers] = useState<Record<string, string>>({});
 
   // Signature modal state
   const [sigModalOpen, setSigModalOpen] = useState(false);
@@ -396,7 +402,7 @@ const SessionDetailPage = () => {
           .order("position", { ascending: true }),
         (supabase as any)
           .from("contract_custom_fields")
-          .select("id, field_key, field_label, default_value")
+          .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
           .eq("photographer_id", s.photographer_id),
       ]);
       setExtras((extrasData ?? []) as SessionExtra[]);
@@ -694,8 +700,8 @@ const SessionDetailPage = () => {
       studio_name: studioName,
       studio_address: studioAddress,
       studio_email: photographer?.email || "",
-    }, contractCustomFields);
-  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields, bonuses, selectedExtras, total, depositAmountCents]);
+    }, contractCustomFields as any, customFieldAnswers);
+  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields, bonuses, selectedExtras, total, depositAmountCents, customFieldAnswers]);
 
   // ────────────────────────────────────────────
   // Calendar helpers
@@ -731,7 +737,7 @@ const SessionDetailPage = () => {
         : Promise.resolve({ data: null }),
       (supabase as any)
         .from("contract_custom_fields")
-        .select("id, field_key, field_label, default_value")
+        .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
         .eq("photographer_id", session.photographer_id),
     ]);
     const latestBody = contractTemplate?.body ?? session.contract_text;
@@ -769,6 +775,7 @@ const SessionDetailPage = () => {
               price: e.price,
               qty: e.qty,
             })),
+            customFieldAnswers,
           },
         }
       );
@@ -1474,11 +1481,51 @@ const SessionDetailPage = () => {
                   <Textarea id="clientNotes" value={clientNotes} onChange={(e) => setClientNotes(e.target.value)} placeholder="Any requests or observations..." rows={3} className="rounded-none resize-none text-sm font-light" />
                 </div>
               </div>
+
+              {(() => {
+                const html = session.contract_text || "";
+                const fields = contractCustomFields.filter((f) =>
+                  f.value_source === "client_input" &&
+                  (html.includes(`{{${f.field_key}}}`) || html.includes(`[[${f.field_key}]]`) || html.includes(`data-variable="${f.field_key}"`))
+                );
+                if (fields.length === 0) return null;
+                return (
+                  <div className="flex flex-col gap-3 pt-3 border-t border-border">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Information for the contract</p>
+                    {fields.map((f) => {
+                      const inputType = f.client_input_type || "text";
+                      const val = customFieldAnswers[f.field_key] ?? "";
+                      return (
+                        <div key={f.id} className="flex flex-col gap-1.5">
+                          <Label className="text-xs tracking-wider uppercase font-light">
+                            {f.client_prompt || f.field_label}
+                            {f.required && <span className="text-destructive ml-1">*</span>}
+                          </Label>
+                          {inputType === "textarea" ? (
+                            <Textarea value={val} onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))} rows={3} className="rounded-none text-sm font-light" />
+                          ) : (
+                            <Input type={inputType === "date" ? "date" : inputType === "number" ? "number" : "text"} value={val} onChange={(e) => setCustomFieldAnswers((p) => ({ ...p, [f.field_key]: e.target.value }))} className="rounded-none text-sm font-light" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep("slots")} className="text-xs tracking-wider uppercase font-light rounded-none">Back</Button>
                 <Button
                   onClick={() => extras.length > 0 ? setStep("addons") : handleEnterReview()}
-                  disabled={!clientName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)}
+                  disabled={
+                    !clientName.trim() ||
+                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail) ||
+                    contractCustomFields.some((f) =>
+                      f.value_source === "client_input" && f.required &&
+                      ((session.contract_text || "").includes(`{{${f.field_key}}}`) || (session.contract_text || "").includes(`[[${f.field_key}]]`)) &&
+                      !(customFieldAnswers[f.field_key] || "").trim()
+                    )
+                  }
                   className="flex-1 text-xs tracking-wider uppercase font-light rounded-none h-11"
                 >
                   Continue →

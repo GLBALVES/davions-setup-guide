@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CONTRACT_VARIABLES } from "@/pages/dashboard/ContractEditor";
 import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
@@ -237,10 +239,25 @@ const Personalize = () => {
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
   // ── Contract custom fields ──────────────────────────────────────────────────
-  interface ContractField {id: string;field_key: string;field_label: string;default_value: string;}
+  interface ContractField {
+    id: string;
+    field_key: string;
+    field_label: string;
+    default_value: string;
+    value_source?: "static" | "mapped" | "client_input";
+    mapped_key?: string | null;
+    client_prompt?: string | null;
+    client_input_type?: string | null;
+    required?: boolean | null;
+  }
   const [contractFields, setContractFields] = useState<ContractField[]>([]);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldDefault, setNewFieldDefault] = useState("");
+  const [newFieldSource, setNewFieldSource] = useState<"static" | "mapped" | "client_input">("static");
+  const [newFieldMappedKey, setNewFieldMappedKey] = useState<string>("");
+  const [newFieldClientPrompt, setNewFieldClientPrompt] = useState("");
+  const [newFieldInputType, setNewFieldInputType] = useState<"text" | "textarea" | "date" | "number">("text");
+  const [newFieldRequired, setNewFieldRequired] = useState(false);
   const [addingField, setAddingField] = useState(false);
   const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
 
@@ -272,7 +289,7 @@ const Personalize = () => {
     if (!photographerId) return;
     const { data } = await (supabase as any).
     from("contract_custom_fields").
-    select("id, field_key, field_label, default_value").
+    select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required").
     eq("photographer_id", photographerId).
     order("created_at", { ascending: true });
     if (data) setContractFields(data);
@@ -291,20 +308,31 @@ const Personalize = () => {
       return;
     }
     setAddingField(true);
-    const { data, error } = await (supabase as any).
-    from("contract_custom_fields").
-    insert({
+    const insertPayload: any = {
       photographer_id: photographerId,
       field_key: fieldKey,
       field_label: newFieldLabel.trim(),
-      default_value: newFieldDefault.trim()
-    }).
-    select("id, field_key, field_label, default_value").
+      default_value: newFieldSource === "static" ? newFieldDefault.trim() : "",
+      value_source: newFieldSource,
+      mapped_key: newFieldSource === "mapped" ? (newFieldMappedKey || null) : null,
+      client_prompt: newFieldSource === "client_input" ? (newFieldClientPrompt.trim() || newFieldLabel.trim()) : null,
+      client_input_type: newFieldSource === "client_input" ? newFieldInputType : "text",
+      required: newFieldSource === "client_input" ? newFieldRequired : false,
+    };
+    const { data, error } = await (supabase as any).
+    from("contract_custom_fields").
+    insert(insertPayload).
+    select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required").
     single();
     if (data && !error) {
       setContractFields((prev) => [...prev, data]);
       setNewFieldLabel("");
       setNewFieldDefault("");
+      setNewFieldSource("static");
+      setNewFieldMappedKey("");
+      setNewFieldClientPrompt("");
+      setNewFieldInputType("text");
+      setNewFieldRequired(false);
       toast({ title: t.personalize.contractFieldAdded });
     } else if (error) {
       toast({ title: error.message, variant: "destructive" });
@@ -810,13 +838,20 @@ const Personalize = () => {
 
                       {contractFields.length > 0 &&
                         <div className="flex flex-col gap-2">
-                          {contractFields.map((f) =>
+                          {contractFields.map((f) => {
+                            const src = f.value_source ?? "static";
+                            const sourceLabel =
+                              src === "mapped" ? `↪ ${CONTRACT_VARIABLES.find((v) => v.key === f.mapped_key)?.label ?? f.mapped_key ?? "—"}` :
+                              src === "client_input" ? `👤 ${t.personalize.cfSourceClient}` :
+                              t.personalize.cfSourceStatic;
+                            return (
                             <div key={f.id} className="border border-border p-4 flex items-start justify-between gap-4">
                               <div className="flex flex-col gap-1 min-w-0 flex-1">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{f.field_label}</p>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">{`{{${f.field_key}}}`}</code>
-                                  {f.default_value &&
+                                  <span className="text-[10px] text-muted-foreground">{sourceLabel}</span>
+                                  {src === "static" && f.default_value &&
                                     <span className="text-[10px] text-muted-foreground truncate">
                                       = {f.default_value}
                                     </span>
@@ -835,7 +870,8 @@ const Personalize = () => {
                                 }
                               </Button>
                             </div>
-                          )}
+                            );
+                          })}
                         </div>
                       }
 
@@ -857,6 +893,22 @@ const Personalize = () => {
                           </div>
                           <div className="flex flex-col gap-1.5">
                             <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.cfValueSource}
+                            </Label>
+                            <Select value={newFieldSource} onValueChange={(v) => setNewFieldSource(v as any)}>
+                              <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
+                              <SelectContent className="z-[60]">
+                                <SelectItem value="static">{t.personalize.cfSourceStatic}</SelectItem>
+                                <SelectItem value="mapped">{t.personalize.cfSourceMapped}</SelectItem>
+                                <SelectItem value="client_input">{t.personalize.cfSourceClient}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {newFieldSource === "static" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
                               {t.personalize.contractFieldDefault}
                             </Label>
                             <Input
@@ -865,12 +917,69 @@ const Personalize = () => {
                               placeholder={t.personalize.contractFieldDefaultPlaceholder}
                               className="text-sm" />
                           </div>
-                        </div>
+                        )}
+
+                        {newFieldSource === "mapped" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.cfMappedField}
+                            </Label>
+                            <Select value={newFieldMappedKey} onValueChange={setNewFieldMappedKey}>
+                              <SelectTrigger className="text-sm h-9"><SelectValue placeholder="—" /></SelectTrigger>
+                              <SelectContent className="z-[60]">
+                                {CONTRACT_VARIABLES.map((v) => (
+                                  <SelectItem key={v.key} value={v.key}>{v.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {newFieldSource === "client_input" && (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                                {t.personalize.cfClientPrompt}
+                              </Label>
+                              <Input
+                                value={newFieldClientPrompt}
+                                onChange={(e) => setNewFieldClientPrompt(e.target.value)}
+                                placeholder={t.personalize.cfClientPromptPlaceholder}
+                                className="text-sm" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 items-end">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                                  {t.personalize.cfInputType}
+                                </Label>
+                                <Select value={newFieldInputType} onValueChange={(v) => setNewFieldInputType(v as any)}>
+                                  <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
+                                  <SelectContent className="z-[60]">
+                                    <SelectItem value="text">Text</SelectItem>
+                                    <SelectItem value="textarea">Textarea</SelectItem>
+                                    <SelectItem value="date">Date</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <label className="flex items-center gap-2 text-xs font-light cursor-pointer pb-2">
+                                <input
+                                  type="checkbox"
+                                  checked={newFieldRequired}
+                                  onChange={(e) => setNewFieldRequired(e.target.checked)}
+                                  className="h-4 w-4 accent-primary"
+                                />
+                                {t.personalize.cfRequired}
+                              </label>
+                            </div>
+                          </div>
+                        )}
+
                         <Button
                           size="sm"
                           variant="outline"
                           className="self-start gap-1.5 text-xs tracking-wider uppercase font-light"
-                          disabled={!newFieldLabel.trim() || addingField}
+                          disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
                           onClick={handleAddContractField}>
                           {addingField ?
                             <Loader2 className="h-3.5 w-3.5 animate-spin" /> :

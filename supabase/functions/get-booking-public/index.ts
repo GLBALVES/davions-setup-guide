@@ -82,7 +82,7 @@ serve(async (req) => {
         : Promise.resolve({ data: null, error: null }),
       supabase
         .from("contract_custom_fields")
-        .select("id, field_key, field_label, default_value")
+        .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
         .eq("photographer_id", booking.photographer_id),
     ]);
 

@@ -57,11 +57,18 @@ export const CONTRACT_VARIABLES = [
 
 export type VariableKey = (typeof CONTRACT_VARIABLES)[number]["key"];
 
-interface CustomField {
+export type CustomFieldValueSource = "static" | "mapped" | "client_input";
+
+export interface CustomField {
   id: string;
   field_key: string;
   field_label: string;
   default_value: string;
+  value_source?: CustomFieldValueSource;
+  mapped_key?: string | null;
+  client_prompt?: string | null;
+  client_input_type?: string | null;
+  required?: boolean | null;
 }
 
 function normalizeVariableToken(value: string): string {
@@ -98,7 +105,8 @@ function applyVariableValue(html: string, key: string, label: string, value: str
 export function resolveContractVariables(
   html: string,
   data: Partial<Record<string, string>>,
-  customFields?: CustomField[]
+  customFields?: CustomField[],
+  customFieldValues?: Record<string, string>
 ): string {
   let result = CONTRACT_VARIABLES.reduce((acc, v) => {
     const val = data[v.key] ?? "";
@@ -107,7 +115,15 @@ export function resolveContractVariables(
 
   if (customFields) {
     for (const cf of customFields) {
-      const val = data[cf.field_key] ?? cf.default_value ?? "";
+      const source = cf.value_source ?? "static";
+      let val = "";
+      if (source === "client_input") {
+        val = customFieldValues?.[cf.field_key] ?? data[cf.field_key] ?? cf.default_value ?? "";
+      } else if (source === "mapped" && cf.mapped_key) {
+        val = data[cf.mapped_key] ?? customFieldValues?.[cf.field_key] ?? cf.default_value ?? "";
+      } else {
+        val = data[cf.field_key] ?? customFieldValues?.[cf.field_key] ?? cf.default_value ?? "";
+      }
       result = applyVariableValue(result, cf.field_key, cf.field_label, val);
     }
   }
@@ -241,7 +257,7 @@ const ContractEditor = () => {
     (async () => {
       const { data } = await (supabase as any)
         .from("contract_custom_fields")
-        .select("id, field_key, field_label, default_value")
+        .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: true });
       if (data) setCustomFields(data);
@@ -355,7 +371,7 @@ const ContractEditor = () => {
         field_label: newFieldLabel.trim(),
         default_value: newFieldDefault.trim(),
       })
-      .select("id, field_key, field_label, default_value")
+      .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
       .single();
 
     if (data && !error) {
