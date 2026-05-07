@@ -144,6 +144,7 @@ interface StepDef {
 
 const BookingConfirm = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<BookingData | null>(null);
