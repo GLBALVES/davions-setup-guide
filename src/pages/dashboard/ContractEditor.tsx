@@ -105,7 +105,8 @@ function applyVariableValue(html: string, key: string, label: string, value: str
 export function resolveContractVariables(
   html: string,
   data: Partial<Record<string, string>>,
-  customFields?: CustomField[]
+  customFields?: CustomField[],
+  customFieldValues?: Record<string, string>
 ): string {
   let result = CONTRACT_VARIABLES.reduce((acc, v) => {
     const val = data[v.key] ?? "";
@@ -114,7 +115,15 @@ export function resolveContractVariables(
 
   if (customFields) {
     for (const cf of customFields) {
-      const val = data[cf.field_key] ?? cf.default_value ?? "";
+      const source = cf.value_source ?? "static";
+      let val = "";
+      if (source === "client_input") {
+        val = customFieldValues?.[cf.field_key] ?? data[cf.field_key] ?? cf.default_value ?? "";
+      } else if (source === "mapped" && cf.mapped_key) {
+        val = data[cf.mapped_key] ?? customFieldValues?.[cf.field_key] ?? cf.default_value ?? "";
+      } else {
+        val = data[cf.field_key] ?? customFieldValues?.[cf.field_key] ?? cf.default_value ?? "";
+      }
       result = applyVariableValue(result, cf.field_key, cf.field_label, val);
     }
   }
