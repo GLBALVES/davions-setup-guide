@@ -2252,13 +2252,16 @@ const SessionForm = () => {
                       );
                     })()}
 
-                    {/* ── Balance Due Timing ── (only when a deposit is configured) */}
-                    {depositEnabled && (
-                      <div className="border border-border p-4 flex flex-col gap-3">
+                    {/* ── Balance Due Timing ── (always available; covers both deposit balance and full payment) */}
+                    <div className="border border-border p-4 flex flex-col gap-3">
                         <div className="flex flex-col gap-0.5">
-                          <p className="text-xs tracking-wider uppercase font-light">When to Charge the Remaining Balance</p>
+                          <p className="text-xs tracking-wider uppercase font-light">
+                            {depositEnabled ? "When to Charge the Remaining Balance" : "When to Charge the Session Payment"}
+                          </p>
                           <p className="text-[10px] text-muted-foreground leading-relaxed">
-                            Choose when the rest of the session price will be billed to the client.
+                            {depositEnabled
+                              ? "Choose when the rest of the session price will be billed to the client."
+                              : "Choose when the full session price will be billed to the client."}
                           </p>
                         </div>
                         <div className="grid gap-2">
