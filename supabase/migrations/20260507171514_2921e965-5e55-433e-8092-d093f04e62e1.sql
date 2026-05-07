@@ -1,0 +1,1 @@
+ALTER TABLE public.client_projects ADD COLUMN IF NOT EXISTS is_paused boolean NOT NULL DEFAULT false;

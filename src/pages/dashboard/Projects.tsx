@@ -10,7 +10,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, Camera, Clock, AlertTriangle, Timer, RefreshCw } from "lucide-react";
+import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGrid, List, Archive, ArchiveRestore, Camera, Clock, AlertTriangle, Timer, RefreshCw, Pause, Play } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -80,6 +80,7 @@ interface ClientProject {
   gallery_expires_at?: string | null;
   location?: string | null;
   description?: string | null;
+  is_paused?: boolean;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -155,6 +156,7 @@ function KanbanCard({
   onEdit,
   onDelete,
   onArchive,
+  onTogglePause,
   shotDeadlineDays,
   postProdDeadlineDays,
   onSetDeadline,
@@ -165,6 +167,7 @@ function KanbanCard({
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  onTogglePause?: (id: string, paused: boolean) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
@@ -234,6 +237,7 @@ function KanbanCard({
   // Upcoming session proximity alert
   const upcomingSessionStatus = (() => {
     if (project.stage !== "upcoming") return null;
+    if (project.is_paused) return null;
     if (!project.shoot_date) return null;
     const d = new Date(project.shoot_date);
     const now = new Date();
@@ -333,6 +337,15 @@ function KanbanCard({
           </button>
           <p className="flex-1 text-xs font-medium leading-snug truncate">{project.client_name || project.title}</p>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            {project.stage === "upcoming" && onTogglePause && (
+              <button
+                className={`p-0.5 ${project.is_paused ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-amber-500"}`}
+                onClick={(e) => { e.stopPropagation(); onTogglePause(project.id, !project.is_paused); }}
+                title={project.is_paused ? ((p_t as any).resumeSession ?? "Resume") : ((p_t as any).pauseSession ?? "Pause — awaiting reschedule")}
+              >
+                {project.is_paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+              </button>
+            )}
             <button
               className="p-0.5 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onEdit(project); }}
@@ -620,6 +633,7 @@ function KanbanColumn({
   onEdit,
   onDelete,
   onArchive,
+  onTogglePause,
   onAddCard,
   shotDeadlineDays,
   onSetShotDeadlineDays,
@@ -634,6 +648,7 @@ function KanbanColumn({
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  onTogglePause?: (id: string, paused: boolean) => void;
   onAddCard: (stage: Stage) => void;
   shotDeadlineDays?: number | null;
   onSetShotDeadlineDays?: (days: number | null) => void;
@@ -833,7 +848,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} onTogglePause={onTogglePause} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
           ))}
         </SortableContext>
 
@@ -1439,6 +1454,7 @@ const Projects = () => {
 
       for (const p of mapped) {
         if (p.stage !== "upcoming") continue;
+        if (p.is_paused) continue;
 
         const booking = (p as any).bookings;
         let sessionEnd: Date | null = null;
@@ -1502,6 +1518,7 @@ const Projects = () => {
 
       for (const p of projects) {
         if (p.stage !== "upcoming") continue;
+        if (p.is_paused) continue;
 
         let sessionEnd: Date | null = null;
         if (p.shoot_date && p.shoot_time) {
@@ -1685,6 +1702,13 @@ const Projects = () => {
     toast.success(p_t.projectRemoved);
   };
 
+  const handleTogglePause = async (id: string, paused: boolean) => {
+    await supabase.from("client_projects" as any).update({ is_paused: paused } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, is_paused: paused } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, is_paused: paused } : prev);
+    toast.success(paused ? "Sessão pausada — aguardando reagendamento" : "Sessão retomada");
+  };
+
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
@@ -1836,6 +1860,7 @@ const Projects = () => {
                           onEdit={openEdit}
                           onDelete={handleDelete}
                           onArchive={handleArchive}
+                          onTogglePause={s.key === "upcoming" ? handleTogglePause : undefined}
                           onAddCard={openAdd}
                           shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
                           onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
