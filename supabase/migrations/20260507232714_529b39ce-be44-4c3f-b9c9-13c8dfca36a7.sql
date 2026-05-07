@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS show_spots_left BOOLEAN NOT NULL DEFAULT true;

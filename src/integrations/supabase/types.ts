@@ -3608,6 +3608,7 @@ export type Database = {
           reminder_days: number[]
           session_model: string
           session_type_id: string | null
+          show_spots_left: boolean
           slug: string | null
           sort_order: number
           status: string
@@ -3648,6 +3649,7 @@ export type Database = {
           reminder_days?: number[]
           session_model?: string
           session_type_id?: string | null
+          show_spots_left?: boolean
           slug?: string | null
           sort_order?: number
           status?: string
@@ -3688,6 +3690,7 @@ export type Database = {
           reminder_days?: number[]
           session_model?: string
           session_type_id?: string | null
+          show_spots_left?: boolean
           slug?: string | null
           sort_order?: number
           status?: string
