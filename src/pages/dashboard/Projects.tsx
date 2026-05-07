@@ -1454,6 +1454,7 @@ const Projects = () => {
 
       for (const p of mapped) {
         if (p.stage !== "upcoming") continue;
+        if (p.is_paused) continue;
 
         const booking = (p as any).bookings;
         let sessionEnd: Date | null = null;
