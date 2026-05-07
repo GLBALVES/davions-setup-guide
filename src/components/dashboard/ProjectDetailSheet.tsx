@@ -1619,9 +1619,15 @@ export function ProjectDetailSheet({
   };
 
   const handleSessionChange = async (newSessionId: string) => {
-    if (!project.booking_id) return;
     const newSess = photographerSessions.find((s) => s.id === newSessionId);
     if (!newSess) return;
+
+    if (!project.booking_id) {
+      // Project without booking — just update session reference on client_projects
+      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+      toast.success(tp.projectUpdated || "Session updated");
+      return;
+    }
 
     const sessInfo: SessionInfo = {
       id: newSess.id,
