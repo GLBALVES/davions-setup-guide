@@ -1288,8 +1288,7 @@ const Personalize = () => {
                             const nextIdx = briefingQuestions.length;
                             setBriefingQuestions((prev) => [...prev, newQ]);
                             setTimeout(() => {
-                              const el = questionRefs.current[nextIdx];
-                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              briefingScrollContainerRef.current?.scrollTo({ top: briefingScrollContainerRef.current?.scrollHeight ?? 0, behavior: 'smooth' });
                             }, 150);
                           }}>
                           <Plus className="h-3 w-3" />
