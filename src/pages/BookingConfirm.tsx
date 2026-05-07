@@ -1107,7 +1107,7 @@ const BookingConfirm = () => {
               className="text-xs gap-1.5 tracking-wider uppercase font-light"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Back
+              {t.common.back}
             </Button>
 
             {!isLastStep ? (
@@ -1117,7 +1117,7 @@ const BookingConfirm = () => {
                 disabled={!canProceed()}
                 className="text-xs gap-1.5 tracking-wider uppercase font-light"
               >
-                Next
+                {t.sessions.saveAndContinue}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
