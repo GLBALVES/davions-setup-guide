@@ -1564,7 +1564,7 @@ const Projects = () => {
         const toProofGallery: string[] = [];
         for (const p of (allProjects as any[])) {
           if (p.stage !== "shot") continue;
-          if (p.booking_id && proofGalleryBookings.has(p.booking_id)) {
+          if ((p.booking_id && proofGalleryBookings.has(p.booking_id)) || proofByProject.has(p.id)) {
             toProofGallery.push(p.id);
           }
         }
@@ -1583,7 +1583,7 @@ const Projects = () => {
         const toFinalGallery: string[] = [];
         for (const p of (allProjects as any[])) {
           if (p.stage !== "post_production") continue;
-          if (p.booking_id && finalGalleryBookings.has(p.booking_id)) {
+          if ((p.booking_id && finalGalleryBookings.has(p.booking_id)) || finalByProject.has(p.id)) {
             toFinalGallery.push(p.id);
           }
         }
@@ -1602,13 +1602,17 @@ const Projects = () => {
       const mapped = (allProjects as any[]).map((p) => {
         // Derive shoot_time from availability if not set on the project
         const availStartTime = (p.bookings as any)?.session_availability?.start_time?.slice(0, 5) ?? null;
+        const coverFromBooking = p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null;
+        const coverFromProject = galleryCoversByProject[p.id] ?? null;
+        const expiryFromBooking = p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null;
+        const expiryFromProject = galleryExpiryByProject[p.id] ?? null;
         return {
           ...p,
           shoot_time: p.shoot_time ?? availStartTime,
           session_title: (p.bookings as any)?.sessions?.title ?? null,
-          gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
+          gallery_cover_url: coverFromProject ?? coverFromBooking,
           gallery_deadline: p.gallery_deadline ?? null,
-          gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
+          gallery_expires_at: expiryFromProject ?? expiryFromBooking,
           location: p.location ?? null,
           description: p.description ?? null,
           client_phone: p.client_phone ?? null,
