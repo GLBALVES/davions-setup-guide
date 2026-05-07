@@ -1,69 +1,68 @@
-# Workflow de Emails — Jornada do Cliente em 7 Etapas
+## Contexto
 
-Reorganiza o painel de emails automáticos seguindo a jornada real do cliente (do fechamento da sessão ao pós-entrega) e implementa os disparadores que ainda não existem.
+Hoje o formulário de **One Session** (em `CreateBookingDialog.tsx`, etapa 1B) já tem:
+- Nome, duração, nº de fotos, preço, local, contrato, briefing e itens incluídos.
 
-## Nova ordem de gatilhos (jornada)
+A ideia é **enriquecer** sem virar uma "session normal" (que tem disponibilidade pública, slots, add-ons cadastrados, store, SEO, galerias automáticas, etc.). One Session continua sendo uma sessão **ad-hoc, privada, criada pelo fotógrafo direto na agenda**.
 
-| # | Chave (key) | Quando dispara |
-|---|---|---|
-| 1 | `booking_confirmed` | Cliente fecha/paga a sessão (boas-vindas) |
-| 2 | `session_completed` | Após data+hora do ensaio terminar (agradecimento + próxima etapa) |
-| 3 | `proof_gallery_sent` | Galeria de provas é publicada |
-| 4 | `selection_completed` | Cliente finaliza seleção de fotos (vai para fila de pós) |
-| 5 | `final_gallery_sent` | Galeria final é publicada |
-| 6 | `download_reminder_7d` | 7 dias após envio da galeria final, se cliente não baixou |
-| 7 | `post_delivery_feedback_7d` | 7 dias após o cliente baixar as fotos (agradecimento + feedback) |
+## Sugestão de novos campos
 
-Os lembretes pré-sessão (`reminder_14_days`, `reminder_7_days`, `reminder_1_day`) continuam existindo, agora agrupados separadamente como "Pré-sessão".
+Organizados em uma seção colapsável **"Mais detalhes (opcional)"** logo abaixo dos campos atuais, para não poluir a tela inicial.
 
-Triggers antigos (`shot_to_editing`, `editing_to_review`, `review_to_delivered`, `delivered_to_done`, `gallery_linked`) deixam de aparecer no painel — os registros já salvos no banco ficam preservados, mas ocultos da UI (não removidos para não quebrar histórico).
+### 1. Comerciais / financeiros
+- **Desconto** (valor ou %) — aplicado direto no total exibido ao cliente.
+- **Sinal / depósito** (valor fixo ou %) — quanto o cliente paga para confirmar.
+- **Forma de pagamento prevista** (Pix / cartão / dinheiro / transferência / outro) — só anotação interna.
+- **Vencimento do saldo** (data ou "no dia da sessão" / "X dias após").
+- **Imposto / taxa** (%) — opcional, calcula no resumo.
 
-## Mudanças na UI (`WorkflowEmailTemplates.tsx`)
+### 2. Entrega
+- **Prazo de entrega das fotos** (dias úteis, ex: 15).
+- **Formato de entrega** (galeria online / pendrive / WeTransfer / link).
+- **Quantidade mínima garantida** vs. **quantidade estimada** (separar dos "nº de fotos" atual).
+- **Inclui edição?** (toggle) + **nível de edição** (básica / avançada).
+- **Fotos extras** — preço por foto adicional (caso o cliente queira mais que o pacote).
 
-- Substituir `STAGE_TRIGGERS` pelas 7 chaves novas + as 3 de pré-sessão.
-- Reescrever `triggerMeta` com labels/descrições nos 3 idiomas (EN/PT-BR/ES) via `LanguageContext`.
-- Sidebar com 3 grupos, nesta ordem:
-  1. **Jornada do cliente** — as 7 etapas numeradas (1–7) na ordem acima
-  2. **Pré-sessão** — 14d / 7d / 1d
-- Adicionar variáveis novas em `VARIABLES` e `SAMPLE_PREVIEW`:
-  - `{{selection_deadline}}`, `{{final_delivery_eta}}`, `{{download_link}}`, `{{feedback_link}}`
-- Configurações por template (já existem): nome interno, remetente, BCC, atraso em minutos, ativo/inativo, auto-envio, preview, teste, histórico.
+### 3. Logística da sessão
+- **Tipo de local** (estúdio / externa / casa do cliente / evento).
+- **Endereço completo** (separado do "Location" curto atual).
+- **Custo de deslocamento** (valor) — entra no resumo.
+- **Equipe envolvida** (multiselect de membros do studio, se houver) ou texto livre.
+- **Equipamento especial** (texto curto: drone, iluminação extra, etc.).
 
-## Backend — pontos de disparo
+### 4. Cliente / experiência
+- **Quantidade de pessoas** na sessão.
+- **Trocas de roupa / looks** incluídos (número).
+- **Pets / crianças?** (toggles informativos).
+- **Observações internas** (textarea, só o fotógrafo vê).
+- **Observações para o cliente** (textarea, aparece no e-mail/contrato).
 
-Criar uma edge function única `send-workflow-email` (versão "real" da `send-workflow-email-test` já existente). Recebe `{ photographer_id, trigger, project_id|booking_id, recipient, vars }`, busca o template ativo, renderiza variáveis, envia via Brevo, grava em `workflow_email_logs` com `is_test=false`.
+### 5. Pós-sessão
+- **Permite uso comercial das fotos?** (toggle).
+- **Direito de arrependimento / política de cancelamento** (texto curto ou seleção de presets).
+- **Tags internas** (categorização rápida: "amiga", "indicação", "teste", etc.).
 
-Pontos de chamada:
+## Recomendação prática (MVP enxuto)
 
-| Trigger | Onde plugar |
-|---|---|
-| `booking_confirmed` | `session-booking-webhook` (após `payment_status='paid'`) |
-| `proof_gallery_sent` | ao publicar galeria do tipo "proofs" (toggle de `galleries.status`) |
-| `selection_completed` | endpoint/ação que finaliza seleção do cliente |
-| `final_gallery_sent` | ao publicar galeria final |
-| `session_completed` | cron horário que varre `bookings` cuja `booked_date + hora` < now() e ainda não tiveram disparo |
-| `download_reminder_7d` | cron diário: galerias finais publicadas há ≥7d sem download registrado |
-| `post_delivery_feedback_7d` | cron diário: 7d após primeiro download registrado |
+Se a ideia é **não inflar** a One Session, sugiro adicionar **agora** apenas o conjunto que mais impacta gestão e cobrança:
 
-Schema:
+1. **Sinal/depósito** (valor ou %)
+2. **Desconto** (valor ou %)
+3. **Prazo de entrega** (dias)
+4. **Fotos extras — preço unitário**
+5. **Endereço completo** (separado do Location curto)
+6. **Quantidade de pessoas**
+7. **Observações internas** (privado)
+8. **Observações para o cliente** (público no contrato/e-mail)
 
-- Adicionar coluna `last_download_at timestamptz` em `galleries` (se não existir) — atualizada no endpoint de download.
-- Adicionar tabela auxiliar `workflow_email_dispatched (project_id, trigger, sent_at)` com unique `(project_id, trigger)` para evitar reenvio pelos crons.
+Tudo dentro de um accordion **"Mais detalhes (opcional)"**, mantendo a tela inicial igual de simples.
 
-Cron (pg_cron + pg_net) chamando a edge function dispatcher horária/diária.
+## Estrutura técnica sugerida
 
-## Detalhes técnicos
+- Em vez de criar 8 colunas novas em `sessions`, usar uma coluna JSONB existente (ex: `metadata` ou criar `one_session_details jsonb`) só para One Session.
+- O resumo financeiro (preço − desconto + extras + deslocamento + imposto = total; sinal; saldo) é calculado no frontend e mostrado no Step 2 e no contrato.
+- i18n: adicionar chaves em `t.createBooking` para EN/PT/ES.
 
-- Migration: nova tabela `workflow_email_dispatched`, coluna `galleries.last_download_at`, RLS por `photographer_id`.
-- Edge functions:
-  - `send-workflow-email` (novo, dispatcher real, reusa lógica de render do test).
-  - `workflow-email-cron` (novo, varre bookings/galleries e chama dispatcher).
-- Hook em `session-booking-webhook` para `booking_confirmed`.
-- Hooks no fluxo de publicar galeria (proofs/final) e finalizar seleção.
-- i18n: adicionar chaves em `LanguageContext` para os 7 novos labels/desc nos 3 idiomas.
-- Manter compatibilidade: registros antigos em `workflow_email_templates` com triggers descontinuados não são deletados; UI apenas não os lista.
+## Pergunta antes de implementar
 
-## Fora de escopo
-
-- Editor visual de novos campos custom além das variáveis listadas.
-- Migração automática de conteúdo dos templates antigos para os novos (usuário recria — só existem ~5 e nenhum cliente em produção tem esses templates configurados ainda neste fluxo).
+Quer que eu siga com o **MVP enxuto (8 campos)** acima, ou prefere escolher outro recorte da lista completa?
