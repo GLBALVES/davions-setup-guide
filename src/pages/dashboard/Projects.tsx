@@ -1492,18 +1492,41 @@ const Projects = () => {
       .order("position", { ascending: true });
 
     if (allProjects) {
-      // 5. Fetch gallery covers for projects with a booking_id
+      // 5. Fetch gallery covers for projects with a booking_id OR linked via project_id
       const bookingIds = (allProjects as any[])
         .map((p) => p.booking_id)
         .filter(Boolean);
+      const projectIds = (allProjects as any[]).map((p) => p.id).filter(Boolean);
 
       let galleryCovers: Record<string, string> = {};
       let galleryExpiry: Record<string, string> = {};
-      if (bookingIds.length > 0) {
+      // Maps keyed by project_id (for galleries linked directly via project_id)
+      const galleryCoversByProject: Record<string, string> = {};
+      const galleryExpiryByProject: Record<string, string> = {};
+      const proofByProject = new Set<string>();
+      const finalByProject = new Set<string>();
+      if (bookingIds.length > 0 || projectIds.length > 0) {
+        const orFilter = [
+          bookingIds.length > 0 ? `booking_id.in.(${bookingIds.join(",")})` : null,
+          projectIds.length > 0 ? `project_id.in.(${projectIds.join(",")})` : null,
+        ].filter(Boolean).join(",");
         const { data: galleries } = await supabase
           .from("galleries")
-          .select("booking_id, cover_image_url, category, status, expires_at")
-          .in("booking_id", bookingIds);
+          .select("booking_id, project_id, cover_image_url, category, status, expires_at")
+          .or(orFilter);
+        // Project-id keyed maps
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.project_id && g.cover_image_url && g.status !== "expired") {
+              galleryCoversByProject[g.project_id] = g.cover_image_url;
+            }
+            if (g.project_id && g.expires_at) {
+              galleryExpiryByProject[g.project_id] = g.expires_at;
+            }
+            if (g.project_id && g.category === "proof") proofByProject.add(g.project_id);
+            if (g.project_id && g.category === "final") finalByProject.add(g.project_id);
+          }
+        }
         // Map cover images (skip expired for cover)
         if (galleries) {
           for (const g of galleries as any[]) {
