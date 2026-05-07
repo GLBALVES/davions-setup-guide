@@ -442,6 +442,7 @@ const Personalize = () => {
         setBusinessCurrency(b.business_currency ?? "USD");
         setBusinessTaxId(b.business_tax_id ?? "");
         setBusinessSalesTax(b.business_sales_tax != null ? String(b.business_sales_tax) : "");
+        setBusinessTaxName(b.business_tax_name ?? "");
       }
 
       setLoading(false);
