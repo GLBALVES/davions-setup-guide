@@ -187,6 +187,7 @@ const BookingConfirm = () => {
 
   // Payment state
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isSavingContinue, setIsSavingContinue] = useState(false);
 
   useEffect(() => {
     if (!bookingId) { setLoading(false); return; }
@@ -520,8 +521,24 @@ const BookingConfirm = () => {
     return true;
   };
 
-  const goNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  const goNext = async () => {
+    if (currentStep >= steps.length - 1) return;
+    const stepKey = activeStep?.key;
+    setIsSavingContinue(true);
+    try {
+      if (stepKey === "client_info") {
+        await handleSaveClientInfo();
+      } else if (stepKey === "briefing") {
+        await handleSubmitBriefing();
+      } else if (stepKey === "contract") {
+        if (!contractAccepted) {
+          await handleAcceptContract(true);
+        }
+      }
+      setCurrentStep(currentStep + 1);
+    } finally {
+      setIsSavingContinue(false);
+    }
   };
 
   const goBack = () => {
@@ -1114,11 +1131,20 @@ const BookingConfirm = () => {
               <Button
                 size="sm"
                 onClick={goNext}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSavingContinue}
                 className="text-xs gap-1.5 tracking-wider uppercase font-light"
               >
-                {t.sessions.saveAndContinue}
-                <ChevronRight className="h-3.5 w-3.5" />
+                {isSavingContinue ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    {t.sessions.saveAndContinue}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </Button>
             ) : (
               // On the last step (payment), no "Next" button needed — payment button handles it
