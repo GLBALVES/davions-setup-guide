@@ -533,10 +533,11 @@ function KanbanCard({
         {/* Deadline progress bar */}
         {(() => {
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
-          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const shootISO = shootDateTime ? shootDateTime.toISOString() : null;
+          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && shootISO ? shootISO : null);
           // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
-            ? (project.shoot_date ?? project.created_at)
+            ? (shootISO ?? project.created_at)
             : project.created_at;
           if (!status || !deadline) {
             // Show a subtle warning when this stage expects a deadline but none is set
@@ -556,12 +557,15 @@ function KanbanCard({
           }
           const progress = getDeadlineProgress(startAnchor, deadline);
           const barColor = DEADLINE_BAR[status] ?? "bg-border";
-          // Label text (days/hours left)
+          // Label text (days/hours/min left)
           const label = (() => {
             if (!deadline) return null;
             const d = parseISO(deadline);
             const now = new Date();
             if (isPast(d)) return null;
+            const diffMs = d.getTime() - now.getTime();
+            const mins = Math.round(diffMs / 60000);
+            if (mins < 60) return `${Math.max(0, mins)}m`;
             const h = differenceInHours(d, now);
             if (h < 24) return `${h}h`;
             return `${differenceInDays(d, now)}d`;
