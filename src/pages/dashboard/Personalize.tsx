@@ -838,13 +838,20 @@ const Personalize = () => {
 
                       {contractFields.length > 0 &&
                         <div className="flex flex-col gap-2">
-                          {contractFields.map((f) =>
+                          {contractFields.map((f) => {
+                            const src = f.value_source ?? "static";
+                            const sourceLabel =
+                              src === "mapped" ? `↪ ${CONTRACT_VARIABLES.find((v) => v.key === f.mapped_key)?.label ?? f.mapped_key ?? "—"}` :
+                              src === "client_input" ? `👤 ${t.personalize.cfSourceClient}` :
+                              t.personalize.cfSourceStatic;
+                            return (
                             <div key={f.id} className="border border-border p-4 flex items-start justify-between gap-4">
                               <div className="flex flex-col gap-1 min-w-0 flex-1">
                                 <p className="text-xs tracking-wider uppercase font-light truncate">{f.field_label}</p>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono">{`{{${f.field_key}}}`}</code>
-                                  {f.default_value &&
+                                  <span className="text-[10px] text-muted-foreground">{sourceLabel}</span>
+                                  {src === "static" && f.default_value &&
                                     <span className="text-[10px] text-muted-foreground truncate">
                                       = {f.default_value}
                                     </span>
@@ -863,7 +870,8 @@ const Personalize = () => {
                                 }
                               </Button>
                             </div>
-                          )}
+                            );
+                          })}
                         </div>
                       }
 
