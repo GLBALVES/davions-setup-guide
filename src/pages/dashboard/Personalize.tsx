@@ -1091,28 +1091,7 @@ const Personalize = () => {
 
                         {/* Questions */}
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
-                            <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
-                            onClick={() => {
-                              const newQ: BriefingQuestion = {
-                                id: crypto.randomUUID(),
-                                type: "short_text",
-                                label: "",
-                                required: false,
-                                options: []
-                              };
-                              setBriefingQuestions((prev) => [...prev, newQ]);
-                            }}>
-                            
-                              <Plus className="h-3 w-3" />
-                              {t.personalize.addQuestion}
-                            </Button>
-                          </div>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
 
                           {briefingQuestions.length === 0 &&
                         <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
