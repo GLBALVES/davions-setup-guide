@@ -201,17 +201,26 @@ const BookingSuccess = () => {
   };
 
   // ── Helpers for answers ────────────────────────────────────────────────────
+  const clearMissing = (qId: string) => {
+    setMissingIds((prev) => {
+      if (!prev.has(qId)) return prev;
+      const next = new Set(prev);
+      next.delete(qId);
+      return next;
+    });
+  };
+
   const setTextAnswer = (qId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: value }));
+    if (value && (typeof value !== "string" || value.trim())) clearMissing(qId);
   };
 
   const setCheckboxAnswer = (qId: string, option: string, checked: boolean) => {
     setAnswers((prev) => {
       const current = (prev[qId] as string[]) ?? [];
-      return {
-        ...prev,
-        [qId]: checked ? [...current, option] : current.filter((o) => o !== option),
-      };
+      const nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      if (nextArr.length > 0) clearMissing(qId);
+      return { ...prev, [qId]: nextArr };
     });
   };
 
