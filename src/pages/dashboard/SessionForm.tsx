@@ -2058,16 +2058,6 @@ const SessionForm = () => {
                       </p>
                     </div>
 
-                    {/* Show "X vagas" badge */}
-                    <div className="border border-border p-5 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs tracking-wider uppercase font-light">Show available spots</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          Displays the "X vagas" badge under each time slot on the booking page when more than one spot is configured.
-                        </p>
-                      </div>
-                      <Switch checked={showSpotsLeft} onCheckedChange={setShowSpotsLeft} />
-                    </div>
 
 
                     {/* ── Require Payment Toggle ── */}
