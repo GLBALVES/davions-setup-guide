@@ -165,6 +165,35 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
         setHeadcount(d.headcount ?? "");
         setInternalNotes(d.internal_notes ?? "");
         setClientNotes(d.client_notes ?? "");
+
+        // Payment fields (from sessions table)
+        setRequirePayment(Boolean(session.price && session.price > 0));
+        setTaxRate(session.tax_rate ? Number(session.tax_rate) : "");
+        setTaxEnabled(Number(session.tax_rate ?? 0) > 0);
+        setPDepositEnabled(Boolean(session.deposit_enabled));
+        setPDepositType(session.deposit_type === "percent" ? "percent" : "fixed");
+        setPDepositAmount(
+          session.deposit_amount
+            ? (session.deposit_type === "percent" ? Number(session.deposit_amount) : Number(session.deposit_amount) / 100)
+            : ""
+        );
+        setAllowTip(Boolean(session.allow_tip));
+        setPaymentOpen(Boolean(session.deposit_enabled || session.allow_tip || Number(session.tax_rate ?? 0) > 0));
+
+        // Tiers
+        const tiers = (tiersData ?? []) as any[];
+        setPhotoTiers(tiers.map((t) => ({
+          id: t.id, min_photos: t.min_photos, max_photos: t.max_photos,
+          price_per_photo: Number(t.price_per_photo) / 100,
+        })));
+        setPhotosOpen(tiers.length > 0);
+
+        // Extras
+        const exs = (extrasData ?? []) as any[];
+        setExtras(exs.map((e) => ({
+          id: e.id, description: e.description, quantity: e.quantity, price: Number(e.price) / 100,
+        })));
+        setExtrasOpen(exs.length > 0);
       } catch (err: any) {
         toast({ title: err?.message ?? "Failed to load", variant: "destructive" });
       } finally {
