@@ -113,7 +113,9 @@ Deno.serve(async (req) => {
     if (settingsData?.value) {
       const days = parseInt(settingsData.value, 10);
       if (!isNaN(days) && days > 0) {
-        expires_at = new Date(Date.now() + days * 86400000).toISOString();
+        const d = new Date(Date.now() + days * 86400000);
+        d.setHours(23, 59, 59, 999);
+        expires_at = d.toISOString();
       }
     }
 
