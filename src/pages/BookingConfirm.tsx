@@ -1065,11 +1065,16 @@ const BookingConfirm = () => {
 
                     {q.type === "checkboxes" && (
                       <div className="flex flex-col gap-1.5">
+                        {q.max_select && q.max_select > 0 && (
+                          <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Select up to {q.max_select}</p>
+                        )}
                         {q.options.map((opt) => {
                           const current = (answers[q.id] as string[]) ?? [];
+                          const isChecked = current.includes(opt);
+                          const atMax = !!q.max_select && q.max_select > 0 && current.length >= q.max_select && !isChecked;
                           return (
-                            <label key={opt} className="flex items-center gap-2.5 cursor-pointer">
-                              <input type="checkbox" checked={current.includes(opt)} onChange={(e) => setCheckboxAnswer(q.id, opt, e.target.checked)} className="h-3.5 w-3.5 accent-foreground" />
+                            <label key={opt} className={`flex items-center gap-2.5 ${atMax ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+                              <input type="checkbox" checked={isChecked} disabled={atMax} onChange={(e) => setCheckboxAnswer(q.id, opt, e.target.checked, q.max_select)} className="h-3.5 w-3.5 accent-foreground" />
                               <span className="text-sm font-light">{opt}</span>
                             </label>
                           );
