@@ -1288,8 +1288,13 @@ const Personalize = () => {
                             const nextIdx = briefingQuestions.length;
                             setBriefingQuestions((prev) => [...prev, newQ]);
                             setTimeout(() => {
-                              briefingScrollContainerRef.current?.scrollTo({ top: briefingScrollContainerRef.current?.scrollHeight ?? 0, behavior: 'smooth' });
-                            }, 150);
+                              requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                  const container = briefingScrollContainerRef.current;
+                                  if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                                });
+                              });
+                            }, 0);
                           }}>
                           <Plus className="h-3 w-3" />
                           {t.personalize.addQuestion}
