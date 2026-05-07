@@ -117,11 +117,13 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
     (async () => {
       setLoading(true);
       try {
-        const [{ data: session }, { data: bonuses }, { data: bs }, { data: cs }] = await Promise.all([
+        const [{ data: session }, { data: bonuses }, { data: bs }, { data: cs }, { data: tiersData }, { data: extrasData }] = await Promise.all([
           (supabase as any).from("sessions").select("*").eq("id", sessionId).single(),
           (supabase as any).from("session_bonuses").select("text, position").eq("session_id", sessionId).order("position", { ascending: true }),
           (supabase as any).from("briefings").select("id, name").eq("photographer_id", user.id).order("created_at", { ascending: false }),
           (supabase as any).from("contracts").select("id, name, body").eq("photographer_id", user.id).order("created_at", { ascending: false }),
+          (supabase as any).from("session_photo_tiers").select("id, min_photos, max_photos, price_per_photo").eq("session_id", sessionId).order("min_photos", { ascending: true }),
+          (supabase as any).from("session_extras").select("id, description, quantity, price").eq("session_id", sessionId).order("created_at", { ascending: true }),
         ]);
         if (cancelled || !session) return;
 
