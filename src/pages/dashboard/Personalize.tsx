@@ -237,10 +237,25 @@ const Personalize = () => {
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
 
   // ── Contract custom fields ──────────────────────────────────────────────────
-  interface ContractField {id: string;field_key: string;field_label: string;default_value: string;}
+  interface ContractField {
+    id: string;
+    field_key: string;
+    field_label: string;
+    default_value: string;
+    value_source?: "static" | "mapped" | "client_input";
+    mapped_key?: string | null;
+    client_prompt?: string | null;
+    client_input_type?: string | null;
+    required?: boolean | null;
+  }
   const [contractFields, setContractFields] = useState<ContractField[]>([]);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldDefault, setNewFieldDefault] = useState("");
+  const [newFieldSource, setNewFieldSource] = useState<"static" | "mapped" | "client_input">("static");
+  const [newFieldMappedKey, setNewFieldMappedKey] = useState<string>("");
+  const [newFieldClientPrompt, setNewFieldClientPrompt] = useState("");
+  const [newFieldInputType, setNewFieldInputType] = useState<"text" | "textarea" | "date" | "number">("text");
+  const [newFieldRequired, setNewFieldRequired] = useState(false);
   const [addingField, setAddingField] = useState(false);
   const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
 
