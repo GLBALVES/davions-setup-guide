@@ -662,6 +662,10 @@ function KanbanColumn({
   onSetShotDeadlineDays,
   postProdDeadlineDays,
   onSetPostProdDeadlineDays,
+  proofDeadlineDays,
+  onSetProofDeadlineDays,
+  finalDeadlineDays,
+  onSetFinalDeadlineDays,
   onSetDeadline,
   onSetGalleryExpiry,
 }: {
@@ -677,6 +681,10 @@ function KanbanColumn({
   onSetShotDeadlineDays?: (days: number | null) => void;
   postProdDeadlineDays?: number | null;
   onSetPostProdDeadlineDays?: (days: number | null) => void;
+  proofDeadlineDays?: number | null;
+  onSetProofDeadlineDays?: (days: number | null) => void;
+  finalDeadlineDays?: number | null;
+  onSetFinalDeadlineDays?: (days: number | null) => void;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
@@ -686,6 +694,10 @@ function KanbanColumn({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [ppInputVal, setPpInputVal] = useState(postProdDeadlineDays != null ? String(postProdDeadlineDays) : "");
   const [ppPopoverOpen, setPpPopoverOpen] = useState(false);
+  const [proofInputVal, setProofInputVal] = useState(proofDeadlineDays != null ? String(proofDeadlineDays) : "");
+  const [proofPopoverOpen, setProofPopoverOpen] = useState(false);
+  const [finalInputVal, setFinalInputVal] = useState(finalDeadlineDays != null ? String(finalDeadlineDays) : "");
+  const [finalPopoverOpen, setFinalPopoverOpen] = useState(false);
 
   const handleDaysCommit = (val: string) => {
     const n = parseInt(val, 10);
@@ -697,6 +709,18 @@ function KanbanColumn({
     const n = parseInt(val, 10);
     if (!isNaN(n) && n > 0) onSetPostProdDeadlineDays?.(n);
     else { onSetPostProdDeadlineDays?.(null); setPpInputVal(""); }
+  };
+
+  const handleProofDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetProofDeadlineDays?.(n);
+    else { onSetProofDeadlineDays?.(null); setProofInputVal(""); }
+  };
+
+  const handleFinalDaysCommit = (val: string) => {
+    const n = parseInt(val, 10);
+    if (!isNaN(n) && n > 0) onSetFinalDeadlineDays?.(n);
+    else { onSetFinalDeadlineDays?.(null); setFinalInputVal(""); }
   };
 
   // Example date: today + shotDeadlineDays
