@@ -1065,6 +1065,18 @@ function ProjectModal({
     onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
   };
 
+  const isCreate = !initial;
+  const handleCreateSimple = () => {
+    const name = clientName.trim();
+    if (!name) { toast.error(p_t.clientName); return; }
+    onSave({
+      title: name,
+      client_name: name,
+      client_email: clientEmail.trim() || null,
+      stage: defaultStage ?? "upcoming",
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
@@ -1074,65 +1086,78 @@ function ProjectModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 py-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.title_field} *</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wedding João & Ana" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+        {isCreate ? (
+          <div className="flex flex-col gap-3 py-2">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.clientName}</label>
-              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Lima" />
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.clientName} *</label>
+              <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Lima" autoFocus />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
               <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+        ) : (
+          <div className="flex flex-col gap-3 py-2">
             <div className="flex flex-col gap-1">
-              <SessionTypeManager
-                photographerId={photographerId}
-                sessionTypes={sessionTypes}
-                selectedTypeId={sessionTypeId}
-                onSelect={setSessionTypeId}
-                onRefetch={onRefetchSessionTypes}
-                mode="select"
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.title_field} *</label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wedding João & Ana" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.clientName}</label>
+                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ana Lima" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
+                <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <SessionTypeManager
+                  photographerId={photographerId}
+                  sessionTypes={sessionTypes}
+                  selectedTypeId={sessionTypeId}
+                  onSelect={setSessionTypeId}
+                  onRefetch={onRefetchSessionTypes}
+                  mode="select"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
+                <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.stage}</label>
+              <Select value={stage} onValueChange={(v) => setStage(v as Stage)}>
+                <SelectTrigger className="h-10 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAGES.map((s) => (
+                    <SelectItem key={s.key} value={s.key}>{stageLabels[s.key] ?? s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.notes}</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder={p_t.additionalNotes}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
-              <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
-            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.stage}</label>
-            <Select value={stage} onValueChange={(v) => setStage(v as Stage)}>
-              <SelectTrigger className="h-10 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STAGES.map((s) => (
-                  <SelectItem key={s.key} value={s.key}>{stageLabels[s.key] ?? s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.notes}</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              placeholder={p_t.additionalNotes}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-            />
-          </div>
-        </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>{p_t.cancel}</Button>
-          <Button size="sm" onClick={handleSave}>{initial ? p_t.save : p_t.create}</Button>
+          <Button size="sm" onClick={isCreate ? handleCreateSimple : handleSave}>{initial ? p_t.save : p_t.create}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
