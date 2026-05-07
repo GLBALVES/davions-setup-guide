@@ -1153,6 +1153,10 @@ function OneSessionCard({
         onOpenChange={setEditOpen}
         sessionId={session.id}
         onSaved={onEdited}
+        onConverted={(id) => {
+          onDelete(id);
+          onEdited?.();
+        }}
       />
 
       {/* Convert confirmation */}
