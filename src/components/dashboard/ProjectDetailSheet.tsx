@@ -2339,7 +2339,7 @@ export function ProjectDetailSheet({
         open={sessionPickerOpen}
         onOpenChange={setSessionPickerOpen}
         sessions={photographerSessions as PickerSession[]}
-        currentSessionId={bookingData?.session_id ?? null}
+        currentSessionId={bookingData?.session_id ?? photographerSessions.find((s) => s.title === (project.session_title ?? project.session_type))?.id ?? null}
         onSelect={handleSessionChange}
       />
     </Dialog>
