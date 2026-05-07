@@ -2084,17 +2084,17 @@ const SessionForm = () => {
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
                             <Input
                               id="pay-price"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={price}
+                              type="text"
+                              inputMode="decimal"
+                              value={formatCurrencyInput(price, lang as CurrencyLang)}
                               onChange={(e) => {
-                                setPrice(e.target.value);
-                                if (parseFloat(e.target.value || "0") > 0 && !requirePayment) {
+                                const parsed = parseCurrencyInput(e.target.value, lang as CurrencyLang);
+                                setPrice(parsed);
+                                if (parseFloat(parsed || "0") > 0 && !requirePayment) {
                                   setRequirePayment(true);
                                 }
                               }}
-                              placeholder="0.00"
+                              placeholder={currencyPlaceholder(lang as CurrencyLang)}
                               className="pl-7"
                             />
                           </div>
