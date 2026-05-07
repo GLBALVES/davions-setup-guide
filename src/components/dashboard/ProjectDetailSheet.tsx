@@ -394,7 +394,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">
                     {tp.depositAmount}
-                    {depositType === "percentage" && ` (${depositAmount}%)`}
+                    {isPercentDeposit && ` (${depositAmount}%)`}
                   </span>
                   <span className={cn("tabular-nums font-medium", depositPaid > 0 ? "text-emerald-600" : "text-muted-foreground")}>
                     {depositPaid > 0 ? `−${fmt(depositPaid / 100)}` : fmt(depositValue / 100)}
