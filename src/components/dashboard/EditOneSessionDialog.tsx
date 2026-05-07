@@ -10,6 +10,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,28 +33,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, Plus, X, Loader2 } from "lucide-react";
+import { ChevronDown, Plus, X, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   sessionId: string | null;
   onSaved?: () => void;
+  onConverted?: (id: string) => void;
 }
 
 interface Briefing { id: string; name: string }
 interface Contract { id: string; name: string; body: string }
 
-export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved }: Props) {
+export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, onConverted }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const cb = t.createBooking;
   const sLabels = t.sessions;
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   // Core fields
   const [title, setTitle] = useState("");
@@ -401,16 +416,66 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved }:
           </ScrollArea>
         )}
 
-        <DialogFooter className="px-5 py-3 border-t border-border/50">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
-            {cb.back}
+        <DialogFooter className="px-5 py-3 border-t border-border/50 flex-row sm:justify-between gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConvertOpen(true)}
+            disabled={loading || !sessionId}
+            className="text-[10px] tracking-wider uppercase font-light gap-1.5"
+          >
+            <ArrowRight className="h-3 w-3" />
+            {sLabels.convertToSession}
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving || loading || !title.trim()} className="text-xs gap-1.5">
-            {saving && <Loader2 className="h-3 w-3 animate-spin" />}
-            {sLabels.saveChanges}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
+              {cb.back}
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving || loading || !title.trim()} className="text-xs gap-1.5">
+              {saving && <Loader2 className="h-3 w-3 animate-spin" />}
+              {sLabels.saveChanges}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={convertOpen} onOpenChange={setConvertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{sLabels.convertToSession}</AlertDialogTitle>
+            <AlertDialogDescription>{sLabels.convertConfirm}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={converting}>{cb.back}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={converting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!sessionId || !user) return;
+                setConverting(true);
+                try {
+                  const { error } = await (supabase as any)
+                    .from("sessions")
+                    .update({ session_model: "standard", hide_from_store: false })
+                    .eq("id", sessionId)
+                    .eq("photographer_id", user.id);
+                  if (error) throw error;
+                  setConvertOpen(false);
+                  onOpenChange(false);
+                  onConverted?.(sessionId);
+                  navigate(`/dashboard/sessions/${sessionId}`);
+                } catch (err: any) {
+                  toast({ title: err?.message ?? "Failed", variant: "destructive" });
+                } finally {
+                  setConverting(false);
+                }
+              }}
+            >
+              {converting ? "…" : sLabels.convertToSession}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
