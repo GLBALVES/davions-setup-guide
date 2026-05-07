@@ -215,6 +215,10 @@ export function CreateBookingDialog({
       setOsDeliveryDays(""); setOsExtraPhotoPrice("");
       setOsFullAddress(""); setOsHeadcount("");
       setOsInternalNotes(""); setOsClientNotes("");
+      setOsPaymentOpen(false); setOsTaxEnabled(false); setOsTaxRate("");
+      setOsPDepositEnabled(false); setOsPDepositAmount(""); setOsPDepositType("fixed"); setOsAllowTip(false);
+      setOsPhotosOpen(false); setOsPhotoTiers([]);
+      setOsExtrasOpen(false); setOsExtras([]);
       setClientSuggestions([]); setShowSuggestions(false);
       if (defaultDate) setDate(defaultDate);
       else setDate(undefined);
