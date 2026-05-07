@@ -228,9 +228,17 @@ const DEFAULT_CONTENT: Record<string, { name: string; subject: string; html: str
 <p>Qualquer dúvida, é só responder este email.</p>
 <p>{{photographer_name}}<br/>{{studio_name}}</p>`,
   },
+  briefing_pending_reminder: {
+    name: "Briefing pendente · lembrete diário",
+    subject: "Falta seu briefing para a sessão {{session_type}} 📝",
+    html: `<p>Olá {{client_name}},</p>
+<p>Notei que o briefing da sua sessão <strong>{{session_type}}</strong> ({{shoot_date}}) ainda não foi preenchido.</p>
+<p>Ele é rapidinho e me ajuda muito a preparar tudo do jeito que você imagina. Pode preencher pelo link abaixo:</p>
+<p><a href="{{briefing_link}}" style="display:inline-block;padding:12px 24px;background:#000;color:#fff;text-decoration:none;border-radius:4px;">Preencher briefing</a></p>
+<p>Qualquer dúvida, é só responder este email.</p>
+<p>{{photographer_name}}<br/>{{studio_name}}</p>`,
+  },
 };
-
-function emptyTpl(trigger: string): TemplateRow {
   const def = DEFAULT_CONTENT[trigger];
   return {
     stage_trigger: trigger,
