@@ -361,10 +361,12 @@ const BookingConfirm = () => {
   const setTextAnswer = (qId: string, value: string) =>
     setAnswers((prev) => ({ ...prev, [qId]: value }));
 
-  const setCheckboxAnswer = (qId: string, option: string, checked: boolean) =>
+  const setCheckboxAnswer = (qId: string, option: string, checked: boolean, max?: number | null) =>
     setAnswers((prev) => {
       const current = (prev[qId] as string[]) ?? [];
-      return { ...prev, [qId]: checked ? [...current, option] : current.filter((o) => o !== option) };
+      const nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      if (checked && max && max > 0 && nextArr.length > max) return prev;
+      return { ...prev, [qId]: nextArr };
     });
 
   const handleSubmitBriefing = async (): Promise<boolean> => {
