@@ -495,32 +495,44 @@ const BookingSuccess = () => {
                     )}
 
                     {q.type === "multi_image" && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {q.options.filter(Boolean).map((opt, i) => {
-                          const [optUrl, ...captionParts] = opt.split("||");
-                          const caption = captionParts.join("||");
-                          const selected = (answers[q.id] as string) === optUrl;
-                          return (
-                            <button
-                              type="button"
-                              key={`${opt}-${i}`}
-                              onClick={() => setTextAnswer(q.id, optUrl)}
-                              className={`relative flex flex-col overflow-hidden border transition-all ${selected ? "border-foreground ring-2 ring-foreground" : "border-input hover:border-foreground/40"}`}
-                            >
-                              <div className="relative aspect-square overflow-hidden">
-                                <img src={optUrl} alt={caption || `Option ${i + 1}`} className="w-full h-full object-cover" />
-                                {selected && (
-                                  <span className="absolute top-1 right-1 bg-foreground text-background text-[9px] uppercase tracking-wider px-1.5 py-0.5">Selected</span>
+                      <div className="flex flex-col gap-2">
+                        {q.max_select && q.max_select > 0 && (
+                          <p className="text-[10px] tracking-wider uppercase text-muted-foreground">
+                            Select up to {q.max_select}
+                          </p>
+                        )}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {q.options.filter(Boolean).map((opt, i) => {
+                            const [optUrl, ...captionParts] = opt.split("||");
+                            const caption = captionParts.join("||");
+                            const current = Array.isArray(answers[q.id])
+                              ? (answers[q.id] as string[])
+                              : (answers[q.id] ? [answers[q.id] as string] : []);
+                            const selected = current.includes(optUrl);
+                            const atMax = !!q.max_select && q.max_select > 0 && current.length >= q.max_select && !selected;
+                            return (
+                              <button
+                                type="button"
+                                key={`${opt}-${i}`}
+                                disabled={atMax}
+                                onClick={() => setCheckboxAnswer(q.id, optUrl, !selected, q.max_select)}
+                                className={`relative flex flex-col overflow-hidden border transition-all ${selected ? "border-foreground ring-2 ring-foreground" : "border-input hover:border-foreground/40"} ${atMax ? "opacity-50 cursor-not-allowed" : ""}`}
+                              >
+                                <div className="relative aspect-square overflow-hidden">
+                                  <img src={optUrl} alt={caption || `Option ${i + 1}`} className="w-full h-full object-cover" />
+                                  {selected && (
+                                    <span className="absolute top-1 right-1 bg-foreground text-background text-[9px] uppercase tracking-wider px-1.5 py-0.5">Selected</span>
+                                  )}
+                                </div>
+                                {caption && (
+                                  <span className="px-2 py-1.5 text-[11px] font-light text-foreground text-center truncate">
+                                    {caption}
+                                  </span>
                                 )}
-                              </div>
-                              {caption && (
-                                <span className="px-2 py-1.5 text-[11px] font-light text-foreground text-center truncate">
-                                  {caption}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
