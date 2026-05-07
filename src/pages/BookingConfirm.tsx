@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +144,7 @@ interface StepDef {
 
 const BookingConfirm = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<BookingData | null>(null);
@@ -1105,7 +1107,7 @@ const BookingConfirm = () => {
               className="text-xs gap-1.5 tracking-wider uppercase font-light"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Back
+              {t.common.back}
             </Button>
 
             {!isLastStep ? (
@@ -1115,7 +1117,7 @@ const BookingConfirm = () => {
                 disabled={!canProceed()}
                 className="text-xs gap-1.5 tracking-wider uppercase font-light"
               >
-                Next
+                {t.sessions.saveAndContinue}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (

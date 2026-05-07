@@ -145,6 +145,7 @@ export const translations = {
       editOneSession: "Edit One Session",
       saveChanges: "Save changes",
       saved: "Changes saved",
+      saveAndContinue: "Save & Continue",
     },
     // ── Galleries page ──
     galleries: {
@@ -2279,6 +2280,7 @@ export const translations = {
       editOneSession: "Editar Sessão Avulsa",
       saveChanges: "Salvar alterações",
       saved: "Alterações salvas",
+      saveAndContinue: "Salvar & Continuar",
     },
     galleries: {
       title: "Galerias",
@@ -4363,6 +4365,7 @@ export const translations = {
       editOneSession: "Editar Sesión Única",
       saveChanges: "Guardar cambios",
       saved: "Cambios guardados",
+      saveAndContinue: "Guardar & Continuar",
     },
     galleries: {
       title: "Galerías",
