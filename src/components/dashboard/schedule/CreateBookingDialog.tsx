@@ -31,9 +31,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, ChevronDown, Clock, DollarSign, Loader2, MapPin, Plus, Search, X, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, ChevronDown, Clock, CreditCard, DollarSign, Loader2, MapPin, Package, Plus, Search, Trash2, X, Zap } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 /* ── types ─────────────────────────────────────────── */
