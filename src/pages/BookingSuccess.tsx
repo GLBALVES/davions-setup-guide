@@ -502,7 +502,8 @@ const BookingSuccess = () => {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 <Button
                   onClick={handleSubmitBriefing}
