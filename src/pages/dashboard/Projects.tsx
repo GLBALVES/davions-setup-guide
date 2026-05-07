@@ -1212,6 +1212,7 @@ const Projects = () => {
 
   const [view, setView] = useState<"kanban" | "list">(initialView);
   const [showArchived, setShowArchived] = useState(initialArchived);
+  const [showPausedOnly, setShowPausedOnly] = useState(false);
   const [activeStageFilter, setActiveStageFilter] = useState<Stage | "all">(initialStage);
 
   // Keep the URL in sync whenever filter state changes
