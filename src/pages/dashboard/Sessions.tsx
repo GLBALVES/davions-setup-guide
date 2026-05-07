@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List, GripVertical, Trash2, Zap, ArrowRight } from "lucide-react";
+import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ, DollarSign, Globe, GlobeLock, Copy, Link2, Mail, MessageCircle, LayoutGrid, List, GripVertical, Trash2, Zap, ArrowRight, Pencil } from "lucide-react";
+import { EditOneSessionDialog } from "@/components/dashboard/EditOneSessionDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
@@ -312,6 +313,7 @@ const Sessions = () => {
                           }
                         }}
                         onDelete={(id) => setSessions((prev) => prev.filter((ss) => ss.id !== id))}
+                        onEdited={fetchSessions}
                       />
                     ))}
                   </div>
@@ -1028,10 +1030,12 @@ function OneSessionCard({
   session,
   onConvert,
   onDelete,
+  onEdited,
 }: {
   session: Session;
   onConvert: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdited?: () => void;
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
@@ -1040,6 +1044,7 @@ function OneSessionCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -1112,11 +1117,22 @@ function OneSessionCard({
               size="sm"
               variant="outline"
               className="text-[10px] tracking-wider uppercase font-light gap-1.5 flex-1"
-              onClick={() => setConvertDialogOpen(true)}
+              onClick={() => setEditOpen(true)}
             >
-              <ArrowRight className="h-3 w-3" />
-              {s.convertToSession}
+              <Pencil className="h-3 w-3" />
+              {t.common?.edit ?? "Edit"}
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setConvertDialogOpen(true)}
+                  className="p-1.5 transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{s.convertToSession}</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -1131,6 +1147,13 @@ function OneSessionCard({
           </div>
         </div>
       </div>
+
+      <EditOneSessionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        sessionId={session.id}
+        onSaved={onEdited}
+      />
 
       {/* Convert confirmation */}
       <AlertDialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>

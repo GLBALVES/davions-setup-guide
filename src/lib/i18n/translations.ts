@@ -142,6 +142,9 @@ export const translations = {
       converted: "Converted to standard session",
       noOneSessions: "No one-off sessions",
       oneSessionsHint: "Sessions created via manual booking appear here",
+      editOneSession: "Edit One Session",
+      saveChanges: "Save changes",
+      saved: "Changes saved",
     },
     // ── Galleries page ──
     galleries: {
@@ -2271,6 +2274,9 @@ export const translations = {
       converted: "Convertida em sessão padrão",
       noOneSessions: "Nenhuma sessão avulsa",
       oneSessionsHint: "Sessões criadas via agendamento manual aparecem aqui",
+      editOneSession: "Editar Sessão Avulsa",
+      saveChanges: "Salvar alterações",
+      saved: "Alterações salvas",
     },
     galleries: {
       title: "Galerias",
@@ -4350,6 +4356,9 @@ export const translations = {
       converted: "Convertida en sesión estándar",
       noOneSessions: "Sin sesiones únicas",
       oneSessionsHint: "Las sesiones creadas vía reserva manual aparecen aquí",
+      editOneSession: "Editar Sesión Única",
+      saveChanges: "Guardar cambios",
+      saved: "Cambios guardados",
     },
     galleries: {
       title: "Galerías",
