@@ -1934,15 +1934,24 @@ const Projects = () => {
       toast.success(p_t.projectUpdated);
     } else {
       const stageProjects = projects.filter((p) => p.stage === data.stage);
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .from("client_projects" as any)
         .insert({
           ...data,
           photographer_id: user?.id,
           position: stageProjects.length,
-        } as any);
+        } as any)
+        .select()
+        .single();
       if (error) { toast.error(p_t.failedToCreate); return; }
       toast.success(p_t.projectCreated);
+      setModalOpen(false);
+      await fetchProjects();
+      if (created) {
+        setSheetProject(created as unknown as ClientProject);
+        setSheetOpen(true);
+      }
+      return;
     }
     setModalOpen(false);
     fetchProjects();
