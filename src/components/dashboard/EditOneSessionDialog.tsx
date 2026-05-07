@@ -48,15 +48,18 @@ interface Props {
 interface Briefing { id: string; name: string }
 interface Contract { id: string; name: string; body: string }
 
-export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved }: Props) {
+export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, onConverted }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const cb = t.createBooking;
   const sLabels = t.sessions;
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   // Core fields
   const [title, setTitle] = useState("");
