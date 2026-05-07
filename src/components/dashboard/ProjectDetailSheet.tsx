@@ -1624,7 +1624,7 @@ export function ProjectDetailSheet({
 
     if (!project.booking_id) {
       // Project without booking — just update session reference on client_projects
-      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+      await save({ session_type: newSess.title } as any);
       toast.success(tp.projectUpdated || "Session updated");
       return;
     }
