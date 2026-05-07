@@ -427,6 +427,13 @@ export function CreateBookingDialog({
             internal_notes: osInternalNotes.trim() || null,
             client_notes: osClientNotes.trim() || null,
           },
+          tax_rate: osTaxEnabled && osTaxRate !== "" ? Number(osTaxRate) : 0,
+          deposit_enabled: osPDepositEnabled,
+          deposit_type: osPDepositType,
+          deposit_amount: osPDepositEnabled && osPDepositAmount !== ""
+            ? (osPDepositType === "percent" ? Math.round(Number(osPDepositAmount)) : Math.round(Number(osPDepositAmount) * 100))
+            : 0,
+          allow_tip: osAllowTip,
         })
         .select("id")
         .single();
@@ -441,6 +448,34 @@ export function CreateBookingDialog({
           position: i,
         }));
         await (supabase as any).from("session_bonuses").insert(bonuses);
+      }
+
+      // Photo tiers
+      const validTiers = osPhotoTiers.filter(t => t.min_photos > 0 && t.price_per_photo !== "");
+      if (validTiers.length > 0) {
+        await (supabase as any).from("session_photo_tiers").insert(
+          validTiers.map(t => ({
+            session_id: sessionData.id,
+            photographer_id: user.id,
+            min_photos: Number(t.min_photos),
+            max_photos: t.max_photos,
+            price_per_photo: Math.round(Number(t.price_per_photo) * 100),
+          }))
+        );
+      }
+
+      // Extras
+      const validExtras = osExtras.filter(e => e.description.trim() && e.price !== "");
+      if (validExtras.length > 0) {
+        await (supabase as any).from("session_extras").insert(
+          validExtras.map(e => ({
+            session_id: sessionData.id,
+            photographer_id: user.id,
+            description: e.description.trim(),
+            quantity: Number(e.quantity) || 99,
+            price: Math.round(Number(e.price) * 100),
+          }))
+        );
       }
 
       // Add to local sessions list so step 2 can reference it
