@@ -212,6 +212,16 @@ const DEFAULT_CONTENT: Record<string, { name: string; subject: string; html: str
 <p>Dicas finais: durma bem, hidrate-se, e venha leve e tranquilo(a). O resto a gente faz junto!</p>
 <p>Até amanhã,<br/>{{photographer_name}}</p>`,
   },
+  balance_due_session_day: {
+    name: "Pagamento · saldo no dia da sessão",
+    subject: "Lembrete de pagamento — sessão {{session_type}}",
+    html: `<p>Olá {{client_name}},</p>
+<p>Este é um lembrete amigável: o saldo restante da sua sessão <strong>{{session_type}}</strong> ({{shoot_date}} às {{shoot_time}}) é de <strong>{{balance_amount}}</strong>.</p>
+<p>Para sua comodidade, você pode efetuar o pagamento de forma segura pelo link abaixo:</p>
+<p><a href="{{payment_link}}" style="display:inline-block;padding:12px 24px;background:#000;color:#fff;text-decoration:none;border-radius:4px;">Pagar saldo agora</a></p>
+<p>Qualquer dúvida, é só responder este email.</p>
+<p>{{photographer_name}}<br/>{{studio_name}}</p>`,
+  },
 };
 
 function emptyTpl(trigger: string): TemplateRow {
