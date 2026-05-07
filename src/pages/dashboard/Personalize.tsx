@@ -1252,9 +1252,30 @@ const Personalize = () => {
                             </div>
                         )}
                         </div>
+                      </div>
 
-                        {/* Footer actions */}
-                        <div className="flex justify-end gap-2 pt-1 border-t border-border">
+                      {/* Footer actions — sticky */}
+                      <div className="flex items-center justify-between gap-2 px-6 py-3 border-t border-border bg-background shrink-0">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-[10px] tracking-wider uppercase font-light h-8 px-3"
+                          onClick={() => {
+                            const newQ: BriefingQuestion = {
+                              id: crypto.randomUUID(),
+                              type: "short_text",
+                              label: "",
+                              required: false,
+                              options: []
+                            };
+                            setBriefingQuestions((prev) => [...prev, newQ]);
+                          }}>
+                          <Plus className="h-3 w-3" />
+                          {t.personalize.addQuestion}
+                        </Button>
+
+                        <div className="flex items-center gap-2">
                           <Button
                           type="button"
                           variant="outline"
