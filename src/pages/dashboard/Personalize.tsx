@@ -1159,7 +1159,7 @@ const Personalize = () => {
 
                               {/* Options (for multiple_choice / checkboxes) */}
                               {(q.type === "multiple_choice" || q.type === "checkboxes") &&
-                          <div className="flex flex-col gap-2 pl-1" ref={(el) => { optionsContainerRefs.current[idx] = el; }}>
+                          <div data-question-idx={idx} className="flex flex-col gap-2 pl-1" ref={(el) => { optionsContainerRefs.current[idx] = el; }}>
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.options}</p>
                                   {q.options.map((opt, optIdx) =>
                             <div key={optIdx} className="flex items-center gap-2">
