@@ -113,6 +113,7 @@ serve(async (req) => {
     // Extend expires_at
     const newExpiry = new Date();
     newExpiry.setDate(newExpiry.getDate() + extensionDays);
+    newExpiry.setHours(23, 59, 59, 999);
 
     const { error: updateError } = await supabase
       .from("galleries")
