@@ -94,6 +94,9 @@ const VARIABLES: { token: string; desc: string }[] = [
   { token: "{{feedback_link}}", desc: "Link de feedback" },
   { token: "{{studio_name}}", desc: "Nome do estúdio" },
   { token: "{{studio_email}}", desc: "Email do estúdio" },
+  { token: "{{shoot_time}}", desc: "Horário do ensaio" },
+  { token: "{{balance_amount}}", desc: "Valor do saldo restante" },
+  { token: "{{payment_link}}", desc: "Link de pagamento do saldo" },
 ];
 
 const SAMPLE_PREVIEW: Record<string, string> = {
