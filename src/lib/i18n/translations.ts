@@ -4356,6 +4356,9 @@ export const translations = {
       converted: "Convertida en sesión estándar",
       noOneSessions: "Sin sesiones únicas",
       oneSessionsHint: "Las sesiones creadas vía reserva manual aparecen aquí",
+      editOneSession: "Editar Sesión Única",
+      saveChanges: "Guardar cambios",
+      saved: "Cambios guardados",
     },
     galleries: {
       title: "Galerías",
