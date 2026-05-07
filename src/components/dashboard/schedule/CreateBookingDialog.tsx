@@ -31,9 +31,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatTime12 } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, ChevronDown, Clock, DollarSign, Loader2, MapPin, Plus, Search, X, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, ChevronDown, Clock, CreditCard, DollarSign, Loader2, MapPin, Package, Plus, Search, Trash2, X, Zap } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 /* ── types ─────────────────────────────────────────── */
@@ -161,6 +162,25 @@ export function CreateBookingDialog({
   const [osInternalNotes, setOsInternalNotes] = useState("");
   const [osClientNotes, setOsClientNotes] = useState("");
 
+  // Payment
+  const [osPaymentOpen, setOsPaymentOpen] = useState(false);
+  const [osTaxEnabled, setOsTaxEnabled] = useState(false);
+  const [osTaxRate, setOsTaxRate] = useState<number | "">("");
+  const [osPDepositEnabled, setOsPDepositEnabled] = useState(false);
+  const [osPDepositAmount, setOsPDepositAmount] = useState<number | "">("");
+  const [osPDepositType, setOsPDepositType] = useState<"fixed" | "percent">("fixed");
+  const [osAllowTip, setOsAllowTip] = useState(false);
+
+  // Photo tiers
+  interface OsPhotoTier { min_photos: number; max_photos: number | null; price_per_photo: number | "" }
+  const [osPhotosOpen, setOsPhotosOpen] = useState(false);
+  const [osPhotoTiers, setOsPhotoTiers] = useState<OsPhotoTier[]>([]);
+
+  // Extras (addons)
+  interface OsExtraItem { description: string; quantity: number | ""; price: number | "" }
+  const [osExtrasOpen, setOsExtrasOpen] = useState(false);
+  const [osExtras, setOsExtras] = useState<OsExtraItem[]>([]);
+
   // Contracts & Briefings for one session
   const [contracts, setContracts] = useState<{ id: string; name: string; body: string }[]>([]);
   const [briefings, setBriefings] = useState<{ id: string; name: string }[]>([]);
@@ -195,6 +215,10 @@ export function CreateBookingDialog({
       setOsDeliveryDays(""); setOsExtraPhotoPrice("");
       setOsFullAddress(""); setOsHeadcount("");
       setOsInternalNotes(""); setOsClientNotes("");
+      setOsPaymentOpen(false); setOsTaxEnabled(false); setOsTaxRate("");
+      setOsPDepositEnabled(false); setOsPDepositAmount(""); setOsPDepositType("fixed"); setOsAllowTip(false);
+      setOsPhotosOpen(false); setOsPhotoTiers([]);
+      setOsExtrasOpen(false); setOsExtras([]);
       setClientSuggestions([]); setShowSuggestions(false);
       if (defaultDate) setDate(defaultDate);
       else setDate(undefined);
@@ -407,6 +431,13 @@ export function CreateBookingDialog({
             internal_notes: osInternalNotes.trim() || null,
             client_notes: osClientNotes.trim() || null,
           },
+          tax_rate: osTaxEnabled && osTaxRate !== "" ? Number(osTaxRate) : 0,
+          deposit_enabled: osPDepositEnabled,
+          deposit_type: osPDepositType,
+          deposit_amount: osPDepositEnabled && osPDepositAmount !== ""
+            ? (osPDepositType === "percent" ? Math.round(Number(osPDepositAmount)) : Math.round(Number(osPDepositAmount) * 100))
+            : 0,
+          allow_tip: osAllowTip,
         })
         .select("id")
         .single();
@@ -421,6 +452,34 @@ export function CreateBookingDialog({
           position: i,
         }));
         await (supabase as any).from("session_bonuses").insert(bonuses);
+      }
+
+      // Photo tiers
+      const validTiers = osPhotoTiers.filter(t => t.min_photos > 0 && t.price_per_photo !== "");
+      if (validTiers.length > 0) {
+        await (supabase as any).from("session_photo_tiers").insert(
+          validTiers.map(t => ({
+            session_id: sessionData.id,
+            photographer_id: user.id,
+            min_photos: Number(t.min_photos),
+            max_photos: t.max_photos,
+            price_per_photo: Math.round(Number(t.price_per_photo) * 100),
+          }))
+        );
+      }
+
+      // Extras
+      const validExtras = osExtras.filter(e => e.description.trim() && e.price !== "");
+      if (validExtras.length > 0) {
+        await (supabase as any).from("session_extras").insert(
+          validExtras.map(e => ({
+            session_id: sessionData.id,
+            photographer_id: user.id,
+            description: e.description.trim(),
+            quantity: Number(e.quantity) || 99,
+            price: Math.round(Number(e.price) * 100),
+          }))
+        );
       }
 
       // Add to local sessions list so step 2 can reference it
@@ -828,6 +887,143 @@ export function CreateBookingDialog({
                         <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientNotes}</Label>
                         <Textarea value={osClientNotes} onChange={e => setOsClientNotes(e.target.value)} rows={2} className="text-xs resize-none" />
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment */}
+                <div className="flex flex-col gap-2 border-t border-border/50 pt-3">
+                  <button type="button" onClick={() => setOsPaymentOpen(o => !o)}
+                    className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-1.5"><CreditCard className="h-3 w-3" />{t.sessionForm?.stepPayment ?? "Payment"}</span>
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", osPaymentOpen && "rotate-180")} />
+                  </button>
+                  {osPaymentOpen && (
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="flex items-center justify-between gap-3 border border-border/50 px-3 py-2">
+                        <Label className="text-[10px] tracking-wider uppercase">{t.sessionForm?.taxRate ?? "Tax"}</Label>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={osTaxEnabled} onCheckedChange={setOsTaxEnabled} />
+                          {osTaxEnabled && (
+                            <div className="relative">
+                              <Input type="number" min={0} step={0.01} value={osTaxRate}
+                                onChange={e => setOsTaxRate(e.target.value === "" ? "" : Number(e.target.value))}
+                                className="text-xs h-7 w-20 pr-6" placeholder="0" />
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">%</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="border border-border/50 px-3 py-2 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] tracking-wider uppercase">Deposit</Label>
+                          <Switch checked={osPDepositEnabled} onCheckedChange={setOsPDepositEnabled} />
+                        </div>
+                        {osPDepositEnabled && (
+                          <div className="flex gap-1">
+                            <Input type="number" min={0} step={0.01} value={osPDepositAmount}
+                              onChange={e => setOsPDepositAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                              className="text-xs h-8 flex-1" placeholder="0" />
+                            <Select value={osPDepositType} onValueChange={(v) => setOsPDepositType(v as any)}>
+                              <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="percent">%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border border-border/50 px-3 py-2">
+                        <Label className="text-[10px] tracking-wider uppercase">{t.sessionForm?.allowTip ?? "Allow tip"}</Label>
+                        <Switch checked={osAllowTip} onCheckedChange={setOsAllowTip} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Photo Tiers */}
+                <div className="flex flex-col gap-2 border-t border-border/50 pt-3">
+                  <button type="button" onClick={() => setOsPhotosOpen(o => !o)}
+                    className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-1.5"><Camera className="h-3 w-3" />{t.sessionForm?.stepAddons ?? "Extra Photos"}</span>
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", osPhotosOpen && "rotate-180")} />
+                  </button>
+                  {osPhotosOpen && (
+                    <div className="flex flex-col gap-2 pt-1">
+                      {osPhotoTiers.map((tier, i) => (
+                        <div key={i} className="grid grid-cols-[1fr,1fr,1fr,auto] gap-2 items-end border border-border/50 p-2">
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Min</Label>
+                            <Input type="number" min={1} value={tier.min_photos}
+                              onChange={e => setOsPhotoTiers(p => p.map((tt, j) => j === i ? { ...tt, min_photos: Number(e.target.value) } : tt))}
+                              className="text-xs h-7" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Max</Label>
+                            <Input type="number" min={0} value={tier.max_photos ?? ""}
+                              onChange={e => setOsPhotoTiers(p => p.map((tt, j) => j === i ? { ...tt, max_photos: e.target.value === "" ? null : Number(e.target.value) } : tt))}
+                              className="text-xs h-7" placeholder="∞" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">$/photo</Label>
+                            <Input type="number" min={0} step={0.01} value={tier.price_per_photo}
+                              onChange={e => setOsPhotoTiers(p => p.map((tt, j) => j === i ? { ...tt, price_per_photo: e.target.value === "" ? "" : Number(e.target.value) } : tt))}
+                              className="text-xs h-7" />
+                          </div>
+                          <button type="button" onClick={() => setOsPhotoTiers(p => p.filter((_, j) => j !== i))}
+                            className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" className="text-[10px] h-7"
+                        onClick={() => setOsPhotoTiers(p => [...p, { min_photos: 1, max_photos: null, price_per_photo: "" }])}>
+                        <Plus className="h-3 w-3" /> Add tier
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Extras */}
+                <div className="flex flex-col gap-2 border-t border-border/50 pt-3">
+                  <button type="button" onClick={() => setOsExtrasOpen(o => !o)}
+                    className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors">
+                    <span className="flex items-center gap-1.5"><Package className="h-3 w-3" />{t.sessionForm?.extras ?? "Add-ons"}</span>
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", osExtrasOpen && "rotate-180")} />
+                  </button>
+                  {osExtrasOpen && (
+                    <div className="flex flex-col gap-2 pt-1">
+                      {osExtras.map((ex, i) => (
+                        <div key={i} className="grid grid-cols-[2fr,1fr,1fr,auto] gap-2 items-end border border-border/50 p-2">
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Description</Label>
+                            <Input value={ex.description}
+                              onChange={e => setOsExtras(p => p.map((xx, j) => j === i ? { ...xx, description: e.target.value } : xx))}
+                              className="text-xs h-7" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Qty</Label>
+                            <Input type="number" min={1} value={ex.quantity}
+                              onChange={e => setOsExtras(p => p.map((xx, j) => j === i ? { ...xx, quantity: e.target.value === "" ? "" : Number(e.target.value) } : xx))}
+                              className="text-xs h-7" placeholder="99" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-[9px] tracking-widest uppercase text-muted-foreground">Price</Label>
+                            <Input type="number" min={0} step={0.01} value={ex.price}
+                              onChange={e => setOsExtras(p => p.map((xx, j) => j === i ? { ...xx, price: e.target.value === "" ? "" : Number(e.target.value) } : xx))}
+                              className="text-xs h-7" />
+                          </div>
+                          <button type="button" onClick={() => setOsExtras(p => p.filter((_, j) => j !== i))}
+                            className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" className="text-[10px] h-7"
+                        onClick={() => setOsExtras(p => [...p, { description: "", quantity: 1, price: "" }])}>
+                        <Plus className="h-3 w-3" /> Add extra
+                      </Button>
                     </div>
                   )}
                 </div>
