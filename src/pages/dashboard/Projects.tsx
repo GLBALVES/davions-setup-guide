@@ -159,6 +159,8 @@ function KanbanCard({
   onTogglePause,
   shotDeadlineDays,
   postProdDeadlineDays,
+  proofDeadlineDays,
+  finalDeadlineDays,
   onSetDeadline,
   onSetGalleryExpiry,
 }: {
@@ -170,6 +172,8 @@ function KanbanCard({
   onTogglePause?: (id: string, paused: boolean) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
+  proofDeadlineDays?: number | null;
+  finalDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
   onSetGalleryExpiry?: (projectId: string, expiresAt: string | null) => void;
 }) {
