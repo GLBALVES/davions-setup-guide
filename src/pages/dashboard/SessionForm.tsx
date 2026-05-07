@@ -372,9 +372,9 @@ const SessionForm = () => {
       setTagline((s as unknown as { tagline?: string | null }).tagline ?? "");
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
-      // Default to true so the price field is always honored on save.
-      // Photographer can explicitly disable for free sessions.
-      setRequirePayment(true);
+      // Load payment_required from DB; default true for legacy sessions.
+      const sPay = s as unknown as { payment_required?: boolean };
+      setRequirePayment(sPay.payment_required ?? true);
       // Payment extras
       const sAny = s as unknown as { tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; allow_tip?: boolean };
       if (sAny.tax_rate != null && sAny.tax_rate > 0) {
