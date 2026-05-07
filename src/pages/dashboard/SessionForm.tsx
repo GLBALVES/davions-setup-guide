@@ -313,12 +313,20 @@ const SessionForm = () => {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
         .from("photographers")
-        .select("store_slug, stripe_account_id")
+        .select("store_slug, stripe_account_id, business_sales_tax")
         .eq("id", user.id)
         .single()
         .then(({ data }) => {
           setStripeConfigured(Boolean(data?.stripe_account_id));
           setStoreSlug((data as any)?.store_slug ?? null);
+          // Pre-fill default tax rate from business profile (only for new sessions)
+          if (!isEdit) {
+            const defaultTax = (data as any)?.business_sales_tax;
+            if (defaultTax != null && Number(defaultTax) > 0) {
+              setTaxEnabled(true);
+              setTaxRate(String(defaultTax));
+            }
+          }
         });
     }
   }, [fetchSessionTypes, fetchContractTemplates, fetchBriefingTemplates, user]);
