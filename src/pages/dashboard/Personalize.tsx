@@ -1081,7 +1081,7 @@ const Personalize = () => {
                           {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
+                      <div ref={briefingScrollContainerRef} className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
                         {/* Briefing name */}
                         <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
