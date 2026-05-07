@@ -1071,13 +1071,13 @@ const Personalize = () => {
                   <Dialog open={briefingDialogOpen} onOpenChange={(open) => {
                   setBriefingDialogOpen(open);
                 }}>
-                    <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-                      <DialogHeader>
+                    <DialogContent className="max-w-2xl w-full p-0 flex flex-col" style={{ maxHeight: "90vh" }}>
+                      <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border">
                         <DialogTitle className="text-sm tracking-widest uppercase font-light">
                           {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="flex flex-col gap-5 pt-2">
+                      <div className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
                         {/* Briefing name */}
                         <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
@@ -1091,28 +1091,7 @@ const Personalize = () => {
 
                         {/* Questions */}
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
-                            <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-[10px] tracking-wider uppercase font-light h-7 px-3"
-                            onClick={() => {
-                              const newQ: BriefingQuestion = {
-                                id: crypto.randomUUID(),
-                                type: "short_text",
-                                label: "",
-                                required: false,
-                                options: []
-                              };
-                              setBriefingQuestions((prev) => [...prev, newQ]);
-                            }}>
-                            
-                              <Plus className="h-3 w-3" />
-                              {t.personalize.addQuestion}
-                            </Button>
-                          </div>
+                          <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.questionsLabel}</Label>
 
                           {briefingQuestions.length === 0 &&
                         <p className="text-[11px] text-muted-foreground italic text-center py-4 border border-dashed border-border">
@@ -1273,9 +1252,30 @@ const Personalize = () => {
                             </div>
                         )}
                         </div>
+                      </div>
 
-                        {/* Footer actions */}
-                        <div className="flex justify-end gap-2 pt-1 border-t border-border">
+                      {/* Footer actions — sticky */}
+                      <div className="flex items-center justify-between gap-2 px-6 py-3 border-t border-border bg-background shrink-0">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-[10px] tracking-wider uppercase font-light h-8 px-3"
+                          onClick={() => {
+                            const newQ: BriefingQuestion = {
+                              id: crypto.randomUUID(),
+                              type: "short_text",
+                              label: "",
+                              required: false,
+                              options: []
+                            };
+                            setBriefingQuestions((prev) => [...prev, newQ]);
+                          }}>
+                          <Plus className="h-3 w-3" />
+                          {t.personalize.addQuestion}
+                        </Button>
+
+                        <div className="flex items-center gap-2">
                           <Button
                           type="button"
                           variant="outline"
