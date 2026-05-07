@@ -4365,6 +4365,7 @@ export const translations = {
       editOneSession: "Editar Sesión Única",
       saveChanges: "Guardar cambios",
       saved: "Cambios guardados",
+      saveAndContinue: "Guardar & Continuar",
     },
     galleries: {
       title: "Galerías",
