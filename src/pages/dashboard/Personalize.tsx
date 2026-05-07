@@ -306,20 +306,31 @@ const Personalize = () => {
       return;
     }
     setAddingField(true);
-    const { data, error } = await (supabase as any).
-    from("contract_custom_fields").
-    insert({
+    const insertPayload: any = {
       photographer_id: photographerId,
       field_key: fieldKey,
       field_label: newFieldLabel.trim(),
-      default_value: newFieldDefault.trim()
-    }).
+      default_value: newFieldSource === "static" ? newFieldDefault.trim() : "",
+      value_source: newFieldSource,
+      mapped_key: newFieldSource === "mapped" ? (newFieldMappedKey || null) : null,
+      client_prompt: newFieldSource === "client_input" ? (newFieldClientPrompt.trim() || newFieldLabel.trim()) : null,
+      client_input_type: newFieldSource === "client_input" ? newFieldInputType : "text",
+      required: newFieldSource === "client_input" ? newFieldRequired : false,
+    };
+    const { data, error } = await (supabase as any).
+    from("contract_custom_fields").
+    insert(insertPayload).
     select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required").
     single();
     if (data && !error) {
       setContractFields((prev) => [...prev, data]);
       setNewFieldLabel("");
       setNewFieldDefault("");
+      setNewFieldSource("static");
+      setNewFieldMappedKey("");
+      setNewFieldClientPrompt("");
+      setNewFieldInputType("text");
+      setNewFieldRequired(false);
       toast({ title: t.personalize.contractFieldAdded });
     } else if (error) {
       toast({ title: error.message, variant: "destructive" });
