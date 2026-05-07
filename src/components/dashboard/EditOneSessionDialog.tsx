@@ -33,7 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, Plus, X, Loader2, ArrowRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ChevronDown, Plus, X, Loader2, ArrowRight, Trash2, CreditCard, Camera, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
