@@ -2040,7 +2040,7 @@ const Projects = () => {
                           onArchive={handleArchive}
                           onTogglePause={s.key === "upcoming" ? handleTogglePause : undefined}
                           onAddCard={openAdd}
-                          shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : (s.key === "proof_gallery" || s.key === "final_gallery") ? shotDeadlineDays : undefined}
+                          shotDeadlineDays={s.key === "shot" ? shotDeadlineDays : undefined}
                           onSetShotDeadlineDays={s.key === "shot" ? handleSetShotDeadlineDays : undefined}
                           postProdDeadlineDays={s.key === "post_production" ? postProdDeadlineDays : undefined}
                           onSetPostProdDeadlineDays={s.key === "post_production" ? handleSetPostProdDeadlineDays : undefined}
