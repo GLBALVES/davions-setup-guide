@@ -1203,7 +1203,7 @@ const Personalize = () => {
 
                               {/* Image options (for multi_image) */}
                               {q.type === "multi_image" &&
-                          <div className="flex flex-col gap-2 pl-1">
+                          <div className="flex flex-col gap-2 pl-1" ref={(el) => { optionsContainerRefs.current[idx] = el; }}>
                                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Image options</p>
                                   <div className="grid grid-cols-3 gap-2">
                                     {q.options.map((opt, optIdx) => {
