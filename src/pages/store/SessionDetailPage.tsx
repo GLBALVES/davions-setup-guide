@@ -699,8 +699,8 @@ const SessionDetailPage = () => {
       studio_name: studioName,
       studio_address: studioAddress,
       studio_email: photographer?.email || "",
-    }, contractCustomFields);
-  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields, bonuses, selectedExtras, total, depositAmountCents]);
+    }, contractCustomFields as any, customFieldAnswers);
+  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields, bonuses, selectedExtras, total, depositAmountCents, customFieldAnswers]);
 
   // ────────────────────────────────────────────
   // Calendar helpers
