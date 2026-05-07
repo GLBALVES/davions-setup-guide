@@ -67,6 +67,7 @@ const BookingSuccess = () => {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
+  const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
 
   // ── Confirm payment (always try when we have a checkoutSessionId) ─────────
   const tryConfirmBooking = async (
@@ -200,17 +201,26 @@ const BookingSuccess = () => {
   };
 
   // ── Helpers for answers ────────────────────────────────────────────────────
+  const clearMissing = (qId: string) => {
+    setMissingIds((prev) => {
+      if (!prev.has(qId)) return prev;
+      const next = new Set(prev);
+      next.delete(qId);
+      return next;
+    });
+  };
+
   const setTextAnswer = (qId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: value }));
+    if (value && (typeof value !== "string" || value.trim())) clearMissing(qId);
   };
 
   const setCheckboxAnswer = (qId: string, option: string, checked: boolean) => {
     setAnswers((prev) => {
       const current = (prev[qId] as string[]) ?? [];
-      return {
-        ...prev,
-        [qId]: checked ? [...current, option] : current.filter((o) => o !== option),
-      };
+      const nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      if (nextArr.length > 0) clearMissing(qId);
+      return { ...prev, [qId]: nextArr };
     });
   };
 
@@ -218,13 +228,21 @@ const BookingSuccess = () => {
   const handleSubmitBriefing = async () => {
     if (!briefing || !bookingId) return;
 
-    // Validate required questions
+    // Validate required questions and collect missing ones for highlighting
+    const missing = new Set<string>();
     for (const q of briefing.questions) {
       if (!q.required) continue;
       const ans = answers[q.id];
       if (!ans || (Array.isArray(ans) && ans.length === 0) || (typeof ans === "string" && !ans.trim())) {
-        return; // silent — required indicator visible on the field
+        missing.add(q.id);
       }
+    }
+    setMissingIds(missing);
+    if (missing.size > 0) {
+      // Scroll first missing question into view
+      const first = document.querySelector(`[data-briefing-question="${Array.from(missing)[0]}"]`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
     setSubmittingBriefing(true);
@@ -367,11 +385,20 @@ const BookingSuccess = () => {
               </div>
             ) : (
               <div className="p-5 flex flex-col gap-5">
-                {briefing.questions.map((q) => (
-                  <div key={q.id} className="flex flex-col gap-1.5">
-                    <p className="text-xs font-light">
+                {briefing.questions.map((q) => {
+                  const isMissing = missingIds.has(q.id);
+                  return (
+                  <div
+                    key={q.id}
+                    data-briefing-question={q.id}
+                    className={`flex flex-col gap-1.5 transition-colors ${isMissing ? "border-l-2 border-destructive pl-3 -ml-3" : ""}`}
+                  >
+                    <p className={`text-xs font-light ${isMissing ? "text-destructive" : ""}`}>
                       {q.label}
                       {q.required && <span className="text-destructive ml-1">*</span>}
+                      {isMissing && (
+                        <span className="ml-2 text-[10px] tracking-wider uppercase text-destructive">Required</span>
+                      )}
                     </p>
 
                     {/* Short text */}
@@ -475,7 +502,8 @@ const BookingSuccess = () => {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
 
                 <Button
                   onClick={handleSubmitBriefing}
