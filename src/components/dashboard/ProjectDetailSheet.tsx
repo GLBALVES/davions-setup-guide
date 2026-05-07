@@ -1623,9 +1623,10 @@ export function ProjectDetailSheet({
     if (!newSess) return;
 
     if (!project.booking_id) {
-      // Project without booking — just update session reference on client_projects
-      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+      // Project without booking — persist session reference directly
+      await onUpdate(project.id, { session_type: newSess.title } as any);
       toast.success(tp.projectUpdated || "Session updated");
+      setSessionPickerOpen(false);
       return;
     }
 
@@ -1717,7 +1718,7 @@ export function ProjectDetailSheet({
       }
 
       // 6. Update client_projects session_type
-      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+      await save({ session_type: newSess.title } as any);
 
       // 7. Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
