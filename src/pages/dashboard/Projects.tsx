@@ -1661,6 +1661,11 @@ const Projects = () => {
           .eq("id", p.id)
       )
     );
+
+    if (activeProj.stage !== newStage) {
+      const stageLabel = (STAGES.find((s) => s.key === newStage)?.label) ?? newStage;
+      toast.success(`Movido para ${stageLabel}`);
+    }
   };
 
   const openAdd = (stage: Stage) => {
