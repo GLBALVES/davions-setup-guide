@@ -2930,6 +2930,17 @@ const SessionForm = () => {
                       )}
                     </div>
 
+                    {/* Show available spots badge */}
+                    <div className="border border-border p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Show available spots</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Displays the "X vagas" badge under each time slot on the booking page (only when a slot has more than one spot).
+                        </p>
+                      </div>
+                      <Switch checked={showSpotsLeft} onCheckedChange={setShowSpotsLeft} />
+                    </div>
+
                     {/* Hide from store */}
                     <div className="border border-border p-5 flex items-center justify-between">
                       <div>
