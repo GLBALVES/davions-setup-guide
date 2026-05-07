@@ -1803,11 +1803,12 @@ const Projects = () => {
                 );
               })}
               <div className="ml-auto flex items-center gap-2">
-                {(activeStageFilter !== "all" || showArchived) && (
+                {(activeStageFilter !== "all" || showArchived || showPausedOnly) && (
                   <button
                     onClick={() => {
                       setActiveStageFilter("all");
                       setShowArchived(false);
+                      setShowPausedOnly(false);
                     }}
                     className="flex items-center gap-1.5 border border-border/50 rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                   >
@@ -1815,6 +1816,24 @@ const Projects = () => {
                     <span>{(p_t as any).clearFilters ?? "Limpar filtros"}</span>
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    setShowPausedOnly((v) => {
+                      const next = !v;
+                      if (next) { setShowArchived(false); setActiveStageFilter("upcoming"); }
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-1.5 border rounded-sm px-2.5 py-0.5 text-[10px] tracking-wider uppercase transition-colors ${
+                    showPausedOnly
+                      ? "bg-muted text-foreground border-border"
+                      : "text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  <Pause className="h-3 w-3" />
+                  <span>Pausadas</span>
+                  <span className="opacity-60">{projects.filter((p) => p.is_paused && p.stage !== "archived").length}</span>
+                </button>
                 <button
                   onClick={() => {
                     setShowArchived((v) => {
