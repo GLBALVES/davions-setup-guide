@@ -161,6 +161,7 @@ const BookingConfirm = () => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [avail, setAvail] = useState<AvailData | null>(null);
   const [bonuses, setBonuses] = useState<BonusItem[]>([]);
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [briefing, setBriefing] = useState<BriefingData | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
