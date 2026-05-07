@@ -35,6 +35,7 @@ interface BriefingQuestion {
   label: string;
   required: boolean;
   options: string[];
+  max_select?: number | null;
 }
 interface Briefing {id: string;name: string;questions: BriefingQuestion[];}
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
