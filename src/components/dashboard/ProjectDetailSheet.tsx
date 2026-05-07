@@ -1717,7 +1717,7 @@ export function ProjectDetailSheet({
       }
 
       // 6. Update client_projects session_type
-      await save({ session_type: newSess.title, session_title: newSess.title } as any);
+      await save({ session_type: newSess.title } as any);
 
       // 7. Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
