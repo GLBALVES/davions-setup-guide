@@ -1479,6 +1479,9 @@ const Projects = () => {
         }
 
         if (sessionEnd && sessionEnd < now) {
+          // Skip auto-advance if user manually moved the card back after the session ended
+          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
+          if (updatedAt && updatedAt > sessionEnd) continue;
           toAdvance.push(p.id);
         }
       }
@@ -1538,6 +1541,9 @@ const Projects = () => {
         }
 
         if (sessionEnd && sessionEnd <= now) {
+          // Skip if user manually moved the card after the session ended
+          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
+          if (updatedAt && updatedAt > sessionEnd) continue;
           toAdvance.push(p.id);
         }
       }
