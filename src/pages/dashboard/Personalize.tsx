@@ -1150,10 +1150,11 @@ const Personalize = () => {
 
                               {/* Question label */}
                               <Input
-                            value={q.label}
-                            onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
-                            placeholder="Type your question here…"
-                            className="text-sm font-light h-8" />
+                                ref={(el) => { questionLabelRefs.current[idx] = el; }}
+                                value={q.label}
+                                onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
+                                placeholder="Type your question here…"
+                                className="text-sm font-light h-8" />
                           
 
                               {/* Options (for multiple_choice / checkboxes) */}
