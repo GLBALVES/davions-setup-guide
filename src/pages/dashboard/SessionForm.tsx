@@ -2090,9 +2090,6 @@ const SessionForm = () => {
                               onChange={(e) => {
                                 const parsed = parseCurrencyInput(e.target.value, lang as CurrencyLang);
                                 setPrice(parsed);
-                                if (parseFloat(parsed || "0") > 0 && !requirePayment) {
-                                  setRequirePayment(true);
-                                }
                               }}
                               placeholder={currencyPlaceholder(lang as CurrencyLang)}
                               className="pl-7"
