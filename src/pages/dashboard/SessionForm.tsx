@@ -2316,7 +2316,6 @@ const SessionForm = () => {
                           </p>
                         )}
                       </div>
-                    )}
 
                     {/* ── Allow Tip ── */}
 
