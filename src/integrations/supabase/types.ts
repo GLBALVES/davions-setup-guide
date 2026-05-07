@@ -3534,6 +3534,8 @@ export type Database = {
       sessions: {
         Row: {
           allow_tip: boolean
+          balance_due_offset_hours: number
+          balance_due_timing: string
           booking_notice_days: number
           booking_window_days: number
           break_after_minutes: number
@@ -3571,6 +3573,8 @@ export type Database = {
         }
         Insert: {
           allow_tip?: boolean
+          balance_due_offset_hours?: number
+          balance_due_timing?: string
           booking_notice_days?: number
           booking_window_days?: number
           break_after_minutes?: number
@@ -3608,6 +3612,8 @@ export type Database = {
         }
         Update: {
           allow_tip?: boolean
+          balance_due_offset_hours?: number
+          balance_due_timing?: string
           booking_notice_days?: number
           booking_window_days?: number
           break_after_minutes?: number
