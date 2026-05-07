@@ -1603,10 +1603,11 @@ export function ProjectDetailSheet({
 
   const save = async (data: Partial<ProjectSheetData>) => { queueChange(data); };
 
-  const queueDateTime = (newDate: string | null, newTime: string | null) => {
+  const queueDateTime = (newDate: string | null | undefined, newTime: string | null | undefined) => {
     const updates: Partial<ProjectSheetData> = {};
-    if (newDate !== undefined) updates.shoot_date = newDate;
-    if (newTime !== undefined) updates.shoot_time = newTime;
+    if (newDate !== undefined && newDate !== null) updates.shoot_date = newDate;
+    if (newTime !== undefined && newTime !== null) updates.shoot_time = newTime;
+    if (Object.keys(updates).length === 0) return;
     queueChange(updates);
     setConflictWarning(null);
   };
