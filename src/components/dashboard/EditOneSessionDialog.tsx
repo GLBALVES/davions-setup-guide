@@ -33,14 +33,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, Plus, X, Loader2 } from "lucide-react";
+import { ChevronDown, Plus, X, Loader2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   sessionId: string | null;
   onSaved?: () => void;
+  onConverted?: (id: string) => void;
 }
 
 interface Briefing { id: string; name: string }
