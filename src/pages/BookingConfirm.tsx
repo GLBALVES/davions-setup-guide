@@ -275,6 +275,12 @@ const BookingConfirm = () => {
           .order("position", { ascending: true });
         setBonuses(bonusData ?? []);
 
+        const { data: itemsData } = await (supabase as any)
+          .from("booking_invoice_items")
+          .select("description, quantity, unit_price")
+          .eq("booking_id", bookingId);
+        setInvoiceItems((itemsData ?? []) as InvoiceItem[]);
+
         if (s.briefing_id) {
           const { data: brData } = await (supabase as any)
             .from("briefings")
