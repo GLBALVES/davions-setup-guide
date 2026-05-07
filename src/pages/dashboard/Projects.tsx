@@ -876,6 +876,72 @@ function KanbanColumn({
               </PopoverContent>
             </Popover>
           )}
+          {/* Deadline popover — proof_gallery / final_gallery columns */}
+          {(stage.key === "proof_gallery" || stage.key === "final_gallery") && (() => {
+            const isProof = stage.key === "proof_gallery";
+            const days = isProof ? proofDeadlineDays : finalDeadlineDays;
+            const inputVal2 = isProof ? proofInputVal : finalInputVal;
+            const setInputVal2 = isProof ? setProofInputVal : setFinalInputVal;
+            const open = isProof ? proofPopoverOpen : finalPopoverOpen;
+            const setOpen = isProof ? setProofPopoverOpen : setFinalPopoverOpen;
+            const commit = isProof ? handleProofDaysCommit : handleFinalDaysCommit;
+            const onClear = isProof ? onSetProofDeadlineDays : onSetFinalDeadlineDays;
+            const colorClass = isProof
+              ? "text-orange-500 bg-orange-500/10 hover:bg-orange-500/20"
+              : "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20";
+            return (
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] transition-colors ${
+                      days != null ? colorClass : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/40"
+                    }`}
+                    title={t.projects.deadlineTooltipPostProd}
+                  >
+                    <Timer className="h-3 w-3 shrink-0" />
+                    {days != null && <span>{days}d</span>}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="w-64 p-4 flex flex-col gap-3">
+                  <div>
+                    <p className="text-xs font-semibold">
+                      {isProof ? t.projects.proof_gallery : t.projects.final_gallery}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                      {t.projects.postProdDeadlineDesc}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={inputVal2}
+                      onChange={(e) => setInputVal2(e.target.value)}
+                      onBlur={() => commit(inputVal2)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          commit(inputVal2);
+                          setOpen(false);
+                        }
+                      }}
+                      placeholder={isProof ? "ex: 14" : "ex: 60"}
+                      className="w-16 h-8 text-center text-sm border border-border rounded-sm bg-background focus:outline-none focus:border-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-sm text-muted-foreground">{t.projects.daysAfterSession}</span>
+                  </div>
+                  {days != null && (
+                    <button
+                      onClick={() => { onClear?.(null); setInputVal2(""); setOpen(false); }}
+                      className="text-[11px] text-destructive/70 hover:text-destructive text-left transition-colors"
+                    >
+                      {t.projects.removeDeadline}
+                    </button>
+                  )}
+                </PopoverContent>
+              </Popover>
+            );
+          })()}
           <button
             className="text-muted-foreground/40 hover:text-foreground transition-colors"
             onClick={() => onAddCard(stage.key)}
