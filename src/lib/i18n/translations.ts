@@ -850,6 +850,7 @@ export const translations = {
       country: "Country",
       currency: "Currency",
       taxIdVat: "Tax ID / VAT Number",
+      salesTax: "Sales Tax (%)",
       saving: "Saving…",
       saveChanges: "Save changes",
       businessSaved: "Business settings saved",
