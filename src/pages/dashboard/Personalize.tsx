@@ -1187,24 +1187,24 @@ const Personalize = () => {
                                       </Button>
                                     </div>
                             )}
-                                  <button
-                              type="button"
-                              className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
-                              onClick={() => {
-                                setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item));
-                                setTimeout(() => {
-                                  requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                      const el = optionsContainerRefs.current[idx];
-                                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                    });
-                                  });
-                                }, 0);
-                              }}>
-                              
-                                    <Plus className="h-3 w-3" />
-                                    {t.personalize.addOption}
-                                  </button>
+                                   <button
+                                     type="button"
+                                     className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition-colors w-fit flex items-center gap-1 mt-0.5"
+                                     onClick={() => {
+                                       setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, options: [...item.options, ""] } : item));
+                                       setTimeout(() => {
+                                         requestAnimationFrame(() => {
+                                           requestAnimationFrame(() => {
+                                             const inputs = document.querySelectorAll(`[data-question-idx="${idx}"] input[placeholder^="Option"]`);
+                                             const last = inputs[inputs.length - 1] as HTMLInputElement | undefined;
+                                             last?.focus();
+                                           });
+                                         });
+                                       }, 0);
+                                     }}>
+                                     <Plus className="h-3 w-3" />
+                                     {t.personalize.addOption}
+                                   </button>
                                 </div>
                           }
 
