@@ -1030,10 +1030,12 @@ function OneSessionCard({
   session,
   onConvert,
   onDelete,
+  onEdited,
 }: {
   session: Session;
   onConvert: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdited?: () => void;
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
@@ -1042,6 +1044,7 @@ function OneSessionCard({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
