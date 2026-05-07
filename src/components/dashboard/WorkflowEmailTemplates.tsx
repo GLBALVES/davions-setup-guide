@@ -101,6 +101,7 @@ const VARIABLES: { token: string; desc: string }[] = [
   { token: "{{shoot_time}}", desc: "Horário do ensaio" },
   { token: "{{balance_amount}}", desc: "Valor do saldo restante" },
   { token: "{{payment_link}}", desc: "Link de pagamento do saldo" },
+  { token: "{{briefing_link}}", desc: "Link do briefing pendente" },
 ];
 
 const SAMPLE_PREVIEW: Record<string, string> = {
