@@ -332,7 +332,7 @@ const BookingConfirm = () => {
       if (!Array.isArray(fnResult?.contractCustomFields)) {
         const { data: cfData } = await (supabase as any)
           .from("contract_custom_fields")
-          .select("id, field_key, field_label, default_value")
+          .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
           .eq("photographer_id", b.photographer_id);
         if (cfData) setContractCustomFields(cfData);
       }

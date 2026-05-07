@@ -396,7 +396,7 @@ const SessionDetailPage = () => {
           .order("position", { ascending: true }),
         (supabase as any)
           .from("contract_custom_fields")
-          .select("id, field_key, field_label, default_value")
+          .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
           .eq("photographer_id", s.photographer_id),
       ]);
       setExtras((extrasData ?? []) as SessionExtra[]);
@@ -731,7 +731,7 @@ const SessionDetailPage = () => {
         : Promise.resolve({ data: null }),
       (supabase as any)
         .from("contract_custom_fields")
-        .select("id, field_key, field_label, default_value")
+        .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
         .eq("photographer_id", session.photographer_id),
     ]);
     const latestBody = contractTemplate?.body ?? session.contract_text;
