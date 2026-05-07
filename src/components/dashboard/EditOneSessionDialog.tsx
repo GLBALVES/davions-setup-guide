@@ -86,6 +86,26 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
   const [internalNotes, setInternalNotes] = useState("");
   const [clientNotes, setClientNotes] = useState("");
 
+  // Payment
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [requirePayment, setRequirePayment] = useState(false);
+  const [taxEnabled, setTaxEnabled] = useState(false);
+  const [taxRate, setTaxRate] = useState<number | "">("");
+  const [pDepositEnabled, setPDepositEnabled] = useState(false);
+  const [pDepositAmount, setPDepositAmount] = useState<number | "">("");
+  const [pDepositType, setPDepositType] = useState<"fixed" | "percent">("fixed");
+  const [allowTip, setAllowTip] = useState(false);
+
+  // Photo tiers
+  interface PhotoTier { id?: string; min_photos: number; max_photos: number | null; price_per_photo: number | "" }
+  const [photosOpen, setPhotosOpen] = useState(false);
+  const [photoTiers, setPhotoTiers] = useState<PhotoTier[]>([]);
+
+  // Extras (addons)
+  interface ExtraItem { id?: string; description: string; quantity: number | ""; price: number | "" }
+  const [extrasOpen, setExtrasOpen] = useState(false);
+  const [extras, setExtras] = useState<ExtraItem[]>([]);
+
   // Lookups
   const [briefings, setBriefings] = useState<Briefing[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
