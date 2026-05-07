@@ -456,7 +456,7 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
                           <Select value={pDepositType} onValueChange={(v) => setPDepositType(v as any)}>
                             <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="fixed">R$</SelectItem>
+                              <SelectItem value="fixed">$</SelectItem>
                               <SelectItem value="percent">%</SelectItem>
                             </SelectContent>
                           </Select>
@@ -581,7 +581,7 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
                           <Select value={depositType} onValueChange={(v) => setDepositType(v as any)}>
                             <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="fixed">R$</SelectItem>
+                              <SelectItem value="fixed">$</SelectItem>
                               <SelectItem value="percentage">%</SelectItem>
                             </SelectContent>
                           </Select>
@@ -596,7 +596,7 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
                           <Select value={discountType} onValueChange={(v) => setDiscountType(v as any)}>
                             <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="fixed">R$</SelectItem>
+                              <SelectItem value="fixed">$</SelectItem>
                               <SelectItem value="percentage">%</SelectItem>
                             </SelectContent>
                           </Select>
