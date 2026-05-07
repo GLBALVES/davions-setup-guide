@@ -668,6 +668,12 @@ const SessionDetailPage = () => {
 
   const resolvedContractHtml = useMemo(() => {
     if (!session?.contract_text) return "";
+    const includesHtml = bonuses.length > 0
+      ? `<ul>${bonuses.map((b) => `<li>${b}</li>`).join("")}</ul>`
+      : "—";
+    const addonsHtml = selectedExtras.length > 0
+      ? `<ul>${selectedExtras.map((e) => `<li>${e.qty}× ${e.description} — ${formatCurrency(e.price * e.qty)}</li>`).join("")}</ul>`
+      : "—";
     return resolveContractVariables(session.contract_text, {
       client_name: clientName,
       client_email: clientEmail,
@@ -678,12 +684,18 @@ const SessionDetailPage = () => {
       session_duration: `${session.duration_minutes} min`,
       session_price: formatCurrency(session.price),
       session_location: session.location || "",
+      num_photos: session.num_photos > 0 ? String(session.num_photos) : "—",
+      includes: includesHtml,
+      selected_addons: addonsHtml,
+      total_amount: formatCurrency(total),
+      deposit_amount: session.deposit_enabled ? formatCurrency(depositAmountCents) : "—",
+      balance_amount: session.deposit_enabled ? formatCurrency(total - depositAmountCents) : formatCurrency(0),
       photographer_name: photographer?.full_name || "",
       studio_name: studioName,
       studio_address: studioAddress,
       studio_email: photographer?.email || "",
     }, contractCustomFields);
-  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields]);
+  }, [session, clientName, clientEmail, clientPhone, selectedSlot, photographer, studioName, studioAddress, contractCustomFields, bonuses, selectedExtras, total, depositAmountCents]);
 
   // ────────────────────────────────────────────
   // Calendar helpers
