@@ -273,8 +273,7 @@ function KanbanCard({
     const hoursUntil = differenceInHours(shootDateTime, now);
     if (hoursUntil < 24) return "urgent";
     if (daysUntil <= 3) return "warning";
-    if (daysUntil <= 7) return "ok";
-    return null;
+    return "ok";
   })();
 
   const upcomingSessionLabel = (() => {
