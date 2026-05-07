@@ -302,8 +302,8 @@ function KanbanCard({
 
   // Human-readable gallery expiry label
   const galleryExpiryLabel = (() => {
-    if (!project.gallery_expires_at || !galleryExpiryStatus) return null;
-    const d = parseISO(project.gallery_expires_at);
+    if (!effectiveGalleryExpiry || !galleryExpiryStatus) return null;
+    const d = parseISO(effectiveGalleryExpiry);
     const now = new Date();
     if (isPast(d)) return p_t.galleryExpired;
     const h = differenceInHours(d, now);
