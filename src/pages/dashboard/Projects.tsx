@@ -1552,23 +1552,27 @@ const Projects = () => {
   }, [projects]);
 
   const projectsByStage = (stage: Stage) =>
-    projects.filter((p) => p.stage === stage).sort((a, b) => {
-      // Primary sort: shoot_date ascending (nulls last)
-      const dateA = a.shoot_date;
-      const dateB = b.shoot_date;
-      if (dateA && dateB) {
-        const cmpDate = dateA.localeCompare(dateB);
-        if (cmpDate !== 0) return cmpDate;
-        // Same date — sort by shoot_time ascending
-        const timeA = a.shoot_time || "00:00";
-        const timeB = b.shoot_time || "00:00";
-        const cmpTime = timeA.localeCompare(timeB);
-        if (cmpTime !== 0) return cmpTime;
-      }
-      if (dateA && !dateB) return -1;
-      if (!dateA && dateB) return 1;
-      return a.position - b.position;
-    });
+    projects
+      .filter((p) => p.stage === stage)
+      .filter((p) => (showPausedOnly ? !!p.is_paused : true))
+      .sort((a, b) => {
+        // Paused always last
+        if (!!a.is_paused !== !!b.is_paused) return a.is_paused ? 1 : -1;
+        // Primary sort: shoot_date ascending (nulls last)
+        const dateA = a.shoot_date;
+        const dateB = b.shoot_date;
+        if (dateA && dateB) {
+          const cmpDate = dateA.localeCompare(dateB);
+          if (cmpDate !== 0) return cmpDate;
+          const timeA = a.shoot_time || "00:00";
+          const timeB = b.shoot_time || "00:00";
+          const cmpTime = timeA.localeCompare(timeB);
+          if (cmpTime !== 0) return cmpTime;
+        }
+        if (dateA && !dateB) return -1;
+        if (!dateA && dateB) return 1;
+        return a.position - b.position;
+      });
 
   const activeStages = STAGES.filter((s) => s.key !== "archived");
   const visibleStages = activeStageFilter === "all"
