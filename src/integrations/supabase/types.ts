@@ -2880,6 +2880,7 @@ export type Database = {
           business_sales_tax: number | null
           business_state: string | null
           business_tax_id: string | null
+          business_tax_name: string | null
           business_zip: string | null
           created_at: string
           custom_domain: string | null
@@ -2906,6 +2907,7 @@ export type Database = {
           business_sales_tax?: number | null
           business_state?: string | null
           business_tax_id?: string | null
+          business_tax_name?: string | null
           business_zip?: string | null
           created_at?: string
           custom_domain?: string | null
@@ -2932,6 +2934,7 @@ export type Database = {
           business_sales_tax?: number | null
           business_state?: string | null
           business_tax_id?: string | null
+          business_tax_name?: string | null
           business_zip?: string | null
           created_at?: string
           custom_domain?: string | null
