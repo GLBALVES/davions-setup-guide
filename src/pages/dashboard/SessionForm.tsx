@@ -2362,6 +2362,29 @@ const SessionForm = () => {
                           })}
                         </div>
                       </div>
+
+                    {/* ── Allow Tip ── */}
+                    <div className="flex items-start justify-between border border-border p-4 gap-4">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-xs tracking-wider uppercase font-light">Allow Tip</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Clients can add a gratuity at checkout. The tip option will only appear on the <strong>final payment</strong> — it is not shown on deposit checkouts.
+                        </p>
+                      </div>
+                      <Switch checked={allowTip} onCheckedChange={setAllowTip} />
+                    </div>
+
+                  </section>
+
+                  {/* Step 3 Actions */}
+                  <div className="flex items-center justify-between border-t border-border pt-6">
+                    <Button variant="ghost" onClick={() => setStep(2)} className="gap-2 text-xs tracking-wider uppercase font-light text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" />Back
+                    </Button>
+                    <Button onClick={() => setStep(4)} className="gap-2 text-xs tracking-wider uppercase font-light">
+                      Next<ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </>
               )}
 
