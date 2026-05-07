@@ -62,13 +62,15 @@ serve(async (req) => {
     // Fetch session data
     const { data: sessionData, error: sessionError } = await supabase
       .from("sessions")
-      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location, allow_tip")
+      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location, allow_tip, payment_required")
       .eq("id", sessionId)
       .single();
 
     if (sessionError || !sessionData) {
       throw new Error("Session not found");
     }
+
+    const paymentRequired = (sessionData as any).payment_required !== false;
 
     // Fetch photographer data
     const { data: photoData } = await supabase
