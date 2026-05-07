@@ -57,11 +57,18 @@ export const CONTRACT_VARIABLES = [
 
 export type VariableKey = (typeof CONTRACT_VARIABLES)[number]["key"];
 
-interface CustomField {
+export type CustomFieldValueSource = "static" | "mapped" | "client_input";
+
+export interface CustomField {
   id: string;
   field_key: string;
   field_label: string;
   default_value: string;
+  value_source?: CustomFieldValueSource;
+  mapped_key?: string | null;
+  client_prompt?: string | null;
+  client_input_type?: string | null;
+  required?: boolean | null;
 }
 
 function normalizeVariableToken(value: string): string {
