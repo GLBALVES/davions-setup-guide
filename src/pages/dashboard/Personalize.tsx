@@ -893,6 +893,22 @@ const Personalize = () => {
                           </div>
                           <div className="flex flex-col gap-1.5">
                             <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.cfValueSource}
+                            </Label>
+                            <Select value={newFieldSource} onValueChange={(v) => setNewFieldSource(v as any)}>
+                              <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
+                              <SelectContent className="z-[60]">
+                                <SelectItem value="static">{t.personalize.cfSourceStatic}</SelectItem>
+                                <SelectItem value="mapped">{t.personalize.cfSourceMapped}</SelectItem>
+                                <SelectItem value="client_input">{t.personalize.cfSourceClient}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {newFieldSource === "static" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
                               {t.personalize.contractFieldDefault}
                             </Label>
                             <Input
@@ -901,12 +917,69 @@ const Personalize = () => {
                               placeholder={t.personalize.contractFieldDefaultPlaceholder}
                               className="text-sm" />
                           </div>
-                        </div>
+                        )}
+
+                        {newFieldSource === "mapped" && (
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                              {t.personalize.cfMappedField}
+                            </Label>
+                            <Select value={newFieldMappedKey} onValueChange={setNewFieldMappedKey}>
+                              <SelectTrigger className="text-sm h-9"><SelectValue placeholder="—" /></SelectTrigger>
+                              <SelectContent className="z-[60]">
+                                {CONTRACT_VARIABLES.map((v) => (
+                                  <SelectItem key={v.key} value={v.key}>{v.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {newFieldSource === "client_input" && (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                              <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                                {t.personalize.cfClientPrompt}
+                              </Label>
+                              <Input
+                                value={newFieldClientPrompt}
+                                onChange={(e) => setNewFieldClientPrompt(e.target.value)}
+                                placeholder={t.personalize.cfClientPromptPlaceholder}
+                                className="text-sm" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 items-end">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">
+                                  {t.personalize.cfInputType}
+                                </Label>
+                                <Select value={newFieldInputType} onValueChange={(v) => setNewFieldInputType(v as any)}>
+                                  <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
+                                  <SelectContent className="z-[60]">
+                                    <SelectItem value="text">Text</SelectItem>
+                                    <SelectItem value="textarea">Textarea</SelectItem>
+                                    <SelectItem value="date">Date</SelectItem>
+                                    <SelectItem value="number">Number</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <label className="flex items-center gap-2 text-xs font-light cursor-pointer pb-2">
+                                <input
+                                  type="checkbox"
+                                  checked={newFieldRequired}
+                                  onChange={(e) => setNewFieldRequired(e.target.checked)}
+                                  className="h-4 w-4 accent-primary"
+                                />
+                                {t.personalize.cfRequired}
+                              </label>
+                            </div>
+                          </div>
+                        )}
+
                         <Button
                           size="sm"
                           variant="outline"
                           className="self-start gap-1.5 text-xs tracking-wider uppercase font-light"
-                          disabled={!newFieldLabel.trim() || addingField}
+                          disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
                           onClick={handleAddContractField}>
                           {addingField ?
                             <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
