@@ -57,6 +57,16 @@ interface SessionData {
   contract_id: string | null;
   price: number;
   session_model: string | null;
+  deposit_enabled?: boolean;
+  deposit_amount?: number;
+  deposit_type?: string;
+  tax_rate?: number;
+}
+
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
 }
 
 interface AvailData {
