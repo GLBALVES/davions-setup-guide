@@ -219,13 +219,21 @@ const BookingSuccess = () => {
   const handleSubmitBriefing = async () => {
     if (!briefing || !bookingId) return;
 
-    // Validate required questions
+    // Validate required questions and collect missing ones for highlighting
+    const missing = new Set<string>();
     for (const q of briefing.questions) {
       if (!q.required) continue;
       const ans = answers[q.id];
       if (!ans || (Array.isArray(ans) && ans.length === 0) || (typeof ans === "string" && !ans.trim())) {
-        return; // silent — required indicator visible on the field
+        missing.add(q.id);
       }
+    }
+    setMissingIds(missing);
+    if (missing.size > 0) {
+      // Scroll first missing question into view
+      const first = document.querySelector(`[data-briefing-question="${Array.from(missing)[0]}"]`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
     setSubmittingBriefing(true);
