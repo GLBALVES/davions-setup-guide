@@ -1490,7 +1490,7 @@ const SessionDetailPage = () => {
                 if (fields.length === 0) return null;
                 return (
                   <div className="flex flex-col gap-3 pt-3 border-t border-border">
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.personalize.cfBookingSectionTitle}</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Information for the contract</p>
                     {fields.map((f) => {
                       const inputType = f.client_input_type || "text";
                       const val = customFieldAnswers[f.field_key] ?? "";
