@@ -961,7 +961,7 @@ function KanbanColumn({
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
           {projects.map((p) => (
-            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} onTogglePause={onTogglePause} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
+            <KanbanCard key={p.id} project={p} onView={onView} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive} onTogglePause={onTogglePause} shotDeadlineDays={shotDeadlineDays} postProdDeadlineDays={postProdDeadlineDays} proofDeadlineDays={proofDeadlineDays} finalDeadlineDays={finalDeadlineDays} onSetDeadline={onSetDeadline} onSetGalleryExpiry={onSetGalleryExpiry} />
           ))}
         </SortableContext>
 
