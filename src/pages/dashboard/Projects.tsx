@@ -1518,6 +1518,7 @@ const Projects = () => {
 
       for (const p of projects) {
         if (p.stage !== "upcoming") continue;
+        if (p.is_paused) continue;
 
         let sessionEnd: Date | null = null;
         if (p.shoot_date && p.shoot_time) {
