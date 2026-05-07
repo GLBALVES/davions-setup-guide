@@ -35,6 +35,7 @@ interface BriefingQuestion {
   label: string;
   required: boolean;
   options: string[];
+  max_select?: number | null;
 }
 interface Briefing {id: string;name: string;questions: BriefingQuestion[];}
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
@@ -1146,6 +1147,22 @@ const Personalize = () => {
                               
                                   <label htmlFor={`req-${q.id}`} className="text-[11px] text-muted-foreground cursor-pointer">{t.personalize.required}</label>
                                 </div>
+                                {(q.type === "checkboxes" || q.type === "multi_image") && (
+                                  <div className="flex items-center gap-2">
+                                    <label htmlFor={`max-${q.id}`} className="text-[11px] text-muted-foreground">Max</label>
+                                    <Input
+                                      id={`max-${q.id}`}
+                                      type="number"
+                                      min={1}
+                                      value={q.max_select ?? ""}
+                                      placeholder="∞"
+                                      onChange={(e) => {
+                                        const v = e.target.value === "" ? null : Math.max(1, parseInt(e.target.value, 10) || 1);
+                                        setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, max_select: v } : item));
+                                      }}
+                                      className="h-7 w-16 text-xs font-light" />
+                                  </div>
+                                )}
                               </div>
 
                               {/* Question label */}

@@ -153,14 +153,20 @@ function BriefingResponseDialog({ open, onClose, bookingId, briefingId }: Briefi
           <div className="flex flex-col gap-4 pt-1">
             {questions.map((q) => {
               const ans = answers[q.id];
-              const isImage = q.type === "multi_image" && typeof ans === "string" && isImageUrl(ans);
+              const ansArr = Array.isArray(ans) ? ans : (ans ? [ans as string] : []);
+              const isImageType = q.type === "multi_image";
+              const imageUrls = isImageType ? ansArr.filter((v) => typeof v === "string" && isImageUrl(v)) : [];
               return (
                 <div key={q.id} className="flex flex-col gap-1">
                   <p className="text-[10px] tracking-wider uppercase text-muted-foreground">{q.label}</p>
-                  {isImage ? (
-                    <a href={ans as string} target="_blank" rel="noreferrer" className="block w-32 aspect-square overflow-hidden border border-border">
-                      <img src={ans as string} alt="" className="w-full h-full object-cover" />
-                    </a>
+                  {imageUrls.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {imageUrls.map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noreferrer" className="block w-24 aspect-square overflow-hidden border border-border">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-sm font-light">{formatAnswer(q)}</p>
                   )}

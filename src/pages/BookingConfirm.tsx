@@ -87,6 +87,7 @@ interface BriefingQuestion {
   label: string;
   required: boolean;
   options: string[];
+  max_select?: number | null;
 }
 
 interface BriefingData {
@@ -360,10 +361,12 @@ const BookingConfirm = () => {
   const setTextAnswer = (qId: string, value: string) =>
     setAnswers((prev) => ({ ...prev, [qId]: value }));
 
-  const setCheckboxAnswer = (qId: string, option: string, checked: boolean) =>
+  const setCheckboxAnswer = (qId: string, option: string, checked: boolean, max?: number | null) =>
     setAnswers((prev) => {
       const current = (prev[qId] as string[]) ?? [];
-      return { ...prev, [qId]: checked ? [...current, option] : current.filter((o) => o !== option) };
+      const nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      if (checked && max && max > 0 && nextArr.length > max) return prev;
+      return { ...prev, [qId]: nextArr };
     });
 
   const handleSubmitBriefing = async (): Promise<boolean> => {
@@ -1062,11 +1065,16 @@ const BookingConfirm = () => {
 
                     {q.type === "checkboxes" && (
                       <div className="flex flex-col gap-1.5">
+                        {q.max_select && q.max_select > 0 && (
+                          <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Select up to {q.max_select}</p>
+                        )}
                         {q.options.map((opt) => {
                           const current = (answers[q.id] as string[]) ?? [];
+                          const isChecked = current.includes(opt);
+                          const atMax = !!q.max_select && q.max_select > 0 && current.length >= q.max_select && !isChecked;
                           return (
-                            <label key={opt} className="flex items-center gap-2.5 cursor-pointer">
-                              <input type="checkbox" checked={current.includes(opt)} onChange={(e) => setCheckboxAnswer(q.id, opt, e.target.checked)} className="h-3.5 w-3.5 accent-foreground" />
+                            <label key={opt} className={`flex items-center gap-2.5 ${atMax ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+                              <input type="checkbox" checked={isChecked} disabled={atMax} onChange={(e) => setCheckboxAnswer(q.id, opt, e.target.checked, q.max_select)} className="h-3.5 w-3.5 accent-foreground" />
                               <span className="text-sm font-light">{opt}</span>
                             </label>
                           );
@@ -1086,23 +1094,32 @@ const BookingConfirm = () => {
                     )}
 
                     {q.type === "multi_image" && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {q.options.filter(Boolean).map((opt, i) => {
-                          const selected = (answers[q.id] as string) === opt;
-                          return (
-                            <button
-                              type="button"
-                              key={`${opt}-${i}`}
-                              onClick={() => setTextAnswer(q.id, opt)}
-                              className={`relative aspect-square overflow-hidden border transition-all ${selected ? "border-foreground ring-2 ring-foreground" : "border-input hover:border-foreground/40"}`}
-                            >
-                              <img src={opt} alt={`Option ${i + 1}`} className="w-full h-full object-cover" />
-                              {selected && (
-                                <span className="absolute top-1 right-1 bg-foreground text-background text-[9px] uppercase tracking-wider px-1.5 py-0.5">Selected</span>
-                              )}
-                            </button>
-                          );
-                        })}
+                      <div className="flex flex-col gap-2">
+                        {q.max_select && q.max_select > 0 && (
+                          <p className="text-[10px] tracking-wider uppercase text-muted-foreground">Select up to {q.max_select}</p>
+                        )}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {q.options.filter(Boolean).map((opt, i) => {
+                            const [optUrl] = opt.split("||");
+                            const current = Array.isArray(answers[q.id]) ? (answers[q.id] as string[]) : (answers[q.id] ? [answers[q.id] as string] : []);
+                            const selected = current.includes(optUrl);
+                            const atMax = !!q.max_select && q.max_select > 0 && current.length >= q.max_select && !selected;
+                            return (
+                              <button
+                                type="button"
+                                key={`${opt}-${i}`}
+                                disabled={atMax}
+                                onClick={() => setCheckboxAnswer(q.id, optUrl, !selected, q.max_select)}
+                                className={`relative aspect-square overflow-hidden border transition-all ${selected ? "border-foreground ring-2 ring-foreground" : "border-input hover:border-foreground/40"} ${atMax ? "opacity-50 cursor-not-allowed" : ""}`}
+                              >
+                                <img src={optUrl} alt={`Option ${i + 1}`} className="w-full h-full object-cover" />
+                                {selected && (
+                                  <span className="absolute top-1 right-1 bg-foreground text-background text-[9px] uppercase tracking-wider px-1.5 py-0.5">Selected</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
