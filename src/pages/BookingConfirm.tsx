@@ -962,7 +962,7 @@ const BookingConfirm = () => {
 
                 <Button
                   onClick={handleSaveClientInfo}
-                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim()}
+                  disabled={savingClientInfo || !clientInfo.full_name.trim() || !clientInfo.phone.trim() || activeClientInputFields.some((f) => f.required && !(customFieldAnswers[f.field_key] || "").trim())}
                   className="w-full text-xs tracking-wider uppercase font-light mt-1"
                 >
                   {savingClientInfo ? "Saving…" : "Save & Continue"}
