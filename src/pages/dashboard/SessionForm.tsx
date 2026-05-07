@@ -2112,7 +2112,12 @@ const SessionForm = () => {
                                 Specify a tax percentage to display to clients.
                               </p>
                             </div>
-                            <Switch checked={taxEnabled} onCheckedChange={setTaxEnabled} />
+                            <Switch checked={taxEnabled} onCheckedChange={(checked) => {
+                              setTaxEnabled(checked);
+                              if (checked && defaultBusinessTax != null && (!taxRate || taxRate === "0")) {
+                                setTaxRate(String(defaultBusinessTax));
+                              }
+                            }} />
                           </div>
                           {taxEnabled && (
                             <div className="flex items-center gap-4 mt-1">
