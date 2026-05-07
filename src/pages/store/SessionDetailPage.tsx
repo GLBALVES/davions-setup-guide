@@ -329,6 +329,7 @@ const SessionDetailPage = () => {
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [contractCustomFields, setContractCustomFields] = useState<ContractCustomField[]>([]);
+  const [customFieldAnswers, setCustomFieldAnswers] = useState<Record<string, string>>({});
 
   // Signature modal state
   const [sigModalOpen, setSigModalOpen] = useState(false);
