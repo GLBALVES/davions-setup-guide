@@ -320,10 +320,12 @@ const SessionForm = () => {
         .then(({ data }) => {
           setStripeConfigured(Boolean(data?.stripe_account_id));
           setStoreSlug((data as any)?.store_slug ?? null);
-          // Pre-fill default tax rate from business profile (only for new sessions)
-          if (!isEdit) {
-            const defaultTax = (data as any)?.business_sales_tax;
-            if (defaultTax != null && Number(defaultTax) > 0) {
+          // Always store the default business tax for toggle pre-fill
+          const defaultTax = (data as any)?.business_sales_tax;
+          if (defaultTax != null && Number(defaultTax) > 0) {
+            setDefaultBusinessTax(Number(defaultTax));
+            // Pre-fill default tax rate from business profile (only for new sessions)
+            if (!isEdit) {
               setTaxEnabled(true);
               setTaxRate(String(defaultTax));
             }
