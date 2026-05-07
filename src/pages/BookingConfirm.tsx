@@ -187,6 +187,7 @@ const BookingConfirm = () => {
 
   // Payment state
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isSavingContinue, setIsSavingContinue] = useState(false);
 
   useEffect(() => {
     if (!bookingId) { setLoading(false); return; }
