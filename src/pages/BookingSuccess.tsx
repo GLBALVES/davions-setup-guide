@@ -385,11 +385,20 @@ const BookingSuccess = () => {
               </div>
             ) : (
               <div className="p-5 flex flex-col gap-5">
-                {briefing.questions.map((q) => (
-                  <div key={q.id} className="flex flex-col gap-1.5">
-                    <p className="text-xs font-light">
+                {briefing.questions.map((q) => {
+                  const isMissing = missingIds.has(q.id);
+                  return (
+                  <div
+                    key={q.id}
+                    data-briefing-question={q.id}
+                    className={`flex flex-col gap-1.5 transition-colors ${isMissing ? "border-l-2 border-destructive pl-3 -ml-3" : ""}`}
+                  >
+                    <p className={`text-xs font-light ${isMissing ? "text-destructive" : ""}`}>
                       {q.label}
                       {q.required && <span className="text-destructive ml-1">*</span>}
+                      {isMissing && (
+                        <span className="ml-2 text-[10px] tracking-wider uppercase text-destructive">Required</span>
+                      )}
                     </p>
 
                     {/* Short text */}
