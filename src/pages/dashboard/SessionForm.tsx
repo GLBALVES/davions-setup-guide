@@ -372,9 +372,9 @@ const SessionForm = () => {
       setTagline((s as unknown as { tagline?: string | null }).tagline ?? "");
       setStatus(s.status as "draft" | "active");
       setSessionTypeId((s as unknown as { session_type_id?: string | null }).session_type_id ?? null);
-      // Default to true so the price field is always honored on save.
-      // Photographer can explicitly disable for free sessions.
-      setRequirePayment(true);
+      // Load payment_required from DB; default true for legacy sessions.
+      const sPay = s as unknown as { payment_required?: boolean };
+      setRequirePayment(sPay.payment_required ?? true);
       // Payment extras
       const sAny = s as unknown as { tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; allow_tip?: boolean };
       if (sAny.tax_rate != null && sAny.tax_rate > 0) {
@@ -775,7 +775,6 @@ const SessionForm = () => {
 
     setSaving(true);
     const priceInCents = Math.round(parseFloat(price || "0") * 100);
-    const finalPrice = requirePayment ? priceInCents : 0;
 
     let finalDepositAmount = 0;
     if (depositEnabled) {
@@ -789,9 +788,10 @@ const SessionForm = () => {
       .from("sessions")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .update({
-        price: finalPrice,
+        price: priceInCents,
+        payment_required: requirePayment,
         tax_rate: taxEnabled ? parseFloat(taxRate || "0") : 0,
-        deposit_enabled: depositEnabled,
+        deposit_enabled: requirePayment ? depositEnabled : false,
         deposit_amount: finalDepositAmount,
         deposit_type: depositType,
         allow_tip: allowTip,
@@ -2090,9 +2090,6 @@ const SessionForm = () => {
                               onChange={(e) => {
                                 const parsed = parseCurrencyInput(e.target.value, lang as CurrencyLang);
                                 setPrice(parsed);
-                                if (parseFloat(parsed || "0") > 0 && !requirePayment) {
-                                  setRequirePayment(true);
-                                }
                               }}
                               placeholder={currencyPlaceholder(lang as CurrencyLang)}
                               className="pl-7"

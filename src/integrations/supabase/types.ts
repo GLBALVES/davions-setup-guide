@@ -3601,6 +3601,7 @@ export type Database = {
           location: string | null
           num_photos: number
           one_session_details: Json
+          payment_required: boolean
           photographer_id: string
           portfolio_photos: string[] | null
           price: number
@@ -3640,6 +3641,7 @@ export type Database = {
           location?: string | null
           num_photos?: number
           one_session_details?: Json
+          payment_required?: boolean
           photographer_id: string
           portfolio_photos?: string[] | null
           price?: number
@@ -3679,6 +3681,7 @@ export type Database = {
           location?: string | null
           num_photos?: number
           one_session_details?: Json
+          payment_required?: boolean
           photographer_id?: string
           portfolio_photos?: string[] | null
           price?: number

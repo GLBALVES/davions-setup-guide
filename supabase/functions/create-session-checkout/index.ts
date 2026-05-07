@@ -62,13 +62,15 @@ serve(async (req) => {
     // Fetch session data
     const { data: sessionData, error: sessionError } = await supabase
       .from("sessions")
-      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location, allow_tip")
+      .select("title, price, photographer_id, deposit_enabled, deposit_amount, deposit_type, tax_rate, duration_minutes, location, allow_tip, payment_required")
       .eq("id", sessionId)
       .single();
 
     if (sessionError || !sessionData) {
       throw new Error("Session not found");
     }
+
+    const paymentRequired = (sessionData as any).payment_required !== false;
 
     // Fetch photographer data
     const { data: photoData } = await supabase
@@ -106,6 +108,22 @@ serve(async (req) => {
         throw new Error(bookingError?.message ?? "Failed to create booking");
       }
       bookingId = newBooking.id;
+    }
+
+    // ── Free booking: no payment required ──
+    if (!paymentRequired) {
+      await supabase
+        .from("bookings")
+        .update({ status: "confirmed", payment_status: "not_required" })
+        .eq("id", bookingId);
+      if (slotId) {
+        await supabase.from("session_availability").update({ is_booked: true }).eq("id", slotId);
+      }
+      const successUrl = `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`;
+      return new Response(JSON.stringify({ url: successUrl, free: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     // ── Lazy Connect: auto-create account on first checkout ──

@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS payment_required BOOLEAN NOT NULL DEFAULT true;
