@@ -326,8 +326,9 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         const subtotal = sessionPrice + extrasTotal;
         const taxAmount = Math.round(subtotal * taxRate / 100);
         const grandTotal = subtotal + taxAmount;
+        const isPercentDeposit = depositType === "percent" || depositType === "percentage";
         const depositValue = depositEnabled
-          ? (depositType === "percentage" ? Math.round(grandTotal * depositAmount / 100) : depositAmount)
+          ? (isPercentDeposit ? Math.round(grandTotal * depositAmount / 100) : depositAmount)
           : 0;
         const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
         const totalPaidAmount = isFullPaid ? grandTotal : depositPaid;
@@ -393,7 +394,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">
                     {tp.depositAmount}
-                    {depositType === "percentage" && ` (${depositAmount}%)`}
+                    {isPercentDeposit && ` (${depositAmount}%)`}
                   </span>
                   <span className={cn("tabular-nums font-medium", depositPaid > 0 ? "text-emerald-600" : "text-muted-foreground")}>
                     {depositPaid > 0 ? `−${fmt(depositPaid / 100)}` : fmt(depositValue / 100)}
