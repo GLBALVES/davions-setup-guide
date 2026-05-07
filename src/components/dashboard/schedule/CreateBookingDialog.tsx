@@ -739,6 +739,99 @@ export function CreateBookingDialog({
                   )}
                 </div>
 
+                {/* More details (optional) */}
+                <div className="flex flex-col gap-2 border-t border-border/50 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setOsMoreOpen(o => !o)}
+                    className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span>{t.createBooking.moreDetails}</span>
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", osMoreOpen && "rotate-180")} />
+                  </button>
+
+                  {osMoreOpen && (
+                    <div className="flex flex-col gap-3 pt-1">
+                      {/* Deposit + Discount */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.depositLabel}</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" min={0} step={0.01} value={osDepositValue}
+                              onChange={e => setOsDepositValue(e.target.value === "" ? "" : Number(e.target.value))}
+                              className="text-xs h-8 flex-1" placeholder="0" />
+                            <Select value={osDepositType} onValueChange={(v) => setOsDepositType(v as any)}>
+                              <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="percentage">%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.discountLabel}</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" min={0} step={0.01} value={osDiscountValue}
+                              onChange={e => setOsDiscountValue(e.target.value === "" ? "" : Number(e.target.value))}
+                              className="text-xs h-8 flex-1" placeholder="0" />
+                            <Select value={osDiscountType} onValueChange={(v) => setOsDiscountType(v as any)}>
+                              <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="percentage">%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delivery + Extra photo + Headcount */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.deliveryDays}</Label>
+                          <Input type="number" min={0} value={osDeliveryDays}
+                            onChange={e => setOsDeliveryDays(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-xs h-8" placeholder="15" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.extraPhotoPrice}</Label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">R$</span>
+                            <Input type="number" min={0} step={0.01} value={osExtraPhotoPrice}
+                              onChange={e => setOsExtraPhotoPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                              className="text-xs h-8 pl-8" placeholder="0" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.headcount}</Label>
+                          <Input type="number" min={0} value={osHeadcount}
+                            onChange={e => setOsHeadcount(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-xs h-8" placeholder="1" />
+                        </div>
+                      </div>
+
+                      {/* Full address */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.fullAddress}</Label>
+                        <Input value={osFullAddress} onChange={e => setOsFullAddress(e.target.value)} className="text-xs h-8" />
+                      </div>
+
+                      {/* Internal notes */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.internalNotes}</Label>
+                        <Textarea value={osInternalNotes} onChange={e => setOsInternalNotes(e.target.value)} rows={2} className="text-xs resize-none" />
+                      </div>
+
+                      {/* Client notes */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.createBooking.clientNotes}</Label>
+                        <Textarea value={osClientNotes} onChange={e => setOsClientNotes(e.target.value)} rows={2} className="text-xs resize-none" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Continue */}
                 <DialogFooter className="pt-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => setMode("select")} className="text-xs">
