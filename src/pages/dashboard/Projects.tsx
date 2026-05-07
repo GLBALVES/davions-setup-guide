@@ -1492,18 +1492,41 @@ const Projects = () => {
       .order("position", { ascending: true });
 
     if (allProjects) {
-      // 5. Fetch gallery covers for projects with a booking_id
+      // 5. Fetch gallery covers for projects with a booking_id OR linked via project_id
       const bookingIds = (allProjects as any[])
         .map((p) => p.booking_id)
         .filter(Boolean);
+      const projectIds = (allProjects as any[]).map((p) => p.id).filter(Boolean);
 
       let galleryCovers: Record<string, string> = {};
       let galleryExpiry: Record<string, string> = {};
-      if (bookingIds.length > 0) {
+      // Maps keyed by project_id (for galleries linked directly via project_id)
+      const galleryCoversByProject: Record<string, string> = {};
+      const galleryExpiryByProject: Record<string, string> = {};
+      const proofByProject = new Set<string>();
+      const finalByProject = new Set<string>();
+      if (bookingIds.length > 0 || projectIds.length > 0) {
+        const orFilter = [
+          bookingIds.length > 0 ? `booking_id.in.(${bookingIds.join(",")})` : null,
+          projectIds.length > 0 ? `project_id.in.(${projectIds.join(",")})` : null,
+        ].filter(Boolean).join(",");
         const { data: galleries } = await supabase
           .from("galleries")
-          .select("booking_id, cover_image_url, category, status, expires_at")
-          .in("booking_id", bookingIds);
+          .select("booking_id, project_id, cover_image_url, category, status, expires_at")
+          .or(orFilter);
+        // Project-id keyed maps
+        if (galleries) {
+          for (const g of galleries as any[]) {
+            if (g.project_id && g.cover_image_url && g.status !== "expired") {
+              galleryCoversByProject[g.project_id] = g.cover_image_url;
+            }
+            if (g.project_id && g.expires_at) {
+              galleryExpiryByProject[g.project_id] = g.expires_at;
+            }
+            if (g.project_id && g.category === "proof") proofByProject.add(g.project_id);
+            if (g.project_id && g.category === "final") finalByProject.add(g.project_id);
+          }
+        }
         // Map cover images (skip expired for cover)
         if (galleries) {
           for (const g of galleries as any[]) {
@@ -1541,7 +1564,7 @@ const Projects = () => {
         const toProofGallery: string[] = [];
         for (const p of (allProjects as any[])) {
           if (p.stage !== "shot") continue;
-          if (p.booking_id && proofGalleryBookings.has(p.booking_id)) {
+          if ((p.booking_id && proofGalleryBookings.has(p.booking_id)) || proofByProject.has(p.id)) {
             toProofGallery.push(p.id);
           }
         }
@@ -1560,7 +1583,7 @@ const Projects = () => {
         const toFinalGallery: string[] = [];
         for (const p of (allProjects as any[])) {
           if (p.stage !== "post_production") continue;
-          if (p.booking_id && finalGalleryBookings.has(p.booking_id)) {
+          if ((p.booking_id && finalGalleryBookings.has(p.booking_id)) || finalByProject.has(p.id)) {
             toFinalGallery.push(p.id);
           }
         }
@@ -1579,13 +1602,17 @@ const Projects = () => {
       const mapped = (allProjects as any[]).map((p) => {
         // Derive shoot_time from availability if not set on the project
         const availStartTime = (p.bookings as any)?.session_availability?.start_time?.slice(0, 5) ?? null;
+        const coverFromBooking = p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null;
+        const coverFromProject = galleryCoversByProject[p.id] ?? null;
+        const expiryFromBooking = p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null;
+        const expiryFromProject = galleryExpiryByProject[p.id] ?? null;
         return {
           ...p,
           shoot_time: p.shoot_time ?? availStartTime,
           session_title: (p.bookings as any)?.sessions?.title ?? null,
-          gallery_cover_url: p.booking_id ? (galleryCovers[p.booking_id] ?? null) : null,
+          gallery_cover_url: coverFromProject ?? coverFromBooking,
           gallery_deadline: p.gallery_deadline ?? null,
-          gallery_expires_at: p.booking_id ? (galleryExpiry[p.booking_id] ?? null) : null,
+          gallery_expires_at: expiryFromProject ?? expiryFromBooking,
           location: p.location ?? null,
           description: p.description ?? null,
           client_phone: p.client_phone ?? null,
