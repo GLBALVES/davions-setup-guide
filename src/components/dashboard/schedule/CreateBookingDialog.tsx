@@ -34,6 +34,7 @@ import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { AlertTriangle, ArrowLeft, CalendarIcon, Camera, ChevronDown, Clock, DollarSign, Loader2, MapPin, Plus, Search, X, Zap } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 /* ── types ─────────────────────────────────────────── */
 
