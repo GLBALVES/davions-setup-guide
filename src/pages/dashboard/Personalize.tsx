@@ -270,6 +270,9 @@ const Personalize = () => {
   const [savingBriefing, setSavingBriefing] = useState(false);
   const [deletingBriefingId, setDeletingBriefingId] = useState<string | null>(null);
 
+  const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const optionsContainerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
