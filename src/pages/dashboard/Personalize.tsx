@@ -1283,7 +1283,15 @@ const Personalize = () => {
                         <FieldRow label={t.personalize.taxIdVat}>
                           <Input value={businessTaxId} onChange={(e) => setBusinessTaxId(e.target.value)} placeholder="e.g. 12-3456789" className="h-9 text-sm font-light" />
                         </FieldRow>
-                        <FieldRow label={(t.personalize as any).salesTax || "Sales Tax (%)"}>
+                        <FieldRow label={(t.personalize as any).taxName || "Tax Name"}>
+                          <Input
+                            value={businessTaxName}
+                            onChange={(e) => setBusinessTaxName(e.target.value)}
+                            placeholder="e.g. Sales Tax, IVA, VAT"
+                            className="h-9 text-sm font-light"
+                          />
+                        </FieldRow>
+                        <FieldRow label={(t.personalize as any).salesTax || "Tax Rate (%)"}>
                           <Input
                             type="number"
                             inputMode="decimal"
