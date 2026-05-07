@@ -193,6 +193,7 @@ const Personalize = () => {
   const [businessCountry, setBusinessCountry] = useState("");
   const [businessCurrency, setBusinessCurrency] = useState("USD");
   const [businessTaxId, setBusinessTaxId] = useState("");
+  const [businessSalesTax, setBusinessSalesTax] = useState<string>("");
   const [savingBusiness, setSavingBusiness] = useState(false);
 
   // ── Gallery settings (per type) ────────────────────────────────────────────
