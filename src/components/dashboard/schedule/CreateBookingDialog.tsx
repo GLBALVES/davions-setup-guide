@@ -188,6 +188,12 @@ export function CreateBookingDialog({
       setClientEmail("");
       setOsName(""); setOsDuration(60); setOsLocation(""); setOsNumPhotos(0);
       setOsBriefingId(""); setOsContractId(""); setOsIncludes([]); setOsIncludeInput("");
+      setOsMoreOpen(false);
+      setOsDepositValue(""); setOsDepositType("fixed");
+      setOsDiscountValue(""); setOsDiscountType("fixed");
+      setOsDeliveryDays(""); setOsExtraPhotoPrice("");
+      setOsFullAddress(""); setOsHeadcount("");
+      setOsInternalNotes(""); setOsClientNotes("");
       setClientSuggestions([]); setShowSuggestions(false);
       if (defaultDate) setDate(defaultDate);
       else setDate(undefined);
