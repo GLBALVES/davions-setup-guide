@@ -382,6 +382,15 @@ const BookingConfirm = () => {
     setBriefingSubmitted(true);
   };
 
+  /* ── Custom fields the client must fill in for the contract ── */
+  const activeClientInputFields = useMemo(() => {
+    const html = session?.contract_text || "";
+    return contractCustomFields.filter((f) => {
+      if (f.value_source !== "client_input") return false;
+      return html.includes(`{{${f.field_key}}}`) || html.includes(`[[${f.field_key}]]`) || html.includes(`data-variable="${f.field_key}"`);
+    });
+  }, [session, contractCustomFields]);
+
   /* ── Client info handler ── */
   const handleSaveClientInfo = async () => {
     if (!booking) return;
