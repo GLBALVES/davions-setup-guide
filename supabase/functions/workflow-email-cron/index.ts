@@ -30,7 +30,27 @@ serve(async (req) => {
     session_completed: 0,
     download_reminder_7d: 0,
     post_delivery_feedback_7d: 0,
+    balance_due_session_day: 0,
   };
+
+  // Helpers ------------------------------------------------
+  const enc = new TextEncoder();
+  const b64url = (buf: ArrayBuffer) =>
+    btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  async function signToken(bookingId: string, expSec: number): Promise<string> {
+    const payload = b64url(enc.encode(JSON.stringify({ b: bookingId, e: expSec })));
+    const k = await crypto.subtle.importKey(
+      "raw", enc.encode(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""),
+      { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+    );
+    const sig = await crypto.subtle.sign("HMAC", k, enc.encode(payload));
+    return `${payload}.${b64url(sig)}`;
+  }
+  function fmtBRL(cents: number) {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
 
   try {
     // 1) session_completed — bookings whose shoot has ended
