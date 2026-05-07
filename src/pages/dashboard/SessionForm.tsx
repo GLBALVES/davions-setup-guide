@@ -161,6 +161,7 @@ const SessionForm = () => {
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
   const [bookingWindowDays, setBookingWindowDays] = useState("60");
   const [virtualBlockPercent, setVirtualBlockPercent] = useState("0");
+  const [showSpotsLeft, setShowSpotsLeft] = useState(true);
   const [hideFromStore, setHideFromStore] = useState(false);
 
   const editor = useEditor({
