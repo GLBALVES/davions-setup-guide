@@ -375,8 +375,8 @@ function KanbanCard({
           </div>
         </div>
 
-        {/* Gallery cover thumbnail for proof/final stages */}
-        {(project.stage === "proof_gallery" || project.stage === "final_gallery") && project.gallery_cover_url && (
+        {/* Gallery cover thumbnail — shown whenever a gallery is linked to the project */}
+        {project.gallery_cover_url && (
           <div className="w-full h-20 rounded-sm overflow-hidden border border-border">
             <img
               src={project.gallery_cover_url}
