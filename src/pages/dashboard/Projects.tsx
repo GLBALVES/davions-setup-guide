@@ -253,29 +253,43 @@ function KanbanCard({
   const galleryExpiryStatus = effectiveGalleryExpiry ? getDeadlineStatus(effectiveGalleryExpiry) : null;
 
   // Upcoming session proximity alert
+  // Combine shoot_date (YYYY-MM-DD) + shoot_time (HH:mm) into a local Date
+  const shootDateTime = (() => {
+    if (!project.shoot_date) return null;
+    const time = project.shoot_time && /^\d{1,2}:\d{2}/.test(project.shoot_time)
+      ? project.shoot_time.slice(0, 5)
+      : "00:00";
+    const d = new Date(`${project.shoot_date}T${time}:00`);
+    return isNaN(d.getTime()) ? null : d;
+  })();
+
   const upcomingSessionStatus = (() => {
     if (project.stage !== "upcoming") return null;
     if (project.is_paused) return null;
-    if (!project.shoot_date) return null;
-    const d = new Date(project.shoot_date);
+    if (!shootDateTime) return null;
     const now = new Date();
-    if (isPast(d)) return "overdue"; // session already passed (shouldn't happen normally)
-    const daysUntil = differenceInDays(d, now);
-    const hoursUntil = differenceInHours(d, now);
-    if (hoursUntil < 24) return "urgent";   // less than 24h → red
-    if (daysUntil <= 3) return "warning";   // ≤ 3 days → yellow
-    if (daysUntil <= 7) return "ok";        // ≤ 7 days → green
-    return null;                            // more than 7 days → no color
+    if (isPast(shootDateTime)) return "overdue";
+    const daysUntil = differenceInDays(shootDateTime, now);
+    const hoursUntil = differenceInHours(shootDateTime, now);
+    if (hoursUntil < 24) return "urgent";
+    if (daysUntil <= 3) return "warning";
+    if (daysUntil <= 7) return "ok";
+    return null;
   })();
 
   const upcomingSessionLabel = (() => {
-    if (!upcomingSessionStatus || !project.shoot_date) return null;
-    const d = new Date(project.shoot_date);
+    if (!upcomingSessionStatus || !shootDateTime) return null;
     const now = new Date();
-    if (isPast(d)) return p_t.sessionPassed;
-    const h = differenceInHours(d, now);
-    if (h < 24) return p_t.sessionInHours(h);
-    const days = differenceInDays(d, now);
+    if (isPast(shootDateTime)) return p_t.sessionPassed;
+    const h = differenceInHours(shootDateTime, now);
+    if (h < 24) {
+      if (h < 1) {
+        const mins = Math.max(0, Math.round((shootDateTime.getTime() - now.getTime()) / 60000));
+        return `${mins}m`;
+      }
+      return p_t.sessionInHours(h);
+    }
+    const days = differenceInDays(shootDateTime, now);
     return p_t.sessionInDays(days);
   })();
 
@@ -519,10 +533,11 @@ function KanbanCard({
         {/* Deadline progress bar */}
         {(() => {
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
-          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const shootISO = shootDateTime ? shootDateTime.toISOString() : null;
+          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && shootISO ? shootISO : null);
           // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
-            ? (project.shoot_date ?? project.created_at)
+            ? (shootISO ?? project.created_at)
             : project.created_at;
           if (!status || !deadline) {
             // Show a subtle warning when this stage expects a deadline but none is set
@@ -542,12 +557,15 @@ function KanbanCard({
           }
           const progress = getDeadlineProgress(startAnchor, deadline);
           const barColor = DEADLINE_BAR[status] ?? "bg-border";
-          // Label text (days/hours left)
+          // Label text (days/hours/min left)
           const label = (() => {
             if (!deadline) return null;
             const d = parseISO(deadline);
             const now = new Date();
             if (isPast(d)) return null;
+            const diffMs = d.getTime() - now.getTime();
+            const mins = Math.round(diffMs / 60000);
+            if (mins < 60) return `${Math.max(0, mins)}m`;
             const h = differenceInHours(d, now);
             if (h < 24) return `${h}h`;
             return `${differenceInDays(d, now)}d`;
