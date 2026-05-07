@@ -247,6 +247,13 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
             internal_notes: internalNotes.trim() || null,
             client_notes: clientNotes.trim() || null,
           },
+          tax_rate: taxEnabled && taxRate !== "" ? Number(taxRate) : 0,
+          deposit_enabled: pDepositEnabled,
+          deposit_type: pDepositType,
+          deposit_amount: pDepositEnabled && pDepositAmount !== ""
+            ? (pDepositType === "percent" ? Math.round(Number(pDepositAmount)) : Math.round(Number(pDepositAmount) * 100))
+            : 0,
+          allow_tip: allowTip,
         })
         .eq("id", sessionId)
         .eq("photographer_id", user.id);
@@ -262,6 +269,36 @@ export function EditOneSessionDialog({ open, onOpenChange, sessionId, onSaved, o
             photographer_id: user.id,
             text,
             position: i,
+          }))
+        );
+      }
+
+      // Replace photo tiers
+      await (supabase as any).from("session_photo_tiers").delete().eq("session_id", sessionId);
+      const validTiers = photoTiers.filter((t) => t.min_photos > 0 && t.price_per_photo !== "");
+      if (validTiers.length > 0) {
+        await (supabase as any).from("session_photo_tiers").insert(
+          validTiers.map((t) => ({
+            session_id: sessionId,
+            photographer_id: user.id,
+            min_photos: Number(t.min_photos),
+            max_photos: t.max_photos,
+            price_per_photo: Math.round(Number(t.price_per_photo) * 100),
+          }))
+        );
+      }
+
+      // Replace extras
+      await (supabase as any).from("session_extras").delete().eq("session_id", sessionId);
+      const validExtras = extras.filter((e) => e.description.trim() && e.price !== "");
+      if (validExtras.length > 0) {
+        await (supabase as any).from("session_extras").insert(
+          validExtras.map((e) => ({
+            session_id: sessionId,
+            photographer_id: user.id,
+            description: e.description.trim(),
+            quantity: Number(e.quantity) || 99,
+            price: Math.round(Number(e.price) * 100),
           }))
         );
       }
